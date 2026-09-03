@@ -2,12 +2,6 @@
 
 <h3 align="center">A desktop Mihomo client with native Kokoro subscription support</h3>
 
-<p align="center">
-  <a href="https://github.com/amamiyakokoro/KokoroApp/releases/latest"><img src="https://img.shields.io/github/v/release/amamiyakokoro/KokoroApp?label=latest" alt="Latest release"></a>
-  <a href="https://github.com/amamiyakokoro/KokoroApp/releases/tag/rolling"><img src="https://img.shields.io/badge/release-rolling-orange" alt="Rolling release"></a>
-  <a href="https://t.me/+y7rcYjEKIiI1NzZl"><img src="https://img.shields.io/badge/Telegram-Group-blue?logo=telegram" alt="Telegram group"></a>
-</p>
-
 Kokoro is an Electron-based desktop client for [Mihomo](https://github.com/MetaCubeX/mihomo). It combines profile management, system proxy controls, TUN support, configuration overrides, and authenticated Kokoro subscriptions in one application.
 
 ## Features
