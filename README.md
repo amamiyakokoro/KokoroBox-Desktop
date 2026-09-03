@@ -154,16 +154,6 @@ Use the generated PKG when testing proxy connections. The PKG installs Kokoro in
 
 The project currently creates non-notarized builds. Distribution outside a development environment requires an appropriate Apple signing and notarization setup.
 
-## Kokoro authentication
-
-Kokoro opens the system browser for osu! authorization and returns to the application through:
-
-```text
-kokoro://oauth/callback
-```
-
-The redirect URI must exactly match an entry in the server's `APP_REDIRECT_URIS` configuration. Access and refresh tokens are stored with Electron's secure storage and must never be written to logs, analytics, or crash reports.
-
 ## Contributing
 
 This repository is primarily maintained for personal use. Pull requests are reviewed on a case-by-case basis.
