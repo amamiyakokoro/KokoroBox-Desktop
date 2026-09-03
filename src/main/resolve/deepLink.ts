@@ -2,6 +2,7 @@ import { ipcMain, type BrowserWindow, type IpcMainEvent } from 'electron'
 import { addOverrideItem, addProfileItem } from '../config'
 import { getUserAgent } from '../utils/userAgent'
 import { showNotification } from '../utils/notification'
+import { handleKokoroCallback, KOKORO_REDIRECT_URI } from '../kokoro/client'
 
 interface DeepLinkContext {
   getMainWindow: () => BrowserWindow | null
@@ -10,6 +11,20 @@ interface DeepLinkContext {
 }
 
 export async function handleDeepLink(url: string, context: DeepLinkContext): Promise<void> {
+  if (url.startsWith(`${new URL(KOKORO_REDIRECT_URI).protocol}//`)) {
+    try {
+      await handleKokoroCallback(new URL(url))
+      if (!context.getMainWindow()) await context.createWindow()
+      context.showWindow()
+      void showNotification({ title: 'Kokoro 登录成功', variant: 'success' })
+    } catch (error) {
+      void showNotification({ title: 'Kokoro 登录失败', body: `${error}`, variant: 'danger' })
+    } finally {
+      context.getMainWindow()?.webContents.send('kokoro-auth-changed')
+    }
+    return
+  }
+
   if (!url.startsWith('clash://') && !url.startsWith('mihomo://') && !url.startsWith('sparkle://'))
     return
 

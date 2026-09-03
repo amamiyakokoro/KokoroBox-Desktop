@@ -113,7 +113,7 @@ Terminal=false
 Type=Application
 Icon=sparkle
 StartupWMClass=sparkle
-Comment=Sparkle
+Comment=Kokoro
 Categories=Utility;
 `
 

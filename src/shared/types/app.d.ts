@@ -179,6 +179,9 @@ interface ProfileItem {
   substore?: boolean
   locked?: boolean
   autoUpdate?: boolean
+  kokoro?: {
+    settings: KokoroSubscriptionSettings
+  }
 }
 
 interface SubscriptionUserInfo {
@@ -186,6 +189,76 @@ interface SubscriptionUserInfo {
   download: number
   total: number
   expire: number
+}
+
+type KokoroProtocol = 'vmess' | 'anytls' | 'hysteria2'
+type KokoroISP = 'ct' | 'cu' | 'cm' | 'other'
+type KokoroMode = 'relay' | 'direct'
+type KokoroRuleSource = 'origin' | 'mirror'
+type KokoroFinalRoute = 'proxy' | 'direct'
+
+interface KokoroSubscriptionSettings {
+  format: 'mihomo'
+  protocol: KokoroProtocol
+  plan: string | null
+  isp: KokoroISP | null
+  mode: KokoroMode
+  rule_source: KokoroRuleSource
+  final_route: KokoroFinalRoute
+  rule_provider_auto_update: boolean
+  profile_auto_update: boolean
+  profile_update_hours: number
+}
+
+interface KokoroPlan {
+  name: string
+  description?: string | null
+  supported_isps: string[]
+}
+
+interface KokoroUser {
+  osu_id: string
+  username?: string | null
+  avatar_url?: string | null
+  plans: string[]
+  plans_details: KokoroPlan[]
+  traffic_usage: number
+  bandwidth_limit: number
+  subscription_expires_at?: string | null
+}
+
+interface KokoroSubscriptionOptions {
+  formats: Array<{
+    value: string
+    content_type: string
+    filename: string
+    target_version?: string
+    testing: boolean
+  }>
+  protocols: Array<{ value: string; label: string; supports_direct: boolean }>
+  plans: KokoroPlan[]
+  isps: Array<{ value: string; label: string }>
+  rule_sources: string[]
+  final_routes: string[]
+  profile_update: { min_hours: number; max_hours: number }
+  defaults: {
+    format: string
+    protocol: string
+    plan: string | null
+    isp: string | null
+    mode: string
+    rule_source: string
+    final_route: string
+    rule_provider_auto_update: boolean
+    profile_auto_update: boolean
+    profile_update_hours: number
+  }
+}
+
+interface KokoroSession {
+  authenticated: boolean
+  user?: KokoroUser
+  options?: KokoroSubscriptionOptions
 }
 
 interface OverrideConfig {

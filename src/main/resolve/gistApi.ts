@@ -9,7 +9,7 @@ interface GistInfo {
   html_url: string
 }
 
-const GIST_DESCRIPTION = 'Auto Synced Sparkle Runtime Config'
+const GIST_DESCRIPTION = 'Auto Synced Kokoro Runtime Config'
 const GIST_FILE_NAME = 'sparkle.yaml'
 const GIST_ENCRYPTED_FILE_NAME = 'sparkle.yaml.age'
 

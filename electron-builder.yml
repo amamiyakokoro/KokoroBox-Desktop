@@ -1,5 +1,5 @@
-appId: sparkle.app
-productName: Sparkle
+appId: com.amamiyakokoro.app
+productName: Kokoro
 directories:
   buildResources: build
 files:
@@ -19,11 +19,12 @@ extraResources:
   - from: './extra/'
     to: ''
 protocols:
-  name: 'Sparkle URI Scheme'
+  name: 'Kokoro URI Scheme'
   schemes:
     - 'clash'
     - 'mihomo'
     - 'sparkle'
+    - 'kokoro'
 win:
   target:
     - nsis
@@ -57,8 +58,8 @@ pkg:
 linux:
   desktop:
     entry:
-      Name: Sparkle
-      MimeType: 'x-scheme-handler/clash;x-scheme-handler/mihomo;x-scheme-handler/sparkle'
+      Name: Kokoro
+      MimeType: 'x-scheme-handler/clash;x-scheme-handler/mihomo;x-scheme-handler/sparkle;x-scheme-handler/kokoro'
   target:
     - deb
     - rpm

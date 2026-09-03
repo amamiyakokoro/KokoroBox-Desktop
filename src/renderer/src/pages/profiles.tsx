@@ -23,12 +23,14 @@ import { SortableContext } from '@dnd-kit/sortable'
 import { FaPlus } from 'react-icons/fa6'
 import { IoMdRefresh } from 'react-icons/io'
 import { MdTune } from 'react-icons/md'
+import { LuHeartHandshake } from 'react-icons/lu'
 import SubStoreIcon from '@renderer/components/base/substore-icon'
 import ProfileSettingDrawer from '@renderer/components/profiles/profile-setting-drawer'
 import useSWR from 'swr'
 import { useNavigate } from 'react-router-dom'
 import { useCardDndSensors } from '@renderer/hooks/use-card-dnd-sensors'
 import { notify } from '@renderer/utils/notification'
+import KokoroSubscriptionModal from '@renderer/components/profiles/kokoro-subscription-modal'
 
 const emptyItems: ProfileItem[] = []
 
@@ -55,6 +57,7 @@ const Profiles: React.FC = () => {
   const [switching, setSwitching] = useState(false)
   const [fileOver, setFileOver] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
+  const [showKokoroModal, setShowKokoroModal] = useState(false)
   const [isSettingDrawerOpen, setIsSettingDrawerOpen] = useState(false)
   const [settingDrawerReopenSignal, setSettingDrawerReopenSignal] = useState(0)
   const [editingItem, setEditingItem] = useState<ProfileItem | null>(null)
@@ -305,6 +308,15 @@ const Profiles: React.FC = () => {
           }}
         />
       )}
+      {showKokoroModal && (
+        <KokoroSubscriptionModal
+          onClose={() => setShowKokoroModal(false)}
+          onImported={() => {
+            mutateProfileConfig()
+            window.electron.ipcRenderer.send('updateTrayMenu')
+          }}
+        />
+      )}
       <div className="sticky profiles-sticky top-0 z-40">
         <div className="flex p-2">
           <Input
@@ -423,6 +435,16 @@ const Profiles: React.FC = () => {
               </DropdownMenu>
             </Dropdown>
           )}
+          <Button
+            className="ml-2"
+            size="sm"
+            color="primary"
+            variant="flat"
+            startContent={<LuHeartHandshake />}
+            onPress={() => setShowKokoroModal(true)}
+          >
+            Kokoro
+          </Button>
           <Dropdown>
             <DropdownTrigger>
               <Button className="ml-2 new-profile" size="sm" isIconOnly color="primary">

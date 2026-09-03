@@ -20,7 +20,7 @@ options=('!debug' '!lto')
 
 prepare(){
     cd $srcdir/${pkgname}-${pkgver}
-    sed -i "s/productName: Sparkle/productName: sparkle/" electron-builder.yml
+    sed -i "s/productName: Kokoro/productName: sparkle/" electron-builder.yml
     pnpm install
 }
 

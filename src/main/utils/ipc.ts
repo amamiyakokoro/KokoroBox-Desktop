@@ -42,6 +42,8 @@ import {
   saveFileStrWithElevation,
   setProfileStr,
   updateProfileItem,
+  addKokoroProfile,
+  clearKokoroProfiles,
   setProfileConfig,
   getOverrideConfig,
   setOverrideConfig,
@@ -138,6 +140,7 @@ import { showNotification } from './notification'
 import { getUserAgent } from './userAgent'
 import { appendAppLog, clearCachedMihomoLogs, getCachedMihomoLogs } from './log'
 import { ageIdentityToRecipient, generateAgeKeyPair } from './age'
+import { getKokoroSession, revokeKokoroSession, startKokoroLogin } from '../kokoro/client'
 
 function ipcErrorWrapper<T>( // eslint-disable-next-line @typescript-eslint/no-explicit-any
   fn: (...args: any[]) => T | Promise<T> // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -280,6 +283,16 @@ export function registerIpcMainHandlers(): void {
   ipcMain.handle('changeCurrentProfile', (_e, id) => ipcErrorWrapper(changeCurrentProfile)(id))
   ipcMain.handle('addProfileItem', (_e, item) => ipcErrorWrapper(addProfileItem)(item))
   ipcMain.handle('removeProfileItem', (_e, id) => ipcErrorWrapper(removeProfileItem)(id))
+  ipcMain.handle('getKokoroSession', () => ipcErrorWrapper(getKokoroSession)())
+  ipcMain.handle('startKokoroLogin', () => ipcErrorWrapper(startKokoroLogin)())
+  ipcMain.handle('addKokoroProfile', (_e, settings) => ipcErrorWrapper(addKokoroProfile)(settings))
+  ipcMain.handle('revokeKokoroSession', () =>
+    ipcErrorWrapper(async () => {
+      await revokeKokoroSession()
+      await clearKokoroProfiles()
+      mainWindow?.webContents.send('profileConfigUpdated')
+    })()
+  )
   ipcMain.handle('getOverrideConfig', (_e, force) => ipcErrorWrapper(getOverrideConfig)(force))
   ipcMain.handle('setOverrideConfig', (_e, config) => ipcErrorWrapper(setOverrideConfig)(config))
   ipcMain.handle('getOverrideItem', (_e, id) => ipcErrorWrapper(getOverrideItem)(id))
@@ -402,7 +415,7 @@ export function registerIpcMainHandlers(): void {
   ipcMain.handle('applyTheme', (_e, theme) => ipcErrorWrapper(applyTheme)(theme))
   ipcMain.handle('copyEnv', (_e, type) => ipcErrorWrapper(copyEnv)(type))
   ipcMain.handle('alert', (_e, msg) => {
-    void showNotification({ title: 'Sparkle', body: msg, variant: 'danger' })
+    void showNotification({ title: 'Kokoro', body: msg, variant: 'danger' })
   })
   ipcMain.handle('resetAppConfig', resetAppConfig)
   ipcMain.handle('relaunchApp', () => {

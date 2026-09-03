@@ -178,6 +178,22 @@ export async function removeProfileItem(id: string): Promise<void> {
   return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('removeProfileItem', id))
 }
 
+export async function getKokoroSession(): Promise<KokoroSession> {
+  return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('getKokoroSession'))
+}
+
+export async function startKokoroLogin(): Promise<void> {
+  return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('startKokoroLogin'))
+}
+
+export async function addKokoroProfile(settings: KokoroSubscriptionSettings): Promise<void> {
+  return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('addKokoroProfile', settings))
+}
+
+export async function revokeKokoroSession(): Promise<void> {
+  return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('revokeKokoroSession'))
+}
+
 export async function updateProfileItem(item: ProfileItem): Promise<void> {
   return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('updateProfileItem', item))
 }

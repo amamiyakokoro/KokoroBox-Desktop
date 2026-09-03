@@ -17,7 +17,9 @@ export {
   getProfileParseStr,
   setProfileStr,
   changeCurrentProfile,
-  updateProfileItem
+  updateProfileItem,
+  addKokoroProfile,
+  clearKokoroProfiles
 } from './profile'
 export {
   getOverrideConfig,

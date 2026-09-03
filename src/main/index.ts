@@ -90,7 +90,12 @@ async function scheduleLightweightMode(): Promise<void> {
   quitTimeout = setTimeout(enterLightweightMode, autoLightweightDelay * 1000)
 }
 
+const retainedUserDataPath = app.getPath('userData')
 const syncConfig = getAppConfigSync()
+
+// Keep the existing data directory so upgrades from Sparkle retain all user settings.
+app.setName('Kokoro')
+app.setPath('userData', retainedUserDataPath)
 
 function exitApp(): void {
   disableSysProxySync()
@@ -171,7 +176,7 @@ initAppQuitLifecycle({
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(async () => {
   // Set app user model id for windows
-  electronApp.setAppUserModelId('sparkle.app')
+  electronApp.setAppUserModelId('com.amamiyakokoro.app')
   let appConfig: AppConfig
   try {
     appConfig = await initPromise
@@ -212,6 +217,17 @@ app.whenReady().then(async () => {
   runStartupTask('traffic monitor', startMonitor())
 
   await createWindowPromise
+
+  const initialDeepLink = process.argv.find((value) =>
+    ['clash://', 'mihomo://', 'sparkle://', 'kokoro://'].some((prefix) => value.startsWith(prefix))
+  )
+  if (initialDeepLink) {
+    await handleDeepLink(initialDeepLink, {
+      getMainWindow: () => mainWindow,
+      createWindow,
+      showWindow
+    })
+  }
 
   const uiTasks: Promise<void>[] = [initShortcut()]
 

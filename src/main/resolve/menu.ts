@@ -186,8 +186,8 @@ export async function createApplicationMenu(): Promise<void> {
           click: () => {
             dialog.showMessageBox(mainWindow!, {
               type: 'info',
-              title: '关于 Sparkle',
-              message: 'Sparkle',
+              title: '关于 Kokoro',
+              message: 'Kokoro',
               detail: `版本：${app.getVersion()}\n一个基于 Electron 的代理工具`,
               buttons: ['确定']
             })

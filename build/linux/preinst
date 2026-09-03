@@ -71,7 +71,7 @@ stop_sparkle_service_if_running() {
     fi
 
     if ! mark_service_running; then
-        echo "Failed to record running Sparkle service state" >&2
+        echo "Failed to record running Kokoro service state" >&2
         exit 1
     fi
 
@@ -85,7 +85,7 @@ stop_sparkle_service_if_running() {
         return
     fi
 
-    echo "Sparkle service is still running; aborting install to avoid replacing active files" >&2
+    echo "Kokoro service is still running; aborting install to avoid replacing active files" >&2
     exit 1
 }
 

@@ -1,6 +1,6 @@
 #!/bin/sh
 
-APP_PATH="/Applications/Sparkle.app"
+APP_PATH="/Applications/Kokoro.app"
 
 chown root:admin "$APP_PATH/Contents/Resources/sidecar/mihomo"
 chown root:admin "$APP_PATH/Contents/Resources/sidecar/mihomo-alpha"

@@ -1,4 +1,4 @@
-# Sparkle
+# Kokoro
 
 <h3 align="center">Another <a href="https://github.com/MetaCubeX/mihomo">Mihomo</a> GUI</h3>
 
@@ -30,7 +30,7 @@
 
 ### 技术架构
 
-Sparkle 基于 Electron + React + TypeScript 构建
+Kokoro 基于 Electron + React + TypeScript 构建
 
 #### 前端技术栈
 

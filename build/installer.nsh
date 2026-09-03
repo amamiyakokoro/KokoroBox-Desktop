@@ -72,7 +72,7 @@
   !insertmacro QuerySparkleServiceState $R1
   ${If} $R1 != "stopped"
   ${AndIf} $R1 != "not-installed"
-    MessageBox MB_ICONSTOP "SparkleService is still running. Please stop the service and run the installer again."
+    MessageBox MB_ICONSTOP "Kokoro service is still running. Please stop the service and run the installer again."
     Abort
   ${EndIf}
 !macroend
@@ -95,7 +95,7 @@
   ${If} $R1 != "stopped"
   ${AndIf} $R1 != "not-installed"
     StrCpy $sparkleServiceWasRunning "true"
-    DetailPrint "Stopping Sparkle service"
+    DetailPrint "Stopping Kokoro service"
     nsExec::ExecToStack '"$SYSDIR\sc.exe" stop SparkleService'
     Pop $R2
     Pop $R3
@@ -118,11 +118,11 @@
   ${If} $sparkleServiceWasRunning == "true"
     StrCpy $R1 "$INSTDIR\resources\files\sparkle-service.exe"
     ${If} ${FileExists} "$R1"
-      DetailPrint "Starting Sparkle service: $R1"
+      DetailPrint "Starting Kokoro service: $R1"
       nsExec::ExecToLog '"$R1" service start'
       Pop $R2
       ${If} $R2 != 0
-        DetailPrint "Sparkle service start exited with code $R2"
+        DetailPrint "Kokoro service start exited with code $R2"
       ${EndIf}
     ${EndIf}
   ${EndIf}

@@ -1,7 +1,7 @@
 import { getControledMihomoConfig } from './controledMihomo'
 import { mihomoProfileWorkDir, mihomoWorkDir, profileConfigPath, profilePath } from '../utils/dirs'
 import { addProfileUpdater, delProfileUpdater } from '../core/profileUpdater'
-import { readFile, writeFile, rm, mkdir } from 'fs/promises'
+import { readFile, writeFile, rm, mkdir, rename } from 'fs/promises'
 import { fileToStr } from '@uruhalushia/sparkle-native'
 import { restartCore } from '../core/manager'
 import { getAppConfig } from './app'
@@ -21,6 +21,8 @@ import { getUserAgent } from '../utils/userAgent'
 import { execWithElevation } from '../utils/elevation'
 import { decryptAgeText, encryptAgeText, isAgeEncryptedText } from '../utils/age'
 import { isHttpUrl } from '../utils/url'
+import { downloadKokoroProfile } from '../kokoro/client'
+import { validateMihomoProfileContent } from '../kokoro/profile-check'
 
 let profileConfig: ProfileConfig // profile.yaml
 const FILE_PERMISSION_ELEVATION_REQUIRED = 'FILE_PERMISSION_ELEVATION_REQUIRED'
@@ -157,10 +159,28 @@ export async function createProfile(item: Partial<ProfileItem>): Promise<Profile
     useProxy: item.useProxy || false,
     ageRecipient: item.ageRecipient?.trim() || undefined,
     ageIdentity: item.ageIdentity?.trim() || undefined,
+    kokoro: item.kokoro,
     updated: new Date().getTime()
   } as ProfileItem
   switch (newItem.type) {
     case 'remote': {
+      if (newItem.kokoro) {
+        const downloaded = await downloadKokoroProfile(newItem.kokoro.settings)
+        parseYaml<MihomoConfig>(downloaded.content)
+        await validateMihomoProfileContent(downloaded.content)
+        newItem.name = item.name || downloaded.profileName
+        newItem.verify = true
+        newItem.autoUpdate = newItem.kokoro.settings.profile_auto_update
+        newItem.interval = downloaded.profileUpdateInterval
+          ? downloaded.profileUpdateInterval * 60
+          : 0
+        if (downloaded.subscriptionUserinfo) {
+          newItem.extra = parseSubinfo(downloaded.subscriptionUserinfo)
+        }
+        await setProfileStr(id, downloaded.content, newItem)
+        break
+      }
+
       const { 'mixed-port': mixedPort = 7890 } = await getControledMihomoConfig()
       if (!item.url) throw new Error('Empty URL')
       let res: AxiosResponse
@@ -319,6 +339,38 @@ export async function getProfileStr(id: string | undefined): Promise<string> {
   }
 }
 
+export async function addKokoroProfile(settings: KokoroSubscriptionSettings): Promise<void> {
+  await addProfileItem({
+    type: 'remote',
+    name: '',
+    verify: true,
+    autoUpdate: settings.profile_auto_update,
+    interval: settings.profile_auto_update ? settings.profile_update_hours * 60 : 0,
+    kokoro: { settings: { ...settings, format: 'mihomo' } }
+  })
+}
+
+export async function clearKokoroProfiles(): Promise<void> {
+  const config = await getProfileConfig()
+  const removed = config.items.filter((item) => item.kokoro)
+  if (removed.length === 0) return
+
+  const removedIds = new Set(removed.map((item) => item.id))
+  config.items = config.items.filter((item) => !removedIds.has(item.id))
+  const currentRemoved = Boolean(config.current && removedIds.has(config.current))
+  if (currentRemoved) config.current = config.items[0]?.id
+  await setProfileConfig(config)
+
+  await Promise.all(
+    removed.map(async (item) => {
+      await delProfileUpdater(item.id)
+      await rm(profilePath(item.id), { force: true })
+      await rm(mihomoProfileWorkDir(item.id), { recursive: true, force: true })
+    })
+  )
+  if (currentRemoved) await restartCore()
+}
+
 export async function getProfileParseStr(id: string | undefined): Promise<string> {
   let data: string
   if (existsSync(profilePath(id || 'default'))) {
@@ -362,7 +414,15 @@ async function writeProfileContent(
     ? await encryptAgeText(content, profileItem.ageRecipient)
     : content
 
-  await writeFile(profilePath(id), data, 'utf-8')
+  const targetPath = profilePath(id)
+  const tempPath = `${targetPath}.${process.pid}.${Date.now()}.tmp`
+  try {
+    await writeFile(tempPath, data, { encoding: 'utf-8', mode: 0o600 })
+    await rename(tempPath, targetPath)
+  } catch (error) {
+    await rm(tempPath, { force: true }).catch(() => {})
+    throw error
+  }
   if (shouldRestartCurrent && current === id) await restartCore()
 }
 

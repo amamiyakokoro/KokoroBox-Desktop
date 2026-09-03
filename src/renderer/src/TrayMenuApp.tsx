@@ -99,7 +99,7 @@ const TrayMenuApp: React.FC = () => {
       <div className="flex items-center justify-between px-3 py-2 border-b border-divider bg-content2/50">
         <div className="flex items-center gap-2">
           <div className="w-2 h-2 rounded-full bg-primary animate-pulse shadow-lg shadow-primary/50" />
-          <span className="text-sm font-semibold">Sparkle</span>
+          <span className="text-sm font-semibold">Kokoro</span>
         </div>
         <div className="flex items-center gap-1">
           <Button

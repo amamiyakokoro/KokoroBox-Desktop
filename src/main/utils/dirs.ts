@@ -127,6 +127,10 @@ export function serviceAuthStorePath(): string {
   return path.join(dataDir(), 'service-auth.json')
 }
 
+export function kokoroAuthStorePath(): string {
+  return path.join(dataDir(), 'kokoro-auth.json')
+}
+
 export function appConfigPath(): string {
   return path.join(dataDir(), 'config.yaml')
 }

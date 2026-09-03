@@ -127,7 +127,7 @@ jobs:
       - name: Keep product name lowercase on Linux
         if: matrix.os == 'ubuntu-latest'
         run: |
-          sed -i "s/productName: Sparkle/productName: sparkle/" electron-builder.yml
+          sed -i "s/productName: Kokoro/productName: sparkle/" electron-builder.yml
 
       - name: Install Build Tools
         if: matrix.os == 'ubuntu-latest' && matrix.format == 'pacman'

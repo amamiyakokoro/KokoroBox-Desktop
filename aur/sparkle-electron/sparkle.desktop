@@ -1,10 +1,10 @@
 [Desktop Entry]
-Name=Sparkle
+Name=Kokoro
 Exec=sparkle %U
 Terminal=false
 Type=Application
 Icon=sparkle
 StartupWMClass=sparkle
-MimeType=x-scheme-handler/clash;x-scheme-handler/mihomo;x-scheme-handler/sparkle;
-Comment=Sparkle
+MimeType=x-scheme-handler/clash;x-scheme-handler/mihomo;x-scheme-handler/sparkle;x-scheme-handler/kokoro;
+Comment=Kokoro
 Categories=Utility;

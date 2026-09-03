@@ -67,7 +67,7 @@ export async function setupFirewall(): Promise<void> {
     setupFirewallRules([
       { name: 'mihomo', applicationPath: mihomoCorePath('mihomo') },
       { name: 'mihomo-alpha', applicationPath: mihomoCorePath('mihomo-alpha') },
-      { name: 'Sparkle', applicationPath: exePath() }
+      { name: 'Kokoro', applicationPath: exePath() }
     ])
   }
 }

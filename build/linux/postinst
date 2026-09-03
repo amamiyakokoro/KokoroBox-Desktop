@@ -12,7 +12,7 @@ if [ ! -f '/usr/bin/sparkle' ] || [ -L '/usr/bin/sparkle' ]; then
     fi
 fi
 
-sed -i 's/Name=sparkle/Name=Sparkle/' '/usr/share/applications/sparkle.desktop'
+sed -i 's/Name=sparkle/Name=Kokoro/' '/usr/share/applications/sparkle.desktop'
 
 chmod 4755 '/opt/sparkle/chrome-sandbox' || true
 chmod +sx /opt/sparkle/resources/sidecar/mihomo
