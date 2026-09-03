@@ -23,7 +23,6 @@ import { SortableContext } from '@dnd-kit/sortable'
 import { FaPlus } from 'react-icons/fa6'
 import { IoMdRefresh } from 'react-icons/io'
 import { MdTune } from 'react-icons/md'
-import { LuHeartHandshake } from 'react-icons/lu'
 import SubStoreIcon from '@renderer/components/base/substore-icon'
 import ProfileSettingDrawer from '@renderer/components/profiles/profile-setting-drawer'
 import useSWR from 'swr'
@@ -435,16 +434,6 @@ const Profiles: React.FC = () => {
               </DropdownMenu>
             </Dropdown>
           )}
-          <Button
-            className="ml-2"
-            size="sm"
-            color="primary"
-            variant="flat"
-            startContent={<LuHeartHandshake />}
-            onPress={() => setShowKokoroModal(true)}
-          >
-            Kokoro
-          </Button>
           <Dropdown>
             <DropdownTrigger>
               <Button className="ml-2 new-profile" size="sm" isIconOnly color="primary">
@@ -454,6 +443,10 @@ const Profiles: React.FC = () => {
             <DropdownMenu
               onAction={async (key) => {
                 switch (key) {
+                  case 'kokoro': {
+                    setShowKokoroModal(true)
+                    break
+                  }
                   case 'open': {
                     try {
                       const files = await getFilePath(['yml', 'yaml'])
@@ -493,6 +486,9 @@ const Profiles: React.FC = () => {
                 }
               }}
             >
+              <DropdownItem key="kokoro" showDivider>
+                登录 Kokoro 获取订阅
+              </DropdownItem>
               <DropdownItem key="open">打开本地配置</DropdownItem>
               <DropdownItem key="new">新建本地配置</DropdownItem>
               <DropdownItem key="import">导入远程配置</DropdownItem>
