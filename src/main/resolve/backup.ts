@@ -13,13 +13,15 @@ import {
   themesDir
 } from '../utils/dirs'
 
+const DEFAULT_WEBDAV_DIR = 'KokoroBox'
+
 export async function webdavBackup(): Promise<boolean> {
   const { createClient } = await import('webdav/dist/node/index.js')
   const {
     webdavUrl = '',
     webdavUsername = '',
     webdavPassword = '',
-    webdavDir = 'sparkle'
+    webdavDir = DEFAULT_WEBDAV_DIR
   } = await getAppConfig()
   const zip = new AdmZip()
 
@@ -53,7 +55,7 @@ export async function webdavRestore(filename: string): Promise<void> {
     webdavUrl = '',
     webdavUsername = '',
     webdavPassword = '',
-    webdavDir = 'sparkle'
+    webdavDir = DEFAULT_WEBDAV_DIR
   } = await getAppConfig()
 
   const client = createClient(webdavUrl, {
@@ -71,7 +73,7 @@ export async function listWebdavBackups(): Promise<string[]> {
     webdavUrl = '',
     webdavUsername = '',
     webdavPassword = '',
-    webdavDir = 'sparkle'
+    webdavDir = DEFAULT_WEBDAV_DIR
   } = await getAppConfig()
 
   const client = createClient(webdavUrl, {
@@ -88,7 +90,7 @@ export async function webdavDelete(filename: string): Promise<void> {
     webdavUrl = '',
     webdavUsername = '',
     webdavPassword = '',
-    webdavDir = 'sparkle'
+    webdavDir = DEFAULT_WEBDAV_DIR
   } = await getAppConfig()
 
   const client = createClient(webdavUrl, {
