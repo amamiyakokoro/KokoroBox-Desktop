@@ -3,6 +3,7 @@ import { Button, Spinner, Card, CardBody, Chip, Divider } from '@heroui/react'
 import { Modal } from '@heroui-v3/react'
 import { serviceStatus, testServiceConnection } from '@renderer/utils/ipc'
 import { notify } from '@renderer/utils/notification'
+import { systemCoreOnlyBuild, systemServicePath } from '../../../../shared/build-flags'
 
 interface Props {
   onChange: (open: boolean) => void
@@ -209,9 +210,13 @@ const ServiceModal: React.FC<Props> = (props) => {
 
                 <Divider />
 
-                <div className="text-xs text-default-500 space-y-2">
+               <div className="text-xs text-default-500 space-y-2">
                   <div className="flex items-start gap-2">
-                    <span>提供系统代理设置和核心进程管理的提权功能</span>
+                    <span>
+                      {systemCoreOnlyBuild
+                        ? `使用系统服务：${systemServicePath}`
+                        : '提供系统代理设置和核心进程管理的提权功能'}
+                    </span>
                   </div>
                   <div className="flex items-start gap-2">
                     <span>未安装状态下部分高级功能将无法使用</span>

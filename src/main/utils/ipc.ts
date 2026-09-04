@@ -94,6 +94,7 @@ import {
 } from '../service/manager'
 import { patchCoreProfile } from '../service/api'
 import { coreLogPath, findSystemMihomo, logDir } from './dirs'
+import { systemCoreOnlyBuild } from '../../shared/build-flags'
 import {
   getRuntimeConfig,
   getRuntimeConfigStr,
@@ -235,7 +236,9 @@ export function registerIpcMainHandlers(): void {
   ipcMain.handle('mihomoUnfixedProxy', (_e, group) => ipcErrorWrapper(mihomoUnfixedProxy)(group))
   ipcMain.handle('mihomoUpgradeGeo', ipcErrorWrapper(mihomoUpgradeGeo))
   ipcMain.handle('mihomoUpgradeUI', ipcErrorWrapper(mihomoUpgradeUI))
-  ipcMain.handle('mihomoUpgrade', (_e, channel) => ipcErrorWrapper(mihomoUpgrade)(channel))
+  if (!systemCoreOnlyBuild) {
+    ipcMain.handle('mihomoUpgrade', (_e, channel) => ipcErrorWrapper(mihomoUpgrade)(channel))
+  }
   ipcMain.handle('mihomoProxyDelay', (_e, proxy, url, provider) =>
     ipcErrorWrapper(mihomoProxyDelay)(proxy, url, provider)
   )
@@ -272,9 +275,11 @@ export function registerIpcMainHandlers(): void {
     ipcErrorWrapper(getFilePreviewStr)(path, format)
   )
   ipcMain.handle('setFileStr', (_e, path, str) => ipcErrorWrapper(setFileStr)(path, str))
-  ipcMain.handle('saveFileStrWithElevation', (_e, path, str) =>
-    ipcErrorWrapper(saveFileStrWithElevation)(path, str)
-  )
+  if (!systemCoreOnlyBuild) {
+    ipcMain.handle('saveFileStrWithElevation', (_e, path, str) =>
+      ipcErrorWrapper(saveFileStrWithElevation)(path, str)
+    )
+  }
   ipcMain.handle('setProfileStr', (_e, id, str) => ipcErrorWrapper(setProfileStr)(id, str))
   ipcMain.handle('updateProfileItem', (_e, item) => ipcErrorWrapper(updateProfileItem)(item))
   ipcMain.handle('changeCurrentProfile', (_e, id) => ipcErrorWrapper(changeCurrentProfile)(id))
@@ -295,15 +300,17 @@ export function registerIpcMainHandlers(): void {
   ipcMain.handle('triggerSysProxy', (_e, enable, onlyActiveDevice, useRegistry) =>
     ipcErrorWrapper(triggerSysProxy)(enable, onlyActiveDevice, useRegistry)
   )
-  ipcMain.handle('manualGrantCorePermition', (_e, cores?: ('mihomo' | 'mihomo-alpha')[]) =>
-    ipcErrorWrapper(manualGrantCorePermition)(cores)
-  )
-  ipcMain.handle('checkCorePermission', () => ipcErrorWrapper(checkCorePermission)())
-  ipcMain.handle('revokeCorePermission', (_e, cores?: ('mihomo' | 'mihomo-alpha')[]) =>
-    ipcErrorWrapper(revokeCorePermission)(cores)
-  )
-  ipcMain.handle('checkElevateTask', () => ipcErrorWrapper(checkElevateTask)())
-  ipcMain.handle('deleteElevateTask', () => ipcErrorWrapper(deleteElevateTask)())
+  if (!systemCoreOnlyBuild) {
+    ipcMain.handle('manualGrantCorePermition', (_e, cores?: ('mihomo' | 'mihomo-alpha')[]) =>
+      ipcErrorWrapper(manualGrantCorePermition)(cores)
+    )
+    ipcMain.handle('checkCorePermission', () => ipcErrorWrapper(checkCorePermission)())
+    ipcMain.handle('revokeCorePermission', (_e, cores?: ('mihomo' | 'mihomo-alpha')[]) =>
+      ipcErrorWrapper(revokeCorePermission)(cores)
+    )
+    ipcMain.handle('checkElevateTask', () => ipcErrorWrapper(checkElevateTask)())
+    ipcMain.handle('deleteElevateTask', () => ipcErrorWrapper(deleteElevateTask)())
+  }
   ipcMain.handle('serviceStatus', () => ipcErrorWrapper(serviceStatus)())
   ipcMain.handle('testServiceConnection', () => ipcErrorWrapper(testServiceConnection)())
   ipcMain.handle('initService', () => ipcErrorWrapper(initService)())
