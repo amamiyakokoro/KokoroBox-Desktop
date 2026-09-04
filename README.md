@@ -1,66 +1,70 @@
+<div align="center">
+
+<img src="resources/icon.png" width="112" alt="Kokoro icon">
+
 # Kokoro
 
-<h3 align="center">A desktop Mihomo client with native Kokoro subscription support</h3>
+A desktop Mihomo client with native Kokoro subscription support.
+
+</div>
+
+## About
 
 Kokoro is an Electron-based desktop client for [Mihomo](https://github.com/MetaCubeX/mihomo). It combines profile management, system proxy controls, TUN support, configuration overrides, and authenticated Kokoro subscriptions in one application.
 
-## Features
+## Highlights
 
-- Ready-to-use TUN mode without requiring service mode
-- Secure Kokoro sign-in through the system browser and osu! OAuth
-- Authenticated Kokoro subscription download and automatic updates
-- Multiple color themes and a modern desktop interface
-- Controls for commonly used Mihomo settings
-- Bundled stable and preview Mihomo cores
-- One-click configuration backup and restore through WebDAV
-- Flexible configuration overrides
-- Integrated Sub-Store subscription management
+- **Mihomo integration** — bundled stable and preview cores with controls for commonly used settings
+- **TUN and system proxy** — ready-to-use TUN mode and native system proxy integration
+- **Kokoro integration** — secure account sign-in, authenticated subscription downloads, and automatic updates
+- **Profile tools** — flexible configuration overrides and integrated Sub-Store subscription management
+- **Backup and restore** — one-click configuration backup and restore through WebDAV
+- **Desktop experience** — multiple color themes and a modern React interface
 
-## Requirements
+## Kokoro subscriptions
 
-- Node.js 20 or later; an LTS release is recommended
-- pnpm 9 or later
+Kokoro can create and maintain Mihomo profiles directly from a Kokoro account:
+
+- Secure osu! sign-in through the system browser
+- Authenticated subscription downloads without exposing credentials in profile URLs
+- Automatic subscription updates
+- Kokoro account and subscription settings integrated into the desktop interface
+
+Access tokens, refresh tokens, subscription credentials, and complete subscription URLs must never be included in logs, screenshots, analytics, or issue reports.
+
+## Install
+
+Download a package for your platform from [GitHub Releases](https://github.com/amamiyakokoro/KokoroApp/releases):
+
+- Windows: NSIS installer or portable 7z archive
+- macOS: PKG installer
+- Linux: DEB, RPM, or Pacman package
+
+On macOS, use the PKG when testing proxy connections. It installs Kokoro in `/Applications` and assigns the ownership and setuid permissions required by the bundled Mihomo cores. Running an intermediate `.app` from `dist/mac-*` skips these installation steps.
+
+The project currently creates non-notarized macOS builds. Distribution outside a development environment requires an appropriate Apple signing and notarization setup.
+
+## Build from source
+
+### Requirements
+
+- Node.js 22.12 or later; an LTS release is recommended
+- pnpm 11
 - A recent Git release
 
-## Technology
+Clone the repository and install its dependencies:
 
-Kokoro is built with Electron, React, and TypeScript.
+```bash
+git clone https://github.com/amamiyakokoro/KokoroApp.git
+cd KokoroApp
+pnpm install
+```
 
-### Renderer
+Start the development server:
 
-- React 19
-- TypeScript
-- HeroUI
-- Tailwind CSS
-- Monaco Editor
-
-### Main process
-
-- Electron
-- Mihomo Core
-- `sparkle-service` for privileged operations
-- `sysproxy-go` for system proxy integration
-
-## Getting started
-
-1. Clone the repository:
-
-   ```bash
-   git clone https://github.com/amamiyakokoro/KokoroApp.git
-   cd KokoroApp
-   ```
-
-2. Install dependencies:
-
-   ```bash
-   pnpm install
-   ```
-
-3. Start the development server:
-
-   ```bash
-   pnpm dev
-   ```
+```bash
+pnpm dev
+```
 
 If Electron was not installed correctly, reinstall its binary before starting development:
 
@@ -72,99 +76,58 @@ cd ../..
 
 On Windows, disable TUN temporarily if the development window opens as a blank screen.
 
-## Project structure
+### Scripts
 
-```text
-KokoroApp/
-├── src/
-│   ├── main/               # Electron main process
-│   │   ├── core/           # Mihomo lifecycle and API integration
-│   │   ├── config/         # Application and profile configuration
-│   │   ├── kokoro/         # Kokoro authentication and subscriptions
-│   │   ├── resolve/        # Deep links, menus, tray, and updates
-│   │   ├── service/        # Privileged service integration
-│   │   ├── sys/            # Operating-system integration
-│   │   └── utils/          # Shared main-process utilities
-│   ├── preload/            # Secure renderer-to-main bridge
-│   ├── renderer/           # React application
-│   └── shared/             # Shared types
-├── resources/              # Application assets
-├── build/                  # Packaging configuration and scripts
-├── extra/                  # Prepared cores and runtime resources
-├── scripts/                # Resource preparation and release tools
-├── electron-builder.yml    # electron-builder configuration
-└── package.json
-```
+| Command            | Purpose                                                              |
+| ------------------ | -------------------------------------------------------------------- |
+| `pnpm dev`         | Start the development server                                         |
+| `pnpm typecheck`   | Type-check the main and renderer processes                           |
+| `pnpm lint`        | Run ESLint and apply supported fixes                                 |
+| `pnpm format`      | Format the repository with Prettier                                  |
+| `pnpm prepare`     | Download and prepare cores, services, rule data, and frontend assets |
+| `pnpm build:win`   | Build Windows packages                                               |
+| `pnpm build:mac`   | Build the macOS PKG installer                                        |
+| `pnpm build:linux` | Build Linux packages                                                 |
 
-## Scripts
-
-### Development
-
-- `pnpm dev` — start the development server
-- `pnpm typecheck` — type-check the main and renderer processes
-- `pnpm typecheck:node` — type-check the main process
-- `pnpm typecheck:web` — type-check the renderer
-- `pnpm lint` — run ESLint and apply supported fixes
-- `pnpm format` — format the repository with Prettier
-
-### Resource preparation
-
-- `pnpm prepare` — download and prepare cores, services, rule data, and frontend assets
-- `pnpm postinstall` — install Electron and rebuild native application dependencies
-
-### Packaging
-
-- `pnpm build:win` — build Windows installers
-- `pnpm build:mac` — build the macOS PKG installer
-- `pnpm build:linux` — build Linux packages
-
-Specify an architecture by passing the matching electron-builder flag:
-
-```bash
-pnpm build:win --x64
-pnpm build:win --arm64
-pnpm build:mac --x64
-pnpm build:mac --arm64
-pnpm build:linux --x64
-pnpm build:linux --arm64
-```
-
-Prepare resources for the target architecture before creating a release package:
+Specify an architecture with the matching electron-builder flag. Prepare target resources before creating a release package:
 
 ```bash
 pnpm prepare --arm64
 pnpm build:mac --arm64
 ```
 
-Expected package formats:
+The packaging commands accept `--x64` and `--arm64` for each supported operating system.
 
-- Windows: NSIS installer and portable 7z archive
-- macOS: PKG installer
-- Linux: DEB, RPM, and Pacman packages
+## Project structure
 
-### macOS installation note
+| Path           | Purpose                                                                                  |
+| -------------- | ---------------------------------------------------------------------------------------- |
+| `src/main`     | Electron main process, Mihomo lifecycle, configuration, and operating-system integration |
+| `src/preload`  | Secure renderer-to-main bridge                                                           |
+| `src/renderer` | React application                                                                        |
+| `src/shared`   | Types shared by the main and renderer processes                                          |
+| `resources`    | Application assets                                                                       |
+| `build`        | Packaging configuration and scripts                                                      |
+| `extra`        | Prepared cores and runtime resources                                                     |
+| `scripts`      | Resource preparation and release tools                                                   |
 
-Use the generated PKG when testing proxy connections. The PKG installs Kokoro in `/Applications` and runs the packaging scripts that assign the required owner and setuid permissions to the bundled Mihomo cores. Running the intermediate `.app` from `dist/mac-*` skips those installation steps.
-
-The project currently creates non-notarized builds. Distribution outside a development environment requires an appropriate Apple signing and notarization setup.
+Kokoro is built with Electron, React, TypeScript, HeroUI, Tailwind CSS, and Monaco Editor. Privileged operations use `sparkle-service`, while `sysproxy-go` provides system proxy integration.
 
 ## Contributing
 
-This repository is primarily maintained for personal use. Pull requests are reviewed on a case-by-case basis.
+This repository is primarily maintained for personal use. Bug reports and focused pull requests are reviewed on a case-by-case basis. Please use [GitHub Issues](https://github.com/amamiyakokoro/KokoroApp/issues) for reproducible bugs and feature proposals.
 
-1. Fork the repository.
-2. Create a feature branch: `git checkout -b feature/my-change`.
-3. Run `pnpm typecheck` and the relevant tests.
-4. Commit and push your changes.
-5. Open a pull request with a concise description and verification notes.
+Before opening a pull request:
 
-When contributing:
+1. Follow the existing code style and naming conventions.
+2. Run `pnpm typecheck` and the relevant tests.
+3. Update the documentation when behavior changes.
+4. Restart the development server after changing main-process or preload code.
 
-- Follow the existing code style and naming conventions.
-- Update documentation when behavior changes.
-- Restart the development server after changing main-process or preload code.
-- Never commit credentials, subscription URLs, generated user profiles, or local runtime data.
+Never commit credentials, subscription URLs, generated user profiles, or local runtime data.
 
-## Upstream
+## Upstream and license
 
-Kokoro is based on the original [Sparkle project](https://github.com/xishang0128/sparkle) and continues to use compatible internal service and data identifiers where required for safe upgrades.
+Kokoro is derived from the original [Sparkle project](https://github.com/xishang0128/sparkle) and continues to use compatible internal service and data identifiers where required for safe upgrades.
+
+The project is distributed under the [GNU General Public License version 3](LICENSE). Individual dependencies remain subject to their respective licenses.
