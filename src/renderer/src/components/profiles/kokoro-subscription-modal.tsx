@@ -204,21 +204,21 @@ const KokoroSubscriptionModal: React.FC<Props> = ({ onClose, onImported }) => {
                 </div>
               ) : (
                 <div className="flex flex-col gap-5">
-                  <section className="flex items-center gap-3 border-b border-default-100 pb-5">
+                  <section className="flex items-start gap-3 border-b border-default-100 pb-5">
                     {user.avatar_url ? (
                       <img
                         src={user.avatar_url}
                         alt=""
                         referrerPolicy="no-referrer"
-                        className="size-11 rounded-full bg-default-100 object-cover"
+                        className="size-11 shrink-0 rounded-full bg-default-100 object-cover"
                       />
                     ) : (
-                      <div className="flex size-11 items-center justify-center rounded-full bg-primary/10 font-semibold text-primary">
+                      <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-primary/10 font-semibold text-primary">
                         {(user.username || user.osu_id).slice(0, 1).toUpperCase()}
                       </div>
                     )}
                     <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         <h3 className="truncate font-semibold">{user.username || user.osu_id}</h3>
                         {user.plans.map((plan) => (
                           <Chip key={plan} size="sm" color="primary" variant="flat">
@@ -239,6 +239,7 @@ const KokoroSubscriptionModal: React.FC<Props> = ({ onClose, onImported }) => {
                       size="sm"
                       variant="light"
                       color="danger"
+                      className="shrink-0"
                       onPress={handleLogout}
                       startContent={<LuLogOut />}
                     >
@@ -252,7 +253,7 @@ const KokoroSubscriptionModal: React.FC<Props> = ({ onClose, onImported }) => {
                     </p>
                   )}
 
-                  <section className="grid grid-cols-2 gap-x-4 gap-y-4">
+                  <section className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <Select
                       label="方案"
                       size="sm"
@@ -356,35 +357,36 @@ const KokoroSubscriptionModal: React.FC<Props> = ({ onClose, onImported }) => {
                   </section>
 
                   <section className="divide-y divide-default-100 border-y border-default-100">
-                    <div className="flex items-center justify-between py-3">
-                      <div>
+                    <div className="flex flex-wrap items-center justify-between gap-4 py-3">
+                      <div className="min-w-0">
                         <p className="text-sm font-medium">规则集自动更新</p>
                         <p className="mt-0.5 text-xs text-foreground-500">更新远端 rule-provider</p>
                       </div>
                       <Switch
                         size="sm"
+                        className="ml-auto shrink-0"
                         isSelected={settings?.rule_provider_auto_update}
                         onValueChange={(value) =>
                           updateSettings({ rule_provider_auto_update: value })
                         }
                       />
                     </div>
-                    <div className="flex items-center justify-between py-3">
-                      <div>
+                    <div className="flex flex-wrap items-center justify-between gap-4 py-3">
+                      <div className="min-w-0">
                         <p className="text-sm font-medium">订阅自动更新</p>
                         <p className="mt-0.5 text-xs text-foreground-500">
                           失败时保留上一份可用配置
                         </p>
                       </div>
-                      <div className="flex items-center gap-3">
+                      <div className="ml-auto flex shrink-0 items-center gap-3">
                         <Input
                           aria-label="更新间隔"
                           type="number"
                           size="sm"
-                          className="w-28"
+                          className="w-32 shrink-0"
                           min={options.profile_update.min_hours}
                           max={options.profile_update.max_hours}
-                          endContent="小时"
+                          endContent={<span className="shrink-0 whitespace-nowrap">小时</span>}
                           value={String(settings?.profile_update_hours || '')}
                           onValueChange={(value) =>
                             updateSettings({

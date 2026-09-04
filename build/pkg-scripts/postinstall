@@ -7,8 +7,6 @@ chown root:admin "$APP_PATH/Contents/Resources/sidecar/mihomo-alpha"
 chmod +s "$APP_PATH/Contents/Resources/sidecar/mihomo"
 chmod +s "$APP_PATH/Contents/Resources/sidecar/mihomo-alpha"
 
-/usr/bin/codesign --force --deep --sign - "$APP_PATH"
-
 restore_sparkle_service_if_was_running() {
   SERVICE_BIN="$APP_PATH/Contents/Resources/files/sparkle-service"
   SERVICE_STATE_FILE="/tmp/sparkle-service-was-running"
