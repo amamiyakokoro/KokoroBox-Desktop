@@ -98,6 +98,22 @@ pnpm build:mac --arm64
 
 The packaging commands accept `--x64` and `--arm64` for each supported operating system.
 
+### Linux system-core builds
+
+For distribution packages that provide Mihomo and the privileged service separately, enable the system-core build mode:
+
+```bash
+export SPARKLE_SYSTEM_CORE=1
+# Optional; defaults to /usr/bin/sparkle-service
+export SPARKLE_SYSTEM_SERVICE=/usr/bin/sparkle-service
+pnpm install
+pnpm build:linux
+```
+
+`SPARKLE_SYSTEM_CORE=1` uses `/usr/bin/mihomo` by default. Set it to an absolute path to use another system-provided executable. The service path defaults to `/usr/bin/sparkle-service`.
+
+This mode skips downloading and packaging external resources and removes the project's package installation hooks. Distribution subpackages must provide the runtime resources, while the init system manages the service lifecycle.
+
 ## Project structure
 
 | Path           | Purpose                                                                                  |
