@@ -2,9 +2,9 @@ pkgname=sparkle-electron-git
 _pkgname=${pkgname%-electron-git}
 pkgver=1.26.7.r17.g2fed67e
 pkgrel=1
-pkgdesc="Another Mihomo GUI"
+pkgdesc="KokoroBox desktop Mihomo client"
 arch=('x86_64' 'aarch64')
-url="https://github.com/xishang0128/sparkle"
+url="https://github.com/amamiyakokoro/KokoroBox-Desktop"
 license=('GPL-3.0-only')
 provides=("$_pkgname=$pkgver")
 conflicts=("$_pkgname" "$_pkgname-git" "$_pkgname-bin" "$_pkgname-rolling-bin" "$_pkgname-electron" "$_pkgname-electron-bin")
@@ -15,7 +15,7 @@ install=$_pkgname.install
 source=(
     "${_pkgname}.desktop"
     "${_pkgname}.sh"
-    "git+$url.git"
+    "${_pkgname}::git+$url.git"
 )
 sha256sums=(
     "b17d85f6d862285a53a24d0f8dedd08f1f3c852ba6a901fabc487177598803cc"
@@ -34,7 +34,7 @@ pkgver() {
 
 prepare(){
     cd $srcdir/${_pkgname}
-    sed -i "s/productName: Kokoro/productName: sparkle/" electron-builder.yml
+    sed -i "s/productName: KokoroBox/productName: sparkle/" electron-builder.yml
     pnpm install
 }
 

@@ -80,7 +80,7 @@ const UpdaterDrawer: React.FC<Props> = (props) => {
 
   const isDownloading = updateStatus?.downloading || downloading
   const releaseTag = tag ?? (version.includes('-rolling-') ? 'rolling' : version)
-  const releaseUrl = `https://github.com/xishang0128/sparkle/releases/tag/${releaseTag}`
+  const releaseUrl = `https://github.com/amamiyakokoro/KokoroBox-Desktop/releases/tag/${releaseTag}`
 
   const progress = Math.max(0, Math.min(100, updateStatus?.progress ?? 0))
 

@@ -3,7 +3,7 @@
 OLD_SYSPROXY="/Library/PrivilegedHelperTools/sparkle.helper"
 SERVICE_NAME="SparkleService"
 SERVICE_STATE_FILE="/tmp/sparkle-service-was-running"
-APP_PATH="/Applications/Kokoro.app"
+APP_PATH="/Applications/KokoroBox.app"
 SERVICE_BIN="$APP_PATH/Contents/Resources/files/sparkle-service"
 
 UNINSTALL=false
@@ -48,7 +48,7 @@ stop_sparkle_service_if_running() {
     fi
 
     if ! touch "$SERVICE_STATE_FILE"; then
-        echo "Failed to record running Kokoro service state" >&2
+        echo "Failed to record running KokoroBox service state" >&2
         exit 1
     fi
 
@@ -57,7 +57,7 @@ stop_sparkle_service_if_running() {
         return
     fi
 
-    echo "Kokoro service is still running; aborting install to avoid replacing active files" >&2
+    echo "KokoroBox service is still running; aborting install to avoid replacing active files" >&2
     exit 1
 }
 

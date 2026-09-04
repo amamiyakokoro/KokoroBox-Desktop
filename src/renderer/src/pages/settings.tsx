@@ -36,7 +36,7 @@ const Settings: React.FC = () => {
             variant="light"
             className="app-nodrag"
             onPress={() => {
-              window.open('https://github.com/xishang0128/sparkle')
+              window.open('https://github.com/amamiyakokoro/KokoroBox-Desktop')
             }}
           >
             <IoLogoGithub className="text-lg" />

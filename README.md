@@ -1,16 +1,16 @@
 <div align="center">
 
-<img src="resources/icon.png" width="112" alt="Kokoro icon">
+<img src="resources/icon.png" width="112" alt="KokoroBox icon">
 
-# Kokoro
+# KokoroBox-Desktop
 
-A desktop Mihomo client with native Kokoro subscription support.
+The desktop home of KokoroBox, a Mihomo client with native Kokoro subscription support.
 
 </div>
 
 ## About
 
-Kokoro is an Electron-based desktop client for [Mihomo](https://github.com/MetaCubeX/mihomo). It combines profile management, system proxy controls, TUN support, configuration overrides, and authenticated Kokoro subscriptions in one application.
+KokoroBox is an Electron-based desktop client for [Mihomo](https://github.com/MetaCubeX/mihomo). It combines profile management, system proxy controls, TUN support, configuration overrides, and authenticated Kokoro subscriptions in one application.
 
 ## Highlights
 
@@ -23,7 +23,7 @@ Kokoro is an Electron-based desktop client for [Mihomo](https://github.com/MetaC
 
 ## Kokoro subscriptions
 
-Kokoro can create and maintain Mihomo profiles directly from a Kokoro account:
+KokoroBox can create and maintain Mihomo profiles directly from a Kokoro account:
 
 - Secure osu! sign-in through the system browser
 - Authenticated subscription downloads without exposing credentials in profile URLs
@@ -34,13 +34,13 @@ Access tokens, refresh tokens, subscription credentials, and complete subscripti
 
 ## Install
 
-Download a package for your platform from [GitHub Releases](https://github.com/amamiyakokoro/KokoroApp/releases):
+Download a package for your platform from [GitHub Releases](https://github.com/amamiyakokoro/KokoroBox-Desktop/releases):
 
 - Windows: NSIS installer or portable 7z archive
 - macOS: PKG installer
 - Linux: DEB, RPM, or Pacman package
 
-On macOS, use the PKG when testing proxy connections. It installs Kokoro in `/Applications` and assigns the ownership and setuid permissions required by the bundled Mihomo cores. Running an intermediate `.app` from `dist/mac-*` skips these installation steps.
+On macOS, use the PKG when testing proxy connections. It installs KokoroBox in `/Applications` and assigns the ownership and setuid permissions required by the bundled Mihomo cores. Running an intermediate `.app` from `dist/mac-*` skips these installation steps.
 
 The project currently creates non-notarized macOS builds. Distribution outside a development environment requires an appropriate Apple signing and notarization setup.
 
@@ -55,8 +55,8 @@ The project currently creates non-notarized macOS builds. Distribution outside a
 Clone the repository and install its dependencies:
 
 ```bash
-git clone https://github.com/amamiyakokoro/KokoroApp.git
-cd KokoroApp
+git clone https://github.com/amamiyakokoro/KokoroBox-Desktop.git
+cd KokoroBox-Desktop
 pnpm install
 ```
 
@@ -111,11 +111,11 @@ The packaging commands accept `--x64` and `--arm64` for each supported operating
 | `extra`        | Prepared cores and runtime resources                                                     |
 | `scripts`      | Resource preparation and release tools                                                   |
 
-Kokoro is built with Electron, React, TypeScript, HeroUI, Tailwind CSS, and Monaco Editor. Privileged operations use `sparkle-service`, while `sysproxy-go` provides system proxy integration.
+KokoroBox is built with Electron, React, TypeScript, HeroUI, Tailwind CSS, and Monaco Editor. Privileged operations use `sparkle-service`, while `sysproxy-go` provides system proxy integration.
 
 ## Contributing
 
-This repository is primarily maintained for personal use. Bug reports and focused pull requests are reviewed on a case-by-case basis. Please use [GitHub Issues](https://github.com/amamiyakokoro/KokoroApp/issues) for reproducible bugs and feature proposals.
+This repository is primarily maintained for personal use. Bug reports and focused pull requests are reviewed on a case-by-case basis. Please use [GitHub Issues](https://github.com/amamiyakokoro/KokoroBox-Desktop/issues) for reproducible bugs and feature proposals.
 
 Before opening a pull request:
 
@@ -128,6 +128,6 @@ Never commit credentials, subscription URLs, generated user profiles, or local r
 
 ## Upstream and license
 
-Kokoro is derived from the original [Sparkle project](https://github.com/xishang0128/sparkle) and continues to use compatible internal service and data identifiers where required for safe upgrades.
+KokoroBox-Desktop is derived from the original [Sparkle project](https://github.com/xishang0128/sparkle) and continues to use compatible internal service and data identifiers where required for safe upgrades.
 
 The project is distributed under the [GNU General Public License version 3](LICENSE). Individual dependencies remain subject to their respective licenses.

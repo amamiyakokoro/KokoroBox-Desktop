@@ -1,5 +1,5 @@
 appId: com.amamiyakokoro.app
-productName: Kokoro
+productName: KokoroBox
 directories:
   buildResources: build
 files:
@@ -19,7 +19,7 @@ extraResources:
   - from: './extra/'
     to: ''
 protocols:
-  name: 'Kokoro URI Scheme'
+  name: 'KokoroBox URI Scheme'
   schemes:
     - 'clash'
     - 'mihomo'
@@ -58,7 +58,7 @@ pkg:
 linux:
   desktop:
     entry:
-      Name: Kokoro
+      Name: KokoroBox
       MimeType: 'x-scheme-handler/clash;x-scheme-handler/mihomo;x-scheme-handler/sparkle;x-scheme-handler/kokoro'
   target:
     - deb

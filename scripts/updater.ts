@@ -5,7 +5,7 @@ const pkg = readFileSync('package.json', 'utf-8')
 let changelog = readFileSync('changelog.md', 'utf-8')
 const { version } = JSON.parse(pkg)
 const tag = process.env.RELEASE_TAG || version
-const downloadUrl = `https://github.com/xishang0128/sparkle/releases/download/${tag}`
+const downloadUrl = `https://github.com/amamiyakokoro/KokoroBox-Desktop/releases/download/${tag}`
 const latest = {
   version,
   tag,
@@ -14,13 +14,13 @@ const latest = {
 
 if (process.env.SKIP_CHANGELOG !== '1') {
   changelog += '\n### 下载地址：\n\n#### Windows10/11：\n\n'
-  changelog += `- 安装版：[64 位](${downloadUrl}/sparkle-windows-${version}-x64-setup.exe) | [ARM64](${downloadUrl}/sparkle-windows-${version}-arm64-setup.exe)\n\n`
+  changelog += `- 安装版：[64 位](${downloadUrl}/kokorobox-desktop-windows-${version}-x64-setup.exe) | [ARM64](${downloadUrl}/kokorobox-desktop-windows-${version}-arm64-setup.exe)\n\n`
   changelog += '\n#### macOS 11+:\n\n'
-  changelog += `- PKG：[Intel](${downloadUrl}/sparkle-macos-${version}-x64.pkg) | [Apple Silicon](${downloadUrl}/sparkle-macos-${version}-arm64.pkg)\n\n`
+  changelog += `- PKG：[Intel](${downloadUrl}/kokorobox-desktop-macos-${version}-x64.pkg) | [Apple Silicon](${downloadUrl}/kokorobox-desktop-macos-${version}-arm64.pkg)\n\n`
   changelog += '\n#### Linux:\n\n'
-  changelog += `- DEB：[64 位](${downloadUrl}/sparkle-linux-${version}-amd64.deb) | [ARM64](${downloadUrl}/sparkle-linux-${version}-arm64.deb) | [loong64](${downloadUrl}/sparkle-linux-${version}-loong64.deb)\n\n`
-  changelog += `- RPM：[64 位](${downloadUrl}/sparkle-linux-${version}-x86_64.rpm) | [ARM64](${downloadUrl}/sparkle-linux-${version}-aarch64.rpm) | [loong64](${downloadUrl}/sparkle-linux-${version}-loongarch64.rpm)\n\n`
-  changelog += `- PACMAN：[64 位](${downloadUrl}/sparkle-linux-${version}-x64.pkg.tar.zst) | [ARM64](${downloadUrl}/sparkle-linux-${version}-aarch64.pkg.tar.zst) | [loong64](${downloadUrl}/sparkle-linux-${version}-loong64.pkg.tar.zst)`
+  changelog += `- DEB：[64 位](${downloadUrl}/kokorobox-desktop-linux-${version}-amd64.deb) | [ARM64](${downloadUrl}/kokorobox-desktop-linux-${version}-arm64.deb) | [loong64](${downloadUrl}/kokorobox-desktop-linux-${version}-loong64.deb)\n\n`
+  changelog += `- RPM：[64 位](${downloadUrl}/kokorobox-desktop-linux-${version}-x86_64.rpm) | [ARM64](${downloadUrl}/kokorobox-desktop-linux-${version}-aarch64.rpm) | [loong64](${downloadUrl}/kokorobox-desktop-linux-${version}-loongarch64.rpm)\n\n`
+  changelog += `- PACMAN：[64 位](${downloadUrl}/kokorobox-desktop-linux-${version}-x64.pkg.tar.zst) | [ARM64](${downloadUrl}/kokorobox-desktop-linux-${version}-aarch64.pkg.tar.zst) | [loong64](${downloadUrl}/kokorobox-desktop-linux-${version}-loong64.pkg.tar.zst)`
 }
 writeFileSync('latest.yml', yaml.stringify(latest))
 writeFileSync('changelog.md', changelog)

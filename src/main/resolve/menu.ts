@@ -171,13 +171,13 @@ export async function createApplicationMenu(): Promise<void> {
         {
           label: '了解更多',
           click: () => {
-            shell.openExternal('https://github.com/xishang0128/sparkle')
+            shell.openExternal('https://github.com/amamiyakokoro/KokoroBox-Desktop')
           }
         },
         {
           label: '报告问题',
           click: () => {
-            shell.openExternal('https://github.com/xishang0128/sparkle/issues')
+            shell.openExternal('https://github.com/amamiyakokoro/KokoroBox-Desktop/issues')
           }
         },
         { type: 'separator' },
@@ -186,8 +186,8 @@ export async function createApplicationMenu(): Promise<void> {
           click: () => {
             dialog.showMessageBox(mainWindow!, {
               type: 'info',
-              title: '关于 Kokoro',
-              message: 'Kokoro',
+              title: '关于 KokoroBox',
+              message: 'KokoroBox',
               detail: `版本：${app.getVersion()}\n一个基于 Electron 的代理工具`,
               buttons: ['确定']
             })

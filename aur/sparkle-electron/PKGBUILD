@@ -1,10 +1,11 @@
 pkgname=sparkle-electron
 _pkgname=sparkle
+_srcname=KokoroBox-Desktop
 pkgver=1.26.7
 pkgrel=1
-pkgdesc="Another Mihomo GUI"
+pkgdesc="KokoroBox desktop Mihomo client"
 arch=('x86_64' 'aarch64')
-url="https://github.com/xishang0128/sparkle"
+url="https://github.com/amamiyakokoro/KokoroBox-Desktop"
 license=('GPL-3.0-only')
 provides=("$_pkgname=$pkgver")
 conflicts=("$_pkgname" "$_pkgname-git" "$_pkgname-bin" "$_pkgname-rolling-bin" "$_pkgname-electron-bin" "$_pkgname-electron-git")
@@ -24,20 +25,20 @@ sha256sums=("28e4a721d1bc4cf25934eb7ddfd7309587b8ea5c4771baba1137b4b4ae77aaa2"
 options=('!debug' '!lto')
 
 prepare(){
-    cd $srcdir/${_pkgname}-${pkgver}
-    sed -i "s/productName: Kokoro/productName: sparkle/" electron-builder.yml
+    cd $srcdir/${_srcname}-${pkgver}
+    sed -i "s/productName: KokoroBox/productName: sparkle/" electron-builder.yml
     pnpm install
 }
 
 build(){
-    cd $srcdir/${_pkgname}-${pkgver}
+    cd $srcdir/${_srcname}-${pkgver}
     pnpm build:linux deb
 }
 
 package() {
-    asar extract $srcdir/${_pkgname}-${pkgver}/dist/linux-unpacked/resources/app.asar ${pkgdir}/opt/sparkle
-    cp -r $srcdir/${_pkgname}-${pkgver}/extra/sidecar ${pkgdir}/opt/sparkle/resources/
-    cp -r $srcdir/${_pkgname}-${pkgver}/extra/files ${pkgdir}/opt/sparkle/resources/
+    asar extract $srcdir/${_srcname}-${pkgver}/dist/linux-unpacked/resources/app.asar ${pkgdir}/opt/sparkle
+    cp -r $srcdir/${_srcname}-${pkgver}/extra/sidecar ${pkgdir}/opt/sparkle/resources/
+    cp -r $srcdir/${_srcname}-${pkgver}/extra/files ${pkgdir}/opt/sparkle/resources/
     chmod +x ${pkgdir}/opt/sparkle/resources/files/sparkle-service
     chmod +sx ${pkgdir}/opt/sparkle/resources/sidecar/mihomo
     chmod +sx ${pkgdir}/opt/sparkle/resources/sidecar/mihomo-alpha

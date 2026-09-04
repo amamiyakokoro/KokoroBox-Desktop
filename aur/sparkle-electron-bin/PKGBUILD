@@ -2,9 +2,9 @@ pkgname=sparkle-electron-bin
 _pkgname=sparkle
 pkgver=1.26.7
 pkgrel=1
-pkgdesc="Another Mihomo GUI"
+pkgdesc="KokoroBox desktop Mihomo client"
 arch=('x86_64' 'aarch64')
-url="https://github.com/xishang0128/sparkle"
+url="https://github.com/amamiyakokoro/KokoroBox-Desktop"
 license=('GPL-3.0-only')
 provides=("$_pkgname=$pkgver")
 conflicts=("$_pkgname" "$_pkgname-git" "$_pkgname-bin" "$_pkgname-rolling-bin" "$_pkgname-electron" "$_pkgname-electron-git")
@@ -13,8 +13,8 @@ optdepends=('libappindicator-gtk3: Allow sparkle to extend a menu via Ayatana in
 makedepends=('asar' 'libarchive')
 install=$_pkgname.install
 source=("${_pkgname}.desktop" "${_pkgname}.sh")
-source_x86_64=("${_pkgname}-${pkgver}-x86_64.deb::${url}/releases/download/${pkgver}/sparkle-linux-${pkgver}-amd64.deb")
-source_aarch64=("${_pkgname}-${pkgver}-aarch64.deb::${url}/releases/download/${pkgver}/sparkle-linux-${pkgver}-arm64.deb")
+source_x86_64=("${_pkgname}-${pkgver}-x86_64.deb::${url}/releases/download/${pkgver}/kokorobox-desktop-linux-${pkgver}-amd64.deb")
+source_aarch64=("${_pkgname}-${pkgver}-aarch64.deb::${url}/releases/download/${pkgver}/kokorobox-desktop-linux-${pkgver}-arm64.deb")
 sha256sums=(
     "b17d85f6d862285a53a24d0f8dedd08f1f3c852ba6a901fabc487177598803cc"
     "ce855656fb0682d403685244c77dd2d90ec6efb207753fb7a6ddc1e9b6aa2c49"

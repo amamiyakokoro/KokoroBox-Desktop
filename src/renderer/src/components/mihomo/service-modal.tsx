@@ -132,7 +132,7 @@ const ServiceModal: React.FC<Props> = (props) => {
         <Modal.Container scroll="inside">
           <Modal.Dialog className="w-112.5">
             <Modal.Header className="flex-col gap-1">
-              <Modal.Heading>Kokoro 服务管理</Modal.Heading>
+              <Modal.Heading>KokoroBox 服务管理</Modal.Heading>
             </Modal.Header>
             <Modal.Body>
               <div className="space-y-4">

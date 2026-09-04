@@ -107,13 +107,13 @@ export async function enableAutoRun(): Promise<void> {
   if (process.platform === 'linux') {
     let desktop = `
 [Desktop Entry]
-Name=sparkle
+Name=KokoroBox
 Exec=${exePath()} %U
 Terminal=false
 Type=Application
 Icon=sparkle
 StartupWMClass=sparkle
-Comment=Kokoro
+Comment=KokoroBox
 Categories=Utility;
 `
 

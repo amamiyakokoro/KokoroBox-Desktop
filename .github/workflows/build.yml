@@ -127,7 +127,7 @@ jobs:
       - name: Keep product name lowercase on Linux
         if: matrix.os == 'ubuntu-latest'
         run: |
-          sed -i "s/productName: Kokoro/productName: sparkle/" electron-builder.yml
+          sed -i "s/productName: KokoroBox/productName: sparkle/" electron-builder.yml
 
       - name: Install Build Tools
         if: matrix.os == 'ubuntu-latest' && matrix.format == 'pacman'
@@ -233,8 +233,8 @@ jobs:
         with:
           name: ${{ matrix.os }}-${{ matrix.arch }}${{ matrix.format && '-' || '' }}${{ matrix.format || '' }}
           path: |
-            dist/sparkle*
-            !dist/sparkle.app.plist
-            !dist/sparkle*blockmap*
+            dist/kokorobox-desktop*
+            !dist/kokorobox-desktop.app.plist
+            !dist/kokorobox-desktop*blockmap*
             latest.yml
             changelog.md

@@ -1,4 +1,4 @@
-description: 提交 sparkle 漏洞
+description: 提交 KokoroBox 漏洞
 name: 错误反馈
 title: '[Bug] '
 body:
@@ -8,7 +8,7 @@ body:
       options:
         - label: 我已在标题简短的描述了我所遇到的问题
         - label: 我使用中文正确地描述了我所遇到的问题
-        - label: 我已在 [Issues](https://github.com/xishang0128/sparkle/issues?q=is%3Aissue) 中寻找过我要提出的问题，但未找到相同的问题
+        - label: 我已在 [Issues](https://github.com/amamiyakokoro/KokoroBox-Desktop/issues?q=is%3Aissue) 中寻找过我要提出的问题，但未找到相同的问题
         - label: 我已在 [常见问题](https://mihomo.party/docs/issues/common) 中寻找过我要提出的问题，并没有找到答案
         - label: 这是 GUI 程序的问题，而不是内核程序的问题
         - label: 我已经关闭所有杀毒软件/代理软件后测试过，问题依旧存在
@@ -30,8 +30,8 @@ body:
     validations:
       required: true
   - attributes:
-      description: 请提供出现问题的 sparkle 版本，需要具体到小版本号，如果没有该 issues 将会被直接关闭
-      label: 发生问题的 sparkle 版本
+      description: 请提供出现问题的 KokoroBox 版本，需要具体到小版本号，如果没有该 issues 将会被直接关闭
+      label: 发生问题的 KokoroBox 版本
     type: input
     validations:
       required: true

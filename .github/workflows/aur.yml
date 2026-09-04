@@ -49,10 +49,10 @@ jobs:
 
           if [[ "$PACKAGE" == sparkle-rolling-bin ]]; then
             release=$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/rolling")
-            release_version=$(jq -er '.assets[].name | select(endswith("-amd64.deb")) | sub("^sparkle-linux-"; "") | sub("-amd64.deb$"; "")' <<< "$release")
+            release_version=$(jq -er '.assets[].name | select(endswith("-amd64.deb")) | sub("^kokorobox-desktop-linux-"; "") | sub("-amd64.deb$"; "")' <<< "$release")
             pkgver=${release_version/-rolling-/.r$(git rev-list --count HEAD).}
-            amd64_sha256=$(jq -er --arg name "sparkle-linux-${release_version}-amd64.deb" '.assets[] | select(.name == $name).digest | sub("^sha256:"; "")' <<< "$release")
-            arm64_sha256=$(jq -er --arg name "sparkle-linux-${release_version}-arm64.deb" '.assets[] | select(.name == $name).digest | sub("^sha256:"; "")' <<< "$release")
+            amd64_sha256=$(jq -er --arg name "kokorobox-desktop-linux-${release_version}-amd64.deb" '.assets[] | select(.name == $name).digest | sub("^sha256:"; "")' <<< "$release")
+            arm64_sha256=$(jq -er --arg name "kokorobox-desktop-linux-${release_version}-arm64.deb" '.assets[] | select(.name == $name).digest | sub("^sha256:"; "")' <<< "$release")
             sed -i \
               -e "s/^pkgver=.*/pkgver=${pkgver}/" \
               -e "s/^_releasever=.*/_releasever=${release_version}/" \

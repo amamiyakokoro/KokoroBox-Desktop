@@ -33,7 +33,7 @@ export async function createDriver(navigate: NavigateFunction): Promise<Driver> 
       {
         element: 'none',
         popover: {
-          title: '欢迎使用 Kokoro',
+          title: '欢迎使用 KokoroBox',
           description:
             '这是一份交互式使用教程，如果您已经完全熟悉本软件的操作，可以直接点击右上角关闭按钮，后续您可以随时从设置中打开本教程',
           align: 'center'
@@ -88,7 +88,7 @@ export async function createDriver(navigate: NavigateFunction): Promise<Driver> 
         popover: {
           title: '订阅导入',
           description:
-            'Kokoro 支持多种订阅导入方式，在此输入订阅链接，点击导入即可导入您的订阅配置，如果您的订阅需要代理才能更新，请勾选"代理"再点击导入，当然这需要已经有一个可以正常使用的订阅才可以',
+            'KokoroBox 支持多种订阅导入方式，在此输入订阅链接，点击导入即可导入您的订阅配置，如果您的订阅需要代理才能更新，请勾选"代理"再点击导入，当然这需要已经有一个可以正常使用的订阅才可以',
           side: 'bottom',
           align: 'start'
         }
@@ -98,7 +98,7 @@ export async function createDriver(navigate: NavigateFunction): Promise<Driver> 
         popover: {
           title: 'Sub-Store',
           description:
-            'Kokoro 深度集成了 Sub-Store，您可以点击该按钮进入 Sub-Store 或直接导入您通过 Sub-Store 管理的订阅，Kokoro 默认使用内置的 Sub-Store 后端，如果您有自建的 Sub-Store 后端，可以在设置页面中配置，如果您不使用 Sub-Store 也可以在设置页面中关闭',
+            'KokoroBox 深度集成了 Sub-Store，您可以点击该按钮进入 Sub-Store 或直接导入您通过 Sub-Store 管理的订阅，KokoroBox 默认使用内置的 Sub-Store 后端，如果您有自建的 Sub-Store 后端，可以在设置页面中配置，如果您不使用 Sub-Store 也可以在设置页面中关闭',
           side: 'bottom',
           align: 'start'
         }
@@ -159,7 +159,7 @@ export async function createDriver(navigate: NavigateFunction): Promise<Driver> 
         popover: {
           title: '虚拟网卡设置',
           description:
-            '这里可以更改虚拟网卡相关设置，Kokoro 理论上已经完全解决权限问题，如果您的虚拟网卡仍然不可用，可以尝试重设防火墙（Windows）或手动授权内核（MacOS/Linux）后重启内核',
+            '这里可以更改虚拟网卡相关设置，KokoroBox 理论上已经完全解决权限问题，如果您的虚拟网卡仍然不可用，可以尝试重设防火墙（Windows）或手动授权内核（MacOS/Linux）后重启内核',
           side: 'bottom',
           align: 'start'
         }
@@ -169,7 +169,7 @@ export async function createDriver(navigate: NavigateFunction): Promise<Driver> 
         popover: {
           title: '覆写',
           description:
-            'Kokoro 提供强大的覆写功能，可以对您导入的订阅配置进行个性化修改，如添加规则、自定义代理组等，您可以直接导入别人写好的覆写文件，也可以自己动手编写，<b>编辑好覆写文件一定要记得在需要覆写的订阅上启用</b>，覆写文件的语法请参考 <a href="https://mihomo.party/docs/guide/override" target="_blank">官方文档</a>',
+            'KokoroBox 提供强大的覆写功能，可以对您导入的订阅配置进行个性化修改，如添加规则、自定义代理组等，您可以直接导入别人写好的覆写文件，也可以自己动手编写，<b>编辑好覆写文件一定要记得在需要覆写的订阅上启用</b>，覆写文件的语法请参考 <a href="https://mihomo.party/docs/guide/override" target="_blank">官方文档</a>',
           side: 'right',
           align: 'center'
         }

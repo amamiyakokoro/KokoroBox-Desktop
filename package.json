@@ -1,13 +1,13 @@
 {
-  "name": "sparkle",
+  "name": "kokorobox-desktop",
   "version": "1.26.8",
-  "description": "Kokoro",
+  "description": "KokoroBox",
   "main": "./out/main/index.js",
   "author": {
     "name": "xishang0128",
     "email": "xishang02@gmail.com"
   },
-  "homepage": "https://github.com/xishang0128/sparkle",
+  "homepage": "https://github.com/amamiyakokoro/KokoroBox-Desktop",
   "scripts": {
     "format": "prettier --write .",
     "lint": "eslint . --ext .js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix",

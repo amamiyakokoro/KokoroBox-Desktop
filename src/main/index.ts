@@ -90,12 +90,10 @@ async function scheduleLightweightMode(): Promise<void> {
   quitTimeout = setTimeout(enterLightweightMode, autoLightweightDelay * 1000)
 }
 
-const retainedUserDataPath = app.getPath('userData')
-const syncConfig = getAppConfigSync()
-
 // Keep the existing data directory so upgrades from Sparkle retain all user settings.
-app.setName('Kokoro')
-app.setPath('userData', retainedUserDataPath)
+app.setPath('userData', join(app.getPath('appData'), 'sparkle'))
+const syncConfig = getAppConfigSync()
+app.setName('KokoroBox')
 
 function exitApp(): void {
   disableSysProxySync()
