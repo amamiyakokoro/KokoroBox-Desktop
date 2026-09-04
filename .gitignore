@@ -8,3 +8,12 @@ out
 *.log*
 .idea
 *.ttf
+
+# Apple signing and notarization credentials
+*.p12
+*.pfx
+*.p8
+*.keychain
+*.keychain-db
+*.mobileprovision
+*.provisionprofile
