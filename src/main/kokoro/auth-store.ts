@@ -1,3 +1,4 @@
+import { tr } from '../../shared/i18n'
 import { existsSync } from 'fs'
 import { mkdir, readFile, rename, unlink, writeFile } from 'fs/promises'
 import { dirname } from 'path'
@@ -19,11 +20,11 @@ interface KokoroAuthEnvelope {
 
 function assertSecureStorageAvailable(): void {
   if (!safeStorage.isEncryptionAvailable()) {
-    throw new Error('系统安全存储不可用，无法保存 Kokoro 登录凭据')
+    throw new Error(tr('系统安全存储不可用，无法保存 Kokoro 登录凭据'))
   }
 
   if (process.platform === 'linux' && safeStorage.getSelectedStorageBackend?.() === 'basic_text') {
-    throw new Error('系统密钥环不可用，无法安全保存 Kokoro 登录凭据')
+    throw new Error(tr('系统密钥环不可用，无法安全保存 Kokoro 登录凭据'))
   }
 }
 
@@ -39,7 +40,7 @@ function normalizeCredentials(value: Partial<KokoroCredentials>): KokoroCredenti
     !Number.isFinite(accessExpiresAt) ||
     !Number.isFinite(refreshExpiresAt)
   ) {
-    throw new Error('Kokoro 登录凭据无效')
+    throw new Error(tr('Kokoro 登录凭据无效'))
   }
 
   return { accessToken, accessExpiresAt, refreshToken, refreshExpiresAt }
@@ -61,7 +62,7 @@ export async function loadKokoroCredentials(): Promise<KokoroCredentials | null>
     envelope.storage !== 'electron-safe-storage' ||
     !envelope.encrypted
   ) {
-    throw new Error('Kokoro 登录凭据存储格式无效')
+    throw new Error(tr('Kokoro 登录凭据存储格式无效'))
   }
 
   const decrypted = safeStorage.decryptString(Buffer.from(envelope.encrypted, 'base64'))

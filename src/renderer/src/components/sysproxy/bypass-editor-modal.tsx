@@ -1,3 +1,4 @@
+import { tr } from '../../../../shared/i18n'
 /* eslint-disable react/prop-types */
 import { useEffect, useState } from 'react'
 import { dump, load } from 'js-yaml'
@@ -29,10 +30,10 @@ const ByPassEditorModal: React.FC<Props> = (props) => {
       if (parsed && Array.isArray(parsed.bypass)) {
         onConfirm(parsed.bypass)
       } else {
-        notify('YAML 格式错误', { variant: 'danger' })
+        notify(tr('YAML 格式错误'), { variant: 'danger' })
       }
     } catch (e) {
-      notify('YAML 解析失败：' + e, { variant: 'danger' })
+      notify(tr('YAML 解析失败：') + e, { variant: 'danger' })
     }
   }
 
@@ -47,7 +48,7 @@ const ByPassEditorModal: React.FC<Props> = (props) => {
         <Modal.Container scroll="inside">
           <Modal.Dialog className="mt-4 h-[calc(100%-32px)] max-w-none w-[calc(100%-100px)]">
             <Modal.Header className="app-drag pb-0">
-              <Modal.Heading>编辑绕过列表 (YAML)</Modal.Heading>
+              <Modal.Heading>{tr('编辑绕过列表 (YAML)')}</Modal.Heading>
             </Modal.Header>
             <Modal.Body className="h-full">
               <BaseEditor
@@ -58,10 +59,10 @@ const ByPassEditorModal: React.FC<Props> = (props) => {
             </Modal.Body>
             <Modal.Footer className="pt-0 pb-0">
               <Button size="sm" variant="secondary" onPress={onCancel}>
-                取消
+                {tr('取消')}
               </Button>
               <Button size="sm" onPress={handleConfirm}>
-                确认
+                {tr('确认')}
               </Button>
             </Modal.Footer>
           </Modal.Dialog>

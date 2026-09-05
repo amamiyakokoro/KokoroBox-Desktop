@@ -1,3 +1,4 @@
+import { tr } from '../../../../shared/i18n'
 import {
   mihomoProxyProviders,
   mihomoUpdateProxyProviders,
@@ -85,7 +86,7 @@ const ProxyProvider: React.FC = () => {
       await mihomoUpdateProxyProviders(name)
       mutate()
     } catch (e) {
-      notify(`${name} 更新失败\n${e}`, { variant: 'danger' })
+      notify(tr('{0} 更新失败\n{1}', [name, e]), { variant: 'danger' })
     } finally {
       setUpdating((prev) => {
         prev[index] = false
@@ -134,7 +135,7 @@ const ProxyProvider: React.FC = () => {
           }
         />
       )}
-      <SettingItem compatKey="legacy" title="代理集合" divider>
+      <SettingItem compatKey="legacy" title={tr('代理集合')} divider>
         <Button
           size="sm"
           color="primary"
@@ -144,7 +145,7 @@ const ProxyProvider: React.FC = () => {
             })
           }}
         >
-          更新全部
+          {tr('更新全部')}
         </Button>
       </SettingItem>
       {providers.map((provider, index) => (
@@ -219,11 +220,11 @@ const ProxyProvider: React.FC = () => {
                 <div className="h-8 leading-8 text-foreground-500">
                   {provider.subscriptionInfo.Expire
                     ? dayjs.unix(provider.subscriptionInfo.Expire).format('YYYY-MM-DD')
-                    : '长期有效'}
+                    : tr('长期有效')}
                 </div>
               </SettingItem>
               <Meter
-                aria-label={`${provider.name} 流量使用`}
+                aria-label={tr('{0} 流量使用', [provider.name])}
                 className="w-full"
                 maxValue={provider.subscriptionInfo.Total}
                 value={provider.subscriptionInfo.Upload + provider.subscriptionInfo.Download}

@@ -20,6 +20,9 @@ KokoroBox is an Electron-based desktop client for [Mihomo](https://github.com/Me
 - **Profile tools** — flexible configuration overrides and integrated Sub-Store subscription management
 - **Backup and restore** — one-click configuration backup and restore through WebDAV
 - **Desktop experience** — multiple color themes and a modern React interface
+- **Chinese localization** — Simplified Chinese and Traditional Chinese (Taiwan), with automatic system-language selection
+
+Choose a language under **Application settings → Interface language**, then restart the app to apply it to every window and native menu. Subscription names, proxy names, and configuration contents retain their original text.
 
 ## Kokoro subscriptions
 

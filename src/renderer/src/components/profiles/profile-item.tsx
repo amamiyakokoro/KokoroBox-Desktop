@@ -1,3 +1,4 @@
+import { tr } from '../../../../shared/i18n'
 import {
   Button,
   Card,
@@ -82,21 +83,21 @@ const ProfileItem: React.FC<Props> = (props) => {
     const list = [
       {
         key: 'edit-info',
-        label: '编辑信息',
+        label: tr('编辑信息'),
         showDivider: false,
         color: 'default',
         className: ''
       } as MenuItem,
       {
         key: 'edit-file',
-        label: '编辑文件',
+        label: tr('编辑文件'),
         showDivider: false,
         color: 'default',
         className: ''
       } as MenuItem,
       {
         key: 'open-file',
-        label: '打开文件',
+        label: tr('打开文件'),
         showDivider: !(info.type === 'remote' && info.url),
         color: 'default',
         className: ''
@@ -105,7 +106,7 @@ const ProfileItem: React.FC<Props> = (props) => {
         ? [
             {
               key: 'qrcode',
-              label: '二维码',
+              label: tr('二维码'),
               showDivider: true,
               color: 'default',
               className: ''
@@ -114,7 +115,7 @@ const ProfileItem: React.FC<Props> = (props) => {
         : []),
       {
         key: 'delete',
-        label: '删除',
+        label: tr('删除'),
         showDivider: false,
         color: 'danger',
         className: 'text-danger'
@@ -123,7 +124,7 @@ const ProfileItem: React.FC<Props> = (props) => {
     if (info.home) {
       list.unshift({
         key: 'home',
-        label: '主页',
+        label: tr('主页'),
         showDivider: false,
         color: 'default',
         className: ''
@@ -207,9 +208,9 @@ const ProfileItem: React.FC<Props> = (props) => {
       {confirmOpen && (
         <ConfirmModal
           onChange={setConfirmOpen}
-          title="确认删除配置？"
-          confirmText="确认删除"
-          cancelText="取消"
+          title={tr('确认删除配置？')}
+          confirmText={tr('确认删除')}
+          cancelText={tr('取消')}
           onConfirm={() => {
             removeProfileItem(info.id)
             mutateProfileConfig()
@@ -301,7 +302,7 @@ const ProfileItem: React.FC<Props> = (props) => {
                       await patchAppConfig({ profileDisplayDate: 'update' })
                     }}
                   >
-                    {extra.expire ? dayjs.unix(extra.expire).format('YYYY-MM-DD') : '长期有效'}
+                    {extra.expire ? dayjs.unix(extra.expire).format('YYYY-MM-DD') : tr('长期有效')}
                   </Button>
                 ) : (
                   <Button
@@ -328,7 +329,7 @@ const ProfileItem: React.FC<Props> = (props) => {
                   variant="bordered"
                   className={`${isCurrent ? 'text-primary-foreground border-primary-foreground' : 'border-primary text-primary'}`}
                 >
-                  远程
+                  {tr('远程')}
                 </Chip>
                 <small>{dayjs(info.updated).fromNow()}</small>
               </div>
@@ -342,12 +343,12 @@ const ProfileItem: React.FC<Props> = (props) => {
                   variant="bordered"
                   className={`${isCurrent ? 'text-primary-foreground border-primary-foreground' : 'border-primary text-primary'}`}
                 >
-                  本地
+                  {tr('本地')}
                 </Chip>
               </div>
             )}
             {extra && (
-              <Meter aria-label="流量用量" maxValue={total} value={usage}>
+              <Meter aria-label={tr('流量用量')} maxValue={total} value={usage}>
                 <Meter.Track
                   className={
                     isCurrent

@@ -1,3 +1,4 @@
+import { tr } from '../../../../shared/i18n'
 import { Button, Card, CardBody, CardFooter, Tooltip } from '@heroui/react'
 import { IoJournalOutline } from 'react-icons/io5'
 import { useLocation, useNavigate } from 'react-router-dom'
@@ -32,7 +33,7 @@ const LogCard: React.FC<Props> = (props) => {
   if (iconOnly) {
     return (
       <div className={`${logCardStatus} flex justify-center`}>
-        <Tooltip content="日志" placement="right">
+        <Tooltip content={tr('日志')} placement="right">
           <Button
             size="sm"
             isIconOnly
@@ -84,7 +85,7 @@ const LogCard: React.FC<Props> = (props) => {
           <h3
             className={`text-md font-bold ${match ? 'text-primary-foreground' : 'text-foreground'}`}
           >
-            日志
+            {tr('日志')}
           </h3>
         </CardFooter>
       </Card>

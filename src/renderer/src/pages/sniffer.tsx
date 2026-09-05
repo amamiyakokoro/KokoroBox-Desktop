@@ -1,3 +1,4 @@
+import { tr } from '../../../shared/i18n'
 import { Button, Input, Switch } from '@heroui/react'
 import BasePage from '@renderer/components/base/base-page'
 import SettingCard from '@renderer/components/base/base-setting-card'
@@ -79,7 +80,7 @@ const Sniffer: React.FC = () => {
 
   return (
     <BasePage
-      title="域名嗅探设置"
+      title={tr('域名嗅探设置')}
       contentClassName="no-scrollbar"
       header={
         changed && (
@@ -102,13 +103,13 @@ const Sniffer: React.FC = () => {
               })
             }
           >
-            保存
+            {tr('保存')}
           </Button>
         )
       }
     >
       <SettingCard>
-        <SettingItem compatKey="legacy" title="覆盖连接地址" divider>
+        <SettingItem compatKey="legacy" title={tr('覆盖连接地址')} divider>
           <Switch
             size="sm"
             isSelected={values.overrideDestination}
@@ -128,7 +129,7 @@ const Sniffer: React.FC = () => {
             }}
           />
         </SettingItem>
-        <SettingItem compatKey="legacy" title="对真实 IP 映射嗅探" divider>
+        <SettingItem compatKey="legacy" title={tr('对真实 IP 映射嗅探')} divider>
           <Switch
             size="sm"
             isSelected={values.forceDNSMapping}
@@ -137,7 +138,7 @@ const Sniffer: React.FC = () => {
             }}
           />
         </SettingItem>
-        <SettingItem compatKey="legacy" title="对未映射 IP 地址嗅探" divider>
+        <SettingItem compatKey="legacy" title={tr('对未映射 IP 地址嗅探')} divider>
           <Switch
             size="sm"
             isSelected={values.parsePureIP}
@@ -146,56 +147,56 @@ const Sniffer: React.FC = () => {
             }}
           />
         </SettingItem>
-        <SettingItem compatKey="legacy" title="HTTP 端口嗅探" divider>
+        <SettingItem compatKey="legacy" title={tr('HTTP 端口嗅探')} divider>
           <Input
             size="sm"
             className="w-[50%]"
-            placeholder="端口号，使用逗号分割多个值"
+            placeholder={tr('端口号，使用逗号分割多个值')}
             value={values.sniff.HTTP?.ports.join(',')}
             onValueChange={(v) => handleSniffPortChange('HTTP', v)}
           />
         </SettingItem>
-        <SettingItem compatKey="legacy" title="TLS 端口嗅探" divider>
+        <SettingItem compatKey="legacy" title={tr('TLS 端口嗅探')} divider>
           <Input
             size="sm"
             className="w-[50%]"
-            placeholder="端口号，使用逗号分割多个值"
+            placeholder={tr('端口号，使用逗号分割多个值')}
             value={values.sniff.TLS?.ports.join(',')}
             onValueChange={(v) => handleSniffPortChange('TLS', v)}
           />
         </SettingItem>
-        <SettingItem compatKey="legacy" title="QUIC 端口嗅探" divider>
+        <SettingItem compatKey="legacy" title={tr('QUIC 端口嗅探')} divider>
           <Input
             size="sm"
             className="w-[50%]"
-            placeholder="端口号，使用逗号分割多个值"
+            placeholder={tr('端口号，使用逗号分割多个值')}
             value={values.sniff.QUIC?.ports.join(',')}
             onValueChange={(v) => handleSniffPortChange('QUIC', v)}
           />
         </SettingItem>
         <EditableList
-          title="跳过域名嗅探"
+          title={tr('跳过域名嗅探')}
           items={values.skipDomain}
           onChange={(list) => setValues({ ...values, skipDomain: list as string[] })}
-          placeholder="例：+.push.apple.com"
+          placeholder={tr('例：+.push.apple.com')}
         />
         <EditableList
-          title="强制域名嗅探"
+          title={tr('强制域名嗅探')}
           items={values.forceDomain}
           onChange={(list) => setValues({ ...values, forceDomain: list as string[] })}
-          placeholder="例：v2ex.com"
+          placeholder={tr('例：v2ex.com')}
         />
         <EditableList
-          title="跳过目标地址嗅探"
+          title={tr('跳过目标地址嗅探')}
           items={values.skipDstAddress}
           onChange={(list) => setValues({ ...values, skipDstAddress: list as string[] })}
-          placeholder="例：1.1.1.1/32"
+          placeholder={tr('例：1.1.1.1/32')}
         />
         <EditableList
-          title="跳过来源地址嗅探"
+          title={tr('跳过来源地址嗅探')}
           items={values.skipSrcAddress}
           onChange={(list) => setValues({ ...values, skipSrcAddress: list as string[] })}
-          placeholder="例：192.168.1.1/24"
+          placeholder={tr('例：192.168.1.1/24')}
           divider={false}
         />
       </SettingCard>

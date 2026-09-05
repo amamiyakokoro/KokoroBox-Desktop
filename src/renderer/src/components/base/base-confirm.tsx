@@ -1,3 +1,4 @@
+import { tr } from '../../../../shared/i18n'
 import React from 'react'
 import { Button, Modal } from '@heroui-v3/react'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
@@ -36,10 +37,10 @@ interface Props {
 const ConfirmModal: React.FC<Props> = (props) => {
   const {
     onChange,
-    title = '请确认',
+    title = tr('请确认'),
     description,
-    confirmText = '确认',
-    cancelText = '取消',
+    confirmText = tr('确认'),
+    cancelText = tr('取消'),
     onConfirm,
     buttons,
     className

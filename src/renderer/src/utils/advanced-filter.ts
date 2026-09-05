@@ -1,3 +1,4 @@
+import { tr } from '../../../shared/i18n'
 type FilterExpression =
   | { type: 'literal'; value: unknown }
   | { type: 'path'; segments: Array<string | number> }
@@ -59,7 +60,7 @@ class FilterParser {
     const expression = this.parseOr()
 
     if (this.current().type !== 'eof') {
-      throw new FilterSyntaxError('存在无法识别的多余内容', this.current().position)
+      throw new FilterSyntaxError(tr('存在无法识别的多余内容'), this.current().position)
     }
 
     return expression
@@ -131,7 +132,7 @@ class FilterParser {
     if (token.type === 'lparen') {
       this.index += 1
       const expression = this.parseOr()
-      this.expect('rparen', '缺少右括号 ")"')
+      this.expect('rparen', tr('缺少右括号 ")"'))
       return expression
     }
 
@@ -154,12 +155,12 @@ class FilterParser {
       return { type: 'literal', value: token.value }
     }
 
-    throw new FilterSyntaxError('缺少合法表达式', token.position)
+    throw new FilterSyntaxError(tr('缺少合法表达式'), token.position)
   }
 
   private parsePath(): FilterExpression {
     const segments: Array<string | number> = []
-    this.expect('dot', '路径必须以 "." 开头')
+    this.expect('dot', tr('路径必须以 "." 开头'))
 
     let expectSegment = false
 
@@ -178,13 +179,13 @@ class FilterParser {
           segments.push(token.value)
           this.index += 1
         } else {
-          throw new FilterSyntaxError('方括号中只支持数字下标或字符串键名', token.position)
+          throw new FilterSyntaxError(tr('方括号中只支持数字下标或字符串键名'), token.position)
         }
 
-        this.expect('rbracket', '缺少右方括号 "]"')
+        this.expect('rbracket', tr('缺少右方括号 "]"'))
         expectSegment = false
       } else if (expectSegment) {
-        throw new FilterSyntaxError('点号后缺少字段名', this.current().position)
+        throw new FilterSyntaxError(tr('点号后缺少字段名'), this.current().position)
       } else {
         break
       }
@@ -252,7 +253,7 @@ class FilterParser {
   }
 
   private consume<T extends FilterToken['type']>(type: T): Extract<FilterToken, { type: T }> {
-    return this.expect(type, `缺少 ${type}`)
+    return this.expect(type, tr('缺少 {0}', [type]))
   }
 }
 
@@ -272,7 +273,7 @@ function parseQuotedString(input: string, start: number): { value: string; nextI
       const escaped = input[index + 1]
 
       if (!escaped) {
-        throw new FilterSyntaxError('字符串转义不完整', index)
+        throw new FilterSyntaxError(tr('字符串转义不完整'), index)
       }
 
       switch (escaped) {
@@ -303,7 +304,7 @@ function parseQuotedString(input: string, start: number): { value: string; nextI
     index += 1
   }
 
-  throw new FilterSyntaxError('字符串缺少结束引号', start)
+  throw new FilterSyntaxError(tr('字符串缺少结束引号'), start)
 }
 
 function tokenize(input: string): FilterToken[] {
@@ -440,7 +441,7 @@ function tokenize(input: string): FilterToken[] {
       continue
     }
 
-    throw new FilterSyntaxError(`存在无法识别的字符 "${input[index]}"`, index)
+    throw new FilterSyntaxError(tr('存在无法识别的字符 "{0}"', [input[index]]), index)
   }
 
   tokens.push({ type: 'eof', position: len })
@@ -719,10 +720,10 @@ function looksLikeAdvancedFilter(input: string): boolean {
 
 function formatFilterError(error: unknown): string {
   if (error instanceof FilterSyntaxError) {
-    return `高级筛选语法错误：${error.message}（第 ${error.position + 1} 位）`
+    return tr('高级筛选语法错误：{0}（第 {1} 位）', [error.message, error.position + 1])
   }
 
-  return '高级筛选解析失败'
+  return tr('高级筛选解析失败')
 }
 
 export function compileAdvancedFilter<T>(

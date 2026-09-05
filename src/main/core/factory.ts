@@ -1,3 +1,4 @@
+import { tr } from '../../shared/i18n'
 import {
   getControledMihomoConfig,
   getProfileConfig,
@@ -366,7 +367,7 @@ async function runOverrideScript(
       Buffer
     }
     vm.createContext(ctx)
-    log('info', '开始执行脚本', 'w')
+    log('info', tr('开始执行脚本'), 'w')
     vm.runInContext(script, ctx)
     const promise = vm.runInContext(
       `(async () => {
@@ -378,12 +379,12 @@ async function runOverrideScript(
     )
     const newProfile = await promise
     if (typeof newProfile !== 'object') {
-      throw new Error('脚本返回值必须是对象')
+      throw new Error(tr('脚本返回值必须是对象'))
     }
-    log('info', '脚本执行成功')
+    log('info', tr('脚本执行成功'))
     return newProfile
   } catch (e) {
-    log('exception', `脚本执行失败：${e}`)
+    log('exception', tr('脚本执行失败：{0}', [e]))
     return profile
   }
 }

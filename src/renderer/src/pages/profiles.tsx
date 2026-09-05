@@ -1,3 +1,4 @@
+import { tr } from '../../../shared/i18n'
 import {
   Button,
   Checkbox,
@@ -75,7 +76,7 @@ const Profiles: React.FC = () => {
     const items: { icon?: ReactNode; key: string; children: ReactNode; divider: boolean }[] = [
       {
         key: 'open-substore',
-        children: '访问 Sub-Store',
+        children: tr('访问 Sub-Store'),
         icon: <SubStoreIcon className="text-lg" />,
         divider:
           (Boolean(subs) && subs.length > 0) || (Boolean(collections) && collections.length > 0)
@@ -202,10 +203,10 @@ const Profiles: React.FC = () => {
             const content = await readTextFile(path)
             await addProfileItem({ name: file.name, type: 'local', file: content })
           } catch (e) {
-            notify('文件导入失败' + e, { variant: 'danger' })
+            notify(tr('文件导入失败') + e, { variant: 'danger' })
           }
         } else {
-          notify('不支持的文件类型', { variant: 'danger' })
+          notify(tr('不支持的文件类型'), { variant: 'danger' })
         }
       } else {
         const droppedUrl =
@@ -227,7 +228,7 @@ const Profiles: React.FC = () => {
           })
           setShowEditModal(true)
         } catch {
-          notify('未检测到有效的订阅链接', { variant: 'danger' })
+          notify(tr('未检测到有效的订阅链接'), { variant: 'danger' })
         }
       }
       setFileOver(false)
@@ -246,7 +247,7 @@ const Profiles: React.FC = () => {
   return (
     <BasePage
       ref={pageRef}
-      title="订阅管理"
+      title={tr('订阅管理')}
       contentClassName="no-scrollbar"
       header={
         <>
@@ -343,7 +344,7 @@ const Profiles: React.FC = () => {
                   checked={useProxy}
                   onValueChange={setUseProxy}
                 >
-                  代理
+                  {tr('代理')}
                 </Checkbox>
               </>
             }
@@ -357,7 +358,7 @@ const Profiles: React.FC = () => {
             isLoading={importing}
             onPress={() => handleImport(url)}
           >
-            导入
+            {tr('导入')}
           </Button>
           {useSubStore && (
             <Dropdown
@@ -463,7 +464,7 @@ const Profiles: React.FC = () => {
                   case 'new': {
                     {
                       await addProfileItem({
-                        name: '新配置',
+                        name: tr('新配置'),
                         type: 'local',
                         file: 'proxies: []\nproxy-groups: []\nrules: []'
                       })
@@ -487,11 +488,11 @@ const Profiles: React.FC = () => {
               }}
             >
               <DropdownItem key="kokoro" showDivider>
-                登录 Kokoro 获取订阅
+                {tr('登录 Kokoro 获取订阅')}
               </DropdownItem>
-              <DropdownItem key="open">打开本地配置</DropdownItem>
-              <DropdownItem key="new">新建本地配置</DropdownItem>
-              <DropdownItem key="import">导入远程配置</DropdownItem>
+              <DropdownItem key="open">{tr('打开本地配置')}</DropdownItem>
+              <DropdownItem key="new">{tr('新建本地配置')}</DropdownItem>
+              <DropdownItem key="import">{tr('导入远程配置')}</DropdownItem>
             </DropdownMenu>
           </Dropdown>
         </div>

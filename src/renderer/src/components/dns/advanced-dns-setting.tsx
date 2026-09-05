@@ -1,3 +1,4 @@
+import { tr } from '../../../../shared/i18n'
 import React, { useState } from 'react'
 import SettingCard from '../base/base-setting-card'
 import SettingItem from '../base/base-setting-item'
@@ -69,8 +70,8 @@ const AdvancedDnsSetting: React.FC<AdvancedDnsSettingProps> = ({
   ])
 
   return (
-    <SettingCard header="更多设置">
-      <SettingItem compatKey="legacy" title="连接遵守规则" divider>
+    <SettingCard header={tr('更多设置')}>
+      <SettingItem compatKey="legacy" title={tr('连接遵守规则')} divider>
         <Switch
           size="sm"
           isSelected={respectRules}
@@ -79,7 +80,7 @@ const AdvancedDnsSetting: React.FC<AdvancedDnsSettingProps> = ({
         />
       </SettingItem>
       <EditableList
-        title="直连解析服务器"
+        title={tr('直连解析服务器')}
         items={directNameserver}
         validate={(part) => isValidDnsServer(part as string)}
         onChange={(list) => {
@@ -87,13 +88,13 @@ const AdvancedDnsSetting: React.FC<AdvancedDnsSettingProps> = ({
           onDirectNameserverChange(arr)
           const firstInvalid = arr.find((f) => !isValidDnsServer(f).ok)
           setDirectNameserverError(
-            firstInvalid ? (isValidDnsServer(firstInvalid).error ?? '格式错误') : null
+            firstInvalid ? (isValidDnsServer(firstInvalid).error ?? tr('格式错误')) : null
           )
         }}
-        placeholder="例：tls://dns.alidns.com"
+        placeholder={tr('例：tls://dns.alidns.com')}
       />
       <EditableList
-        title="代理节点解析服务器"
+        title={tr('代理节点解析服务器')}
         items={proxyServerNameserver}
         validate={(part) => isValidDnsServer(part as string)}
         onChange={(list) => {
@@ -101,14 +102,14 @@ const AdvancedDnsSetting: React.FC<AdvancedDnsSettingProps> = ({
           onProxyNameserverChange(arr)
           const firstInvalid = arr.find((f) => !isValidDnsServer(f).ok)
           setProxyNameserverError(
-            firstInvalid ? (isValidDnsServer(firstInvalid).error ?? '格式错误') : null
+            firstInvalid ? (isValidDnsServer(firstInvalid).error ?? tr('格式错误')) : null
           )
         }}
-        placeholder="例：tls://dns.alidns.com"
+        placeholder={tr('例：tls://dns.alidns.com')}
       />
       {proxyServerNameserver.length > 0 && (
         <EditableList
-          title="代理节点解析策略"
+          title={tr('代理节点解析策略')}
           items={proxyServerNameserverPolicy}
           validate={(part1) => isValidDomainWildcard(part1)}
           validatePart2={(part2) => {
@@ -131,7 +132,7 @@ const AdvancedDnsSetting: React.FC<AdvancedDnsSettingProps> = ({
               for (const domain of Object.keys(rec)) {
                 if (!isValidDomainWildcard(domain).ok) {
                   setProxyNameserverPolicyError(
-                    isValidDomainWildcard(domain).error ?? '域名格式错误'
+                    isValidDomainWildcard(domain).error ?? tr('域名格式错误')
                   )
                   return
                 }
@@ -140,7 +141,7 @@ const AdvancedDnsSetting: React.FC<AdvancedDnsSettingProps> = ({
                 if (Array.isArray(v)) {
                   for (const vv of v) {
                     if (!isValidDnsServer(vv).ok) {
-                      setProxyNameserverPolicyError(isValidDnsServer(vv).error ?? '格式错误')
+                      setProxyNameserverPolicyError(isValidDnsServer(vv).error ?? tr('格式错误'))
                       return
                     }
                   }
@@ -151,7 +152,7 @@ const AdvancedDnsSetting: React.FC<AdvancedDnsSettingProps> = ({
                     .filter(Boolean)
                   for (const p of parts) {
                     if (!isValidDnsServer(p).ok) {
-                      setProxyNameserverPolicyError(isValidDnsServer(p).error ?? '格式错误')
+                      setProxyNameserverPolicyError(isValidDnsServer(p).error ?? tr('格式错误'))
                       return
                     }
                   }
@@ -159,16 +160,16 @@ const AdvancedDnsSetting: React.FC<AdvancedDnsSettingProps> = ({
               }
               setProxyNameserverPolicyError(null)
             } catch (e) {
-              setProxyNameserverPolicyError('策略格式错误')
+              setProxyNameserverPolicyError(tr('策略格式错误'))
             }
           }}
-          placeholder="域名"
-          part2Placeholder="DNS 服务器，用逗号分隔"
+          placeholder={tr('域名')}
+          part2Placeholder={tr('DNS 服务器，用逗号分隔')}
           objectMode="record"
         />
       )}
       <EditableList
-        title="域名解析策略"
+        title={tr('域名解析策略')}
         items={nameserverPolicy}
         validatePart1={(part1) => isValidDomainWildcard(part1)}
         validatePart2={(part2) => {
@@ -190,7 +191,7 @@ const AdvancedDnsSetting: React.FC<AdvancedDnsSettingProps> = ({
             const rec = newValue as Record<string, string | string[]>
             for (const domain of Object.keys(rec)) {
               if (!isValidDomainWildcard(domain).ok) {
-                setNameserverPolicyError(isValidDomainWildcard(domain).error ?? '域名格式错误')
+                setNameserverPolicyError(isValidDomainWildcard(domain).error ?? tr('域名格式错误'))
                 return
               }
             }
@@ -198,7 +199,7 @@ const AdvancedDnsSetting: React.FC<AdvancedDnsSettingProps> = ({
               if (Array.isArray(v)) {
                 for (const vv of v) {
                   if (!isValidDnsServer(vv).ok) {
-                    setNameserverPolicyError(isValidDnsServer(vv).error ?? '格式错误')
+                    setNameserverPolicyError(isValidDnsServer(vv).error ?? tr('格式错误'))
                     return
                   }
                 }
@@ -209,7 +210,7 @@ const AdvancedDnsSetting: React.FC<AdvancedDnsSettingProps> = ({
                   .filter(Boolean)
                 for (const p of parts) {
                   if (!isValidDnsServer(p).ok) {
-                    setNameserverPolicyError(isValidDnsServer(p).error ?? '格式错误')
+                    setNameserverPolicyError(isValidDnsServer(p).error ?? tr('格式错误'))
                     return
                   }
                 }
@@ -217,17 +218,17 @@ const AdvancedDnsSetting: React.FC<AdvancedDnsSettingProps> = ({
             }
             setNameserverPolicyError(null)
           } catch (e) {
-            setNameserverPolicyError('策略格式错误')
+            setNameserverPolicyError(tr('策略格式错误'))
           }
         }}
-        placeholder="域名"
-        part2Placeholder="DNS 服务器，用逗号分隔"
+        placeholder={tr('域名')}
+        part2Placeholder={tr('DNS 服务器，用逗号分隔')}
         objectMode="record"
       />
-      <SettingItem compatKey="legacy" title="使用系统 Hosts" divider>
+      <SettingItem compatKey="legacy" title={tr('使用系统 Hosts')} divider>
         <Switch size="sm" isSelected={useSystemHosts} onValueChange={onUseSystemHostsChange} />
       </SettingItem>
-      <SettingItem compatKey="legacy" title="自定义 Hosts">
+      <SettingItem compatKey="legacy" title={tr('自定义 Hosts')}>
         <Switch size="sm" isSelected={useHosts} onValueChange={onUseHostsChange} />
       </SettingItem>
       {useHosts && (
@@ -244,14 +245,14 @@ const AdvancedDnsSetting: React.FC<AdvancedDnsSettingProps> = ({
             onHostsChange(hostArr)
             for (const domain of Object.keys(rec as Record<string, string | string[]>)) {
               if (!isValidDomainWildcard(domain).ok) {
-                setHostsError(isValidDomainWildcard(domain).error ?? '域名格式错误')
+                setHostsError(isValidDomainWildcard(domain).error ?? tr('域名格式错误'))
                 return
               }
             }
             setHostsError(null)
           }}
-          placeholder="域名"
-          part2Placeholder="域名或 IP，用逗号分隔多个值"
+          placeholder={tr('域名')}
+          part2Placeholder={tr('域名或 IP，用逗号分隔多个值')}
           objectMode="record"
           divider={false}
         />

@@ -1,3 +1,4 @@
+import { tr } from '../../shared/i18n'
 import { is } from '@electron-toolkit/utils'
 import { existsSync, mkdirSync, readdirSync } from 'fs'
 import { app } from 'electron'
@@ -113,12 +114,14 @@ export function mihomoCorePath(core: string): string {
   if (core === 'system') {
     const sysPath = systemCorePath()
     if (!sysPath || !existsSync(sysPath)) {
-      const errorMsg = sysPath ? `系统内核路径无效或不存在: ${sysPath}` : '系统内核路径未设置'
+      const errorMsg = sysPath
+        ? tr('系统内核路径无效或不存在: {0}', [sysPath])
+        : tr('系统内核路径未设置')
       throw new Error(errorMsg)
     }
     return sysPath
   }
-  throw new Error('内核路径错误')
+  throw new Error(tr('内核路径错误'))
 }
 
 function systemCorePath(): string {

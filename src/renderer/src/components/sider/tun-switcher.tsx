@@ -1,3 +1,4 @@
+import { tr } from '../../../../shared/i18n'
 import { Button, Card, CardBody, CardFooter, Tooltip } from '@heroui/react'
 import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'
 import BorderSwitch from '@renderer/components/base/border-swtich'
@@ -48,7 +49,7 @@ const TunSwitcher: React.FC<Props> = (props) => {
   if (iconOnly) {
     return (
       <div className={`${tunCardStatus} flex justify-center`}>
-        <Tooltip content="虚拟网卡" placement="right">
+        <Tooltip content={tr('虚拟网卡')} placement="right">
           <Button
             size="sm"
             isIconOnly
@@ -105,7 +106,7 @@ const TunSwitcher: React.FC<Props> = (props) => {
           <h3
             className={`text-md font-bold ${match ? 'text-primary-foreground' : 'text-foreground'}`}
           >
-            虚拟网卡
+            {tr('虚拟网卡')}
           </h3>
         </CardFooter>
       </Card>

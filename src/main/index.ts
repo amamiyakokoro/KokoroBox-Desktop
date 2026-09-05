@@ -1,3 +1,4 @@
+import { getLocale, resolveLocale, setLocale, tr } from '../shared/i18n'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { registerIpcMainHandlers } from './utils/ipc'
 import { app, shell, BrowserWindow, Menu, type IpcMainEvent } from 'electron'
@@ -93,6 +94,7 @@ async function scheduleLightweightMode(): Promise<void> {
 // Keep the existing data directory so upgrades from Sparkle retain all user settings.
 app.setPath('userData', join(app.getPath('appData'), 'sparkle'))
 const syncConfig = getAppConfigSync()
+setLocale(resolveLocale(syncConfig.language, app.getPreferredSystemLanguages()))
 app.setName('KokoroBox')
 
 function exitApp(): void {
@@ -179,7 +181,7 @@ app.whenReady().then(async () => {
   try {
     appConfig = await initPromise
   } catch (e) {
-    void showNotification({ title: '应用初始化失败', body: `${e}`, variant: 'danger' })
+    void showNotification({ title: tr('应用初始化失败'), body: `${e}`, variant: 'danger' })
     app.quit()
     return
   }
@@ -208,7 +210,7 @@ app.whenReady().then(async () => {
       })
       coreStarted = true
     } catch (e) {
-      void showNotification({ title: '内核启动出错', body: `${e}`, variant: 'danger' })
+      void showNotification({ title: tr('内核启动出错'), body: `${e}`, variant: 'danger' })
     }
   })()
 
@@ -291,6 +293,7 @@ export async function createWindow(appConfig?: AppConfig): Promise<void> {
       autoHideMenuBar: true,
       ...(process.platform === 'linux' ? { icon: icon } : {}),
       webPreferences: {
+        additionalArguments: [`--kokorobox-locale=${getLocale()}`],
         preload: join(__dirname, '../preload/index.js'),
         spellcheck: false,
         sandbox: false,

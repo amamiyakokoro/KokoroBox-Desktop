@@ -1,3 +1,4 @@
+import { tr } from '../../../shared/i18n'
 import BasePage from '@renderer/components/base/base-page'
 import { mihomoCloseConnections, mihomoCloseConnection } from '@renderer/utils/ipc'
 import React, { Key, KeyboardEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
@@ -875,7 +876,7 @@ const Connections: React.FC = () => {
 
   return (
     <BasePage
-      title="连接"
+      title={tr('连接')}
       header={
         <>
           <div className="flex">
@@ -899,7 +900,7 @@ const Connections: React.FC = () => {
                 isIconOnly
                 size="sm"
                 variant="light"
-                aria-label={tab === 'active' ? '关闭所有连接' : '清空记录'}
+                aria-label={tab === 'active' ? tr('关闭所有连接') : tr('清空记录')}
                 onPress={() => {
                   if (filter === '') {
                     closeAllConnections()
@@ -923,7 +924,7 @@ const Connections: React.FC = () => {
             isIconOnly
             className="app-nodrag ml-2"
             variant="light"
-            aria-label={paused ? '继续' : '暂停'}
+            aria-label={paused ? tr('继续') : tr('暂停')}
             onPress={() =>
               setPaused((p) => {
                 pausedRef.current = !p
@@ -938,7 +939,7 @@ const Connections: React.FC = () => {
             isIconOnly
             className="app-nodrag"
             variant="light"
-            aria-label="连接设置"
+            aria-label={tr('连接设置')}
             onPress={() => {
               setIsSettingDrawerOpen(true)
               setSettingDrawerReopenSignal((signal) => signal + 1)
@@ -979,7 +980,7 @@ const Connections: React.FC = () => {
                   content={activeConnections.length}
                   showOutline={false}
                 >
-                  <span className="p-1">活动中</span>
+                  <span className="p-1">{tr('活动中')}</span>
                 </Badge>
               }
             />
@@ -994,13 +995,13 @@ const Connections: React.FC = () => {
                   content={closedConnections.length}
                   showOutline={false}
                 >
-                  <span className="p-1">已关闭</span>
+                  <span className="p-1">{tr('已关闭')}</span>
                 </Badge>
               }
             />
           </Tabs>
           <Tooltip
-            content={compiledFilter.error ?? '格式错误'}
+            content={compiledFilter.error ?? tr('格式错误')}
             placement="left"
             isOpen={Boolean(compiledFilter.error)}
             showArrow={true}
@@ -1022,7 +1023,7 @@ const Connections: React.FC = () => {
                   input: 'font-mono text-sm tracking-normal focus-visible:!outline-none'
                 }}
                 value={filter}
-                placeholder="筛选过滤"
+                placeholder={tr('筛选过滤')}
                 isClearable
                 isInvalid={Boolean(compiledFilter.error)}
                 onValueChange={handleFilterValueChange}
@@ -1064,7 +1065,7 @@ const Connections: React.FC = () => {
           </Tooltip>
 
           <Select
-            aria-label="排序字段"
+            aria-label={tr('排序字段')}
             classNames={{ trigger: 'data-[hover=true]:bg-default-200' }}
             size="sm"
             className="w-34 min-w-24 shrink-0"
@@ -1072,18 +1073,18 @@ const Connections: React.FC = () => {
             disallowEmptySelection={true}
             onSelectionChange={handleOrderByChange}
           >
-            <SelectItem key="upload">上传量</SelectItem>
-            <SelectItem key="download">下载量</SelectItem>
-            <SelectItem key="uploadSpeed">上传速度</SelectItem>
-            <SelectItem key="downloadSpeed">下载速度</SelectItem>
-            <SelectItem key="time">时间</SelectItem>
-            <SelectItem key="process">进程名称</SelectItem>
+            <SelectItem key="upload">{tr('上传量')}</SelectItem>
+            <SelectItem key="download">{tr('下载量')}</SelectItem>
+            <SelectItem key="uploadSpeed">{tr('上传速度')}</SelectItem>
+            <SelectItem key="downloadSpeed">{tr('下载速度')}</SelectItem>
+            <SelectItem key="time">{tr('时间')}</SelectItem>
+            <SelectItem key="process">{tr('进程名称')}</SelectItem>
           </Select>
           <Button
             size="sm"
             isIconOnly
             className="bg-content2"
-            aria-label={connectionDirection === 'asc' ? '升序' : '降序'}
+            aria-label={connectionDirection === 'asc' ? tr('升序') : tr('降序')}
             onPress={handleDirectionToggle}
           >
             {connectionDirection === 'asc' ? (
@@ -1108,7 +1109,7 @@ const Connections: React.FC = () => {
             />
           ) : (
             <div className="h-full flex items-center justify-center text-foreground-500">
-              {filter === '' ? '暂无连接' : '没有匹配的进程'}
+              {filter === '' ? tr('暂无连接') : tr('没有匹配的进程')}
             </div>
           )
         ) : (

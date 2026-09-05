@@ -1,3 +1,4 @@
+import { tr } from '../../../../shared/i18n'
 import { Button, Drawer } from '@heroui-v3/react'
 import React, { useEffect, useState } from 'react'
 import { FiCheck, FiCopy } from 'react-icons/fi'
@@ -36,7 +37,7 @@ const ErrorDetailDrawer: React.FC<Props> = (props) => {
       <Drawer.Content placement="right" className="top-12 h-[calc(100%-48px)] p-3 pl-0">
         <Drawer.Dialog className="flex h-full w-[min(520px,calc(100vw-32px))] max-w-none flex-col overflow-hidden rounded-2xl! border border-separator/70 bg-overlay p-0 shadow-overlay">
           <Drawer.Header className="border-b border-separator/70 px-5 py-4">
-            <Drawer.Heading className="text-base font-semibold">错误详情</Drawer.Heading>
+            <Drawer.Heading className="text-base font-semibold">{tr('错误详情')}</Drawer.Heading>
           </Drawer.Header>
           <Drawer.Body className="no-scrollbar flex-1 overflow-y-auto px-5 py-4 text-foreground">
             <div className="mb-3 text-sm font-medium">{props.title}</div>
@@ -51,7 +52,7 @@ const ErrorDetailDrawer: React.FC<Props> = (props) => {
               className="h-8 min-w-0 px-3 text-sm leading-none"
               onPress={() => props.onOpenChange(false)}
             >
-              关闭
+              {tr('关闭')}
             </Button>
             <Button
               size="sm"
@@ -59,7 +60,7 @@ const ErrorDetailDrawer: React.FC<Props> = (props) => {
               onPress={handleCopy}
             >
               {copied ? <FiCheck /> : <FiCopy />}
-              {copied ? '已复制' : '复制'}
+              {copied ? tr('已复制') : tr('复制')}
             </Button>
           </Drawer.Footer>
         </Drawer.Dialog>

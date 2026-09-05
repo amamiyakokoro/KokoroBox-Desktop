@@ -1,3 +1,4 @@
+import { tr } from '../../../../shared/i18n'
 import React, { useState } from 'react'
 import SettingCard from '../base/base-setting-card'
 import SettingItem from '../base/base-setting-item'
@@ -31,8 +32,8 @@ const EnvSetting: React.FC = () => {
   const [safePathsInput, setSafePathsInput] = useState(safePaths)
 
   return (
-    <SettingCard header="环境变量">
-      <SettingItem compatKey="legacy" title="禁用系统 CA" divider>
+    <SettingCard header={tr('环境变量')}>
+      <SettingItem compatKey="legacy" title={tr('禁用系统 CA')} divider>
         <Switch
           size="sm"
           isSelected={disableSystemCA}
@@ -41,7 +42,7 @@ const EnvSetting: React.FC = () => {
           }}
         />
       </SettingItem>
-      <SettingItem compatKey="legacy" title="禁用内置 CA" divider>
+      <SettingItem compatKey="legacy" title={tr('禁用内置 CA')} divider>
         <Switch
           size="sm"
           isSelected={disableEmbedCA}
@@ -50,7 +51,7 @@ const EnvSetting: React.FC = () => {
           }}
         />
       </SettingItem>
-      <SettingItem compatKey="legacy" title="禁用回环检测" divider>
+      <SettingItem compatKey="legacy" title={tr('禁用回环检测')} divider>
         <Switch
           size="sm"
           isSelected={disableLoopbackDetector}
@@ -60,7 +61,7 @@ const EnvSetting: React.FC = () => {
         />
       </SettingItem>
       {platform == 'linux' && (
-        <SettingItem compatKey="legacy" title="禁用 nftables" divider>
+        <SettingItem compatKey="legacy" title={tr('禁用 nftables')} divider>
           <Switch
             size="sm"
             isSelected={disableNftables}
@@ -70,7 +71,7 @@ const EnvSetting: React.FC = () => {
           />
         </SettingItem>
       )}
-      <SettingItem compatKey="legacy" title="可信路径">
+      <SettingItem compatKey="legacy" title={tr('可信路径')}>
         {safePathsInput.join('') != safePaths.join('') && (
           <Button
             size="sm"
@@ -79,7 +80,7 @@ const EnvSetting: React.FC = () => {
               handleConfigChangeWithRestart('safePaths', safePathsInput)
             }}
           >
-            确认
+            {tr('确认')}
           </Button>
         )}
       </SettingItem>

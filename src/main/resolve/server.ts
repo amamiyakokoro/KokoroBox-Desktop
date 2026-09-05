@@ -1,3 +1,4 @@
+import { tr } from '../../shared/i18n'
 import { getAppConfig, getControledMihomoConfig } from '../config'
 import { Worker } from 'worker_threads'
 import {
@@ -46,7 +47,7 @@ async function downloadReleaseAsset(repo: string, file: string, mixedPort: numbe
   )
   const asset = release.assets.find((asset) => asset.name === file)
   if (!asset?.browser_download_url || !asset.digest?.match(/^sha256:[a-f\d]{64}$/i)) {
-    throw new Error(`无法从 GitHub Release 中找到 "${file}" 对应的 SHA-256 信息`)
+    throw new Error(tr('无法从 GitHub Release 中找到 "{0}" 对应的 SHA-256 信息', [file]))
   }
   const { data } = await axios.get(asset.browser_download_url, {
     responseType: 'arraybuffer',
@@ -55,7 +56,7 @@ async function downloadReleaseAsset(repo: string, file: string, mixedPort: numbe
   })
   const buffer = Buffer.from(data)
   if (createHash('sha256').update(buffer).digest('hex') !== asset.digest.slice(7).toLowerCase()) {
-    throw new Error(`SHA-256 校验失败："${file}" 哈希不匹配`)
+    throw new Error(tr('SHA-256 校验失败："{0}" 哈希不匹配', [file]))
   }
   return buffer
 }
@@ -221,7 +222,7 @@ export async function downloadSubStore(): Promise<void> {
     // 清理临时目录
     await rm(tempDir, { recursive: true })
   } catch (error) {
-    console.error('下载 Sub-Store 文件失败：', error)
+    console.error(tr('下载 Sub-Store 文件失败：'), error)
     throw error
   }
 }

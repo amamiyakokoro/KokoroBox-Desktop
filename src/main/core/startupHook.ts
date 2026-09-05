@@ -1,3 +1,4 @@
+import { tr } from '../../shared/i18n'
 import type { ChildProcess } from 'child_process'
 import { existsSync, watch } from 'fs'
 import type { FSWatcher } from 'fs'
@@ -93,7 +94,7 @@ export function createCoreHookWaiter(hook: CoreStartupHook): CoreHookWaiter {
   }
 
   const handleClose = (code: number | null, signal: NodeJS.Signals | null): void => {
-    complete(new Error(`内核启动失败，post-up 未触发，code: ${code}, signal: ${signal}`))
+    complete(new Error(tr('内核启动失败，post-up 未触发，code: {0}, signal: {1}', [code, signal])))
   }
 
   const promise = new Promise<void>((resolve, reject) => {
@@ -110,7 +111,7 @@ export function createCoreHookWaiter(hook: CoreStartupHook): CoreHookWaiter {
     watcher.on('error', complete)
 
     timer = setTimeout(() => {
-      complete(new Error(`等待内核 post-up 超时：${coreHookTimeout}ms`))
+      complete(new Error(tr('等待内核 post-up 超时：{0}ms', [coreHookTimeout])))
     }, coreHookTimeout)
   })
 

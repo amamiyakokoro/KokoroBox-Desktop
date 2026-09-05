@@ -1,3 +1,4 @@
+import { tr } from '../../shared/i18n'
 import crypto from 'crypto'
 
 export interface KeyPair {
@@ -42,12 +43,12 @@ export class KeyManager {
 
   setKeyPair(publicKey: string, privateKey: string, keyId?: string): void {
     if (!publicKey || !privateKey || publicKey.trim() === '' || privateKey.trim() === '') {
-      throw new Error('密钥不能为空')
+      throw new Error(tr('密钥不能为空'))
     }
     const computedKeyId = computeKeyId(publicKey)
     const normalizedKeyId = keyId?.trim() || computedKeyId
     if (normalizedKeyId !== computedKeyId) {
-      throw new Error('密钥 ID 与公钥不匹配')
+      throw new Error(tr('密钥 ID 与公钥不匹配'))
     }
     this.keyId = normalizedKeyId
     this.publicKey = publicKey
@@ -56,28 +57,28 @@ export class KeyManager {
 
   getKeyID(): string {
     if (!this.keyId) {
-      throw new Error('密钥 ID 未初始化')
+      throw new Error(tr('密钥 ID 未初始化'))
     }
     return this.keyId
   }
 
   getPublicKey(): string {
     if (!this.publicKey) {
-      throw new Error('公钥未初始化')
+      throw new Error(tr('公钥未初始化'))
     }
     return this.publicKey
   }
 
   getPrivateKey(): string {
     if (!this.privateKey) {
-      throw new Error('私钥未初始化')
+      throw new Error(tr('私钥未初始化'))
     }
     return this.privateKey
   }
 
   signData(data: string): string {
     if (!this.privateKey) {
-      throw new Error('私钥未初始化')
+      throw new Error(tr('私钥未初始化'))
     }
 
     const keyObject = crypto.createPrivateKey({
@@ -109,12 +110,12 @@ export class KeyManager {
 export function computeKeyId(publicKey: string): string {
   const normalizedKey = publicKey.trim()
   if (!normalizedKey) {
-    throw new Error('公钥不能为空')
+    throw new Error(tr('公钥不能为空'))
   }
 
   const keyBytes = Buffer.from(normalizedKey, 'base64')
   if (keyBytes.length === 0) {
-    throw new Error('公钥格式无效')
+    throw new Error(tr('公钥格式无效'))
   }
 
   return crypto.createHash('sha256').update(keyBytes).digest('hex')

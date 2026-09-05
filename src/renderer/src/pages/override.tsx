@@ -1,3 +1,4 @@
+import { tr } from '../../../shared/i18n'
 import {
   Button,
   Divider,
@@ -124,10 +125,10 @@ const Override: React.FC = () => {
               ext: file.name.endsWith('.js') ? 'js' : 'yaml'
             })
           } catch (e) {
-            notify('文件导入失败' + e, { variant: 'danger' })
+            notify(tr('文件导入失败') + e, { variant: 'danger' })
           }
         } else {
-          notify('不支持的文件类型', { variant: 'danger' })
+          notify(tr('不支持的文件类型'), { variant: 'danger' })
         }
       } else {
         const droppedUrl =
@@ -149,7 +150,7 @@ const Override: React.FC = () => {
           })
           setShowEditModal(true)
         } catch {
-          notify('未检测到有效的覆写链接', { variant: 'danger' })
+          notify(tr('未检测到有效的覆写链接'), { variant: 'danger' })
         }
       }
       isProcessingDrop.current = false
@@ -169,7 +170,7 @@ const Override: React.FC = () => {
   return (
     <BasePage
       ref={pageRef}
-      title="覆写"
+      title={tr('覆写')}
       contentClassName="no-scrollbar"
       header={
         <>
@@ -227,7 +228,7 @@ const Override: React.FC = () => {
             isLoading={importing}
             onPress={handleImport}
           >
-            导入
+            {tr('导入')}
           </Button>
           <Dropdown>
             <DropdownTrigger>
@@ -255,14 +256,14 @@ const Override: React.FC = () => {
                   }
                 } else if (key === 'new-yaml') {
                   await addOverrideItem({
-                    name: '新建 YAML',
+                    name: tr('新建 YAML'),
                     type: 'local',
                     file: '# https://mihomo.party/docs/guide/override/yaml',
                     ext: 'yaml'
                   })
                 } else if (key === 'new-js') {
                   await addOverrideItem({
-                    name: '新建 JS',
+                    name: tr('新建 JS'),
                     type: 'local',
                     file: '// https://mihomo.party/docs/guide/override/javascript\nfunction main(config) {\n  return config\n}',
                     ext: 'js'
@@ -281,10 +282,10 @@ const Override: React.FC = () => {
                 }
               }}
             >
-              <DropdownItem key="open">打开本地覆写</DropdownItem>
-              <DropdownItem key="import">导入远程覆写</DropdownItem>
-              <DropdownItem key="new-yaml">新建 YAML</DropdownItem>
-              <DropdownItem key="new-js">新建 JavaScript</DropdownItem>
+              <DropdownItem key="open">{tr('打开本地覆写')}</DropdownItem>
+              <DropdownItem key="import">{tr('导入远程覆写')}</DropdownItem>
+              <DropdownItem key="new-yaml">{tr('新建 YAML')}</DropdownItem>
+              <DropdownItem key="new-js">{tr('新建 JavaScript')}</DropdownItem>
             </DropdownMenu>
           </Dropdown>
         </div>

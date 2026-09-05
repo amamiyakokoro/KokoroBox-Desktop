@@ -1,3 +1,4 @@
+import { tr } from '../../../../shared/i18n'
 import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'
 import SettingCard from '../base/base-setting-card'
 import SettingItem from '../base/base-setting-item'
@@ -32,8 +33,8 @@ const AdvancedSetting: React.FC = () => {
   }
 
   return (
-    <SettingCard header="高级设置">
-      <SettingItem compatKey="legacy" title="查找进程" divider>
+    <SettingCard header={tr('高级设置')}>
+      <SettingItem compatKey="legacy" title={tr('查找进程')} divider>
         <Tabs
           size="sm"
           color="primary"
@@ -42,12 +43,12 @@ const AdvancedSetting: React.FC = () => {
             onChangeNeedRestart({ 'find-process-mode': key as FindProcessMode })
           }}
         >
-          <Tab key="strict" title="自动"></Tab>
-          <Tab key="off" title="关闭"></Tab>
-          <Tab key="always" title="开启"></Tab>
+          <Tab key="strict" title={tr('自动')}></Tab>
+          <Tab key="off" title={tr('关闭')}></Tab>
+          <Tab key="always" title={tr('开启')}></Tab>
         </Tabs>
       </SettingItem>
-      <SettingItem compatKey="legacy" title="存储选择节点" divider>
+      <SettingItem compatKey="legacy" title={tr('存储选择节点')} divider>
         <Switch
           size="sm"
           isSelected={storeSelected}
@@ -56,7 +57,7 @@ const AdvancedSetting: React.FC = () => {
           }}
         />
       </SettingItem>
-      <SettingItem compatKey="legacy" title="存储 FakeIP" divider>
+      <SettingItem compatKey="legacy" title={tr('存储 FakeIP')} divider>
         <Switch
           size="sm"
           isSelected={storeFakeIp}
@@ -67,9 +68,11 @@ const AdvancedSetting: React.FC = () => {
       </SettingItem>
       <SettingItem
         compatKey="legacy"
-        title="使用 RTT 延迟测试"
+        title={tr('使用 RTT 延迟测试')}
         actions={
-          <Tooltip content="开启后会使用统一延迟测试来获取节点延迟，以消除不同节点握手时间的影响">
+          <Tooltip
+            content={tr('开启后会使用统一延迟测试来获取节点延迟，以消除不同节点握手时间的影响')}
+          >
             <Button isIconOnly size="sm" variant="light">
               <IoIosHelpCircle className="text-lg" />
             </Button>
@@ -87,9 +90,11 @@ const AdvancedSetting: React.FC = () => {
       </SettingItem>
       <SettingItem
         compatKey="legacy"
-        title="TCP 并发"
+        title={tr('TCP 并发')}
         actions={
-          <Tooltip content="对 dns 解析出的多个 IP 地址进行 TCP 并发连接，使用握手时间最短的连接">
+          <Tooltip
+            content={tr('对 dns 解析出的多个 IP 地址进行 TCP 并发连接，使用握手时间最短的连接')}
+          >
             <Button isIconOnly size="sm" variant="light">
               <IoIosHelpCircle className="text-lg" />
             </Button>
@@ -105,7 +110,7 @@ const AdvancedSetting: React.FC = () => {
           }}
         />
       </SettingItem>
-      <SettingItem compatKey="legacy" title="禁用 TCP Keep Alive" divider>
+      <SettingItem compatKey="legacy" title={tr('禁用 TCP Keep Alive')} divider>
         <Switch
           size="sm"
           isSelected={disableKeepAlive}
@@ -114,7 +119,7 @@ const AdvancedSetting: React.FC = () => {
           }}
         />
       </SettingItem>
-      <SettingItem compatKey="legacy" title="TCP Keep Alive 间隔" divider>
+      <SettingItem compatKey="legacy" title={tr('TCP Keep Alive 间隔')} divider>
         <div className="flex">
           {intervalInput !== interval && (
             <Button
@@ -125,7 +130,7 @@ const AdvancedSetting: React.FC = () => {
                 await onChangeNeedRestart({ 'keep-alive-interval': intervalInput })
               }}
             >
-              确认
+              {tr('确认')}
             </Button>
           )}
           <Input
@@ -140,7 +145,7 @@ const AdvancedSetting: React.FC = () => {
           />
         </div>
       </SettingItem>
-      <SettingItem compatKey="legacy" title="TCP Keep Alive 空闲" divider>
+      <SettingItem compatKey="legacy" title={tr('TCP Keep Alive 空闲')} divider>
         <div className="flex">
           {idleInput !== idle && (
             <Button
@@ -151,7 +156,7 @@ const AdvancedSetting: React.FC = () => {
                 await onChangeNeedRestart({ 'keep-alive-idle': idleInput })
               }}
             >
-              确认
+              {tr('确认')}
             </Button>
           )}
           <Input
@@ -166,7 +171,7 @@ const AdvancedSetting: React.FC = () => {
           />
         </div>
       </SettingItem>
-      <SettingItem compatKey="legacy" title="指定出站接口">
+      <SettingItem compatKey="legacy" title={tr('指定出站接口')}>
         <InterfaceSelect
           value={interfaceName}
           exclude={[device, 'lo']}

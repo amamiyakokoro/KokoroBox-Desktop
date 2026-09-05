@@ -1,3 +1,4 @@
+import { tr } from '../../../../shared/i18n'
 import { Button, Chip, Input, Select, SelectItem, Switch } from '@heroui/react'
 import { Modal } from '@heroui-v3/react'
 import { calcTraffic } from '@renderer/utils/calc'
@@ -130,7 +131,7 @@ const KokoroSubscriptionModal: React.FC<Props> = ({ onClose, onImported }) => {
       setSession({ authenticated: false })
       setSettings(undefined)
       onImported()
-      notify('已退出 Kokoro，并移除本地 Kokoro 配置缓存', { variant: 'success' })
+      notify(tr('已退出 Kokoro，并移除本地 Kokoro 配置缓存'), { variant: 'success' })
     } catch (error) {
       notify(error, { variant: 'danger' })
     } finally {
@@ -148,7 +149,7 @@ const KokoroSubscriptionModal: React.FC<Props> = ({ onClose, onImported }) => {
         isp: settings.isp || null
       })
       onImported()
-      notify('Kokoro 订阅已添加', { variant: 'success' })
+      notify(tr('Kokoro 订阅已添加'), { variant: 'success' })
       onClose()
     } catch (error) {
       notify(error, { variant: 'danger' })
@@ -171,9 +172,9 @@ const KokoroSubscriptionModal: React.FC<Props> = ({ onClose, onImported }) => {
           <Modal.Dialog className="w-[min(680px,calc(100%-24px))] max-w-none">
             <Modal.Header className="app-drag border-b border-default-100 pb-4">
               <div>
-                <Modal.Heading>Kokoro 订阅</Modal.Heading>
+                <Modal.Heading>{tr('Kokoro 订阅')}</Modal.Heading>
                 <p className="mt-1 text-xs font-normal text-foreground-500">
-                  通过 osu! 登录，并从 Kokoro 安全获取 Mihomo 配置
+                  {tr('通过 osu! 登录，并从 Kokoro 安全获取 Mihomo 配置')}
                 </p>
               </div>
             </Modal.Header>
@@ -187,10 +188,11 @@ const KokoroSubscriptionModal: React.FC<Props> = ({ onClose, onImported }) => {
                   <div className="mb-5 flex size-14 items-center justify-center rounded-full bg-primary/10 text-primary">
                     <LuLogIn className="text-2xl" />
                   </div>
-                  <h3 className="text-base font-semibold">登录 Kokoro</h3>
+                  <h3 className="text-base font-semibold">{tr('登录 Kokoro')}</h3>
                   <p className="mt-2 max-w-sm text-sm leading-6 text-foreground-500">
-                    将在系统浏览器中完成 osu! 授权。Kokoro 不会接触 osu!
-                    密码，登录凭据保存在系统安全存储中。
+                    {tr(
+                      '将在系统浏览器中完成 osu! 授权。Kokoro 不会接触 osu! 密码，登录凭据保存在系统安全存储中。'
+                    )}
                   </p>
                   <Button
                     className="mt-6 min-w-36"
@@ -199,7 +201,7 @@ const KokoroSubscriptionModal: React.FC<Props> = ({ onClose, onImported }) => {
                     onPress={handleLogin}
                     startContent={!loggingIn ? <LuLogIn /> : undefined}
                   >
-                    {loggingIn ? '等待浏览器授权' : '使用 osu! 登录'}
+                    {loggingIn ? tr('等待浏览器授权') : tr('使用 osu! 登录')}
                   </Button>
                 </div>
               ) : (
@@ -228,11 +230,16 @@ const KokoroSubscriptionModal: React.FC<Props> = ({ onClose, onImported }) => {
                       </div>
                       <p className="mt-1 text-xs text-foreground-500">
                         {user.bandwidth_limit === 0
-                          ? `本月已用 ${calcTraffic(user.traffic_usage)} · 不限流量`
-                          : `本月已用 ${calcTraffic(user.traffic_usage)} / ${calcTraffic(user.bandwidth_limit)}`}
+                          ? tr('本月已用 {0} · 不限流量', [calcTraffic(user.traffic_usage)])
+                          : tr('本月已用 {0} / {1}', [
+                              calcTraffic(user.traffic_usage),
+                              calcTraffic(user.bandwidth_limit)
+                            ])}
                         {user.subscription_expires_at
-                          ? ` · ${utcDate(user.subscription_expires_at).format('YYYY-MM-DD')} 到期`
-                          : ' · 长期有效'}
+                          ? tr(' · {0} 到期', [
+                              utcDate(user.subscription_expires_at).format('YYYY-MM-DD')
+                            ])
+                          : tr(' · 长期有效')}
                       </p>
                     </div>
                     <Button
@@ -243,19 +250,19 @@ const KokoroSubscriptionModal: React.FC<Props> = ({ onClose, onImported }) => {
                       onPress={handleLogout}
                       startContent={<LuLogOut />}
                     >
-                      登出
+                      {tr('登出')}
                     </Button>
                   </section>
 
                   {!mihomoAvailable && (
                     <p className="rounded-lg bg-danger-50 px-3 py-2 text-sm text-danger">
-                      当前 Kokoro 帐号没有可用的 Mihomo 格式。
+                      {tr('当前 Kokoro 帐号没有可用的 Mihomo 格式。')}
                     </p>
                   )}
 
                   <section className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <Select
-                      label="方案"
+                      label={tr('方案')}
                       size="sm"
                       selectedKeys={settings?.plan ? new Set([settings.plan]) : new Set()}
                       isDisabled={options.plans.length === 0}
@@ -271,7 +278,7 @@ const KokoroSubscriptionModal: React.FC<Props> = ({ onClose, onImported }) => {
                       ))}
                     </Select>
                     <Select
-                      label="网络运营商"
+                      label={tr('网络运营商')}
                       size="sm"
                       selectedKeys={new Set([settings?.isp || ''])}
                       disallowEmptySelection
@@ -286,7 +293,7 @@ const KokoroSubscriptionModal: React.FC<Props> = ({ onClose, onImported }) => {
                       ))}
                     </Select>
                     <Select
-                      label="协议"
+                      label={tr('协议')}
                       size="sm"
                       selectedKeys={settings ? new Set([settings.protocol]) : new Set()}
                       disallowEmptySelection
@@ -305,12 +312,12 @@ const KokoroSubscriptionModal: React.FC<Props> = ({ onClose, onImported }) => {
                     {!supportsDirect ? (
                       <div className="flex min-h-12 items-center rounded-lg bg-default-100 px-3 text-sm text-foreground-500">
                         {settings?.protocol === 'vmess'
-                          ? 'VMess 固定使用中继模式'
-                          : '此协议当前仅支持中继模式'}
+                          ? tr('VMess 固定使用中继模式')
+                          : tr('此协议当前仅支持中继模式')}
                       </div>
                     ) : (
                       <Select
-                        label="连接模式"
+                        label={tr('连接模式')}
                         size="sm"
                         selectedKeys={settings ? new Set([settings.mode]) : new Set()}
                         disallowEmptySelection
@@ -318,12 +325,12 @@ const KokoroSubscriptionModal: React.FC<Props> = ({ onClose, onImported }) => {
                           updateSettings({ mode: String(value.currentKey) as KokoroMode })
                         }
                       >
-                        <SelectItem key="relay">中继</SelectItem>
-                        <SelectItem key="direct">直连</SelectItem>
+                        <SelectItem key="relay">{tr('中继')}</SelectItem>
+                        <SelectItem key="direct">{tr('直连')}</SelectItem>
                       </Select>
                     )}
                     <Select
-                      label="规则来源"
+                      label={tr('规则来源')}
                       size="sm"
                       selectedKeys={settings ? new Set([settings.rule_source]) : new Set()}
                       disallowEmptySelection
@@ -335,12 +342,12 @@ const KokoroSubscriptionModal: React.FC<Props> = ({ onClose, onImported }) => {
                     >
                       {options.rule_sources.map((source) => (
                         <SelectItem key={source}>
-                          {source === 'origin' ? '原始来源' : '镜像'}
+                          {source === 'origin' ? tr('原始来源') : tr('镜像')}
                         </SelectItem>
                       ))}
                     </Select>
                     <Select
-                      label="未匹配流量"
+                      label={tr('未匹配流量')}
                       size="sm"
                       selectedKeys={settings ? new Set([settings.final_route]) : new Set()}
                       disallowEmptySelection
@@ -351,7 +358,9 @@ const KokoroSubscriptionModal: React.FC<Props> = ({ onClose, onImported }) => {
                       }
                     >
                       {options.final_routes.map((route) => (
-                        <SelectItem key={route}>{route === 'proxy' ? '代理' : '直连'}</SelectItem>
+                        <SelectItem key={route}>
+                          {route === 'proxy' ? tr('代理') : tr('直连')}
+                        </SelectItem>
                       ))}
                     </Select>
                   </section>
@@ -359,8 +368,10 @@ const KokoroSubscriptionModal: React.FC<Props> = ({ onClose, onImported }) => {
                   <section className="divide-y divide-default-100 border-y border-default-100">
                     <div className="flex flex-wrap items-center justify-between gap-4 py-3">
                       <div className="min-w-0">
-                        <p className="text-sm font-medium">规则集自动更新</p>
-                        <p className="mt-0.5 text-xs text-foreground-500">更新远端 rule-provider</p>
+                        <p className="text-sm font-medium">{tr('规则集自动更新')}</p>
+                        <p className="mt-0.5 text-xs text-foreground-500">
+                          {tr('更新远端 rule-provider')}
+                        </p>
                       </div>
                       <Switch
                         size="sm"
@@ -373,20 +384,22 @@ const KokoroSubscriptionModal: React.FC<Props> = ({ onClose, onImported }) => {
                     </div>
                     <div className="flex flex-wrap items-center justify-between gap-4 py-3">
                       <div className="min-w-0">
-                        <p className="text-sm font-medium">订阅自动更新</p>
+                        <p className="text-sm font-medium">{tr('订阅自动更新')}</p>
                         <p className="mt-0.5 text-xs text-foreground-500">
-                          失败时保留上一份可用配置
+                          {tr('失败时保留上一份可用配置')}
                         </p>
                       </div>
                       <div className="ml-auto flex shrink-0 items-center gap-3">
                         <Input
-                          aria-label="更新间隔"
+                          aria-label={tr('更新间隔')}
                           type="number"
                           size="sm"
                           className="w-32 shrink-0"
                           min={options.profile_update.min_hours}
                           max={options.profile_update.max_hours}
-                          endContent={<span className="shrink-0 whitespace-nowrap">小时</span>}
+                          endContent={
+                            <span className="shrink-0 whitespace-nowrap">{tr('小时')}</span>
+                          }
                           value={String(settings?.profile_update_hours || '')}
                           onValueChange={(value) =>
                             updateSettings({
@@ -411,7 +424,7 @@ const KokoroSubscriptionModal: React.FC<Props> = ({ onClose, onImported }) => {
             {session?.authenticated && user && options && !loading ? (
               <Modal.Footer className="border-t border-default-100">
                 <Button size="sm" variant="light" onPress={onClose}>
-                  取消
+                  {tr('取消')}
                 </Button>
                 <Button
                   size="sm"
@@ -421,7 +434,7 @@ const KokoroSubscriptionModal: React.FC<Props> = ({ onClose, onImported }) => {
                   onPress={handleImport}
                   startContent={!importing ? <LuCloudDownload /> : undefined}
                 >
-                  获取并添加
+                  {tr('获取并添加')}
                 </Button>
               </Modal.Footer>
             ) : null}

@@ -1,3 +1,4 @@
+import { tr } from '../../../../shared/i18n'
 import { Button, Drawer, InputGroup, ListBox, Select, Switch } from '@heroui-v3/react'
 import React, { useEffect, useRef, useState } from 'react'
 import SettingItem from '../base/base-setting-item'
@@ -67,13 +68,13 @@ const ConnectionSettingDrawer: React.FC<Props> = (props) => {
       <Drawer.Content placement="right" className="top-12 h-[calc(100%-48px)] p-3 pl-0">
         <Drawer.Dialog className="flex h-full w-[min(460px,calc(100vw-32px))] max-w-none flex-col overflow-hidden rounded-2xl! border border-separator/70 bg-overlay p-0 shadow-overlay flag-emoji">
           <Drawer.Header className="border-b border-separator/70 px-5 py-4">
-            <Drawer.Heading className="text-base font-semibold">连接设置</Drawer.Heading>
+            <Drawer.Heading className="text-base font-semibold">{tr('连接设置')}</Drawer.Heading>
           </Drawer.Header>
           <Drawer.Body className="no-scrollbar flex-1 overflow-y-auto px-5 py-3">
             <div className="flex flex-col gap-1">
-              <SettingItem title="显示应用图标" {...settingItemProps} divider>
+              <SettingItem title={tr('显示应用图标')} {...settingItemProps} divider>
                 <Switch
-                  aria-label="显示应用图标"
+                  aria-label={tr('显示应用图标')}
                   isSelected={displayIcon}
                   onChange={(v) => {
                     patchAppConfig({ displayIcon: v })
@@ -86,9 +87,9 @@ const ConnectionSettingDrawer: React.FC<Props> = (props) => {
                   </Switch.Content>
                 </Switch>
               </SettingItem>
-              <SettingItem title="显示应用名称" {...settingItemProps} divider>
+              <SettingItem title={tr('显示应用名称')} {...settingItemProps} divider>
                 <Switch
-                  aria-label="显示应用名称"
+                  aria-label={tr('显示应用名称')}
                   isSelected={displayAppName}
                   onChange={(v) => {
                     patchAppConfig({ displayAppName: v })
@@ -101,9 +102,9 @@ const ConnectionSettingDrawer: React.FC<Props> = (props) => {
                   </Switch.Content>
                 </Switch>
               </SettingItem>
-              <SettingItem title="进程归类" {...settingItemProps} divider>
+              <SettingItem title={tr('进程归类')} {...settingItemProps} divider>
                 <Switch
-                  aria-label="进程归类"
+                  aria-label={tr('进程归类')}
                   isSelected={connectionGroupByProcess}
                   onChange={(v) => {
                     patchAppConfig({ connectionGroupByProcess: v })
@@ -117,10 +118,10 @@ const ConnectionSettingDrawer: React.FC<Props> = (props) => {
                 </Switch>
               </SettingItem>
               {connectionGroupByProcess && (
-                <SettingItem title="归类排序" {...settingItemProps} divider>
+                <SettingItem title={tr('归类排序')} {...settingItemProps} divider>
                   <div className="flex items-center justify-end gap-2">
                     <Select
-                      aria-label="归类排序字段"
+                      aria-label={tr('归类排序字段')}
                       className="w-24"
                       variant="secondary"
                       value={connectionGroupSort}
@@ -144,28 +145,28 @@ const ConnectionSettingDrawer: React.FC<Props> = (props) => {
                       </Select.Trigger>
                       <Select.Popover>
                         <ListBox>
-                          <ListBox.Item id="name" textValue="名称">
-                            名称
+                          <ListBox.Item id="name" textValue={tr('名称')}>
+                            {tr('名称')}
                             <ListBox.ItemIndicator />
                           </ListBox.Item>
-                          <ListBox.Item id="count" textValue="连接数">
-                            连接数
+                          <ListBox.Item id="count" textValue={tr('连接数')}>
+                            {tr('连接数')}
                             <ListBox.ItemIndicator />
                           </ListBox.Item>
-                          <ListBox.Item id="upload" textValue="上传量">
-                            上传量
+                          <ListBox.Item id="upload" textValue={tr('上传量')}>
+                            {tr('上传量')}
                             <ListBox.ItemIndicator />
                           </ListBox.Item>
-                          <ListBox.Item id="download" textValue="下载量">
-                            下载量
+                          <ListBox.Item id="download" textValue={tr('下载量')}>
+                            {tr('下载量')}
                             <ListBox.ItemIndicator />
                           </ListBox.Item>
-                          <ListBox.Item id="uploadSpeed" textValue="上传速度">
-                            上传速度
+                          <ListBox.Item id="uploadSpeed" textValue={tr('上传速度')}>
+                            {tr('上传速度')}
                             <ListBox.ItemIndicator />
                           </ListBox.Item>
-                          <ListBox.Item id="downloadSpeed" textValue="下载速度">
-                            下载速度
+                          <ListBox.Item id="downloadSpeed" textValue={tr('下载速度')}>
+                            {tr('下载速度')}
                             <ListBox.ItemIndicator />
                           </ListBox.Item>
                         </ListBox>
@@ -176,7 +177,7 @@ const ConnectionSettingDrawer: React.FC<Props> = (props) => {
                       isIconOnly
                       variant="secondary"
                       className="h-8 w-8 shrink-0"
-                      aria-label={connectionGroupDirection === 'asc' ? '升序' : '降序'}
+                      aria-label={connectionGroupDirection === 'asc' ? tr('升序') : tr('降序')}
                       onPress={() => {
                         patchAppConfig({
                           connectionGroupDirection:
@@ -193,7 +194,7 @@ const ConnectionSettingDrawer: React.FC<Props> = (props) => {
                   </div>
                 </SettingItem>
               )}
-              <SettingItem title="刷新间隔" {...settingItemProps}>
+              <SettingItem title={tr('刷新间隔')} {...settingItemProps}>
                 <div className="setting-item__inline-controls">
                   {intervalInput !== connectionInterval && (
                     <Button
@@ -206,12 +207,12 @@ const ConnectionSettingDrawer: React.FC<Props> = (props) => {
                         restartMihomoConnections()
                       }}
                     >
-                      确认
+                      {tr('确认')}
                     </Button>
                   )}
                   <InputGroup variant="secondary">
                     <InputGroup.Input
-                      aria-label="刷新间隔"
+                      aria-label={tr('刷新间隔')}
                       type="number"
                       value={intervalInput.toString()}
                       max={10000}

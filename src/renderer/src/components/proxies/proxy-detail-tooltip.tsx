@@ -1,3 +1,4 @@
+import { tr } from '../../../../shared/i18n'
 import { Chip, Separator, Surface } from '@heroui-v3/react'
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
@@ -28,8 +29,8 @@ function getDelayChipColor(delay: number): DelayColor {
 }
 
 function getDelayText(delay: number): string {
-  if (delay === -1) return '未测试'
-  if (delay === 0) return '超时'
+  if (delay === -1) return tr('未测试')
+  if (delay === 0) return tr('超时')
   return `${delay}ms`
 }
 
@@ -161,19 +162,19 @@ const ProxyDetailTooltip: React.FC<Props> = ({ proxy, anchorEl, visible }) => {
         <Separator variant="tertiary" />
 
         <div className="px-3 py-2 grid grid-cols-[auto_1fr] gap-x-2 gap-y-1.5 items-center">
-          <span className="text-[10px] text-muted">类型</span>
+          <span className="text-[10px] text-muted">{tr('类型')}</span>
           <Chip className="justify-self-end" variant="soft" size="sm">
             {proxy.type}
           </Chip>
 
-          <span className="text-[10px] text-muted">状态</span>
+          <span className="text-[10px] text-muted">{tr('状态')}</span>
           <Chip
             className="justify-self-end"
             color={proxy.alive ? 'success' : 'danger'}
             variant="soft"
             size="sm"
           >
-            {proxy.alive ? '在线' : '离线'}
+            {proxy.alive ? tr('在线') : tr('离线')}
           </Chip>
 
           {proxy.udp !== undefined && (
@@ -185,7 +186,7 @@ const ProxyDetailTooltip: React.FC<Props> = ({ proxy, anchorEl, visible }) => {
                 variant="soft"
                 size="sm"
               >
-                {proxy.udp ? '开启' : '关闭'}
+                {proxy.udp ? tr('开启') : tr('关闭')}
               </Chip>
             </>
           )}
@@ -198,7 +199,7 @@ const ProxyDetailTooltip: React.FC<Props> = ({ proxy, anchorEl, visible }) => {
                 variant="soft"
                 size="sm"
               >
-                {proxy.tfo ? '开启' : '关闭'}
+                {proxy.tfo ? tr('开启') : tr('关闭')}
               </Chip>
             </>
           )}
@@ -211,7 +212,7 @@ const ProxyDetailTooltip: React.FC<Props> = ({ proxy, anchorEl, visible }) => {
                 variant="soft"
                 size="sm"
               >
-                {proxy.xudp ? '开启' : '关闭'}
+                {proxy.xudp ? tr('开启') : tr('关闭')}
               </Chip>
             </>
           )}
@@ -224,7 +225,7 @@ const ProxyDetailTooltip: React.FC<Props> = ({ proxy, anchorEl, visible }) => {
                 variant="soft"
                 size="sm"
               >
-                {proxy.mptcp ? '开启' : '关闭'}
+                {proxy.mptcp ? tr('开启') : tr('关闭')}
               </Chip>
             </>
           )}
@@ -237,7 +238,7 @@ const ProxyDetailTooltip: React.FC<Props> = ({ proxy, anchorEl, visible }) => {
                 variant="soft"
                 size="sm"
               >
-                {proxy.smux ? '开启' : '关闭'}
+                {proxy.smux ? tr('开启') : tr('关闭')}
               </Chip>
             </>
           )}
@@ -250,13 +251,13 @@ const ProxyDetailTooltip: React.FC<Props> = ({ proxy, anchorEl, visible }) => {
                 variant="soft"
                 size="sm"
               >
-                {proxy.uot ? '开启' : '关闭'}
+                {proxy.uot ? tr('开启') : tr('关闭')}
               </Chip>
             </>
           )}
           {proxy.interface && (
             <>
-              <span className="text-[10px] text-muted">出站接口</span>
+              <span className="text-[10px] text-muted">{tr('出站接口')}</span>
               <span className="text-[10px] text-muted justify-self-end truncate">
                 {proxy.interface}
               </span>
@@ -264,7 +265,7 @@ const ProxyDetailTooltip: React.FC<Props> = ({ proxy, anchorEl, visible }) => {
           )}
           {group?.now && !group?.fixed && (
             <>
-              <span className="text-[10px] text-muted">当前选择</span>
+              <span className="text-[10px] text-muted">{tr('当前选择')}</span>
               <span className="text-[10px] flag-emoji text-muted justify-self-end truncate">
                 {group.now}
               </span>
@@ -272,7 +273,7 @@ const ProxyDetailTooltip: React.FC<Props> = ({ proxy, anchorEl, visible }) => {
           )}
           {group?.fixed && (
             <>
-              <span className="text-[10px] text-muted">固定选择</span>
+              <span className="text-[10px] text-muted">{tr('固定选择')}</span>
               <span className="text-[10px] flag-emoji text-muted justify-self-end truncate">
                 {group.fixed}
               </span>
@@ -282,7 +283,7 @@ const ProxyDetailTooltip: React.FC<Props> = ({ proxy, anchorEl, visible }) => {
 
         <Separator variant="tertiary" />
         <div className="px-3 pt-2 pb-2.5">
-          <span className="text-[10px] text-muted block mb-1.5">历史延迟</span>
+          <span className="text-[10px] text-muted block mb-1.5">{tr('历史延迟')}</span>
           {history.length > 0 ? (
             <svg width={SPARK_W} height={CHART_H}>
               {history.map((h, i) => {
@@ -323,7 +324,7 @@ const ProxyDetailTooltip: React.FC<Props> = ({ proxy, anchorEl, visible }) => {
               })}
             </svg>
           ) : (
-            <span className="text-[10px] text-muted/50">暂无记录</span>
+            <span className="text-[10px] text-muted/50">{tr('暂无记录')}</span>
           )}
         </div>
       </Surface>

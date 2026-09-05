@@ -1,3 +1,4 @@
+import { tr } from '../../../../shared/i18n'
 import { Button, Card, CardBody, Chip } from '@heroui/react'
 import { Avatar } from '@heroui-v3/react'
 import { calcTraffic } from '@renderer/utils/calc'
@@ -43,7 +44,7 @@ const ConnectionGroupHeaderComponent: React.FC<Props> = ({
   const title = useMemo(() => {
     if (displayName) return displayName
     const name = label.replace(/\.exe$/, '')
-    return name || '未知进程'
+    return name || tr('未知进程')
   }, [displayName, label])
 
   const uploadTraffic = useMemo(() => calcTraffic(upload), [upload])
@@ -93,7 +94,7 @@ const ConnectionGroupHeaderComponent: React.FC<Props> = ({
                   size="sm"
                   isIconOnly
                   color={isClosed ? 'danger' : 'warning'}
-                  aria-label={isClosed ? '清空该进程全部记录' : '关闭该进程全部连接'}
+                  aria-label={isClosed ? tr('清空该进程全部记录') : tr('关闭该进程全部连接')}
                   onPress={() => onCloseAll(groupKey)}
                 >
                   {isClosed ? <CgTrash className="text-lg" /> : <CgClose className="text-lg" />}

@@ -1,3 +1,4 @@
+import { tr } from '../../../../shared/i18n'
 import { Button, Card, CardBody } from '@heroui/react'
 import { mihomoUnfixedProxy } from '@renderer/utils/ipc'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
@@ -146,8 +147,8 @@ const ProxyItem: React.FC<Props> = (props) => {
   }
 
   function delayText(delay: number): string {
-    if (delay === -1) return '测试'
-    if (delay === 0) return '超时'
+    if (delay === -1) return tr('测试')
+    if (delay === 0) return tr('超时')
     return delay.toString()
   }
 

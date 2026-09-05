@@ -1,3 +1,4 @@
+import { tr } from '../../../../shared/i18n'
 import { Button, Card, CardBody, CardFooter, Tooltip } from '@heroui/react'
 import BorderSwitch from '@renderer/components/base/border-swtich'
 import { useLocation, useNavigate } from 'react-router-dom'
@@ -57,7 +58,7 @@ const SysproxySwitcher: React.FC<Props> = (props) => {
   if (iconOnly) {
     return (
       <div className={`${sysproxyCardStatus} flex justify-center`}>
-        <Tooltip content="系统代理" placement="right">
+        <Tooltip content={tr('系统代理')} placement="right">
           <Button
             size="sm"
             isIconOnly
@@ -115,7 +116,7 @@ const SysproxySwitcher: React.FC<Props> = (props) => {
           <h3
             className={`text-md font-bold ${match ? 'text-primary-foreground' : 'text-foreground'}`}
           >
-            系统代理
+            {tr('系统代理')}
           </h3>
         </CardFooter>
       </Card>

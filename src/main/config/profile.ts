@@ -1,3 +1,4 @@
+import { tr } from '../../shared/i18n'
 import { getControledMihomoConfig } from './controledMihomo'
 import { mihomoProfileWorkDir, mihomoWorkDir, profileConfigPath, profilePath } from '../utils/dirs'
 import { addProfileUpdater, delProfileUpdater } from '../core/profileUpdater'
@@ -47,7 +48,7 @@ export async function setProfileConfig(config: ProfileConfig): Promise<void> {
 
 export async function getProfileItem(id: string | undefined): Promise<ProfileItem | undefined> {
   const { items } = await getProfileConfig()
-  if (!id || id === 'default') return { id: 'default', type: 'local', name: '空白订阅' }
+  if (!id || id === 'default') return { id: 'default', type: 'local', name: tr('空白订阅') }
   return items.find((item) => item.id === id)
 }
 
@@ -139,7 +140,7 @@ export async function removeProfileItem(id: string): Promise<void> {
 
 export async function getCurrentProfileItem(): Promise<ProfileItem> {
   const { current } = await getProfileConfig()
-  return (await getProfileItem(current)) || { id: 'default', type: 'local', name: '空白订阅' }
+  return (await getProfileItem(current)) || { id: 'default', type: 'local', name: tr('空白订阅') }
 }
 
 export async function createProfile(item: Partial<ProfileItem>): Promise<ProfileItem> {
@@ -207,7 +208,7 @@ export async function createProfile(item: Partial<ProfileItem>): Promise<Profile
             const expected = item.fingerprint.replace(/:/g, '').toUpperCase()
             const verify = (s: tls.TLSSocket) => {
               if (getCertFingerprint(s.getPeerCertificate()) !== expected)
-                s.destroy(new Error('证书指纹不匹配'))
+                s.destroy(new Error(tr('证书指纹不匹配')))
             }
 
             if (newItem.useProxy && mixedPort != 0) {
@@ -224,7 +225,7 @@ export async function createProfile(item: Partial<ProfileItem>): Promise<Profile
 
                 req.on('connect', (res, sock, head) => {
                   if (res.statusCode !== 200) {
-                    cb?.(new Error(`代理连接失败，状态码：${res.statusCode}`), null!)
+                    cb?.(new Error(tr('代理连接失败，状态码：{0}', [res.statusCode])), null!)
                     return
                   }
                   if (head.length > 0) sock.unshift(head)
@@ -264,15 +265,15 @@ export async function createProfile(item: Partial<ProfileItem>): Promise<Profile
         } catch (error) {
           if (axios.isAxiosError(error)) {
             if (error.code === 'ECONNRESET' || error.code === 'ECONNABORTED') {
-              throw new Error(`网络连接被重置或超时：${item.url}`)
+              throw new Error(tr('网络连接被重置或超时：{0}', [item.url]))
             } else if (error.code === 'CERT_HAS_EXPIRED') {
-              throw new Error(`服务器证书已过期：${item.url}`)
+              throw new Error(tr('服务器证书已过期：{0}', [item.url]))
             } else if (error.code === 'UNABLE_TO_VERIFY_LEAF_SIGNATURE') {
-              throw new Error(`无法验证服务器证书：${item.url}`)
+              throw new Error(tr('无法验证服务器证书：{0}', [item.url]))
             } else if (error.message.includes('Certificate verification failed')) {
-              throw new Error(`证书验证失败：${item.url}`)
+              throw new Error(tr('证书验证失败：{0}', [item.url]))
             } else {
-              throw new Error(`请求失败：${error.message}`)
+              throw new Error(tr('请求失败：{0}', [error.message]))
             }
           }
           throw error
@@ -315,7 +316,7 @@ export async function createProfile(item: Partial<ProfileItem>): Promise<Profile
         try {
           parseYaml<MihomoConfig>(data)
         } catch (error) {
-          throw new Error('订阅格式错误，无法解析为有效的配置文件\n' + (error as Error).message)
+          throw new Error(tr('订阅格式错误，无法解析为有效的配置文件\n') + (error as Error).message)
         }
       }
       await setProfileStr(id, data, newItem)
@@ -397,7 +398,7 @@ async function decryptProfileContent(
 ): Promise<string> {
   if (!isAgeEncryptedText(content)) return content
   if (!item?.ageIdentity) {
-    throw new Error(`${item?.name || '配置'} 已使用 age 加密，请先填写 age 私钥`)
+    throw new Error(tr('{0} 已使用 age 加密，请先填写 age 私钥', [item?.name || tr('配置')]))
   }
   return await decryptAgeText(content, item.ageIdentity)
 }
@@ -570,7 +571,7 @@ export async function getFileStr(path: string, ageSecretKey?: string): Promise<s
   }
 
   if (!ageSecretKey) {
-    throw new Error('当前内容已使用 age 加密，请先配置 age 私钥')
+    throw new Error(tr('当前内容已使用 age 加密，请先配置 age 私钥'))
   }
 
   return await decryptAgeText(content, ageSecretKey)

@@ -1,3 +1,4 @@
+import { tr } from '../../../../shared/i18n'
 import {
   Button,
   Description,
@@ -152,7 +153,7 @@ const ConnectionDetailModal = ({ connection, onClose }: Props) => {
       <Dropdown>
         <Dropdown.Trigger className="rounded-lg">
           <Button
-            aria-label="复制规则"
+            aria-label={tr('复制规则')}
             isIconOnly
             size="sm"
             variant="tertiary"
@@ -196,29 +197,33 @@ const ConnectionDetailModal = ({ connection, onClose }: Props) => {
   }
 
   const rows: Array<StaticRow | CopyRow> = [
-    { kind: 'static', title: '连接建立时间', content: dayjs(connection.start).fromNow() },
+    { kind: 'static', title: tr('连接建立时间'), content: dayjs(connection.start).fromNow() },
     {
       kind: 'static',
-      title: '规则',
+      title: tr('规则'),
       content: (
         <>
-          {connection.rule ? connection.rule : '未命中任何规则'}
+          {connection.rule ? connection.rule : tr('未命中任何规则')}
           {connection.rulePayload ? `(${connection.rulePayload})` : ''}
         </>
       )
     },
-    { kind: 'static', title: '代理链', content: [...connection.chains].reverse().join('>>') },
-    { kind: 'static', title: '上传速度', content: `${calcTraffic(connection.uploadSpeed || 0)}/s` },
+    { kind: 'static', title: tr('代理链'), content: [...connection.chains].reverse().join('>>') },
     {
       kind: 'static',
-      title: '下载速度',
+      title: tr('上传速度'),
+      content: `${calcTraffic(connection.uploadSpeed || 0)}/s`
+    },
+    {
+      kind: 'static',
+      title: tr('下载速度'),
       content: `${calcTraffic(connection.downloadSpeed || 0)}/s`
     },
-    { kind: 'static', title: '上传量', content: calcTraffic(connection.upload) },
-    { kind: 'static', title: '下载量', content: calcTraffic(connection.download) },
+    { kind: 'static', title: tr('上传量'), content: calcTraffic(connection.upload) },
+    { kind: 'static', title: tr('下载量'), content: calcTraffic(connection.download) },
     {
       kind: 'copy',
-      title: '连接类型',
+      title: tr('连接类型'),
       value: [connection.metadata.type, connection.metadata.network],
       displayName: `${connection.metadata.type}(${connection.metadata.network})`,
       prefix: ['IN-TYPE', 'NETWORK']
@@ -227,7 +232,7 @@ const ConnectionDetailModal = ({ connection, onClose }: Props) => {
       ? [
           {
             kind: 'copy' as const,
-            title: '主机',
+            title: tr('主机'),
             value: connection.metadata.host,
             prefix: ['DOMAIN', 'DOMAIN-SUFFIX']
           }
@@ -237,7 +242,7 @@ const ConnectionDetailModal = ({ connection, onClose }: Props) => {
       ? [
           {
             kind: 'copy' as const,
-            title: '嗅探主机',
+            title: tr('嗅探主机'),
             value: connection.metadata.sniffHost,
             prefix: ['DOMAIN', 'DOMAIN-SUFFIX']
           }
@@ -247,7 +252,7 @@ const ConnectionDetailModal = ({ connection, onClose }: Props) => {
       ? [
           {
             kind: 'copy' as const,
-            title: '进程名',
+            title: tr('进程名'),
             value: [
               connection.metadata.process,
               ...(connection.metadata.uid ? [connection.metadata.uid.toString()] : [])
@@ -263,7 +268,7 @@ const ConnectionDetailModal = ({ connection, onClose }: Props) => {
       ? [
           {
             kind: 'copy' as const,
-            title: '进程路径',
+            title: tr('进程路径'),
             value: connection.metadata.processPath,
             prefix: ['PROCESS-PATH']
           }
@@ -273,7 +278,7 @@ const ConnectionDetailModal = ({ connection, onClose }: Props) => {
       ? [
           {
             kind: 'copy' as const,
-            title: '来源 IP',
+            title: tr('来源 IP'),
             value: connection.metadata.sourceIP,
             prefix: ['SRC-IP-CIDR']
           }
@@ -283,7 +288,7 @@ const ConnectionDetailModal = ({ connection, onClose }: Props) => {
       ? [
           {
             kind: 'copy' as const,
-            title: '来源 GeoIP',
+            title: tr('来源 GeoIP'),
             value: connection.metadata.sourceGeoIP,
             prefix: ['SRC-GEOIP']
           }
@@ -293,7 +298,7 @@ const ConnectionDetailModal = ({ connection, onClose }: Props) => {
       ? [
           {
             kind: 'copy' as const,
-            title: '来源 ASN',
+            title: tr('来源 ASN'),
             value: connection.metadata.sourceIPASN,
             prefix: ['SRC-IP-ASN']
           }
@@ -303,7 +308,7 @@ const ConnectionDetailModal = ({ connection, onClose }: Props) => {
       ? [
           {
             kind: 'copy' as const,
-            title: '目标 IP',
+            title: tr('目标 IP'),
             value: connection.metadata.destinationIP,
             prefix: ['IP-CIDR']
           }
@@ -313,7 +318,7 @@ const ConnectionDetailModal = ({ connection, onClose }: Props) => {
       ? [
           {
             kind: 'copy' as const,
-            title: '目标 GeoIP',
+            title: tr('目标 GeoIP'),
             value: connection.metadata.destinationGeoIP,
             prefix: ['GEOIP']
           }
@@ -323,7 +328,7 @@ const ConnectionDetailModal = ({ connection, onClose }: Props) => {
       ? [
           {
             kind: 'copy' as const,
-            title: '目标 ASN',
+            title: tr('目标 ASN'),
             value: connection.metadata.destinationIPASN,
             prefix: ['IP-ASN']
           }
@@ -333,7 +338,7 @@ const ConnectionDetailModal = ({ connection, onClose }: Props) => {
       ? [
           {
             kind: 'copy' as const,
-            title: '来源端口',
+            title: tr('来源端口'),
             value: connection.metadata.sourcePort,
             prefix: ['SRC-PORT']
           }
@@ -343,7 +348,7 @@ const ConnectionDetailModal = ({ connection, onClose }: Props) => {
       ? [
           {
             kind: 'copy' as const,
-            title: '目标端口',
+            title: tr('目标端口'),
             value: connection.metadata.destinationPort,
             prefix: ['DST-PORT']
           }
@@ -353,7 +358,7 @@ const ConnectionDetailModal = ({ connection, onClose }: Props) => {
       ? [
           {
             kind: 'copy' as const,
-            title: '入站 IP',
+            title: tr('入站 IP'),
             value: connection.metadata.inboundIP,
             prefix: ['SRC-IP-CIDR']
           }
@@ -363,7 +368,7 @@ const ConnectionDetailModal = ({ connection, onClose }: Props) => {
       ? [
           {
             kind: 'copy' as const,
-            title: '入站端口',
+            title: tr('入站端口'),
             value: connection.metadata.inboundPort,
             prefix: ['SRC-PORT']
           }
@@ -373,7 +378,7 @@ const ConnectionDetailModal = ({ connection, onClose }: Props) => {
       ? [
           {
             kind: 'copy' as const,
-            title: '入站名称',
+            title: tr('入站名称'),
             value: connection.metadata.inboundName,
             prefix: ['IN-NAME']
           }
@@ -383,7 +388,7 @@ const ConnectionDetailModal = ({ connection, onClose }: Props) => {
       ? [
           {
             kind: 'copy' as const,
-            title: '入站用户',
+            title: tr('入站用户'),
             value: connection.metadata.inboundUser,
             prefix: ['IN-USER']
           }
@@ -403,20 +408,20 @@ const ConnectionDetailModal = ({ connection, onClose }: Props) => {
       ? [
           {
             kind: 'copy' as const,
-            title: '远程目标',
+            title: tr('远程目标'),
             value: connection.metadata.remoteDestination,
             prefix: ['IP-CIDR']
           }
         ]
       : []),
     ...(connection.metadata.dnsMode
-      ? [{ kind: 'static' as const, title: 'DNS 模式', content: connection.metadata.dnsMode }]
+      ? [{ kind: 'static' as const, title: tr('DNS 模式'), content: connection.metadata.dnsMode }]
       : []),
     ...(connection.metadata.specialProxy
       ? [
           {
             kind: 'static' as const,
-            title: '特殊代理',
+            title: tr('特殊代理'),
             content: connection.metadata.specialProxy
           }
         ]
@@ -425,7 +430,7 @@ const ConnectionDetailModal = ({ connection, onClose }: Props) => {
       ? [
           {
             kind: 'static' as const,
-            title: '特殊规则',
+            title: tr('特殊规则'),
             content: connection.metadata.specialRules
           }
         ]
@@ -443,10 +448,10 @@ const ConnectionDetailModal = ({ connection, onClose }: Props) => {
         <Modal.Container scroll="inside">
           <Modal.Dialog className="connection-detail-modal w-[min(700px,calc(100%-24px))] max-w-none pb-2 flag-emoji">
             <Modal.Header className="app-drag pb-0">
-              <Modal.Heading>连接详情</Modal.Heading>
+              <Modal.Heading>{tr('连接详情')}</Modal.Heading>
             </Modal.Header>
             <Tabs
-              aria-label="连接详情视图"
+              aria-label={tr('连接详情视图')}
               className="flex min-h-0 flex-col"
               selectedKey={viewMode}
               onSelectionChange={(key) => setViewMode(key as 'detail' | 'raw')}
@@ -479,13 +484,13 @@ const ConnectionDetailModal = ({ connection, onClose }: Props) => {
               </Modal.Body>
               <Modal.Footer className="app-nodrag mt-0! justify-start px-0! pt-0! pb-0!">
                 <Tabs.ListContainer>
-                  <Tabs.List aria-label="连接详情视图切换">
+                  <Tabs.List aria-label={tr('连接详情视图切换')}>
                     <Tabs.Tab id="detail">
-                      详情
+                      {tr('详情')}
                       <Tabs.Indicator />
                     </Tabs.Tab>
                     <Tabs.Tab id="raw">
-                      原始数据
+                      {tr('原始数据')}
                       <Tabs.Indicator />
                     </Tabs.Tab>
                   </Tabs.List>

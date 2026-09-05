@@ -1,3 +1,4 @@
+import { tr } from '../../../../shared/i18n'
 import { Button, Tooltip } from '@heroui/react'
 import SettingCard from '../base/base-setting-card'
 import SettingItem from '../base/base-setting-item'
@@ -21,9 +22,9 @@ import { notify } from '@renderer/utils/notification'
 async function handleCreateHeapSnapshot(): Promise<void> {
   try {
     const snapshotPath = await createHeapSnapshot()
-    notify(`堆快照已创建\n${snapshotPath}`, { variant: 'success' })
+    notify(tr('堆快照已创建\n{0}', [snapshotPath]), { variant: 'success' })
   } catch (e) {
-    notify(`创建堆快照失败\n${e}`, { variant: 'danger' })
+    notify(tr('创建堆快照失败\n{0}', [e]), { variant: 'danger' })
   }
 }
 
@@ -88,25 +89,25 @@ const Actions: React.FC = () => {
       {confirmOpen && (
         <ConfirmModal
           onChange={setConfirmOpen}
-          title="确认删除配置？"
+          title={tr('确认删除配置？')}
           description={
             <>
-              ⚠️ 删除配置，
-              <span className="text-red-500">操作不可撤销</span>
+              {tr('⚠️ 删除配置，')}
+              <span className="text-red-500">{tr('操作不可撤销')}</span>
             </>
           }
-          confirmText="确认删除"
-          cancelText="取消"
+          confirmText={tr('确认删除')}
+          cancelText={tr('取消')}
           onConfirm={resetAppConfig}
         />
       )}
       <SettingCard>
-        <SettingItem compatKey="legacy" title="打开引导页面" divider>
+        <SettingItem compatKey="legacy" title={tr('打开引导页面')} divider>
           <Button size="sm" onPress={() => startTour(navigate)}>
-            打开引导页面
+            {tr('打开引导页面')}
           </Button>
         </SettingItem>
-        <SettingItem compatKey="legacy" title="检查更新" divider>
+        <SettingItem compatKey="legacy" title={tr('检查更新')} divider>
           <Button
             size="sm"
             isLoading={checkingUpdate}
@@ -117,19 +118,19 @@ const Actions: React.FC = () => {
                 if (version) {
                   setNewVersion(version.version)
                   setChangelog(version.changelog)
-                  notify('发现新版本', {
+                  notify(tr('发现新版本'), {
                     actionProps: {
-                      children: '查看内容',
+                      children: tr('查看内容'),
                       onPress: openUpdateDrawer,
                       variant: 'secondary'
                     },
-                    body: `${version.version} 版本就绪`,
+                    body: tr('{0} 版本就绪', [version.version]),
                     forceToast: true,
                     timeout: 8000,
                     variant: 'accent'
                   })
                 } else {
-                  notify('当前已是最新版本', { body: '无需更新' })
+                  notify(tr('当前已是最新版本'), { body: tr('无需更新') })
                 }
               } catch (e) {
                 notify(e, { variant: 'danger' })
@@ -138,14 +139,14 @@ const Actions: React.FC = () => {
               }
             }}
           >
-            检查更新
+            {tr('检查更新')}
           </Button>
         </SettingItem>
         <SettingItem
           compatKey="legacy"
-          title="重置软件"
+          title={tr('重置软件')}
           actions={
-            <Tooltip content="删除所有配置，将软件恢复初始状态">
+            <Tooltip content={tr('删除所有配置，将软件恢复初始状态')}>
               <Button isIconOnly size="sm" variant="light">
                 <IoIosHelpCircle className="text-lg" />
               </Button>
@@ -154,14 +155,14 @@ const Actions: React.FC = () => {
           divider
         >
           <Button size="sm" onPress={() => setConfirmOpen(true)}>
-            重置软件
+            {tr('重置软件')}
           </Button>
         </SettingItem>
         <SettingItem
           compatKey="legacy"
-          title="清除缓存"
+          title={tr('清除缓存')}
           actions={
-            <Tooltip content="清除软件渲染进程缓存">
+            <Tooltip content={tr('清除软件渲染进程缓存')}>
               <Button isIconOnly size="sm" variant="light">
                 <IoIosHelpCircle className="text-lg" />
               </Button>
@@ -170,14 +171,14 @@ const Actions: React.FC = () => {
           divider
         >
           <Button size="sm" onPress={() => localStorage.clear()}>
-            清除缓存
+            {tr('清除缓存')}
           </Button>
         </SettingItem>
         <SettingItem
           compatKey="legacy"
-          title="创建堆快照"
+          title={tr('创建堆快照')}
           actions={
-            <Tooltip content="创建主进程堆快照，用于排查内存问题">
+            <Tooltip content={tr('创建主进程堆快照，用于排查内存问题')}>
               <Button isIconOnly size="sm" variant="light">
                 <IoIosHelpCircle className="text-lg" />
               </Button>
@@ -186,14 +187,14 @@ const Actions: React.FC = () => {
           divider
         >
           <Button size="sm" onPress={handleCreateHeapSnapshot}>
-            创建堆快照
+            {tr('创建堆快照')}
           </Button>
         </SettingItem>
         <SettingItem
           compatKey="legacy"
-          title="保留内核退出"
+          title={tr('保留内核退出')}
           actions={
-            <Tooltip content="完全退出软件，只保留内核进程">
+            <Tooltip content={tr('完全退出软件，只保留内核进程')}>
               <Button isIconOnly size="sm" variant="light">
                 <IoIosHelpCircle className="text-lg" />
               </Button>
@@ -202,15 +203,15 @@ const Actions: React.FC = () => {
           divider
         >
           <Button size="sm" onPress={quitWithoutCore}>
-            退出
+            {tr('退出')}
           </Button>
         </SettingItem>
-        <SettingItem compatKey="legacy" title="退出应用" divider>
+        <SettingItem compatKey="legacy" title={tr('退出应用')} divider>
           <Button size="sm" onPress={quitApp}>
-            退出应用
+            {tr('退出应用')}
           </Button>
         </SettingItem>
-        <SettingItem compatKey="legacy" title="应用版本">
+        <SettingItem compatKey="legacy" title={tr('应用版本')}>
           <div>v{version}</div>
         </SettingItem>
       </SettingCard>

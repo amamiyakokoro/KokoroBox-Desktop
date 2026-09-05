@@ -1,3 +1,4 @@
+import { tr } from '../../../../shared/i18n'
 import {
   Button,
   Dropdown,
@@ -49,7 +50,7 @@ const EditInfoModal: React.FC<Props> = (props) => {
         ageIdentity: keyPair.identity,
         ageRecipient: keyPair.recipient
       }))
-      notify('已生成 age 密钥', { variant: 'success' })
+      notify(tr('已生成 age 密钥'), { variant: 'success' })
     } catch (e) {
       notify(e, { variant: 'danger' })
     }
@@ -59,7 +60,7 @@ const EditInfoModal: React.FC<Props> = (props) => {
     try {
       const recipient = await ageIdentityToRecipient(values.ageIdentity ?? '')
       setValues((current) => ({ ...current, ageRecipient: recipient }))
-      notify('已生成 age 公钥', { variant: 'success' })
+      notify(tr('已生成 age 公钥'), { variant: 'success' })
     } catch (e) {
       notify(e, { variant: 'danger' })
     }
@@ -145,7 +146,9 @@ const EditInfoModal: React.FC<Props> = (props) => {
           size="sm"
           className="h-6.5 min-h-6.5 min-w-0 justify-start rounded-md px-2 text-[13px]"
         >
-          <span className="truncate">{i.name} (全局)</span>
+          <span className="truncate">
+            {i.name} {tr(' (全局)')}
+          </span>
         </Button>
       </Surface>
     ))
@@ -225,11 +228,13 @@ const EditInfoModal: React.FC<Props> = (props) => {
                 <Dropdown.Item
                   id="empty"
                   key="empty"
-                  textValue="没有可用的覆写"
+                  textValue={tr('没有可用的覆写')}
                   isDisabled
                   className="min-h-8 rounded-md px-2.5 py-1.5"
                 >
-                  <Label className="-translate-y-px text-sm leading-5">没有可用的覆写</Label>
+                  <Label className="-translate-y-px text-sm leading-5">
+                    {tr('没有可用的覆写')}
+                  </Label>
                 </Dropdown.Item>
               )}
             </Dropdown.Menu>
@@ -250,14 +255,14 @@ const EditInfoModal: React.FC<Props> = (props) => {
         <Modal.Container scroll="inside">
           <Modal.Dialog className="w-[min(600px,calc(100%-24px))] max-w-none">
             <Modal.Header className="app-drag pb-1">
-              <Modal.Heading>{item.id ? '编辑信息' : '导入远程配置'}</Modal.Heading>
+              <Modal.Heading>{item.id ? tr('编辑信息') : tr('导入远程配置')}</Modal.Heading>
             </Modal.Header>
             <Modal.Body className="no-scrollbar max-h-[70vh] overflow-y-auto pt-1 pb-2">
               <Surface variant="transparent" className="flex flex-col">
                 {renderField(
-                  '名称',
+                  tr('名称'),
                   <Input
-                    aria-label="名称"
+                    aria-label={tr('名称')}
                     data-setting-input="edit-modal-name"
                     value={values.name}
                     variant="secondary"
@@ -268,9 +273,9 @@ const EditInfoModal: React.FC<Props> = (props) => {
                 )}
                 {values.type === 'remote' &&
                   renderField(
-                    '订阅地址',
+                    tr('订阅地址'),
                     <Input
-                      aria-label="订阅地址"
+                      aria-label={tr('订阅地址')}
                       data-setting-input="edit-modal"
                       value={values.url}
                       variant="secondary"
@@ -282,9 +287,9 @@ const EditInfoModal: React.FC<Props> = (props) => {
                   )}
                 {values.type === 'remote' &&
                   renderField(
-                    '证书指纹',
+                    tr('证书指纹'),
                     <Input
-                      aria-label="证书指纹"
+                      aria-label={tr('证书指纹')}
                       data-setting-input="edit-modal"
                       value={values.fingerprint ?? ''}
                       variant="secondary"
@@ -296,9 +301,9 @@ const EditInfoModal: React.FC<Props> = (props) => {
                   )}
                 {values.type === 'remote' &&
                   renderField(
-                    '指定 UA',
+                    tr('指定 UA'),
                     <Input
-                      aria-label="指定 UA"
+                      aria-label={tr('指定 UA')}
                       data-setting-input="edit-modal"
                       value={values.ua ?? ''}
                       variant="secondary"
@@ -310,9 +315,9 @@ const EditInfoModal: React.FC<Props> = (props) => {
                   )}
                 {values.type === 'remote' &&
                   renderField(
-                    '验证订阅格式',
+                    tr('验证订阅格式'),
                     <Switch
-                      aria-label="验证订阅格式"
+                      aria-label={tr('验证订阅格式')}
                       size="sm"
                       isSelected={values.verify ?? false}
                       onChange={(v) => {
@@ -328,9 +333,9 @@ const EditInfoModal: React.FC<Props> = (props) => {
                   )}
                 {values.type === 'remote' &&
                   renderField(
-                    '使用代理更新',
+                    tr('使用代理更新'),
                     <Switch
-                      aria-label="使用代理更新"
+                      aria-label={tr('使用代理更新')}
                       size="sm"
                       isSelected={values.useProxy ?? false}
                       onChange={(v) => {
@@ -346,9 +351,9 @@ const EditInfoModal: React.FC<Props> = (props) => {
                   )}
                 {values.type === 'remote' &&
                   renderField(
-                    '自动更新',
+                    tr('自动更新'),
                     <Switch
-                      aria-label="自动更新"
+                      aria-label={tr('自动更新')}
                       size="sm"
                       isSelected={values.autoUpdate ?? false}
                       onChange={(v) => {
@@ -363,10 +368,10 @@ const EditInfoModal: React.FC<Props> = (props) => {
                     </Switch>
                   )}
                 {renderField(
-                  'age 公钥',
+                  tr('age 公钥'),
                   <InputGroup data-setting-input="edit-modal" variant="secondary">
                     <InputGroup.Input
-                      aria-label="age 公钥"
+                      aria-label={tr('age 公钥')}
                       value={values.ageRecipient ?? ''}
                       placeholder="age1..."
                       onChange={(event) => {
@@ -378,7 +383,7 @@ const EditInfoModal: React.FC<Props> = (props) => {
                       <Tooltip delay={0}>
                         <Tooltip.Trigger>
                           <Button
-                            aria-label="从 age 私钥生成公钥"
+                            aria-label={tr('从 age 私钥生成公钥')}
                             isIconOnly
                             size="sm"
                             variant="ghost"
@@ -387,14 +392,14 @@ const EditInfoModal: React.FC<Props> = (props) => {
                             <LuArrowRight className="text-lg" />
                           </Button>
                         </Tooltip.Trigger>
-                        <Tooltip.Content>从私钥生成公钥</Tooltip.Content>
+                        <Tooltip.Content>{tr('从私钥生成公钥')}</Tooltip.Content>
                       </Tooltip>
                       <Button
-                        aria-label="复制 age 公钥"
+                        aria-label={tr('复制 age 公钥')}
                         isIconOnly
                         size="sm"
                         variant="ghost"
-                        onPress={() => copyValue(values.ageRecipient, '已复制 age 公钥')}
+                        onPress={() => copyValue(values.ageRecipient, tr('已复制 age 公钥'))}
                       >
                         <BiCopy className="text-lg" />
                       </Button>
@@ -402,10 +407,10 @@ const EditInfoModal: React.FC<Props> = (props) => {
                   </InputGroup>
                 )}
                 {renderField(
-                  'age 私钥',
+                  tr('age 私钥'),
                   <InputGroup data-setting-input="edit-modal" variant="secondary">
                     <InputGroup.Input
-                      aria-label="age 私钥"
+                      aria-label={tr('age 私钥')}
                       type={ageIdentityVisible ? 'text' : 'password'}
                       value={values.ageIdentity ?? ''}
                       placeholder="AGE-SECRET-KEY-1..."
@@ -416,7 +421,7 @@ const EditInfoModal: React.FC<Props> = (props) => {
                     />
                     <InputGroup.Suffix>
                       <Button
-                        aria-label="生成 age 私钥"
+                        aria-label={tr('生成 age 私钥')}
                         isIconOnly
                         size="sm"
                         variant="ghost"
@@ -425,16 +430,16 @@ const EditInfoModal: React.FC<Props> = (props) => {
                         <LuRefreshCw className="text-lg" />
                       </Button>
                       <Button
-                        aria-label="复制 age 私钥"
+                        aria-label={tr('复制 age 私钥')}
                         isIconOnly
                         size="sm"
                         variant="ghost"
-                        onPress={() => copyValue(values.ageIdentity, '已复制 age 私钥')}
+                        onPress={() => copyValue(values.ageIdentity, tr('已复制 age 私钥'))}
                       >
                         <BiCopy className="text-lg" />
                       </Button>
                       <Button
-                        aria-label={ageIdentityVisible ? '隐藏 age 私钥' : '显示 age 私钥'}
+                        aria-label={ageIdentityVisible ? tr('隐藏 age 私钥') : tr('显示 age 私钥')}
                         isIconOnly
                         size="sm"
                         variant="ghost"
@@ -452,9 +457,9 @@ const EditInfoModal: React.FC<Props> = (props) => {
                 {values.type === 'remote' &&
                   values.autoUpdate &&
                   renderField(
-                    '更新间隔（分钟）',
+                    tr('更新间隔（分钟）'),
                     <Input
-                      aria-label="更新间隔（分钟）"
+                      aria-label={tr('更新间隔（分钟）')}
                       type="number"
                       data-setting-input="edit-modal-number"
                       value={values.interval?.toString() ?? ''}
@@ -470,26 +475,26 @@ const EditInfoModal: React.FC<Props> = (props) => {
                           <Tooltip.Trigger>
                             <button
                               type="button"
-                              aria-label="说明"
+                              aria-label={tr('说明')}
                               className="flex size-7 items-center justify-center rounded-full bg-transparent p-0 text-foreground outline-none ring-0 shadow-none hover:bg-transparent focus:bg-transparent focus:outline-none focus-visible:outline-none focus-visible:ring-0"
                             >
                               <IoIosHelpCircle className="text-lg" />
                             </button>
                           </Tooltip.Trigger>
-                          <Tooltip.Content>当前更新间隔由远程管理</Tooltip.Content>
+                          <Tooltip.Content>{tr('当前更新间隔由远程管理')}</Tooltip.Content>
                         </Tooltip>
                       ) : undefined
                     }
                   )}
-                {renderField('覆写', overrideContent, { align: 'start', divider: false })}
+                {renderField(tr('覆写'), overrideContent, { align: 'start', divider: false })}
               </Surface>
             </Modal.Body>
             <Modal.Footer className="justify-end pt-2">
               <Button size="sm" variant="secondary" onPress={onClose}>
-                取消
+                {tr('取消')}
               </Button>
               <Button size="sm" variant="primary" onPress={onSave}>
-                {item.id ? '保存' : '导入'}
+                {item.id ? tr('保存') : tr('导入')}
               </Button>
             </Modal.Footer>
           </Modal.Dialog>

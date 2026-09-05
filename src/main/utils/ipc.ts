@@ -1,3 +1,4 @@
+import { tr } from '../../shared/i18n'
 import { app, ipcMain } from 'electron'
 import {
   mihomoChangeProxy,
@@ -203,7 +204,7 @@ async function normalizeServiceModePatch(patch: Partial<AppConfig>): Promise<Par
     return patch
   }
 
-  void showNotification({ title: '服务不可用，已切换到执行命令模式' })
+  void showNotification({ title: tr('服务不可用，已切换到执行命令模式') })
   return {
     ...patch,
     sysProxy: {

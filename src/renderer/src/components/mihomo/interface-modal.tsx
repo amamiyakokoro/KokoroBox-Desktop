@@ -1,3 +1,4 @@
+import { tr } from '../../../../shared/i18n'
 import { Snippet } from '@heroui/react'
 import { Modal } from '@heroui-v3/react'
 import React, { useEffect, useState } from 'react'
@@ -31,7 +32,7 @@ const InterfaceModal: React.FC<Props> = (props) => {
         <Modal.Container scroll="inside">
           <Modal.Dialog>
             <Modal.Header className="app-drag">
-              <Modal.Heading>网络信息</Modal.Heading>
+              <Modal.Heading>{tr('网络信息')}</Modal.Heading>
             </Modal.Header>
             <Modal.Body className="no-scrollbar max-h-[70vh] overflow-y-auto">
               {Object.entries(info).map(([key, value]) => {

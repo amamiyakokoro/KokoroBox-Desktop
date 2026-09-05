@@ -1,3 +1,4 @@
+import { tr } from '../../../../shared/i18n'
 import { Button, Label, Modal, Switch } from '@heroui-v3/react'
 import { Spinner } from '@heroui/react'
 import React, { useEffect, useState } from 'react'
@@ -56,10 +57,10 @@ const EditFileModal: React.FC<Props> = (props) => {
     <Modal>
       {isConfirmOpen && (
         <ConfirmModal
-          title="确认取消"
-          description="您有未保存的修改，确定要取消吗？"
-          confirmText="放弃修改"
-          cancelText="继续编辑"
+          title={tr('确认取消')}
+          description={tr('您有未保存的修改，确定要取消吗？')}
+          confirmText={tr('放弃修改')}
+          cancelText={tr('继续编辑')}
           onChange={setIsConfirmOpen}
           onConfirm={onClose}
         />
@@ -73,7 +74,10 @@ const EditFileModal: React.FC<Props> = (props) => {
         <Modal.Container scroll="inside">
           <Modal.Dialog className="mt-4 h-[calc(100%-32px)] max-w-none w-[calc(100%-100px)]">
             <Modal.Header className="app-drag pb-0">
-              <Modal.Heading>编辑覆写{language === 'javascript' ? '脚本' : '配置'}</Modal.Heading>
+              <Modal.Heading>
+                {tr('编辑覆写')}
+                {language === 'javascript' ? tr('脚本') : tr('配置')}
+              </Modal.Heading>
             </Modal.Header>
             <Modal.Body className="h-full">
               {isLoading ? (
@@ -97,7 +101,7 @@ const EditFileModal: React.FC<Props> = (props) => {
                     <Switch.Control>
                       <Switch.Thumb />
                     </Switch.Control>
-                    <Label>显示修改</Label>
+                    <Label>{tr('显示修改')}</Label>
                   </Switch.Content>
                 </Switch>
                 <Switch size="sm" isSelected={sideBySide} onChange={setSideBySide}>
@@ -105,13 +109,13 @@ const EditFileModal: React.FC<Props> = (props) => {
                     <Switch.Control>
                       <Switch.Thumb />
                     </Switch.Control>
-                    <Label>侧边显示</Label>
+                    <Label>{tr('侧边显示')}</Label>
                   </Switch.Content>
                 </Switch>
               </div>
               <div className="flex gap-2">
                 <Button size="sm" variant="secondary" onPress={handleClose}>
-                  取消
+                  {tr('取消')}
                 </Button>
                 <Button
                   size="sm"
@@ -129,7 +133,7 @@ const EditFileModal: React.FC<Props> = (props) => {
                     }
                   }}
                 >
-                  保存
+                  {tr('保存')}
                 </Button>
               </div>
             </Modal.Footer>

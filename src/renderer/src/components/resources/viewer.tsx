@@ -1,3 +1,4 @@
+import { tr } from '../../../../shared/i18n'
 import { Button, Modal } from '@heroui-v3/react'
 import { Spinner } from '@heroui/react'
 import React, { useEffect, useState } from 'react'
@@ -82,7 +83,7 @@ const Viewer: React.FC<Props> = (props) => {
     } catch (e) {
       if (!elevated && typeof e === 'string' && e.includes(FILE_PERMISSION_ELEVATION_REQUIRED)) {
         if (systemCoreOnlyBuild) {
-          notify('当前文件没有写入权限，系统内核构建不支持提权保存', { variant: 'danger' })
+          notify(tr('当前文件没有写入权限，系统内核构建不支持提权保存'), { variant: 'danger' })
           return
         }
         setShowPermissionConfirm(true)
@@ -138,18 +139,20 @@ const Viewer: React.FC<Props> = (props) => {
       {!systemCoreOnlyBuild && showPermissionConfirm && (
         <ConfirmModal
           onChange={setShowPermissionConfirm}
-          title="保存需要提权"
-          description="当前文件或目录没有写入权限。你可以取消本次保存，或者执行提权后修改权限并继续保存。"
+          title={tr('保存需要提权')}
+          description={tr(
+            '当前文件或目录没有写入权限。你可以取消本次保存，或者执行提权后修改权限并继续保存。'
+          )}
           buttons={[
             {
               key: 'cancel',
-              text: '取消',
+              text: tr('取消'),
               variant: 'light',
               onPress: () => {}
             },
             {
               key: 'elevate',
-              text: '提权保存',
+              text: tr('提权保存'),
               color: 'primary',
               onPress: () => save(true)
             }
@@ -187,10 +190,10 @@ const Viewer: React.FC<Props> = (props) => {
             {type === 'File' && !isLoading && (
               <Modal.Footer className="pt-0 pb-0">
                 <Button size="sm" variant="secondary" isDisabled={isSaving} onPress={onClose}>
-                  取消
+                  {tr('取消')}
                 </Button>
                 <Button size="sm" isPending={isSaving} onPress={() => save()}>
-                  保存
+                  {tr('保存')}
                 </Button>
               </Modal.Footer>
             )}

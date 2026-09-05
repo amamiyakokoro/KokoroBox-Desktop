@@ -1,3 +1,4 @@
+import { tr } from '../../shared/i18n'
 import { app, globalShortcut, ipcMain } from 'electron'
 import { mainWindow, setNotQuitDialog, triggerMainWindow } from '..'
 import {
@@ -44,7 +45,7 @@ export async function registerShortcut(
           await triggerSysProxy(!enable, onlyActiveDevice)
           await patchAppConfig({ sysProxy: { enable: !enable } })
           void showNotification({
-            title: `系统代理已${!enable ? '开启' : '关闭'}`
+            title: tr('系统代理已{0}', [!enable ? tr('开启') : tr('关闭')])
           })
           mainWindow?.webContents.send('appConfigUpdated')
           floatingWindow?.webContents.send('appConfigUpdated')
@@ -67,7 +68,7 @@ export async function registerShortcut(
           }
           await restartCore()
           void showNotification({
-            title: `虚拟网卡已${!enable ? '开启' : '关闭'}`
+            title: tr('虚拟网卡已{0}', [!enable ? tr('开启') : tr('关闭')])
           })
           mainWindow?.webContents.send('controledMihomoConfigUpdated')
           floatingWindow?.webContents.send('appConfigUpdated')
@@ -83,7 +84,7 @@ export async function registerShortcut(
         await patchControledMihomoConfig({ mode: 'rule' })
         await patchMihomoConfig({ mode: 'rule' })
         void showNotification({
-          title: '已切换至规则模式'
+          title: tr('已切换至规则模式')
         })
         mainWindow?.webContents.send('controledMihomoConfigUpdated')
         ipcMain.emit('updateTrayMenu')
@@ -94,7 +95,7 @@ export async function registerShortcut(
         await patchControledMihomoConfig({ mode: 'global' })
         await patchMihomoConfig({ mode: 'global' })
         void showNotification({
-          title: '已切换至全局模式'
+          title: tr('已切换至全局模式')
         })
         mainWindow?.webContents.send('controledMihomoConfigUpdated')
         ipcMain.emit('updateTrayMenu')
@@ -105,7 +106,7 @@ export async function registerShortcut(
         await patchControledMihomoConfig({ mode: 'direct' })
         await patchMihomoConfig({ mode: 'direct' })
         void showNotification({
-          title: '已切换至直连模式'
+          title: tr('已切换至直连模式')
         })
         mainWindow?.webContents.send('controledMihomoConfigUpdated')
         ipcMain.emit('updateTrayMenu')

@@ -1,3 +1,4 @@
+import { tr } from '../../shared/i18n'
 import { ipcMain } from 'electron'
 import { getAppConfig, patchAppConfig } from '../config'
 import { mainWindow } from '..'
@@ -135,7 +136,7 @@ export function createServiceCoreRuntime(options: ServiceCoreRuntimeOptions) {
     await patchAppConfig({ corePermissionMode: 'elevated' })
     mainWindow?.webContents.send('appConfigUpdated')
     floatingWindow?.webContents.send('appConfigUpdated')
-    void showNotification({ title: '服务不可用，已切换到非服务模式' })
+    void showNotification({ title: tr('服务不可用，已切换到非服务模式') })
     return options.startCore(detached)
   }
 
@@ -186,7 +187,7 @@ export function createServiceCoreRuntime(options: ServiceCoreRuntimeOptions) {
         await Promise.all(promises)
         mainWindow?.webContents.send('core-started')
       }
-      void showNotification({ title: '服务不可用，已切换到非服务模式' })
+      void showNotification({ title: tr('服务不可用，已切换到非服务模式') })
     } finally {
       mainWindow?.webContents.reload()
       floatingWindow?.webContents.reload()

@@ -1,3 +1,4 @@
+import { tr } from '../../../../shared/i18n'
 import React, { useEffect, useState } from 'react'
 import { Button, Card, CardBody, CardHeader, Chip, Divider } from '@heroui/react'
 import { Modal } from '@heroui-v3/react'
@@ -47,7 +48,10 @@ const PermissionModal: React.FC<Props> = (props) => {
     } catch (e) {
       // 忽略用户取消操作的错误
       const errorMsg = String(e)
-      if (errorMsg.includes('用户取消操作') || errorMsg.includes('UserCancelledError')) {
+      if (
+        /(?:用户|用戶|使用者)取消操作/.test(errorMsg) ||
+        errorMsg.includes('UserCancelledError')
+      ) {
         // 静默失败，只刷新状态
         await checkPermissions()
         return
@@ -73,7 +77,10 @@ const PermissionModal: React.FC<Props> = (props) => {
     } catch (e) {
       // 忽略用户取消操作的错误
       const errorMsg = String(e)
-      if (errorMsg.includes('用户取消操作') || errorMsg.includes('UserCancelledError')) {
+      if (
+        /(?:用户|用戶|使用者)取消操作/.test(errorMsg) ||
+        errorMsg.includes('UserCancelledError')
+      ) {
         // 静默失败，只刷新状态
         await checkPermissions()
         return
@@ -85,9 +92,9 @@ const PermissionModal: React.FC<Props> = (props) => {
   }
 
   const getStatusText = (coreName: 'mihomo' | 'mihomo-alpha'): string => {
-    if (hasPermission === null) return '检查中'
-    if (typeof hasPermission === 'boolean') return hasPermission ? '已授权' : '未授权'
-    return hasPermission[coreName] ? '已授权' : '未授权'
+    if (hasPermission === null) return tr('检查中')
+    if (typeof hasPermission === 'boolean') return hasPermission ? tr('已授权') : tr('未授权')
+    return hasPermission[coreName] ? tr('已授权') : tr('未授权')
   }
 
   const getStatusColor = (coreName: 'mihomo' | 'mihomo-alpha'): string => {
@@ -109,7 +116,7 @@ const PermissionModal: React.FC<Props> = (props) => {
         <Modal.Container scroll="inside">
           <Modal.Dialog className="w-112.5">
             <Modal.Header className="flex-col gap-1">
-              <Modal.Heading>提权状态管理</Modal.Heading>
+              <Modal.Heading>{tr('提权状态管理')}</Modal.Heading>
             </Modal.Header>
             <Modal.Body>
               <div className="space-y-4">
@@ -122,7 +129,7 @@ const PermissionModal: React.FC<Props> = (props) => {
                       <CardBody className="py-4">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            <span className="text-sm font-medium">提权配置状态</span>
+                            <span className="text-sm font-medium">{tr('提权配置状态')}</span>
                           </div>
                           <Chip
                             color={
@@ -136,12 +143,12 @@ const PermissionModal: React.FC<Props> = (props) => {
                             size="sm"
                           >
                             {hasPermission === null
-                              ? '检查中...'
+                              ? tr('检查中...')
                               : typeof hasPermission === 'boolean'
                                 ? hasPermission
-                                  ? '已配置'
-                                  : '未配置'
-                                : '未知'}
+                                  ? tr('已配置')
+                                  : tr('未配置')
+                                : tr('未知')}
                           </Chip>
                         </div>
                       </CardBody>
@@ -152,15 +159,15 @@ const PermissionModal: React.FC<Props> = (props) => {
                     <div className="text-xs text-default-500 space-y-2">
                       <div className="flex items-start gap-2">
                         <span className="mt-0.5">•</span>
-                        <span>提权配置会让直接运行模式具备必要的系统权限</span>
+                        <span>{tr('提权配置会让直接运行模式具备必要的系统权限')}</span>
                       </div>
                       <div className="flex items-start gap-2">
                         <span className="mt-0.5">•</span>
-                        <span>可以让内核以管理员权限运行，无需每次 UAC 提示</span>
+                        <span>{tr('可以让内核以管理员权限运行，无需每次 UAC 提示')}</span>
                       </div>
                       <div className="flex items-start gap-2">
                         <span className="mt-0.5">•</span>
-                        <span>取消注册后可能需要手动提权才能使用某些功能</span>
+                        <span>{tr('取消注册后可能需要手动提权才能使用某些功能')}</span>
                       </div>
                     </div>
                   </>
@@ -171,7 +178,7 @@ const PermissionModal: React.FC<Props> = (props) => {
                         <CardHeader className="pb-0 pt-4 px-4 flex-col items-start">
                           <div className="flex items-center justify-between w-full">
                             <div className="flex items-center gap-2">
-                              <h4 className="font-semibold text-medium">内置正式版</h4>
+                              <h4 className="font-semibold text-medium">{tr('内置正式版')}</h4>
                             </div>
                             <Chip
                               color={
@@ -194,7 +201,7 @@ const PermissionModal: React.FC<Props> = (props) => {
                               isLoading={loading.mihomo}
                               fullWidth
                             >
-                              撤销授权
+                              {tr('撤销授权')}
                             </Button>
                           ) : (
                             <Button
@@ -205,7 +212,7 @@ const PermissionModal: React.FC<Props> = (props) => {
                               isLoading={loading.mihomo}
                               fullWidth
                             >
-                              授权内核
+                              {tr('授权内核')}
                             </Button>
                           )}
                         </CardBody>
@@ -215,7 +222,7 @@ const PermissionModal: React.FC<Props> = (props) => {
                         <CardHeader className="pb-0 pt-4 px-4 flex-col items-start">
                           <div className="flex items-center justify-between w-full">
                             <div className="flex items-center gap-2">
-                              <h4 className="font-semibold text-medium">内置预览版</h4>
+                              <h4 className="font-semibold text-medium">{tr('内置预览版')}</h4>
                             </div>
                             <Chip
                               color={
@@ -240,7 +247,7 @@ const PermissionModal: React.FC<Props> = (props) => {
                               isLoading={loading['mihomo-alpha']}
                               fullWidth
                             >
-                              撤销授权
+                              {tr('撤销授权')}
                             </Button>
                           ) : (
                             <Button
@@ -251,7 +258,7 @@ const PermissionModal: React.FC<Props> = (props) => {
                               isLoading={loading['mihomo-alpha']}
                               fullWidth
                             >
-                              授权内核
+                              {tr('授权内核')}
                             </Button>
                           )}
                         </CardBody>
@@ -260,10 +267,10 @@ const PermissionModal: React.FC<Props> = (props) => {
 
                     <div className="text-xs text-default-500 space-y-2">
                       <div className="flex items-start gap-2">
-                        <span>授权后内核将获得必要的系统权限</span>
+                        <span>{tr('授权后内核将获得必要的系统权限')}</span>
                       </div>
                       <div className="flex items-start gap-2">
-                        <span>可以使用 TUN 等高级网络功能</span>
+                        <span>{tr('可以使用 TUN 等高级网络功能')}</span>
                       </div>
                     </div>
                   </>
@@ -277,7 +284,7 @@ const PermissionModal: React.FC<Props> = (props) => {
                 onPress={() => onChange(false)}
                 isDisabled={Object.values(loading).some((v) => v)}
               >
-                关闭
+                {tr('关闭')}
               </Button>
               {isWindows &&
                 (() => {
@@ -292,7 +299,7 @@ const PermissionModal: React.FC<Props> = (props) => {
                       onPress={() => handleAction(onRevoke)}
                       isLoading={isLoading}
                     >
-                      取消提权
+                      {tr('取消提权')}
                     </Button>
                   ) : (
                     <Button
@@ -301,7 +308,7 @@ const PermissionModal: React.FC<Props> = (props) => {
                       onPress={() => handleAction(onGrant)}
                       isLoading={isLoading}
                     >
-                      配置提权
+                      {tr('配置提权')}
                     </Button>
                   )
                 })()}

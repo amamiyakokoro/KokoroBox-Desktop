@@ -1,3 +1,4 @@
+import { tr } from '../../../../shared/i18n'
 import { Button } from '@heroui/react'
 import React, { useState, useEffect } from 'react'
 import UpdaterDrawer from './updater-drawer'
@@ -59,16 +60,16 @@ const UpdaterButton: React.FC<Props> = (props) => {
     notifiedUpdateVersion = latest.version
     hiddenUpdateButtonVersion = latest.version
     setShowButton(false)
-    notify('发现新版本', {
+    notify(tr('发现新版本'), {
       actionProps: {
-        children: '查看内容',
+        children: tr('查看内容'),
         onPress: () => {
           setOpenDrawer(true)
           setDrawerReopenSignal((signal) => signal + 1)
         },
         variant: 'secondary'
       },
-      body: `${latest.version} 版本就绪`,
+      body: tr('{0} 版本就绪', [latest.version]),
       forceToast: true,
       onClose: () => {
         if (hiddenUpdateButtonVersion === latest.version) {
@@ -110,7 +111,7 @@ const UpdaterButton: React.FC<Props> = (props) => {
       {showButton && (
         <Button
           isIconOnly
-          aria-label="查看更新"
+          aria-label={tr('查看更新')}
           className={iconOnly ? 'app-nodrag' : 'fixed right-11.25 app-nodrag'}
           color="danger"
           size={iconOnly ? 'md' : 'sm'}

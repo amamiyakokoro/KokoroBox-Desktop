@@ -1,3 +1,4 @@
+import { tr } from '../../shared/i18n'
 import { overrideConfigPath, overridePath } from '../utils/dirs'
 import { getControledMihomoConfig } from './controledMihomo'
 import { readFile, writeFile, rm } from 'fs/promises'
@@ -82,7 +83,7 @@ export async function createOverride(item: Partial<OverrideItem>): Promise<Overr
           const expected = item.fingerprint.replace(/:/g, '').toUpperCase()
           const verify = (s: tls.TLSSocket) => {
             if (getCertFingerprint(s.getPeerCertificate()) !== expected)
-              s.destroy(new Error('证书指纹不匹配'))
+              s.destroy(new Error(tr('证书指纹不匹配')))
           }
 
           if (mixedPort != 0) {
@@ -99,7 +100,7 @@ export async function createOverride(item: Partial<OverrideItem>): Promise<Overr
 
               req.on('connect', (res, sock, head) => {
                 if (res.statusCode !== 200) {
-                  cb?.(new Error(`代理连接失败，状态码：${res.statusCode}`), null!)
+                  cb?.(new Error(tr('代理连接失败，状态码：{0}', [res.statusCode])), null!)
                   return
                 }
                 if (head.length > 0) sock.unshift(head)
@@ -137,15 +138,15 @@ export async function createOverride(item: Partial<OverrideItem>): Promise<Overr
       } catch (error) {
         if (axios.isAxiosError(error)) {
           if (error.code === 'ECONNRESET' || error.code === 'ECONNABORTED') {
-            throw new Error(`网络连接被重置或超时：${item.url}`)
+            throw new Error(tr('网络连接被重置或超时：{0}', [item.url]))
           } else if (error.code === 'CERT_HAS_EXPIRED') {
-            throw new Error(`服务器证书已过期：${item.url}`)
+            throw new Error(tr('服务器证书已过期：{0}', [item.url]))
           } else if (error.code === 'UNABLE_TO_VERIFY_LEAF_SIGNATURE') {
-            throw new Error(`无法验证服务器证书：${item.url}`)
+            throw new Error(tr('无法验证服务器证书：{0}', [item.url]))
           } else if (error.message.includes('Certificate verification failed')) {
-            throw new Error(`证书验证失败：${item.url}`)
+            throw new Error(tr('证书验证失败：{0}', [item.url]))
           } else {
-            throw new Error(`请求失败：${error.message}`)
+            throw new Error(tr('请求失败：{0}', [error.message]))
           }
         }
         throw error

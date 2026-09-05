@@ -1,3 +1,4 @@
+import { tr } from '../../../../shared/i18n'
 import { useEffect, useState } from 'react'
 import { Button, Input, Select, SelectItem, Switch, Tooltip } from '@heroui/react'
 import { IoIosHelpCircle } from 'react-icons/io'
@@ -40,12 +41,14 @@ const LogSetting: React.FC = () => {
   }
 
   return (
-    <SettingCard header="日志设置">
+    <SettingCard header={tr('日志设置')}>
       <SettingItem
         compatKey="legacy"
-        title="保存日志"
+        title={tr('保存日志')}
         actions={
-          <Tooltip content="关闭后将停止写入本地日志文件，实时日志页面仍可继续查看当前会话日志">
+          <Tooltip
+            content={tr('关闭后将停止写入本地日志文件，实时日志页面仍可继续查看当前会话日志')}
+          >
             <Button isIconOnly size="sm" variant="light">
               <IoIosHelpCircle className="text-lg" />
             </Button>
@@ -61,7 +64,7 @@ const LogSetting: React.FC = () => {
           }}
         />
       </SettingItem>
-      <SettingItem compatKey="legacy" title="日志保留天数" divider>
+      <SettingItem compatKey="legacy" title={tr('日志保留天数')} divider>
         <div className="flex">
           {saveLogs && maxLogDaysInput !== maxLogDays && (
             <Button
@@ -72,14 +75,14 @@ const LogSetting: React.FC = () => {
                 patchAppConfig({ maxLogDays: maxLogDaysInput })
               }}
             >
-              确认
+              {tr('确认')}
             </Button>
           )}
           <Input
             size="sm"
             type="number"
             className="w-25"
-            endContent="天"
+            endContent={tr('天')}
             value={maxLogDaysInput.toString()}
             min={1}
             isDisabled={!saveLogs}
@@ -91,9 +94,9 @@ const LogSetting: React.FC = () => {
       </SettingItem>
       <SettingItem
         compatKey="legacy"
-        title="单文件日志上限"
+        title={tr('单文件日志上限')}
         actions={
-          <Tooltip content="仅影响本地日志文件，超过大小上限后会自动删除最早的日志行">
+          <Tooltip content={tr('仅影响本地日志文件，超过大小上限后会自动删除最早的日志行')}>
             <Button isIconOnly size="sm" variant="light">
               <IoIosHelpCircle className="text-lg" />
             </Button>
@@ -111,7 +114,7 @@ const LogSetting: React.FC = () => {
                 patchAppConfig({ maxLogFileSizeMB: maxLogFileSizeMBInput })
               }}
             >
-              确认
+              {tr('确认')}
             </Button>
           )}
           <Input
@@ -130,9 +133,9 @@ const LogSetting: React.FC = () => {
       </SettingItem>
       <SettingItem
         compatKey="legacy"
-        title="实时日志缓存数"
+        title={tr('实时日志缓存数')}
         actions={
-          <Tooltip content="仅影响应用内实时日志页面保留的条数，不影响本地日志文件">
+          <Tooltip content={tr('仅影响应用内实时日志页面保留的条数，不影响本地日志文件')}>
             <Button isIconOnly size="sm" variant="light">
               <IoIosHelpCircle className="text-lg" />
             </Button>
@@ -150,14 +153,14 @@ const LogSetting: React.FC = () => {
                 patchAppConfig({ maxLogEntries: maxLogEntriesInput })
               }}
             >
-              确认
+              {tr('确认')}
             </Button>
           )}
           <Input
             size="sm"
             type="number"
             className="w-25"
-            endContent="条"
+            endContent={tr('条')}
             value={maxLogEntriesInput.toString()}
             min={1}
             onValueChange={(value) => {
@@ -166,9 +169,9 @@ const LogSetting: React.FC = () => {
           />
         </div>
       </SettingItem>
-      <SettingItem compatKey="legacy" title="日志等级">
+      <SettingItem compatKey="legacy" title={tr('日志等级')}>
         <Select
-          aria-label="日志等级"
+          aria-label={tr('日志等级')}
           classNames={{ trigger: 'data-[hover=true]:bg-default-200' }}
           className="w-25"
           size="sm"
@@ -178,11 +181,11 @@ const LogSetting: React.FC = () => {
             onChangeNeedRestart({ 'log-level': value.currentKey as LogLevel })
           }
         >
-          <SelectItem key="silent">静默</SelectItem>
-          <SelectItem key="error">错误</SelectItem>
-          <SelectItem key="warning">警告</SelectItem>
-          <SelectItem key="info">信息</SelectItem>
-          <SelectItem key="debug">调试</SelectItem>
+          <SelectItem key="silent">{tr('静默')}</SelectItem>
+          <SelectItem key="error">{tr('错误')}</SelectItem>
+          <SelectItem key="warning">{tr('警告')}</SelectItem>
+          <SelectItem key="info">{tr('信息')}</SelectItem>
+          <SelectItem key="debug">{tr('调试')}</SelectItem>
         </Select>
       </SettingItem>
     </SettingCard>

@@ -1,3 +1,4 @@
+import { tr } from '../../shared/i18n'
 import axios, { type AxiosRequestConfig, type AxiosResponse } from 'axios'
 import crypto from 'crypto'
 import { shell } from 'electron'
@@ -75,7 +76,7 @@ function toKokoroError(error: unknown): KokoroAPIError {
   if (error instanceof KokoroAPIError) return error
   if (axios.isAxiosError(error)) {
     return new KokoroAPIError(
-      errorDetail(error.response?.data, error.message || 'Kokoro 请求失败'),
+      errorDetail(error.response?.data, error.message || tr('Kokoro 请求失败')),
       error.response?.status
     )
   }
@@ -109,7 +110,7 @@ function credentialsFromToken(response: TokenResponse): KokoroCredentials {
 
 async function storeTokenResponse(response: TokenResponse): Promise<KokoroCredentials> {
   if (response.token_type.toLowerCase() !== 'bearer') {
-    throw new KokoroAPIError('Kokoro 返回了不支持的 token 类型')
+    throw new KokoroAPIError(tr('Kokoro 返回了不支持的 token 类型'))
   }
   const next = credentialsFromToken(response)
   await saveKokoroCredentials(next)
@@ -138,7 +139,7 @@ async function refreshAccessToken(staleAccessToken?: string): Promise<KokoroCred
   const current = await getCredentials()
   if (!current || current.refreshExpiresAt <= Date.now()) {
     await clearSession()
-    throw new KokoroAPIError('Kokoro 登录已过期，请重新登录', 401)
+    throw new KokoroAPIError(tr('Kokoro 登录已过期，请重新登录'), 401)
   }
   if (staleAccessToken && current.accessToken !== staleAccessToken) return current
   if (refreshPromise) return refreshPromise
@@ -194,7 +195,7 @@ async function authorizedRequest<T>(
   replayed = false
 ): Promise<AxiosResponse<T>> {
   let current = await getCredentials()
-  if (!current) throw new KokoroAPIError('请先登录 Kokoro', 401)
+  if (!current) throw new KokoroAPIError(tr('请先登录 Kokoro'), 401)
   if (current.accessExpiresAt <= Date.now() + ACCESS_EXPIRY_LEEWAY_MS) {
     current = await refreshAccessToken(current.accessToken)
   }
@@ -242,7 +243,7 @@ export async function handleKokoroCallback(callback: URL): Promise<void> {
     callback.hostname !== expectedCallback.hostname ||
     callback.pathname !== expectedCallback.pathname
   ) {
-    throw new KokoroAPIError('Kokoro 登录回调地址无效')
+    throw new KokoroAPIError(tr('Kokoro 登录回调地址无效'))
   }
 
   const pending = pendingLogin
@@ -252,15 +253,15 @@ export async function handleKokoroCallback(callback: URL): Promise<void> {
     Date.now() - pending.createdAt > LOGIN_STATE_TTL_MS ||
     !stateMatches(state, pending.state)
   ) {
-    throw new KokoroAPIError('Kokoro 登录状态无效或已过期，请重新登录')
+    throw new KokoroAPIError(tr('Kokoro 登录状态无效或已过期，请重新登录'))
   }
 
   pendingLogin = null
   if (callback.searchParams.get('error') === 'access_denied') {
-    throw new KokoroAPIError('已取消 Kokoro 登录')
+    throw new KokoroAPIError(tr('已取消 Kokoro 登录'))
   }
   const code = callback.searchParams.get('code') || ''
-  if (!code) throw new KokoroAPIError('Kokoro 登录回调缺少授权码')
+  if (!code) throw new KokoroAPIError(tr('Kokoro 登录回调缺少授权码'))
 
   const response = await postToken({
     grant_type: 'authorization_code',
@@ -297,7 +298,7 @@ function validateAuthenticatedConfigUrl(value: string): string {
     url.origin !== base.origin ||
     url.pathname !== `${base.pathname}/app/subscription/config`
   ) {
-    throw new KokoroAPIError('Kokoro 返回了无效的配置下载地址')
+    throw new KokoroAPIError(tr('Kokoro 返回了无效的配置下载地址'))
   }
   return url.toString()
 }
@@ -313,7 +314,7 @@ export async function downloadKokoroProfile(
   })
   const resolved = resolveResponse.data
   if (resolved.format !== 'mihomo' || !resolved.content_type.toLowerCase().includes('yaml')) {
-    throw new KokoroAPIError('Kokoro 返回了不兼容的 Mihomo 配置格式')
+    throw new KokoroAPIError(tr('Kokoro 返回了不兼容的 Mihomo 配置格式'))
   }
 
   const response = await authorizedRequest<string>({
@@ -324,7 +325,7 @@ export async function downloadKokoroProfile(
   })
   const contentType = String(response.headers['content-type'] || '').toLowerCase()
   if (!contentType.includes('yaml')) {
-    throw new KokoroAPIError('Kokoro 配置响应不是 YAML')
+    throw new KokoroAPIError(tr('Kokoro 配置响应不是 YAML'))
   }
 
   const interval = Number(response.headers['profile-update-interval'])

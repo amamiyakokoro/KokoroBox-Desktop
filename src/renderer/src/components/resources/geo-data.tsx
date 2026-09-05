@@ -1,3 +1,4 @@
+import { tr } from '../../../../shared/i18n'
 import { Button, Input, Switch, Tab, Tabs } from '@heroui/react'
 import SettingCard from '@renderer/components/base/base-setting-card'
 import SettingItem from '@renderer/components/base/base-setting-item'
@@ -40,7 +41,7 @@ const GeoData: React.FC = () => {
 
   return (
     <SettingCard>
-      <SettingItem compatKey="legacy" title="GeoIP-DAT 数据库" divider>
+      <SettingItem compatKey="legacy" title={tr('GeoIP-DAT 数据库')} divider>
         <div className="flex w-[70%]">
           {geoipInput !== geoxUrl.geoip && (
             <Button
@@ -51,13 +52,13 @@ const GeoData: React.FC = () => {
                 patchControledMihomoConfig({ 'geox-url': { ...geoxUrl, geoip: geoipInput } })
               }}
             >
-              确认
+              {tr('确认')}
             </Button>
           )}
           <Input size="sm" value={geoipInput} onValueChange={setGeoIpInput} />
         </div>
       </SettingItem>
-      <SettingItem compatKey="legacy" title="GeoIP-MMDB 数据库" divider>
+      <SettingItem compatKey="legacy" title={tr('GeoIP-MMDB 数据库')} divider>
         <div className="flex w-[70%]">
           {mmdbInput !== geoxUrl.mmdb && (
             <Button
@@ -68,13 +69,13 @@ const GeoData: React.FC = () => {
                 patchControledMihomoConfig({ 'geox-url': { ...geoxUrl, mmdb: mmdbInput } })
               }}
             >
-              确认
+              {tr('确认')}
             </Button>
           )}
           <Input size="sm" value={mmdbInput} onValueChange={setMmdbInput} />
         </div>
       </SettingItem>
-      <SettingItem compatKey="legacy" title="GeoSite 数据库" divider>
+      <SettingItem compatKey="legacy" title={tr('GeoSite 数据库')} divider>
         <div className="flex w-[70%]">
           {geositeInput !== geoxUrl.geosite && (
             <Button
@@ -85,14 +86,14 @@ const GeoData: React.FC = () => {
                 patchControledMihomoConfig({ 'geox-url': { ...geoxUrl, geosite: geositeInput } })
               }}
             >
-              确认
+              {tr('确认')}
             </Button>
           )}
           <Input size="sm" value={geositeInput} onValueChange={setGeositeInput} />
         </div>
       </SettingItem>
 
-      <SettingItem compatKey="legacy" title="IP-ASN 数据库" divider>
+      <SettingItem compatKey="legacy" title={tr('IP-ASN 数据库')} divider>
         <div className="flex w-[70%]">
           {asnInput !== geoxUrl.asn && (
             <Button
@@ -103,13 +104,13 @@ const GeoData: React.FC = () => {
                 patchControledMihomoConfig({ 'geox-url': { ...geoxUrl, asn: asnInput } })
               }}
             >
-              确认
+              {tr('确认')}
             </Button>
           )}
           <Input size="sm" value={asnInput} onValueChange={setAsnInput} />
         </div>
       </SettingItem>
-      <SettingItem compatKey="legacy" title="GeoIP 模式" divider>
+      <SettingItem compatKey="legacy" title={tr('GeoIP 模式')} divider>
         <Tabs
           size="sm"
           color="primary"
@@ -124,7 +125,7 @@ const GeoData: React.FC = () => {
       </SettingItem>
       <SettingItem
         compatKey="legacy"
-        title="自动更新数据库"
+        title={tr('自动更新数据库')}
         actions={
           <Button
             size="sm"
@@ -134,7 +135,7 @@ const GeoData: React.FC = () => {
               setUpdating(true)
               try {
                 await mihomoUpgradeGeo()
-                notify('数据库更新成功', { variant: 'success' })
+                notify(tr('数据库更新成功'), { variant: 'success' })
               } catch (e) {
                 notify(e, { variant: 'danger' })
               } finally {
@@ -156,7 +157,7 @@ const GeoData: React.FC = () => {
         />
       </SettingItem>
       {geoAutoUpdate && (
-        <SettingItem compatKey="legacy" title="更新间隔(小时)">
+        <SettingItem compatKey="legacy" title={tr('更新间隔(小时)')}>
           <Input
             size="sm"
             type="number"

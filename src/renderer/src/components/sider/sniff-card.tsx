@@ -1,3 +1,4 @@
+import { tr } from '../../../../shared/i18n'
 import { Button, Card, CardBody, CardFooter, Tooltip } from '@heroui/react'
 import BorderSwitch from '@renderer/components/base/border-swtich'
 import { RiScan2Fill } from 'react-icons/ri'
@@ -45,7 +46,7 @@ const SniffCard: React.FC<Props> = (props) => {
   if (iconOnly) {
     return (
       <div className={`${sniffCardStatus} ${!controlSniff ? 'hidden' : ''} flex justify-center`}>
-        <Tooltip content="域名嗅探" placement="right">
+        <Tooltip content={tr('域名嗅探')} placement="right">
           <Button
             size="sm"
             isIconOnly
@@ -103,7 +104,7 @@ const SniffCard: React.FC<Props> = (props) => {
           <h3
             className={`text-md font-bold ${match ? 'text-primary-foreground' : 'text-foreground'}`}
           >
-            域名嗅探
+            {tr('域名嗅探')}
           </h3>
         </CardFooter>
       </Card>

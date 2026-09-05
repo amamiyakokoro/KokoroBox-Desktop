@@ -1,3 +1,4 @@
+import { tr } from '../../../../shared/i18n'
 import { Button, Input } from '@heroui-v3/react'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Virtuoso, VirtuosoHandle } from 'react-virtuoso'
@@ -248,7 +249,7 @@ export const TextViewer: React.FC<Props> = ({ value }) => {
                 jumpToMatch(event.shiftKey ? currentMatch - 1 : currentMatch + 1)
               }
             }}
-            placeholder="搜索"
+            placeholder={tr('搜索')}
             className="text-viewer-search w-full pl-8"
           />
         </div>

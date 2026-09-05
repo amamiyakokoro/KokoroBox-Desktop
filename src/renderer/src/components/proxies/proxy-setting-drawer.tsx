@@ -1,3 +1,4 @@
+import { tr } from '../../../../shared/i18n'
 import { Drawer, Input, InputGroup, ListBox, Select, Switch } from '@heroui-v3/react'
 import React, { useState, useEffect, useRef } from 'react'
 import SettingItem from '../base/base-setting-item'
@@ -91,13 +92,13 @@ const ProxySettingDrawer: React.FC<Props> = (props) => {
       <Drawer.Content placement="right" className="top-12 h-[calc(100%-48px)] p-3 pl-0">
         <Drawer.Dialog className="flex h-full w-[min(520px,calc(100vw-32px))] max-w-none flex-col overflow-hidden rounded-2xl! border border-separator/70 bg-overlay p-0 shadow-overlay flag-emoji">
           <Drawer.Header className="border-b border-separator/70 px-5 py-4">
-            <Drawer.Heading className="text-base font-semibold">代理组设置</Drawer.Heading>
+            <Drawer.Heading className="text-base font-semibold">{tr('代理组设置')}</Drawer.Heading>
           </Drawer.Header>
           <Drawer.Body className="no-scrollbar flex-1 overflow-y-auto px-5 py-3">
             <div className="flex flex-col gap-1">
-              <SettingItem title="代理节点展示列数" {...settingItemProps} divider>
+              <SettingItem title={tr('代理节点展示列数')} {...settingItemProps} divider>
                 <Select
-                  aria-label="代理节点展示列数"
+                  aria-label={tr('代理节点展示列数')}
                   value={proxyCols}
                   variant="secondary"
                   onChange={async (value) => {
@@ -115,38 +116,38 @@ const ProxySettingDrawer: React.FC<Props> = (props) => {
                   </Select.Trigger>
                   <Select.Popover>
                     <ListBox>
-                      <ListBox.Item id="auto" textValue="自动">
-                        自动
+                      <ListBox.Item id="auto" textValue={tr('自动')}>
+                        {tr('自动')}
                         <ListBox.ItemIndicator />
                       </ListBox.Item>
-                      <ListBox.Item id="1" textValue="一列">
-                        一列
+                      <ListBox.Item id="1" textValue={tr('一列')}>
+                        {tr('一列')}
                         <ListBox.ItemIndicator />
                       </ListBox.Item>
-                      <ListBox.Item id="2" textValue="两列">
-                        两列
+                      <ListBox.Item id="2" textValue={tr('两列')}>
+                        {tr('两列')}
                         <ListBox.ItemIndicator />
                       </ListBox.Item>
-                      <ListBox.Item id="3" textValue="三列">
-                        三列
+                      <ListBox.Item id="3" textValue={tr('三列')}>
+                        {tr('三列')}
                         <ListBox.ItemIndicator />
                       </ListBox.Item>
-                      <ListBox.Item id="4" textValue="四列">
-                        四列
+                      <ListBox.Item id="4" textValue={tr('四列')}>
+                        {tr('四列')}
                         <ListBox.ItemIndicator />
                       </ListBox.Item>
                     </ListBox>
                   </Select.Popover>
                 </Select>
               </SettingItem>
-              <SettingItem title="节点排序方式" {...settingItemProps} divider>
+              <SettingItem title={tr('节点排序方式')} {...settingItemProps} divider>
                 <SettingTabs
-                  ariaLabel="节点排序方式"
+                  ariaLabel={tr('节点排序方式')}
                   selectedKey={proxyDisplayOrder}
                   options={[
-                    { id: 'default', label: '默认' },
-                    { id: 'delay', label: '延迟' },
-                    { id: 'name', label: '名称' }
+                    { id: 'default', label: tr('默认') },
+                    { id: 'delay', label: tr('延迟') },
+                    { id: 'name', label: tr('名称') }
                   ]}
                   onChange={async (v) => {
                     await patchAppConfig({
@@ -155,14 +156,14 @@ const ProxySettingDrawer: React.FC<Props> = (props) => {
                   }}
                 />
               </SettingItem>
-              <SettingItem title="代理组额外信息" {...settingItemProps} divider>
+              <SettingItem title={tr('代理组额外信息')} {...settingItemProps} divider>
                 <SettingTabs
-                  ariaLabel="代理组额外信息"
+                  ariaLabel={tr('代理组额外信息')}
                   selectedKey={groupDisplayLayout}
                   options={[
-                    { id: 'hidden', label: '隐藏' },
-                    { id: 'single', label: '单行' },
-                    { id: 'double', label: '双行' }
+                    { id: 'hidden', label: tr('隐藏') },
+                    { id: 'single', label: tr('单行') },
+                    { id: 'double', label: tr('双行') }
                   ]}
                   onChange={async (v) => {
                     await patchAppConfig({
@@ -171,14 +172,14 @@ const ProxySettingDrawer: React.FC<Props> = (props) => {
                   }}
                 />
               </SettingItem>
-              <SettingItem title="代理节点额外信息" {...settingItemProps} divider>
+              <SettingItem title={tr('代理节点额外信息')} {...settingItemProps} divider>
                 <SettingTabs
-                  ariaLabel="代理节点额外信息"
+                  ariaLabel={tr('代理节点额外信息')}
                   selectedKey={proxyDisplayLayout}
                   options={[
-                    { id: 'hidden', label: '隐藏' },
-                    { id: 'single', label: '单行' },
-                    { id: 'double', label: '双行' }
+                    { id: 'hidden', label: tr('隐藏') },
+                    { id: 'single', label: tr('单行') },
+                    { id: 'double', label: tr('双行') }
                   ]}
                   onChange={async (v) => {
                     await patchAppConfig({
@@ -187,9 +188,9 @@ const ProxySettingDrawer: React.FC<Props> = (props) => {
                   }}
                 />
               </SettingItem>
-              <SettingItem title="显示二级分组选中节点" {...settingItemProps} divider>
+              <SettingItem title={tr('显示二级分组选中节点')} {...settingItemProps} divider>
                 <Switch
-                  aria-label="显示二级分组选中节点"
+                  aria-label={tr('显示二级分组选中节点')}
                   isSelected={showGroupSelectedProxy}
                   onChange={(v) => {
                     patchAppConfig({ showGroupSelectedProxy: v })
@@ -202,9 +203,9 @@ const ProxySettingDrawer: React.FC<Props> = (props) => {
                   </Switch.Content>
                 </Switch>
               </SettingItem>
-              <SettingItem title="悬停显示节点详情" {...settingItemProps} divider>
+              <SettingItem title={tr('悬停显示节点详情')} {...settingItemProps} divider>
                 <Switch
-                  aria-label="悬停显示节点详情"
+                  aria-label={tr('悬停显示节点详情')}
                   isSelected={showProxyDetailTooltip}
                   onChange={(v) => {
                     patchAppConfig({ showProxyDetailTooltip: v })
@@ -217,9 +218,9 @@ const ProxySettingDrawer: React.FC<Props> = (props) => {
                   </Switch.Content>
                 </Switch>
               </SettingItem>
-              <SettingItem title="记住代理组展开状态" {...settingItemProps} divider>
+              <SettingItem title={tr('记住代理组展开状态')} {...settingItemProps} divider>
                 <Switch
-                  aria-label="记住代理组展开状态"
+                  aria-label={tr('记住代理组展开状态')}
                   isSelected={rememberProxyGroupOpenState}
                   onChange={(v) => {
                     patchAppConfig({ rememberProxyGroupOpenState: v })
@@ -232,9 +233,9 @@ const ProxySettingDrawer: React.FC<Props> = (props) => {
                   </Switch.Content>
                 </Switch>
               </SettingItem>
-              <SettingItem title="切换节点时断开连接" {...settingItemProps} divider>
+              <SettingItem title={tr('切换节点时断开连接')} {...settingItemProps} divider>
                 <Switch
-                  aria-label="切换节点时断开连接"
+                  aria-label={tr('切换节点时断开连接')}
                   isSelected={autoCloseConnection}
                   onChange={(v) => {
                     patchAppConfig({ autoCloseConnection: v })
@@ -248,13 +249,13 @@ const ProxySettingDrawer: React.FC<Props> = (props) => {
                 </Switch>
               </SettingItem>
               {autoCloseConnection && (
-                <SettingItem title="打断模式" {...settingItemProps} divider>
+                <SettingItem title={tr('打断模式')} {...settingItemProps} divider>
                   <SettingTabs
-                    ariaLabel="打断模式"
+                    ariaLabel={tr('打断模式')}
                     selectedKey={closeMode}
                     options={[
-                      { id: 'all', label: '所有连接' },
-                      { id: 'group', label: '仅当前组' }
+                      { id: 'all', label: tr('所有连接') },
+                      { id: 'group', label: tr('仅当前组') }
                     ]}
                     onChange={async (v) => {
                       await patchAppConfig({
@@ -264,12 +265,12 @@ const ProxySettingDrawer: React.FC<Props> = (props) => {
                   />
                 </SettingItem>
               )}
-              <SettingItem title="延迟测试地址" {...settingItemProps} divider>
+              <SettingItem title={tr('延迟测试地址')} {...settingItemProps} divider>
                 <Input
-                  aria-label="延迟测试地址"
+                  aria-label={tr('延迟测试地址')}
                   data-setting-input="url"
                   value={url}
-                  placeholder="默认 https://www.gstatic.com/generate_204"
+                  placeholder={tr('默认 https://www.gstatic.com/generate_204')}
                   variant="secondary"
                   onChange={(event) => {
                     const v = event.target.value
@@ -278,13 +279,13 @@ const ProxySettingDrawer: React.FC<Props> = (props) => {
                   }}
                 />
               </SettingItem>
-              <SettingItem title="测试地址来源" {...settingItemProps} divider>
+              <SettingItem title={tr('测试地址来源')} {...settingItemProps} divider>
                 <SettingTabs
-                  ariaLabel="测试地址来源"
+                  ariaLabel={tr('测试地址来源')}
                   selectedKey={delayTestUrlScope}
                   options={[
-                    { id: 'group', label: '使用组配置' },
-                    { id: 'global', label: '使用统一地址' }
+                    { id: 'group', label: tr('使用组配置') },
+                    { id: 'global', label: tr('使用统一地址') }
                   ]}
                   onChange={async (v) => {
                     await patchAppConfig({
@@ -293,9 +294,9 @@ const ProxySettingDrawer: React.FC<Props> = (props) => {
                   }}
                 />
               </SettingItem>
-              <SettingItem title="使用策略组 API 测速" {...settingItemProps} divider>
+              <SettingItem title={tr('使用策略组 API 测速')} {...settingItemProps} divider>
                 <Switch
-                  aria-label="使用策略组 API 测速"
+                  aria-label={tr('使用策略组 API 测速')}
                   isSelected={delayTestUseGroupApi}
                   onChange={(v) => {
                     patchAppConfig({ delayTestUseGroupApi: v })
@@ -309,15 +310,15 @@ const ProxySettingDrawer: React.FC<Props> = (props) => {
                 </Switch>
               </SettingItem>
               {!delayTestUseGroupApi && (
-                <SettingItem title="延迟测试并发数量" {...settingItemProps} divider>
+                <SettingItem title={tr('延迟测试并发数量')} {...settingItemProps} divider>
                   <InputGroup data-setting-input="number" variant="secondary">
                     <InputGroup.Input
-                      aria-label="延迟测试并发数量"
+                      aria-label={tr('延迟测试并发数量')}
                       type="number"
                       value={delayTestConcurrency?.toString()}
                       min={MIN_DELAY_TEST_CONCURRENCY}
                       max={MAX_DELAY_TEST_CONCURRENCY}
-                      placeholder={`默认 ${DEFAULT_DELAY_TEST_CONCURRENCY}`}
+                      placeholder={tr('默认 {0}', [DEFAULT_DELAY_TEST_CONCURRENCY])}
                       onChange={(event) => {
                         const v = event.target.value
                         patchAppConfig({
@@ -328,13 +329,13 @@ const ProxySettingDrawer: React.FC<Props> = (props) => {
                   </InputGroup>
                 </SettingItem>
               )}
-              <SettingItem title="延迟测试超时时间" {...settingItemProps}>
+              <SettingItem title={tr('延迟测试超时时间')} {...settingItemProps}>
                 <InputGroup data-setting-input="number" variant="secondary">
                   <InputGroup.Input
-                    aria-label="延迟测试超时时间"
+                    aria-label={tr('延迟测试超时时间')}
                     type="number"
                     value={delayTestTimeout?.toString()}
-                    placeholder="默认 5000"
+                    placeholder={tr('默认 5000')}
                     onChange={(event) => {
                       const v = event.target.value
                       patchAppConfig({ delayTestTimeout: parseInt(v) })

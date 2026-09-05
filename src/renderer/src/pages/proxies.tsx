@@ -1,3 +1,4 @@
+import { tr } from '../../../shared/i18n'
 import { Button, Card, CardBody, Chip } from '@heroui/react'
 import { Avatar } from '@heroui-v3/react'
 import BasePage from '@renderer/components/base/base-page'
@@ -689,7 +690,7 @@ const Proxies: React.FC = () => {
 
   return (
     <BasePage
-      title="代理组"
+      title={tr('代理组')}
       header={
         <Button
           size="sm"
@@ -715,7 +716,7 @@ const Proxies: React.FC = () => {
         <div className="h-full w-full flex justify-center items-center">
           <div className="flex flex-col items-center">
             <MdDoubleArrow className="text-foreground-500 text-[100px]" />
-            <h2 className="text-foreground-500 text-[20px]">直连模式</h2>
+            <h2 className="text-foreground-500 text-[20px]">{tr('直连模式')}</h2>
           </div>
         </div>
       ) : (

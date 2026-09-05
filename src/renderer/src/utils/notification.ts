@@ -1,3 +1,4 @@
+import { tr } from '../../../shared/i18n'
 import { toast, type ButtonProps } from '@heroui-v3/react'
 import { getAppConfig } from './ipc'
 
@@ -51,7 +52,7 @@ export function showToastNotification(payload: AppNotificationPayload): void {
   const errorDetailAction =
     payload.variant === 'danger' && body
       ? {
-          children: '查看详情',
+          children: tr('查看详情'),
           onPress: () => errorDetailHandler?.({ title, body })
         }
       : undefined
@@ -63,7 +64,7 @@ export function showToastNotification(payload: AppNotificationPayload): void {
       errorDetailAction ??
       (payload.url
         ? {
-            children: '打开',
+            children: tr('打开'),
             onPress: () => window.open(payload.url, '_blank', 'noopener,noreferrer')
           }
         : undefined),

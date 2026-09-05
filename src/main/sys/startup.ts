@@ -1,3 +1,4 @@
+import { tr } from '../../shared/i18n'
 import { is } from '@electron-toolkit/utils'
 import { app } from 'electron'
 import { execSync, spawn } from 'child_process'
@@ -43,8 +44,8 @@ export function ensureWindowsElevatedStartup(
         // ignore
       }
       void showNotification({
-        title: '首次启动请以管理员权限运行',
-        body: `首次启动请以管理员权限运行\n${createErrorStr}\n${errorStr}`,
+        title: tr('首次启动请以管理员权限运行'),
+        body: tr('首次启动请以管理员权限运行\n{0}\n{1}', [createErrorStr, errorStr]),
         variant: 'danger'
       })
     } finally {

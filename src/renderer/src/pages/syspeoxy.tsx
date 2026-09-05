@@ -1,3 +1,4 @@
+import { tr } from '../../../shared/i18n'
 import { Button, Input, Switch, Tab, Tabs, Tooltip } from '@heroui/react'
 import BasePage from '@renderer/components/base/base-page'
 import SettingCard from '@renderer/components/base/base-setting-card'
@@ -113,7 +114,7 @@ const Sysproxy: React.FC = () => {
       return values
     }
 
-    notify('服务不可用，已切换到执行命令模式')
+    notify(tr('服务不可用，已切换到执行命令模式'))
     const nextValues = {
       ...values,
       settingMode: 'exec' as const,
@@ -144,12 +145,12 @@ const Sysproxy: React.FC = () => {
 
   return (
     <BasePage
-      title="系统代理设置"
+      title={tr('系统代理设置')}
       contentClassName="no-scrollbar"
       header={
         changed && (
           <Button color="primary" className="app-nodrag" size="sm" onPress={onSave}>
-            保存
+            {tr('保存')}
           </Button>
         )
       }
@@ -178,41 +179,41 @@ const Sysproxy: React.FC = () => {
         />
       )}
       <SettingCard className="sysproxy-settings">
-        <SettingItem compatKey="legacy" title="代理主机" divider>
+        <SettingItem compatKey="legacy" title={tr('代理主机')} divider>
           <Input
             size="sm"
             className="w-[50%]"
             value={values.host}
-            placeholder="默认 127.0.0.1 若无特殊需求请勿修改"
+            placeholder={tr('默认 127.0.0.1 若无特殊需求请勿修改')}
             onValueChange={(v) => {
               setValues({ ...values, host: v })
             }}
           />
         </SettingItem>
-        <SettingItem compatKey="legacy" title="代理模式" divider>
+        <SettingItem compatKey="legacy" title={tr('代理模式')} divider>
           <Tabs
             size="sm"
             color="primary"
             selectedKey={values.mode}
             onSelectionChange={(key: Key) => setValues({ ...values, mode: key as SysProxyMode })}
           >
-            <Tab key="manual" title="手动" />
+            <Tab key="manual" title={tr('手动')} />
             <Tab key="auto" title="PAC" />
           </Tabs>
         </SettingItem>
         {platform === 'win32' && (
-          <SettingItem compatKey="legacy" title="UWP 工具" divider>
+          <SettingItem compatKey="legacy" title={tr('UWP 工具')} divider>
             <Button
               size="sm"
               onPress={async () => {
                 await openUWPTool()
               }}
             >
-              打开 UWP 工具
+              {tr('打开 UWP 工具')}
             </Button>
           </SettingItem>
         )}
-        <SettingItem compatKey="legacy" title="设置方式" divider>
+        <SettingItem compatKey="legacy" title={tr('设置方式')} divider>
           <Tabs
             size="sm"
             color="primary"
@@ -227,19 +228,21 @@ const Sysproxy: React.FC = () => {
               })
             }}
           >
-            <Tab key="exec" title="执行命令" />
-            <Tab key="service" title="服务模式" />
+            <Tab key="exec" title={tr('执行命令')} />
+            <Tab key="service" title={tr('服务模式')} />
           </Tabs>
         </SettingItem>
         {platform !== 'linux' && values.settingMode === 'service' && (
           <SettingItem
             compatKey="legacy"
-            title="仅为活跃接口设置"
+            title={tr('仅为活跃接口设置')}
             actions={
               <Tooltip
                 content={
                   <>
-                    <div>开启后，系统代理仅会为当前活跃的网络接口设置，仅服务模式下生效</div>
+                    <div>
+                      {tr('开启后，系统代理仅会为当前活跃的网络接口设置，仅服务模式下生效')}
+                    </div>
                   </>
                 }
               >
@@ -263,9 +266,11 @@ const Sysproxy: React.FC = () => {
         {values.settingMode === 'service' && (
           <SettingItem
             compatKey="legacy"
-            title="系统代理守护"
+            title={tr('系统代理守护')}
             actions={
-              <Tooltip content={<div>检测到系统代理被修改后自动恢复，仅服务模式下生效</div>}>
+              <Tooltip
+                content={<div>{tr('检测到系统代理被修改后自动恢复，仅服务模式下生效')}</div>}
+              >
                 <Button isIconOnly size="sm" variant="light">
                   <IoIosHelpCircle className="text-lg" />
                 </Button>
@@ -285,9 +290,9 @@ const Sysproxy: React.FC = () => {
         {values.settingMode === 'service' && values.guard && (
           <SettingItem
             compatKey="legacy"
-            title="守护通知"
+            title={tr('守护通知')}
             actions={
-              <Tooltip content={<div>系统代理恢复成功或失败时发送通知</div>}>
+              <Tooltip content={<div>{tr('系统代理恢复成功或失败时发送通知')}</div>}>
                 <Button isIconOnly size="sm" variant="light">
                   <IoIosHelpCircle className="text-lg" />
                 </Button>
@@ -306,15 +311,15 @@ const Sysproxy: React.FC = () => {
           </SettingItem>
         )}
         {values.mode === 'auto' && (
-          <SettingItem compatKey="legacy" title="代理模式">
+          <SettingItem compatKey="legacy" title={tr('代理模式')}>
             <Button size="sm" onPress={() => setOpenPacEditor(true)}>
-              编辑 PAC 脚本
+              {tr('编辑 PAC 脚本')}
             </Button>
           </SettingItem>
         )}
         {values.mode === 'manual' && (
           <>
-            <SettingItem compatKey="legacy" title="添加默认代理绕过" divider>
+            <SettingItem compatKey="legacy" title={tr('添加默认代理绕过')} divider>
               <Button
                 size="sm"
                 onPress={() => {
@@ -324,23 +329,23 @@ const Sysproxy: React.FC = () => {
                   })
                 }}
               >
-                添加默认代理绕过
+                {tr('添加默认代理绕过')}
               </Button>
             </SettingItem>
-            <SettingItem compatKey="legacy" title="代理绕过列表">
+            <SettingItem compatKey="legacy" title={tr('代理绕过列表')}>
               <Button
                 size="sm"
                 onPress={async () => {
                   setOpenEditor(true)
                 }}
               >
-                编辑
+                {tr('编辑')}
               </Button>
             </SettingItem>
             <EditableList
               items={values.bypass}
               onChange={(list) => setValues({ ...values, bypass: list as string[] })}
-              placeholder="例：*.baidu.com"
+              placeholder={tr('例：*.baidu.com')}
               divider={false}
             />
           </>

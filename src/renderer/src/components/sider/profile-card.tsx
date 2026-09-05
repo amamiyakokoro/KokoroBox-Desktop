@@ -1,3 +1,4 @@
+import { tr } from '../../../../shared/i18n'
 import { Button, Card, CardBody, CardFooter, Chip, Tooltip } from '@heroui/react'
 import { Meter } from '@heroui-v3/react'
 import { useProfileConfig } from '@renderer/hooks/use-profile-config'
@@ -8,7 +9,6 @@ import { IoMdRefresh } from 'react-icons/io'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import 'dayjs/locale/zh-cn'
 import dayjs from 'dayjs'
 import React, { useState } from 'react'
 import ConfigViewer from './config-viewer'
@@ -16,7 +16,6 @@ import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { TiFolder } from 'react-icons/ti'
 
 dayjs.extend(relativeTime)
-dayjs.locale('zh-cn')
 
 interface Props {
   iconOnly?: boolean
@@ -51,7 +50,7 @@ const ProfileCard: React.FC<Props> = (props) => {
   const info = items?.find((item) => item.id === current) ?? {
     id: 'default',
     type: 'local',
-    name: '空白订阅'
+    name: tr('空白订阅')
   }
 
   const extra = info?.extra
@@ -61,7 +60,7 @@ const ProfileCard: React.FC<Props> = (props) => {
   if (iconOnly) {
     return (
       <div className={`${profileCardStatus} flex justify-center`}>
-        <Tooltip content="订阅管理" placement="right">
+        <Tooltip content={tr('订阅管理')} placement="right">
           <Button
             size="sm"
             isIconOnly
@@ -160,7 +159,7 @@ const ProfileCard: React.FC<Props> = (props) => {
                       await patchAppConfig({ profileDisplayDate: 'update' })
                     }}
                   >
-                    {extra.expire ? dayjs.unix(extra.expire).format('YYYY-MM-DD') : '长期有效'}
+                    {extra.expire ? dayjs.unix(extra.expire).format('YYYY-MM-DD') : tr('长期有效')}
                   </Button>
                 ) : (
                   <Button
@@ -187,7 +186,7 @@ const ProfileCard: React.FC<Props> = (props) => {
                   variant="bordered"
                   className={`${match ? 'text-primary-foreground border-primary-foreground' : 'border-primary text-primary'}`}
                 >
-                  远程
+                  {tr('远程')}
                 </Chip>
                 <small>{dayjs(info.updated).fromNow()}</small>
               </div>
@@ -201,12 +200,12 @@ const ProfileCard: React.FC<Props> = (props) => {
                   variant="bordered"
                   className={`${match ? 'text-primary-foreground border-primary-foreground' : 'border-primary text-primary'}`}
                 >
-                  本地
+                  {tr('本地')}
                 </Chip>
               </div>
             )}
             {extra && (
-              <Meter aria-label="流量用量" maxValue={total} value={usage}>
+              <Meter aria-label={tr('流量用量')} maxValue={total} value={usage}>
                 <Meter.Track
                   className={
                     match
@@ -266,7 +265,7 @@ const ProfileCard: React.FC<Props> = (props) => {
             <h3
               className={`text-md font-bold ${match ? 'text-primary-foreground' : 'text-foreground'}`}
             >
-              订阅管理
+              {tr('订阅管理')}
             </h3>
           </CardFooter>
         </Card>

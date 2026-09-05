@@ -1,3 +1,4 @@
+import { tr } from '../../../../shared/i18n'
 import React, { useEffect, useState } from 'react'
 import { Select, SelectItem } from '@heroui/react'
 import { getInterfaces } from '@renderer/utils/ipc'
@@ -18,14 +19,14 @@ const InterfaceSelect: React.FC<{
 
   return (
     <Select
-      aria-label="网络接口"
+      aria-label={tr('网络接口')}
       size="sm"
       className="w-75"
       selectedKeys={new Set([value])}
       disallowEmptySelection={true}
       onSelectionChange={(v) => onChange(v.currentKey as string)}
     >
-      <SelectItem key="">禁用</SelectItem>
+      <SelectItem key="">{tr('禁用')}</SelectItem>
       <>
         {ifaces.map((name) => (
           <SelectItem key={name}>{name}</SelectItem>

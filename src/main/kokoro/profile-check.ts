@@ -1,3 +1,4 @@
+import { tr } from '../../shared/i18n'
 import { execFile } from 'child_process'
 import { mkdir, mkdtemp, rm, writeFile } from 'fs/promises'
 import path from 'path'
@@ -31,7 +32,7 @@ export async function validateMihomoProfileContent(content: string): Promise<voi
       .filter((line) => line.includes('level=error'))
       .map((line) => line.split('level=error', 2)[1]?.trim() || line.trim())
     throw new Error(
-      `Kokoro 配置校验失败：${errorLines.join('\n') || output.trim() || error.message}`
+      tr('Kokoro 配置校验失败：{0}', [errorLines.join('\n') || output.trim() || error.message])
     )
   } finally {
     await rm(testDir, { recursive: true, force: true })

@@ -1,3 +1,4 @@
+import { tr } from '../../../../shared/i18n'
 import React, { useState } from 'react'
 import SettingCard from '../base/base-setting-card'
 import SettingItem from '../base/base-setting-item'
@@ -63,8 +64,8 @@ const PortSetting: React.FC = () => {
   return (
     <>
       {lanOpen && <InterfaceModal onClose={() => setLanOpen(false)} />}
-      <SettingCard header="端口设置">
-        <SettingItem compatKey="legacy" title="混合端口" divider>
+      <SettingCard header={tr('端口设置')}>
+        <SettingItem compatKey="legacy" title={tr('混合端口')} divider>
           <div className="flex">
             {mixedPortInput !== mixedPort && (
               <Button
@@ -80,7 +81,7 @@ const PortSetting: React.FC = () => {
                   }
                 }}
               >
-                确认
+                {tr('确认')}
               </Button>
             )}
             <Input
@@ -96,7 +97,7 @@ const PortSetting: React.FC = () => {
             />
           </div>
         </SettingItem>
-        <SettingItem compatKey="legacy" title="Socks 端口" divider>
+        <SettingItem compatKey="legacy" title={tr('Socks 端口')} divider>
           <div className="flex">
             {socksPortInput !== socksPort && (
               <Button
@@ -108,7 +109,7 @@ const PortSetting: React.FC = () => {
                   onChangeNeedRestart({ 'socks-port': socksPortInput })
                 }}
               >
-                确认
+                {tr('确认')}
               </Button>
             )}
             <Input
@@ -124,7 +125,7 @@ const PortSetting: React.FC = () => {
             />
           </div>
         </SettingItem>
-        <SettingItem compatKey="legacy" title="Http 端口" divider>
+        <SettingItem compatKey="legacy" title={tr('Http 端口')} divider>
           <div className="flex">
             {httpPortInput !== httpPort && (
               <Button
@@ -136,7 +137,7 @@ const PortSetting: React.FC = () => {
                   onChangeNeedRestart({ port: httpPortInput })
                 }}
               >
-                确认
+                {tr('确认')}
               </Button>
             )}
             <Input
@@ -153,7 +154,7 @@ const PortSetting: React.FC = () => {
           </div>
         </SettingItem>
         {platform !== 'win32' && (
-          <SettingItem compatKey="legacy" title="Redir 端口" divider>
+          <SettingItem compatKey="legacy" title={tr('Redir 端口')} divider>
             <div className="flex">
               {redirPortInput !== redirPort && (
                 <Button
@@ -165,7 +166,7 @@ const PortSetting: React.FC = () => {
                     onChangeNeedRestart({ 'redir-port': redirPortInput })
                   }}
                 >
-                  确认
+                  {tr('确认')}
                 </Button>
               )}
               <Input
@@ -183,7 +184,7 @@ const PortSetting: React.FC = () => {
           </SettingItem>
         )}
         {platform === 'linux' && (
-          <SettingItem compatKey="legacy" title="TProxy 端口" divider>
+          <SettingItem compatKey="legacy" title={tr('TProxy 端口')} divider>
             <div className="flex">
               {tproxyPortInput !== tproxyPort && (
                 <Button
@@ -195,7 +196,7 @@ const PortSetting: React.FC = () => {
                     onChangeNeedRestart({ 'tproxy-port': tproxyPortInput })
                   }}
                 >
-                  确认
+                  {tr('确认')}
                 </Button>
               )}
               <Input
@@ -214,7 +215,7 @@ const PortSetting: React.FC = () => {
         )}
         <SettingItem
           compatKey="legacy"
-          title="允许局域网连接"
+          title={tr('允许局域网连接')}
           actions={
             <Button
               size="sm"
@@ -239,7 +240,7 @@ const PortSetting: React.FC = () => {
         </SettingItem>
         {allowLan && (
           <>
-            <SettingItem compatKey="legacy" title="允许连接的 IP 段">
+            <SettingItem compatKey="legacy" title={tr('允许连接的 IP 段')}>
               {lanAllowedIpsInput.join('') !== lanAllowedIps.join('') && (
                 <Button
                   size="sm"
@@ -248,16 +249,16 @@ const PortSetting: React.FC = () => {
                     onChangeNeedRestart({ 'lan-allowed-ips': lanAllowedIpsInput })
                   }}
                 >
-                  确认
+                  {tr('确认')}
                 </Button>
               )}
             </SettingItem>
             <EditableList
               items={lanAllowedIpsInput}
               onChange={(items) => setLanAllowedIpsInput(items as string[])}
-              placeholder="IP 段"
+              placeholder={tr('IP 段')}
             />
-            <SettingItem compatKey="legacy" title="禁止连接的 IP 段">
+            <SettingItem compatKey="legacy" title={tr('禁止连接的 IP 段')}>
               {lanDisallowedIpsInput.join('') !== lanDisallowedIps.join('') && (
                 <Button
                   size="sm"
@@ -266,37 +267,37 @@ const PortSetting: React.FC = () => {
                     onChangeNeedRestart({ 'lan-disallowed-ips': lanDisallowedIpsInput })
                   }}
                 >
-                  确认
+                  {tr('确认')}
                 </Button>
               )}
             </SettingItem>
             <EditableList
               items={lanDisallowedIpsInput}
               onChange={(items) => setLanDisallowedIpsInput(items as string[])}
-              placeholder="IP 段"
+              placeholder={tr('IP 段')}
             />
           </>
         )}
-        <SettingItem compatKey="legacy" title="用户验证">
+        <SettingItem compatKey="legacy" title={tr('用户验证')}>
           {authenticationInput.join() !== authentication.join() && (
             <Button
               size="sm"
               color="primary"
               onPress={() => onChangeNeedRestart({ authentication: authenticationInput })}
             >
-              确认
+              {tr('确认')}
             </Button>
           )}
         </SettingItem>
         <EditableList
           items={authenticationInput}
           onChange={(items) => setAuthenticationInput(items as string[])}
-          placeholder="用户名"
-          part2Placeholder="密码"
+          placeholder={tr('用户名')}
+          part2Placeholder={tr('密码')}
           parse={parseAuth}
           format={formatAuth}
         />
-        <SettingItem compatKey="legacy" title="允许跳过验证的 IP 段">
+        <SettingItem compatKey="legacy" title={tr('允许跳过验证的 IP 段')}>
           {skipAuthPrefixesInput.join('') !== skipAuthPrefixes.join('') && (
             <Button
               size="sm"
@@ -305,14 +306,14 @@ const PortSetting: React.FC = () => {
                 onChangeNeedRestart({ 'skip-auth-prefixes': skipAuthPrefixesInput })
               }}
             >
-              确认
+              {tr('确认')}
             </Button>
           )}
         </SettingItem>
         <EditableList
           items={skipAuthPrefixesInput}
           onChange={(items) => setSkipAuthPrefixesInput(items as string[])}
-          placeholder="IP 段"
+          placeholder={tr('IP 段')}
           disableFirst
           divider={false}
         />

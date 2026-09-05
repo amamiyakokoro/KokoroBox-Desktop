@@ -1,7 +1,8 @@
+import { tr } from '../../../../shared/i18n'
 import React, { useState } from 'react'
 import SettingCard from '../base/base-setting-card'
 import SettingItem from '../base/base-setting-item'
-import { Button, Switch, Tab, Tabs, Tooltip } from '@heroui/react'
+import { Button, Select, SelectItem, Switch, Tab, Tabs, Tooltip } from '@heroui/react'
 import useSWR from 'swr'
 import { checkAutoRun, disableAutoRun, enableAutoRun, relaunchApp } from '@renderer/utils/ipc'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
@@ -13,6 +14,7 @@ const GeneralConfig: React.FC = () => {
   const { data: enable, mutate: mutateEnable } = useSWR('checkAutoRun', checkAutoRun)
   const { appConfig, patchAppConfig } = useAppConfig()
   const {
+    language = 'system',
     silentStart = false,
     autoCheckUpdate,
     updateChannel = 'stable',
@@ -23,19 +25,20 @@ const GeneralConfig: React.FC = () => {
 
   const [showRestartConfirm, setShowRestartConfirm] = useState(false)
   const [pendingDisableGPU, setPendingDisableGPU] = useState(disableGPU)
+  const [languageChanged, setLanguageChanged] = useState(false)
 
   return (
     <>
       {showRestartConfirm && (
         <ConfirmModal
-          title="确定要重启应用吗？"
+          title={tr('确定要重启应用吗？')}
           description={
             <div>
-              <p>修改 GPU 加速设置需要重启应用才能生效</p>
+              <p>{tr('修改 GPU 加速设置需要重启应用才能生效')}</p>
             </div>
           }
-          confirmText="重启"
-          cancelText="取消"
+          confirmText={tr('重启')}
+          cancelText={tr('取消')}
           onChange={(open) => {
             if (!open) {
               setPendingDisableGPU(disableGPU)
@@ -52,7 +55,33 @@ const GeneralConfig: React.FC = () => {
         />
       )}
       <SettingCard>
-        <SettingItem compatKey="legacy" title="开机自启" divider>
+        <SettingItem compatKey="legacy" title={tr('界面语言')} divider>
+          <div className="flex max-w-full flex-wrap items-center justify-end gap-2">
+            <Select
+              aria-label={tr('界面语言')}
+              className="w-44"
+              size="sm"
+              selectedKeys={[language]}
+              disallowEmptySelection
+              onSelectionChange={async (selection) => {
+                const nextLanguage = selection.currentKey
+                if (!['system', 'zh-CN', 'zh-TW'].includes(nextLanguage || '')) return
+                const saved = await patchAppConfig({ language: nextLanguage as AppLanguage })
+                if (saved) setLanguageChanged(true)
+              }}
+            >
+              <SelectItem key="system">{tr('跟随系统')}</SelectItem>
+              <SelectItem key="zh-CN">简体中文</SelectItem>
+              <SelectItem key="zh-TW">繁體中文</SelectItem>
+            </Select>
+            {languageChanged && (
+              <Button size="sm" color="primary" onPress={() => relaunchApp()}>
+                {tr('重启以应用语言')}
+              </Button>
+            )}
+          </div>
+        </SettingItem>
+        <SettingItem compatKey="legacy" title={tr('开机自启')} divider>
           <Switch
             size="sm"
             isSelected={enable}
@@ -71,7 +100,7 @@ const GeneralConfig: React.FC = () => {
             }}
           />
         </SettingItem>
-        <SettingItem compatKey="legacy" title="静默启动" divider>
+        <SettingItem compatKey="legacy" title={tr('静默启动')} divider>
           <Switch
             size="sm"
             isSelected={silentStart}
@@ -80,7 +109,7 @@ const GeneralConfig: React.FC = () => {
             }}
           />
         </SettingItem>
-        <SettingItem compatKey="legacy" title="自动检查更新" divider>
+        <SettingItem compatKey="legacy" title={tr('自动检查更新')} divider>
           <Switch
             size="sm"
             isSelected={autoCheckUpdate}
@@ -89,7 +118,7 @@ const GeneralConfig: React.FC = () => {
             }}
           />
         </SettingItem>
-        <SettingItem compatKey="legacy" title="更新通道" divider>
+        <SettingItem compatKey="legacy" title={tr('更新通道')} divider>
           <Tabs
             size="sm"
             color="primary"
@@ -98,11 +127,11 @@ const GeneralConfig: React.FC = () => {
               patchAppConfig({ updateChannel: v as AppUpdateChannel })
             }}
           >
-            <Tab key="stable" title="正式版" />
-            <Tab key="rolling" title="滚动版" />
+            <Tab key="stable" title={tr('正式版')} />
+            <Tab key="rolling" title={tr('滚动版')} />
           </Tabs>
         </SettingItem>
-        <SettingItem compatKey="legacy" title="通知形式" divider>
+        <SettingItem compatKey="legacy" title={tr('通知形式')} divider>
           <Tabs
             size="sm"
             color="primary"
@@ -111,16 +140,16 @@ const GeneralConfig: React.FC = () => {
               patchAppConfig({ notificationMode: v as AppNotificationMode })
             }}
           >
-            <Tab key="system" title="系统" />
-            <Tab key="toast" title="应用内" />
+            <Tab key="system" title={tr('系统')} />
+            <Tab key="toast" title={tr('应用内')} />
           </Tabs>
         </SettingItem>
 
         <SettingItem
           compatKey="legacy"
-          title="禁用 GPU 加速"
+          title={tr('禁用 GPU 加速')}
           actions={
-            <Tooltip content="开启后，应用将禁用 GPU 加速，可能会提高稳定性，但会降低性能">
+            <Tooltip content={tr('开启后，应用将禁用 GPU 加速，可能会提高稳定性，但会降低性能')}>
               <Button isIconOnly size="sm" variant="light">
                 <IoIosHelpCircle className="text-lg" />
               </Button>
@@ -139,9 +168,9 @@ const GeneralConfig: React.FC = () => {
         </SettingItem>
         <SettingItem
           compatKey="legacy"
-          title="禁用动画"
+          title={tr('禁用动画')}
           actions={
-            <Tooltip content="开启后，应用将减轻绝大部分动画效果，可能会提高性能">
+            <Tooltip content={tr('开启后，应用将减轻绝大部分动画效果，可能会提高性能')}>
               <Button isIconOnly size="sm" variant="light">
                 <IoIosHelpCircle className="text-lg" />
               </Button>

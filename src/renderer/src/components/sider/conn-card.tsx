@@ -1,3 +1,4 @@
+import { tr } from '../../../../shared/i18n'
 import { Button, Card, CardBody, CardFooter, Tooltip } from '@heroui/react'
 import { FaCircleArrowDown, FaCircleArrowUp } from 'react-icons/fa6'
 import { useLocation, useNavigate } from 'react-router-dom'
@@ -123,7 +124,7 @@ const ConnCard: React.FC<Props> = (props) => {
   if (iconOnly) {
     return (
       <div className={`${connectionCardStatus} flex justify-center`}>
-        <Tooltip content="连接" placement="right">
+        <Tooltip content={tr('连接')} placement="right">
           <Button
             size="sm"
             isIconOnly
@@ -190,7 +191,7 @@ const ConnCard: React.FC<Props> = (props) => {
               <div
                 className={`flex justify-between items-center w-full text-md font-bold ${match ? 'text-primary-foreground' : 'text-foreground'}`}
               >
-                <h3>连接</h3>
+                <h3>{tr('连接')}</h3>
               </div>
             </CardFooter>
             <TrafficChart data={trafficData} isActive={match} />
@@ -223,7 +224,7 @@ const ConnCard: React.FC<Props> = (props) => {
             <h3
               className={`text-md font-bold ${match ? 'text-primary-foreground' : 'text-foreground'}`}
             >
-              连接
+              {tr('连接')}
             </h3>
           </CardFooter>
         </Card>

@@ -1,3 +1,4 @@
+import { tr } from '../../../../shared/i18n'
 import { Button, Label, Modal, Switch } from '@heroui-v3/react'
 import { Spinner } from '@heroui/react'
 import React, { useEffect, useState } from 'react'
@@ -66,10 +67,10 @@ const EditFileModal: React.FC<Props> = (props) => {
     <Modal>
       {isConfirmOpen && (
         <ConfirmModal
-          title="确认取消"
-          description="您有未保存的修改，确定要取消吗？"
-          confirmText="放弃修改"
-          cancelText="继续编辑"
+          title={tr('确认取消')}
+          description={tr('您有未保存的修改，确定要取消吗？')}
+          confirmText={tr('放弃修改')}
+          cancelText={tr('继续编辑')}
           onChange={setIsConfirmOpen}
           onConfirm={onClose}
         />
@@ -84,10 +85,10 @@ const EditFileModal: React.FC<Props> = (props) => {
           <Modal.Dialog className="mt-4 h-[calc(100%-32px)] max-w-none w-[calc(100%-100px)]">
             <Modal.Header className="app-drag pb-0">
               <div className="flex justify-start">
-                <Modal.Heading className="flex items-center">编辑订阅</Modal.Heading>
+                <Modal.Heading className="flex items-center">{tr('编辑订阅')}</Modal.Heading>
                 {isRemote && (
                   <small className="ml-2 text-foreground-500">
-                    注意：此处编辑配置更新订阅后会还原，如需要自定义配置请使用
+                    {tr('注意：此处编辑配置更新订阅后会还原，如需要自定义配置请使用')}
                     <Button
                       size="sm"
                       variant="ghost"
@@ -96,9 +97,9 @@ const EditFileModal: React.FC<Props> = (props) => {
                         navigate('/override')
                       }}
                     >
-                      覆写
+                      {tr('覆写')}
                     </Button>
-                    功能
+                    {tr('功能')}
                   </small>
                 )}
               </div>
@@ -125,7 +126,7 @@ const EditFileModal: React.FC<Props> = (props) => {
                     <Switch.Control>
                       <Switch.Thumb />
                     </Switch.Control>
-                    <Label>显示修改</Label>
+                    <Label>{tr('显示修改')}</Label>
                   </Switch.Content>
                 </Switch>
                 <Switch size="sm" isSelected={sideBySide} onChange={setSideBySide}>
@@ -133,16 +134,16 @@ const EditFileModal: React.FC<Props> = (props) => {
                     <Switch.Control>
                       <Switch.Thumb />
                     </Switch.Control>
-                    <Label>侧边显示</Label>
+                    <Label>{tr('侧边显示')}</Label>
                   </Switch.Content>
                 </Switch>
               </div>
               <div className="flex gap-2">
                 <Button size="sm" variant="secondary" onPress={handleClose}>
-                  取消
+                  {tr('取消')}
                 </Button>
                 <Button size="sm" variant="primary" isPending={isSaving} onPress={() => save()}>
-                  保存
+                  {tr('保存')}
                 </Button>
               </div>
             </Modal.Footer>

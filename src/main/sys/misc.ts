@@ -1,3 +1,4 @@
+import { tr } from '../../shared/i18n'
 import { execFile, execSync, spawn } from 'child_process'
 import { app, dialog, nativeImage, nativeTheme, shell } from 'electron'
 import { readFile } from 'fs/promises'
@@ -19,7 +20,7 @@ import { execWithElevation } from '../utils/elevation'
 
 export function getFilePath(
   ext: string[],
-  title = '选择订阅文件',
+  title = tr('选择订阅文件'),
   filterName = `${ext} file`
 ): string[] | undefined {
   return dialog.showOpenDialogSync({

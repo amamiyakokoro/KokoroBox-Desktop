@@ -1,3 +1,4 @@
+import { tr } from '../../shared/i18n'
 import { useTheme } from 'next-themes'
 import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { NavigateFunction, useLocation, useNavigate, useRoutes } from 'react-router-dom'
@@ -213,18 +214,19 @@ const App: React.FC = () => {
       <Suspense fallback={null}>
         {showQuitConfirm && (
           <ConfirmModal
-            title="确定要退出 KokoroBox 吗？"
+            title={tr('确定要退出 KokoroBox 吗？')}
             description={
               <div>
                 <p></p>
-                <p className="text-sm text-gray-500 mt-2">退出后代理功能将停止工作</p>
+                <p className="text-sm text-gray-500 mt-2">{tr('退出后代理功能将停止工作')}</p>
                 <p className="text-sm text-gray-400 mt-1">
-                  快按两次或长按 {platform === 'darwin' ? '⌘Q' : 'Ctrl+Q'} 可直接退出
+                  {tr('快按两次或长按 ')}
+                  {platform === 'darwin' ? '⌘Q' : 'Ctrl+Q'} {tr(' 可直接退出')}
                 </p>
               </div>
             }
-            confirmText="退出"
-            cancelText="取消"
+            confirmText={tr('退出')}
+            cancelText={tr('取消')}
             onChange={(open) => {
               if (!open) {
                 handleQuitConfirm(false)
@@ -235,20 +237,24 @@ const App: React.FC = () => {
         )}
         {showProfileInstallConfirm && profileInstallData && (
           <ConfirmModal
-            title="确定要导入订阅配置吗？"
+            title={tr('确定要导入订阅配置吗？')}
             description={
               <div>
                 <p className="text-sm text-gray-600 mb-2">
-                  名称：{profileInstallData.name || '未命名'}
+                  {tr('名称：')}
+                  {profileInstallData.name || tr('未命名')}
                 </p>
-                <p className="text-sm text-gray-600 mb-2">链接：{profileInstallData.url}</p>
+                <p className="text-sm text-gray-600 mb-2">
+                  {tr('链接：')}
+                  {profileInstallData.url}
+                </p>
                 <p className="text-sm text-orange-500 mt-2">
-                  请确保订阅配置来源可信，恶意配置可能影响您的网络安全
+                  {tr('请确保订阅配置来源可信，恶意配置可能影响您的网络安全')}
                 </p>
               </div>
             }
-            confirmText="导入"
-            cancelText="取消"
+            confirmText={tr('导入')}
+            cancelText={tr('取消')}
             onChange={(open) => {
               if (!open) {
                 handleProfileInstallConfirm(false)
@@ -260,20 +266,24 @@ const App: React.FC = () => {
         )}
         {showOverrideInstallConfirm && overrideInstallData && (
           <ConfirmModal
-            title="确定要导入覆写文件吗？"
+            title={tr('确定要导入覆写文件吗？')}
             description={
               <div>
                 <p className="text-sm text-gray-600 mb-2">
-                  名称：{overrideInstallData.name || '未命名'}
+                  {tr('名称：')}
+                  {overrideInstallData.name || tr('未命名')}
                 </p>
-                <p className="text-sm text-gray-600 mb-2">链接：{overrideInstallData.url}</p>
+                <p className="text-sm text-gray-600 mb-2">
+                  {tr('链接：')}
+                  {overrideInstallData.url}
+                </p>
                 <p className="text-sm text-orange-500 mt-2">
-                  请确保覆写文件来源可信，恶意覆写文件可能影响您的网络安全
+                  {tr('请确保覆写文件来源可信，恶意覆写文件可能影响您的网络安全')}
                 </p>
               </div>
             }
-            confirmText="导入"
-            cancelText="取消"
+            confirmText={tr('导入')}
+            cancelText={tr('取消')}
             onChange={(open) => {
               if (!open) {
                 handleOverrideInstallConfirm(false)

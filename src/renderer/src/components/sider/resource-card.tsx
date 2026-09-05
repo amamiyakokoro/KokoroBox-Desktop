@@ -1,3 +1,4 @@
+import { tr } from '../../../../shared/i18n'
 import { Button, Card, CardBody, CardFooter, Tooltip } from '@heroui/react'
 import React from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
@@ -32,7 +33,7 @@ const ResourceCard: React.FC<Props> = (props) => {
   if (iconOnly) {
     return (
       <div className={`${resourceCardStatus} flex justify-center`}>
-        <Tooltip content="外部资源" placement="right">
+        <Tooltip content={tr('外部资源')} placement="right">
           <Button
             size="sm"
             isIconOnly
@@ -84,7 +85,7 @@ const ResourceCard: React.FC<Props> = (props) => {
           <h3
             className={`text-md font-bold ${match ? 'text-primary-foreground' : 'text-foreground'}`}
           >
-            外部资源
+            {tr('外部资源')}
           </h3>
         </CardFooter>
       </Card>

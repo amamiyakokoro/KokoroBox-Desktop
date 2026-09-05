@@ -1,12 +1,11 @@
+import { tr } from '../../../../shared/i18n'
 import { Separator, Surface } from '@heroui-v3/react'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
-import 'dayjs/locale/zh-cn'
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 
 dayjs.extend(relativeTime)
-dayjs.locale('zh-cn')
 
 interface Props {
   rule: ControllerRulesDetail
@@ -120,33 +119,33 @@ const RuleDetailTooltip: React.FC<Props> = ({ rule, anchorEl, visible }) => {
         <Separator variant="tertiary" />
 
         <div className="px-3 py-2 grid grid-cols-[auto_1fr] gap-x-2 gap-y-1.5 items-center">
-          <span className="text-[10px] text-muted">类型</span>
+          <span className="text-[10px] text-muted">{tr('类型')}</span>
           <span className="text-[10px] text-muted justify-self-end">{rule.type}</span>
 
-          <span className="text-[10px] text-muted">代理</span>
+          <span className="text-[10px] text-muted">{tr('代理')}</span>
           <span className="text-[10px] text-muted justify-self-end">{rule.proxy}</span>
 
           {rule.size > 0 && (
             <>
-              <span className="text-[10px] text-muted">大小</span>
+              <span className="text-[10px] text-muted">{tr('大小')}</span>
               <span className="text-[10px] text-muted justify-self-end">{rule.size}</span>
             </>
           )}
 
           {totalCount > 0 ? (
             <>
-              <span className="text-[10px] text-muted">命中率</span>
+              <span className="text-[10px] text-muted">{tr('命中率')}</span>
               <span className="text-[10px] text-muted justify-self-end">{hitRate.toFixed(1)}%</span>
 
-              <span className="text-[10px] text-muted">命中次数</span>
+              <span className="text-[10px] text-muted">{tr('命中次数')}</span>
               <span className="text-[10px] text-muted justify-self-end">{hitCount}</span>
 
-              <span className="text-[10px] text-muted">总次数</span>
+              <span className="text-[10px] text-muted">{tr('总次数')}</span>
               <span className="text-[10px] text-muted justify-self-end">{totalCount}</span>
 
               {!isZeroTime(hitAt) && (
                 <>
-                  <span className="text-[10px] text-muted">最后命中</span>
+                  <span className="text-[10px] text-muted">{tr('最后命中')}</span>
                   <span className="text-[10px] text-muted justify-self-end">
                     {dayjs(hitAt).fromNow()}
                   </span>
@@ -155,7 +154,7 @@ const RuleDetailTooltip: React.FC<Props> = ({ rule, anchorEl, visible }) => {
 
               {missCount > 0 && !isZeroTime(missAt) && (
                 <>
-                  <span className="text-[10px] text-muted">最后放行</span>
+                  <span className="text-[10px] text-muted">{tr('最后放行')}</span>
                   <span className="text-[10px] text-muted justify-self-end">
                     {dayjs(missAt).fromNow()}
                   </span>
@@ -164,8 +163,8 @@ const RuleDetailTooltip: React.FC<Props> = ({ rule, anchorEl, visible }) => {
             </>
           ) : (
             <>
-              <span className="text-[10px] text-muted">统计</span>
-              <span className="text-[10px] text-muted/50 justify-self-end">暂无数据</span>
+              <span className="text-[10px] text-muted">{tr('统计')}</span>
+              <span className="text-[10px] text-muted/50 justify-self-end">{tr('暂无数据')}</span>
             </>
           )}
         </div>

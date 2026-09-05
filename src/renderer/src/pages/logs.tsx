@@ -1,3 +1,4 @@
+import { tr } from '../../../shared/i18n'
 import BasePage from '@renderer/components/base/base-page'
 import LogItem from '@renderer/components/logs/log-item'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
@@ -137,19 +138,19 @@ const Logs: React.FC = () => {
   }, [maxLogEntries])
 
   return (
-    <BasePage title="实时日志" contentClassName="overflow-y-hidden">
+    <BasePage title={tr('实时日志')} contentClassName="overflow-y-hidden">
       <div className="flex h-full min-h-0 flex-col">
         <div className="sticky top-0 z-40">
           <div className="flex w-full items-center gap-2 p-2">
             <Input
               size="sm"
               value={filter}
-              placeholder="筛选过滤"
+              placeholder={tr('筛选过滤')}
               isClearable
               onValueChange={setFilter}
             />
             <Select
-              aria-label="日志等级过滤"
+              aria-label={tr('日志等级过滤')}
               className="w-24 shrink-0"
               value={activeLogLevelFilter}
               variant="secondary"
@@ -173,42 +174,42 @@ const Logs: React.FC = () => {
                 <ListBox className="w-24 rounded-lg p-1 text-sm">
                   <ListBox.Item
                     id="silent"
-                    textValue="静默"
+                    textValue={tr('静默')}
                     className="min-h-8 rounded-md px-2.5 py-1.5 text-sm"
                   >
-                    静默
+                    {tr('静默')}
                     <ListBox.ItemIndicator className="size-3.5" />
                   </ListBox.Item>
                   <ListBox.Item
                     id="error"
-                    textValue="错误"
+                    textValue={tr('错误')}
                     className="min-h-8 rounded-md px-2.5 py-1.5 text-sm"
                   >
-                    错误
+                    {tr('错误')}
                     <ListBox.ItemIndicator className="size-3.5" />
                   </ListBox.Item>
                   <ListBox.Item
                     id="warning"
-                    textValue="警告"
+                    textValue={tr('警告')}
                     className="min-h-8 rounded-md px-2.5 py-1.5 text-sm"
                   >
-                    警告
+                    {tr('警告')}
                     <ListBox.ItemIndicator className="size-3.5" />
                   </ListBox.Item>
                   <ListBox.Item
                     id="info"
-                    textValue="信息"
+                    textValue={tr('信息')}
                     className="min-h-8 rounded-md px-2.5 py-1.5 text-sm"
                   >
-                    信息
+                    {tr('信息')}
                     <ListBox.ItemIndicator className="size-3.5" />
                   </ListBox.Item>
                   <ListBox.Item
                     id="debug"
-                    textValue="调试"
+                    textValue={tr('调试')}
                     className="min-h-8 rounded-md px-2.5 py-1.5 text-sm"
                   >
-                    调试
+                    {tr('调试')}
                     <ListBox.ItemIndicator className="size-3.5" />
                   </ListBox.Item>
                 </ListBox>

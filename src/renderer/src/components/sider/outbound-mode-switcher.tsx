@@ -1,3 +1,4 @@
+import { tr } from '../../../../shared/i18n'
 import { Tabs, Tab } from '@heroui/react'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'
@@ -52,9 +53,9 @@ const OutboundModeSwitcher: React.FC<Props> = ({ iconOnly }: Props) => {
       }}
       onSelectionChange={(key: Key) => onChangeMode(key as OutboundMode)}
     >
-      <Tab className={`${mode === 'rule' ? 'font-bold' : ''}`} key="rule" title="规则" />
-      <Tab className={`${mode === 'global' ? 'font-bold' : ''}`} key="global" title="全局" />
-      <Tab className={`${mode === 'direct' ? 'font-bold' : ''}`} key="direct" title="直连" />
+      <Tab className={`${mode === 'rule' ? 'font-bold' : ''}`} key="rule" title={tr('规则')} />
+      <Tab className={`${mode === 'global' ? 'font-bold' : ''}`} key="global" title={tr('全局')} />
+      <Tab className={`${mode === 'direct' ? 'font-bold' : ''}`} key="direct" title={tr('直连')} />
     </Tabs>
   )
 }

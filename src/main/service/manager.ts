@@ -1,3 +1,4 @@
+import { tr } from '../../shared/i18n'
 import { servicePath } from '../utils/dirs'
 import { execWithElevation } from '../utils/elevation'
 import { KeyManager, type KeyPair, computeKeyId } from './key'
@@ -119,7 +120,7 @@ export async function initKeyManager(): Promise<KeyManager> {
 
 export function getKeyManager(): KeyManager {
   if (!keyManager) {
-    throw new Error('密钥管理器未初始化，请先调用 initKeyManager')
+    throw new Error(tr('密钥管理器未初始化，请先调用 initKeyManager'))
   }
   return keyManager
 }
@@ -129,7 +130,7 @@ export function getPublicKey(): string {
 }
 
 class UserCancelledError extends Error {
-  constructor(message = '用户取消操作') {
+  constructor(message = tr('用户取消操作')) {
     super(message)
     this.name = 'UserCancelledError'
   }
@@ -141,7 +142,7 @@ function isUserCancelledError(error: unknown): boolean {
   }
   const errorMsg = error instanceof Error ? error.message : String(error)
   return (
-    errorMsg.includes('用户已取消') ||
+    /(?:用户|用戶|使用者)已取消/.test(errorMsg) ||
     errorMsg.includes('User canceled') ||
     errorMsg.includes('(-128)') ||
     errorMsg.includes('user cancelled') ||
@@ -208,7 +209,7 @@ async function getAuthorizedPrincipalArgs(): Promise<string[]> {
   if (process.platform === 'win32') {
     const sid = getCurrentUserSid()
     if (!sid.startsWith('S-')) {
-      throw new Error('读取当前用户 SID 失败')
+      throw new Error(tr('读取当前用户 SID 失败'))
     }
 
     return ['--authorized-sid', sid]
@@ -216,7 +217,7 @@ async function getAuthorizedPrincipalArgs(): Promise<string[]> {
 
   const uid = process.getuid?.()
   if (uid == null) {
-    throw new Error('读取当前用户 UID 失败')
+    throw new Error(tr('读取当前用户 UID 失败'))
   }
 
   return ['--authorized-uid', String(uid)]
@@ -247,7 +248,9 @@ async function waitForServiceReady(timeoutMs = 15000): Promise<void> {
   }
 
   throw new Error(
-    `等待服务就绪超时：${lastError instanceof Error ? lastError.message : String(lastError)}`
+    tr('等待服务就绪超时：{0}', [
+      lastError instanceof Error ? lastError.message : String(lastError)
+    ])
   )
 }
 
@@ -269,7 +272,7 @@ export async function initService(): Promise<void> {
     if (isUserCancelledError(error)) {
       throw new UserCancelledError()
     }
-    throw new Error(`服务初始化失败：${serviceCommandErrorMessage(error)}`)
+    throw new Error(tr('服务初始化失败：{0}', [serviceCommandErrorMessage(error)]))
   }
 
   await waitForServiceReady()
@@ -284,7 +287,7 @@ export async function installService(): Promise<void> {
     if (isUserCancelledError(error)) {
       throw new UserCancelledError()
     }
-    throw new Error(`服务安装失败：${serviceCommandErrorMessage(error)}`)
+    throw new Error(tr('服务安装失败：{0}', [serviceCommandErrorMessage(error)]))
   }
 }
 
@@ -297,7 +300,7 @@ export async function uninstallService(): Promise<void> {
     if (isUserCancelledError(error)) {
       throw new UserCancelledError()
     }
-    throw new Error(`服务卸载失败：${serviceCommandErrorMessage(error)}`)
+    throw new Error(tr('服务卸载失败：{0}', [serviceCommandErrorMessage(error)]))
   }
 }
 
@@ -310,7 +313,7 @@ export async function startService(): Promise<void> {
     if (isUserCancelledError(error)) {
       throw new UserCancelledError()
     }
-    throw new Error(`服务启动失败：${serviceCommandErrorMessage(error)}`)
+    throw new Error(tr('服务启动失败：{0}', [serviceCommandErrorMessage(error)]))
   }
 }
 
@@ -323,7 +326,7 @@ export async function stopService(): Promise<void> {
     if (isUserCancelledError(error)) {
       throw new UserCancelledError()
     }
-    throw new Error(`服务停止失败：${serviceCommandErrorMessage(error)}`)
+    throw new Error(tr('服务停止失败：{0}', [serviceCommandErrorMessage(error)]))
   }
 }
 
@@ -336,7 +339,7 @@ export async function restartService(): Promise<void> {
     if (isUserCancelledError(error)) {
       throw new UserCancelledError()
     }
-    throw new Error(`服务重启失败：${serviceCommandErrorMessage(error)}`)
+    throw new Error(tr('服务重启失败：{0}', [serviceCommandErrorMessage(error)]))
   }
 }
 

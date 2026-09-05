@@ -1,3 +1,4 @@
+import { tr } from '../../../../shared/i18n'
 import React, { useState } from 'react'
 import SettingCard from '../base/base-setting-card'
 import SettingItem from '../base/base-setting-item'
@@ -35,14 +36,14 @@ const ControllerSetting: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false)
   const [externalControllerError, setExternalControllerError] = useState<string | null>(() => {
     const r = isValidListenAddress(externalController)
-    return r.ok ? null : (r.error ?? '格式错误')
+    return r.ok ? null : (r.error ?? tr('格式错误'))
   })
 
   const upgradeUI = async (): Promise<void> => {
     try {
       setUpgrading(true)
       await mihomoUpgradeUI()
-      notify('面板更新成功', { variant: 'success' })
+      notify(tr('面板更新成功'), { variant: 'success' })
     } catch (e) {
       notify(e, { variant: 'danger' })
     } finally {
@@ -64,8 +65,8 @@ const ControllerSetting: React.FC = () => {
   }
 
   return (
-    <SettingCard header="外部控制器">
-      <SettingItem compatKey="legacy" title="监听地址" divider={externalController !== ''}>
+    <SettingCard header={tr('外部控制器')}>
+      <SettingItem compatKey="legacy" title={tr('监听地址')} divider={externalController !== ''}>
         <div className="flex">
           {externalControllerInput != externalController && !externalControllerError && (
             <Button
@@ -79,7 +80,7 @@ const ControllerSetting: React.FC = () => {
                 })
               }}
             >
-              确认
+              {tr('确认')}
             </Button>
           )}
           <Tooltip
@@ -97,7 +98,7 @@ const ControllerSetting: React.FC = () => {
               onValueChange={(v) => {
                 setExternalControllerInput(v)
                 const r = isValidListenAddress(v)
-                setExternalControllerError(r.ok ? null : (r.error ?? '格式错误'))
+                setExternalControllerError(r.ok ? null : (r.error ?? tr('格式错误')))
               }}
             />
           </Tooltip>
@@ -107,7 +108,7 @@ const ControllerSetting: React.FC = () => {
         <>
           <SettingItem
             compatKey="legacy"
-            title="访问密钥"
+            title={tr('访问密钥')}
             actions={
               <Button
                 size="sm"
@@ -130,7 +131,7 @@ const ControllerSetting: React.FC = () => {
                     onChangeNeedRestart({ secret: secretInput })
                   }}
                 >
-                  确认
+                  {tr('确认')}
                 </Button>
               )}
               <Input
@@ -155,7 +156,7 @@ const ControllerSetting: React.FC = () => {
               />
             </div>
           </SettingItem>
-          <SettingItem compatKey="legacy" title="启用控制器面板" divider>
+          <SettingItem compatKey="legacy" title={tr('启用控制器面板')} divider>
             <Switch
               size="sm"
               isSelected={enableExternalUi}
@@ -170,7 +171,7 @@ const ControllerSetting: React.FC = () => {
           {enableExternalUi && (
             <SettingItem
               compatKey="legacy"
-              title="控制器面板"
+              title={tr('控制器面板')}
               actions={
                 <>
                   <Button
@@ -234,11 +235,11 @@ const ControllerSetting: React.FC = () => {
                       })
                     }}
                   >
-                    确认
+                    {tr('确认')}
                   </Button>
                 )}
                 <Select
-                  aria-label="外部 UI 来源"
+                  aria-label={tr('外部 UI 来源')}
                   classNames={{ trigger: 'data-[hover=true]:bg-default-200' }}
                   className="w-37.5"
                   size="sm"
@@ -267,9 +268,9 @@ const ControllerSetting: React.FC = () => {
               </div>
             </SettingItem>
           )}
-          <SettingItem compatKey="legacy" title="CORS 配置"></SettingItem>
+          <SettingItem compatKey="legacy" title={tr('CORS 配置')}></SettingItem>
           <div className="flex flex-col space-y-2 mt-2"></div>
-          <SettingItem compatKey="legacy" title="允许私有网络访问">
+          <SettingItem compatKey="legacy" title={tr('允许私有网络访问')}>
             <Switch
               size="sm"
               isSelected={allowPrivateNetwork}
@@ -284,7 +285,7 @@ const ControllerSetting: React.FC = () => {
             />
           </SettingItem>
           <div className="mt-1"></div>
-          <SettingItem compatKey="legacy" title="允许的来源">
+          <SettingItem compatKey="legacy" title={tr('允许的来源')}>
             {allowOriginsInput.join(',') != initialAllowOrigins.join(',') && (
               <Button
                 size="sm"
@@ -299,7 +300,7 @@ const ControllerSetting: React.FC = () => {
                   })
                 }}
               >
-                确认
+                {tr('确认')}
               </Button>
             )}
           </SettingItem>

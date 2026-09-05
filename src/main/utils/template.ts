@@ -2,6 +2,7 @@ import os from 'os'
 import { systemCoreDefaultPath, systemCoreOnlyBuild } from '../../shared/build-flags'
 
 export const defaultConfig: AppConfig = {
+  language: 'system',
   core: systemCoreOnlyBuild ? 'system' : 'mihomo',
   ...(systemCoreOnlyBuild ? { systemCorePath: systemCoreDefaultPath } : {}),
   ...(systemCoreOnlyBuild ? { corePermissionMode: 'elevated' as const } : {}),

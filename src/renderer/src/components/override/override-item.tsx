@@ -1,3 +1,4 @@
+import { tr } from '../../../../shared/i18n'
 import {
   Button,
   Card,
@@ -65,21 +66,21 @@ const OverrideItem: React.FC<Props> = (props) => {
     const list = [
       {
         key: 'edit-info',
-        label: '编辑信息',
+        label: tr('编辑信息'),
         showDivider: false,
         color: 'default',
         className: ''
       } as MenuItem,
       {
         key: 'edit-file',
-        label: '编辑文件',
+        label: tr('编辑文件'),
         showDivider: false,
         color: 'default',
         className: ''
       } as MenuItem,
       {
         key: 'open-file',
-        label: '打开文件',
+        label: tr('打开文件'),
         showDivider: false,
         color: 'default',
         className: ''
@@ -88,7 +89,7 @@ const OverrideItem: React.FC<Props> = (props) => {
         ? [
             {
               key: 'qrcode',
-              label: '二维码',
+              label: tr('二维码'),
               showDivider: false,
               color: 'default',
               className: ''
@@ -97,14 +98,14 @@ const OverrideItem: React.FC<Props> = (props) => {
         : []),
       {
         key: 'exec-log',
-        label: '执行日志',
+        label: tr('执行日志'),
         showDivider: true,
         color: 'default',
         className: ''
       } as MenuItem,
       {
         key: 'delete',
-        label: '删除',
+        label: tr('删除'),
         showDivider: false,
         color: 'danger',
         className: 'text-danger'
@@ -194,9 +195,9 @@ const OverrideItem: React.FC<Props> = (props) => {
       {confirmOpen && (
         <ConfirmModal
           onChange={setConfirmOpen}
-          title="确认删除覆写？"
-          confirmText="确认删除"
-          cancelText="取消"
+          title={tr('确认删除覆写？')}
+          confirmText={tr('确认删除')}
+          cancelText={tr('取消')}
           onConfirm={() => {
             removeOverrideItem(info.id)
             mutateOverrideConfig()
@@ -278,7 +279,7 @@ const OverrideItem: React.FC<Props> = (props) => {
               <div className={`mt-2 flex justify-start`}>
                 {info.global && (
                   <Chip size="sm" variant="dot" color="primary" className="mr-2">
-                    全局
+                    {tr('全局')}
                   </Chip>
                 )}
                 <Chip size="sm" variant="bordered">

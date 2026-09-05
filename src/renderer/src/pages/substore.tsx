@@ -1,3 +1,4 @@
+import { tr } from '../../../shared/i18n'
 import { Button } from '@heroui/react'
 import BasePage from '@renderer/components/base/base-page'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
@@ -45,7 +46,7 @@ const SubStore: React.FC = () => {
               isLoading={isUpdating}
               onPress={async () => {
                 try {
-                  notify('Sub-Store 更新中...')
+                  notify(tr('Sub-Store 更新中...'))
                   setIsUpdating(true)
                   await downloadSubStore()
                   await stopSubStoreBackendServer()
@@ -57,9 +58,9 @@ const SubStore: React.FC = () => {
                   await stopSubStoreFrontendServer()
                   await startSubStoreFrontendServer()
                   await getPort()
-                  notify('Sub-Store 更新完成', { variant: 'success' })
+                  notify(tr('Sub-Store 更新完成'), { variant: 'success' })
                 } catch (e) {
-                  notify(`Sub-Store 更新失败：${e}`, { variant: 'danger' })
+                  notify(tr('Sub-Store 更新失败：{0}', [e]), { variant: 'danger' })
                 } finally {
                   setIsUpdating(false)
                 }

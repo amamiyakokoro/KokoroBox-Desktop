@@ -1,3 +1,4 @@
+import { tr } from '../../shared/i18n'
 import axios, { AxiosInstance, AxiosRequestConfig, InternalAxiosRequestConfig } from 'axios'
 import crypto from 'crypto'
 import WebSocket from 'ws'
@@ -249,7 +250,7 @@ function createServiceAPIError(error: unknown): unknown {
   if (serviceError.response?.data) {
     const message = getResponseErrorMessage(
       serviceError.response.data,
-      serviceError.message || '请求失败'
+      serviceError.message || tr('请求失败')
     )
 
     return new ServiceAPIError(message, {
@@ -315,7 +316,7 @@ export const getServiceAuthHeaders = (
   body: Buffer = Buffer.alloc(0)
 ): Record<string, string> => {
   if (!keyManager?.isInitialized()) {
-    throw new Error('服务 API 未初始化')
+    throw new Error(tr('服务 API 未初始化'))
   }
 
   const bodyHash = crypto.createHash('sha256').update(body).digest('hex')
@@ -347,14 +348,14 @@ export const getServiceAuthHeaders = (
 
 export const getServiceAxios = (): AxiosInstance => {
   if (!serviceAxios) {
-    throw new Error('服务 API 未初始化')
+    throw new Error(tr('服务 API 未初始化'))
   }
   return serviceAxios
 }
 
 export const getKeyManager = (): KeyManager => {
   if (!keyManager) {
-    throw new Error('密钥管理器未初始化')
+    throw new Error(tr('密钥管理器未初始化'))
   }
   return keyManager
 }

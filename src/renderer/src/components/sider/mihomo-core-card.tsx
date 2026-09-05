@@ -1,3 +1,4 @@
+import { tr } from '../../../../shared/i18n'
 import { Button, Card, CardBody, CardFooter, Tooltip } from '@heroui/react'
 import { calcTraffic } from '@renderer/utils/calc'
 import { mihomoVersion, restartCore } from '@renderer/utils/ipc'
@@ -64,7 +65,7 @@ const MihomoCoreCard: React.FC<Props> = (props) => {
   if (iconOnly) {
     return (
       <div className={`${mihomoCoreCardStatus} flex justify-center`}>
-        <Tooltip content="内核设置" placement="right">
+        <Tooltip content={tr('内核设置')} placement="right">
           <Button
             size="sm"
             isIconOnly
@@ -143,7 +144,7 @@ const MihomoCoreCard: React.FC<Props> = (props) => {
             <div
               className={`flex justify-between w-full text-md font-bold ${match ? 'text-primary-foreground' : 'text-foreground'}`}
             >
-              <h4>内核设置</h4>
+              <h4>{tr('内核设置')}</h4>
               <h4>{calcTraffic(mem)}</h4>
             </div>
           </CardFooter>
@@ -175,7 +176,7 @@ const MihomoCoreCard: React.FC<Props> = (props) => {
             <h3
               className={`text-md font-bold ${match ? 'text-primary-foreground' : 'text-foreground'}`}
             >
-              内核设置
+              {tr('内核设置')}
             </h3>
           </CardFooter>
         </Card>

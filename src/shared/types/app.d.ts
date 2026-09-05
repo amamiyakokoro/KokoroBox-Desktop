@@ -6,6 +6,7 @@ interface AppVersion {
 
 type AppUpdateChannel = 'stable' | 'rolling'
 type AppNotificationMode = 'system' | 'toast'
+type AppLanguage = 'system' | 'zh-CN' | 'zh-TW'
 type AppNotificationVariant = 'default' | 'accent' | 'success' | 'warning' | 'danger'
 
 interface AppNotificationPayload {
@@ -33,6 +34,7 @@ interface IHost {
 }
 
 interface AppConfig {
+  language?: AppLanguage
   updateChannel: AppUpdateChannel
   notificationMode?: AppNotificationMode
   showUpdateButtonAfterNotification?: boolean

@@ -1,3 +1,4 @@
+import { tr } from '../../../../shared/i18n'
 import React, { useEffect, useState, useRef } from 'react'
 import SettingCard from '../base/base-setting-card'
 import SettingItem from '../base/base-setting-item'
@@ -94,12 +95,12 @@ const AppearanceConfig: React.FC = () => {
           }}
         />
       )}
-      <SettingCard header="外观设置">
+      <SettingCard header={tr('外观设置')}>
         <SettingItem
           compatKey="legacy"
-          title="显示悬浮窗"
+          title={tr('显示悬浮窗')}
           actions={
-            <Tooltip content="未禁用GPU加速的情况下，悬浮窗可能会导致应用崩溃">
+            <Tooltip content={tr('未禁用GPU加速的情况下，悬浮窗可能会导致应用崩溃')}>
               <Button isIconOnly size="sm" variant="light">
                 <IoIosHelpCircle className="text-lg" />
               </Button>
@@ -132,7 +133,7 @@ const AppearanceConfig: React.FC = () => {
         </SettingItem>
         {localShowFloating && (
           <>
-            <SettingItem compatKey="legacy" title="根据网速旋转悬浮窗图标" divider>
+            <SettingItem compatKey="legacy" title={tr('根据网速旋转悬浮窗图标')} divider>
               <Switch
                 size="sm"
                 isSelected={spinFloatingIcon}
@@ -142,7 +143,7 @@ const AppearanceConfig: React.FC = () => {
                 }}
               />
             </SettingItem>
-            <SettingItem compatKey="legacy" title="禁用托盘图标" divider>
+            <SettingItem compatKey="legacy" title={tr('禁用托盘图标')} divider>
               <Switch
                 size="sm"
                 isSelected={disableTray}
@@ -161,9 +162,13 @@ const AppearanceConfig: React.FC = () => {
         {!disableTray && (
           <SettingItem
             compatKey="legacy"
-            title="自定义托盘图标"
+            title={tr('自定义托盘图标')}
             actions={
-              <Tooltip content="设置后托盘会使用此图标；开启网速显示时会与网速合成。PNG、JPG、WebP 会先裁剪后保存。">
+              <Tooltip
+                content={tr(
+                  '设置后托盘会使用此图标；开启网速显示时会与网速合成。PNG、JPG、WebP 会先裁剪后保存。'
+                )}
+              >
                 <Button isIconOnly size="sm" variant="light">
                   <IoIosHelpCircle className="text-lg" />
                 </Button>
@@ -174,7 +179,9 @@ const AppearanceConfig: React.FC = () => {
             <div className="flex min-w-0 max-w-[65%] items-center justify-end gap-2">
               {customTrayIcon && (
                 <span className="truncate text-xs text-default-500">
-                  {customTrayIcon.startsWith('data:image/') ? '已储存自定义图标' : customTrayIcon}
+                  {customTrayIcon.startsWith('data:image/')
+                    ? tr('已储存自定义图标')
+                    : customTrayIcon}
                 </span>
               )}
               <Button
@@ -183,8 +190,8 @@ const AppearanceConfig: React.FC = () => {
                 onPress={async () => {
                   const files = await getFilePath(
                     ['png', 'jpg', 'jpeg', 'webp', 'ico', 'icns'],
-                    '选择托盘图标',
-                    '托盘图标'
+                    tr('选择托盘图标'),
+                    tr('托盘图标')
                   )
                   if (!files?.[0]) return
                   if (rasterTrayIconPattern.test(files[0])) {
@@ -195,7 +202,7 @@ const AppearanceConfig: React.FC = () => {
                   await updateTrayIcon()
                 }}
               >
-                {customTrayIcon ? '更换图标' : '选择图标'}
+                {customTrayIcon ? tr('更换图标') : tr('选择图标')}
               </Button>
               {customTrayIcon && (
                 <Button
@@ -206,7 +213,7 @@ const AppearanceConfig: React.FC = () => {
                     await updateTrayIcon()
                   }}
                 >
-                  恢复默认
+                  {tr('恢复默认')}
                 </Button>
               )}
             </div>
@@ -214,7 +221,7 @@ const AppearanceConfig: React.FC = () => {
         )}
         {platform !== 'linux' && (
           <>
-            <SettingItem compatKey="legacy" title="托盘菜单显示节点信息" divider>
+            <SettingItem compatKey="legacy" title={tr('托盘菜单显示节点信息')} divider>
               <Switch
                 size="sm"
                 isSelected={proxyInTray}
@@ -224,7 +231,7 @@ const AppearanceConfig: React.FC = () => {
               />
             </SettingItem>
             {proxyInTray && (
-              <SettingItem compatKey="legacy" title="托盘菜单节点延迟显示方式" divider>
+              <SettingItem compatKey="legacy" title={tr('托盘菜单节点延迟显示方式')} divider>
                 <Tabs
                   size="sm"
                   color="primary"
@@ -236,14 +243,14 @@ const AppearanceConfig: React.FC = () => {
                     window.electron.ipcRenderer.send('updateTrayMenu')
                   }}
                 >
-                  <Tab key="same-line" title="同一行" />
-                  <Tab key="new-line" title="换行" />
+                  <Tab key="same-line" title={tr('同一行')} />
+                  <Tab key="new-line" title={tr('换行')} />
                 </Tabs>
               </SettingItem>
             )}
             <SettingItem
               compatKey="legacy"
-              title={`${platform === 'win32' ? '任务栏' : '状态栏'}显示网速信息`}
+              title={tr('{0}显示网速信息', [platform === 'win32' ? tr('任务栏') : tr('状态栏')])}
               divider
             >
               <Switch
@@ -259,7 +266,7 @@ const AppearanceConfig: React.FC = () => {
         )}
         {platform === 'darwin' && (
           <>
-            <SettingItem compatKey="legacy" title="显示 Dock 图标" divider>
+            <SettingItem compatKey="legacy" title={tr('显示 Dock 图标')} divider>
               <Switch
                 size="sm"
                 isSelected={useDockIcon}
@@ -271,7 +278,7 @@ const AppearanceConfig: React.FC = () => {
             </SettingItem>
           </>
         )}
-        <SettingItem compatKey="legacy" title="使用系统标题栏" divider>
+        <SettingItem compatKey="legacy" title={tr('使用系统标题栏')} divider>
           <Switch
             size="sm"
             isSelected={useWindowFrame}
@@ -284,9 +291,13 @@ const AppearanceConfig: React.FC = () => {
         {useWindowFrame && (
           <SettingItem
             compatKey="legacy"
-            title="启用窗口拖动区域"
+            title={tr('启用窗口拖动区域')}
             actions={
-              <Tooltip content="让应用内页面标题的空白区域可用于拖动窗口，适用于系统未提供可拖动标题栏的环境。">
+              <Tooltip
+                content={tr(
+                  '让应用内页面标题的空白区域可用于拖动窗口，适用于系统未提供可拖动标题栏的环境。'
+                )}
+              >
                 <Button isIconOnly size="sm" variant="light">
                   <IoIosHelpCircle className="text-lg" />
                 </Button>
@@ -304,7 +315,7 @@ const AppearanceConfig: React.FC = () => {
             />
           </SettingItem>
         )}
-        <SettingItem compatKey="legacy" title="显示更新按钮" divider>
+        <SettingItem compatKey="legacy" title={tr('显示更新按钮')} divider>
           <Switch
             size="sm"
             isSelected={showUpdateButtonAfterNotification}
@@ -313,7 +324,7 @@ const AppearanceConfig: React.FC = () => {
             }}
           />
         </SettingItem>
-        <SettingItem compatKey="legacy" title="背景色" divider>
+        <SettingItem compatKey="legacy" title={tr('背景色')} divider>
           <Tabs
             size="sm"
             color="primary"
@@ -323,14 +334,14 @@ const AppearanceConfig: React.FC = () => {
               patchAppConfig({ appTheme: key as AppTheme })
             }}
           >
-            <Tab key="system" title="自动" />
-            <Tab key="dark" title="深色" />
-            <Tab key="light" title="浅色" />
+            <Tab key="system" title={tr('自动')} />
+            <Tab key="dark" title={tr('深色')} />
+            <Tab key="light" title={tr('浅色')} />
           </Tabs>
         </SettingItem>
         <SettingItem
           compatKey="legacy"
-          title="主题"
+          title={tr('主题')}
           actions={
             <>
               <Button
@@ -384,7 +395,7 @@ const AppearanceConfig: React.FC = () => {
         >
           {customThemes && (
             <Select
-              aria-label="自定义主题"
+              aria-label={tr('自定义主题')}
               classNames={{ trigger: 'data-[hover=true]:bg-default-200' }}
               className="w-[60%]"
               size="sm"

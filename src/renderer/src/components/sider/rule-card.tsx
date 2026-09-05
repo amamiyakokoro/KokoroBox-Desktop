@@ -1,3 +1,4 @@
+import { tr } from '../../../../shared/i18n'
 import { Button, Card, CardBody, CardFooter, Chip, Tooltip } from '@heroui/react'
 import { MdOutlineAltRoute } from 'react-icons/md'
 import { useLocation, useNavigate } from 'react-router-dom'
@@ -34,7 +35,7 @@ const RuleCard: React.FC<Props> = (props) => {
   if (iconOnly) {
     return (
       <div className={`${ruleCardStatus} flex justify-center`}>
-        <Tooltip content="规则" placement="right">
+        <Tooltip content={tr('规则')} placement="right">
           <Button
             size="sm"
             isIconOnly
@@ -104,7 +105,7 @@ const RuleCard: React.FC<Props> = (props) => {
           <h3
             className={`text-md font-bold ${match ? 'text-primary-foreground' : 'text-foreground'}`}
           >
-            规则
+            {tr('规则')}
           </h3>
         </CardFooter>
       </Card>

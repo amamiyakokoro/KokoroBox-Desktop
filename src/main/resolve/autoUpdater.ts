@@ -1,3 +1,4 @@
+import { tr } from '../../shared/i18n'
 import axios, { AxiosRequestConfig, CancelTokenSource } from 'axios'
 import { parseYaml } from '../utils/yaml'
 import { app, shell } from 'electron'
@@ -44,7 +45,7 @@ async function ensureFreeSpace(dir: string, requiredBytes: number, message: stri
   if (freeBytes < requiredBytes) {
     const freeMb = Math.floor(freeBytes / 1024 / 1024)
     const requiredMb = Math.ceil(requiredBytes / 1024 / 1024)
-    throw new Error(`${message}。需要：${requiredMb} MB，当前可用：${freeMb} MB`)
+    throw new Error(tr('{0}。需要：{1} MB，当前可用：{2} MB', [message, requiredMb, freeMb]))
   }
 }
 
@@ -95,7 +96,7 @@ async function ensureWindowsInstallerTempSpace(): Promise<void> {
   }
 
   const tempDir = os.tmpdir()
-  await ensureFreeSpace(tempDir, WINDOWS_INSTALLER_MIN_TEMP_SPACE_BYTES, '临时目录空间不足')
+  await ensureFreeSpace(tempDir, WINDOWS_INSTALLER_MIN_TEMP_SPACE_BYTES, tr('临时目录空间不足'))
 }
 
 export async function downloadAndInstallUpdate(version: string, tag?: string): Promise<void> {
@@ -130,7 +131,7 @@ export async function downloadAndInstallUpdate(version: string, tag?: string): P
     file = file.replace('-setup.exe', '-portable.7z')
   }
   if (!file) {
-    throw new Error('不支持自动更新，请手动下载更新')
+    throw new Error(tr('不支持自动更新，请手动下载更新'))
   }
   downloadCancelToken = axios.CancelToken.source()
 
@@ -161,13 +162,13 @@ export async function downloadAndInstallUpdate(version: string, tag?: string): P
       releaseRes.data.assets || []
     const matchedAsset = assets.find((a) => a.name === file)
     if (!matchedAsset || !matchedAsset.digest) {
-      throw new Error(`无法从 GitHub Release 中找到 "${file}" 对应的 SHA-256 信息`)
+      throw new Error(tr('无法从 GitHub Release 中找到 "{0}" 对应的 SHA-256 信息', [file]))
     }
     const expectedHash = matchedAsset.digest.split(':')[1].toLowerCase()
 
     if (!existsSync(path.join(dataDir(), file))) {
       if (matchedAsset.size) {
-        await ensureFreeSpace(dataDir(), matchedAsset.size, '更新包保存目录空间不足')
+        await ensureFreeSpace(dataDir(), matchedAsset.size, tr('更新包保存目录空间不足'))
       }
       const res = await axios.get(`${baseUrl}${file}`, {
         responseType: 'arraybuffer',
@@ -202,7 +203,9 @@ export async function downloadAndInstallUpdate(version: string, tag?: string): P
     const localHash = hashSum.digest('hex').toLowerCase()
     if (localHash !== expectedHash) {
       await rm(path.join(dataDir(), file), { force: true })
-      throw new Error(`SHA-256 校验失败：本地哈希 ${localHash} 与预期 ${expectedHash} 不符`)
+      throw new Error(
+        tr('SHA-256 校验失败：本地哈希 {0} 与预期 {1} 不符', [localHash, expectedHash])
+      )
     }
 
     mainWindow?.webContents.send('update-status', {
@@ -268,14 +271,14 @@ export async function downloadAndInstallUpdate(version: string, tag?: string): P
       mainWindow?.webContents.send('update-status', {
         downloading: false,
         progress: 0,
-        error: '下载已取消'
+        error: tr('下载已取消')
       })
       return
     } else {
       mainWindow?.webContents.send('update-status', {
         downloading: false,
         progress: 0,
-        error: e instanceof Error ? e.message : '下载失败'
+        error: e instanceof Error ? e.message : tr('下载失败')
       })
     }
     throw e
@@ -286,7 +289,7 @@ export async function downloadAndInstallUpdate(version: string, tag?: string): P
 
 export async function cancelUpdate(): Promise<void> {
   if (downloadCancelToken) {
-    downloadCancelToken.cancel('用户取消下载')
+    downloadCancelToken.cancel(tr('用户取消下载'))
     downloadCancelToken = null
   }
 }

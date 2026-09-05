@@ -1,4 +1,6 @@
 import React from 'react'
+import './utils/locale'
+import { getLocale } from '../../shared/i18n'
 import ReactDOM from 'react-dom/client'
 import { ThemeProvider as NextThemesProvider } from 'next-themes'
 import { HeroUIProvider } from '@heroui/react'
@@ -10,7 +12,7 @@ import { ControledMihomoConfigProvider } from './hooks/use-controled-mihomo-conf
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
-    <HeroUIProvider>
+    <HeroUIProvider locale={getLocale()}>
       <NextThemesProvider attribute="class" enableSystem defaultTheme="dark">
         <BaseErrorBoundary>
           <AppConfigProvider>

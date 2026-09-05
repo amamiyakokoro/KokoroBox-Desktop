@@ -1,3 +1,4 @@
+import { tr } from '../../../../shared/i18n'
 import { Modal, Separator } from '@heroui-v3/react'
 import React, { useEffect, useState } from 'react'
 import { getOverride } from '@renderer/utils/ipc'
@@ -32,7 +33,7 @@ const ExecLogModal: React.FC<Props> = (props) => {
         <Modal.Container scroll="inside">
           <Modal.Dialog>
             <Modal.Header className="app-drag">
-              <Modal.Heading>执行日志</Modal.Heading>
+              <Modal.Heading>{tr('执行日志')}</Modal.Heading>
             </Modal.Header>
             <Modal.Body>
               {logs.map((log, index) => {

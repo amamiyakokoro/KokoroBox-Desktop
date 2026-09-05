@@ -1,3 +1,4 @@
+import { tr } from '../../shared/i18n'
 import { getAppConfig, getControledMihomoConfig } from '../config'
 import { pacPort, startPacServer, stopPacServer } from '../resolve/server'
 import { promisify } from 'util'
@@ -134,7 +135,7 @@ async function setSysProxy(onlyActiveDevice: boolean, useRegistry = false): Prom
           )
           updateSysproxyGuardEventStream(guardNotify)
         } catch {
-          throw new Error('服务可能未安装')
+          throw new Error(tr('服务可能未安装'))
         }
       } else {
         updateSysproxyGuardEventStream(false)
@@ -163,7 +164,7 @@ async function setSysProxy(onlyActiveDevice: boolean, useRegistry = false): Prom
             )
             updateSysproxyGuardEventStream(guardNotify)
           } catch {
-            throw new Error('服务可能未安装')
+            throw new Error(tr('服务可能未安装'))
           }
         } else {
           updateSysproxyGuardEventStream(false)
@@ -229,12 +230,12 @@ async function handleSysproxyGuardEvent(event: ServiceSysproxyEvent): Promise<vo
   if (!(await shouldNotifySysproxyGuardEvent(event))) return
 
   if (event.type === 'guard_restored') {
-    void showNotification({ title: '系统代理已恢复', variant: 'success' })
+    void showNotification({ title: tr('系统代理已恢复'), variant: 'success' })
     return
   }
 
   void showNotification({
-    title: '系统代理恢复失败',
+    title: tr('系统代理恢复失败'),
     body: event.error || event.message,
     variant: 'danger'
   })

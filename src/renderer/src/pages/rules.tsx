@@ -1,3 +1,4 @@
+import { tr } from '../../../shared/i18n'
 import BasePage from '@renderer/components/base/base-page'
 import RuleItem from '@renderer/components/rules/rule-item'
 import { Virtuoso } from 'react-virtuoso'
@@ -23,13 +24,13 @@ const Rules: React.FC = () => {
   }, [rules, filter])
 
   return (
-    <BasePage title="分流规则">
+    <BasePage title={tr('分流规则')}>
       <div className="sticky top-0 z-40">
         <div className="flex p-2">
           <Input
             size="sm"
             value={filter}
-            placeholder="筛选过滤"
+            placeholder={tr('筛选过滤')}
             isClearable
             onValueChange={setFilter}
           />

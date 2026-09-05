@@ -1,3 +1,4 @@
+import { tr } from '../../../../shared/i18n'
 import { Button, Card, CardBody, CardFooter, Chip, Tooltip } from '@heroui/react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
@@ -34,7 +35,7 @@ const ProxyCard: React.FC<Props> = (props) => {
   if (iconOnly) {
     return (
       <div className={`${proxyCardStatus} flex justify-center`}>
-        <Tooltip content="代理组" placement="right">
+        <Tooltip content={tr('代理组')} placement="right">
           <Button
             size="sm"
             isIconOnly
@@ -103,7 +104,7 @@ const ProxyCard: React.FC<Props> = (props) => {
           <h3
             className={`text-md font-bold ${match ? 'text-primary-foreground' : 'text-foreground'}`}
           >
-            代理组
+            {tr('代理组')}
           </h3>
         </CardFooter>
       </Card>

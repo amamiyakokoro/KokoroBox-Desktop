@@ -1,3 +1,4 @@
+import { tr } from '../../../../shared/i18n'
 import { Button, Card, CardBody, CardFooter, Tooltip } from '@heroui/react'
 import React from 'react'
 import { MdFormatOverline } from 'react-icons/md'
@@ -31,7 +32,7 @@ const OverrideCard: React.FC<Props> = (props) => {
   if (iconOnly) {
     return (
       <div className={`${overrideCardStatus} flex justify-center`}>
-        <Tooltip content="覆写" placement="right">
+        <Tooltip content={tr('覆写')} placement="right">
           <Button
             size="sm"
             isIconOnly
@@ -83,7 +84,7 @@ const OverrideCard: React.FC<Props> = (props) => {
           <h3
             className={`text-md font-bold ${match ? 'text-primary-foreground' : 'text-foreground'}`}
           >
-            覆写
+            {tr('覆写')}
           </h3>
         </CardFooter>
       </Card>

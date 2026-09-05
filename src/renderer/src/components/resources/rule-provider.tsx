@@ -1,3 +1,4 @@
+import { tr } from '../../../../shared/i18n'
 import {
   mihomoRuleProviders,
   mihomoUpdateRuleProviders,
@@ -86,7 +87,7 @@ const RuleProvider: React.FC = () => {
       await mihomoUpdateRuleProviders(name)
       mutate()
     } catch (e) {
-      notify(`${name} 更新失败\n${e}`, { variant: 'danger' })
+      notify(tr('{0} 更新失败\n{1}', [name, e]), { variant: 'danger' })
     } finally {
       setUpdating((prev) => {
         prev[index] = false
@@ -131,7 +132,7 @@ const RuleProvider: React.FC = () => {
           }
         />
       )}
-      <SettingItem compatKey="legacy" title="规则集合" divider>
+      <SettingItem compatKey="legacy" title={tr('规则集合')} divider>
         <Button
           size="sm"
           color="primary"
@@ -141,7 +142,7 @@ const RuleProvider: React.FC = () => {
             })
           }}
         >
-          更新全部
+          {tr('更新全部')}
         </Button>
       </SettingItem>
       {providers.map((provider, index) => (

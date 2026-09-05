@@ -1,21 +1,22 @@
+import { tr } from '../../../../shared/i18n'
 import React from 'react'
 import SettingCard from '../base/base-setting-card'
 import SettingItem from '../base/base-setting-item'
 import { RadioGroup, Radio } from '@heroui/react'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 const titleMap = {
-  sysproxyCardStatus: '系统代理',
-  tunCardStatus: '虚拟网卡',
-  profileCardStatus: '订阅管理',
-  proxyCardStatus: '代理组',
-  ruleCardStatus: '规则',
-  resourceCardStatus: '外部资源',
-  overrideCardStatus: '覆写',
-  connectionCardStatus: '连接',
-  mihomoCoreCardStatus: '内核',
+  sysproxyCardStatus: tr('系统代理'),
+  tunCardStatus: tr('虚拟网卡'),
+  profileCardStatus: tr('订阅管理'),
+  proxyCardStatus: tr('代理组'),
+  ruleCardStatus: tr('规则'),
+  resourceCardStatus: tr('外部资源'),
+  overrideCardStatus: tr('覆写'),
+  connectionCardStatus: tr('连接'),
+  mihomoCoreCardStatus: tr('内核'),
   dnsCardStatus: 'DNS',
-  sniffCardStatus: '域名嗅探',
-  logCardStatus: '日志',
+  sniffCardStatus: tr('域名嗅探'),
+  logCardStatus: tr('日志'),
   substoreCardStatus: 'Sub-Store'
 }
 const SiderConfig: React.FC = () => {
@@ -53,7 +54,7 @@ const SiderConfig: React.FC = () => {
   }
 
   return (
-    <SettingCard header="侧边栏设置">
+    <SettingCard header={tr('侧边栏设置')}>
       {Object.keys(cardStatus).map((key, index, array) => {
         return (
           <SettingItem
@@ -69,9 +70,9 @@ const SiderConfig: React.FC = () => {
                 patchAppConfig({ [key]: v as CardStatus })
               }}
             >
-              <Radio value="col-span-2">大</Radio>
-              <Radio value="col-span-1">小</Radio>
-              <Radio value="hidden">隐藏</Radio>
+              <Radio value="col-span-2">{tr('大')}</Radio>
+              <Radio value="col-span-1">{tr('小')}</Radio>
+              <Radio value="hidden">{tr('隐藏')}</Radio>
             </RadioGroup>
           </SettingItem>
         )

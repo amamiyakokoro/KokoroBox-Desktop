@@ -1,3 +1,4 @@
+import { tr } from '../../shared/i18n'
 import { execFile } from 'child_process'
 import { promisify } from 'util'
 import {
@@ -33,7 +34,7 @@ function appleScriptQuote(value: string): string {
 
 export async function execWithElevation(command: string, args: string[]): Promise<void> {
   if (systemCoreOnlyBuild && command !== systemServicePath) {
-    throw new Error('系统内核构建不支持提权操作')
+    throw new Error(tr('系统内核构建不支持提权操作'))
   }
 
   if (process.platform === 'win32') {
@@ -48,7 +49,7 @@ export async function execWithElevation(command: string, args: string[]): Promis
       }
     } catch (error) {
       throw new Error(
-        `Windows 提权执行失败：${error instanceof Error ? error.message : String(error)}`
+        tr('Windows 提权执行失败：{0}', [error instanceof Error ? error.message : String(error)])
       )
     }
   } else if (process.platform === 'linux') {
@@ -56,7 +57,7 @@ export async function execWithElevation(command: string, args: string[]): Promis
       await execFilePromise('pkexec', [command, ...args])
     } catch (error) {
       throw new Error(
-        `Linux 提权执行失败：${error instanceof Error ? error.message : String(error)}`
+        tr('Linux 提权执行失败：{0}', [error instanceof Error ? error.message : String(error)])
       )
     }
   } else if (process.platform === 'darwin') {
@@ -68,7 +69,7 @@ export async function execWithElevation(command: string, args: string[]): Promis
       ])
     } catch (error) {
       throw new Error(
-        `macOS 提权执行失败：${error instanceof Error ? error.message : String(error)}`
+        tr('macOS 提权执行失败：{0}', [error instanceof Error ? error.message : String(error)])
       )
     }
   }

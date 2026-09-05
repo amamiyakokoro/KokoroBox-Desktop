@@ -1,3 +1,4 @@
+import { tr } from '../../../shared/i18n'
 import { Button } from '@heroui/react'
 import BasePage from '@renderer/components/base/base-page'
 // import { CgWebsite } from 'react-icons/cg'
@@ -14,7 +15,7 @@ import AppearanceConfig from '@renderer/components/settings/appearance-confis'
 const Settings: React.FC = () => {
   return (
     <BasePage
-      title="应用设置"
+      title={tr('应用设置')}
       header={
         <>
           {/* <Button

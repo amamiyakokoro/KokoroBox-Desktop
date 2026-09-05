@@ -1,3 +1,4 @@
+import { tr } from '../../shared/i18n'
 import { execFile } from 'child_process'
 import { promisify } from 'util'
 import { mihomoCorePath } from '../utils/dirs'
@@ -7,7 +8,7 @@ import { createElevateTask } from '../sys/misc'
 type CoreName = 'mihomo' | 'mihomo-alpha'
 
 class UserCancelledError extends Error {
-  constructor(message = '用户取消操作') {
+  constructor(message = tr('用户取消操作')) {
     super(message)
     this.name = 'UserCancelledError'
   }
@@ -19,7 +20,7 @@ function isUserCancelledError(error: unknown): boolean {
   }
   const errorMsg = error instanceof Error ? error.message : String(error)
   return (
-    errorMsg.includes('用户已取消') ||
+    /(?:用户|用戶|使用者)已取消/.test(errorMsg) ||
     errorMsg.includes('User canceled') ||
     errorMsg.includes('(-128)') ||
     errorMsg.includes('user cancelled') ||

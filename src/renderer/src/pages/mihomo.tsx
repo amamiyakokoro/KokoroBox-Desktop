@@ -1,3 +1,4 @@
+import { tr } from '../../../shared/i18n'
 import { Button, Select, SelectItem, Switch, Tab, Tabs } from '@heroui/react'
 import BasePage from '@renderer/components/base/base-page'
 import SettingCard from '@renderer/components/base/base-setting-card'
@@ -103,7 +104,7 @@ const Mihomo: React.FC = () => {
       setTimeout(() => PubSub.publish('mihomo-core-changed'), 2000)
     } catch (e) {
       if (typeof e === 'string' && e.includes('already using latest version')) {
-        notify('已经是最新版本')
+        notify(tr('已经是最新版本'))
       } else {
         notify(e, { variant: 'danger' })
       }
@@ -117,8 +118,8 @@ const Mihomo: React.FC = () => {
       const paths = await getSystemCorePaths()
 
       if (paths.length === 0) {
-        notify('未找到系统内核', {
-          body: '系统中未找到可用的 mihomo 或 clash 内核，已自动切换回内置内核'
+        notify(tr('未找到系统内核'), {
+          body: tr('系统中未找到可用的 mihomo 或 clash 内核，已自动切换回内置内核')
         })
         return
       }
@@ -142,23 +143,23 @@ const Mihomo: React.FC = () => {
   }
 
   return (
-    <BasePage title="内核设置" contentClassName="no-scrollbar">
+    <BasePage title={tr('内核设置')} contentClassName="no-scrollbar">
       {!systemCoreOnlyBuild && showPermissionModal && (
         <PermissionModal
           onChange={setShowPermissionModal}
           onRevoke={async () => {
             if (platform === 'win32') {
               await deleteElevateTask()
-              notify('提权配置已取消')
+              notify(tr('提权配置已取消'))
             } else {
               await revokeCorePermission()
-              notify('内核权限已撤销')
+              notify(tr('内核权限已撤销'))
             }
             await restartCore()
           }}
           onGrant={async () => {
             await manualGrantCorePermition()
-            notify(platform === 'win32' ? '提权配置成功' : '内核授权成功')
+            notify(platform === 'win32' ? tr('提权配置成功') : tr('内核授权成功'))
             await restartCore()
           }}
         />
@@ -168,25 +169,25 @@ const Mihomo: React.FC = () => {
           onChange={setShowServiceModal}
           onInit={async () => {
             await initService()
-            notify('服务初始化成功')
+            notify(tr('服务初始化成功'))
           }}
           {...(!systemCoreOnlyBuild
             ? {
                 onInstall: async () => {
                   await installService()
-                  notify('服务安装成功')
+                  notify(tr('服务安装成功'))
                 },
                 onUninstall: async () => {
                   await uninstallService()
-                  notify('服务卸载成功')
+                  notify(tr('服务卸载成功'))
                 },
                 onStart: async () => {
                   await startService()
-                  notify('服务启动成功')
+                  notify(tr('服务启动成功'))
                 },
                 onRestart: async () => {
                   await restartService()
-                  notify('服务重启成功')
+                  notify(tr('服务重启成功'))
                 }
               }
             : {})}
@@ -195,7 +196,7 @@ const Mihomo: React.FC = () => {
       <SettingCard>
         <SettingItem
           compatKey="legacy"
-          title="内核版本"
+          title={tr('内核版本')}
           actions={
             !systemCoreOnlyBuild && (core === 'mihomo' || core === 'mihomo-alpha') ? (
               <Button
@@ -212,10 +213,10 @@ const Mihomo: React.FC = () => {
           divider
         >
           {systemCoreOnlyBuild ? (
-            <span className="text-sm text-foreground-600">系统内核</span>
+            <span className="text-sm text-foreground-600">{tr('系统内核')}</span>
           ) : (
             <Select
-              aria-label="内核版本"
+              aria-label={tr('内核版本')}
               classNames={{ trigger: 'data-[hover=true]:bg-default-200' }}
               className="w-37.5"
               size="sm"
@@ -225,16 +226,16 @@ const Mihomo: React.FC = () => {
                 handleCoreChange(v.currentKey as 'mihomo' | 'mihomo-alpha' | 'system')
               }
             >
-              <SelectItem key="mihomo">内置稳定版</SelectItem>
-              <SelectItem key="mihomo-alpha">内置预览版</SelectItem>
-              <SelectItem key="system">使用系统内核</SelectItem>
+              <SelectItem key="mihomo">{tr('内置稳定版')}</SelectItem>
+              <SelectItem key="mihomo-alpha">{tr('内置预览版')}</SelectItem>
+              <SelectItem key="system">{tr('使用系统内核')}</SelectItem>
             </Select>
           )}
         </SettingItem>
         {core === 'system' && (
-          <SettingItem compatKey="legacy" title="系统内核路径选择" divider>
+          <SettingItem compatKey="legacy" title={tr('系统内核路径选择')} divider>
             <Select
-              aria-label="系统内核路径"
+              aria-label={tr('系统内核路径')}
               classNames={{ trigger: 'data-[hover=true]:bg-default-200' }}
               className="w-87.5"
               size="sm"
@@ -247,23 +248,23 @@ const Mihomo: React.FC = () => {
               }}
             >
               {loadingPaths ? (
-                <SelectItem key="">正在查找系统内核...</SelectItem>
+                <SelectItem key="">{tr('正在查找系统内核...')}</SelectItem>
               ) : systemCorePaths.length > 0 ? (
                 systemCorePaths.map((path) => <SelectItem key={path}>{path}</SelectItem>)
               ) : (
-                <SelectItem key="">未找到系统内核</SelectItem>
+                <SelectItem key="">{tr('未找到系统内核')}</SelectItem>
               )}
             </Select>
             {!loadingPaths && systemCorePaths.length === 0 && (
               <div className="mt-2 text-sm text-warning">
-                未在系统中找到 mihomo 或 clash 内核，请安装后重试
+                {tr('未在系统中找到 mihomo 或 clash 内核，请安装后重试')}
               </div>
             )}
           </SettingItem>
         )}
-        <SettingItem compatKey="legacy" title="内核进程优先级" divider>
+        <SettingItem compatKey="legacy" title={tr('内核进程优先级')} divider>
           <Select
-            aria-label="内核进程优先级"
+            aria-label={tr('内核进程优先级')}
             classNames={{ trigger: 'data-[hover=true]:bg-default-200' }}
             className="w-37.5"
             size="sm"
@@ -280,41 +281,41 @@ const Mihomo: React.FC = () => {
               }
             }}
           >
-            <SelectItem key="PRIORITY_HIGHEST">实时</SelectItem>
-            <SelectItem key="PRIORITY_HIGH">高</SelectItem>
-            <SelectItem key="PRIORITY_ABOVE_NORMAL">高于正常</SelectItem>
-            <SelectItem key="PRIORITY_NORMAL">正常</SelectItem>
-            <SelectItem key="PRIORITY_BELOW_NORMAL">低于正常</SelectItem>
-            <SelectItem key="PRIORITY_LOW">低</SelectItem>
+            <SelectItem key="PRIORITY_HIGHEST">{tr('实时')}</SelectItem>
+            <SelectItem key="PRIORITY_HIGH">{tr('高')}</SelectItem>
+            <SelectItem key="PRIORITY_ABOVE_NORMAL">{tr('高于正常')}</SelectItem>
+            <SelectItem key="PRIORITY_NORMAL">{tr('正常')}</SelectItem>
+            <SelectItem key="PRIORITY_BELOW_NORMAL">{tr('低于正常')}</SelectItem>
+            <SelectItem key="PRIORITY_LOW">{tr('低')}</SelectItem>
           </Select>
         </SettingItem>
-        <SettingItem compatKey="legacy" title="运行模式" divider>
+        <SettingItem compatKey="legacy" title={tr('运行模式')} divider>
           <Tabs
             size="sm"
             color="primary"
             selectedKey={corePermissionMode}
             onSelectionChange={(key) => handlePermissionModeChange(key as string)}
           >
-            <Tab key="elevated" title="直接运行" />
-            <Tab key="service" title="系统服务" />
+            <Tab key="elevated" title={tr('直接运行')} />
+            <Tab key="service" title={tr('系统服务')} />
           </Tabs>
         </SettingItem>
         {platform === 'linux' && corePermissionMode === 'service' && (
-          <SettingItem compatKey="legacy" title="服务核心运行方式" divider>
+          <SettingItem compatKey="legacy" title={tr('服务核心运行方式')} divider>
             <Tabs
               size="sm"
               color="primary"
               selectedKey={serviceRunMode}
               onSelectionChange={(key) => handleConfigChangeWithRestart('serviceRunMode', key)}
             >
-              <Tab key="auto" title="自动" />
-              <Tab key="sandbox" title="沙盒" />
-              <Tab key="direct" title="直接启动" />
+              <Tab key="auto" title={tr('自动')} />
+              <Tab key="sandbox" title={tr('沙盒')} />
+              <Tab key="direct" title={tr('直接启动')} />
             </Tabs>
           </SettingItem>
         )}
         {corePermissionMode !== 'service' && (
-          <SettingItem compatKey="legacy" title="启动检测方式" divider>
+          <SettingItem compatKey="legacy" title={tr('启动检测方式')} divider>
             <Tabs
               size="sm"
               color="primary"
@@ -322,20 +323,20 @@ const Mihomo: React.FC = () => {
               onSelectionChange={(key) => handleConfigChangeWithRestart('coreStartupMode', key)}
             >
               <Tab key="post-up" title="Post Up" />
-              <Tab key="log" title="日志解析" />
+              <Tab key="log" title={tr('日志解析')} />
             </Tabs>
           </SettingItem>
         )}
         {!systemCoreOnlyBuild && (
-          <SettingItem compatKey="legacy" title="提权状态" divider>
+          <SettingItem compatKey="legacy" title={tr('提权状态')} divider>
             <Button size="sm" color="primary" onPress={() => setShowPermissionModal(true)}>
-              管理
+              {tr('管理')}
             </Button>
           </SettingItem>
         )}
-        <SettingItem compatKey="legacy" title="服务状态" divider>
+        <SettingItem compatKey="legacy" title={tr('服务状态')} divider>
           <Button size="sm" color="primary" onPress={() => setShowServiceModal(true)}>
-            管理
+            {tr('管理')}
           </Button>
         </SettingItem>
         <SettingItem compatKey="legacy" title="IPv6">

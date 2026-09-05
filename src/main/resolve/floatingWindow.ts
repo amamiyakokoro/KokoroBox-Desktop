@@ -5,6 +5,7 @@ import { getAppConfig, patchAppConfig } from '../config'
 import { applyTheme } from './theme'
 import { buildContextMenu, showTrayIcon } from './tray'
 import { createWindowStateManager } from './windowState'
+import { getLocale } from '../../shared/i18n'
 
 export let floatingWindow: BrowserWindow | null = null
 let triggerTimeoutRef: NodeJS.Timeout | null = null
@@ -59,6 +60,7 @@ async function createFloatingWindow(): Promise<void> {
     closable: false,
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
+      additionalArguments: [`--kokorobox-locale=${getLocale()}`],
       spellcheck: false,
       sandbox: false,
       ...(is.dev ? { webSecurity: false } : {})

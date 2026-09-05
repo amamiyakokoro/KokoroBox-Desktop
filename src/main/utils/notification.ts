@@ -1,3 +1,4 @@
+import { tr } from '../../shared/i18n'
 import { BrowserWindow, Notification, clipboard, dialog, ipcMain, shell } from 'electron'
 import { getAppConfig } from '../config/app'
 
@@ -55,7 +56,7 @@ export async function showNotification(payload: AppNotificationPayload): Promise
     title: notification.title,
     body: notification.body,
     timeoutType: notification.persistent ? 'never' : 'default',
-    actions: hasErrorDetail ? [{ type: 'button', text: '查看详情' }] : undefined
+    actions: hasErrorDetail ? [{ type: 'button', text: tr('查看详情') }] : undefined
   })
   if (hasErrorDetail) {
     const showDetail = (): void => {
@@ -130,10 +131,10 @@ function showNotificationDetail(title: string, body: string): void {
   void dialog
     .showMessageBox({
       type: 'error',
-      title: '错误详情',
+      title: tr('错误详情'),
       message: title,
       detail: body,
-      buttons: ['关闭', '复制'],
+      buttons: [tr('关闭'), tr('复制')],
       noLink: true
     })
     .then(({ response }) => {

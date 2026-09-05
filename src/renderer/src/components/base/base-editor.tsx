@@ -1,3 +1,4 @@
+import { tr } from '../../../../shared/i18n'
 import React, { useMemo, useRef } from 'react'
 import * as monaco from 'monaco-editor'
 import { configureMonacoYaml } from 'monaco-yaml'
@@ -81,44 +82,44 @@ const monacoInitialization = (): void => {
             '\\+rules': {
               type: 'array',
               $ref: '#/definitions/rules',
-              description: '“+”开头表示将内容插入到原数组前面'
+              description: tr('“+”开头表示将内容插入到原数组前面')
             },
             'rules\\+': {
               type: 'array',
               $ref: '#/definitions/rules',
-              description: '“+”结尾表示将内容追加到原数组后面'
+              description: tr('“+”结尾表示将内容追加到原数组后面')
             },
             '\\+proxies': {
               type: 'array',
               $ref: '#/definitions/proxies',
-              description: '“+”开头表示将内容插入到原数组前面'
+              description: tr('“+”开头表示将内容插入到原数组前面')
             },
             'proxies\\+': {
               type: 'array',
               $ref: '#/definitions/proxies',
-              description: '“+”结尾表示将内容追加到原数组后面'
+              description: tr('“+”结尾表示将内容追加到原数组后面')
             },
             '\\+proxy-groups': {
               type: 'array',
               $ref: '#/definitions/proxy-groups',
-              description: '“+”开头表示将内容插入到原数组前面'
+              description: tr('“+”开头表示将内容插入到原数组前面')
             },
             'proxy-groups\\+': {
               type: 'array',
               $ref: '#/definitions/proxy-groups',
-              description: '“+”结尾表示将内容追加到原数组后面'
+              description: tr('“+”结尾表示将内容追加到原数组后面')
             },
             '^\\+': {
               type: 'array',
-              description: '“+”开头表示将内容插入到原数组前面'
+              description: tr('“+”开头表示将内容插入到原数组前面')
             },
             '\\+$': {
               type: 'array',
-              description: '“+”结尾表示将内容追加到原数组后面'
+              description: tr('“+”结尾表示将内容追加到原数组后面')
             },
             '!$': {
               type: 'object',
-              description: '“!”结尾表示强制覆盖该项而不进行递归合并'
+              description: tr('“!”结尾表示强制覆盖该项而不进行递归合并')
             }
           }
         }

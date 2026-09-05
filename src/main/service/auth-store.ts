@@ -1,3 +1,4 @@
+import { tr } from '../../shared/i18n'
 import { existsSync } from 'fs'
 import { mkdir, readFile, rename, unlink, writeFile } from 'fs/promises'
 import { dirname } from 'path'
@@ -22,13 +23,13 @@ function normalizeServiceAuthSecret(secret: {
   const privateKey = secret.privateKey?.trim() || ''
 
   if (!publicKey || !privateKey) {
-    throw new Error('服务鉴权密钥无效')
+    throw new Error(tr('服务鉴权密钥无效'))
   }
 
   const computedKeyId = computeKeyId(publicKey)
   const keyId = secret.keyId?.trim() || computedKeyId
   if (keyId !== computedKeyId) {
-    throw new Error('服务鉴权密钥无效')
+    throw new Error(tr('服务鉴权密钥无效'))
   }
 
   return {
@@ -56,7 +57,7 @@ export async function loadServiceAuthSecret(): Promise<ServiceAuthSecret | null>
     return normalizeServiceAuthSecret(envelope)
   }
 
-  throw new Error('服务鉴权存储格式无效')
+  throw new Error(tr('服务鉴权存储格式无效'))
 }
 
 export async function saveServiceAuthSecret(secret: ServiceAuthSecret): Promise<void> {

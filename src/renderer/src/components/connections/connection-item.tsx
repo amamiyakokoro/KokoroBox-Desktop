@@ -1,3 +1,4 @@
+import { tr } from '../../../../shared/i18n'
 import { Button, Card, CardFooter, CardHeader, Chip } from '@heroui/react'
 import { Avatar } from '@heroui-v3/react'
 import { calcTraffic } from '@renderer/utils/calc'
@@ -113,7 +114,7 @@ const ConnectionItemComponent: React.FC<Props> = ({
                 variant="light"
                 isIconOnly
                 size="sm"
-                aria-label={info.isActive ? '关闭连接' : '删除记录'}
+                aria-label={info.isActive ? tr('关闭连接') : tr('删除记录')}
                 className="absolute right-2 transform"
                 onPress={handleClose}
               >
