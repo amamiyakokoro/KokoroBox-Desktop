@@ -594,7 +594,7 @@ test('desktop inbox handles pre-ready and warm deliveries and strips OAuth argv 
   assert.equal(results.length, 2)
 })
 
-test('packaging registers the shared scheme and startup handoff precedes elevation', () => {
+test('packaging registers the shared scheme and Windows callback relay precedes app locking', () => {
   const config = parseYaml(readFileSync('electron-builder.yml', 'utf8'))
   const protocols = Array.isArray(config.protocols) ? config.protocols : [config.protocols]
   assert.ok(protocols.some((item: { schemes: string[] }) => item.schemes.includes('kokoro')))
@@ -602,13 +602,14 @@ test('packaging registers the shared scheme and startup handoff precedes elevati
   const init = readFileSync('src/main/utils/init.ts', 'utf8')
   assert.match(init, /['"]kokoro['"]/) // Runtime Windows/dev registration.
   const main = readFileSync('src/main/index.ts', 'utf8')
+  const callbackRelay = main.indexOf('void forwardKokoroCallback(')
+  const singleInstanceLock = main.indexOf('app.requestSingleInstanceLock()')
+  assert.ok(callbackRelay >= 0 && callbackRelay < singleInstanceLock)
+  assert.ok(singleInstanceLock < main.indexOf('ensureWindowsElevatedStartup(syncConfig'))
   assert.ok(
-    main.indexOf('app.requestSingleInstanceLock()') <
-      main.indexOf('ensureWindowsElevatedStartup(syncConfig')
-  )
-  assert.ok(
-    main.indexOf('takeInitialDeepLinks(process.argv)') <
-      main.indexOf('ensureWindowsElevatedStartup(syncConfig')
+    singleInstanceLock < main.indexOf('takeInitialDeepLinks(process.argv)') &&
+      main.indexOf('takeInitialDeepLinks(process.argv)') <
+        main.indexOf('ensureWindowsElevatedStartup(syncConfig')
   )
   assert.match(main, /event\.preventDefault\(\)/)
 })

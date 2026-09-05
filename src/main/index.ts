@@ -149,26 +149,31 @@ function showWindow(): number {
 applyWindowsGpuWorkaround()
 if (syncConfig.disableGPU) app.disableHardwareAcceleration()
 
-const gotTheLock = app.requestSingleInstanceLock()
-if (!gotTheLock) {
-  app.quit()
+const windowsKokoroCallback =
+  process.platform === 'win32' ? process.argv.find(isKokoroURI) : undefined
+if (windowsKokoroCallback) {
+  // A browser starts protocol handlers without elevation. Try the authenticated relay before
+  // Electron's single-instance handoff, which Windows can block across integrity levels.
+  void forwardKokoroCallback(
+    kokoroCallbackRelayPath(app.getPath('userData')),
+    windowsKokoroCallback
+  ).then((forwarded) => {
+    if (forwarded) app.quit()
+    else requestPrimaryInstance()
+  })
 } else {
-  const initialDeepLinks = takeInitialDeepLinks(process.argv)
-  const windowsKokoroCallback =
-    process.platform === 'win32' ? initialDeepLinks.find(isKokoroURI) : undefined
-  if (windowsKokoroCallback) {
-    // Windows can isolate Electron's single-instance channel across elevation levels.
-    // Authenticate the original process with the pending state before forwarding the callback.
-    void forwardKokoroCallback(
-      kokoroCallbackRelayPath(app.getPath('userData')),
-      windowsKokoroCallback
-    ).then((forwarded) => {
-      if (forwarded) app.quit()
-      else startPrimaryInstance(initialDeepLinks)
-    })
-  } else {
-    startPrimaryInstance(initialDeepLinks)
+  requestPrimaryInstance()
+}
+
+function requestPrimaryInstance(): void {
+  const gotTheLock = app.requestSingleInstanceLock()
+  if (!gotTheLock) {
+    app.quit()
+    return
   }
+  // Keep callback URLs in argv until after the lock request so Electron can still deliver them
+  // through second-instance when both processes run at the same integrity level.
+  startPrimaryInstance(takeInitialDeepLinks(process.argv))
 }
 
 function startPrimaryInstance(initialDeepLinks: string[]): void {
