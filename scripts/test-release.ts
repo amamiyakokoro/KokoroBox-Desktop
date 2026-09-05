@@ -314,10 +314,10 @@ function publicationMock(
   const github = {
     rest: {
       repos: {
-        getReleaseByTag: async () => {
+        listReleases: async () => {
           if (options.authFailure) throw Object.assign(new Error('Forbidden'), { status: 403 })
-          if (options.missingRelease) return missing()
-          return { data: { id: 1, draft: options.draft ?? true } }
+          if (options.missingRelease) return []
+          return [{ id: 1, tag_name: env.RELEASE_TAG, draft: options.draft ?? true }]
         },
         getCommit: async () => {
           if (options.missingTag)
@@ -409,6 +409,12 @@ test('a stable draft is published only after asset and tag checks; incomplete up
     await assert.rejects(mock.run('Finalize Release'))
     assert.deepEqual(mock.calls, [])
   }
+})
+
+test('uploaded packages are verified through draft-aware release enumeration', async () => {
+  await publicationMock().run('Verify Uploaded Packages')
+  for (const options of [{ missingRelease: true }, { missingAsset: true }, { authFailure: true }])
+    await assert.rejects(publicationMock(options).run('Verify Uploaded Packages'))
 })
 
 test('rolling tags move and old assets are deleted only after complete uploads', async () => {

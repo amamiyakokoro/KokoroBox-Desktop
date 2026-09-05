@@ -61,12 +61,11 @@ jobs:
             if (!rolling && process.env.RELEASE_CHANNEL !== 'stable') throw new Error('Invalid release channel');
             if (rolling && tag !== 'rolling') throw new Error('Unexpected rolling tag');
             if (!rolling) {
-              try {
-                const { data } = await github.rest.repos.getReleaseByTag({ ...context.repo, tag });
-                if (!data.draft) throw new Error('Refusing to overwrite a published stable release.');
-              } catch (error) {
-                if (error.status !== 404) throw error;
-              }
+              // getReleaseByTag returns 404 for drafts, so enumerate releases until publication.
+              const releases = await github.paginate(github.rest.repos.listReleases, { ...context.repo, per_page: 100 });
+              const matches = releases.filter(item => item.tag_name === tag);
+              if (matches.length > 1) throw new Error(`Multiple releases found for tag: ${tag}`);
+              if (matches[0] && !matches[0].draft) throw new Error('Refusing to overwrite a published stable release.');
             }
             try {
               // The refs API reports an absent tag as 404; getCommit reports it as 422.
@@ -101,7 +100,12 @@ jobs:
         with:
           script: |
             const fs = require('node:fs');
-            const { data: release } = await github.rest.repos.getReleaseByTag({ ...context.repo, tag: process.env.RELEASE_TAG });
+            const tag = process.env.RELEASE_TAG;
+            // Draft releases are intentionally absent from getReleaseByTag.
+            const releases = await github.paginate(github.rest.repos.listReleases, { ...context.repo, per_page: 100 });
+            const matches = releases.filter(item => item.tag_name === tag);
+            if (matches.length !== 1) throw new Error(`Expected exactly one release for tag: ${tag}`);
+            const release = matches[0];
             const assets = await github.paginate(github.rest.repos.listReleaseAssets, { ...context.repo, release_id: release.id, per_page: 100 });
             for (const name of fs.readdirSync('dist/release').filter(name => name !== 'changelog.md' && name !== 'latest.yml')) {
               const asset = assets.find(item => item.name === name);
@@ -125,7 +129,11 @@ jobs:
           script: |
             const fs = require('node:fs');
             const tag = process.env.RELEASE_TAG;
-            const { data: release } = await github.rest.repos.getReleaseByTag({ ...context.repo, tag });
+            // Stable releases remain drafts here, so enumerate releases by exact tag.
+            const releases = await github.paginate(github.rest.repos.listReleases, { ...context.repo, per_page: 100 });
+            const matches = releases.filter(item => item.tag_name === tag);
+            if (matches.length !== 1) throw new Error(`Expected exactly one release for tag: ${tag}`);
+            const release = matches[0];
             const expected = fs.readdirSync('dist/release').filter(name => name !== 'changelog.md');
             const assets = await github.paginate(github.rest.repos.listReleaseAssets, { ...context.repo, release_id: release.id, per_page: 100 });
             for (const name of expected) {
