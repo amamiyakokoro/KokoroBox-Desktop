@@ -175,6 +175,48 @@
   min-width: 0;
 }
 
+/* English labels need more room than the original fixed-width Chinese labels. */
+:root:lang(en) .setting-item:not(.setting-item--titleless) {
+  grid-template-columns: minmax(0, 36%) minmax(0, 1fr);
+}
+
+:root:lang(en) .setting-item__title {
+  height: auto;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.5;
+}
+
+:root:lang(en) .setting-item--compact,
+:root:lang(en) .setting-item-legacy {
+  height: auto;
+  min-height: calc(var(--spacing) * 8);
+}
+
+:root:lang(en) .setting-item-legacy {
+  flex-wrap: wrap;
+  align-items: center;
+  gap: calc(var(--spacing) * 2) calc(var(--spacing) * 3);
+}
+
+:root:lang(en) .setting-item-legacy > :first-child {
+  height: auto;
+  min-width: 0;
+  max-width: 100%;
+}
+
+:root:lang(en) .setting-item-legacy h4 {
+  height: auto;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.5;
+}
+
+:root:lang(en) .setting-item-legacy > :last-child:not(:first-child) {
+  max-width: 100%;
+  margin-inline-start: auto;
+}
+
 .setting-item--content-end .setting-item__content {
   display: flex;
   justify-content: end;

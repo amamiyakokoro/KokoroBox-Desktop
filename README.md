@@ -20,9 +20,11 @@ KokoroBox is an Electron-based desktop client for [Mihomo](https://github.com/Me
 - **Profile tools** — flexible configuration overrides and integrated Sub-Store subscription management
 - **Backup and restore** — one-click configuration backup and restore through WebDAV
 - **Desktop experience** — multiple color themes and a modern React interface
-- **Chinese localization** — Simplified Chinese and Traditional Chinese (Taiwan), with automatic system-language selection
+- **Localization** — English, Simplified Chinese and Traditional Chinese (Taiwan), with automatic system-language selection
 
 Choose a language under **Application settings → Interface language**, then restart the app to apply it to every window and native menu. Subscription names, proxy names, and configuration contents retain their original text.
+
+With **System default**, the first supported language in your system preferences is used. English variants such as `en-US` and `en-GB` use English; Chinese script and region variants select Simplified or Traditional Chinese. If no supported language is found, the existing Simplified Chinese fallback is retained.
 
 ## Kokoro subscriptions
 
@@ -83,17 +85,18 @@ On Windows, disable TUN temporarily if the development window opens as a blank s
 
 ### Scripts
 
-| Command            | Purpose                                                              |
-| ------------------ | -------------------------------------------------------------------- |
-| `pnpm dev`         | Start the development server                                         |
-| `pnpm typecheck`   | Type-check the main and renderer processes                           |
-| `pnpm test:kokoro` | Test Kokoro PKCE authentication and callback handling                |
-| `pnpm lint`        | Run ESLint and apply supported fixes                                 |
-| `pnpm format`      | Format the repository with Prettier                                  |
-| `pnpm prepare`     | Download and prepare cores, services, rule data, and frontend assets |
-| `pnpm build:win`   | Build Windows packages                                               |
-| `pnpm build:mac`   | Build the macOS PKG installer                                        |
-| `pnpm build:linux` | Build Linux packages                                                 |
+| Command                  | Purpose                                                              |
+| ------------------------ | -------------------------------------------------------------------- |
+| `pnpm dev`               | Start the development server                                         |
+| `pnpm typecheck`         | Type-check the main and renderer processes                           |
+| `pnpm test:kokoro`       | Test Kokoro PKCE authentication and callback handling                |
+| `pnpm test:localization` | Check locale selection, translation coverage and renderer startup    |
+| `pnpm lint`              | Run ESLint and apply supported fixes                                 |
+| `pnpm format`            | Format the repository with Prettier                                  |
+| `pnpm prepare`           | Download and prepare cores, services, rule data, and frontend assets |
+| `pnpm build:win`         | Build Windows packages                                               |
+| `pnpm build:mac`         | Build the macOS PKG installer                                        |
+| `pnpm build:linux`       | Build Linux packages                                                 |
 
 Specify an architecture with the matching electron-builder flag. Prepare target resources before creating a release package:
 

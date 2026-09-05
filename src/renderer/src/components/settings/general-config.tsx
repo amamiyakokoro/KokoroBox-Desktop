@@ -65,7 +65,7 @@ const GeneralConfig: React.FC = () => {
               disallowEmptySelection
               onSelectionChange={async (selection) => {
                 const nextLanguage = selection.currentKey
-                if (!['system', 'zh-CN', 'zh-TW'].includes(nextLanguage || '')) return
+                if (!['system', 'zh-CN', 'zh-TW', 'en'].includes(nextLanguage || '')) return
                 const saved = await patchAppConfig({ language: nextLanguage as AppLanguage })
                 if (saved) setLanguageChanged(true)
               }}
@@ -73,6 +73,7 @@ const GeneralConfig: React.FC = () => {
               <SelectItem key="system">{tr('跟随系统')}</SelectItem>
               <SelectItem key="zh-CN">简体中文</SelectItem>
               <SelectItem key="zh-TW">繁體中文</SelectItem>
+              <SelectItem key="en">English</SelectItem>
             </Select>
             {languageChanged && (
               <Button size="sm" color="primary" onPress={() => relaunchApp()}>

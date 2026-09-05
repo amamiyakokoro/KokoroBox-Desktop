@@ -45,7 +45,7 @@ export async function registerShortcut(
           await triggerSysProxy(!enable, onlyActiveDevice)
           await patchAppConfig({ sysProxy: { enable: !enable } })
           void showNotification({
-            title: tr('系统代理已{0}', [!enable ? tr('开启') : tr('关闭')])
+            title: !enable ? tr('系统代理已开启') : tr('系统代理已关闭')
           })
           mainWindow?.webContents.send('appConfigUpdated')
           floatingWindow?.webContents.send('appConfigUpdated')
@@ -68,7 +68,7 @@ export async function registerShortcut(
           }
           await restartCore()
           void showNotification({
-            title: tr('虚拟网卡已{0}', [!enable ? tr('开启') : tr('关闭')])
+            title: !enable ? tr('虚拟网卡已开启') : tr('虚拟网卡已关闭')
           })
           mainWindow?.webContents.send('controledMihomoConfigUpdated')
           floatingWindow?.webContents.send('appConfigUpdated')

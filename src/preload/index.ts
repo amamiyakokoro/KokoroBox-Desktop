@@ -3,7 +3,11 @@ import { electronAPI } from '@electron-toolkit/preload'
 
 // Custom APIs for renderer
 const api = {
-  locale: process.argv.includes('--kokorobox-locale=zh-TW') ? 'zh-TW' : 'zh-CN',
+  locale: process.argv.includes('--kokorobox-locale=en')
+    ? 'en'
+    : process.argv.includes('--kokorobox-locale=zh-TW')
+      ? 'zh-TW'
+      : 'zh-CN',
   webUtils: webUtils,
   platform: process.platform
 }

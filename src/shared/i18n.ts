@@ -1,16 +1,18 @@
 import { messages as zhTW } from './locales/zh-TW'
+import { messages as en } from './locales/en'
 
-export type Locale = 'zh-CN' | 'zh-TW'
+export type Locale = 'zh-CN' | 'zh-TW' | 'en'
 export type LanguagePreference = 'system' | Locale
 
 export function resolveLocale(
   preference: unknown,
   systemLanguages: readonly string[] = []
 ): Locale {
-  if (preference === 'zh-CN' || preference === 'zh-TW') return preference
+  if (preference === 'zh-CN' || preference === 'zh-TW' || preference === 'en') return preference
 
   for (const language of systemLanguages) {
     const parts = language.toLowerCase().replaceAll('_', '-').split('-')
+    if (parts[0] === 'en') return 'en'
     if (parts[0] !== 'zh') continue
     if (parts.includes('hans')) return 'zh-CN'
     return parts.some((part) => ['hant', 'tw', 'hk', 'mo'].includes(part)) ? 'zh-TW' : 'zh-CN'
@@ -33,8 +35,8 @@ export function getLocale(): Locale {
 
 /** Translate only application-owned messages; interpolation values remain untouched. */
 export function tr(message: string, values: readonly unknown[] = []): string {
-  const translated =
-    currentLocale === 'zh-TW' && Object.hasOwn(zhTW, message) ? zhTW[message] : message
+  const catalog = currentLocale === 'en' ? en : currentLocale === 'zh-TW' ? zhTW : undefined
+  const translated = catalog && Object.hasOwn(catalog, message) ? catalog[message] : message
   return translated.replace(/\{(\d+)\}/g, (placeholder, index: string) =>
     Number(index) < values.length ? String(values[Number(index)]) : placeholder
   )

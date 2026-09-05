@@ -4,6 +4,6 @@ import { webUtils } from 'electron'
 declare global {
   interface Window {
     electron: ElectronAPI
-    api: { webUtils: typeof webUtils; platform: NodeJS.Platform; locale: 'zh-CN' | 'zh-TW' }
+    api: { webUtils: typeof webUtils; platform: NodeJS.Platform; locale: 'zh-CN' | 'zh-TW' | 'en' }
   }
 }

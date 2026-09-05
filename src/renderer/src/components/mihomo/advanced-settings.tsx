@@ -44,7 +44,7 @@ const AdvancedSetting: React.FC = () => {
           }}
         >
           <Tab key="strict" title={tr('自动')}></Tab>
-          <Tab key="off" title={tr('关闭')}></Tab>
+          <Tab key="off" title={tr('已关闭')}></Tab>
           <Tab key="always" title={tr('开启')}></Tab>
         </Tabs>
       </SettingItem>

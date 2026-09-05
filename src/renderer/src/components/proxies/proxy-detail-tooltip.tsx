@@ -186,7 +186,7 @@ const ProxyDetailTooltip: React.FC<Props> = ({ proxy, anchorEl, visible }) => {
                 variant="soft"
                 size="sm"
               >
-                {proxy.udp ? tr('开启') : tr('关闭')}
+                {proxy.udp ? tr('开启') : tr('已关闭')}
               </Chip>
             </>
           )}
@@ -199,7 +199,7 @@ const ProxyDetailTooltip: React.FC<Props> = ({ proxy, anchorEl, visible }) => {
                 variant="soft"
                 size="sm"
               >
-                {proxy.tfo ? tr('开启') : tr('关闭')}
+                {proxy.tfo ? tr('开启') : tr('已关闭')}
               </Chip>
             </>
           )}
@@ -212,7 +212,7 @@ const ProxyDetailTooltip: React.FC<Props> = ({ proxy, anchorEl, visible }) => {
                 variant="soft"
                 size="sm"
               >
-                {proxy.xudp ? tr('开启') : tr('关闭')}
+                {proxy.xudp ? tr('开启') : tr('已关闭')}
               </Chip>
             </>
           )}
@@ -225,7 +225,7 @@ const ProxyDetailTooltip: React.FC<Props> = ({ proxy, anchorEl, visible }) => {
                 variant="soft"
                 size="sm"
               >
-                {proxy.mptcp ? tr('开启') : tr('关闭')}
+                {proxy.mptcp ? tr('开启') : tr('已关闭')}
               </Chip>
             </>
           )}
@@ -238,7 +238,7 @@ const ProxyDetailTooltip: React.FC<Props> = ({ proxy, anchorEl, visible }) => {
                 variant="soft"
                 size="sm"
               >
-                {proxy.smux ? tr('开启') : tr('关闭')}
+                {proxy.smux ? tr('开启') : tr('已关闭')}
               </Chip>
             </>
           )}
@@ -251,7 +251,7 @@ const ProxyDetailTooltip: React.FC<Props> = ({ proxy, anchorEl, visible }) => {
                 variant="soft"
                 size="sm"
               >
-                {proxy.uot ? tr('开启') : tr('关闭')}
+                {proxy.uot ? tr('开启') : tr('已关闭')}
               </Chip>
             </>
           )}
