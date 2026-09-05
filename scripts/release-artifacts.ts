@@ -51,7 +51,7 @@ export const releaseTargets: Target[] = [
   ...['x64', 'arm64'].flatMap((arch) =>
     ['7z', 'nsis'].map((format) => ({ os: 'windows-latest', arch, format }))
   ),
-  ...['x64', 'arm64', 'loong64'].flatMap((arch) =>
+  ...['x64', 'arm64'].flatMap((arch) =>
     ['deb', 'rpm', 'pacman'].map((format) => ({ os: 'ubuntu-latest', arch, format }))
   ),
   ...['x64', 'arm64'].map((arch) => ({ os: 'macos-latest', arch, format: 'pkg' }))
@@ -78,9 +78,9 @@ export function artifactName(target: Target, version: string): string {
   if (target.os === 'macos-latest') return `${prefix}-${target.arch}.pkg`
   const arch =
     target.format === 'deb'
-      ? { x64: 'amd64', arm64: 'arm64', loong64: 'loong64' }[target.arch]
+      ? { x64: 'amd64', arm64: 'arm64' }[target.arch]
       : target.format === 'rpm'
-        ? { x64: 'x86_64', arm64: 'aarch64', loong64: 'loongarch64' }[target.arch]
+        ? { x64: 'x86_64', arm64: 'aarch64' }[target.arch]
         : target.arch === 'arm64'
           ? 'aarch64'
           : target.arch

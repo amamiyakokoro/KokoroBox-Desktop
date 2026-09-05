@@ -18,9 +18,9 @@ if (process.env.SKIP_CHANGELOG !== '1') {
   changelog += '\n#### macOS 11+:\n\n'
   changelog += `- PKG：[Intel](${downloadUrl}/kokorobox-desktop-macos-${version}-x64.pkg) | [Apple Silicon](${downloadUrl}/kokorobox-desktop-macos-${version}-arm64.pkg)\n\n`
   changelog += '\n#### Linux:\n\n'
-  changelog += `- DEB：[64 位](${downloadUrl}/kokorobox-desktop-linux-${version}-amd64.deb) | [ARM64](${downloadUrl}/kokorobox-desktop-linux-${version}-arm64.deb) | [loong64](${downloadUrl}/kokorobox-desktop-linux-${version}-loong64.deb)\n\n`
-  changelog += `- RPM：[64 位](${downloadUrl}/kokorobox-desktop-linux-${version}-x86_64.rpm) | [ARM64](${downloadUrl}/kokorobox-desktop-linux-${version}-aarch64.rpm) | [loong64](${downloadUrl}/kokorobox-desktop-linux-${version}-loongarch64.rpm)\n\n`
-  changelog += `- PACMAN：[64 位](${downloadUrl}/kokorobox-desktop-linux-${version}-x64.pkg.tar.zst) | [ARM64](${downloadUrl}/kokorobox-desktop-linux-${version}-aarch64.pkg.tar.zst) | [loong64](${downloadUrl}/kokorobox-desktop-linux-${version}-loong64.pkg.tar.zst)`
+  changelog += `- DEB：[64 位](${downloadUrl}/kokorobox-desktop-linux-${version}-amd64.deb) | [ARM64](${downloadUrl}/kokorobox-desktop-linux-${version}-arm64.deb)\n\n`
+  changelog += `- RPM：[64 位](${downloadUrl}/kokorobox-desktop-linux-${version}-x86_64.rpm) | [ARM64](${downloadUrl}/kokorobox-desktop-linux-${version}-aarch64.rpm)\n\n`
+  changelog += `- PACMAN：[64 位](${downloadUrl}/kokorobox-desktop-linux-${version}-x64.pkg.tar.zst) | [ARM64](${downloadUrl}/kokorobox-desktop-linux-${version}-aarch64.pkg.tar.zst)`
 }
 writeFileSync('latest.yml', yaml.stringify(latest))
 writeFileSync('changelog.md', changelog)

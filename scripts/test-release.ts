@@ -77,11 +77,12 @@ test('monthly releases bootstrap without a stable tag, skip unchanged/non-month-
   )
 })
 
-test('build matrix exactly matches the 15 required release artifacts', () => {
+test('build matrix exactly matches the 12 required release artifacts', () => {
   const build = workflow('build')
   assert.deepEqual(build.jobs.build.strategy.matrix.include, releaseTargets)
-  assert.equal(new Set(releaseTargets.map(targetId)).size, 15)
-  assert.equal(new Set(releaseTargets.map((target) => artifactName(target, '2.26.8'))).size, 15)
+  assert.equal(new Set(releaseTargets.map(targetId)).size, 12)
+  assert.equal(new Set(releaseTargets.map((target) => artifactName(target, '2.26.8'))).size, 12)
+  assert.deepEqual([...new Set(releaseTargets.map((target) => target.arch))], ['x64', 'arm64'])
   assert.equal(
     artifactName({ os: 'ubuntu-latest', arch: 'arm64', format: 'rpm' }, '2.26.8'),
     'kokorobox-desktop-linux-2.26.8-aarch64.rpm'
@@ -98,14 +99,29 @@ test('build matrix exactly matches the 15 required release artifacts', () => {
 
 test('Linux artifact architecture names agree with electron-builder, including ARM64 Pacman', () => {
   const { Arch, getArtifactArchName } = createRequire(import.meta.url)('builder-util/out/arch.js')
-  for (const target of releaseTargets.filter(
-    (target) => target.os === 'ubuntu-latest' && target.arch !== 'loong64'
-  )) {
+  for (const target of releaseTargets.filter((target) => target.os === 'ubuntu-latest')) {
     const arch = getArtifactArchName(Arch[target.arch], target.format)
     assert.equal(
       artifactName(target, '2.26.8'),
       `kokorobox-desktop-linux-2.26.8-${arch}.${target.format === 'pacman' ? 'pkg.tar.zst' : target.format}`
     )
+  }
+})
+
+test('removed LoongArch64 targets and build/download configuration cannot return', () => {
+  for (const format of ['deb', 'rpm', 'pacman']) {
+    assert.throws(
+      () => artifactName({ os: 'ubuntu-latest', arch: 'loong64', format }, '2.26.8'),
+      /Unsupported release target/
+    )
+  }
+  for (const file of [
+    '.github/workflows/build.yml',
+    'scripts/prepare.ts',
+    'scripts/updater.ts',
+    'pnpm-workspace.yaml'
+  ]) {
+    assert.doesNotMatch(readFileSync(file, 'utf8'), /loong/i, file)
   }
 })
 
@@ -152,9 +168,9 @@ test('collects complete builds, generates hashes, download links and updater-com
     assert.equal(latest.tag, 'v2.26.8')
     assert.match(latest.changelog, /releases\/download\/v2.26.8\//)
     assert.match(latest.changelog, /Developer ID-signed, notarized by Apple/)
-    assert.equal(readdirSync(output).length, 18)
+    assert.equal(readdirSync(output).length, 15)
     const lines = readFileSync(path.join(output, 'SHA256SUMS'), 'utf8').trim().split('\n')
-    assert.equal(lines.length, 15)
+    assert.equal(lines.length, 12)
     for (const line of lines) {
       const [digest, name] = line.split('  ')
       assert.equal(
@@ -278,6 +294,7 @@ function publicationMock(
     missingRelease?: boolean
     missingAsset?: boolean
     authFailure?: boolean
+    refFailure?: number
   } = {}
 ) {
   const calls: string[] = []
@@ -302,8 +319,11 @@ function publicationMock(
           if (options.missingRelease) return missing()
           return { data: { id: 1, draft: options.draft ?? true } }
         },
-        getCommit: async () =>
-          options.missingTag ? missing() : { data: { sha: options.existingSha ?? sha } },
+        getCommit: async () => {
+          if (options.missingTag)
+            throw Object.assign(new Error('No commit found for SHA'), { status: 422 })
+          return { data: { sha: options.existingSha ?? sha } }
+        },
         listReleaseAssets: async () => (options.missingAsset ? assets.slice(1) : assets),
         updateRelease: async () => {
           calls.push('publish')
@@ -313,6 +333,13 @@ function publicationMock(
         }
       },
       git: {
+        getRef: async ({ ref }: { ref: string }) => {
+          assert.equal(ref, `tags/${env.RELEASE_TAG}`)
+          if (options.refFailure)
+            throw Object.assign(new Error('Ref lookup failed'), { status: options.refFailure })
+          if (options.missingTag) return missing()
+          return { data: { object: { sha: options.existingSha ?? sha } } }
+        },
         createRef: async () => {
           calls.push('create-tag')
         },
@@ -354,6 +381,22 @@ test('publication creates a missing stable tag and does not overwrite published 
     const mock = publicationMock(options)
     await assert.rejects(mock.run('Check Publication Target'))
     assert.deepEqual(mock.calls, [])
+  }
+})
+
+test('first rolling publication creates an absent ref without a commit lookup or error fallback', async () => {
+  const first = publicationMock({ channel: 'rolling', missingTag: true })
+  await first.run('Check Publication Target')
+  assert.deepEqual(first.calls, ['create-tag'])
+  const existing = publicationMock({ channel: 'rolling', existingSha: 'a'.repeat(40) })
+  await existing.run('Check Publication Target')
+  assert.deepEqual(existing.calls, [])
+  for (const channel of ['stable', 'rolling']) {
+    for (const refFailure of [403, 422, 500]) {
+      const failed = publicationMock({ channel, refFailure })
+      await assert.rejects(failed.run('Check Publication Target'))
+      assert.deepEqual(failed.calls, [])
+    }
   }
 })
 

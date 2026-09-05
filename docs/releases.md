@@ -8,11 +8,11 @@ The workflows retain the upstream Sparkle build matrix and native-dependency pre
 | -------- | ------------------------------ | ------------------------------ |
 | Windows  | x64, ARM64                     | NSIS `.exe`, portable `.7z`    |
 | macOS    | Intel x64, Apple Silicon ARM64 | `.pkg`                         |
-| Linux    | x64, ARM64, LoongArch64        | `.deb`, `.rpm`, `.pkg.tar.zst` |
+| Linux    | x64, ARM64                     | `.deb`, `.rpm`, `.pkg.tar.zst` |
 
-Each release must contain all 15 packages, `latest.yml`, and `SHA256SUMS`. The updater metadata preserves the exact release tag, including a leading `v` when present. Build artifacts remain available in the workflow run for 14 days.
+Each release must contain all 12 packages, `latest.yml`, and `SHA256SUMS`. The updater metadata preserves the exact release tag, including a leading `v` when present. Build artifacts remain available in the workflow run for 14 days.
 
-All targets use GitHub-hosted runners. LoongArch64 retains the upstream community Electron 42.3.0 and `@loongdotjs/electron-builder` 26.15.6 adaptation; other targets use the locked project dependencies. The native module for each target architecture is checked before packaging.
+All targets use GitHub-hosted runners and the locked project dependencies. The native module for each target architecture is checked before packaging.
 
 Linux retains the internal `/opt/sparkle/sparkle` executable and service identifiers for compatibility with the existing installer and service scripts. The desktop display name remains KokoroBox.
 

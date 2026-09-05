@@ -69,12 +69,18 @@ jobs:
               }
             }
             try {
-              const { data } = await github.rest.repos.getCommit({ ...context.repo, ref: `refs/tags/${tag}` });
-              if (!rolling && data.sha !== context.sha) throw new Error('Release tag changed during the build.');
+              // The refs API reports an absent tag as 404; getCommit reports it as 422.
+              await github.rest.git.getRef({ ...context.repo, ref: `tags/${tag}` });
             } catch (error) {
               if (error.status !== 404) throw error;
               // A draft release does not necessarily create its Git tag until publication.
               await github.rest.git.createRef({ ...context.repo, ref: `refs/tags/${tag}`, sha: context.sha });
+              return;
+            }
+            if (!rolling) {
+              // Resolve annotated tags to their commit before comparing the source SHA.
+              const { data } = await github.rest.repos.getCommit({ ...context.repo, ref: `refs/tags/${tag}` });
+              if (data.sha !== context.sha) throw new Error('Release tag changed during the build.');
             }
       - name: Upload Release Assets
         uses: softprops/action-gh-release@v2
