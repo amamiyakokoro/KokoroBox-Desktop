@@ -24,6 +24,7 @@ import {
   useLinuxCustomRelaunch
 } from './sys/startup'
 import { handleDeepLink } from './resolve/deepLink'
+import { createDeepLinkInbox, takeInitialDeepLinks } from './resolve/deepLinkInbox'
 import { initAppQuitLifecycle } from './resolve/appLifecycle'
 import { showNotification } from './utils/notification'
 import { appendAppLog } from './utils/log'
@@ -115,36 +116,6 @@ function runStartupTask(name: string, task: Promise<unknown>): void {
   })
 }
 
-ensureWindowsElevatedStartup(syncConfig.corePermissionMode, exitApp)
-
-const gotTheLock = app.requestSingleInstanceLock()
-
-if (!gotTheLock) {
-  app.quit()
-}
-
-useLinuxCustomRelaunch()
-applyWindowsGpuWorkaround()
-
-const initPromise = init()
-
-if (syncConfig.disableGPU) {
-  app.disableHardwareAcceleration()
-}
-
-app.on('second-instance', async (_event, commandline) => {
-  showMainWindow()
-  const url = commandline.pop()
-  if (url) {
-    await handleDeepLink(url, { getMainWindow: () => mainWindow, createWindow, showWindow })
-  }
-})
-
-app.on('open-url', async (_event, url) => {
-  showMainWindow()
-  await handleDeepLink(url, { getMainWindow: () => mainWindow, createWindow, showWindow })
-})
-
 function showWindow(): number {
   if (mainWindow) {
     if (mainWindow.isMinimized()) {
@@ -164,93 +135,120 @@ function showWindow(): number {
   return 500
 }
 
-initAppQuitLifecycle({
-  getMainWindow: () => mainWindow,
-  showWindow,
-  clearLightweightTimeout,
-  exitApp
-})
+// A secondary process must hand off to the instance holding the private verifier
+// before elevation, initialization, or shutdown hooks can alter application state.
+const gotTheLock = app.requestSingleInstanceLock()
+if (!gotTheLock) {
+  app.quit()
+} else {
+  startPrimaryInstance()
+}
 
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
-// Some APIs can only be used after this event occurs.
-app.whenReady().then(async () => {
-  // Set app user model id for windows
-  electronApp.setAppUserModelId('com.amamiyakokoro.app')
-  let appConfig: AppConfig
-  try {
-    appConfig = await initPromise
-  } catch (e) {
-    void showNotification({ title: tr('应用初始化失败'), body: `${e}`, variant: 'danger' })
-    app.quit()
-    return
-  }
-
-  // Default open or close DevTools by F12 in development
-  // and ignore CommandOrControl + R in production.
-  // see https://github.com/alex8088/electron-toolkit/tree/master/packages/utils
-  app.on('browser-window-created', (_, window) => {
-    optimizer.watchWindowShortcuts(window)
-  })
-  const { showFloatingWindow: showFloating = false, disableTray = false } = appConfig
-  registerIpcMainHandlers()
-
-  const createWindowPromise = createWindow(appConfig)
-
-  let coreStarted = false
-
-  const coreStartPromise = (async (): Promise<void> => {
-    try {
-      if (is.dev) {
-        await initialWindowDisplayPromise
-      }
-      const [startPromise] = await startCore()
-      startPromise.then(async () => {
-        await initProfileUpdater()
-      })
-      coreStarted = true
-    } catch (e) {
-      void showNotification({ title: tr('内核启动出错'), body: `${e}`, variant: 'danger' })
+function startPrimaryInstance(): void {
+  let initialized = false
+  const inbox = createDeepLinkInbox(
+    (url) => handleDeepLink(url, { getMainWindow: () => mainWindow, createWindow, showWindow }),
+    () => {
+      void showNotification({ title: tr('Kokoro 登录失败'), variant: 'danger' })
     }
-  })()
-
-  runStartupTask('traffic monitor', startMonitor())
-
-  await createWindowPromise
-
-  const initialDeepLink = process.argv.find((value) =>
-    ['clash://', 'mihomo://', 'sparkle://', 'kokoro://'].some((prefix) => value.startsWith(prefix))
   )
-  if (initialDeepLink) {
-    await handleDeepLink(initialDeepLink, {
-      getMainWindow: () => mainWindow,
-      createWindow,
-      showWindow
-    })
-  }
+  // Register before readiness; macOS can deliver open-url during cold startup.
+  app.on('open-url', (event, url) => {
+    event.preventDefault()
+    inbox.receive(url)
+  })
+  app.on('second-instance', (_event, commandline) => {
+    for (const url of takeInitialDeepLinks(commandline)) inbox.receive(url)
+    if (initialized) void showMainWindow()
+  })
+  for (const url of takeInitialDeepLinks(process.argv)) inbox.receive(url)
 
-  const uiTasks: Promise<void>[] = [initShortcut()]
+  ensureWindowsElevatedStartup(syncConfig.corePermissionMode, exitApp)
+  useLinuxCustomRelaunch()
+  applyWindowsGpuWorkaround()
+  const initPromise = init()
+  if (syncConfig.disableGPU) app.disableHardwareAcceleration()
 
-  if (showFloating) {
-    uiTasks.push(Promise.resolve(showFloatingWindow()))
-  }
-  if (!disableTray) {
-    uiTasks.push(createTray())
-  }
+  initAppQuitLifecycle({
+    getMainWindow: () => mainWindow,
+    showWindow,
+    clearLightweightTimeout,
+    exitApp
+  })
 
-  runStartupTask('ui extras', Promise.all(uiTasks))
-  coreStartPromise.then(() => {
-    if (coreStarted) {
-      mainWindow?.webContents.send('core-started')
+  // This method will be called when Electron has finished
+  // initialization and is ready to create browser windows.
+  // Some APIs can only be used after this event occurs.
+  app.whenReady().then(async () => {
+    // Set app user model id for windows
+    electronApp.setAppUserModelId('com.amamiyakokoro.app')
+    let appConfig: AppConfig
+    try {
+      appConfig = await initPromise
+    } catch (e) {
+      void showNotification({ title: tr('应用初始化失败'), body: `${e}`, variant: 'danger' })
+      app.quit()
+      return
     }
-  })
 
-  app.on('activate', function () {
-    // On macOS it's common to re-create a window in the app when the
-    // dock icon is clicked and there are no other windows open.
-    showMainWindow()
+    // Default open or close DevTools by F12 in development
+    // and ignore CommandOrControl + R in production.
+    // see https://github.com/alex8088/electron-toolkit/tree/master/packages/utils
+    app.on('browser-window-created', (_, window) => {
+      optimizer.watchWindowShortcuts(window)
+    })
+    const { showFloatingWindow: showFloating = false, disableTray = false } = appConfig
+    registerIpcMainHandlers()
+
+    const createWindowPromise = createWindow(appConfig)
+
+    let coreStarted = false
+
+    const coreStartPromise = (async (): Promise<void> => {
+      try {
+        if (is.dev) {
+          await initialWindowDisplayPromise
+        }
+        const [startPromise] = await startCore()
+        startPromise.then(async () => {
+          await initProfileUpdater()
+        })
+        coreStarted = true
+      } catch (e) {
+        void showNotification({ title: tr('内核启动出错'), body: `${e}`, variant: 'danger' })
+      }
+    })()
+
+    runStartupTask('traffic monitor', startMonitor())
+
+    await createWindowPromise
+
+    initialized = true
+    inbox.start()
+
+    const uiTasks: Promise<void>[] = [initShortcut()]
+
+    if (showFloating) {
+      uiTasks.push(Promise.resolve(showFloatingWindow()))
+    }
+    if (!disableTray) {
+      uiTasks.push(createTray())
+    }
+
+    runStartupTask('ui extras', Promise.all(uiTasks))
+    coreStartPromise.then(() => {
+      if (coreStarted) {
+        mainWindow?.webContents.send('core-started')
+      }
+    })
+
+    app.on('activate', function () {
+      // On macOS it's common to re-create a window in the app when the
+      // dock icon is clicked and there are no other windows open.
+      showMainWindow()
+    })
   })
-})
+}
 
 export async function createWindow(appConfig?: AppConfig): Promise<void> {
   if (isCreatingWindow) {

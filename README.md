@@ -33,6 +33,8 @@ KokoroBox can create and maintain Mihomo profiles directly from a Kokoro account
 - Automatic subscription updates
 - Kokoro account and subscription settings integrated into the desktop interface
 
+For the mandatory PKCE S256 flow, callback handling and verification checklist, see the [client authentication guide](docs/kokoro-client-api.md).
+
 Access tokens, refresh tokens, subscription credentials, and complete subscription URLs must never be included in logs, screenshots, analytics, or issue reports.
 
 ## Install
@@ -85,6 +87,7 @@ On Windows, disable TUN temporarily if the development window opens as a blank s
 | ------------------ | -------------------------------------------------------------------- |
 | `pnpm dev`         | Start the development server                                         |
 | `pnpm typecheck`   | Type-check the main and renderer processes                           |
+| `pnpm test:kokoro` | Test Kokoro PKCE authentication and callback handling                |
 | `pnpm lint`        | Run ESLint and apply supported fixes                                 |
 | `pnpm format`      | Format the repository with Prettier                                  |
 | `pnpm prepare`     | Download and prepare cores, services, rule data, and frontend assets |

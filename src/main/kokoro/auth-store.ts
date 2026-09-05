@@ -1,5 +1,4 @@
 import { tr } from '../../shared/i18n'
-import { existsSync } from 'fs'
 import { mkdir, readFile, rename, unlink, writeFile } from 'fs/promises'
 import { dirname } from 'path'
 import { safeStorage } from 'electron'
@@ -56,8 +55,14 @@ export async function loadKokoroCredentials(): Promise<KokoroCredentials | null>
   }
 
   assertSecureStorageAvailable()
-  const envelope = JSON.parse(raw) as Partial<KokoroAuthEnvelope>
+  let envelope: Partial<KokoroAuthEnvelope>
+  try {
+    envelope = JSON.parse(raw)
+  } catch {
+    throw new Error(tr('Kokoro 登录凭据存储格式无效'))
+  }
   if (
+    !envelope ||
     envelope.version !== 1 ||
     envelope.storage !== 'electron-safe-storage' ||
     !envelope.encrypted
@@ -65,8 +70,13 @@ export async function loadKokoroCredentials(): Promise<KokoroCredentials | null>
     throw new Error(tr('Kokoro 登录凭据存储格式无效'))
   }
 
-  const decrypted = safeStorage.decryptString(Buffer.from(envelope.encrypted, 'base64'))
-  return normalizeCredentials(JSON.parse(decrypted) as Partial<KokoroCredentials>)
+  try {
+    const decrypted = safeStorage.decryptString(Buffer.from(envelope.encrypted, 'base64'))
+    return normalizeCredentials(JSON.parse(decrypted) as Partial<KokoroCredentials>)
+  } catch {
+    // JSON/crypto errors may contain decrypted input. Never send them to the renderer.
+    throw new Error(tr('Kokoro 登录凭据无效'))
+  }
 }
 
 export async function saveKokoroCredentials(credentials: KokoroCredentials): Promise<void> {
@@ -84,7 +94,6 @@ export async function saveKokoroCredentials(credentials: KokoroCredentials): Pro
   await mkdir(dirname(storePath), { recursive: true })
   try {
     await writeFile(tempPath, JSON.stringify(envelope), { encoding: 'utf-8', mode: 0o600 })
-    if (existsSync(storePath) && process.platform === 'win32') await unlink(storePath)
     await rename(tempPath, storePath)
   } catch (error) {
     await unlink(tempPath).catch(() => {})

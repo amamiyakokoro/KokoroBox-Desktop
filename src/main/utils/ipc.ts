@@ -142,7 +142,12 @@ import { showNotification } from './notification'
 import { getUserAgent } from './userAgent'
 import { appendAppLog, clearCachedMihomoLogs, getCachedMihomoLogs } from './log'
 import { ageIdentityToRecipient, generateAgeKeyPair } from './age'
-import { getKokoroSession, revokeKokoroSession, startKokoroLogin } from '../kokoro/client'
+import {
+  cancelKokoroLogin,
+  getKokoroSession,
+  revokeKokoroSession,
+  startKokoroLogin
+} from '../kokoro/client'
 
 function ipcErrorWrapper<T>( // eslint-disable-next-line @typescript-eslint/no-explicit-any
   fn: (...args: any[]) => T | Promise<T> // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -291,6 +296,7 @@ export function registerIpcMainHandlers(): void {
   ipcMain.handle('removeProfileItem', (_e, id) => ipcErrorWrapper(removeProfileItem)(id))
   ipcMain.handle('getKokoroSession', () => ipcErrorWrapper(getKokoroSession)())
   ipcMain.handle('startKokoroLogin', () => ipcErrorWrapper(startKokoroLogin)())
+  ipcMain.handle('cancelKokoroLogin', () => ipcErrorWrapper(cancelKokoroLogin)())
   ipcMain.handle('addKokoroProfile', (_e, settings) => ipcErrorWrapper(addKokoroProfile)(settings))
   ipcMain.handle('revokeKokoroSession', () =>
     ipcErrorWrapper(async () => {

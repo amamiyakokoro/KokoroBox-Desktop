@@ -186,6 +186,10 @@ export async function startKokoroLogin(): Promise<void> {
   return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('startKokoroLogin'))
 }
 
+export async function cancelKokoroLogin(): Promise<void> {
+  return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('cancelKokoroLogin'))
+}
+
 export async function addKokoroProfile(settings: KokoroSubscriptionSettings): Promise<void> {
   return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('addKokoroProfile', settings))
 }

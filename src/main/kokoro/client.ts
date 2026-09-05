@@ -1,7 +1,17 @@
 import { tr } from '../../shared/i18n'
 import axios, { type AxiosRequestConfig, type AxiosResponse } from 'axios'
-import crypto from 'crypto'
-import { shell } from 'electron'
+import { BrowserWindow, shell } from 'electron'
+import {
+  KOKORO_API_BASE as API_BASE,
+  KOKORO_REDIRECT_URI,
+  LOGIN_TTL_MS,
+  createPendingLogin,
+  createCodeChallenge,
+  loginURL,
+  matchesLoginState,
+  parseKokoroCallback,
+  type PendingLogin
+} from './oauth'
 import {
   deleteKokoroCredentials,
   loadKokoroCredentials,
@@ -9,10 +19,10 @@ import {
   type KokoroCredentials
 } from './auth-store'
 
-const API_BASE = 'https://amamiyakoko.ro/api'
-export const KOKORO_REDIRECT_URI = 'kokoro://oauth/callback'
+export { KOKORO_REDIRECT_URI } from './oauth'
 const ACCESS_EXPIRY_LEEWAY_MS = 60_000
-const LOGIN_STATE_TTL_MS = 10 * 60_000
+// Isolate credential-bearing requests from shared Axios interceptors. Never follow redirects.
+const http = axios.create({ maxRedirects: 0 })
 
 interface TokenResponse {
   token_type: 'Bearer'
@@ -56,38 +66,30 @@ export class KokoroAPIError extends Error {
 let credentials: KokoroCredentials | null | undefined
 let credentialsLoadPromise: Promise<KokoroCredentials | null> | null = null
 let refreshPromise: Promise<KokoroCredentials> | null = null
-let pendingLogin: { state: string; createdAt: number } | null = null
-
-function errorDetail(data: unknown, fallback: string): string {
-  if (!data || typeof data !== 'object' || !('detail' in data)) return fallback
-  const detail = (data as { detail: unknown }).detail
-  if (typeof detail === 'string') return detail
-  if (Array.isArray(detail)) {
-    return detail
-      .map((item) =>
-        item && typeof item === 'object' && 'msg' in item ? String(item.msg) : String(item)
-      )
-      .join('\n')
-  }
-  return fallback
-}
+let pendingLogin: PendingLogin | null = null
+let pendingLoginTimer: ReturnType<typeof setTimeout> | undefined
+let exchangingCode = false
+let loginGeneration = 0
+let sessionGeneration = 0
+let credentialWrite: Promise<unknown> = Promise.resolve()
 
 function toKokoroError(error: unknown): KokoroAPIError {
   if (error instanceof KokoroAPIError) return error
   if (axios.isAxiosError(error)) {
-    return new KokoroAPIError(
-      errorDetail(error.response?.data, error.message || tr('Kokoro 请求失败')),
-      error.response?.status
-    )
+    return new KokoroAPIError(tr('Kokoro 请求失败'), error.response?.status)
   }
-  return new KokoroAPIError(error instanceof Error ? error.message : String(error))
+  // Do not propagate transport errors or server bodies: they may echo credentials.
+  return new KokoroAPIError(tr('Kokoro 请求失败'))
 }
 
 async function getCredentials(): Promise<KokoroCredentials | null> {
   if (credentials !== undefined) return credentials
   if (!credentialsLoadPromise) {
+    const generation = sessionGeneration
     credentialsLoadPromise = loadKokoroCredentials()
       .then((stored) => {
+        if (generation !== sessionGeneration || credentials !== undefined)
+          return credentials ?? null
         credentials = stored
         return stored
       })
@@ -108,30 +110,59 @@ function credentialsFromToken(response: TokenResponse): KokoroCredentials {
   }
 }
 
-async function storeTokenResponse(response: TokenResponse): Promise<KokoroCredentials> {
-  if (response.token_type.toLowerCase() !== 'bearer') {
+async function storeTokenResponse(
+  response: TokenResponse,
+  isCurrent: () => boolean = () => true
+): Promise<KokoroCredentials> {
+  if (typeof response?.token_type !== 'string' || response.token_type.toLowerCase() !== 'bearer') {
     throw new KokoroAPIError(tr('Kokoro 返回了不支持的 token 类型'))
   }
+  if (
+    !response.access_token ||
+    typeof response.access_token !== 'string' ||
+    !response.refresh_token ||
+    typeof response.refresh_token !== 'string' ||
+    !Number.isFinite(response.expires_in) ||
+    response.expires_in <= 0 ||
+    !Number.isFinite(response.refresh_expires_in) ||
+    response.refresh_expires_in <= 0
+  ) {
+    throw new KokoroAPIError(tr('Kokoro 登录凭据无效'))
+  }
   const next = credentialsFromToken(response)
-  await saveKokoroCredentials(next)
-  credentials = next
-  return next
+  const write = credentialWrite
+    .catch(() => {})
+    .then(async () => {
+      if (!isCurrent()) throw new KokoroAPIError(tr('已取消 Kokoro 登录'))
+      await saveKokoroCredentials(next)
+      if (!isCurrent()) {
+        await deleteKokoroCredentials()
+        throw new KokoroAPIError(tr('已取消 Kokoro 登录'))
+      }
+      credentials = next
+      return next
+    })
+  credentialWrite = write.catch(() => {})
+  return write
 }
 
 async function clearSession(): Promise<void> {
+  sessionGeneration++
   credentials = null
-  await deleteKokoroCredentials()
+  credentialWrite = credentialWrite.catch(() => {}).then(deleteKokoroCredentials)
+  await credentialWrite
 }
 
 async function postToken(body: Record<string, string>): Promise<TokenResponse> {
   try {
-    const response = await axios.post<TokenResponse>(`${API_BASE}/app/auth/token`, body, {
+    const response = await http.post<TokenResponse>(`${API_BASE}/app/auth/token`, body, {
       timeout: 15_000,
       headers: { 'Content-Type': 'application/json' }
     })
     return response.data
   } catch (error) {
-    throw toKokoroError(error)
+    const status = axios.isAxiosError(error) ? error.response?.status : undefined
+    throw new KokoroAPIError(tr('Kokoro 授权失败，请重新登录'), status)
   }
 }
 
@@ -145,12 +176,13 @@ async function refreshAccessToken(staleAccessToken?: string): Promise<KokoroCred
   if (refreshPromise) return refreshPromise
 
   refreshPromise = (async () => {
+    const generation = sessionGeneration
     try {
       const response = await postToken({
         grant_type: 'refresh_token',
         refresh_token: current.refreshToken
       })
-      return await storeTokenResponse(response)
+      return await storeTokenResponse(response, () => generation === sessionGeneration)
     } catch (error) {
       const apiError = toKokoroError(error)
       if (apiError.status === 401) await clearSession()
@@ -177,7 +209,7 @@ async function sendWithRetry<T>(config: AxiosRequestConfig): Promise<AxiosRespon
   let lastError: unknown
   for (let attempt = 0; attempt < 3; attempt += 1) {
     try {
-      return await axios.request<T>(config)
+      return await http.request<T>(config)
     } catch (error) {
       lastError = error
       const delay = retryDelay(error, attempt)
@@ -219,56 +251,96 @@ async function authorizedRequest<T>(
 }
 
 export async function startKokoroLogin(): Promise<void> {
-  const state = crypto.randomBytes(32).toString('base64url')
-  pendingLogin = { state, createdAt: Date.now() }
-  const loginUrl = new URL(`${API_BASE}/app/auth/login`)
-  loginUrl.searchParams.set('redirect_uri', KOKORO_REDIRECT_URI)
-  loginUrl.searchParams.set('state', state)
-  await shell.openExternal(loginUrl.toString())
+  if (pendingLogin && pendingLogin.expiresAt <= Date.now()) clearPendingLogin()
+  if (pendingLogin || exchangingCode) {
+    throw new KokoroAPIError(tr('Kokoro 登录正在进行中，请先取消或等待完成'))
+  }
+  const pending = createPendingLogin()
+  pendingLogin = pending
+  pendingLoginTimer = setTimeout(() => {
+    if (pendingLogin !== pending) return
+    clearPendingLogin()
+    notifyAuthChanged()
+  }, LOGIN_TTL_MS)
+  pendingLoginTimer.unref()
+  try {
+    await shell.openExternal(loginURL(pending))
+  } catch {
+    if (pendingLogin === pending) clearPendingLogin()
+    throw new KokoroAPIError(tr('Kokoro 授权失败，请重新登录'))
+  }
 }
 
-function stateMatches(actual: string, expected: string): boolean {
-  const actualBuffer = Buffer.from(actual)
-  const expectedBuffer = Buffer.from(expected)
-  return (
-    actualBuffer.length === expectedBuffer.length &&
-    crypto.timingSafeEqual(actualBuffer, expectedBuffer)
-  )
+function clearPendingLogin(): void {
+  if (pendingLoginTimer) clearTimeout(pendingLoginTimer)
+  pendingLoginTimer = undefined
+  pendingLogin = null
 }
 
-export async function handleKokoroCallback(callback: URL): Promise<void> {
-  const expectedCallback = new URL(KOKORO_REDIRECT_URI)
-  if (
-    callback.protocol !== expectedCallback.protocol ||
-    callback.hostname !== expectedCallback.hostname ||
-    callback.pathname !== expectedCallback.pathname
-  ) {
+function notifyAuthChanged(): void {
+  for (const window of BrowserWindow.getAllWindows()) {
+    if (!window.isDestroyed()) window.webContents.send('kokoro-auth-changed')
+  }
+}
+
+export function cancelKokoroLogin(): void {
+  loginGeneration++
+  clearPendingLogin()
+  notifyAuthChanged()
+}
+
+export async function handleKokoroCallback(value: string): Promise<void> {
+  let callback: URL
+  try {
+    callback = parseKokoroCallback(value)
+  } catch {
     throw new KokoroAPIError(tr('Kokoro 登录回调地址无效'))
   }
-
   const pending = pendingLogin
   const state = callback.searchParams.get('state') || ''
-  if (
-    !pending ||
-    Date.now() - pending.createdAt > LOGIN_STATE_TTL_MS ||
-    !stateMatches(state, pending.state)
-  ) {
+  if (pending && pending.expiresAt <= Date.now()) {
+    clearPendingLogin()
+    notifyAuthChanged()
+  }
+  // Unsolicited or forged callbacks must not cancel a legitimate pending login.
+  if (!pendingLogin || !pending || !state || !matchesLoginState(state, pending.state)) {
     throw new KokoroAPIError(tr('Kokoro 登录状态无效或已过期，请重新登录'))
   }
-
-  pendingLogin = null
-  if (callback.searchParams.get('error') === 'access_denied') {
-    throw new KokoroAPIError(tr('已取消 Kokoro 登录'))
+  // Consume before the first await: parallel deliveries and replays cannot exchange again.
+  clearPendingLogin()
+  const generation = loginGeneration
+  const session = sessionGeneration
+  exchangingCode = true
+  try {
+    const code = callback.searchParams.get('code')
+    const error = callback.searchParams.get('error')
+    if (error !== null) {
+      if (code !== null || error !== 'access_denied') {
+        throw new KokoroAPIError(tr('Kokoro 授权失败，请重新登录'))
+      }
+      throw new KokoroAPIError(tr('已取消 Kokoro 登录'))
+    }
+    if (!code?.trim()) throw new KokoroAPIError(tr('Kokoro 登录回调缺少授权码'))
+    if (pending.redirectUri !== KOKORO_REDIRECT_URI || typeof pending.codeVerifier !== 'string') {
+      throw new KokoroAPIError(tr('Kokoro 授权失败，请重新登录'))
+    }
+    createCodeChallenge(pending.codeVerifier) // Validate retained verifier; never downgrade.
+    const response = await postToken({
+      grant_type: 'authorization_code',
+      code,
+      redirect_uri: pending.redirectUri,
+      code_verifier: pending.codeVerifier
+    })
+    await storeTokenResponse(
+      response,
+      () => generation === loginGeneration && session === sessionGeneration
+    )
+  } catch (error) {
+    throw toKokoroError(error)
+  } finally {
+    exchangingCode = false
+    notifyAuthChanged()
   }
-  const code = callback.searchParams.get('code') || ''
-  if (!code) throw new KokoroAPIError(tr('Kokoro 登录回调缺少授权码'))
-
-  const response = await postToken({
-    grant_type: 'authorization_code',
-    code,
-    redirect_uri: KOKORO_REDIRECT_URI
-  })
-  await storeTokenResponse(response)
 }
 
 export async function getKokoroSession(): Promise<KokoroSession> {
@@ -340,10 +412,12 @@ export async function downloadKokoroProfile(
 }
 
 export async function revokeKokoroSession(): Promise<void> {
+  cancelKokoroLogin()
+  sessionGeneration++
   try {
     const current = await getCredentials()
     if (current) {
-      await axios.post(`${API_BASE}/app/auth/revoke`, undefined, {
+      await http.post(`${API_BASE}/app/auth/revoke`, undefined, {
         timeout: 10_000,
         headers: { Authorization: `Bearer ${current.accessToken}` }
       })
@@ -351,7 +425,6 @@ export async function revokeKokoroSession(): Promise<void> {
   } catch {
     // Explicit logout always clears local credentials, even if revoke is unavailable.
   } finally {
-    pendingLogin = null
     await clearSession()
   }
 }

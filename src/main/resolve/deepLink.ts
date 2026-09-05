@@ -3,7 +3,8 @@ import { ipcMain, type BrowserWindow, type IpcMainEvent } from 'electron'
 import { addOverrideItem, addProfileItem } from '../config'
 import { getUserAgent } from '../utils/userAgent'
 import { showNotification } from '../utils/notification'
-import { handleKokoroCallback, KOKORO_REDIRECT_URI } from '../kokoro/client'
+import { handleKokoroCallback, KokoroAPIError } from '../kokoro/client'
+import { isKokoroURI } from '../kokoro/oauth'
 
 interface DeepLinkContext {
   getMainWindow: () => BrowserWindow | null
@@ -12,16 +13,20 @@ interface DeepLinkContext {
 }
 
 export async function handleDeepLink(url: string, context: DeepLinkContext): Promise<void> {
-  if (url.startsWith(`${new URL(KOKORO_REDIRECT_URI).protocol}//`)) {
+  if (isKokoroURI(url)) {
     try {
-      await handleKokoroCallback(new URL(url))
+      if (!context.getMainWindow()) await context.createWindow()
+      context.showWindow()
+      await handleKokoroCallback(url)
       if (!context.getMainWindow()) await context.createWindow()
       context.showWindow()
       void showNotification({ title: tr('Kokoro 登录成功'), variant: 'success' })
     } catch (error) {
-      void showNotification({ title: tr('Kokoro 登录失败'), body: `${error}`, variant: 'danger' })
-    } finally {
-      context.getMainWindow()?.webContents.send('kokoro-auth-changed')
+      void showNotification({
+        title: tr('Kokoro 登录失败'),
+        body: error instanceof KokoroAPIError ? error.message : tr('Kokoro 请求失败'),
+        variant: 'danger'
+      })
     }
     return
   }

@@ -40,6 +40,8 @@ export const messages: Readonly<Record<string, string>> = {
   'Kokoro 订阅': 'Kokoro 訂閱',
   'Kokoro 订阅已添加': 'Kokoro 訂閱已新增',
   'Kokoro 请求失败': 'Kokoro 請求失敗',
+  'Kokoro 授权失败，请重新登录': 'Kokoro 授權失敗，請重新登入',
+  'Kokoro 登录正在进行中，请先取消或等待完成': 'Kokoro 登入正在進行中，請先取消或等待完成',
   'Kokoro 返回了不兼容的 Mihomo 配置格式': 'Kokoro 回傳了不相容的 Mihomo 設定格式',
   'Kokoro 返回了不支持的 token 类型': 'Kokoro 回傳了不支援的 token 型別',
   'Kokoro 返回了无效的配置下载地址': 'Kokoro 回傳了無效的設定下載地址',

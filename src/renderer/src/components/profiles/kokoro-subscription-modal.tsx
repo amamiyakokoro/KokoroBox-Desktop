@@ -4,6 +4,7 @@ import { Modal } from '@heroui-v3/react'
 import { calcTraffic } from '@renderer/utils/calc'
 import {
   addKokoroProfile,
+  cancelKokoroLogin,
   getKokoroSession,
   revokeKokoroSession,
   startKokoroLogin
@@ -55,6 +56,7 @@ const KokoroSubscriptionModal: React.FC<Props> = ({ onClose, onImported }) => {
     window.electron.ipcRenderer.on('kokoro-auth-changed', listener)
     return (): void => {
       window.electron.ipcRenderer.removeListener('kokoro-auth-changed', listener)
+      void cancelKokoroLogin().catch(() => {})
     }
   }, [])
 
@@ -203,6 +205,17 @@ const KokoroSubscriptionModal: React.FC<Props> = ({ onClose, onImported }) => {
                   >
                     {loggingIn ? tr('等待浏览器授权') : tr('使用 osu! 登录')}
                   </Button>
+                  {loggingIn && (
+                    <Button
+                      size="sm"
+                      variant="light"
+                      onPress={() => {
+                        void cancelKokoroLogin().catch(() => {})
+                      }}
+                    >
+                      {tr('取消')}
+                    </Button>
+                  )}
                 </div>
               ) : (
                 <div className="flex flex-col gap-5">
