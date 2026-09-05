@@ -120,8 +120,7 @@
 .rule-card,
 .resource-card,
 .override-card,
-.log-card,
-.substore-card {
+.log-card {
   touch-action: pan-y;
 }
 

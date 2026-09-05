@@ -2,7 +2,6 @@ import { tr } from '../../../shared/i18n'
 import {
   Button,
   Checkbox,
-  Chip,
   Divider,
   Dropdown,
   DropdownItem,
@@ -14,20 +13,16 @@ import BasePage from '@renderer/components/base/base-page'
 import ProfileItem from '@renderer/components/profiles/profile-item'
 import EditInfoModal from '@renderer/components/profiles/edit-info-modal'
 import { useProfileConfig } from '@renderer/hooks/use-profile-config'
-import { useAppConfig } from '@renderer/hooks/use-app-config'
-import { getFilePath, readTextFile, subStoreCollections, subStoreSubs } from '@renderer/utils/ipc'
+import { getFilePath, readTextFile } from '@renderer/utils/ipc'
 import type { KeyboardEvent } from 'react'
-import { ReactNode, useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { MdContentPaste } from 'react-icons/md'
 import { DndContext, closestCenter, DragEndEvent } from '@dnd-kit/core'
 import { SortableContext } from '@dnd-kit/sortable'
 import { FaPlus } from 'react-icons/fa6'
 import { IoMdRefresh } from 'react-icons/io'
 import { MdTune } from 'react-icons/md'
-import SubStoreIcon from '@renderer/components/base/substore-icon'
 import ProfileSettingDrawer from '@renderer/components/profiles/profile-setting-drawer'
-import useSWR from 'swr'
-import { useNavigate } from 'react-router-dom'
 import { useCardDndSensors } from '@renderer/hooks/use-card-dnd-sensors'
 import { notify } from '@renderer/utils/notification'
 import KokoroSubscriptionModal from '@renderer/components/profiles/kokoro-subscription-modal'
@@ -44,14 +39,10 @@ const Profiles: React.FC = () => {
     changeCurrentProfile,
     mutateProfileConfig
   } = useProfileConfig()
-  const { appConfig } = useAppConfig()
-  const { useSubStore = true, useCustomSubStore = false, customSubStoreUrl = '' } = appConfig || {}
   const { current, items } = profileConfig || {}
   const itemsArray = items ?? emptyItems
-  const navigate = useNavigate()
   const [sortedItems, setSortedItems] = useState(itemsArray)
   const [useProxy, setUseProxy] = useState(false)
-  const [subStoreImporting, setSubStoreImporting] = useState(false)
   const [importing, setImporting] = useState(false)
   const [updating, setUpdating] = useState(false)
   const [switching, setSwitching] = useState(false)
@@ -64,72 +55,6 @@ const Profiles: React.FC = () => {
   const [url, setUrl] = useState('')
   const isUrlEmpty = url.trim() === ''
   const sensors = useCardDndSensors()
-  const { data: subs = [], mutate: mutateSubs } = useSWR(
-    useSubStore ? 'subStoreSubs' : undefined,
-    useSubStore ? subStoreSubs : (): undefined => {}
-  )
-  const { data: collections = [], mutate: mutateCollections } = useSWR(
-    useSubStore ? 'subStoreCollections' : undefined,
-    useSubStore ? subStoreCollections : (): undefined => {}
-  )
-  const subStoreMenuItems = useMemo(() => {
-    const items: { icon?: ReactNode; key: string; children: ReactNode; divider: boolean }[] = [
-      {
-        key: 'open-substore',
-        children: tr('访问 Sub-Store'),
-        icon: <SubStoreIcon className="text-lg" />,
-        divider:
-          (Boolean(subs) && subs.length > 0) || (Boolean(collections) && collections.length > 0)
-      }
-    ]
-    if (subs) {
-      subs.forEach((sub, index) => {
-        items.push({
-          key: `sub-${sub.name}`,
-          children: (
-            <div className="flex justify-between">
-              <div>{sub.displayName || sub.name}</div>
-              <div>
-                {sub.tag?.map((tag) => {
-                  return (
-                    <Chip key={tag} size="sm" className="ml-1" radius="sm">
-                      {tag}
-                    </Chip>
-                  )
-                })}
-              </div>
-            </div>
-          ),
-          icon: sub.icon ? <img src={sub.icon} className="h-4.5 w-4.5" /> : null,
-          divider: index === subs.length - 1 && Boolean(collections) && collections.length > 0
-        })
-      })
-    }
-    if (collections) {
-      collections.forEach((sub) => {
-        items.push({
-          key: `collection-${sub.name}`,
-          children: (
-            <div className="flex justify-between">
-              <div>{sub.displayName || sub.name}</div>
-              <div>
-                {sub.tag?.map((tag) => {
-                  return (
-                    <Chip key={tag} size="sm" className="ml-1" radius="sm">
-                      {tag}
-                    </Chip>
-                  )
-                })}
-              </div>
-            </div>
-          ),
-          icon: sub.icon ? <img src={sub.icon} className="h-4.5 w-4.5" /> : null,
-          divider: false
-        })
-      })
-    }
-    return items
-  }, [subs, collections])
   const handleImport = async (importUrl: string): Promise<void> => {
     if (importing) return
     setImporting(true)
@@ -360,81 +285,6 @@ const Profiles: React.FC = () => {
           >
             {tr('导入')}
           </Button>
-          {useSubStore && (
-            <Dropdown
-              onOpenChange={() => {
-                mutateSubs()
-                mutateCollections()
-              }}
-            >
-              <DropdownTrigger>
-                <Button
-                  isLoading={subStoreImporting}
-                  className="ml-2 substore-import"
-                  size="sm"
-                  isIconOnly
-                  color="primary"
-                >
-                  <SubStoreIcon className="text-lg" />
-                </Button>
-              </DropdownTrigger>
-              <DropdownMenu
-                className="max-h-[calc(100vh-200px)] overflow-y-auto"
-                onAction={async (key) => {
-                  if (key === 'open-substore') {
-                    navigate('/substore')
-                  } else if (key.toString().startsWith('sub-')) {
-                    setSubStoreImporting(true)
-                    try {
-                      const sub = subs.find(
-                        (sub) => sub.name === key.toString().replace('sub-', '')
-                      )
-                      await addProfileItem({
-                        name: sub?.displayName || sub?.name || '',
-                        substore: !useCustomSubStore,
-                        type: 'remote',
-                        url: useCustomSubStore
-                          ? `${customSubStoreUrl}/download/${key.toString().replace('sub-', '')}?target=ClashMeta`
-                          : `/download/${key.toString().replace('sub-', '')}`,
-                        useProxy
-                      })
-                    } catch (e) {
-                      notify(e, { variant: 'danger' })
-                    } finally {
-                      setSubStoreImporting(false)
-                    }
-                  } else if (key.toString().startsWith('collection-')) {
-                    setSubStoreImporting(true)
-                    try {
-                      const collection = collections.find(
-                        (collection) =>
-                          collection.name === key.toString().replace('collection-', '')
-                      )
-                      await addProfileItem({
-                        name: collection?.displayName || collection?.name || '',
-                        type: 'remote',
-                        substore: !useCustomSubStore,
-                        url: useCustomSubStore
-                          ? `${customSubStoreUrl}/download/collection/${key.toString().replace('collection-', '')}?target=ClashMeta`
-                          : `/download/collection/${key.toString().replace('collection-', '')}`,
-                        useProxy
-                      })
-                    } catch (e) {
-                      notify(e, { variant: 'danger' })
-                    } finally {
-                      setSubStoreImporting(false)
-                    }
-                  }
-                }}
-              >
-                {subStoreMenuItems.map((item) => (
-                  <DropdownItem startContent={item?.icon} key={item.key} showDivider={item.divider}>
-                    {item.children}
-                  </DropdownItem>
-                ))}
-              </DropdownMenu>
-            </Dropdown>
-          )}
           <Dropdown>
             <DropdownTrigger>
               <Button className="ml-2 new-profile" size="sm" isIconOnly color="primary">

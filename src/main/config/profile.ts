@@ -15,7 +15,6 @@ import crypto from 'crypto'
 import { URL } from 'url'
 import { parseYaml, stringifyYaml } from '../utils/yaml'
 import { defaultProfile } from '../utils/template'
-import { subStorePort } from '../resolve/server'
 import { dirname, isAbsolute, join, relative, resolve } from 'path'
 import { deepMerge } from '../utils/merge'
 import { getUserAgent } from '../utils/userAgent'
@@ -154,7 +153,6 @@ export async function createProfile(item: Partial<ProfileItem>): Promise<Profile
     ua: item.ua,
     verify: item.verify ?? false,
     autoUpdate: item.autoUpdate ?? true,
-    substore: item.substore || false,
     interval: item.interval || 0,
     override: item.override || [],
     useProxy: item.useProxy || false,
@@ -185,99 +183,82 @@ export async function createProfile(item: Partial<ProfileItem>): Promise<Profile
       const { 'mixed-port': mixedPort = 7890 } = await getControledMihomoConfig()
       if (!item.url) throw new Error('Empty URL')
       let res: AxiosResponse
-      if (newItem.substore) {
-        const urlObj = new URL(`http://127.0.0.1:${subStorePort}${item.url}`)
-        urlObj.searchParams.set('target', 'ClashMeta')
-        urlObj.searchParams.set('noCache', 'true')
-        if (newItem.useProxy && mixedPort != 0) {
-          urlObj.searchParams.set('proxy', `http://127.0.0.1:${mixedPort}`)
-        } else {
-          urlObj.searchParams.delete('proxy')
+      try {
+        const httpsAgent = new https.Agent({ rejectUnauthorized: !item.fingerprint })
+
+        if (item.fingerprint) {
+          const expected = item.fingerprint.replace(/:/g, '').toUpperCase()
+          const verify = (s: tls.TLSSocket) => {
+            if (getCertFingerprint(s.getPeerCertificate()) !== expected)
+              s.destroy(new Error(tr('证书指纹不匹配')))
+          }
+
+          if (newItem.useProxy && mixedPort != 0) {
+            const urlObj = new URL(item.url)
+            const hostname = urlObj.hostname
+            const port = urlObj.port || '443'
+            httpsAgent.createConnection = (_, cb) => {
+              const req = http.request({
+                host: '127.0.0.1',
+                port: mixedPort,
+                method: 'CONNECT',
+                path: `${hostname}:${port}`
+              })
+
+              req.on('connect', (res, sock, head) => {
+                if (res.statusCode !== 200) {
+                  cb?.(new Error(tr('代理连接失败，状态码：{0}', [res.statusCode])), null!)
+                  return
+                }
+                if (head.length > 0) sock.unshift(head)
+                const tls$ = tls.connect(
+                  { socket: sock, servername: hostname, rejectUnauthorized: false },
+                  () => verify(tls$)
+                )
+                cb?.(null, tls$)
+              })
+
+              req.on('error', (e) => cb?.(e, null!))
+              req.end()
+              return null!
+            }
+          } else {
+            const conn = httpsAgent.createConnection.bind(httpsAgent)
+            httpsAgent.createConnection = (o, c) => {
+              const sock = conn(o, c)
+              sock?.once('secureConnect', function (this: tls.TLSSocket) {
+                verify(this)
+              })
+              return sock
+            }
+          }
         }
-        res = await axios.get(urlObj.toString(), {
-          headers: {
-            'User-Agent': await getUserAgent()
-          },
+
+        res = await axios.get(item.url, {
+          httpsAgent,
+          ...(newItem.useProxy &&
+            mixedPort &&
+            !item.fingerprint && {
+              proxy: { protocol: 'http', host: '127.0.0.1', port: mixedPort }
+            }),
+          headers: { 'User-Agent': newItem.ua || (await getUserAgent()) },
           responseType: 'text'
         })
-      } else {
-        try {
-          const httpsAgent = new https.Agent({ rejectUnauthorized: !item.fingerprint })
-
-          if (item.fingerprint) {
-            const expected = item.fingerprint.replace(/:/g, '').toUpperCase()
-            const verify = (s: tls.TLSSocket) => {
-              if (getCertFingerprint(s.getPeerCertificate()) !== expected)
-                s.destroy(new Error(tr('证书指纹不匹配')))
-            }
-
-            if (newItem.useProxy && mixedPort != 0) {
-              const urlObj = new URL(item.url)
-              const hostname = urlObj.hostname
-              const port = urlObj.port || '443'
-              httpsAgent.createConnection = (_, cb) => {
-                const req = http.request({
-                  host: '127.0.0.1',
-                  port: mixedPort,
-                  method: 'CONNECT',
-                  path: `${hostname}:${port}`
-                })
-
-                req.on('connect', (res, sock, head) => {
-                  if (res.statusCode !== 200) {
-                    cb?.(new Error(tr('代理连接失败，状态码：{0}', [res.statusCode])), null!)
-                    return
-                  }
-                  if (head.length > 0) sock.unshift(head)
-                  const tls$ = tls.connect(
-                    { socket: sock, servername: hostname, rejectUnauthorized: false },
-                    () => verify(tls$)
-                  )
-                  cb?.(null, tls$)
-                })
-
-                req.on('error', (e) => cb?.(e, null!))
-                req.end()
-                return null!
-              }
-            } else {
-              const conn = httpsAgent.createConnection.bind(httpsAgent)
-              httpsAgent.createConnection = (o, c) => {
-                const sock = conn(o, c)
-                sock?.once('secureConnect', function (this: tls.TLSSocket) {
-                  verify(this)
-                })
-                return sock
-              }
-            }
+      } catch (error) {
+        if (axios.isAxiosError(error)) {
+          if (error.code === 'ECONNRESET' || error.code === 'ECONNABORTED') {
+            throw new Error(tr('网络连接被重置或超时：{0}', [item.url]))
+          } else if (error.code === 'CERT_HAS_EXPIRED') {
+            throw new Error(tr('服务器证书已过期：{0}', [item.url]))
+          } else if (error.code === 'UNABLE_TO_VERIFY_LEAF_SIGNATURE') {
+            throw new Error(tr('无法验证服务器证书：{0}', [item.url]))
+          } else if (error.message.includes('Certificate verification failed')) {
+            throw new Error(tr('证书验证失败：{0}', [item.url]))
+          } else {
+            throw new Error(tr('请求失败：{0}', [error.message]))
           }
-
-          res = await axios.get(item.url, {
-            httpsAgent,
-            ...(newItem.useProxy &&
-              mixedPort &&
-              !item.fingerprint && {
-                proxy: { protocol: 'http', host: '127.0.0.1', port: mixedPort }
-              }),
-            headers: { 'User-Agent': newItem.ua || (await getUserAgent()) },
-            responseType: 'text'
-          })
-        } catch (error) {
-          if (axios.isAxiosError(error)) {
-            if (error.code === 'ECONNRESET' || error.code === 'ECONNABORTED') {
-              throw new Error(tr('网络连接被重置或超时：{0}', [item.url]))
-            } else if (error.code === 'CERT_HAS_EXPIRED') {
-              throw new Error(tr('服务器证书已过期：{0}', [item.url]))
-            } else if (error.code === 'UNABLE_TO_VERIFY_LEAF_SIGNATURE') {
-              throw new Error(tr('无法验证服务器证书：{0}', [item.url]))
-            } else if (error.message.includes('Certificate verification failed')) {
-              throw new Error(tr('证书验证失败：{0}', [item.url]))
-            } else {
-              throw new Error(tr('请求失败：{0}', [error.message]))
-            }
-          }
-          throw error
         }
+        throw error
       }
 
       const data = await decryptProfileContent(String(res.data), newItem)

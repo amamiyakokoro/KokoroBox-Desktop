@@ -76,7 +76,6 @@ interface AppConfig {
   resourceCardStatus?: CardStatus
   ruleCardStatus?: CardStatus
   sniffCardStatus?: CardStatus
-  substoreCardStatus?: CardStatus
   sysproxyCardStatus?: CardStatus
   tunCardStatus?: CardStatus
   githubToken?: string
@@ -84,19 +83,11 @@ interface AppConfig {
   gistEncrypted?: boolean
   gistAgeRecipient?: string
   gistAgeIdentity?: string
-  useSubStore: boolean
-  subStoreHost?: string
-  subStoreBackendSyncCron?: string
-  subStoreBackendDownloadCron?: string
-  subStoreBackendUploadCron?: string
   autoLightweight?: boolean
   autoLightweightDelay?: number
   autoLightweightMode?: 'core' | 'tray'
   coreStartupMode?: 'post-up' | 'log'
-  useCustomSubStore?: boolean
-  useProxyInSubStore?: boolean
   mihomoCpuPriority?: Priority
-  customSubStoreUrl?: string
   diffWorkDir?: boolean
   autoSetDNSMode?: 'none' | 'exec' | 'service'
   originDNS?: string
@@ -178,7 +169,6 @@ interface ProfileItem {
   ageRecipient?: string
   ageIdentity?: string
   extra?: SubscriptionUserInfo
-  substore?: boolean
   locked?: boolean
   autoUpdate?: boolean
   kokoro?: {
@@ -277,11 +267,4 @@ interface OverrideItem {
   url?: string
   file?: string
   fingerprint?: string
-}
-
-interface SubStoreSub {
-  name: string
-  displayName?: string
-  icon?: string
-  tag?: string[]
 }

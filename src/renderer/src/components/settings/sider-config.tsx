@@ -16,8 +16,7 @@ const titleMap = {
   mihomoCoreCardStatus: tr('内核'),
   dnsCardStatus: 'DNS',
   sniffCardStatus: tr('域名嗅探'),
-  logCardStatus: tr('日志'),
-  substoreCardStatus: 'Sub-Store'
+  logCardStatus: tr('日志')
 }
 const SiderConfig: React.FC = () => {
   const { appConfig, patchAppConfig } = useAppConfig()
@@ -33,8 +32,7 @@ const SiderConfig: React.FC = () => {
     mihomoCoreCardStatus = 'col-span-2',
     dnsCardStatus = 'col-span-1',
     sniffCardStatus = 'col-span-1',
-    logCardStatus = 'col-span-1',
-    substoreCardStatus = 'col-span-1'
+    logCardStatus = 'col-span-1'
   } = appConfig || {}
 
   const cardStatus = {
@@ -49,8 +47,7 @@ const SiderConfig: React.FC = () => {
     mihomoCoreCardStatus,
     dnsCardStatus,
     sniffCardStatus,
-    logCardStatus,
-    substoreCardStatus
+    logCardStatus
   }
 
   return (

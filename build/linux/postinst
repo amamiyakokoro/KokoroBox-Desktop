@@ -18,10 +18,6 @@ chmod 4755 '/opt/sparkle/chrome-sandbox' || true
 chmod +sx /opt/sparkle/resources/sidecar/mihomo
 chmod +sx /opt/sparkle/resources/sidecar/mihomo-alpha
 
-if [ -d '/opt/sparkle/resources/files/sub-store-frontend' ]; then
-    chmod -R go-w '/opt/sparkle/resources/files/sub-store-frontend' 2>/dev/null || true
-fi
-
 restore_sparkle_service_if_was_running() {
     SERVICE_NAME='SparkleService'
     STATE_FILE='/run/sparkle/service-was-running'

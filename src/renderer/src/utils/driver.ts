@@ -99,17 +99,6 @@ export async function createDriver(navigate: NavigateFunction): Promise<Driver> 
         }
       },
       {
-        element: '.substore-import',
-        popover: {
-          title: 'Sub-Store',
-          description: tr(
-            'KokoroBox 深度集成了 Sub-Store，您可以点击该按钮进入 Sub-Store 或直接导入您通过 Sub-Store 管理的订阅，KokoroBox 默认使用内置的 Sub-Store 后端，如果您有自建的 Sub-Store 后端，可以在设置页面中配置，如果您不使用 Sub-Store 也可以在设置页面中关闭'
-          ),
-          side: 'bottom',
-          align: 'start'
-        }
-      },
-      {
         element: '.new-profile',
         popover: {
           title: tr('本地订阅'),

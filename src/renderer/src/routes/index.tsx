@@ -13,7 +13,6 @@ import {
   Rules,
   Settings,
   Sniffer,
-  SubStore,
   Sysproxy,
   Tun
 } from './route-pages'
@@ -83,10 +82,6 @@ const routes = [
   {
     path: '/settings',
     element: startupRoute(<Settings />)
-  },
-  {
-    path: '/substore',
-    element: startupRoute(<SubStore />)
   },
   {
     path: '/',

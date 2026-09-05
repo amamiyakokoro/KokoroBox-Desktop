@@ -15,7 +15,6 @@ import ProxyCard from './proxy-card'
 import ResourceCard from './resource-card'
 import RuleCard from './rule-card'
 import SniffCard from './sniff-card'
-import SubStoreCard from './substore-card'
 import SysproxySwitcher from './sysproxy-switcher'
 import TunSwitcher from './tun-switcher'
 
@@ -33,8 +32,7 @@ const defaultSiderOrder = [
   'rule',
   'resource',
   'override',
-  'log',
-  'substore'
+  'log'
 ]
 
 const siderCardRouteMap = {
@@ -49,8 +47,7 @@ const siderCardRouteMap = {
   'log-card': '/logs',
   'rule-card': '/rules',
   'resource-card': '/resources',
-  'override-card': '/override',
-  'substore-card': '/substore'
+  'override-card': '/override'
 } as const
 
 const siderCardSelector = Object.keys(siderCardRouteMap)
@@ -69,8 +66,7 @@ const componentMap = {
   log: LogCard,
   rule: RuleCard,
   resource: ResourceCard,
-  override: OverrideCard,
-  substore: SubStoreCard
+  override: OverrideCard
 }
 
 interface Props {

@@ -3,9 +3,9 @@ import { createWriteStream, type WriteStream } from 'fs'
 import { readFile, stat, writeFile } from 'fs/promises'
 import { Writable } from 'stream'
 import { getAppConfig } from '../config/app'
-import { appLogPath, coreLogPath, substoreLogPath } from './dirs'
+import { appLogPath, coreLogPath } from './dirs'
 
-type LogTarget = 'app' | 'core' | 'substore'
+type LogTarget = 'app' | 'core'
 type MihomoLogSource = 'out' | 'ws'
 type LogContent = string | Buffer
 interface CachedControllerLog extends ControllerLog {
@@ -16,8 +16,7 @@ const streamMap = new Map<LogTarget, { path: string; stream: WriteStream }>()
 const consumerCount = new Map<LogTarget, number>()
 const writeQueue: Record<LogTarget, Promise<void>> = {
   app: Promise.resolve(),
-  core: Promise.resolve(),
-  substore: Promise.resolve()
+  core: Promise.resolve()
 }
 const cachedLogs: CachedControllerLog[] = []
 const cachedLogLimit = 2000
@@ -36,8 +35,6 @@ function resolveLogPath(target: LogTarget): string {
       return appLogPath()
     case 'core':
       return coreLogPath()
-    case 'substore':
-      return substoreLogPath()
     default: {
       const exhaustiveTarget: never = target
       throw new Error(`Unsupported log target: ${exhaustiveTarget}`)

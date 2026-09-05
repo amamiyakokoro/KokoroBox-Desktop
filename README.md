@@ -13,7 +13,7 @@ A cross-platform Mihomo desktop client with native Kokoro subscription support.
 - Bundled stable and preview [Mihomo](https://github.com/MetaCubeX/mihomo) cores
 - System proxy and TUN controls
 - Secure Kokoro sign-in and authenticated subscription updates
-- Profile overrides and integrated Sub-Store tools
+- Profile overrides and subscription management tools
 - WebDAV backup and restore
 - English, Simplified Chinese, and Traditional Chinese localization
 

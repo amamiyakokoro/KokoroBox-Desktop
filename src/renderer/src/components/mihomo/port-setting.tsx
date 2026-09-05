@@ -5,7 +5,7 @@ import SettingItem from '../base/base-setting-item'
 import EditableList from '../base/base-list-editor'
 
 import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'
-import { restartCore, startSubStoreBackendServer, triggerSysProxy } from '@renderer/utils/ipc'
+import { restartCore, triggerSysProxy } from '@renderer/utils/ipc'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { platform } from '@renderer/utils/init'
 import { Button, Input, Switch } from '@heroui/react'
@@ -75,7 +75,6 @@ const PortSetting: React.FC = () => {
                 isDisabled={hasPortConflict()}
                 onPress={async () => {
                   await onChangeNeedRestart({ 'mixed-port': mixedPortInput })
-                  await startSubStoreBackendServer()
                   if (sysProxy?.enable) {
                     triggerSysProxy(true, onlyActiveDevice)
                   }

@@ -11,9 +11,6 @@ import {
   profilePath,
   profilesDir,
   resourcesFilesDir,
-  subStoreBackendPath,
-  subStoreDir,
-  subStoreFrontendDir,
   themesDir
 } from './dirs'
 import {
@@ -27,11 +24,7 @@ import { stringifyYaml } from './yaml'
 import { mkdir, writeFile, cp, rm, readdir } from 'fs/promises'
 import { existsSync } from 'fs'
 import path from 'path'
-import {
-  startPacServer,
-  startSubStoreBackendServer,
-  startSubStoreFrontendServer
-} from '../resolve/server'
+import { startPacServer } from '../resolve/server'
 import { triggerSysProxy } from '../sys/sysproxy'
 import {
   getAppConfig,
@@ -55,8 +48,7 @@ async function initDirs(): Promise<void> {
     overrideDir(),
     mihomoWorkDir(),
     logDir(),
-    mihomoTestDir(),
-    subStoreDir()
+    mihomoTestDir()
   ]
   await Promise.all(
     dirs.map(async (dir) => {
@@ -119,9 +111,7 @@ async function initFiles(): Promise<void> {
     copy('geoip.dat'),
     copy('geosite.dat'),
     copy('ASN.mmdb'),
-    copy('BundleMRS.7z'),
-    copy('sub-store.bundle.js', subStoreBackendPath()),
-    copy('sub-store-frontend', subStoreFrontendDir())
+    copy('BundleMRS.7z')
   ])
 }
 
@@ -220,8 +210,6 @@ function runBackgroundInitTask(name: string, task: Promise<void>): void {
 function startBackgroundInit(appConfig: AppConfig): void {
   const { sysProxy, onlyActiveDevice = false, networkDetection = false } = appConfig
 
-  runBackgroundInitTask('substore frontend', startSubStoreFrontendServer())
-  runBackgroundInitTask('substore backend', startSubStoreBackendServer())
   runBackgroundInitTask('ssid check', startSSIDCheck())
 
   if (networkDetection) {
