@@ -121,7 +121,22 @@ function fixtures(fn: (source: string, output: string) => void, version = '2.26.
         path.join(packages, artifactName(target, version)),
         `fixture: ${targetId(target)}`
       )
-      stageArtifact(target, version, sha, packages, source)
+      const filename = artifactName(target, version)
+      const signing =
+        target.os === 'macos-latest'
+          ? {
+              status: 'apple-notarized' as const,
+              teamId: 'TESTTEAM00',
+              notarizationId: '12345678-1234-1234-1234-123456789abc',
+              version,
+              sha,
+              filename,
+              checksum: createHash('sha256')
+                .update(readFileSync(path.join(packages, filename)))
+                .digest('hex')
+            }
+          : undefined
+      stageArtifact(target, version, sha, packages, source, signing)
     }
     fn(source, output)
   } finally {
@@ -136,7 +151,7 @@ test('collects complete builds, generates hashes, download links and updater-com
     assert.equal(latest.version, '2.26.8')
     assert.equal(latest.tag, 'v2.26.8')
     assert.match(latest.changelog, /releases\/download\/v2.26.8\//)
-    assert.match(latest.changelog, /not Developer ID-signed or notarized/)
+    assert.match(latest.changelog, /Developer ID-signed, notarized by Apple/)
     assert.equal(readdirSync(output).length, 18)
     const lines = readFileSync(path.join(output, 'SHA256SUMS'), 'utf8').trim().split('\n')
     assert.equal(lines.length, 15)
@@ -198,6 +213,20 @@ test('rejects mismatched release channels and pre-existing output', () => {
     mkdirSync(output)
     writeFileSync(path.join(output, 'old.exe'), 'old')
     assert.throws(() => collectArtifacts('2.26.8', 'v2.26.8', sha, source, output, 'notes'))
+  })
+})
+
+test('collection rejects macOS packages without their matching notarization receipt', () => {
+  fixtures((source, output) => {
+    const manifestFile = path.join(source, 'manifest-macos-latest-arm64-pkg.json')
+    const manifest = JSON.parse(readFileSync(manifestFile, 'utf8'))
+    delete manifest.signing
+    writeFileSync(manifestFile, JSON.stringify(manifest))
+    assert.throws(
+      () => collectArtifacts('2.26.8', 'v2.26.8', sha, source, output, 'notes'),
+      /receipt/
+    )
+    assert.equal(existsSync(output), false)
   })
 })
 

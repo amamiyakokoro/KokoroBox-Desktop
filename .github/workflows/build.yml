@@ -15,6 +15,21 @@ on:
         description: 'GitHub Release tag containing the artifacts'
         required: true
         type: string
+    secrets:
+      CSC_LINK:
+        required: true
+      CSC_KEY_PASSWORD:
+        required: true
+      CSC_INSTALLER_LINK:
+        required: true
+      CSC_INSTALLER_KEY_PASSWORD:
+        required: true
+      APPLE_ID:
+        required: true
+      APPLE_APP_SPECIFIC_PASSWORD:
+        required: true
+      APPLE_TEAM_ID:
+        required: true
 
 permissions:
   contents: read
@@ -34,14 +49,19 @@ jobs:
       - run: npm install -g pnpm@11.1.1
       - run: pnpm install --frozen-lockfile --ignore-scripts
       - run: pnpm test:release
+      - run: pnpm test:macos-signing
       - run: pnpm test:kokoro
       - run: pnpm test:localization
       - run: pnpm typecheck
 
   build:
     needs: validate
+    if: >-
+      github.repository == 'amamiyakokoro/KokoroBox-Desktop' &&
+      (github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/')) &&
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule')
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 60
+    timeout-minutes: 90
     env:
       SKIP_PREPARE: '1'
       RELEASE_VERSION: ${{ inputs.version }}
@@ -232,8 +252,26 @@ jobs:
               pnpm build:linux ${{ matrix.format }} --${{ matrix.arch }}
             fi
           else
-            pnpm build:mac --config electron-builder.ci.yml --${{ matrix.arch }}
+            # Compile without secrets; packaging/signing runs in the isolated step below.
+            pnpm exec electron-vite build
           fi
+
+      - name: Sign and Notarize macOS PKG
+        if: matrix.os == 'macos-latest'
+        env:
+          TARGET_ARCH: ${{ matrix.arch }}
+          CSC_LINK: ${{ secrets.CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+          CSC_INSTALLER_LINK: ${{ secrets.CSC_INSTALLER_LINK }}
+          CSC_INSTALLER_KEY_PASSWORD: ${{ secrets.CSC_INSTALLER_KEY_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: node scripts/macos-signing.ts release
+
+      - name: Clean Up macOS Signing Credentials
+        if: always() && matrix.os == 'macos-latest' && env.MACOS_SIGNING_DIR != ''
+        run: node scripts/macos-signing.ts cleanup
 
       - name: Add Portable Flag
         if: matrix.os == 'windows-latest' && matrix.format == '7z'

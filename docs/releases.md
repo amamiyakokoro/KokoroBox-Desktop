@@ -21,9 +21,9 @@ Linux retains the internal `/opt/sparkle/sparkle` executable and service identif
 1. Push the workflow changes to the repository's `master` branch.
 2. Open **Actions** on GitHub and enable workflows if GitHub has disabled them for the fork.
 3. Ensure repository/organization Actions policies permit the referenced actions and GitHub-hosted runners. Publication needs `contents: write`; the workflows grant this only to publishing jobs.
-4. No custom secret is required for unsigned builds. GitHub supplies `GITHUB_TOKEN` automatically.
+4. Configure the seven Apple signing/notarization secrets listed below. They are required for the macOS portion of every release. GitHub supplies `GITHUB_TOKEN` automatically.
 
-The local Apple Keychain is not available on hosted runners. Do not upload certificates or private keys to Git. No AUR key, translation API key, Apple password, or SignPath token is required by this pipeline.
+The local Apple Keychain is not available on hosted runners. Do not upload certificates or private keys to Git. No AUR key, translation API key, or SignPath token is required by this pipeline.
 
 ## Rolling prereleases
 
@@ -58,6 +58,7 @@ The schedule runs at 12:00 Taipei time on potential month-end dates and filters 
 
 - `Build` runs release tests, OAuth tests, localization tests, and TypeScript checks before packaging.
 - Each package is staged with its target, version, source commit, and SHA-256 checksum.
+- macOS packages additionally require a matching verification receipt written only after signing, notarization, stapling, and Gatekeeper checks succeed. A missing or stale receipt blocks staging/publication.
 - `Publish Packages` rejects missing, empty, modified, stale, wrong-version, or wrong-commit artifacts before uploading anything.
 - Platform jobs use `fail-fast: false` so a failed target does not cancel other builds, but any failed target blocks publication of the entire release.
 - Release notes are generated from Git commit subjects without an external translation service. Template headings and download/signing information are English; commit subjects retain their original language.
@@ -67,6 +68,7 @@ Run the local checks with:
 
 ```sh
 pnpm test:release
+pnpm test:macos-signing
 pnpm test:kokoro
 pnpm test:localization
 pnpm typecheck
@@ -75,15 +77,61 @@ pnpm typecheck
 For environments that restrict the `tsx` CLI's IPC socket, the equivalent test invocation is:
 
 ```sh
-node --import tsx --test scripts/test-release.ts scripts/test-kokoro-auth.ts scripts/test-localization.ts
+node --import tsx --test scripts/test-release.ts scripts/test-macos-signing.ts scripts/test-kokoro-auth.ts scripts/test-localization.ts
 ```
 
 ## Signing status
 
 Windows CI packages are currently **not Authenticode-signed**. SignPath signing must be configured after project approval; this workflow does not claim Foundation sponsorship or signed Windows releases.
 
-macOS CI uses `electron-builder.ci.yml` to disable certificate discovery/signing and notarization explicitly. The output is an **unsigned, non-notarized PKG**, while retaining the upstream installation scripts needed for proxy operation. The regular `electron-builder.yml` remains available for local production signing.
+Both Intel and Apple Silicon macOS releases require **Developer ID-signed, Apple-notarized PKGs with stapled tickets**. There is no unsigned fallback in either Stable or Rolling releases. The upstream PKG installation scripts remain enabled for proxy/service operation.
 
-Apple signing/notarization on GitHub requires a separate, explicitly configured credential workflow. Do not describe hosted CI artifacts as equivalent to a locally signed or notarized package.
+`electron-builder.ci.yml` is retained only for unsigned local smoke tests; release workflows no longer use it. The normal `electron-builder.yml` remains available for local production signing.
+
+### Apple repository secrets
+
+In **Settings → Secrets and variables → Actions**, configure:
+
+| Secret                        | Value                                                                     |
+| ----------------------------- | ------------------------------------------------------------------------- |
+| `CSC_LINK`                    | Base64-encoded Developer ID Application `.p12`, including its private key |
+| `CSC_KEY_PASSWORD`            | Application `.p12` export password                                        |
+| `CSC_INSTALLER_LINK`          | Base64-encoded Developer ID Installer `.p12`, including its private key   |
+| `CSC_INSTALLER_KEY_PASSWORD`  | Installer `.p12` export password                                          |
+| `APPLE_ID`                    | Apple ID with access to the developer team                                |
+| `APPLE_APP_SPECIFIC_PASSWORD` | Apple app-specific password, not the account's normal password            |
+| `APPLE_TEAM_ID`               | Ten-character developer Team ID matching both certificates                |
+
+Certificate secrets must contain Base64 data, not URLs or local file paths. Both export passwords must be non-empty. An existing local `notarytool` Keychain profile is not copied to GitHub; the workflow creates its own temporary profile.
+
+### Credential isolation and signing sequence
+
+The release callers explicitly forward only these seven secrets to the reusable Build workflow. Only the macOS signing step receives their values. Compilation, dependency installation, Windows/Linux builds, and publication do not receive the Apple credentials in their environments.
+
+Signing is restricted to this repository's `master` branch or stable version tags, via push, manual dispatch, or schedule on GitHub-hosted runners. External PRs and arbitrary branch refs are not accepted. Protect `master`, release tags, and workflow changes with appropriate review rules. Repository secrets still require trusting users who can change workflows; consider a protected GitHub environment with required reviewers for stronger release approval controls.
+
+`scripts/macos-signing.ts`:
+
+1. Checks every required secret and creates a private temporary directory and Keychain under `RUNNER_TEMP`.
+2. Imports both certificates, authorizes Apple signing tools, and validates notarization credentials in a temporary Keychain profile.
+3. Packages the already compiled app using `forceCodeSigning: true`, the specified team, hardened runtime, and explicit signing of both Mihomo binaries and `sparkle-service`.
+4. Verifies the app/helpers' Developer ID identity, team, hardened runtime, timestamp, and signatures, plus the Installer signature on the PKG.
+5. Submits the **final signed PKG** using `notarytool`, waiting up to 45 minutes for `Accepted`. Automatic electron-builder notarization is disabled in this generated configuration to avoid duplicate or silently skipped submissions.
+6. Staples the PKG ticket, runs `stapler validate`, assesses the installer with Gatekeeper, and rechecks its package signature.
+7. Writes a verification receipt containing the final post-stapling checksum and submission ID. Artifact staging and collection verify that it matches the version, commit, filename, and bytes.
+8. Restores the original Keychain search list and removes the temporary Keychain, certificate files, and temporary configuration. An additional `always()` step handles cancellation/failure cleanup when possible; hosted runner disposal is the final isolation boundary.
+
+Child packaging processes do not inherit certificate blobs or Apple authentication passwords. Raw signing command errors are not printed because process errors can include secret-bearing arguments. Logs identify the failed step without dumping credentials.
+
+### Troubleshooting
+
+- **Missing GitHub Secret**: check the exact secret names and their availability to this repository/workflow.
+- **Import application/installer certificate failed**: check Base64 encoding, the matching export password, and that the `.p12` includes the private key.
+- **Validate Apple notarization credentials failed**: check the app-specific password and membership of the specified team; an Apple account password is not accepted.
+- **Sign App and PKG failed**: check that the certificates are valid Developer ID Application/Installer certificates for the same team, not development or App Store certificates.
+- **Notarization or Gatekeeper failure**: publication stops. Fix the signing/notarization issue before retrying; never bypass the check to ship an unsigned artifact.
+- **Notarization timeout**: Apple may continue processing after the runner stops waiting. No release artifact is staged without a completed verification receipt. Investigate the submission before retrying to avoid unnecessary duplicate submissions.
+
+The signing tests use fake credentials and mocked Apple commands. Passing them verifies orchestration and failure handling, not the validity of repository secrets or Apple's acceptance of a real package.
 
 Real runner builds and installation checks on Windows, macOS, and Linux are still required after pushing workflow changes; local workflow/unit checks alone do not verify these OS behaviors.

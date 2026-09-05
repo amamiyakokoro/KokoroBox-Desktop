@@ -1,5 +1,5 @@
-# GitHub-hosted runners do not have the maintainer's local Apple Keychain.
-# Keep this separate from the production/local signing configuration.
+# Unsigned local smoke-test configuration only. Release Actions do not use this file.
+# Official CI packages require scripts/macos-signing.ts and its verified notarization receipt.
 extends: ./electron-builder.yml
 mac:
   identity: null

@@ -16,6 +16,37 @@ export interface Target {
   arch: string
   format: string
 }
+
+export interface MacSigningReceipt {
+  status: 'apple-notarized'
+  teamId: string
+  notarizationId: string
+  version: string
+  sha: string
+  filename: string
+  checksum: string
+}
+
+export function validateMacReceipt(
+  receipt: MacSigningReceipt | undefined,
+  version: string,
+  sha: string,
+  filename: string,
+  checksum: string
+) {
+  if (
+    !receipt ||
+    receipt.status !== 'apple-notarized' ||
+    !/^[A-Z0-9]{10}$/.test(receipt.teamId) ||
+    !/^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i.test(receipt.notarizationId) ||
+    receipt.version !== version ||
+    receipt.sha !== sha ||
+    receipt.filename !== filename ||
+    receipt.checksum !== checksum
+  ) {
+    throw new Error('Missing or mismatched macOS signing/notarization verification receipt')
+  }
+}
 export const releaseTargets: Target[] = [
   ...['x64', 'arm64'].flatMap((arch) =>
     ['7z', 'nsis'].map((format) => ({ os: 'windows-latest', arch, format }))
@@ -68,15 +99,17 @@ export function stageArtifact(
   version: string,
   sha: string,
   source: string,
-  output: string
+  output: string,
+  signing?: MacSigningReceipt
 ) {
   const filename = artifactName(target, version)
   const checksum = digest(path.join(source, filename))
+  if (target.os === 'macos-latest') validateMacReceipt(signing, version, sha, filename, checksum)
   mkdirSync(output, { recursive: true })
   copyFileSync(path.join(source, filename), path.join(output, filename))
   writeFileSync(
     path.join(output, `manifest-${targetId(target)}.json`),
-    JSON.stringify({ target, version, sha, filename, checksum })
+    JSON.stringify({ target, version, sha, filename, checksum, signing })
   )
 }
 
@@ -110,6 +143,8 @@ export function collectArtifacts(
     }
     if (digest(path.join(source, filename)) !== manifest.checksum)
       throw new Error(`Checksum mismatch: ${filename}`)
+    if (target.os === 'macos-latest')
+      validateMacReceipt(manifest.signing, version, sha, filename, manifest.checksum)
     filenames.push(filename)
     expectedFiles.add(filename).add(manifestName)
   }
@@ -133,7 +168,7 @@ export function collectArtifacts(
           `- [${filename}](https://github.com/amamiyakokoro/KokoroBox-Desktop/releases/download/${tag}/${filename})`
       )
       .join('\n') +
-    '\n\n## Signing status\n\nWindows packages are not Authenticode-signed. macOS PKG installers are not Developer ID-signed or notarized. SHA256SUMS provides integrity checks, not publisher authentication.\n'
+    '\n\n## Signing status\n\nmacOS PKG installers are Developer ID-signed, notarized by Apple, and include a stapled notarization ticket. Windows packages are not Authenticode-signed. SHA256SUMS provides integrity checks, not publisher authentication.\n'
   writeFileSync(path.join(output, 'changelog.md'), notes)
   writeFileSync(path.join(output, 'latest.yml'), stringify({ version, tag, changelog: notes }))
 }
@@ -151,7 +186,10 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
       version,
       sha,
       'dist',
-      'dist/release-artifacts'
+      'dist/release-artifacts',
+      process.env.TARGET_OS === 'macos-latest'
+        ? JSON.parse(readFileSync(`dist/macos-signing-${process.env.TARGET_ARCH}.json`, 'utf8'))
+        : undefined
     )
   } else if (process.argv[2] === 'collect') {
     collectArtifacts(
