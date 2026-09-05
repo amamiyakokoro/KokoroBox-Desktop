@@ -160,15 +160,7 @@ export function collectArtifacts(
       .map((filename) => `${digest(path.join(output, filename))}  ${filename}`)
       .join('\n') + '\n'
   writeFileSync(path.join(output, 'SHA256SUMS'), checksums)
-  const notes =
-    `${changelog.trim()}\n\n## Downloads\n\n` +
-    filenames
-      .map(
-        (filename) =>
-          `- [${filename}](https://github.com/amamiyakokoro/KokoroBox-Desktop/releases/download/${tag}/${filename})`
-      )
-      .join('\n') +
-    '\n\n## Signing status\n\nmacOS PKG installers are Developer ID-signed, notarized by Apple, and include a stapled notarization ticket. Windows packages are not Authenticode-signed. SHA256SUMS provides integrity checks, not publisher authentication.\n'
+  const notes = `${changelog.trim()}\n\n## Signing status\n\nmacOS PKG installers are Developer ID-signed, notarized by Apple, and include a stapled notarization ticket. Windows packages are not Authenticode-signed. SHA256SUMS provides integrity checks, not publisher authentication.\n`
   writeFileSync(path.join(output, 'changelog.md'), notes)
   writeFileSync(path.join(output, 'latest.yml'), stringify({ version, tag, changelog: notes }))
 }

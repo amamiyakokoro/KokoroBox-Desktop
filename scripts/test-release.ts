@@ -172,13 +172,14 @@ function fixtures(fn: (source: string, output: string) => void, version = '2.26.
   }
 }
 
-test('collects complete builds, generates hashes, download links and updater-compatible metadata', () => {
+test('collects complete builds, generates hashes and concise updater-compatible metadata', () => {
   fixtures((source, output) => {
     collectArtifacts('2.26.8', 'v2.26.8', sha, source, output, '- A change')
     const latest = parse(readFileSync(path.join(output, 'latest.yml'), 'utf8'))
     assert.equal(latest.version, '2.26.8')
     assert.equal(latest.tag, 'v2.26.8')
-    assert.match(latest.changelog, /releases\/download\/v2.26.8\//)
+    assert.doesNotMatch(latest.changelog, /## Downloads|releases\/download\//)
+    assert.match(latest.changelog, /- A change/)
     assert.match(latest.changelog, /Developer ID-signed, notarized by Apple/)
     assert.equal(readdirSync(output).length, 15)
     const lines = readFileSync(path.join(output, 'SHA256SUMS'), 'utf8').trim().split('\n')
