@@ -51,6 +51,8 @@ async function getLatestAlphaVersion() {
     const response = await fetch(MIHOMO_ALPHA_VERSION_URL, {
       method: 'GET'
     })
+    if (!response.ok)
+      throw new Error(`Mihomo alpha version request failed: HTTP ${response.status}`)
     const v = await response.text()
     MIHOMO_ALPHA_VERSION = v.trim() // Trim to remove extra whitespaces
     console.log(`Latest alpha version: ${MIHOMO_ALPHA_VERSION}`)
@@ -83,6 +85,7 @@ async function getLatestReleaseVersion() {
     const response = await fetch(MIHOMO_VERSION_URL, {
       method: 'GET'
     })
+    if (!response.ok) throw new Error(`Mihomo version request failed: HTTP ${response.status}`)
     const v = await response.text()
     MIHOMO_VERSION = v.trim() // Trim to remove extra whitespaces
     console.log(`Latest release version: ${MIHOMO_VERSION}`)
@@ -265,6 +268,7 @@ async function downloadFile(url: string | URL | Request, path: fs.PathOrFileDesc
     method: 'GET',
     headers: { 'Content-Type': 'application/octet-stream' }
   })
+  if (!response.ok) throw new Error(`Resource download failed: HTTP ${response.status}`)
   const buffer = await response.arrayBuffer()
   fs.writeFileSync(path, new Uint8Array(buffer))
 

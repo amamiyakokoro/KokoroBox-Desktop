@@ -8,8 +8,8 @@ on:
         required: true
         type: string
       version:
-        description: 'Stable version without the v prefix'
-        required: false
+        description: 'Exact package version, including the rolling suffix when applicable'
+        required: true
         type: string
       release_tag:
         description: 'GitHub Release tag containing the artifacts'
@@ -20,9 +20,33 @@ permissions:
   contents: read
 
 jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+      - run: npm install -g pnpm@11.1.1
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - run: pnpm test:release
+      - run: pnpm test:kokoro
+      - run: pnpm test:localization
+      - run: pnpm typecheck
+
   build:
+    needs: validate
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    env:
+      SKIP_PREPARE: '1'
+      RELEASE_VERSION: ${{ inputs.version }}
     strategy:
+      fail-fast: false
       matrix:
         include:
           - os: windows-latest
@@ -68,48 +92,45 @@ jobs:
 
           - os: macos-latest
             arch: x64
+            format: pkg
           - os: macos-latest
             arch: arm64
+            format: pkg
 
     name: Build ${{ matrix.os }}-${{ matrix.arch }}${{ matrix.format && '-' || '' }}${{ matrix.format || '' }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
 
       - name: Setup Node
         uses: actions/setup-node@v6
         with:
-          node-version: 25
+          node-version: 24
 
       - name: Setup pnpm
-        run: npm install -g pnpm
+        run: npm install -g pnpm@11.1.1
 
       - name: Determine and Update Version
         env:
           BUILD_CHANNEL: ${{ inputs.channel }}
-          INPUT_VERSION: ${{ inputs.version }}
         shell: bash
         run: |
-          GIT_COMMIT_HASH=$(git rev-parse --short HEAD)
-          VERSION=$(jq -r '.version' package.json)
-
-          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "Invalid package version: $VERSION"
-            exit 1
-          fi
-
           case "$BUILD_CHANNEL" in
             stable)
-              if [[ ! "$INPUT_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-                echo "Invalid stable version: $INPUT_VERSION"
+              if [[ ! "$RELEASE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+                echo "Invalid stable version"
                 exit 1
               fi
-              RELEASE_VERSION="$INPUT_VERSION"
               ;;
             rolling)
-              IFS=. read -r MAJOR MINOR PATCH <<< "$VERSION"
-              RELEASE_VERSION="${MAJOR}.${MINOR}.$((PATCH + 1))-rolling-${GIT_COMMIT_HASH}"
+              if [[ ! "$RELEASE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+-rolling-[0-9a-f]{7}$ ]]; then
+                echo "Invalid rolling version"
+                exit 1
+              fi
               ;;
             *)
               echo "Invalid build channel: $BUILD_CHANNEL"
@@ -143,9 +164,9 @@ jobs:
         run: |
           export ELECTRON_MIRROR="https://github.com/darkyzhou/electron-loong64/releases/download/"
           export electron_use_remote_checksums=1
-          SKIP_PREPARE=1 pnpm install electron@42.3.0 -D
-          pnpm remove electron-builder
-          SKIP_PREPARE=1 pnpm install @loongdotjs/electron-builder@26.15.6 -D
+          # Replace both packages together without running the root postinstall
+          # in an intermediate state where electron-builder is unavailable.
+          pnpm add -D electron@42.3.0 electron-builder@npm:@loongdotjs/electron-builder@26.15.6 --ignore-scripts
 
       - name: Install Dependencies and Prepare
         env:
@@ -163,7 +184,13 @@ jobs:
             macos-latest-arm64) PNPM_TARGET_FLAGS="--os=current --os=darwin --cpu=current --cpu=arm64"; SPARKLE_NATIVE_PACKAGE="@uruhalushia/sparkle-native-darwin-arm64" ;;
             *) echo "Unsupported native target: ${{ matrix.os }}-${{ matrix.arch }}" && exit 1 ;;
           esac
-          SKIP_PREPARE=1 pnpm install $PNPM_TARGET_FLAGS
+          if [[ "${{ matrix.arch }}" == "loong64" ]]; then
+            export ELECTRON_MIRROR="https://github.com/darkyzhou/electron-loong64/releases/download/"
+            export electron_use_remote_checksums=1
+            pnpm install --no-frozen-lockfile $PNPM_TARGET_FLAGS
+          else
+            pnpm install --frozen-lockfile $PNPM_TARGET_FLAGS
+          fi
 
           verify_native_package() {
             node -e "require('node:module').createRequire(require.resolve(process.argv[1])).resolve(process.argv[2].trim() + '/package.json')" "$1" "$2"
@@ -185,12 +212,13 @@ jobs:
           prune_native_packages "@uruhalushia/sparkle-native" "sparkle-native-" "$SPARKLE_NATIVE_PACKAGE"
           verify_native_package "@uruhalushia/sparkle-native" "$SPARKLE_NATIVE_PACKAGE" \
             || (echo "Missing $SPARKLE_NATIVE_PACKAGE. pnpm must install cross-platform optional native dependencies." && exit 1)
-          pnpm prepare --${{ matrix.arch }}
+          SKIP_PREPARE=0 pnpm prepare --${{ matrix.arch }}
 
       - name: Build
         env:
           npm_config_arch: ${{ matrix.arch }}
           npm_config_target_arch: ${{ matrix.arch }}
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
         shell: bash
         run: |
           if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
@@ -204,7 +232,7 @@ jobs:
               pnpm build:linux ${{ matrix.format }} --${{ matrix.arch }}
             fi
           else
-            pnpm build:mac --${{ matrix.arch }}
+            pnpm build:mac --config electron-builder.ci.yml --${{ matrix.arch }}
           fi
 
       - name: Add Portable Flag
@@ -214,27 +242,21 @@ jobs:
           New-Item -Path "PORTABLE" -ItemType File
           Get-ChildItem dist/*portable.7z | ForEach-Object {
             7z a $_.FullName PORTABLE
+            if ($LASTEXITCODE -ne 0) { throw "Failed to add portable flag" }
           }
 
-      - name: Create Changelog
+      - name: Stage and Check Artifact
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          git log -1 --pretty=format:"%s%n%b" > changelog.md
-
-      - name: Generate latest.yml
-        env:
-          RELEASE_TAG: ${{ inputs.release_tag }}
-        shell: bash
-        run: SKIP_CHANGELOG=1 pnpm updater
+          TARGET_OS: ${{ matrix.os }}
+          TARGET_ARCH: ${{ matrix.arch }}
+          TARGET_FORMAT: ${{ matrix.format }}
+        run: node scripts/release-artifacts.ts stage
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v7
         with:
-          name: ${{ matrix.os }}-${{ matrix.arch }}${{ matrix.format && '-' || '' }}${{ matrix.format || '' }}
-          path: |
-            dist/kokorobox-desktop*
-            !dist/kokorobox-desktop.app.plist
-            !dist/kokorobox-desktop*blockmap*
-            latest.yml
-            changelog.md
+          name: packages-${{ matrix.os }}-${{ matrix.arch }}-${{ matrix.format }}
+          path: dist/release-artifacts/*
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 14

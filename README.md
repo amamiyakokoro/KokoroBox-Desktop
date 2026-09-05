@@ -49,7 +49,9 @@ Download a package for your platform from [GitHub Releases](https://github.com/a
 
 On macOS, use the PKG when testing proxy connections. It installs KokoroBox in `/Applications` and assigns the ownership and setuid permissions required by the bundled Mihomo cores. Running an intermediate `.app` from `dist/mac-*` skips these installation steps.
 
-The project currently creates non-notarized macOS builds. Distribution outside a development environment requires an appropriate Apple signing and notarization setup.
+GitHub Actions currently produces unsigned Windows packages and unsigned, non-notarized macOS PKG installers. Local Apple-signed packages are separate from CI artifacts. See the [release workflow guide](docs/releases.md) for triggers, build targets, verification, and signing requirements.
+
+Code pushes to `master` build all platforms and update the Rolling prerelease. Push a version tag or run the Release workflow manually to publish a stable release.
 
 ## Build from source
 

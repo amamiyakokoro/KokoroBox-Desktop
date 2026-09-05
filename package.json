@@ -15,6 +15,7 @@
     "typecheck:web": "tsc --noEmit -p tsconfig.web.json --composite false",
     "typecheck": "pnpm run typecheck:node && pnpm run typecheck:web",
     "test:localization": "tsx --test scripts/test-localization.ts",
+    "test:release": "tsx --test scripts/test-release.ts",
     "test:kokoro": "tsx --test scripts/test-kokoro-auth.ts",
     "prepare": "node scripts/prepare.ts",
     "updater": "node scripts/updater.ts",

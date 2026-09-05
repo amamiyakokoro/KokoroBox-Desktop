@@ -3,6 +3,8 @@ productName: KokoroBox
 directories:
   buildResources: build
 files:
+  - '!dist{,/**/*}'
+  - '!electron-builder*.yml'
   - '!**/.vscode/*'
   - '!src/*'
   - '!aur/*'
@@ -58,6 +60,8 @@ pkg:
   #   alignment: bottomleft
   #   file: build/background.png
 linux:
+  # Preserve the executable expected by the upstream install/service scripts.
+  executableName: sparkle
   desktop:
     entry:
       Name: KokoroBox

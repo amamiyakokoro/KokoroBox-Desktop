@@ -1,0 +1,6 @@
+# GitHub-hosted runners do not have the maintainer's local Apple Keychain.
+# Keep this separate from the production/local signing configuration.
+extends: ./electron-builder.yml
+mac:
+  identity: null
+  notarize: false

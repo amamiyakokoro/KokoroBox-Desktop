@@ -1,0 +1,143 @@
+name: Publish Packages
+
+on:
+  workflow_call:
+    inputs:
+      channel:
+        required: true
+        type: string
+      version:
+        required: true
+        type: string
+      release_tag:
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      RELEASE_VERSION: ${{ inputs.version }}
+      RELEASE_TAG: ${{ inputs.release_tag }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+      - run: npm install -g pnpm@11.1.1
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - uses: actions/download-artifact@v7
+        with:
+          pattern: packages-*
+          path: bin/
+          merge-multiple: true
+      - name: Generate Release Notes
+        shell: bash
+        run: |
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 --match 'v[0-9]*.[0-9]*.[0-9]*' --match '[0-9]*.[0-9]*.[0-9]*' HEAD^ 2>/dev/null || true)
+          if [[ -n "$PREVIOUS_TAG" ]]; then
+            git log "$PREVIOUS_TAG..HEAD" --format='- %s (%h)' > changelog.md
+          else
+            git log -20 --format='- %s (%h)' > changelog.md
+          fi
+      - name: Verify Complete Matrix and Generate Metadata
+        run: node scripts/release-artifacts.ts collect
+      - name: Check Publication Target
+        uses: actions/github-script@v8
+        env:
+          RELEASE_CHANNEL: ${{ inputs.channel }}
+        with:
+          script: |
+            const tag = process.env.RELEASE_TAG;
+            const rolling = process.env.RELEASE_CHANNEL === 'rolling';
+            if (!rolling && process.env.RELEASE_CHANNEL !== 'stable') throw new Error('Invalid release channel');
+            if (rolling && tag !== 'rolling') throw new Error('Unexpected rolling tag');
+            if (!rolling) {
+              try {
+                const { data } = await github.rest.repos.getReleaseByTag({ ...context.repo, tag });
+                if (!data.draft) throw new Error('Refusing to overwrite a published stable release.');
+              } catch (error) {
+                if (error.status !== 404) throw error;
+              }
+            }
+            try {
+              const { data } = await github.rest.repos.getCommit({ ...context.repo, ref: `refs/tags/${tag}` });
+              if (!rolling && data.sha !== context.sha) throw new Error('Release tag changed during the build.');
+            } catch (error) {
+              if (error.status !== 404) throw error;
+              // A draft release does not necessarily create its Git tag until publication.
+              await github.rest.git.createRef({ ...context.repo, ref: `refs/tags/${tag}`, sha: context.sha });
+            }
+      - name: Upload Release Assets
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.release_tag }}
+          name: ${{ inputs.channel == 'rolling' && 'Rolling' || inputs.version }}
+          target_commitish: ${{ github.sha }}
+          body_path: dist/release/changelog.md
+          files: |
+            dist/release/kokorobox-desktop-*
+            dist/release/SHA256SUMS
+          fail_on_unmatched_files: true
+          draft: ${{ inputs.channel == 'stable' }}
+          prerelease: ${{ inputs.channel == 'rolling' }}
+          make_latest: false
+      - name: Verify Uploaded Packages
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const fs = require('node:fs');
+            const { data: release } = await github.rest.repos.getReleaseByTag({ ...context.repo, tag: process.env.RELEASE_TAG });
+            const assets = await github.paginate(github.rest.repos.listReleaseAssets, { ...context.repo, release_id: release.id, per_page: 100 });
+            for (const name of fs.readdirSync('dist/release').filter(name => name !== 'changelog.md' && name !== 'latest.yml')) {
+              const asset = assets.find(item => item.name === name);
+              if (!asset || asset.size !== fs.statSync(`dist/release/${name}`).size) throw new Error(`Incomplete uploaded package: ${name}`);
+            }
+      - name: Upload Update Metadata
+        # Keep the previous rolling updater metadata until every replacement package is available.
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.release_tag }}
+          files: dist/release/latest.yml
+          fail_on_unmatched_files: true
+          draft: ${{ inputs.channel == 'stable' }}
+          prerelease: ${{ inputs.channel == 'rolling' }}
+          make_latest: false
+      - name: Finalize Release
+        uses: actions/github-script@v8
+        env:
+          RELEASE_CHANNEL: ${{ inputs.channel }}
+        with:
+          script: |
+            const fs = require('node:fs');
+            const tag = process.env.RELEASE_TAG;
+            const { data: release } = await github.rest.repos.getReleaseByTag({ ...context.repo, tag });
+            const expected = fs.readdirSync('dist/release').filter(name => name !== 'changelog.md');
+            const assets = await github.paginate(github.rest.repos.listReleaseAssets, { ...context.repo, release_id: release.id, per_page: 100 });
+            for (const name of expected) {
+              const asset = assets.find(item => item.name === name);
+              if (!asset || asset.size !== fs.statSync(`dist/release/${name}`).size) throw new Error(`Incomplete uploaded release: ${name}`);
+            }
+            if (process.env.RELEASE_CHANNEL === 'rolling') {
+              // Only this dedicated prerelease tag may move. Do not cancel publication halfway through.
+              if (tag !== 'rolling') throw new Error('Unexpected rolling tag');
+              await github.rest.git.updateRef({ ...context.repo, ref: 'tags/rolling', sha: context.sha, force: true });
+              // Clean up old package versions only after the new assets uploaded successfully.
+              for (const asset of assets) {
+                if (asset.name.startsWith('kokorobox-desktop-') && !expected.includes(asset.name)) {
+                  await github.rest.repos.deleteReleaseAsset({ ...context.repo, asset_id: asset.id });
+                }
+              }
+            } else {
+              const { data: commit } = await github.rest.repos.getCommit({ ...context.repo, ref: `refs/tags/${tag}` });
+              if (commit.sha !== context.sha) throw new Error('Release tag changed during the build.');
+              await github.rest.repos.updateRelease({ ...context.repo, release_id: release.id, draft: false, prerelease: false, make_latest: 'true' });
+            }
