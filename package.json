@@ -4,7 +4,8 @@
   "description": "KokoroBox",
   "main": "./out/main/index.js",
   "author": {
-    "name": "KokoroBox contributors"
+    "name": "KokoroBox contributors",
+    "email": "10204811+PhoenixEmik@users.noreply.github.com"
   },
   "homepage": "https://github.com/amamiyakokoro/KokoroBox-Desktop",
   "scripts": {

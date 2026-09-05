@@ -562,6 +562,11 @@ test('Windows packaging uses KokoroBox names and migrates legacy Sparkle tasks',
   const metadata = JSON.parse(readFileSync('package.json', 'utf8'))
   const config = parseYaml(readFileSync('electron-builder.yml', 'utf8'))
   assert.equal(metadata.author.name, 'KokoroBox contributors')
+  assert.equal(metadata.author.email, '10204811+PhoenixEmik@users.noreply.github.com')
+  assert.equal(
+    config.linux.maintainer,
+    'KokoroBox contributors <10204811+PhoenixEmik@users.noreply.github.com>'
+  )
   assert.equal(config.productName, 'KokoroBox')
   assert.equal(config.win.executableName, 'KokoroBox')
   assert.equal(config.nsis.shortcutName, 'KokoroBox')

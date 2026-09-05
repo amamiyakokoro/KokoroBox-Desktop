@@ -73,7 +73,7 @@ linux:
     - deb
     - rpm
     - pacman
-  maintainer: xishang0128 <xishang02@gmail.com>
+  maintainer: KokoroBox contributors <10204811+PhoenixEmik@users.noreply.github.com>
   category: Utility
   artifactName: ${name}-linux-${version}-${arch}.${ext}
 deb:
