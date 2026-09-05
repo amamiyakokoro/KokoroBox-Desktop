@@ -43,15 +43,25 @@ Access tokens, refresh tokens, subscription credentials, and complete subscripti
 
 Download a package for your platform from [GitHub Releases](https://github.com/amamiyakokoro/KokoroBox-Desktop/releases):
 
-- Windows: NSIS installer or portable 7z archive
-- macOS: PKG installer
-- Linux: DEB, RPM, or Pacman package
+- Windows x64 and ARM64: NSIS installer or portable 7z archive
+- macOS Intel and Apple Silicon: PKG installer
+- Linux x64 and ARM64: DEB, RPM, or Pacman package
+
+Windows packages install and launch `KokoroBox.exe`. The bundled `KokoroBox Runner` handles elevated startup without relying on the former Sparkle executable path, and existing installations can migrate legacy Sparkle scheduled tasks.
 
 On macOS, use the PKG when testing proxy connections. It installs KokoroBox in `/Applications` and assigns the ownership and setuid permissions required by the bundled Mihomo cores. Running an intermediate `.app` from `dist/mac-*` skips these installation steps.
 
-GitHub Actions requires Developer ID signing and Apple notarization for macOS PKG releases. Windows packages are currently unsigned. See the [release workflow guide](docs/releases.md) for credentials, triggers, build targets, and verification requirements.
+Release PKGs are Developer ID signed, notarized by Apple, and distributed with a stapled notarization ticket. Windows packages identify the application author as `KokoroBox contributors`, but are currently not Authenticode-signed. This package metadata is not a cryptographic publisher identity.
 
-Code pushes to `master` build all platforms and update the Rolling prerelease. Push a version tag or run the Release workflow manually to publish a stable release.
+Every release includes `SHA256SUMS`. Verify a downloaded package before installation:
+
+```bash
+shasum -a 256 -c SHA256SUMS --ignore-missing
+```
+
+Checksums detect incomplete or modified downloads; they do not replace platform code signing. See the [release workflow guide](docs/releases.md) for credentials, triggers, build targets, and verification requirements.
+
+Code pushes to `master` build all platforms and update the Rolling prerelease. Push a stable version tag or run the Release workflow manually to publish a stable release. Stable tags use `x.y.z`; numeric revision releases may use SemVer-compatible `x.y.z-N`, such as `2.26.9-1`.
 
 ## Build from source
 
