@@ -29,6 +29,14 @@ import { initAppQuitLifecycle } from './resolve/appLifecycle'
 import { showNotification } from './utils/notification'
 import { appendAppLog } from './utils/log'
 import { migrateLegacyWindowsTasks } from './sys/autoRun'
+import { createPendingKokoroRelayProof } from './kokoro/client'
+import {
+  forwardKokoroCallback,
+  kokoroCallbackRelayPath,
+  startKokoroCallbackRelay,
+  type KokoroCallbackRelay
+} from './resolve/kokoroCallbackRelay'
+import { isKokoroURI } from './kokoro/oauth'
 
 export { setNotQuitDialog } from './resolve/appLifecycle'
 
@@ -136,16 +144,34 @@ function showWindow(): number {
   return 500
 }
 
-// A secondary process must hand off to the instance holding the private verifier
-// before elevation, initialization, or shutdown hooks can alter application state.
+// GPU switches must be applied before app readiness, including while a Windows callback
+// process authenticates the elevated primary instance.
+applyWindowsGpuWorkaround()
+if (syncConfig.disableGPU) app.disableHardwareAcceleration()
+
 const gotTheLock = app.requestSingleInstanceLock()
 if (!gotTheLock) {
   app.quit()
 } else {
-  startPrimaryInstance()
+  const initialDeepLinks = takeInitialDeepLinks(process.argv)
+  const windowsKokoroCallback =
+    process.platform === 'win32' ? initialDeepLinks.find(isKokoroURI) : undefined
+  if (windowsKokoroCallback) {
+    // Windows can isolate Electron's single-instance channel across elevation levels.
+    // Authenticate the original process with the pending state before forwarding the callback.
+    void forwardKokoroCallback(
+      kokoroCallbackRelayPath(app.getPath('userData')),
+      windowsKokoroCallback
+    ).then((forwarded) => {
+      if (forwarded) app.quit()
+      else startPrimaryInstance(initialDeepLinks)
+    })
+  } else {
+    startPrimaryInstance(initialDeepLinks)
+  }
 }
 
-function startPrimaryInstance(): void {
+function startPrimaryInstance(initialDeepLinks: string[]): void {
   let initialized = false
   const inbox = createDeepLinkInbox(
     (url) => handleDeepLink(url, { getMainWindow: () => mainWindow, createWindow, showWindow }),
@@ -162,13 +188,20 @@ function startPrimaryInstance(): void {
     for (const url of takeInitialDeepLinks(commandline)) inbox.receive(url)
     if (initialized) void showMainWindow()
   })
-  for (const url of takeInitialDeepLinks(process.argv)) inbox.receive(url)
+  for (const url of initialDeepLinks) inbox.receive(url)
+
+  let callbackRelay: KokoroCallbackRelay | undefined
+  let quitting = false
+  if (process.platform === 'win32') {
+    app.once('will-quit', () => {
+      quitting = true
+      if (callbackRelay) void callbackRelay.close()
+    })
+  }
 
   ensureWindowsElevatedStartup(syncConfig.corePermissionMode, exitApp)
   useLinuxCustomRelaunch()
-  applyWindowsGpuWorkaround()
   const initPromise = init()
-  if (syncConfig.disableGPU) app.disableHardwareAcceleration()
 
   initAppQuitLifecycle({
     getMainWindow: () => mainWindow,
@@ -183,6 +216,21 @@ function startPrimaryInstance(): void {
   app.whenReady().then(async () => {
     // Set app user model id for windows
     electronApp.setAppUserModelId('com.amamiyakokoro.app')
+    if (process.platform === 'win32') {
+      try {
+        callbackRelay = await startKokoroCallbackRelay(
+          kokoroCallbackRelayPath(app.getPath('userData')),
+          createPendingKokoroRelayProof,
+          inbox.receive
+        )
+        if (quitting) {
+          await callbackRelay.close()
+          return
+        }
+      } catch {
+        void appendAppLog('[App]: Kokoro callback relay unavailable\n')
+      }
+    }
     let appConfig: AppConfig
     try {
       appConfig = await initPromise

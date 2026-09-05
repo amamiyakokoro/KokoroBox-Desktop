@@ -18,6 +18,7 @@ import {
   saveKokoroCredentials,
   type KokoroCredentials
 } from './auth-store'
+import { createKokoroRelayProof } from '../resolve/kokoroCallbackRelay'
 
 export { KOKORO_REDIRECT_URI } from './oauth'
 const ACCESS_EXPIRY_LEEWAY_MS = 60_000
@@ -287,6 +288,21 @@ export function cancelKokoroLogin(): void {
   loginGeneration++
   clearPendingLogin()
   notifyAuthChanged()
+}
+
+export function createPendingKokoroRelayProof(nonce: string): string | null {
+  const pending = pendingLogin
+  if (!pending) return null
+  if (pending.expiresAt <= Date.now()) {
+    clearPendingLogin()
+    notifyAuthChanged()
+    return null
+  }
+  try {
+    return createKokoroRelayProof(pending.state, nonce)
+  } catch {
+    return null
+  }
 }
 
 export async function handleKokoroCallback(value: string): Promise<void> {

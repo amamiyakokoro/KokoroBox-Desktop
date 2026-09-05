@@ -1,10 +1,18 @@
 import assert from 'node:assert/strict'
-import { readFileSync } from 'node:fs'
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs'
+import os from 'node:os'
+import path from 'node:path'
 import { test } from 'node:test'
 import ts from 'typescript'
 import { parse as parseYaml } from 'yaml'
 import * as oauth from '../src/main/kokoro/oauth.ts'
 import { createDeepLinkInbox, takeInitialDeepLinks } from '../src/main/resolve/deepLinkInbox.ts'
+import {
+  createKokoroRelayProof,
+  forwardKokoroCallback,
+  kokoroCallbackRelayPath,
+  startKokoroCallbackRelay
+} from '../src/main/resolve/kokoroCallbackRelay.ts'
 import type { KokoroCredentials } from '../src/main/kokoro/auth-store.ts'
 
 // Exercise the real client module with isolated OS, clock, storage and HTTP boundaries.
@@ -118,6 +126,9 @@ function harness(stored: KokoroCredentials | null = null) {
         deletes++
         stored = null
       }
+    },
+    '../resolve/kokoroCallbackRelay': {
+      createKokoroRelayProof
     }
   }
   const module = { exports: {} }
@@ -208,6 +219,50 @@ test('each attempt creates independent CSPRNG state and verifier and a five-minu
       values.add(value)
     }
   }
+})
+
+test('Windows callback relay authenticates the pending process before forwarding in memory', async () => {
+  const directory = mkdtempSync(path.join(os.tmpdir(), 'kokorobox-relay-test-'))
+  const endpointPath = kokoroCallbackRelayPath(directory)
+  const state = oauth.createPendingLogin().state
+  const callback = `${oauth.KOKORO_REDIRECT_URI}?state=${state}&code=opaque-code`
+  const received: string[] = []
+  const relay = await startKokoroCallbackRelay(
+    endpointPath,
+    (nonce) => createKokoroRelayProof(state, nonce),
+    (value) => received.push(value)
+  )
+  try {
+    assert.doesNotMatch(readFileSync(endpointPath, 'utf8'), /opaque-code|state/)
+    assert.equal(await forwardKokoroCallback(endpointPath, callback), true)
+    assert.deepEqual(received, [callback])
+    assert.equal(
+      await forwardKokoroCallback(
+        endpointPath,
+        `${oauth.KOKORO_REDIRECT_URI}?state=unknown&code=must-not-forward`
+      ),
+      false
+    )
+    assert.deepEqual(received, [callback])
+    assert.equal(await forwardKokoroCallback(endpointPath, 'kokoro://evil/callback'), false)
+  } finally {
+    await relay.close()
+    rmSync(directory, { recursive: true, force: true })
+  }
+  assert.equal(await forwardKokoroCallback(endpointPath, callback), false)
+})
+
+test('callback relay proof exists only for the current unexpired pending login', async () => {
+  const h = harness()
+  const nonce = 'a'.repeat(43)
+  assert.equal(h.client.createPendingKokoroRelayProof(nonce), null)
+  await h.client.startKokoroLogin()
+  assert.equal(
+    h.client.createPendingKokoroRelayProof(nonce),
+    createKokoroRelayProof(h.pending.state, nonce)
+  )
+  h.expire()
+  assert.equal(h.client.createPendingKokoroRelayProof(nonce), null)
 })
 
 test('system browser login URL and code exchange body use the same verifier and redirect', async () => {
