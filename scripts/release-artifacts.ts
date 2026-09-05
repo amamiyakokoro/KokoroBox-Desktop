@@ -70,7 +70,7 @@ export function targetId(target: Target): string {
 
 export function artifactName(target: Target, version: string): string {
   targetId(target)
-  if (!/^\d+\.\d+\.\d+(-rolling-[0-9a-f]{7})?$/.test(version))
+  if (!/^\d+\.\d+\.\d+(?:-\d+|-rolling-[0-9a-f]{7})?$/.test(version))
     throw new Error('Invalid artifact version')
   const prefix = `kokorobox-desktop-${target.os.split('-')[0]}-${version}`
   if (target.os === 'windows-latest')

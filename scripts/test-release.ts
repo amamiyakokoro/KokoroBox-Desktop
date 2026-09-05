@@ -21,7 +21,7 @@ import {
   stageArtifact,
   targetId
 } from './release-artifacts.ts'
-import { normalizeVersion, planRelease } from './release-plan.ts'
+import { compareVersions, normalizeVersion, planRelease } from './release-plan.ts'
 
 const sha = '1234567890abcdef1234567890abcdef12345678'
 const base = { packageVersion: '2.26.8', sha }
@@ -35,6 +35,10 @@ test('stable tag pushes preserve their exact v-prefixed or unprefixed tag', () =
       tag
     })
   }
+  assert.deepEqual(
+    planRelease({ ...base, packageVersion: '2.26.9-1', event: 'push', refName: '2.26.9-1' }),
+    { should_release: true, version: '2.26.9-1', tag: '2.26.9-1' }
+  )
 })
 
 test('manual releases default to package version and reject mismatched or unsafe tags', () => {
@@ -43,6 +47,9 @@ test('manual releases default to package version and reject mismatched or unsafe
     planRelease({ ...base, event: 'workflow_dispatch', inputVersion: 'v2.27.0' }).version,
     '2.27.0'
   )
+  assert.equal(normalizeVersion('v2.26.9-1'), '2.26.9-1')
+  assert.ok(compareVersions('2.26.9-2', '2.26.9-1') > 0)
+  assert.ok(compareVersions('2.26.9', '2.26.9-2') > 0)
   for (const inputTag of ['rolling', 'v2.26.9', '../2.26.8', '2.26.8\nkey=value']) {
     assert.throws(() => planRelease({ ...base, event: 'workflow_dispatch', inputTag }))
   }
@@ -58,6 +65,10 @@ test('rolling versions use one commit and do not regress behind newer stable tag
     planRelease({ ...base, event: 'rolling', stableTags: ['v2.26.10', 'v2.26.9', 'rolling'] })
       .version,
     '2.26.11-rolling-1234567'
+  )
+  assert.equal(
+    planRelease({ ...base, packageVersion: '2.26.9-1', event: 'rolling' }).version,
+    '2.26.10-rolling-1234567'
   )
 })
 
@@ -82,6 +93,7 @@ test('build matrix exactly matches the 12 required release artifacts', () => {
   assert.deepEqual(build.jobs.build.strategy.matrix.include, releaseTargets)
   assert.equal(new Set(releaseTargets.map(targetId)).size, 12)
   assert.equal(new Set(releaseTargets.map((target) => artifactName(target, '2.26.8'))).size, 12)
+  assert.match(artifactName(releaseTargets[0], '2.26.9-1'), /2\.26\.9-1/)
   assert.deepEqual([...new Set(releaseTargets.map((target) => target.arch))], ['x64', 'arm64'])
   assert.equal(
     artifactName({ os: 'ubuntu-latest', arch: 'arm64', format: 'rpm' }, '2.26.8'),

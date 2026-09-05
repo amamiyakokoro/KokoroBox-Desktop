@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version to release (for example 2.26.8); defaults to package.json'
+        description: 'Version to release (for example 2.26.9-1); defaults to package.json'
         required: false
         type: string
       tag:

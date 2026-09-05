@@ -3,18 +3,33 @@ import { appendFileSync, readFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-const stableVersion = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/
+const stableVersion = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-(0|[1-9]\d*))?$/
+
+function parseStableVersion(value: string) {
+  const version = value.replace(/^v/, '')
+  const match = stableVersion.exec(version)
+  if (!match) throw new Error(`Invalid stable version: ${value}`)
+  return {
+    version,
+    major: Number(match[1]),
+    minor: Number(match[2]),
+    patch: Number(match[3]),
+    revision: match[4] === undefined ? null : Number(match[4])
+  }
+}
 
 export function normalizeVersion(value: string): string {
-  const version = value.replace(/^v/, '')
-  if (!stableVersion.test(version)) throw new Error(`Invalid stable version: ${value}`)
-  return version
+  return parseStableVersion(value).version
 }
 
 export function compareVersions(a: string, b: string): number {
-  const left = normalizeVersion(a).split('.').map(Number)
-  const right = normalizeVersion(b).split('.').map(Number)
-  return left[0] - right[0] || left[1] - right[1] || left[2] - right[2]
+  const left = parseStableVersion(a)
+  const right = parseStableVersion(b)
+  const core = left.major - right.major || left.minor - right.minor || left.patch - right.patch
+  if (core !== 0) return core
+  if (left.revision === null) return right.revision === null ? 0 : 1
+  if (right.revision === null) return -1
+  return left.revision - right.revision
 }
 
 interface PlanOptions {
@@ -40,7 +55,7 @@ export function planRelease(options: PlanOptions) {
       ? normalizeVersion(latestTag)
       : packageVersion
   const nextPatch = (version: string) => {
-    const [major, minor, patch] = version.split('.').map(Number)
+    const { major, minor, patch } = parseStableVersion(version)
     return `${major}.${minor}.${patch + 1}`
   }
 
