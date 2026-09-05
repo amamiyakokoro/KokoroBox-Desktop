@@ -110,7 +110,7 @@ Certificate secrets must contain Base64 data, not URLs or local file paths. Both
 
 The release callers explicitly forward only these seven secrets to the reusable Build workflow. Only the macOS signing step receives their values. Compilation, dependency installation, Windows/Linux builds, and publication do not receive the Apple credentials in their environments.
 
-Signing is restricted to this repository's `master` branch or stable version tags, via push, manual dispatch, or schedule on GitHub-hosted runners. External PRs and arbitrary branch refs are not accepted. Protect `master`, release tags, and workflow changes with appropriate review rules. Repository secrets still require trusting users who can change workflows; consider a protected GitHub environment with required reviewers for stronger release approval controls.
+Signing is restricted to this repository's `master` branch or stable SemVer tags (including numeric revision suffixes such as `2.26.9-1`), via push, manual dispatch, or schedule on GitHub-hosted runners. External PRs, rolling tags and arbitrary branch refs are not accepted. Protect `master`, release tags, and workflow changes with appropriate review rules. Repository secrets still require trusting users who can change workflows; consider a protected GitHub environment with required reviewers for stronger release approval controls.
 
 `scripts/macos-signing.ts`:
 

@@ -59,9 +59,10 @@ export function validateSigningEnvironment(env: NodeJS.ProcessEnv) {
   if (!env.RUNNER_TEMP || !path.isAbsolute(env.RUNNER_TEMP))
     throw new Error('RUNNER_TEMP must be an absolute path')
   if (!env.GITHUB_ENV) throw new Error('GITHUB_ENV is required for cancellation cleanup')
+  const ref = env.GITHUB_REF ?? ''
   const trustedRef =
-    env.GITHUB_REF === 'refs/heads/master' ||
-    /^refs\/tags\/v?\d+\.\d+\.\d+$/.test(env.GITHUB_REF ?? '')
+    ref === 'refs/heads/master' ||
+    (!/[\r\n]/.test(ref) && /^refs\/tags\/v?\d+\.\d+\.\d+(?:-(?:0|[1-9]\d*))?$/.test(ref))
   if (
     env.GITHUB_REPOSITORY !== 'amamiyakokoro/KokoroBox-Desktop' ||
     !trustedRef ||

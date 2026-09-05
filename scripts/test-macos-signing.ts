@@ -127,7 +127,21 @@ test('all seven credentials are required and signing rejects untrusted contexts'
       { APPLE_TEAM_ID: 'wrong' }
     ])
       assert.throws(() => validateSigningEnvironment({ ...env, ...override }))
-    validateSigningEnvironment({ ...env, GITHUB_REF: 'refs/tags/v2.26.8' })
+    for (const ref of [
+      'refs/tags/v2.26.8',
+      'refs/tags/2.26.8',
+      'refs/tags/v2.26.9-1',
+      'refs/tags/2.26.9-1'
+    ])
+      validateSigningEnvironment({ ...env, GITHUB_REF: ref })
+    for (const ref of [
+      'refs/tags/2.26.9-01',
+      'refs/tags/2.26.9-beta',
+      'refs/tags/2.26.9-rolling-1234567',
+      'refs/tags/2.26.9-1/extra',
+      'refs/tags/2.26.9-1\n'
+    ])
+      assert.throws(() => validateSigningEnvironment({ ...env, GITHUB_REF: ref }))
   })
 })
 
