@@ -276,6 +276,8 @@ test('CI macOS config loads through electron-builder and preserves PKG installat
   await validateConfiguration(config)
   assert.equal(config.appId, 'com.amamiyakokoro.app')
   assert.equal(config.productName, 'KokoroBox')
+  assert.equal(config.win.executableName, 'KokoroBox')
+  assert.equal(config.nsis.shortcutName, 'KokoroBox')
   assert.deepEqual(config.mac.target, ['pkg'])
   assert.equal(config.mac.identity, null)
   assert.equal(config.mac.notarize, false)

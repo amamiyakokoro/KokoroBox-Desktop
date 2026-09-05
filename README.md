@@ -60,6 +60,7 @@ Code pushes to `master` build all platforms and update the Rolling prerelease. P
 - Node.js 22.12 or later; an LTS release is recommended
 - pnpm 11
 - A recent Git release
+- Go 1.23 or later when preparing Windows packages (builds the KokoroBox elevation runner)
 
 Clone the repository and install its dependencies:
 

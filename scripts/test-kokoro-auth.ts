@@ -558,6 +558,45 @@ test('packaging registers the shared scheme and startup handoff precedes elevati
   assert.match(main, /event\.preventDefault\(\)/)
 })
 
+test('Windows packaging uses KokoroBox names and migrates legacy Sparkle tasks', () => {
+  const metadata = JSON.parse(readFileSync('package.json', 'utf8'))
+  const config = parseYaml(readFileSync('electron-builder.yml', 'utf8'))
+  assert.equal(metadata.author.name, 'KokoroBox contributors')
+  assert.equal(config.productName, 'KokoroBox')
+  assert.equal(config.win.executableName, 'KokoroBox')
+  assert.equal(config.nsis.shortcutName, 'KokoroBox')
+
+  const prepare = readFileSync('scripts/prepare.ts', 'utf8')
+  assert.match(prepare, /file[sS]?,?\s*['"]kokorobox-run\.exe|kokorobox-run\.exe/)
+  assert.match(prepare, /go['"],\s*\[?['"]build|execFileSync\(\s*['"]go['"]/)
+  assert.doesNotMatch(prepare, /sparkle-run\/releases\/download\/\$\{arch\}\/sparkle-run\.exe/)
+
+  const runner = readFileSync('build/windows/runner/main.go', 'utf8')
+  assert.match(runner, /KokoroBox Runner/)
+  assert.doesNotMatch(runner, /Sparkle Runner/)
+  assert.match(runner, /clash:\/\//)
+  assert.doesNotMatch(runner, /kokoro:\/\//)
+
+  const misc = readFileSync('src/main/sys/misc.ts', 'utf8')
+  assert.match(misc, /WINDOWS_ELEVATE_TASK_NAME = 'KokoroBox Elevated'/)
+  assert.match(misc, /resourcesFilesDir\(\), WINDOWS_RUNNER_FILENAME/)
+  assert.match(misc, /function elevateTaskXml\(\)/)
+  assert.doesNotMatch(misc, /copyFileSync/)
+
+  const autoRun = readFileSync('src/main/sys/autoRun.ts', 'utf8')
+  assert.match(autoRun, /WINDOWS_AUTO_RUN_TASK_NAME = 'KokoroBox'/)
+  assert.match(autoRun, /function taskXml\(\)/)
+  assert.match(autoRun, /migrateLegacyWindowsTasks/)
+  assert.match(autoRun, /LEGACY_WINDOWS_AUTO_RUN_TASK_NAME/)
+  assert.doesNotMatch(autoRun, /<Command>.*sparkle-run\.exe/)
+
+  const startup = readFileSync('src/main/sys/startup.ts', 'utf8')
+  assert.doesNotMatch(startup, /\/run['"], ['"]\/tn['"], ['"]sparkle-run/)
+
+  const workflow = readFileSync('.github/workflows/build.yml', 'utf8')
+  assert.match(workflow, /Setup Go for KokoroBox Runner/)
+})
+
 test('secure storage writes one encrypted record and never deletes the old record before rename', async () => {
   const storeSource = ts.transpileModule(readFileSync('src/main/kokoro/auth-store.ts', 'utf8'), {
     compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 }

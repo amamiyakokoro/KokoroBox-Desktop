@@ -29,12 +29,14 @@ protocols:
     - 'sparkle'
     - 'kokoro'
 win:
+  executableName: KokoroBox
   target:
     - nsis
     - 7z
   artifactName: ${name}-windows-${version}-${arch}-portable.${ext}
 nsis:
   artifactName: ${name}-windows-${version}-${arch}-setup.${ext}
+  shortcutName: KokoroBox
   uninstallDisplayName: ${productName}
   allowToChangeInstallationDirectory: true
   oneClick: false

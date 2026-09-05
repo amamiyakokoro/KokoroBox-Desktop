@@ -28,6 +28,7 @@ import { createDeepLinkInbox, takeInitialDeepLinks } from './resolve/deepLinkInb
 import { initAppQuitLifecycle } from './resolve/appLifecycle'
 import { showNotification } from './utils/notification'
 import { appendAppLog } from './utils/log'
+import { migrateLegacyWindowsTasks } from './sys/autoRun'
 
 export { setNotQuitDialog } from './resolve/appLifecycle'
 
@@ -199,6 +200,7 @@ function startPrimaryInstance(): void {
     })
     const { showFloatingWindow: showFloating = false, disableTray = false } = appConfig
     registerIpcMainHandlers()
+    runStartupTask('Windows scheduled task migration', migrateLegacyWindowsTasks())
 
     const createWindowPromise = createWindow(appConfig)
 

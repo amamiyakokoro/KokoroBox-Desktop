@@ -1,13 +1,24 @@
 import { tr } from '../../shared/i18n'
 import { is } from '@electron-toolkit/utils'
 import { app } from 'electron'
-import { execSync, spawn } from 'child_process'
-import { existsSync, writeFileSync } from 'fs'
+import { execFileSync, spawn } from 'child_process'
+import { writeFileSync } from 'fs'
 import iconv from 'iconv-lite'
 import path from 'path'
 import { exePath, taskDir } from '../utils/dirs'
-import { createElevateTaskSync } from './misc'
+import {
+  checkElevateTaskSync,
+  createElevateTaskSync,
+  createElevateTaskWithPromptSync,
+  WINDOWS_ELEVATE_TASK_NAME,
+  WINDOWS_RUNNER_PARAMS_FILENAME
+} from './misc'
 import { showNotification } from '../utils/notification'
+import { isRunningAsAdmin } from '@uruhalushia/sparkle-native'
+
+function safeRunnerArguments(argv: string[]): string[] {
+  return argv.filter((value) => value.length <= 8192 && /^(clash|mihomo|sparkle):\/\//i.test(value))
+}
 
 export function ensureWindowsElevatedStartup(
   corePermissionMode: string | undefined,
@@ -22,35 +33,54 @@ export function ensureWindowsElevatedStartup(
     return
   }
 
+  let runningAsAdmin = false
   try {
-    createElevateTaskSync()
-  } catch (createError) {
+    runningAsAdmin = isRunningAsAdmin()
+  } catch {
+    // Treat an unavailable native check as a normal unelevated launch.
+  }
+
+  if (runningAsAdmin) {
     try {
-      writeFileSync(
-        path.join(taskDir(), 'param.txt'),
-        process.argv.slice(1).length > 0 ? process.argv.slice(1).join(' ') : 'empty'
-      )
-      if (!existsSync(path.join(taskDir(), 'sparkle-run.exe'))) {
-        throw new Error('sparkle-run.exe not found')
-      }
-      execSync('%SystemRoot%\\System32\\schtasks.exe /run /tn sparkle-run')
+      createElevateTaskSync()
     } catch (error) {
-      let createErrorStr = `${createError}`
       let errorStr = `${error}`
       try {
-        createErrorStr = iconv.decode((createError as { stderr: Buffer }).stderr, 'gbk')
         errorStr = iconv.decode((error as { stderr: Buffer }).stderr, 'gbk')
       } catch {
         // ignore
       }
       void showNotification({
         title: tr('首次启动请以管理员权限运行'),
-        body: tr('首次启动请以管理员权限运行\n{0}\n{1}', [createErrorStr, errorStr]),
+        body: errorStr,
         variant: 'danger'
       })
-    } finally {
       exitApp()
     }
+    return
+  }
+
+  try {
+    writeFileSync(
+      path.join(taskDir(), WINDOWS_RUNNER_PARAMS_FILENAME),
+      JSON.stringify(safeRunnerArguments(process.argv.slice(1)))
+    )
+    if (!checkElevateTaskSync()) createElevateTaskWithPromptSync()
+    execFileSync('schtasks.exe', ['/run', '/tn', WINDOWS_ELEVATE_TASK_NAME])
+  } catch (error) {
+    let errorStr = `${error}`
+    try {
+      errorStr = iconv.decode((error as { stderr: Buffer }).stderr, 'gbk')
+    } catch {
+      // ignore
+    }
+    void showNotification({
+      title: tr('首次启动请以管理员权限运行'),
+      body: errorStr,
+      variant: 'danger'
+    })
+  } finally {
+    exitApp()
   }
 }
 

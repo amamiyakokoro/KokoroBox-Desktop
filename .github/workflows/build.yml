@@ -122,6 +122,13 @@ jobs:
         with:
           node-version: 24
 
+      - name: Setup Go for KokoroBox Runner
+        if: matrix.os == 'windows-latest'
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: build/windows/runner/go.mod
+          cache: false
+
       - name: Setup pnpm
         run: npm install -g pnpm@11.1.1
 

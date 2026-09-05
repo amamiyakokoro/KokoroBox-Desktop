@@ -84,6 +84,8 @@ node --import tsx --test scripts/test-release.ts scripts/test-macos-signing.ts s
 
 Windows CI packages are currently **not Authenticode-signed**. SignPath signing must be configured after project approval; this workflow does not claim Foundation sponsorship or signed Windows releases.
 
+Windows packages build the small elevation runner from the reviewed Go source in `build/windows/runner`; release builds never download the legacy Sparkle-branded runner. The installed executable, shortcuts, auto-start task, and elevation task use KokoroBox names. On the first upgraded launch, the app migrates an enabled legacy `sparkle` auto-start task to `KokoroBox` and removes obsolete scheduled tasks and runner files. Internal data, service, IPC, and legacy URI identifiers retain their Sparkle names where changing them would break existing installations or the bundled service protocol.
+
 Both Intel and Apple Silicon macOS releases require **Developer ID-signed, Apple-notarized PKGs with stapled tickets**. There is no unsigned fallback in either Stable or Rolling releases. The upstream PKG installation scripts remain enabled for proxy/service operation.
 
 `electron-builder.ci.yml` is retained only for unsigned local smoke tests; release workflows no longer use it. The normal `electron-builder.yml` remains available for local production signing.

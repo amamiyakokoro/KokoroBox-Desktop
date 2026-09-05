@@ -3,7 +3,7 @@ import AdmZip from 'adm-zip'
 import path from 'path'
 import zlib from 'zlib'
 import { extract } from 'tar'
-import { execSync } from 'child_process'
+import { execFileSync, execSync } from 'child_process'
 import { systemCoreOnlyBuild } from './build-env.ts'
 
 const cwd = process.cwd()
@@ -330,11 +330,25 @@ const resolveSparkleService = () => {
     needExecutable: true
   })
 }
-const resolveRunner = () =>
-  resolveResource({
-    file: 'sparkle-run.exe',
-    downloadURL: `https://github.com/xishang0128/sparkle-run/releases/download/${arch}/sparkle-run.exe`
+const resolveRunner = async () => {
+  const goArch = { x64: 'amd64', ia32: '386', arm64: 'arm64' }[arch]
+  if (!goArch) throw new Error(`unsupported KokoroBox runner architecture "${arch}"`)
+  const outputDir = path.join(cwd, 'extra', 'files')
+  const output = path.join(outputDir, 'kokorobox-run.exe')
+  fs.mkdirSync(outputDir, { recursive: true })
+  if (fs.existsSync(output)) fs.rmSync(output)
+  execFileSync('go', ['build', '-trimpath', '-ldflags', '-s -w -H windowsgui', '-o', output, '.'], {
+    cwd: path.join(cwd, 'build', 'windows', 'runner'),
+    env: {
+      ...process.env,
+      GOOS: 'windows',
+      GOARCH: goArch,
+      ...(goArch === 'amd64' ? { GOAMD64: 'v1' } : {})
+    },
+    stdio: 'inherit'
   })
+  console.log(`[INFO]: KokoroBox runner built for ${arch}`)
+}
 
 const resolveMonitor = async () => {
   const tempDir = path.join(TEMP_DIR, 'TrafficMonitor')
