@@ -57,6 +57,7 @@ mac:
   notarize: true
   artifactName: ${name}-macos-${version}-${arch}.${ext}
 pkg:
+  installLocation: /Applications
   allowAnywhere: false
   allowCurrentUserHome: false
   # background:
