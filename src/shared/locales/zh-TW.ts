@@ -1,6 +1,9 @@
 // Traditional Chinese (Taiwan). Keys are the Simplified Chinese source messages.
 export const messages: Readonly<Record<string, string>> = {
   应用分流: '程式分流',
+  应用程序: '應用程式',
+  上游: '上游',
+  操作: '操作',
   'Windows 应用程序': 'Windows 應用程式',
   选择应用程序: '選擇應用程式',
   'Windows 应用程序分流': 'Windows 應用程式分流',

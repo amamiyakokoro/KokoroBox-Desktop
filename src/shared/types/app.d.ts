@@ -158,9 +158,20 @@ interface AppRoutingRule {
   id: string
   executablePath: string
   processName: string
+  displayName: string
+  iconCacheKey?: string
   action: AppRoutingAction
   protocol: AppRoutingProtocol
   enabled: boolean
+  priority: number
+}
+
+interface AppRoutingApplicationSelection {
+  executablePath: string
+  processName: string
+  displayName: string
+  iconCacheKey?: string
+  iconDataUrl?: string
 }
 
 interface AppRoutingConfig {

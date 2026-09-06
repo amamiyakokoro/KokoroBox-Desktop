@@ -15,6 +15,7 @@ $SourceRoot = Join-Path $BuildRoot "source"
 $ArchivePath = Join-Path $BuildRoot "windivert.zip"
 $WinDivertRoot = Join-Path $BuildRoot "windivert/WinDivert-2.2.2-A"
 $PatchPath = Join-Path $RepositoryRoot "build/proxybridge/fail-closed.patch"
+$RouterSource = Join-Path $RepositoryRoot "build/proxybridge/kokorobox_process_router.c"
 
 if (Test-Path $BuildRoot) { Remove-Item $BuildRoot -Recurse -Force }
 New-Item -ItemType Directory -Path $BuildRoot -Force | Out-Null
@@ -48,27 +49,26 @@ $Sources = @(
     "src\pb_conntrack.c", "src\pb_relay.c"
 ) -join " "
 $CoreOutput = Join-Path $Destination "ProxyBridgeCore.dll"
-$CliOutput = Join-Path $Destination "ProxyBridge_CLI.exe"
+$CoreImportLibrary = Join-Path $BuildRoot "ProxyBridgeCore.lib"
+$RouterOutput = Join-Path $Destination "kokorobox-process-router.exe"
 
 $CoreArgs = "/nologo /O2 /GL /Gy /W4 /wd4100 /wd4189 /wd4267 /wd4244 /wd4996 " +
     "/D_CRT_SECURE_NO_WARNINGS /D_WINSOCK_DEPRECATED_NO_WARNINGS /DPROXYBRIDGE_EXPORTS /DNDEBUG " +
     "/GS /guard:cf /I`"$WinDivertRoot\include`" $Sources /LD /link /LTCG /OPT:REF /OPT:ICF " +
     "/RELEASE /DYNAMICBASE /HIGHENTROPYVA /NXCOMPAT /guard:cf /LIBPATH:`"$WinDivertRoot\x64`" " +
-    "WinDivert.lib ws2_32.lib iphlpapi.lib /OUT:`"$CoreOutput`""
+    "WinDivert.lib ws2_32.lib iphlpapi.lib /IMPLIB:`"$CoreImportLibrary`" /OUT:`"$CoreOutput`""
 $CoreCommand = "`"$VcVars`" x64 >nul && cd /d `"$WindowsRoot`" && cl.exe $CoreArgs"
 cmd /c $CoreCommand
 if ($LASTEXITCODE -ne 0 -or -not (Test-Path $CoreOutput)) { throw "ProxyBridge core build failed" }
 
-$CliArgs = "/nologo /O2 /GL /Gy /W4 /wd4100 /wd4189 /wd4267 /wd4244 /wd4996 " +
+$RouterArgs = "/nologo /O2 /GL /Gy /W4 /wd4100 /wd4189 /wd4267 /wd4244 /wd4996 " +
     "/D_WINSOCK_DEPRECATED_NO_WARNINGS /D_WIN32_WINNT=0x0601 /DNDEBUG /GS /guard:cf " +
-    "cli\main.c /link /LTCG /OPT:REF /OPT:ICF /RELEASE /DYNAMICBASE /HIGHENTROPYVA /NXCOMPAT " +
-    "/guard:cf /SUBSYSTEM:CONSOLE winhttp.lib shell32.lib advapi32.lib /OUT:`"$CliOutput`""
-$CliCommand = "`"$VcVars`" x64 >nul && cd /d `"$WindowsRoot`" && cl.exe $CliArgs"
-cmd /c $CliCommand
-if ($LASTEXITCODE -ne 0 -or -not (Test-Path $CliOutput)) { throw "ProxyBridge CLI build failed" }
-
-& $CliOutput --version
-if ($LASTEXITCODE -ne 0) { throw "ProxyBridge CLI smoke test failed" }
+    "/I`"$WindowsRoot\src`" `"$RouterSource`" `"$CoreImportLibrary`" /link /LTCG /OPT:REF /OPT:ICF " +
+    "/RELEASE /DYNAMICBASE /HIGHENTROPYVA /NXCOMPAT /guard:cf /SUBSYSTEM:CONSOLE shell32.lib " +
+    "/OUT:`"$RouterOutput`""
+$RouterCommand = "`"$VcVars`" x64 >nul && cd /d `"$WindowsRoot`" && cl.exe $RouterArgs"
+cmd /c $RouterCommand
+if ($LASTEXITCODE -ne 0 -or -not (Test-Path $RouterOutput)) { throw "KokoroBox process router build failed" }
 
 Copy-Item (Join-Path $WinDivertRoot "x64\WinDivert.dll") $Destination -Force
 Copy-Item (Join-Path $WinDivertRoot "x64\WinDivert64.sys") $Destination -Force

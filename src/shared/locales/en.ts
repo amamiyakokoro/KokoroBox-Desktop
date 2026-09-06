@@ -1,6 +1,9 @@
 // English. Keys are the Simplified Chinese source messages.
 export const messages: Readonly<Record<string, string>> = {
   应用分流: 'Application routing',
+  应用程序: 'Application',
+  上游: 'Upstream',
+  操作: 'Controls',
   'Windows 应用程序': 'Windows applications',
   选择应用程序: 'Select applications',
   'Windows 应用程序分流': 'Windows application routing',

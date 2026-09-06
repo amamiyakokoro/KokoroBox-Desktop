@@ -138,8 +138,14 @@ export async function replaceAppRoutingConfig(config: AppRoutingConfig): Promise
   )
 }
 
-export async function getApplicationPaths(): Promise<string[] | undefined> {
+export async function getApplicationPaths(): Promise<AppRoutingApplicationSelection[] | undefined> {
   return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('getApplicationPaths'))
+}
+
+export async function getAppRoutingIcon(iconCacheKey: string): Promise<string | undefined> {
+  return ipcErrorWrapper(
+    await window.electron.ipcRenderer.invoke('getAppRoutingIcon', iconCacheKey)
+  )
 }
 
 export async function getCachedMihomoLogs(): Promise<

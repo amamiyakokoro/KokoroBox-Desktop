@@ -135,8 +135,8 @@ export function appRoutingConfigPath(): string {
   return path.join(appRoutingDir(), 'config.json')
 }
 
-export function appRoutingProfilePath(): string {
-  return path.join(appRoutingDir(), 'kokorobox.pbprofile')
+export function appRoutingIconDir(): string {
+  return path.join(appRoutingDir(), 'icons')
 }
 
 export function proxyBridgeDir(): string {
@@ -144,7 +144,7 @@ export function proxyBridgeDir(): string {
 }
 
 export function proxyBridgePath(): string {
-  return path.join(proxyBridgeDir(), 'ProxyBridge_CLI.exe')
+  return path.join(proxyBridgeDir(), 'kokorobox-process-router.exe')
 }
 
 export function appConfigPath(): string {

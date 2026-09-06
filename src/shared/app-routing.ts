@@ -8,7 +8,8 @@ const reservedProcessNames = new Set([
   'clash-meta.exe',
   'mihomo-windows-amd64.exe',
   'proxybridge_cli.exe',
-  'kokorobox-proxybridge.exe'
+  'kokorobox-proxybridge.exe',
+  'kokorobox-process-router.exe'
 ])
 
 export const defaultAppRoutingConfig: AppRoutingConfig = {
@@ -32,6 +33,9 @@ export function validateAppRoutingRule(rule: AppRoutingRule): void {
     throw new Error('Application routing requires an absolute Windows .exe path')
   }
   const derivedName = executableName(rule.executablePath)
+  if (derivedName.includes('*') || derivedName.includes('?')) {
+    throw new Error('Application routing does not allow process wildcards')
+  }
   if (!derivedName || derivedName.toLowerCase() !== rule.processName.toLowerCase()) {
     throw new Error('Application rule process name does not match its executable path')
   }
@@ -41,6 +45,15 @@ export function validateAppRoutingRule(rule: AppRoutingRule): void {
   if (!validActions.has(rule.action)) throw new Error('Invalid application routing action')
   if (!validProtocols.has(rule.protocol)) throw new Error('Invalid application routing protocol')
   if (typeof rule.enabled !== 'boolean') throw new Error('Invalid application rule state')
+  if (!rule.displayName || rule.displayName.length > 260) {
+    throw new Error('Invalid application display name')
+  }
+  if (rule.iconCacheKey && !/^[a-f0-9]{64}$/.test(rule.iconCacheKey)) {
+    throw new Error('Invalid application icon cache key')
+  }
+  if (!Number.isInteger(rule.priority) || rule.priority < 1 || rule.priority > 256) {
+    throw new Error('Invalid application rule priority')
+  }
 }
 
 export function validateAppRoutingConfig(config: AppRoutingConfig): void {
@@ -52,6 +65,7 @@ export function validateAppRoutingConfig(config: AppRoutingConfig): void {
   }
   const ids = new Set<string>()
   const processNames = new Set<string>()
+  const priorities = new Set<number>()
   for (const rule of config.rules) {
     validateAppRoutingRule(rule)
     const processName = rule.processName.toLowerCase()
@@ -59,8 +73,25 @@ export function validateAppRoutingConfig(config: AppRoutingConfig): void {
     if (processNames.has(processName)) {
       throw new Error(`Only one rule can target ${rule.processName}`)
     }
+    if (priorities.has(rule.priority)) throw new Error('Application rule priorities must be unique')
     ids.add(rule.id)
     processNames.add(processName)
+    priorities.add(rule.priority)
+  }
+}
+
+export function normalizeAppRoutingConfig(config: AppRoutingConfig): AppRoutingConfig {
+  return {
+    ...config,
+    rules: [...config.rules]
+      .sort(
+        (a, b) => (a.priority ?? Number.MAX_SAFE_INTEGER) - (b.priority ?? Number.MAX_SAFE_INTEGER)
+      )
+      .map((rule, index) => ({
+        ...rule,
+        displayName: rule.displayName || rule.processName,
+        priority: index + 1
+      }))
   }
 }
 
@@ -72,54 +103,24 @@ function toProxyBridgeAction(action: AppRoutingAction): 'PROXY' | 'DIRECT' | 'BL
   return action.toUpperCase() as 'PROXY' | 'DIRECT' | 'BLOCK'
 }
 
-export function resolveMihomoSocksPort(config: Partial<MihomoConfig>): number | undefined {
-  for (const candidate of [config['socks-port'], config['mixed-port']]) {
-    if (
-      typeof candidate === 'number' &&
-      Number.isInteger(candidate) &&
-      candidate > 0 &&
-      candidate <= 65535
-    ) {
-      return candidate
-    }
-  }
-  return undefined
-}
-
-export function buildProxyBridgeProfile(config: AppRoutingConfig, proxyPort: number): string {
+export function buildProcessRouterCommand(config: AppRoutingConfig, proxyPort: number): string {
   validateAppRoutingConfig(config)
   if (!Number.isInteger(proxyPort) || proxyPort < 1 || proxyPort > 65535) {
     throw new Error('A valid local Mihomo SOCKS5 port is required')
   }
 
-  return JSON.stringify(
-    {
-      Version: '1.0',
-      LocalhostViaProxy: false,
-      IsTrafficLoggingEnabled: false,
-      ProxyConfigs: [
-        {
-          Id: 1,
-          Type: 'socks5',
-          Host: '127.0.0.1',
-          Port: String(proxyPort),
-          Username: '',
-          Password: '',
-          SendDomainToProxy: true
-        }
-      ],
-      ProxyRules: config.rules.map((rule) => ({
-        ProcessName: rule.processName,
-        TargetHosts: '*',
-        TargetPorts: '*',
-        TargetDomains: '*',
-        Protocol: toProxyBridgeProtocol(rule.protocol),
-        Action: toProxyBridgeAction(rule.action),
-        IsEnabled: rule.enabled,
-        ProxyConfigId: rule.action === 'proxy' ? 1 : 0
+  return JSON.stringify({
+    version: 1,
+    command: 'replace_rules',
+    proxy: { host: '127.0.0.1', port: proxyPort },
+    rules: [...config.rules]
+      .sort((a, b) => a.priority - b.priority)
+      .map((rule) => ({
+        processName: rule.processName,
+        protocol: toProxyBridgeProtocol(rule.protocol),
+        action: toProxyBridgeAction(rule.action),
+        enabled: rule.enabled,
+        priority: rule.priority
       }))
-    },
-    null,
-    2
-  )
+  })
 }

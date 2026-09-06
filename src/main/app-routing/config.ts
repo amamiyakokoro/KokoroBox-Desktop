@@ -1,7 +1,12 @@
-import { copyFile, mkdir, readFile, rename, unlink, writeFile } from 'fs/promises'
+import { copyFile, mkdir, readFile, readdir, rename, unlink, writeFile } from 'fs/promises'
 import { existsSync } from 'fs'
-import { defaultAppRoutingConfig, validateAppRoutingConfig } from '../../shared/app-routing'
-import { appRoutingConfigPath, appRoutingDir } from '../utils/dirs'
+import path from 'path'
+import {
+  defaultAppRoutingConfig,
+  normalizeAppRoutingConfig,
+  validateAppRoutingConfig
+} from '../../shared/app-routing'
+import { appRoutingConfigPath, appRoutingDir, appRoutingIconDir } from '../utils/dirs'
 
 let cachedConfig: AppRoutingConfig | undefined
 let writePromise: Promise<void> = Promise.resolve()
@@ -12,8 +17,16 @@ function cloneDefault(): AppRoutingConfig {
 
 async function readValidatedConfig(filePath: string): Promise<AppRoutingConfig> {
   const parsed = JSON.parse(await readFile(filePath, 'utf8')) as AppRoutingConfig
-  validateAppRoutingConfig(parsed)
-  return parsed
+  const migrated = normalizeAppRoutingConfig({
+    ...parsed,
+    rules: parsed.rules.map((rule, index) => ({
+      ...rule,
+      displayName: rule.displayName || rule.processName,
+      priority: rule.priority || index + 1
+    }))
+  })
+  validateAppRoutingConfig(migrated)
+  return migrated
 }
 
 export async function getAppRoutingConfig(force = false): Promise<AppRoutingConfig> {
@@ -32,8 +45,8 @@ export async function getAppRoutingConfig(force = false): Promise<AppRoutingConf
 }
 
 export async function saveAppRoutingConfig(config: AppRoutingConfig): Promise<AppRoutingConfig> {
-  validateAppRoutingConfig(config)
-  const next = structuredClone(config)
+  const next = normalizeAppRoutingConfig(structuredClone(config))
+  validateAppRoutingConfig(next)
   const previous = writePromise
   const current = (async (): Promise<void> => {
     await previous
@@ -47,6 +60,14 @@ export async function saveAppRoutingConfig(config: AppRoutingConfig): Promise<Ap
     }
     await rename(temporaryPath, appRoutingConfigPath())
     cachedConfig = next
+    const activeIcons = new Set(
+      next.rules.flatMap((rule) => (rule.iconCacheKey ? [`${rule.iconCacheKey}.png`] : []))
+    )
+    for (const file of await readdir(appRoutingIconDir()).catch(() => [] as string[])) {
+      if (/^[a-f0-9]{64}\.png$/.test(file) && !activeIcons.has(file)) {
+        await unlink(path.join(appRoutingIconDir(), file)).catch(() => {})
+      }
+    }
   })()
   writePromise = current.catch(() => {})
   await current

@@ -375,6 +375,42 @@ export const getCoreStatus = async (): Promise<Record<string, unknown>> => {
   return await instance.get('/core')
 }
 
+export interface ServiceProcessRouterRules {
+  version: 1
+  proxy_port: number
+  rules: Array<{
+    process_name: string
+    protocol: AppRoutingProtocol
+    action: AppRoutingAction
+    enabled: boolean
+    priority: number
+  }>
+}
+
+// These calls define the authenticated service boundary required by application routing.
+// The bundled service must advertise and implement them before service mode is enabled.
+export const startProcessRouter = async (): Promise<Record<string, unknown>> => {
+  return await getServiceAxios().post('/process-router/start')
+}
+
+export const stopProcessRouter = async (): Promise<void> => {
+  await getServiceAxios().post('/process-router/stop')
+}
+
+export const replaceProcessRouterRules = async (
+  payload: ServiceProcessRouterRules
+): Promise<Record<string, unknown>> => {
+  return await getServiceAxios().put('/process-router/rules', payload)
+}
+
+export const getProcessRouterStatus = async (): Promise<Record<string, unknown>> => {
+  return await getServiceAxios().get('/process-router/status')
+}
+
+export const cleanupProcessRouter = async (): Promise<void> => {
+  await getServiceAxios().post('/process-router/cleanup')
+}
+
 export interface ServiceCoreLaunchProfile {
   core_path?: string
   args?: string[]

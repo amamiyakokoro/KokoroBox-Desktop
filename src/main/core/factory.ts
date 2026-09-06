@@ -21,6 +21,9 @@ import { deepMerge } from '../utils/merge'
 import vm from 'vm'
 import { existsSync, writeFileSync } from 'fs'
 import path from 'path'
+import { getAppRoutingConfig } from '../app-routing/config'
+import { applyAppRoutingListener } from '../app-routing/profile'
+import { appRoutingSupported } from '../../shared/app-routing'
 
 let runtimeConfigStr: string,
   rawProfileStr: string,
@@ -29,10 +32,11 @@ let runtimeConfigStr: string,
   runtimeConfig: MihomoConfig
 
 export async function generateProfile(): Promise<void> {
-  const [profileConfig, appConfig, controledMihomoConfig] = await Promise.all([
+  const [profileConfig, appConfig, controledMihomoConfig, appRoutingConfig] = await Promise.all([
     getProfileConfig(),
     getAppConfig(),
-    getControledMihomoConfig()
+    getControledMihomoConfig(),
+    getAppRoutingConfig()
   ])
   const { current } = profileConfig
   const { diffWorkDir = false, controlDns = true, controlSniff = true } = appConfig
@@ -54,6 +58,13 @@ export async function generateProfile(): Promise<void> {
   }
 
   const profile = deepMerge(JSON.parse(JSON.stringify(currentProfile)), configToMerge)
+
+  applyAppRoutingListener(
+    profile,
+    appRoutingConfig.enabled &&
+      appConfig.corePermissionMode !== 'service' &&
+      appRoutingSupported(process.platform, process.arch)
+  )
 
   await cleanProfile(profile, controlDns, controlSniff)
 

@@ -1,29 +1,24 @@
 import { BrowserWindow } from 'electron'
 import { existsSync } from 'fs'
-import { mkdir, rename, unlink, writeFile } from 'fs/promises'
-import { Socket } from 'net'
 import { spawn, type ChildProcess } from 'child_process'
 import {
   appRoutingSupported,
-  buildProxyBridgeProfile,
-  resolveMihomoSocksPort,
+  buildProcessRouterCommand,
   validateAppRoutingConfig
 } from '../../shared/app-routing'
 import { getAppConfig } from '../config/app'
-import { getControledMihomoConfig } from '../config/controledMihomo'
 import { appendAppLog } from '../utils/log'
-import {
-  appRoutingDir,
-  appRoutingProfilePath,
-  proxyBridgeDir,
-  proxyBridgePath
-} from '../utils/dirs'
+import { proxyBridgeDir, proxyBridgePath } from '../utils/dirs'
 import { getAppRoutingConfig, saveAppRoutingConfig } from './config'
+import { appRoutingSocksPort } from './profile'
+import { prepareAppRoutingConfig } from './rules'
+import { canConnectToAppRoutingListener } from './health'
 
 const probeIntervalMs = 3000
 const restartDelayMs = 1500
 let child: ChildProcess | undefined
 let activePort: number | undefined
+let rulesApplied = false
 let monitor: NodeJS.Timeout | undefined
 let restartTimer: NodeJS.Timeout | undefined
 let stopping = false
@@ -44,34 +39,14 @@ function publishStatus(next: AppRoutingStatus): void {
   }
 }
 
-async function canConnect(port: number): Promise<boolean> {
-  return new Promise((resolve) => {
-    const socket = new Socket()
-    const finish = (available: boolean): void => {
-      socket.destroy()
-      resolve(available)
-    }
-    socket.setTimeout(700)
-    socket.once('connect', () => finish(true))
-    socket.once('timeout', () => finish(false))
-    socket.once('error', () => finish(false))
-    socket.connect(port, '127.0.0.1')
-  })
-}
-
-async function writeProfile(config: AppRoutingConfig, port: number): Promise<void> {
-  await mkdir(appRoutingDir(), { recursive: true })
-  const temporaryPath = `${appRoutingProfilePath()}.tmp`
-  await writeFile(temporaryPath, `${buildProxyBridgeProfile(config, port)}\n`, 'utf8')
-  if (process.platform === 'win32' && existsSync(appRoutingProfilePath())) {
-    await unlink(appRoutingProfilePath())
-  }
-  await rename(temporaryPath, appRoutingProfilePath())
-}
-
 function clearRestartTimer(): void {
   if (restartTimer) clearTimeout(restartTimer)
   restartTimer = undefined
+}
+
+function sendRouterCommand(target: ChildProcess, command: string): void {
+  if (!target.stdin?.writable) throw new Error('Packet interception control channel is unavailable')
+  target.stdin.write(`${command}\n`)
 }
 
 async function stopChild(): Promise<void> {
@@ -81,9 +56,13 @@ async function stopChild(): Promise<void> {
     child = undefined
     activePort = undefined
     activeGeneration = -1
+    rulesApplied = false
     return
   }
   expectedExits.add(runningChild)
+  if (runningChild.stdin?.writable) {
+    sendRouterCommand(runningChild, '{"version":1,"command":"shutdown"}')
+  }
   await new Promise<void>((resolve, reject) => {
     const timeout = setTimeout(
       () => reject(new Error('Timed out while stopping the packet interception sidecar')),
@@ -93,14 +72,14 @@ async function stopChild(): Promise<void> {
       clearTimeout(timeout)
       resolve()
     })
-    if (!runningChild.kill()) {
-      clearTimeout(timeout)
-      reject(new Error('Unable to stop the packet interception sidecar'))
-    }
+    setTimeout(() => {
+      if (runningChild.exitCode === null) runningChild.kill()
+    }, 500).unref()
   })
   if (child === runningChild) child = undefined
   activePort = undefined
   activeGeneration = -1
+  rulesApplied = false
 }
 
 async function startChild(
@@ -108,25 +87,51 @@ async function startChild(
   port: number,
   requiresMihomo: boolean
 ): Promise<void> {
-  await writeProfile(config, port)
   publishStatus({
     supported: true,
     state: 'starting',
     proxyPort: requiresMihomo ? port : undefined,
-    mihomoAvailable: requiresMihomo ? await canConnect(port) : false
+    mihomoAvailable: requiresMihomo ? await canConnectToAppRoutingListener(port) : false
   })
   const executable = proxyBridgePath()
-  const nextChild = spawn(executable, ['--profile', appRoutingProfilePath(), '--verbose', '0'], {
+  const nextChild = spawn(executable, [], {
     cwd: proxyBridgeDir(),
     windowsHide: true,
     shell: false,
-    stdio: ['ignore', 'pipe', 'pipe']
+    stdio: ['pipe', 'pipe', 'pipe']
   })
   child = nextChild
+  rulesApplied = false
   activePort = port
   activeGeneration = configGeneration
-  nextChild.stdout?.resume()
-  nextChild.stderr?.resume()
+  let outputBuffer = ''
+  nextChild.stdout?.setEncoding('utf8')
+  nextChild.stdout?.on('data', (chunk: string) => {
+    outputBuffer += chunk
+    const lines = outputBuffer.split('\n')
+    outputBuffer = lines.pop() || ''
+    for (const line of lines) {
+      if (!line.trim()) continue
+      try {
+        const event = JSON.parse(line) as { version?: number; event?: string; message?: string }
+        if (event.version !== 1) continue
+        if (event.event === 'rules_replaced') {
+          rulesApplied = true
+          void reconcileAppRouting()
+        }
+        if (event.event === 'error') {
+          rulesApplied = false
+          void appendAppLog(`[App routing]: router command failed, ${event.message || 'unknown'}\n`)
+        }
+      } catch {
+        void appendAppLog('[App routing]: ignored malformed router output\n')
+      }
+    }
+  })
+  nextChild.stderr?.setEncoding('utf8')
+  nextChild.stderr?.on('data', (chunk: string) => {
+    void appendAppLog(`[App routing]: router error, ${chunk.slice(0, 1000)}\n`)
+  })
   let terminationHandled = false
   const handleTermination = (message: string): void => {
     if (terminationHandled) return
@@ -151,6 +156,10 @@ async function startChild(
   nextChild.once('exit', () => {
     handleTermination('封包拦截组件意外停止，正在重试')
   })
+  nextChild.stdin?.on('error', () => {
+    if (nextChild.exitCode === null) nextChild.kill()
+  })
+  sendRouterCommand(nextChild, buildProcessRouterCommand(config, port))
 }
 
 async function reconcile(): Promise<void> {
@@ -193,33 +202,25 @@ async function reconcile(): Promise<void> {
     return
   }
   const requiresMihomo = enabledRules.some((rule) => rule.action === 'proxy')
-  const configuredProxyPort = resolveMihomoSocksPort(await getControledMihomoConfig())
-  if (requiresMihomo && !configuredProxyPort) {
-    await stopChild()
-    publishStatus({
-      supported: true,
-      state: 'error',
-      message: '请先启用本机 Mihomo SOCKS 或 mixed 监听端口',
-      mihomoAvailable: false
-    })
-    return
-  }
-  // ProxyBridge requires one syntactically valid proxy config even when every active rule is
-  // Direct or Block. Port 1 is an unreachable placeholder and is never referenced in that case.
-  const proxyPort = requiresMihomo ? configuredProxyPort! : 1
-  if (
-    !child ||
-    child.exitCode !== null ||
-    activePort !== proxyPort ||
-    activeGeneration !== configGeneration
-  ) {
+  const proxyPort = appRoutingSocksPort
+  if (!child || child.exitCode !== null || activePort !== proxyPort) {
     await stopChild()
     await startChild(config, proxyPort, requiresMihomo)
+  } else if (activeGeneration !== configGeneration) {
+    rulesApplied = false
+    publishStatus({
+      supported: true,
+      state: 'starting',
+      proxyPort: requiresMihomo ? proxyPort : undefined,
+      mihomoAvailable: requiresMihomo ? await canConnectToAppRoutingListener(proxyPort) : false
+    })
+    sendRouterCommand(child, buildProcessRouterCommand(config, proxyPort))
+    activeGeneration = configGeneration
   }
-  const mihomoAvailable = requiresMihomo ? await canConnect(proxyPort) : false
+  const mihomoAvailable = requiresMihomo ? await canConnectToAppRoutingListener(proxyPort) : false
   publishStatus({
     supported: true,
-    state: !requiresMihomo || mihomoAvailable ? 'running' : 'degraded',
+    state: !rulesApplied ? 'starting' : !requiresMihomo || mihomoAvailable ? 'running' : 'degraded',
     message:
       !requiresMihomo || mihomoAvailable
         ? undefined
@@ -252,7 +253,7 @@ export async function initializeAppRouting(): Promise<void> {
 }
 
 export async function replaceAppRoutingConfig(config: AppRoutingConfig): Promise<AppRoutingConfig> {
-  const saved = await saveAppRoutingConfig(config)
+  const saved = await saveAppRoutingConfig(await prepareAppRoutingConfig(config))
   configGeneration++
   await reconcileAppRouting()
   return saved

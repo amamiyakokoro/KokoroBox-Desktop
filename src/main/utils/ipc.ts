@@ -68,7 +68,6 @@ import {
   checkElevateTask,
   deleteElevateTask,
   getFilePath,
-  getApplicationPaths,
   openFile,
   openUWPTool,
   readImageFileDataURL,
@@ -141,8 +140,7 @@ import {
   revokeKokoroSession,
   startKokoroLogin
 } from '../kokoro/client'
-import { getAppRoutingConfig } from '../app-routing/config'
-import { getAppRoutingStatus, replaceAppRoutingConfig } from '../app-routing/manager'
+import { registerAppRoutingIpcHandlers } from '../app-routing/ipc'
 
 function ipcErrorWrapper<T>( // eslint-disable-next-line @typescript-eslint/no-explicit-any
   fn: (...args: any[]) => T | Promise<T> // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -217,6 +215,7 @@ async function normalizeServiceModePatch(patch: Partial<AppConfig>): Promise<Par
 }
 
 export function registerIpcMainHandlers(): void {
+  registerAppRoutingIpcHandlers()
   ipcMain.handle('mihomoVersion', ipcErrorWrapper(mihomoVersion))
   ipcMain.handle('mihomoConfig', ipcErrorWrapper(mihomoConfig))
   ipcMain.handle('mihomoCloseConnection', (_e, id) => ipcErrorWrapper(mihomoCloseConnection)(id))
@@ -256,12 +255,6 @@ export function registerIpcMainHandlers(): void {
   ipcMain.handle('enableAutoRun', ipcErrorWrapper(enableAutoRun))
   ipcMain.handle('disableAutoRun', ipcErrorWrapper(disableAutoRun))
   ipcMain.handle('getAppConfig', (_e, force) => ipcErrorWrapper(getAppConfig)(force))
-  ipcMain.handle('getAppRoutingConfig', (_e, force) => ipcErrorWrapper(getAppRoutingConfig)(force))
-  ipcMain.handle('getAppRoutingStatus', () => getAppRoutingStatus())
-  ipcMain.handle('replaceAppRoutingConfig', (_e, config) =>
-    ipcErrorWrapper(replaceAppRoutingConfig)(config)
-  )
-  ipcMain.handle('getApplicationPaths', () => getApplicationPaths())
   ipcMain.handle('getCachedMihomoLogs', () => getCachedMihomoLogs())
   ipcMain.handle('clearCachedMihomoLogs', () => clearCachedMihomoLogs())
   ipcMain.handle('patchAppConfig', (_e, config) =>

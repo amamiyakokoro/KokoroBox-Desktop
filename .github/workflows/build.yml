@@ -235,7 +235,7 @@ jobs:
         shell: pwsh
         run: |
           $required = @(
-            "ProxyBridge_CLI.exe",
+            "kokorobox-process-router.exe",
             "ProxyBridgeCore.dll",
             "WinDivert.dll",
             "WinDivert64.sys",
