@@ -26,6 +26,7 @@ export const messages: Readonly<Record<string, string>> = {
   '输入程序匹配，或选择一个或多个 .exe，然后设定 Proxy、Direct 或 Block。':
     '輸入程式比對，或選擇一個或多個 .exe，然後設定 Proxy、Direct 或 Block。',
   应用程序匹配规则已存在: '應用程式比對規則已存在',
+  或: '或',
   '规则按从上到下的顺序匹配；相同路径只能添加一次。':
     '規則按從上到下的順序比對；相同路徑只能新增一次。',
   添加应用程序: '新增應用程式',

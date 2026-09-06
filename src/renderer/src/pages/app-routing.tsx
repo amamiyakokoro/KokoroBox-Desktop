@@ -120,27 +120,17 @@ const AppRouting: React.FC = () => {
 
         <Divider />
 
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <h3 className="font-semibold">{tr('应用程序规则')}</h3>
-            <p className="text-sm text-foreground-500">
-              {tr('规则按从上到下的顺序匹配；支持文件名或含 * 的完整路径。')}
-            </p>
-          </div>
-          <Button
-            className="w-full shrink-0 lg:w-auto"
-            variant="flat"
-            startContent={<MdAdd className="text-lg" />}
-            isDisabled={!supported || !config || saving}
-            onPress={() => void addApplications()}
-          >
-            {tr('选择应用程序')}
-          </Button>
+        <div>
+          <h3 className="font-semibold">{tr('应用程序规则')}</h3>
+          <p className="text-sm text-foreground-500">
+            {tr('规则按从上到下的顺序匹配；支持文件名或含 * 的完整路径。')}
+          </p>
         </div>
 
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-start">
-          <div className="min-w-0 flex-1">
+        <div className="flex flex-col gap-1">
+          <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto_auto_auto] sm:items-center">
             <Input
+              size="sm"
               label={tr('程序匹配')}
               placeholder="example.exe"
               value={processPattern}
@@ -150,19 +140,29 @@ const AppRouting: React.FC = () => {
                 if (event.key === 'Enter' && processPattern.trim()) void submitPattern()
               }}
             />
-            <p className="mt-1 px-1 text-xs text-foreground-500">
-              {tr('例如：ChatGPT.exe、ChatGPT*.exe 或 C:\\Program Files\\*\\ChatGPT.exe')}
-            </p>
+            <Button
+              className="w-full shrink-0 sm:w-auto"
+              color="primary"
+              startContent={<MdAdd className="text-lg" />}
+              isDisabled={!supported || !config || saving || !processPattern.trim()}
+              onPress={() => void submitPattern()}
+            >
+              {tr('新增匹配规则')}
+            </Button>
+            <span className="text-center text-sm text-foreground-500">{tr('或')}</span>
+            <Button
+              className="w-full shrink-0 sm:w-auto"
+              variant="flat"
+              startContent={<MdAdd className="text-lg" />}
+              isDisabled={!supported || !config || saving}
+              onPress={() => void addApplications()}
+            >
+              {tr('选择应用程序')}
+            </Button>
           </div>
-          <Button
-            className="w-full shrink-0 lg:w-auto"
-            color="primary"
-            startContent={<MdAdd className="text-lg" />}
-            isDisabled={!supported || !config || saving || !processPattern.trim()}
-            onPress={() => void submitPattern()}
-          >
-            {tr('新增匹配规则')}
-          </Button>
+          <p className="px-1 text-xs text-foreground-500">
+            {tr('例如：ChatGPT.exe、ChatGPT*.exe 或 C:\\Program Files\\*\\ChatGPT.exe')}
+          </p>
         </div>
 
         {!supported ? (
