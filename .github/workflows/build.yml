@@ -268,20 +268,14 @@ jobs:
           retention-days: 14
 
   fedora-rpm:
-    name: Fedora ${{ matrix.fedora }} RPM (${{ matrix.arch }})
+    name: Fedora ${{ matrix.fedora }} RPM (x64)
     needs: build
-    runs-on: ${{ matrix.runner }}
+    runs-on: ubuntu-latest
     timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
         fedora: ['43', '44']
-        arch: [x64, arm64]
-        include:
-          - arch: x64
-            runner: ubuntu-latest
-          - arch: arm64
-            runner: ubuntu-24.04-arm
     steps:
       - uses: actions/checkout@v6
         with:
@@ -289,7 +283,7 @@ jobs:
           persist-credentials: false
       - uses: actions/download-artifact@v7
         with:
-          name: packages-ubuntu-latest-${{ matrix.arch }}-rpm
+          name: packages-ubuntu-latest-x64-rpm
           path: fedora-rpm
       - name: Install and smoke-test the release RPM in Fedora
         env:
@@ -304,3 +298,29 @@ jobs:
             -v "$PWD/scripts:/checks:ro" \
             "registry.fedoraproject.org/fedora:${FEDORA_VERSION}" \
             bash /checks/check-fedora-rpm.sh "/packages/${packages[0]##*/}"
+
+  opensuse-rpm:
+    name: openSUSE Tumbleweed RPM (x64)
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/download-artifact@v7
+        with:
+          name: packages-ubuntu-latest-x64-rpm
+          path: opensuse-rpm
+      - name: Install and smoke-test the release RPM in openSUSE
+        shell: bash
+        run: |
+          shopt -s nullglob
+          packages=(opensuse-rpm/*.rpm)
+          test "${#packages[@]}" -eq 1
+          docker run --rm --shm-size=256m \
+            -v "$PWD/opensuse-rpm:/packages:ro" \
+            -v "$PWD/scripts:/checks:ro" \
+            registry.opensuse.org/opensuse/tumbleweed:latest \
+            bash /checks/check-opensuse-rpm.sh "/packages/${packages[0]##*/}"

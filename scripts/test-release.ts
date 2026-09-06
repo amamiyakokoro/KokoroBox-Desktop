@@ -281,22 +281,48 @@ test('workflows gate publication on all builds and do not invoke upstream-only s
   assert.doesNotMatch(publish, /API_KEY|API_URL|AUR_SSH|delete-release-assets/)
 })
 
-test('Fedora validation gates the reusable build on both supported RPM architectures', () => {
+test('Fedora validation gates the reusable build for x64 RPMs', () => {
   const job = workflow('build').jobs['fedora-rpm']
   assert.equal(job.needs, 'build')
   assert.equal(job['continue-on-error'], undefined)
+  assert.equal(job['runs-on'], 'ubuntu-latest')
   assert.deepEqual(job.strategy.matrix.fedora, ['43', '44'])
-  assert.deepEqual(job.strategy.matrix.arch, ['x64', 'arm64'])
-  assert.deepEqual(job.strategy.matrix.include, [
-    { arch: 'x64', runner: 'ubuntu-latest' },
-    { arch: 'arm64', runner: 'ubuntu-24.04-arm' }
-  ])
+  assert.equal(job.strategy.matrix.arch, undefined)
+  assert.equal(job.strategy.matrix.include, undefined)
   const download = job.steps.find((step) => step.uses?.startsWith('actions/download-artifact@'))
-  assert.equal(download.with.name, 'packages-ubuntu-latest-${{ matrix.arch }}-rpm')
+  assert.equal(download.with.name, 'packages-ubuntu-latest-x64-rpm')
   const smoke = job.steps.find((step) => step.run?.includes('check-fedora-rpm.sh'))
   assert.ok(smoke)
   assert.equal(smoke['continue-on-error'], undefined)
   assert.match(smoke.run, /registry\.fedoraproject\.org\/fedora:/)
+})
+
+test('RPM declares cross-distribution SONAME requirements for Electron libraries', () => {
+  const rpm = parse(readFileSync('electron-builder.yml', 'utf8')).rpm
+  const dependencies = rpm.depends
+  for (const dependency of [
+    'libgbm.so.1()(64bit)',
+    'libnotify.so.4()(64bit)',
+    'libuuid.so.1()(64bit)'
+  ]) {
+    assert.ok(dependencies.includes(dependency), `Missing RPM dependency: ${dependency}`)
+  }
+  assert.ok(!dependencies.includes('libuuid'))
+  assert.equal(rpm.afterRemove, 'build/linux/postrm')
+  assert.ok(existsSync(rpm.afterRemove))
+})
+
+test('openSUSE Tumbleweed validation gates the reusable build for x64 RPMs', () => {
+  const job = workflow('build').jobs['opensuse-rpm']
+  assert.equal(job.needs, 'build')
+  assert.equal(job['continue-on-error'], undefined)
+  assert.equal(job['runs-on'], 'ubuntu-latest')
+  const download = job.steps.find((step) => step.uses?.startsWith('actions/download-artifact@'))
+  assert.equal(download.with.name, 'packages-ubuntu-latest-x64-rpm')
+  const smoke = job.steps.find((step) => step.run?.includes('check-opensuse-rpm.sh'))
+  assert.ok(smoke)
+  assert.equal(smoke['continue-on-error'], undefined)
+  assert.match(smoke.run, /registry\.opensuse\.org\/opensuse\/tumbleweed:latest/)
 })
 
 test('CI macOS config loads through electron-builder and preserves PKG installation settings', async () => {

@@ -98,11 +98,13 @@ rpm:
   fpm:
     - --before-install=build/linux/preinst
   afterInstall: 'build/linux/postinst'
+  afterRemove: 'build/linux/postrm'
   # SONAME capabilities avoid Fedora/Rocky versus openSUSE package-name differences.
   # Both supported RPM architectures (x64 and arm64) use the (64bit) suffix.
   depends:
     - 'libasound.so.2()(64bit)'
     - 'libgtk-3.so.0()(64bit)'
+    - 'libgbm.so.1()(64bit)'
     - 'libnotify.so.4()(64bit)'
     - 'libnss3.so()(64bit)'
     - 'libXss.so.1()(64bit)'

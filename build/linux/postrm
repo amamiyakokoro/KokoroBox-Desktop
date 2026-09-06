@@ -1,0 +1,16 @@
+#!/bin/bash
+
+# The command may be installed after KokoroBox, so removal cannot assume the
+# same branch that postinst used when it created the launcher.
+if command -v update-alternatives >/dev/null 2>&1; then
+    update-alternatives --remove 'sparkle' '/opt/sparkle/sparkle' >/dev/null 2>&1 || true
+fi
+
+if [ -L '/usr/bin/sparkle' ]; then
+    target="$(readlink '/usr/bin/sparkle' 2>/dev/null || true)"
+    if [ "$target" = '/opt/sparkle/sparkle' ] || { [ "$target" = '/etc/alternatives/sparkle' ] && [ ! -e '/usr/bin/sparkle' ]; }; then
+        rm -f '/usr/bin/sparkle'
+    fi
+fi
+
+exit 0

@@ -18,13 +18,13 @@ Linux retains the internal `/opt/sparkle/sparkle` executable and service identif
 
 ### RPM compatibility
 
-The RPM dependency declarations target openSUSE, Fedora, and Rocky Linux using shared-library SONAME capabilities instead of distribution-specific library package names. Both x86_64 and aarch64 use RPM's `(64bit)` capability suffix. `xdg-utils` and `at-spi2-core` remain package dependencies because they supply runtime tools and services.
+The RPM dependency declarations target openSUSE, Fedora, and Rocky Linux using shared-library SONAME capabilities instead of distribution-specific library package names. Both x86_64 and aarch64 use RPM's `(64bit)` capability suffix. This includes `libgbm.so.1`, which Electron needs directly but Fedora may install only as a transitive dependency. `xdg-utils` and `at-spi2-core` remain package dependencies because they supply runtime tools and services.
 
 Install with `sudo zypper install ./package.rpm` on openSUSE or `sudo dnf install ./package.rpm` on Fedora/Rocky Linux so the package manager resolves dependencies.
 
-Fedora 43 and 44 are the first runtime validation targets. The reusable build workflow tests the actual release RPM on both versions, using native x86_64 and ARM64 runners, and a failure blocks publication. Each disposable Fedora container installs the RPM with DNF, checks ELF linkage before installing test tools, checks launcher/desktop/sandbox permissions, starts both bundled Mihomo cores, verifies the packaged renderer and preload/main-process IPC under Xvfb as a regular user, then removes the package and checks cleanup.
+Fedora 43 and 44 are the first runtime validation targets. The reusable build workflow tests the actual x86_64 release RPM on both versions, and a failure blocks publication. Each disposable Fedora container installs the RPM with DNF, checks ELF linkage before installing test tools, checks launcher/desktop/sandbox permissions, starts both bundled Mihomo cores, verifies the packaged renderer and preload/main-process IPC under Xvfb as a regular user, then removes the package and checks cleanup.
 
-On 2026-09-06, the locally built `2.26.9-6` x86_64 RPM passed these checks on both Fedora 43 and 44. ARM64 validation is configured in CI but has not been run locally. To reproduce the checks with Docker (or substitute Podman):
+On 2026-09-06, the locally built `2.26.9-6` x86_64 RPM passed these checks on both Fedora 43 and 44. ARM64 RPMs are still built and published, but Fedora ARM64 runtime validation is currently disabled because the native-runner smoke tests exceed the 20-minute job limit. To reproduce the x86_64 checks with Docker (or substitute Podman):
 
 ```sh
 docker run --rm --shm-size=256m \
@@ -35,7 +35,9 @@ docker run --rm --shm-size=256m \
 
 The container smoke test uses X11 and disables Chromium's sandbox and GPU acceleration only for that test process. It does not certify Wayland, hardware rendering, desktop sandbox/SELinux policy, credential storage with a real keyring, or the privileged service/TUN flow; verify those in a Fedora desktop VM or on hardware. The bundled x64 Mihomo and service binaries require an x86-64-v3 CPU.
 
-openSUSE and Rocky Linux retain compatible dependency declarations but are not covered by the Fedora runtime gate. Before declaring specific releases supported, check the final RPM with `rpm -qpR ./package.rpm` and test installation and desktop functionality. In particular, compare the bundled Electron and native module's GLIBC/GLIBCXX requirements with older Rocky Linux releases.
+The reusable build also installs and runs the x86_64 RPM in the official openSUSE Tumbleweed container. This gate uses Zypper and performs the same package metadata, linkage, bundled-core, renderer/IPC, and removal checks as Fedora. openSUSE ARM64 is not included in the runtime gate.
+
+Rocky Linux retains compatible dependency declarations but is not yet covered by a runtime gate. Before declaring specific releases supported, check the final RPM with `rpm -qpR ./package.rpm` and test installation and desktop functionality. In particular, compare the bundled Electron and native module's GLIBC/GLIBCXX requirements with older Rocky Linux releases.
 
 ## First-time setup
 
