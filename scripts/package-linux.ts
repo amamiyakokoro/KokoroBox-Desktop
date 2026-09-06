@@ -47,7 +47,9 @@ const electronBuilder = path.join(
   '.bin',
   process.platform === 'win32' ? 'electron-builder.cmd' : 'electron-builder'
 )
-const args = ['--publish', 'never', '--linux', ...process.argv.slice(2)]
+// Install/service scripts require /opt/sparkle; apply this to local builds as
+// well as CI. The desktop entry keeps the user-facing KokoroBox name.
+const args = ['-c.productName=sparkle', '--publish', 'never', '--linux', ...process.argv.slice(2)]
 let tempConfigDir: string | undefined
 
 if (systemCoreOnlyBuild) {

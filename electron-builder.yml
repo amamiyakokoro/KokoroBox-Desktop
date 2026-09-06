@@ -98,17 +98,20 @@ rpm:
   fpm:
     - --before-install=build/linux/preinst
   afterInstall: 'build/linux/postinst'
+  # SONAME capabilities avoid Fedora/Rocky versus openSUSE package-name differences.
+  # Both supported RPM architectures (x64 and arm64) use the (64bit) suffix.
   depends:
-    - alsa-lib
-    - gtk3
-    - libnotify
-    - nss
-    - libXScrnSaver
-    - libXtst
+    - 'libasound.so.2()(64bit)'
+    - 'libgtk-3.so.0()(64bit)'
+    - 'libnotify.so.4()(64bit)'
+    - 'libnss3.so()(64bit)'
+    - 'libXss.so.1()(64bit)'
+    - 'libXtst.so.6()(64bit)'
     - xdg-utils
     - at-spi2-core
-    - libuuid
-    - libsecret
+    - 'libatspi.so.0()(64bit)'
+    - 'libuuid.so.1()(64bit)'
+    - 'libsecret-1.so.0()(64bit)'
 pacman:
   afterInstall: 'build/linux/postinst'
   fpm:

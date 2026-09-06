@@ -164,11 +164,6 @@ jobs:
 
           jq --arg version "$RELEASE_VERSION" '.version = $version' package.json > tmp.json && mv tmp.json package.json
 
-      - name: Keep product name lowercase on Linux
-        if: matrix.os == 'ubuntu-latest'
-        run: |
-          sed -i "s/productName: KokoroBox/productName: sparkle/" electron-builder.yml
-
       - name: Install Build Tools
         if: matrix.os == 'ubuntu-latest' && matrix.format == 'pacman'
         run: |
@@ -271,3 +266,41 @@ jobs:
           if-no-files-found: error
           compression-level: 0
           retention-days: 14
+
+  fedora-rpm:
+    name: Fedora ${{ matrix.fedora }} RPM (${{ matrix.arch }})
+    needs: build
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        fedora: ['43', '44']
+        arch: [x64, arm64]
+        include:
+          - arch: x64
+            runner: ubuntu-latest
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/download-artifact@v7
+        with:
+          name: packages-ubuntu-latest-${{ matrix.arch }}-rpm
+          path: fedora-rpm
+      - name: Install and smoke-test the release RPM in Fedora
+        env:
+          FEDORA_VERSION: ${{ matrix.fedora }}
+        shell: bash
+        run: |
+          shopt -s nullglob
+          packages=(fedora-rpm/*.rpm)
+          test "${#packages[@]}" -eq 1
+          docker run --rm --shm-size=256m \
+            -v "$PWD/fedora-rpm:/packages:ro" \
+            -v "$PWD/scripts:/checks:ro" \
+            "registry.fedoraproject.org/fedora:${FEDORA_VERSION}" \
+            bash /checks/check-fedora-rpm.sh "/packages/${packages[0]##*/}"

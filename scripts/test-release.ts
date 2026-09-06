@@ -281,6 +281,24 @@ test('workflows gate publication on all builds and do not invoke upstream-only s
   assert.doesNotMatch(publish, /API_KEY|API_URL|AUR_SSH|delete-release-assets/)
 })
 
+test('Fedora validation gates the reusable build on both supported RPM architectures', () => {
+  const job = workflow('build').jobs['fedora-rpm']
+  assert.equal(job.needs, 'build')
+  assert.equal(job['continue-on-error'], undefined)
+  assert.deepEqual(job.strategy.matrix.fedora, ['43', '44'])
+  assert.deepEqual(job.strategy.matrix.arch, ['x64', 'arm64'])
+  assert.deepEqual(job.strategy.matrix.include, [
+    { arch: 'x64', runner: 'ubuntu-latest' },
+    { arch: 'arm64', runner: 'ubuntu-24.04-arm' }
+  ])
+  const download = job.steps.find((step) => step.uses?.startsWith('actions/download-artifact@'))
+  assert.equal(download.with.name, 'packages-ubuntu-latest-${{ matrix.arch }}-rpm')
+  const smoke = job.steps.find((step) => step.run?.includes('check-fedora-rpm.sh'))
+  assert.ok(smoke)
+  assert.equal(smoke['continue-on-error'], undefined)
+  assert.match(smoke.run, /registry\.fedoraproject\.org\/fedora:/)
+})
+
 test('CI macOS config loads through electron-builder and preserves PKG installation settings', async () => {
   const { getConfig, validateConfiguration } = createRequire(import.meta.url)(
     'app-builder-lib/out/util/config/config.js'
