@@ -4,7 +4,7 @@ import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import React from 'react'
-import { LuHeartHandshake } from 'react-icons/lu'
+import { MdManageAccounts } from 'react-icons/md'
 import { useLocation, useNavigate } from 'react-router-dom'
 
 interface Props {
@@ -40,7 +40,7 @@ const KokoroSettingCard: React.FC<Props> = ({ iconOnly = false }) => {
             variant={match ? 'solid' : 'light'}
             onPress={() => navigate('/kokoro')}
           >
-            <LuHeartHandshake className="text-[20px]" />
+            <MdManageAccounts className="text-[21px]" />
           </Button>
         </Tooltip>
       </div>
@@ -72,7 +72,7 @@ const KokoroSettingCard: React.FC<Props> = ({ iconOnly = false }) => {
               variant="flat"
               color="default"
             >
-              <LuHeartHandshake
+              <MdManageAccounts
                 className={`${match ? 'text-primary-foreground' : 'text-foreground'} text-[24px]`}
               />
             </Button>
