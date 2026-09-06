@@ -1,11 +1,15 @@
-import { spawn } from 'child_process'
 import { existsSync } from 'fs'
-import { macAppRoutingBridgePath, macAppRoutingExtensionPath } from '../utils/dirs'
+import { macAppRoutingExtensionPath, macAppRoutingModulePath } from '../utils/dirs'
 import { appRoutingSocksPort } from './profile'
 import { buildMacAppRoutingConfiguration, type MacBridgeConfiguration } from './macos-profile'
 
 const bridgeTimeoutMs = 330_000
 let activePolicyKey = ''
+let nativeBridge: MacNativeBridge | undefined
+
+interface MacNativeBridge {
+  invoke(request: string): Promise<string>
+}
 
 interface MacBridgeResponse {
   version: 1
@@ -15,60 +19,62 @@ interface MacBridgeResponse {
   message?: string
 }
 
+function loadNativeBridge(): MacNativeBridge {
+  if (nativeBridge) return nativeBridge
+  const modulePath = macAppRoutingModulePath()
+  if (!existsSync(modulePath)) throw new Error('macOS application-routing module is not installed')
+  const nativeModule = { exports: {} } as NodeModule
+  process.dlopen(nativeModule, modulePath)
+  const candidate = nativeModule.exports as Partial<MacNativeBridge>
+  if (typeof candidate.invoke !== 'function') {
+    throw new Error('macOS application-routing module has an unsupported interface')
+  }
+  nativeBridge = candidate as MacNativeBridge
+  return nativeBridge
+}
+
+async function invokeWithTimeout(request: string): Promise<string> {
+  let timeout: NodeJS.Timeout | undefined
+  try {
+    return await Promise.race([
+      loadNativeBridge().invoke(request),
+      new Promise<never>((_, reject) => {
+        timeout = setTimeout(
+          () => reject(new Error('macOS application-routing module timed out')),
+          bridgeTimeoutMs
+        )
+      })
+    ])
+  } finally {
+    if (timeout) clearTimeout(timeout)
+  }
+}
+
 async function invokeBridge(
   command: 'apply' | 'stop' | 'status' | 'open-settings',
   configuration?: MacBridgeConfiguration
 ): Promise<MacBridgeResponse> {
-  const executable = macAppRoutingBridgePath()
-  if (!existsSync(executable)) throw new Error('macOS application-routing bridge is not installed')
   if (command === 'apply' && !existsSync(macAppRoutingExtensionPath())) {
     throw new Error('macOS application-routing system extension is not installed')
   }
-  return await new Promise<MacBridgeResponse>((resolve, reject) => {
-    const child = spawn(executable, [], {
-      shell: false,
-      windowsHide: true,
-      stdio: ['pipe', 'pipe', 'ignore']
+  const output = await invokeWithTimeout(
+    JSON.stringify({
+      version: 1,
+      command,
+      ...(configuration ? { configuration } : {})
     })
-    let output = ''
-    const timeout = setTimeout(() => {
-      child.kill()
-      reject(new Error('macOS application-routing bridge timed out'))
-    }, bridgeTimeoutMs)
-    child.stdout.setEncoding('utf8')
-    child.stdout.on('data', (chunk: string) => {
-      if (output.length + chunk.length <= 64 * 1024) output += chunk
-    })
-    child.once('error', (error) => {
-      clearTimeout(timeout)
-      reject(error)
-    })
-    child.once('exit', () => {
-      clearTimeout(timeout)
-      try {
-        const response = JSON.parse(output) as MacBridgeResponse
-        if (
-          response.version !== 1 ||
-          typeof response.ok !== 'boolean' ||
-          !['disabled', 'starting', 'running', 'stopping', 'error'].includes(response.state) ||
-          typeof response.needsUserApproval !== 'boolean'
-        ) {
-          throw new Error('Unsupported macOS application-routing bridge response')
-        }
-        if (!response.ok) throw new Error(response.message || 'macOS application routing failed')
-        resolve(response)
-      } catch (error) {
-        reject(error)
-      }
-    })
-    child.stdin.end(
-      JSON.stringify({
-        version: 1,
-        command,
-        ...(configuration ? { configuration } : {})
-      })
-    )
-  })
+  )
+  const response = JSON.parse(output) as MacBridgeResponse
+  if (
+    response.version !== 1 ||
+    typeof response.ok !== 'boolean' ||
+    !['disabled', 'starting', 'running', 'stopping', 'error'].includes(response.state) ||
+    typeof response.needsUserApproval !== 'boolean'
+  ) {
+    throw new Error('Unsupported macOS application-routing module response')
+  }
+  if (!response.ok) throw new Error(response.message || 'macOS application routing failed')
+  return response
 }
 
 export async function reconcileMacAppRouting(
@@ -105,13 +111,13 @@ export async function reconcileMacAppRouting(
 
 export async function stopMacAppRouting(): Promise<void> {
   activePolicyKey = ''
-  if (!existsSync(macAppRoutingBridgePath())) return
+  if (!existsSync(macAppRoutingModulePath())) return
   await invokeBridge('stop')
 }
 
 export async function openMacAppRoutingSystemSettings(): Promise<void> {
-  if (!existsSync(macAppRoutingBridgePath())) {
-    throw new Error('macOS application-routing bridge is not installed')
+  if (!existsSync(macAppRoutingModulePath())) {
+    throw new Error('macOS application-routing module is not installed')
   }
   await invokeBridge('open-settings')
 }

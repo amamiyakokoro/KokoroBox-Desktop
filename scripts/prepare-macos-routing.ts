@@ -7,11 +7,11 @@ import { proxyBridgeSourceRevision } from '../src/main/app-routing/integrity-man
 const repositoryRoot = path.resolve(import.meta.dirname, '..')
 const targetArch = process.env.npm_config_target_arch || process.arch
 const stagingRoot = path.join(repositoryRoot, 'extra', 'macos-app-routing-system-extension')
-const helperRoot = path.join(repositoryRoot, 'extra', 'files', 'macos-app-routing')
+const moduleStagingRoot = path.join(repositoryRoot, 'extra', 'files', 'macos-app-routing')
 
 if (process.platform !== 'darwin' || !['arm64', 'x64'].includes(targetArch)) {
   rmSync(stagingRoot, { recursive: true, force: true })
-  rmSync(helperRoot, { recursive: true, force: true })
+  rmSync(moduleStagingRoot, { recursive: true, force: true })
   process.exit(0)
 }
 
@@ -31,6 +31,10 @@ const extensionOutput = path.join(
   'KokoroBoxProxyExtension.systemextension'
 )
 const swiftArch = targetArch === 'x64' ? 'x86_64' : 'arm64'
+const nativeModuleRoot = path.join(repositoryRoot, 'native', 'macos-app-routing')
+const electronVersion = JSON.parse(
+  readFileSync(path.join(repositoryRoot, 'node_modules', 'electron', 'package.json'), 'utf8')
+).version as string
 const packageVersion = JSON.parse(readFileSync(path.join(repositoryRoot, 'package.json'), 'utf8'))
   .version as string
 const versionParts = packageVersion.match(/^(\d+)\.(\d+)\.(\d+)(?:-(\d+))?$/)
@@ -96,9 +100,9 @@ if (extensionBuild.status !== 0 || !existsSync(extensionOutput)) {
 }
 
 rmSync(stagingRoot, { recursive: true, force: true })
-rmSync(helperRoot, { recursive: true, force: true })
+rmSync(moduleStagingRoot, { recursive: true, force: true })
 mkdirSync(stagingRoot, { recursive: true })
-mkdirSync(helperRoot, { recursive: true })
+mkdirSync(moduleStagingRoot, { recursive: true })
 cpSync(extensionOutput, path.join(stagingRoot, 'KokoroBoxProxyExtension.systemextension'), {
   recursive: true
 })
@@ -113,34 +117,27 @@ rmSync(
   { force: true }
 )
 
-const helperOutput = path.join(helperRoot, 'kokorobox-app-routing-bridge')
-const helperBuild = spawnSync(
-  'xcrun',
+const nodeGyp = path.join(repositoryRoot, 'node_modules', 'node-gyp', 'bin', 'node-gyp.js')
+const moduleBuild = spawnSync(
+  process.execPath,
   [
-    'swiftc',
-    '-O',
-    '-target',
-    `${swiftArch}-apple-macos13.0`,
-    path.join(repositoryRoot, 'native', 'macos-app-routing', 'KokoroBoxAppRoutingBridge.swift'),
-    '-framework',
-    'AppKit',
-    '-framework',
-    'NetworkExtension',
-    '-framework',
-    'Security',
-    '-framework',
-    'SystemExtensions',
-    '-o',
-    helperOutput
+    nodeGyp,
+    'rebuild',
+    `--target=${electronVersion}`,
+    `--arch=${targetArch}`,
+    '--dist-url=https://electronjs.org/headers',
+    `--devdir=${path.join(buildRoot, 'node-gyp')}`
   ],
-  { stdio: 'inherit' }
+  { cwd: nativeModuleRoot, stdio: 'inherit' }
 )
-if (helperBuild.status !== 0 || !existsSync(helperOutput)) {
-  throw new Error('KokoroBox macOS application-routing bridge build failed')
+const moduleOutput = path.join(nativeModuleRoot, 'build', 'Release', 'kokorobox_app_routing.node')
+if (moduleBuild.status !== 0 || !existsSync(moduleOutput)) {
+  throw new Error('KokoroBox macOS application-routing N-API module build failed')
 }
+cpSync(moduleOutput, path.join(moduleStagingRoot, 'kokorobox-app-routing.node'))
 
-cpSync(path.join(sourceRoot, 'LICENSE'), path.join(helperRoot, 'LICENSE.ProxyBridge'))
+cpSync(path.join(sourceRoot, 'LICENSE'), path.join(moduleStagingRoot, 'LICENSE.ProxyBridge'))
 writeFileSync(
-  path.join(helperRoot, 'manifest.json'),
+  path.join(moduleStagingRoot, 'manifest.json'),
   `${JSON.stringify({ version: 1, proxyBridgeRevision: proxyBridgeSourceRevision, arch: targetArch }, null, 2)}\n`
 )

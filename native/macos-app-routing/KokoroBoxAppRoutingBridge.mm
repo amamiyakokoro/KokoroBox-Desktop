@@ -1,0 +1,409 @@
+#include <node_api.h>
+
+#import <AppKit/AppKit.h>
+#import <Foundation/Foundation.h>
+#import <NetworkExtension/NetworkExtension.h>
+#import <SystemExtensions/SystemExtensions.h>
+
+#include <memory>
+#include <string>
+
+static const NSInteger KBProtocolVersion = 1;
+static const size_t KBMaximumRequestBytes = 256 * 1024;
+static NSString *const KBExtensionIdentifier = @"com.amamiyakokoro.app.proxy-extension";
+static NSString *const KBManagerDescription = @"KokoroBox Application Routing";
+static NSString *const KBErrorDomain = @"com.amamiyakokoro.app.routing-bridge";
+
+static NSError *KBError(NSString *message) {
+  return [NSError errorWithDomain:KBErrorDomain
+                             code:1
+                         userInfo:@{NSLocalizedDescriptionKey : message}];
+}
+
+static BOOL KBWait(dispatch_semaphore_t semaphore, NSTimeInterval seconds) {
+  return dispatch_semaphore_wait(
+             semaphore,
+             dispatch_time(DISPATCH_TIME_NOW, (int64_t)(seconds * NSEC_PER_SEC))) == 0;
+}
+
+@interface KBExtensionActivationDelegate : NSObject <OSSystemExtensionRequestDelegate>
+@property(nonatomic) dispatch_semaphore_t semaphore;
+@property(nonatomic, strong, nullable) NSError *error;
+@property(nonatomic) BOOL needsUserApproval;
+@end
+
+@implementation KBExtensionActivationDelegate
+- (instancetype)init {
+  self = [super init];
+  if (self) self.semaphore = dispatch_semaphore_create(0);
+  return self;
+}
+
+- (void)requestNeedsUserApproval:(OSSystemExtensionRequest *)request {
+  self.needsUserApproval = YES;
+}
+
+- (OSSystemExtensionReplacementAction)request:(OSSystemExtensionRequest *)request
+                 actionForReplacingExtension:(OSSystemExtensionProperties *)existing
+                               withExtension:(OSSystemExtensionProperties *)extension {
+  return OSSystemExtensionReplacementActionReplace;
+}
+
+- (void)request:(OSSystemExtensionRequest *)request
+    didFinishWithResult:(OSSystemExtensionRequestResult)result {
+  dispatch_semaphore_signal(self.semaphore);
+}
+
+- (void)request:(OSSystemExtensionRequest *)request didFailWithError:(NSError *)error {
+  self.error = error;
+  dispatch_semaphore_signal(self.semaphore);
+}
+@end
+
+static NSString *KBStatusName(NEVPNStatus status) {
+  switch (status) {
+  case NEVPNStatusInvalid:
+  case NEVPNStatusDisconnected:
+    return @"disabled";
+  case NEVPNStatusConnecting:
+  case NEVPNStatusReasserting:
+    return @"starting";
+  case NEVPNStatusConnected:
+    return @"running";
+  case NEVPNStatusDisconnecting:
+    return @"stopping";
+  }
+  return @"error";
+}
+
+static BOOL KBActivateExtension(BOOL *needsUserApproval, NSError **error) {
+  KBExtensionActivationDelegate *delegate = [[KBExtensionActivationDelegate alloc] init];
+  dispatch_queue_t queue = dispatch_queue_create(
+      "com.amamiyakokoro.app.routing-bridge.system-extension", DISPATCH_QUEUE_SERIAL);
+  OSSystemExtensionRequest *request =
+      [OSSystemExtensionRequest activationRequestForExtension:KBExtensionIdentifier queue:queue];
+  request.delegate = delegate;
+  [[OSSystemExtensionManager sharedManager] submitRequest:request];
+  if (!KBWait(delegate.semaphore, 300)) {
+    if (error) *error = KBError(@"The macOS System Extension operation timed out");
+    return NO;
+  }
+  if (delegate.error) {
+    if (error) *error = delegate.error;
+    return NO;
+  }
+  if (needsUserApproval) *needsUserApproval = delegate.needsUserApproval;
+  return YES;
+}
+
+static NSArray<NETransparentProxyManager *> *KBLoadManagers(NSError **error) {
+  dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
+  __block NSArray<NETransparentProxyManager *> *loaded = nil;
+  __block NSError *loadError = nil;
+  [NETransparentProxyManager
+      loadAllFromPreferencesWithCompletionHandler:^(NSArray<NETransparentProxyManager *> *managers,
+                                                     NSError *managerError) {
+        loaded = managers ?: @[];
+        loadError = managerError;
+        dispatch_semaphore_signal(semaphore);
+      }];
+  if (!KBWait(semaphore, 30)) {
+    if (error) *error = KBError(@"Loading transparent proxy preferences timed out");
+    return nil;
+  }
+  if (loadError) {
+    if (error) *error = loadError;
+    return nil;
+  }
+  return loaded;
+}
+
+static NETransparentProxyManager *KBLoadManager(NSError **error) {
+  NSArray<NETransparentProxyManager *> *managers = KBLoadManagers(error);
+  if (!managers) return nil;
+  for (NETransparentProxyManager *manager in managers) {
+    NETunnelProviderProtocol *protocol =
+        (NETunnelProviderProtocol *)manager.protocolConfiguration;
+    if ([protocol isKindOfClass:[NETunnelProviderProtocol class]] &&
+        [protocol.providerBundleIdentifier isEqualToString:KBExtensionIdentifier]) {
+      return manager;
+    }
+  }
+  return nil;
+}
+
+static BOOL KBSaveManager(NETransparentProxyManager *manager, NSError **error) {
+  dispatch_semaphore_t saveSemaphore = dispatch_semaphore_create(0);
+  __block NSError *saveError = nil;
+  [manager saveToPreferencesWithCompletionHandler:^(NSError *managerError) {
+    saveError = managerError;
+    dispatch_semaphore_signal(saveSemaphore);
+  }];
+  if (!KBWait(saveSemaphore, 30)) {
+    if (error) *error = KBError(@"Saving transparent proxy preferences timed out");
+    return NO;
+  }
+  if (saveError) {
+    if (error) *error = saveError;
+    return NO;
+  }
+
+  dispatch_semaphore_t loadSemaphore = dispatch_semaphore_create(0);
+  __block NSError *loadError = nil;
+  [manager loadFromPreferencesWithCompletionHandler:^(NSError *managerError) {
+    loadError = managerError;
+    dispatch_semaphore_signal(loadSemaphore);
+  }];
+  if (!KBWait(loadSemaphore, 30)) {
+    if (error) *error = KBError(@"Reloading transparent proxy preferences timed out");
+    return NO;
+  }
+  if (loadError) {
+    if (error) *error = loadError;
+    return NO;
+  }
+  return YES;
+}
+
+static BOOL KBValidateConfiguration(NSDictionary *configuration, NSError **error) {
+  NSNumber *version = configuration[@"version"];
+  NSNumber *failClosed = configuration[@"failClosed"];
+  NSString *proxyHost = configuration[@"proxyHost"];
+  NSNumber *proxyPort = configuration[@"proxyPort"];
+  NSArray *rules = configuration[@"rules"];
+  if (![version isKindOfClass:[NSNumber class]] || version.integerValue != KBProtocolVersion ||
+      ![failClosed isKindOfClass:[NSNumber class]] || !failClosed.boolValue ||
+      ![proxyHost isEqualToString:@"127.0.0.1"] || proxyPort.integerValue != 7891 ||
+      ![rules isKindOfClass:[NSArray class]] || rules.count > 256) {
+    if (error) *error = KBError(@"Invalid application-routing configuration");
+    return NO;
+  }
+  return YES;
+}
+
+static BOOL KBSendConfiguration(NSDictionary *configuration,
+                                NETransparentProxyManager *manager,
+                                NSError **error) {
+  if (![manager.connection isKindOfClass:[NETunnelProviderSession class]]) {
+    if (error) *error = KBError(@"The transparent proxy provider is unavailable");
+    return NO;
+  }
+  NSDictionary *message = @{
+    @"action" : @"replaceKokoroBoxConfiguration",
+    @"configuration" : configuration
+  };
+  NSData *messageData = [NSJSONSerialization dataWithJSONObject:message options:0 error:error];
+  if (!messageData) return NO;
+
+  dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
+  __block NSData *providerResponse = nil;
+  NSError *sendError = nil;
+  BOOL sent = [(NETunnelProviderSession *)manager.connection
+      sendProviderMessage:messageData
+             returnError:&sendError
+         responseHandler:^(NSData *responseData) {
+           providerResponse = responseData;
+           dispatch_semaphore_signal(semaphore);
+         }];
+  if (!sent || sendError) {
+    if (error) *error = sendError ?: KBError(@"Sending the provider policy failed");
+    return NO;
+  }
+  if (!KBWait(semaphore, 30)) {
+    if (error) *error = KBError(@"The transparent proxy provider did not acknowledge the policy");
+    return NO;
+  }
+  NSDictionary *response = providerResponse
+                               ? [NSJSONSerialization JSONObjectWithData:providerResponse
+                                                                 options:0
+                                                                   error:error]
+                               : nil;
+  if (![response isKindOfClass:[NSDictionary class]] ||
+      ![response[@"status"] isEqualToString:@"ok"] ||
+      [response[@"version"] integerValue] != KBProtocolVersion) {
+    if (error && !*error) *error = KBError(@"The provider returned an invalid response");
+    return NO;
+  }
+  return YES;
+}
+
+static NSString *KBApply(NSDictionary *configuration, NSError **error) {
+  if (!KBValidateConfiguration(configuration, error)) return nil;
+  NETransparentProxyManager *manager = KBLoadManager(error);
+  if (!manager && error && *error) return nil;
+  if (!manager) manager = [[NETransparentProxyManager alloc] init];
+
+  if (manager.connection.status == NEVPNStatusConnected &&
+      !KBSendConfiguration(configuration, manager, error)) {
+    return nil;
+  }
+
+  NSData *configurationData =
+      [NSJSONSerialization dataWithJSONObject:configuration options:0 error:error];
+  if (!configurationData) return nil;
+  NETunnelProviderProtocol *protocol = [[NETunnelProviderProtocol alloc] init];
+  protocol.providerBundleIdentifier = KBExtensionIdentifier;
+  protocol.serverAddress = @"127.0.0.1:7891";
+  protocol.providerConfiguration = @{@"kokoroBoxConfiguration" : configurationData};
+  manager.protocolConfiguration = protocol;
+  manager.localizedDescription = KBManagerDescription;
+  manager.enabled = YES;
+  if (!KBSaveManager(manager, error)) return nil;
+
+  if (manager.connection.status == NEVPNStatusDisconnected ||
+      manager.connection.status == NEVPNStatusInvalid) {
+    NSError *startError = nil;
+    if (![manager.connection startVPNTunnelAndReturnError:&startError]) {
+      if (error) *error = startError ?: KBError(@"Starting the transparent proxy failed");
+      return nil;
+    }
+  }
+  return KBStatusName(manager.connection.status);
+}
+
+static NSString *KBStop(NSError **error) {
+  NETransparentProxyManager *manager = KBLoadManager(error);
+  if (!manager && error && *error) return nil;
+  if (!manager) return @"disabled";
+  [manager.connection stopVPNTunnel];
+  manager.enabled = NO;
+  return KBSaveManager(manager, error) ? @"disabled" : nil;
+}
+
+static NSString *KBCurrentStatus(NSError **error) {
+  NETransparentProxyManager *manager = KBLoadManager(error);
+  if (!manager && error && *error) return nil;
+  if (!manager || !manager.enabled) return @"disabled";
+  return KBStatusName(manager.connection.status);
+}
+
+static NSDictionary *KBInvoke(NSDictionary *request, NSError **error) {
+  if (![request isKindOfClass:[NSDictionary class]] ||
+      [request[@"version"] integerValue] != KBProtocolVersion ||
+      ![request[@"command"] isKindOfClass:[NSString class]]) {
+    if (error) *error = KBError(@"Invalid bridge request");
+    return nil;
+  }
+
+  NSString *command = request[@"command"];
+  NSString *state = nil;
+  BOOL needsUserApproval = NO;
+  if ([command isEqualToString:@"apply"]) {
+    NSDictionary *configuration = request[@"configuration"];
+    if (![configuration isKindOfClass:[NSDictionary class]] ||
+        !KBActivateExtension(&needsUserApproval, error)) {
+      if (error && !*error) *error = KBError(@"Invalid bridge request");
+      return nil;
+    }
+    state = KBApply(configuration, error);
+  } else if ([command isEqualToString:@"stop"]) {
+    state = KBStop(error);
+  } else if ([command isEqualToString:@"status"]) {
+    state = KBCurrentStatus(error);
+  } else if ([command isEqualToString:@"open-settings"]) {
+    dispatch_async(dispatch_get_main_queue(), ^{
+      NSURL *url = [NSURL
+          URLWithString:@"x-apple.systempreferences:com.apple.NetworkExtensionSettings"];
+      if (url) [[NSWorkspace sharedWorkspace] openURL:url];
+    });
+    state = KBCurrentStatus(error);
+  } else {
+    if (error) *error = KBError(@"Invalid bridge request");
+    return nil;
+  }
+
+  if (!state) return nil;
+  return @{
+    @"version" : @(KBProtocolVersion),
+    @"ok" : @YES,
+    @"state" : state,
+    @"needsUserApproval" : @(needsUserApproval)
+  };
+}
+
+struct KBWork {
+  napi_async_work asyncWork = nullptr;
+  napi_deferred deferred = nullptr;
+  std::string request;
+  std::string response;
+  std::string error;
+};
+
+static void KBExecute(napi_env env, void *data) {
+  KBWork *work = static_cast<KBWork *>(data);
+  @autoreleasepool {
+    NSData *input = [NSData dataWithBytes:work->request.data() length:work->request.size()];
+    NSError *error = nil;
+    NSDictionary *request = [NSJSONSerialization JSONObjectWithData:input options:0 error:&error];
+    NSDictionary *response = error ? nil : KBInvoke(request, &error);
+    if (!response) {
+      work->error = (error.localizedDescription ?: @"macOS application routing failed").UTF8String;
+      return;
+    }
+    NSData *output = [NSJSONSerialization dataWithJSONObject:response options:0 error:&error];
+    if (!output) {
+      work->error = (error.localizedDescription ?: @"Encoding bridge response failed").UTF8String;
+      return;
+    }
+    work->response.assign(static_cast<const char *>(output.bytes), output.length);
+  }
+}
+
+static void KBComplete(napi_env env, napi_status status, void *data) {
+  std::unique_ptr<KBWork> work(static_cast<KBWork *>(data));
+  napi_value value;
+  if (status != napi_ok || !work->error.empty()) {
+    const std::string &message =
+        work->error.empty() ? std::string("macOS application-routing work failed") : work->error;
+    napi_create_string_utf8(env, message.c_str(), message.size(), &value);
+    napi_value error;
+    napi_create_error(env, nullptr, value, &error);
+    napi_reject_deferred(env, work->deferred, error);
+  } else {
+    napi_create_string_utf8(env, work->response.c_str(), work->response.size(), &value);
+    napi_resolve_deferred(env, work->deferred, value);
+  }
+  napi_delete_async_work(env, work->asyncWork);
+}
+
+static napi_value KBInvokeAsync(napi_env env, napi_callback_info info) {
+  size_t argc = 1;
+  napi_value args[1];
+  napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+  napi_valuetype type = napi_undefined;
+  if (argc != 1 || napi_typeof(env, args[0], &type) != napi_ok || type != napi_string) {
+    napi_throw_type_error(env, nullptr, "invoke expects one JSON string");
+    return nullptr;
+  }
+  size_t size = 0;
+  napi_get_value_string_utf8(env, args[0], nullptr, 0, &size);
+  if (size == 0 || size > KBMaximumRequestBytes) {
+    napi_throw_range_error(env, nullptr, "bridge request size is invalid");
+    return nullptr;
+  }
+
+  std::unique_ptr<KBWork> work = std::make_unique<KBWork>();
+  work->request.resize(size + 1);
+  size_t copied = 0;
+  napi_get_value_string_utf8(env, args[0], work->request.data(), size + 1, &copied);
+  work->request.resize(copied);
+
+  napi_value promise;
+  napi_create_promise(env, &work->deferred, &promise);
+  napi_value resourceName;
+  napi_create_string_utf8(env, "KokoroBoxApplicationRouting", NAPI_AUTO_LENGTH, &resourceName);
+  napi_create_async_work(env, nullptr, resourceName, KBExecute, KBComplete, work.get(),
+                         &work->asyncWork);
+  napi_queue_async_work(env, work->asyncWork);
+  work.release();
+  return promise;
+}
+
+static napi_value KBInitialize(napi_env env, napi_value exports) {
+  napi_value function;
+  napi_create_function(env, "invoke", NAPI_AUTO_LENGTH, KBInvokeAsync, nullptr, &function);
+  napi_set_named_property(env, exports, "invoke", function);
+  return exports;
+}
+
+NAPI_MODULE(NODE_GYP_MODULE_NAME, KBInitialize)

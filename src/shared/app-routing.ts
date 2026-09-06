@@ -17,7 +17,6 @@ const reservedProcessNames = new Set([
 const reservedMacSigningIdentifiers = Object.freeze([
   'com.amamiyakokoro.app',
   'com.amamiyakokoro.app.*',
-  'kokorobox-app-routing-bridge',
   'mihomo',
   'mihomo-alpha'
 ])

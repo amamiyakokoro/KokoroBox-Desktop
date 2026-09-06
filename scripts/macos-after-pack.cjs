@@ -40,19 +40,10 @@ module.exports = async function afterPack(context) {
     'SystemExtensions',
     'KokoroBoxProxyExtension.systemextension'
   )
-  const bridgePath = path.join(
-    appPath,
-    'Contents',
-    'Resources',
-    'files',
-    'macos-app-routing',
-    'kokorobox-app-routing-bridge'
-  )
   const extensionProfile = process.env.KOKOROBOX_EXTENSION_PROVISIONING_PROFILE_PATH
-  if (!existsSync(extensionPath) || !existsSync(bridgePath) || !extensionProfile) {
+  if (!existsSync(extensionPath) || !extensionProfile) {
     throw new Error('Incomplete macOS application-routing payload')
   }
   copyFileSync(extensionProfile, path.join(extensionPath, 'Contents', 'embedded.provisionprofile'))
-  sign(bridgePath, path.join(projectDir, 'build', 'entitlements.mac.bridge.plist'))
   sign(extensionPath, path.join(projectDir, 'build', 'entitlements.mac.extension.plist'))
 }

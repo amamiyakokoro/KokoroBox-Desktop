@@ -99,16 +99,14 @@ export function signingConfig(projectDir: string, teamId: string, appProvisionin
       type: 'distribution',
       hardenedRuntime: true,
       ...(appProvisioningProfile ? { provisioningProfile: appProvisioningProfile } : {}),
-      signIgnore: [
-        'Contents/Library/SystemExtensions/KokoroBoxProxyExtension.systemextension',
-        'Contents/Resources/files/macos-app-routing/kokorobox-app-routing-bridge'
-      ],
+      signIgnore: ['Contents/Library/SystemExtensions/KokoroBoxProxyExtension.systemextension'],
       // The final PKG is explicitly notarized below; never rely on optional auto-notarization.
       notarize: false,
       binaries: [
         'Contents/Resources/sidecar/mihomo',
         'Contents/Resources/sidecar/mihomo-alpha',
-        'Contents/Resources/files/sparkle-service'
+        'Contents/Resources/files/sparkle-service',
+        'Contents/Resources/files/macos-app-routing/kokorobox-app-routing.node'
       ]
     },
     pkg: { identity: teamId }
@@ -375,7 +373,6 @@ export function signMacRelease(
     for (const file of [
       appPath,
       ...signingConfig(projectDir, teamId).mac.binaries.map((file) => path.join(appPath, file)),
-      path.join(appPath, 'Contents/Resources/files/macos-app-routing/kokorobox-app-routing-bridge'),
       path.join(
         appPath,
         'Contents/Library/SystemExtensions/KokoroBoxProxyExtension.systemextension'

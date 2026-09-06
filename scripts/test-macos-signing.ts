@@ -329,10 +329,19 @@ test('generated signing config passes electron-builder validation with required 
   const config = await getConfig(process.cwd(), undefined, signingConfig(process.cwd(), teamId))
   await validateConfiguration(config)
   assert.equal(config.forceCodeSigning, true)
-  assert.equal(config.mac.binaries.length, 3)
+  assert.equal(config.mac.binaries.length, 4)
+  assert.ok(
+    config.mac.binaries.includes(
+      'Contents/Resources/files/macos-app-routing/kokorobox-app-routing.node'
+    )
+  )
   assert.match(config.afterPack, /macos-after-pack\.cjs$/)
   assert.equal(config.mac.entitlementsInherit, 'build/entitlements.mac.helper.plist')
-  assert.equal(config.mac.signIgnore.length, 2)
+  assert.deepEqual(config.mac.signIgnore, [
+    'Contents/Library/SystemExtensions/KokoroBoxProxyExtension.systemextension'
+  ])
+  const afterPack = readFileSync('scripts/macos-after-pack.cjs', 'utf8')
+  assert.doesNotMatch(afterPack, /entitlements\.mac\.bridge|app-routing-bridge/)
   assert.equal(config.pkg.identity, teamId)
 })
 

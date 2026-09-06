@@ -6,17 +6,17 @@ minimum OS version of unrelated KokoroBox features.
 
 ## Architecture
 
-The Electron main process communicates with the bundled
-`kokorobox-app-routing-bridge` executable using one versioned JSON request and response per
-invocation. The Swift bridge is the only component that calls `OSSystemExtensionRequest` and
-`NETransparentProxyManager`. It installs and controls
+The Electron main process loads the bundled `kokorobox-app-routing.node` Node-API module. The
+module runs Apple API work asynchronously inside the already entitled and provisioned main app
+process. It is the only component that calls `OSSystemExtensionRequest` and
+`NETransparentProxyManager`, and it installs and controls
 `com.amamiyakokoro.app.proxy-extension`, a KokoroBox-specific build of ProxyBridge's
 `NETransparentProxyProvider`.
 
-The bridge rejects calls unless its direct parent satisfies the Developer ID requirement for
-`com.amamiyakokoro.app` and Team `755TNLRN92`. This prevents another local process from using
-the bundled executable as a privileged network-configuration deputy. The Team ID is public
-signing metadata, not a credential.
+The module is not a standalone executable and carries no restricted entitlement or embedded
+provisioning profile of its own. Apple authorizes the hosting `com.amamiyakokoro.app` process
+using the main app's provisioning profile. This avoids an invalid standalone-helper design while
+keeping the System Extension in its separately provisioned bundle.
 
 The extension receives the complete policy atomically. A rule uses
 `sourceAppSigningIdentifier` as its stable identity; the selected `.app` path is retained only
@@ -35,16 +35,16 @@ Ordinary UDP/53, QUIC, DoH, and DoT traffic follows the selected application's T
 
 `scripts/prepare-macos-routing.ts` checks out the exact ProxyBridge fork revision declared in
 `src/main/app-routing/integrity-manifest.ts`, builds the app-proxy System Extension, builds the
-Swift bridge for the requested architecture, and stages both for electron-builder. For local
-development, an already checked-out fork can be used without network access:
+Node-API module against the matching Electron headers, and stages both for electron-builder. For
+local development, an already checked-out fork can be used without network access:
 
 ```bash
 PROXYBRIDGE_SOURCE_DIR=/path/to/ProxyBridge npm_config_target_arch=arm64 \
   pnpm prepare:macos-routing
 ```
 
-The generated payload is intentionally unsigned. Release packaging signs it inside the isolated
-temporary Keychain immediately before electron-builder signs the containing app.
+The generated payload is intentionally unsigned. Release packaging signs the native module as
+nested code and embeds the Extension profile before signing the containing app.
 
 ## Apple configuration
 
@@ -62,14 +62,16 @@ GitHub Secrets named `MACOS_APP_PROVISIONING_PROFILE` and
 `MACOS_EXTENSION_PROVISIONING_PROFILE`. Provisioning profiles contain no private key, but they
 are kept out of the repository and temporary files are deleted after signing.
 
-Signing order is enforced by `scripts/macos-after-pack.cjs`: embed the Extension profile, sign
-the bridge, sign the System Extension, sign the Electron app, then sign the PKG. The existing
-notarization, stapling, Gatekeeper, and checksum receipt checks remain mandatory.
+Only these two provisioning profiles are required. No third bridge profile exists. Signing order
+is enforced by `scripts/macos-after-pack.cjs` and electron-builder: embed the Extension profile,
+sign the System Extension, sign the Node-API module as ordinary nested code, sign the Electron
+app with its main-app profile, then sign the PKG. The existing notarization, stapling, Gatekeeper,
+and checksum receipt checks remain mandatory.
 
 ## Verification status
 
 Automated checks cover identifier validation, Windows schema migration, ordered policy
-translation, fail-closed Proxy conversion, entitlement/build configuration, Swift compilation,
+translation, fail-closed Proxy conversion, entitlement/build configuration, Node-API compilation,
 and unsigned arm64 payload creation. Actual activation and packet routing require the approved
 Apple capabilities, matching provisioning profiles, a signed PKG, and a physical Mac.
 

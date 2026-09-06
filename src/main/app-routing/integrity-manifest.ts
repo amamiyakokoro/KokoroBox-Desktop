@@ -1,4 +1,4 @@
-export const proxyBridgeSourceRevision = '002864ff606ddeb4c6dce6dc1247596a3d317fc5'
+export const proxyBridgeSourceRevision = 'ad904d8cd689659e1250bd683deca3d58d49ff7f'
 export const winDivertVersion = '2.2.2'
 export const winDivertArchiveSha256 =
   '63cb41763bb4b20f600b6de04e991a9c2be73279e317d4d82f237b150c5f3f15'

@@ -147,10 +147,10 @@ export function processRouterPath(): string {
   return path.join(processRouterDir(), 'kokorobox-process-router.exe')
 }
 
-export function macAppRoutingBridgePath(): string {
+export function macAppRoutingModulePath(): string {
   return (
-    process.env.KOKOROBOX_MACOS_ROUTING_BRIDGE ||
-    path.join(resourcesFilesDir(), 'macos-app-routing', 'kokorobox-app-routing-bridge')
+    process.env.KOKOROBOX_MACOS_ROUTING_MODULE ||
+    path.join(resourcesFilesDir(), 'macos-app-routing', 'kokorobox-app-routing.node')
   )
 }
 
