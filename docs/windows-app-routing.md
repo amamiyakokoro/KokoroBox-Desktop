@@ -69,9 +69,9 @@ router and releases WinDivert while retaining the canonical rules for the next a
 The privileged service probes the dedicated Mihomo listener before installing Proxy actions.
 The sidecar stays active if the listener becomes unavailable; the service atomically replaces
 every Proxy action with Block. When the listener becomes reachable again, Proxy actions are
-restored. Explicit Direct and Block rules retain their configured action. The packaged
-ProxyBridge source receives an additional defense-in-depth patch that treats a missing or
-incompatible proxy configuration as Block.
+restored. Explicit Direct and Block rules retain their configured action. The pinned KokoroBox
+ProxyBridge fork treats a missing or incompatible proxy configuration as Block as an additional
+defense-in-depth measure.
 
 An unexpected sidecar or WinDivert failure is reported as an error and the service attempts to
 restart it. There can still be a brief interception gap while a crashed sidecar or service
@@ -81,8 +81,8 @@ Windows Firewall kill switch and is outside this MVP.
 ## Reproducible native build
 
 `scripts/build-proxybridge.ps1` builds only in the Windows x64 release job. It checks out an exact
-ProxyBridge commit, verifies the WinDivert archive SHA-256, applies the fail-closed patch, and
-packages only the KokoroBox router, core DLL, WinDivert runtime, and license files. See
+commit from the controlled KokoroBox ProxyBridge fork, verifies the WinDivert archive SHA-256,
+and packages only the KokoroBox router, core DLL, WinDivert runtime, and license files. See
 [`THIRD_PARTY_NOTICES.md`](../THIRD_PARTY_NOTICES.md) for attribution.
 
 The packaged files live under `extra/files/process-router/`; the upstream `.sys` payload is

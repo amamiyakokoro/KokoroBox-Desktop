@@ -2,11 +2,12 @@
 
 ## ProxyBridge
 
-KokoroBox uses a modified subset of [ProxyBridge](https://github.com/InterceptSuite/ProxyBridge)
-as the packet-interception core behind its Windows x64 native router. The build is pinned to commit
-`02703a0672a8b94011a4698368a392f7734c10dc`. KokoroBox changes missing-proxy handling to fail
+KokoroBox uses a modified subset of the
+[KokoroBox ProxyBridge fork](https://github.com/amamiyakokoro/ProxyBridge) as the
+packet-interception core behind its Windows x64 native router. The build is pinned to commit
+`4c2de905b12cf739f07453de3c0e8ce0361d198d`. The fork changes missing-proxy handling to fail
 closed and raises the internal process-pattern capacity so an atomic guard can cover the complete
-bounded rule set.
+bounded rule set. Its history retains the upstream source and license.
 
 ProxyBridge is distributed under the MIT License. Copyright (c) 2025
 Anof-cyber/InterceptSuite. The complete license is packaged next to the sidecar as

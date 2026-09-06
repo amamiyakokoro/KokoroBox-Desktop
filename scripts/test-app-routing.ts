@@ -316,17 +316,13 @@ test('requires every pinned native binary to match its build manifest', () => {
   )
 })
 
-test('native build is pinned and patches missing proxies to fail closed', () => {
+test('native build is pinned to the controlled KokoroBox ProxyBridge fork', () => {
   const build = readFileSync('scripts/build-proxybridge.ps1', 'utf8')
-  const patch = readFileSync('build/proxybridge/fail-closed.patch', 'utf8')
-  const processListPatch = readFileSync('build/proxybridge/process-list-capacity.patch', 'utf8')
   const router = readFileSync('build/proxybridge/kokorobox_process_router.c', 'utf8')
-  assert.match(build, /02703a0672a8b94011a4698368a392f7734c10dc/)
+  assert.match(build, /https:\/\/github\.com\/amamiyakokoro\/ProxyBridge\.git/)
+  assert.match(build, /4c2de905b12cf739f07453de3c0e8ce0361d198d/)
   assert.match(build, /63cb41763bb4b20f600b6de04e991a9c2be73279e317d4d82f237b150c5f3f15/)
-  assert.equal((patch.match(/return RULE_ACTION_BLOCK/g) || []).length, 4)
-  assert.doesNotMatch(patch, /^\+.*return RULE_ACTION_DIRECT/m)
-  assert.match(processListPatch, /MAX_PROCESS_NAME 65536/)
-  assert.match(build, /process-list-capacity\.patch/)
+  assert.doesNotMatch(build, /git -C \$SourceRoot apply/)
   assert.match(build, /kokorobox-process-router\.exe/)
   assert.match(router, /version != PROTOCOL_VERSION/)
   assert.match(router, /argc != 1/)

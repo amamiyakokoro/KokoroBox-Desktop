@@ -3,8 +3,8 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$ProxyBridgeRepository = "https://github.com/InterceptSuite/ProxyBridge.git"
-$ProxyBridgeCommit = "02703a0672a8b94011a4698368a392f7734c10dc"
+$ProxyBridgeRepository = "https://github.com/amamiyakokoro/ProxyBridge.git"
+$ProxyBridgeCommit = "4c2de905b12cf739f07453de3c0e8ce0361d198d"
 $WinDivertUrl = "https://github.com/basil00/WinDivert/releases/download/v2.2.2/WinDivert-2.2.2-A.zip"
 $WinDivertSha256 = "63cb41763bb4b20f600b6de04e991a9c2be73279e317d4d82f237b150c5f3f15"
 $RepositoryRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
@@ -14,8 +14,6 @@ $BuildRoot = Join-Path $TempRoot "kokorobox-proxybridge"
 $SourceRoot = Join-Path $BuildRoot "source"
 $ArchivePath = Join-Path $BuildRoot "windivert.zip"
 $WinDivertRoot = Join-Path $BuildRoot "windivert/WinDivert-2.2.2-A"
-$PatchPath = Join-Path $RepositoryRoot "build/proxybridge/fail-closed.patch"
-$ProcessListPatchPath = Join-Path $RepositoryRoot "build/proxybridge/process-list-capacity.patch"
 $RouterSource = Join-Path $RepositoryRoot "build/proxybridge/kokorobox_process_router.c"
 
 if (Test-Path $BuildRoot) { Remove-Item $BuildRoot -Recurse -Force }
@@ -27,14 +25,6 @@ git clone --filter=blob:none --no-checkout $ProxyBridgeRepository $SourceRoot
 if ($LASTEXITCODE -ne 0) { throw "ProxyBridge clone failed" }
 git -C $SourceRoot checkout --detach $ProxyBridgeCommit
 if ($LASTEXITCODE -ne 0) { throw "ProxyBridge checkout failed" }
-git -C $SourceRoot apply --check --unidiff-zero $PatchPath
-if ($LASTEXITCODE -ne 0) { throw "ProxyBridge fail-closed patch no longer applies" }
-git -C $SourceRoot apply --unidiff-zero $PatchPath
-if ($LASTEXITCODE -ne 0) { throw "ProxyBridge fail-closed patch failed" }
-git -C $SourceRoot apply --check $ProcessListPatchPath
-if ($LASTEXITCODE -ne 0) { throw "ProxyBridge process-list patch no longer applies" }
-git -C $SourceRoot apply $ProcessListPatchPath
-if ($LASTEXITCODE -ne 0) { throw "ProxyBridge process-list patch failed" }
 
 Invoke-WebRequest -Uri $WinDivertUrl -OutFile $ArchivePath
 $DownloadedHash = (Get-FileHash -Algorithm SHA256 $ArchivePath).Hash.ToLowerInvariant()
