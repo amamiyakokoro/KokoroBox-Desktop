@@ -21,8 +21,11 @@ export const appleSecrets = [
   'CSC_INSTALLER_KEY_PASSWORD',
   'APPLE_ID',
   'APPLE_APP_SPECIFIC_PASSWORD',
-  'APPLE_TEAM_ID'
+  'APPLE_TEAM_ID',
+  'MACOS_APP_PROVISIONING_PROFILE',
+  'MACOS_EXTENSION_PROVISIONING_PROFILE'
 ] as const
+export const kokoroBoxAppleTeamId = '755TNLRN92'
 
 export type CommandRunner = (
   label: string,
@@ -51,8 +54,8 @@ export const runCommand: CommandRunner = (label, command, args, env, timeout = 1
 export function validateSigningEnvironment(env: NodeJS.ProcessEnv) {
   for (const name of appleSecrets)
     if (!env[name]?.trim()) throw new Error(`Missing GitHub Secret: ${name}`)
-  if (!/^[A-Z0-9]{10}$/.test(env.APPLE_TEAM_ID!))
-    throw new Error('APPLE_TEAM_ID must contain 10 uppercase letters/digits')
+  if (env.APPLE_TEAM_ID !== kokoroBoxAppleTeamId)
+    throw new Error(`APPLE_TEAM_ID must be ${kokoroBoxAppleTeamId}`)
   if (!['x64', 'arm64'].includes(env.TARGET_ARCH ?? ''))
     throw new Error('Unsupported macOS architecture')
   if (!/^[0-9a-f]{40}$/.test(env.GITHUB_SHA ?? '')) throw new Error('Invalid source commit SHA')
@@ -86,14 +89,20 @@ export function decodeCertificate(value: string): Buffer {
   return decoded
 }
 
-export function signingConfig(projectDir: string, teamId: string) {
+export function signingConfig(projectDir: string, teamId: string, appProvisioningProfile?: string) {
   return {
     extends: path.join(projectDir, 'electron-builder.yml'),
+    afterPack: path.join(projectDir, 'scripts', 'macos-after-pack.cjs'),
     forceCodeSigning: true,
     mac: {
       identity: teamId,
       type: 'distribution',
       hardenedRuntime: true,
+      ...(appProvisioningProfile ? { provisioningProfile: appProvisioningProfile } : {}),
+      signIgnore: [
+        'Contents/Library/SystemExtensions/KokoroBoxProxyExtension.systemextension',
+        'Contents/Resources/files/macos-app-routing/kokorobox-app-routing-bridge'
+      ],
       // The final PKG is explicitly notarized below; never rely on optional auto-notarization.
       notarize: false,
       binaries: [
@@ -110,7 +119,10 @@ export function sanitizedChildEnvironment(env: NodeJS.ProcessEnv): NodeJS.Proces
   // The packaging subprocess does not need certificate blobs, passwords, or Apple account credentials.
   return Object.fromEntries(
     Object.entries(env).filter(
-      ([key]) => !/^(CSC_|WIN_CSC_|APPLE_|GH_TOKEN$|GITHUB_TOKEN$|DEBUG$)/.test(key)
+      ([key]) =>
+        !/^(CSC_|WIN_CSC_|APPLE_|MACOS_.*PROVISIONING_PROFILE$|GH_TOKEN$|GITHUB_TOKEN$|DEBUG$)/.test(
+          key
+        )
     )
   )
 }
@@ -213,6 +225,8 @@ export function signMacRelease(
   const filename = artifactName({ os: 'macos-latest', arch, format: 'pkg' }, version)
   const appCertificate = decodeCertificate(env.CSC_LINK!)
   const installerCertificate = decodeCertificate(env.CSC_INSTALLER_LINK!)
+  const appProvisioningProfile = decodeCertificate(env.MACOS_APP_PROVISIONING_PROFILE!)
+  const extensionProvisioningProfile = decodeCertificate(env.MACOS_EXTENSION_PROVISIONING_PROFILE!)
   const teamId = env.APPLE_TEAM_ID!
   const directory = mkdtempSync(path.join(realpathSync(env.RUNNER_TEMP!), 'kokorobox-signing-'))
   const keychain = path.join(directory, 'signing.keychain-db')
@@ -284,6 +298,10 @@ export function signMacRelease(
       )
       rmSync(file)
     }
+    const appProfilePath = path.join(directory, 'KokoroBox.provisionprofile')
+    const extensionProfilePath = path.join(directory, 'KokoroBoxProxyExtension.provisionprofile')
+    writeFileSync(appProfilePath, appProvisioningProfile, { mode: 0o600 })
+    writeFileSync(extensionProfilePath, extensionProvisioningProfile, { mode: 0o600 })
     run(
       'Authorize Apple signing tools',
       '/usr/bin/security',
@@ -308,8 +326,21 @@ export function signMacRelease(
       ],
       childEnv
     )
+    const identities = run(
+      'Find Developer ID signing identity',
+      '/usr/bin/security',
+      ['find-identity', '-v', '-p', 'codesigning', keychain],
+      childEnv
+    )
+    const identity = identities
+      .split('\n')
+      .find((line) => line.includes(`(${teamId})`) && /[0-9A-F]{40}/.test(line))
+      ?.match(/[0-9A-F]{40}/)?.[0]
+    if (!identity) throw new Error('Developer ID Application identity was not imported')
     const configFile = path.join(directory, 'electron-builder.json')
-    writeFileSync(configFile, JSON.stringify(signingConfig(projectDir, teamId)), { mode: 0o600 })
+    writeFileSync(configFile, JSON.stringify(signingConfig(projectDir, teamId, appProfilePath)), {
+      mode: 0o600
+    })
     console.log(`Signing macOS ${arch} application, helpers and PKG`)
     run(
       'Sign App and PKG',
@@ -324,7 +355,14 @@ export function signMacRelease(
         '--config',
         configFile
       ],
-      { ...childEnv, CSC_KEYCHAIN: keychain, CSC_IDENTITY_AUTO_DISCOVERY: 'true' },
+      {
+        ...childEnv,
+        CSC_KEYCHAIN: keychain,
+        CSC_IDENTITY_AUTO_DISCOVERY: 'true',
+        KOKOROBOX_CODESIGN_IDENTITY: identity,
+        KOKOROBOX_CODESIGN_KEYCHAIN: keychain,
+        KOKOROBOX_EXTENSION_PROVISIONING_PROFILE_PATH: extensionProfilePath
+      },
       30 * 60_000
     )
     const appPath = path.join(
@@ -336,7 +374,12 @@ export function signMacRelease(
     const pkgPath = path.join(projectDir, 'dist', filename)
     for (const file of [
       appPath,
-      ...signingConfig(projectDir, teamId).mac.binaries.map((file) => path.join(appPath, file))
+      ...signingConfig(projectDir, teamId).mac.binaries.map((file) => path.join(appPath, file)),
+      path.join(appPath, 'Contents/Resources/files/macos-app-routing/kokorobox-app-routing-bridge'),
+      path.join(
+        appPath,
+        'Contents/Library/SystemExtensions/KokoroBoxProxyExtension.systemextension'
+      )
     ]) {
       run(
         'Verify App/helper signature',

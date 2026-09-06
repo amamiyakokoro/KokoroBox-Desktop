@@ -7,7 +7,7 @@ import {
   replaceAppRoutingConfig
 } from '@renderer/utils/ipc'
 import { notify } from '@renderer/utils/notification'
-import { normalizeProcessPattern, validateAppRoutingRule } from '../../../shared/app-routing'
+import { normalizeAppRoutingIdentifier, validateAppRoutingRule } from '../../../shared/app-routing'
 import { nanoid } from 'nanoid'
 import { useCallback, useEffect, useState } from 'react'
 
@@ -83,13 +83,14 @@ export function useAppRouting(): {
     const existingPatterns = new Set(config.rules.map((rule) => rule.processPattern.toLowerCase()))
     const additions: AppRoutingRule[] = []
     for (const application of applications) {
-      const { executablePath, executableName, iconDataUrl } = application
-      const processPattern = normalizeProcessPattern(executableName)
+      const { executablePath, identifier, identifierKind, iconDataUrl } = application
+      const processPattern = normalizeAppRoutingIdentifier(identifier, identifierKind)
       if (!processPattern || existingPatterns.has(processPattern.toLowerCase())) continue
       existingPatterns.add(processPattern.toLowerCase())
       additions.push({
         id: nanoid(),
         processPattern,
+        identifierKind,
         sourcePath: executablePath,
         action: config.defaultAction,
         protocol: config.defaultProtocol,
@@ -110,7 +111,9 @@ export function useAppRouting(): {
 
   const addPattern = async (value: string): Promise<boolean> => {
     if (!config) return false
-    const processPattern = normalizeProcessPattern(value)
+    const identifierKind: AppRoutingIdentifierKind =
+      window.api.platform === 'darwin' ? 'macos-signing-identifier' : 'windows-executable'
+    const processPattern = normalizeAppRoutingIdentifier(value, identifierKind)
     if (
       config.rules.some(
         (rule) => rule.processPattern.toLowerCase() === processPattern.toLowerCase()
@@ -122,6 +125,7 @@ export function useAppRouting(): {
     const nextRule: AppRoutingRule = {
       id: nanoid(),
       processPattern,
+      identifierKind,
       action: config.defaultAction,
       protocol: config.defaultProtocol,
       enabled: true,
@@ -168,7 +172,10 @@ export function useAppRouting(): {
     config,
     status,
     saving,
-    supported: status?.supported ?? (window.api.platform === 'win32' && window.api.arch === 'x64'),
+    supported:
+      status?.supported ??
+      ((window.api.platform === 'win32' && window.api.arch === 'x64') ||
+        (window.api.platform === 'darwin' && ['x64', 'arm64'].includes(window.api.arch))),
     icons,
     save,
     addApplications,

@@ -50,6 +50,8 @@ jobs:
       APPLE_ID: ${{ secrets.APPLE_ID }}
       APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
       APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      MACOS_APP_PROVISIONING_PROFILE: ${{ secrets.MACOS_APP_PROVISIONING_PROFILE }}
+      MACOS_EXTENSION_PROVISIONING_PROFILE: ${{ secrets.MACOS_EXTENSION_PROVISIONING_PROFILE }}
     with:
       channel: rolling
       version: ${{ needs.prepare.outputs.version }}

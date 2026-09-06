@@ -148,6 +148,10 @@ export async function getAppRoutingIcon(executablePath: string): Promise<string 
   )
 }
 
+export async function openAppRoutingSystemSettings(): Promise<void> {
+  return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('openAppRoutingSystemSettings'))
+}
+
 export async function getCachedMihomoLogs(): Promise<
   Array<ControllerLog & { id?: string; seq?: number }>
 > {

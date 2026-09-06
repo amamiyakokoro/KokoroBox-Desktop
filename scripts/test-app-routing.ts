@@ -4,10 +4,12 @@ import { resolve } from 'node:path'
 import { test } from 'node:test'
 import {
   appRoutingSupported,
+  appRoutingIdentifierKind,
   executableName,
   isProtectedAppRoutingPattern,
   isProtectedAppRoutingProcess,
   normalizeAppRoutingConfig,
+  normalizeMacSigningIdentifier,
   normalizeWindowsExecutablePath,
   parseAppRoutingConfig,
   validateAppRoutingConfig
@@ -33,6 +35,10 @@ import {
   buildServiceProcessRouterRules,
   validateServiceProcessRouterStatus
 } from '../src/main/app-routing/service-protocol'
+import {
+  buildMacAppRoutingConfiguration,
+  macAppRoutingOperatingSystemSupported
+} from '../src/main/app-routing/macos-profile'
 
 function rule(overrides: Partial<AppRoutingRule> = {}): AppRoutingRule {
   return {
@@ -47,11 +53,54 @@ function rule(overrides: Partial<AppRoutingRule> = {}): AppRoutingRule {
   }
 }
 
-test('application routing is limited to Windows x64', () => {
+test('application routing supports Windows x64 and both macOS architectures', () => {
   assert.equal(appRoutingSupported('win32', 'x64'), true)
   assert.equal(appRoutingSupported('win32', 'arm64'), false)
-  assert.equal(appRoutingSupported('darwin', 'x64'), false)
+  assert.equal(appRoutingSupported('darwin', 'x64'), true)
+  assert.equal(appRoutingSupported('darwin', 'arm64'), true)
   assert.equal(appRoutingSupported('linux', 'x64'), false)
+  assert.equal(macAppRoutingOperatingSystemSupported('21.6.0'), false)
+  assert.equal(macAppRoutingOperatingSystemSupported('22.0.0'), true)
+})
+
+test('validates macOS signing identifiers and translates rules atomically', () => {
+  const macRule = rule({
+    processPattern: 'com.openai.chat*',
+    identifierKind: 'macos-signing-identifier',
+    sourcePath: '/Applications/ChatGPT.app'
+  })
+  assert.equal(appRoutingIdentifierKind(macRule), 'macos-signing-identifier')
+  assert.equal(normalizeMacSigningIdentifier('  com.openai.chat  '), 'com.openai.chat')
+  const config: AppRoutingConfig = {
+    version: 1,
+    enabled: true,
+    failClosed: true,
+    proxyUdpDns: true,
+    defaultAction: 'proxy',
+    defaultProtocol: 'both',
+    diagnosticLogging: false,
+    rules: [macRule]
+  }
+  validateAppRoutingConfig(config)
+  assert.deepEqual(buildMacAppRoutingConfiguration(config, true).rules, [
+    {
+      signingIdentifier: 'com.openai.chat*',
+      ruleProtocol: 'BOTH',
+      action: 'PROXY',
+      enabled: true,
+      priority: 1
+    }
+  ])
+  assert.equal(buildMacAppRoutingConfiguration(config, false).rules[0].action, 'BLOCK')
+  for (const processPattern of ['*', 'com.example.bad?', 'com.amamiyakokoro.app']) {
+    assert.throws(() =>
+      validateAppRoutingConfig({
+        ...config,
+        rules: [{ ...macRule, processPattern }]
+      })
+    )
+  }
+  assert.throws(() => buildMacAppRoutingConfiguration({ ...config, rules: [rule()] }, true))
 })
 
 test('validates filename and wildcard patterns while protecting internal processes', () => {
@@ -460,9 +509,20 @@ test('requires every pinned native binary to match its build manifest', () => {
 
 test('native build is pinned to the controlled KokoroBox ProxyBridge fork', () => {
   const build = readFileSync('scripts/build-proxybridge.ps1', 'utf8')
+  const macBuild = readFileSync('scripts/prepare-macos-routing.ts', 'utf8')
+  const macBridge = readFileSync('native/macos-app-routing/KokoroBoxAppRoutingBridge.swift', 'utf8')
   const router = readFileSync('build/proxybridge/kokorobox_process_router.c', 'utf8')
   assert.match(build, /https:\/\/github\.com\/amamiyakokoro\/ProxyBridge\.git/)
-  assert.match(build, /cf2aee3de37c56d1c530f58295ff6c7521472129/)
+  assert.match(build, new RegExp(proxyBridgeSourceRevision))
+  assert.match(macBuild, /https:\/\/github\.com\/amamiyakokoro\/ProxyBridge\.git/)
+  assert.match(macBuild, /proxyBridgeSourceRevision/)
+  assert.match(macBuild, /KokoroBoxProxyExtension\.systemextension/)
+  assert.match(macBuild, /CODE_SIGNING_ALLOWED=NO/)
+  assert.match(macBuild, /CURRENT_PROJECT_VERSION=/)
+  assert.match(macBuild, /-framework[\s\S]*Security/)
+  assert.match(macBridge, /SecCodeCheckValidity/)
+  assert.match(macBridge, /identifier \\"com\.amamiyakokoro\.app\\"/)
+  assert.match(macBridge, /certificate leaf\[subject\.OU\].*755TNLRN92/)
   assert.match(build, /63cb41763bb4b20f600b6de04e991a9c2be73279e317d4d82f237b150c5f3f15/)
   assert.doesNotMatch(build, /git -C \$SourceRoot apply/)
   assert.match(build, /kokorobox-process-router\.exe/)

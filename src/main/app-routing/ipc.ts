@@ -3,6 +3,7 @@ import { restartCore } from '../core/manager'
 import { getApplicationPaths, getAppRoutingIcon } from '../sys/misc'
 import { getAppRoutingConfig } from './config'
 import { getAppRoutingStatus, replaceAppRoutingConfig } from './manager'
+import { openMacAppRoutingSystemSettings } from './macos'
 
 async function invokeSafely<T>(
   operation: () => T | Promise<T>
@@ -37,5 +38,11 @@ export function registerAppRoutingIpcHandlers(): void {
   ipcMain.handle('getApplicationPaths', () => invokeSafely(getApplicationPaths))
   ipcMain.handle('getAppRoutingIcon', (_event, executablePath: string) =>
     invokeSafely(() => getAppRoutingIcon(executablePath))
+  )
+  ipcMain.handle('openAppRoutingSystemSettings', () =>
+    invokeSafely(async () => {
+      if (process.platform !== 'darwin') throw new Error('System Extension settings are macOS-only')
+      await openMacAppRoutingSystemSettings()
+    })
   )
 }

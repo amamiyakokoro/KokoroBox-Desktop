@@ -34,9 +34,16 @@ export function getFilePath(
 }
 
 export async function getApplicationPaths(): Promise<AppRoutingApplicationSelection[] | undefined> {
+  if (process.platform !== 'win32' && process.platform !== 'darwin') return undefined
+  const isMac = process.platform === 'darwin'
   const selected = dialog.showOpenDialogSync({
     title: tr('选择应用程序'),
-    filters: [{ name: tr('Windows 应用程序'), extensions: ['exe'] }],
+    filters: [
+      {
+        name: isMac ? tr('macOS 应用程序') : tr('Windows 应用程序'),
+        extensions: [isMac ? 'app' : 'exe']
+      }
+    ],
     properties: ['openFile', 'multiSelections']
   })
   if (!selected) return undefined
@@ -44,14 +51,39 @@ export async function getApplicationPaths(): Promise<AppRoutingApplicationSelect
   await mkdir(appRoutingIconDir(), { recursive: true })
   const applications: AppRoutingApplicationSelection[] = []
   for (const selectedPath of selected) {
-    const executablePath = normalizeWindowsExecutablePath(await realpath(selectedPath))
+    const canonicalPath = await realpath(selectedPath)
+    const executablePath = isMac ? canonicalPath : normalizeWindowsExecutablePath(canonicalPath)
+    const fileStat = await stat(executablePath)
+    const expectedExtension = isMac ? '.app' : '.exe'
     if (
-      path.extname(executablePath).toLowerCase() !== '.exe' ||
-      !(await stat(executablePath)).isFile()
+      path.extname(executablePath).toLowerCase() !== expectedExtension ||
+      (isMac ? !fileStat.isDirectory() : !fileStat.isFile())
     ) {
-      throw new Error('Application routing requires an existing .exe file')
+      throw new Error(
+        isMac
+          ? 'Application routing requires an existing macOS .app bundle'
+          : 'Application routing requires an existing .exe file'
+      )
     }
-    const executableName = path.win32.basename(executablePath)
+    const executableName = isMac
+      ? path.basename(executablePath, path.extname(executablePath))
+      : path.win32.basename(executablePath)
+    let identifier = executableName
+    let identifierKind: AppRoutingIdentifierKind = 'windows-executable'
+    if (isMac) {
+      const execFilePromise = promisify(execFile)
+      const { stderr } = await execFilePromise(
+        '/usr/bin/codesign',
+        ['--display', '--verbose=2', executablePath],
+        { encoding: 'utf8' }
+      )
+      const match = stderr.match(/^Identifier=(.+)$/m)
+      if (!match?.[1] || /[\r\n]/.test(match[1])) {
+        throw new Error('The selected macOS application has no usable signing identifier')
+      }
+      identifier = match[1]
+      identifierKind = 'macos-signing-identifier'
+    }
     const iconCacheKey = crypto
       .createHash('sha256')
       .update(executablePath.toLowerCase(), 'utf8')
@@ -64,6 +96,8 @@ export async function getApplicationPaths(): Promise<AppRoutingApplicationSelect
     applications.push({
       executablePath,
       executableName,
+      identifier,
+      identifierKind,
       iconDataUrl
     })
   }
@@ -71,8 +105,10 @@ export async function getApplicationPaths(): Promise<AppRoutingApplicationSelect
 }
 
 export async function getAppRoutingIcon(executablePath: string): Promise<string | undefined> {
-  if (!/^(?:[a-zA-Z]:\\|\\\\)[^\0]+\.exe$/i.test(executablePath)) {
-    throw new Error('Invalid application executable path')
+  const validWindowsPath = /^(?:[a-zA-Z]:\\|\\\\)[^\0]+\.exe$/i.test(executablePath)
+  const validMacPath = /^\/[^\0]+\.app$/i.test(executablePath)
+  if (!validWindowsPath && !validMacPath) {
+    throw new Error('Invalid application path')
   }
   const iconCacheKey = crypto
     .createHash('sha256')

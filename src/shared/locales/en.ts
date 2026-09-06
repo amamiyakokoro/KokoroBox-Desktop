@@ -17,6 +17,7 @@ export const messages: Readonly<Record<string, string>> = {
   '代理核心不可用，已封锁 {0} 个受保护应用的网络连接。':
     'The proxy core is unavailable. Network access is blocked for {0} protected applications.',
   'Windows 应用程序': 'Windows applications',
+  'macOS 应用程序': 'macOS applications',
   选择应用程序: 'Select applications',
   'Windows 应用程序分流': 'Windows application routing',
   '无需系统代理或 TUN，将指定应用程序交给本机 Mihomo 处理。':
@@ -41,6 +42,14 @@ export const messages: Readonly<Record<string, string>> = {
     'Rules match from top to bottom; the same executable path can be added only once.',
   添加应用程序: 'Add applications',
   '此 MVP 仅支持 Windows 10/11 x64。': 'This MVP supports Windows 10/11 x64 only.',
+  '应用分流支持 Windows 10/11 x64 与 macOS 13 或更新版本。':
+    'Application routing supports Windows 10/11 x64 and macOS 13 or later.',
+  签名标识: 'Signing identifier',
+  '规则按从上到下的顺序匹配；使用应用签名标识，可在末尾加入 *。':
+    'Rules match from top to bottom. Use an application signing identifier, optionally ending in *.',
+  '例如：com.openai.chat 或 com.openai.chat*': 'For example: com.openai.chat or com.openai.chat*',
+  '输入签名标识，或选择一个或多个 .app，然后设定 Proxy、Direct 或 Block。':
+    'Enter a signing identifier or select one or more .app bundles, then choose Proxy, Direct, or Block.',
   尚未添加应用程序: 'No applications added',
   '选择一个或多个 .exe，然后设定 Proxy、Direct 或 Block。':
     'Select one or more .exe files, then choose Proxy, Direct, or Block.',
@@ -65,6 +74,12 @@ export const messages: Readonly<Record<string, string>> = {
   封包拦截组件启动失败: 'The packet interception sidecar failed to start',
   '封包拦截组件意外停止，正在重试':
     'The packet interception sidecar stopped unexpectedly; retrying',
+  '请在系统设置中允许 KokoroBox 网络扩展':
+    'Allow the KokoroBox network extension in System Settings.',
+  打开网络扩展设置: 'Open Network Extension Settings',
+  'macOS 应用分流组件未安装': 'The macOS application-routing bridge is not installed',
+  'macOS 系统扩展未安装': 'The macOS system extension is not installed',
+  'macOS 应用分流需要 macOS 13 或更新版本': 'macOS application routing requires macOS 13 or later',
   任务栏: 'Taskbar',
   状态栏: 'Menu bar',
   ' (全局)': ' (Global)',

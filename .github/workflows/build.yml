@@ -30,6 +30,10 @@ on:
         required: true
       APPLE_TEAM_ID:
         required: true
+      MACOS_APP_PROVISIONING_PROFILE:
+        required: true
+      MACOS_EXTENSION_PROVISIONING_PROFILE:
+        required: true
 
 permissions:
   contents: read
@@ -222,6 +226,10 @@ jobs:
             pnpm build:linux ${{ matrix.format }} --${{ matrix.arch }}
           else
             # Compile without secrets; packaging/signing runs in the isolated step below.
+            PROXYBRIDGE_SOURCE_DIR="$RUNNER_TEMP/kokorobox-proxybridge-source"
+            git clone --filter=blob:none --no-checkout https://github.com/amamiyakokoro/ProxyBridge.git "$PROXYBRIDGE_SOURCE_DIR"
+            git -C "$PROXYBRIDGE_SOURCE_DIR" checkout --detach 002864ff606ddeb4c6dce6dc1247596a3d317fc5
+            PROXYBRIDGE_SOURCE_DIR="$PROXYBRIDGE_SOURCE_DIR" pnpm prepare:macos-routing
             pnpm exec electron-vite build
           fi
 
@@ -255,6 +263,8 @@ jobs:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          MACOS_APP_PROVISIONING_PROFILE: ${{ secrets.MACOS_APP_PROVISIONING_PROFILE }}
+          MACOS_EXTENSION_PROVISIONING_PROFILE: ${{ secrets.MACOS_EXTENSION_PROVISIONING_PROFILE }}
         run: node scripts/macos-signing.ts release
 
       - name: Clean Up macOS Signing Credentials

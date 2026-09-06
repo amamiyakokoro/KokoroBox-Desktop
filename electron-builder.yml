@@ -21,6 +21,9 @@ files:
 extraResources:
   - from: './extra/'
     to: ''
+    filter:
+      - '**/*'
+      - '!macos-app-routing-system-extension{,/**/*}'
   - from: './THIRD_PARTY_NOTICES.md'
     to: 'THIRD_PARTY_NOTICES.md'
 protocols:
@@ -50,8 +53,12 @@ mac:
     - pkg
   hardenedRuntime: true
   entitlements: build/entitlements.mac.plist
-  entitlementsInherit: build/entitlements.mac.plist
+  entitlementsInherit: build/entitlements.mac.helper.plist
+  extraFiles:
+    - from: './extra/macos-app-routing-system-extension/KokoroBoxProxyExtension.systemextension'
+      to: 'Library/SystemExtensions/KokoroBoxProxyExtension.systemextension'
   extendInfo:
+    - NSSystemExtensionUsageDescription: KokoroBox uses a system extension to route only the applications you select.
     - NSCameraUsageDescription: Application requests access to the device's camera.
     - NSMicrophoneUsageDescription: Application requests access to the device's microphone.
     - NSDocumentsFolderUsageDescription: Application requests access to the user's Documents folder.

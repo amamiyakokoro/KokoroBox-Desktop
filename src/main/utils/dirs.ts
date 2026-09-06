@@ -147,6 +147,22 @@ export function processRouterPath(): string {
   return path.join(processRouterDir(), 'kokorobox-process-router.exe')
 }
 
+export function macAppRoutingBridgePath(): string {
+  return (
+    process.env.KOKOROBOX_MACOS_ROUTING_BRIDGE ||
+    path.join(resourcesFilesDir(), 'macos-app-routing', 'kokorobox-app-routing-bridge')
+  )
+}
+
+export function macAppRoutingExtensionPath(): string {
+  return path.join(
+    path.dirname(resourcesDir()),
+    'Library',
+    'SystemExtensions',
+    'KokoroBoxProxyExtension.systemextension'
+  )
+}
+
 export function appConfigPath(): string {
   return path.join(dataDir(), 'config.yaml')
 }

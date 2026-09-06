@@ -151,6 +151,7 @@ interface AppConfig {
 
 type AppRoutingAction = 'proxy' | 'direct' | 'block'
 type AppRoutingProtocol = 'tcp' | 'udp' | 'both'
+type AppRoutingIdentifierKind = 'windows-executable' | 'macos-signing-identifier'
 type AppRoutingRuntimeState =
   'unsupported' | 'disabled' | 'starting' | 'running' | 'degraded' | 'error'
 
@@ -159,6 +160,7 @@ interface AppRoutingRule {
   enabled: boolean
   priority: number
   processPattern: string
+  identifierKind?: AppRoutingIdentifierKind
   sourcePath?: string
   protocol: AppRoutingProtocol
   action: AppRoutingAction
@@ -167,6 +169,8 @@ interface AppRoutingRule {
 interface AppRoutingApplicationSelection {
   executablePath: string
   executableName: string
+  identifier: string
+  identifierKind: AppRoutingIdentifierKind
   iconDataUrl?: string
 }
 
