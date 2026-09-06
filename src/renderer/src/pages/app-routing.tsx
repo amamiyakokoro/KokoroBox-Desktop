@@ -1,9 +1,10 @@
 import { tr } from '../../../shared/i18n'
 import BasePage from '@renderer/components/base/base-page'
 import { AppRoutingRuleRow } from '@renderer/components/app-routing/rule-row'
+import AppRoutingSettingDrawer from '@renderer/components/app-routing/app-routing-setting-drawer'
 import { useAppRouting } from '@renderer/hooks/use-app-routing'
 import { Button, Card, CardBody, Chip, Divider, Input, Switch } from '@heroui/react'
-import { MdAdd } from 'react-icons/md'
+import { MdAdd, MdTune } from 'react-icons/md'
 import { useState } from 'react'
 
 function statusColor(
@@ -78,13 +79,42 @@ const AppRouting: React.FC = () => {
     deleteRule
   } = useAppRouting()
   const [processPattern, setProcessPattern] = useState('')
+  const [isSettingDrawerOpen, setIsSettingDrawerOpen] = useState(false)
+  const [settingDrawerReopenSignal, setSettingDrawerReopenSignal] = useState(0)
   const currentStatusMessage = statusMessage(status?.message, status?.protectedApplicationCount)
   const submitPattern = async (): Promise<void> => {
     if (await addPattern(processPattern)) setProcessPattern('')
   }
 
   return (
-    <BasePage title={tr('应用分流')} contentClassName="no-scrollbar">
+    <BasePage
+      title={tr('应用分流')}
+      contentClassName="no-scrollbar"
+      header={
+        <Button
+          size="sm"
+          isIconOnly
+          className="app-nodrag"
+          variant="light"
+          aria-label={tr('应用分流设置')}
+          onPress={() => {
+            setIsSettingDrawerOpen(true)
+            setSettingDrawerReopenSignal((signal) => signal + 1)
+          }}
+        >
+          <MdTune className="text-lg" />
+        </Button>
+      }
+    >
+      {isSettingDrawerOpen && config && (
+        <AppRoutingSettingDrawer
+          reopenSignal={settingDrawerReopenSignal}
+          isDisabled={!supported || saving}
+          isProxyUdpDnsEnabled={config.proxyUdpDns}
+          onProxyUdpDnsChange={(proxyUdpDns) => void save({ ...config, proxyUdpDns })}
+          onClose={() => setIsSettingDrawerOpen(false)}
+        />
+      )}
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-4 p-4">
         <div className="flex items-start justify-between gap-4">
           <div>

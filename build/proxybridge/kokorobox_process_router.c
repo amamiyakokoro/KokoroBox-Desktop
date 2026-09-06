@@ -267,10 +267,12 @@ static BOOL replace_rules(const char *command) {
     char next_processes[MAX_PROCESS_LIST];
     char guarded_processes[MAX_PROCESS_LIST];
     BOOL fail_closed;
+    BOOL proxy_udp_dns;
 
     if (!strstr(command, "\"host\":\"127.0.0.1\"") ||
         !strstr(command, "\"port\":7891") ||
-        !read_bool(command, "failClosed", &fail_closed) || !fail_closed) {
+        !read_bool(command, "failClosed", &fail_closed) || !fail_closed ||
+        !read_bool(command, "proxyUdpDns", &proxy_udp_dns)) {
         emit("error", "proxy endpoint rejected");
         return FALSE;
     }
@@ -316,6 +318,7 @@ static BOOL replace_rules(const char *command) {
     }
 
     ProxyBridge_SetLocalhostViaProxy(FALSE);
+    ProxyBridge_SetProxyUdpDnsEnabled(proxy_udp_dns);
     ProxyBridge_SetTrafficLoggingEnabled(FALSE);
     if (!engine_running) {
         if (!ProxyBridge_Start()) {

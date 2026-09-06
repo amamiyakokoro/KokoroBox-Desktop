@@ -40,6 +40,7 @@ export function buildProcessRouterCommand(
     command: 'replace_rules',
     proxy: { host: '127.0.0.1', port: appRoutingSocksPort },
     failClosed: true,
+    proxyUdpDns: config.proxyUdpDns,
     rules: [...config.rules]
       .sort((a, b) => a.priority - b.priority)
       .map((rule) => ({

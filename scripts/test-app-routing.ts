@@ -54,7 +54,13 @@ test('application routing is limited to Windows x64', () => {
 })
 
 test('validates filename and wildcard patterns while protecting internal processes', () => {
-  validateAppRoutingConfig({ version: 1, enabled: true, failClosed: true, rules: [rule()] })
+  validateAppRoutingConfig({
+    version: 1,
+    enabled: true,
+    failClosed: true,
+    proxyUdpDns: true,
+    rules: [rule()]
+  })
   assert.equal(executableName('C:/Program Files/Example/example.exe'), 'example.exe')
   assert.equal(
     normalizeWindowsExecutablePath('\\\\?\\C:\\Apps\\example.exe'),
@@ -69,6 +75,7 @@ test('validates filename and wildcard patterns while protecting internal process
       version: 1,
       enabled: true,
       failClosed: true,
+      proxyUdpDns: true,
       rules: [
         rule(),
         rule({
@@ -85,6 +92,7 @@ test('validates filename and wildcard patterns while protecting internal process
       version: 1,
       enabled: true,
       failClosed: true,
+      proxyUdpDns: true,
       rules: [rule({ processPattern: 'example*.exe' })]
     })
   )
@@ -93,6 +101,7 @@ test('validates filename and wildcard patterns while protecting internal process
       version: 1,
       enabled: true,
       failClosed: true,
+      proxyUdpDns: true,
       rules: [rule({ processPattern: 'C:\\Program Files\\*\\example.exe' })]
     })
   )
@@ -101,6 +110,7 @@ test('validates filename and wildcard patterns while protecting internal process
       version: 1,
       enabled: true,
       failClosed: true,
+      proxyUdpDns: true,
       rules: [rule(), rule({ id: 'rule-2', priority: 2 })]
     })
   )
@@ -109,6 +119,7 @@ test('validates filename and wildcard patterns while protecting internal process
       version: 1,
       enabled: true,
       failClosed: true,
+      proxyUdpDns: true,
       rules: [rule({ sourcePath: 'relative.exe' })]
     })
   )
@@ -117,6 +128,7 @@ test('validates filename and wildcard patterns while protecting internal process
       version: 1,
       enabled: true,
       failClosed: true,
+      proxyUdpDns: true,
       rules: [rule({ processPattern: 'KokoroBox.exe' })]
     })
   )
@@ -126,6 +138,7 @@ test('validates filename and wildcard patterns while protecting internal process
         version: 1,
         enabled: true,
         failClosed: true,
+        proxyUdpDns: true,
         rules: [rule({ processPattern })]
       })
     )
@@ -135,7 +148,13 @@ test('validates filename and wildcard patterns while protecting internal process
   assert.equal(isProtectedAppRoutingPattern('kokoro*.exe'), true)
   assert.equal(isProtectedAppRoutingPattern('*.exe'), true)
   assert.throws(() =>
-    validateAppRoutingConfig({ version: 1, enabled: true, failClosed: false as true, rules: [] })
+    validateAppRoutingConfig({
+      version: 1,
+      enabled: true,
+      failClosed: false as true,
+      proxyUdpDns: true,
+      rules: []
+    })
   )
 })
 
@@ -180,6 +199,7 @@ test('generates an ordered local-only process-router command', () => {
     version: 1,
     enabled: true,
     failClosed: true,
+    proxyUdpDns: true,
     rules: [
       rule(),
       rule({
@@ -205,6 +225,7 @@ test('generates an ordered local-only process-router command', () => {
   assert.deepEqual(command.proxy, { host: '127.0.0.1', port: 7891 })
   assert.equal(command.version, 1)
   assert.equal(command.command, 'replace_rules')
+  assert.equal(command.proxyUdpDns, true)
   assert.deepEqual(
     command.rules.map((item: Record<string, unknown>) => [
       item.processPattern,
@@ -234,12 +255,14 @@ test('generates and validates the authenticated service protocol', () => {
     version: 1,
     enabled: true,
     failClosed: true,
+    proxyUdpDns: true,
     rules: [rule()]
   }
   assert.deepEqual(buildServiceProcessRouterRules(config, 7891), {
     version: 1,
     proxy_port: 7891,
     fail_closed: true,
+    proxy_udp_dns: true,
     rules: [
       {
         id: 'rule-1',
@@ -271,6 +294,7 @@ test('normalizes persisted order into unique priorities', () => {
     version: 1,
     enabled: true,
     failClosed: true,
+    proxyUdpDns: false,
     rules: [
       rule({ priority: 20 }),
       rule({ id: 'second', processPattern: 'b.exe', sourcePath: 'C:\\b.exe', priority: 10 })
@@ -290,6 +314,7 @@ test('parses only the canonical process-pattern schema', () => {
     version: 1,
     enabled: true,
     failClosed: true,
+    proxyUdpDns: true,
     rules: [
       {
         id: 'current',
@@ -306,6 +331,7 @@ test('parses only the canonical process-pattern schema', () => {
     version: 1,
     enabled: true,
     failClosed: true,
+    proxyUdpDns: true,
     rules: [
       {
         id: 'current',
@@ -318,7 +344,13 @@ test('parses only the canonical process-pattern schema', () => {
       }
     ]
   })
-  assert.deepEqual(Object.keys(parsed).sort(), ['enabled', 'failClosed', 'rules', 'version'])
+  assert.deepEqual(Object.keys(parsed).sort(), [
+    'enabled',
+    'failClosed',
+    'proxyUdpDns',
+    'rules',
+    'version'
+  ])
   assert.deepEqual(Object.keys(parsed.rules[0]).sort(), [
     'action',
     'enabled',
@@ -333,6 +365,7 @@ test('parses only the canonical process-pattern schema', () => {
       version: 1,
       enabled: true,
       failClosed: true,
+      proxyUdpDns: true,
       rules: [
         {
           id: 'old',
@@ -375,7 +408,7 @@ test('native build is pinned to the controlled KokoroBox ProxyBridge fork', () =
   const build = readFileSync('scripts/build-proxybridge.ps1', 'utf8')
   const router = readFileSync('build/proxybridge/kokorobox_process_router.c', 'utf8')
   assert.match(build, /https:\/\/github\.com\/amamiyakokoro\/ProxyBridge\.git/)
-  assert.match(build, /4c2de905b12cf739f07453de3c0e8ce0361d198d/)
+  assert.match(build, /cf2aee3de37c56d1c530f58295ff6c7521472129/)
   assert.match(build, /63cb41763bb4b20f600b6de04e991a9c2be73279e317d4d82f237b150c5f3f15/)
   assert.doesNotMatch(build, /git -C \$SourceRoot apply/)
   assert.match(build, /kokorobox-process-router\.exe/)
@@ -386,6 +419,8 @@ test('native build is pinned to the controlled KokoroBox ProxyBridge fork', () =
   assert.match(router, /ProxyBridge_MoveRuleToPosition\(guard_id, 1\)/)
   assert.match(router, /ProxyBridge_DeleteRule\(guard_id\)/)
   assert.match(router, /read_string\(object, "processPattern"/)
+  assert.match(router, /read_bool\(command, "proxyUdpDns"/)
+  assert.match(router, /ProxyBridge_SetProxyUdpDnsEnabled\(proxy_udp_dns\)/)
   assert.doesNotMatch(router, /read_string\(object, "executablePath"/)
   assert.match(router, /KokoroBox\.exe;mihomo\.exe;mihomo-alpha\.exe;sparkle-service\.exe/)
   assert.match(router, /127\.\*\.\*\.\*.*fe80::\/10/s)

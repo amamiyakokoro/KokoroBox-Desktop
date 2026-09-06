@@ -1,6 +1,10 @@
 // Traditional Chinese (Taiwan). Keys are the Simplified Chinese source messages.
 export const messages: Readonly<Record<string, string>> = {
   应用分流: '程式分流',
+  应用分流设置: '程式分流設定',
+  '代理应用程序 UDP DNS': '代理應用程式 UDP DNS',
+  '将 Proxy 规则应用程序自行发出的 UDP/53 查询交给 Mihomo。':
+    '將符合 Proxy 規則的應用程式自行發出的 UDP/53 查詢交給 Mihomo。',
   应用程序: '應用程式',
   上游: '上游',
   操作: '操作',

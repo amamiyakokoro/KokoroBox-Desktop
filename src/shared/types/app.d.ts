@@ -174,6 +174,7 @@ interface AppRoutingConfig {
   version: 1
   enabled: boolean
   failClosed: true
+  proxyUdpDns: boolean
   rules: AppRoutingRule[]
 }
 

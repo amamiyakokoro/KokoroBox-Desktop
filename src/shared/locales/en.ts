@@ -1,6 +1,10 @@
 // English. Keys are the Simplified Chinese source messages.
 export const messages: Readonly<Record<string, string>> = {
   应用分流: 'Application routing',
+  应用分流设置: 'Application routing settings',
+  '代理应用程序 UDP DNS': 'Proxy application UDP DNS',
+  '将 Proxy 规则应用程序自行发出的 UDP/53 查询交给 Mihomo。':
+    'Send UDP/53 queries issued by applications with Proxy rules through Mihomo.',
   应用程序: 'Application',
   上游: 'Upstream',
   操作: 'Controls',

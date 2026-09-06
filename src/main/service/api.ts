@@ -379,6 +379,7 @@ export interface ServiceProcessRouterRules {
   version: 1
   proxy_port: number
   fail_closed: true
+  proxy_udp_dns: boolean
   rules: Array<{
     id: string
     executable_path: string
