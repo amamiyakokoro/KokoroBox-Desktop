@@ -25,7 +25,7 @@ const SiderConfig: React.FC = () => {
     sysproxyCardStatus = 'col-span-1',
     tunCardStatus = 'col-span-1',
     profileCardStatus = 'col-span-2',
-    kokoroCardStatus = 'col-span-1',
+    kokoroCardStatus = 'col-span-2',
     proxyCardStatus = 'col-span-2',
     ruleCardStatus = 'col-span-1',
     resourceCardStatus = 'col-span-1',

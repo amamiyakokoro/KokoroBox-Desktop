@@ -3,10 +3,9 @@ import { Button, Card, CardBody, CardFooter, Tooltip } from '@heroui/react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
-import { useProfileConfig } from '@renderer/hooks/use-profile-config'
-import React, { useState } from 'react'
+import React from 'react'
 import { LuHeartHandshake } from 'react-icons/lu'
-import KokoroSubscriptionModal from '../profiles/kokoro-subscription-modal'
+import { useLocation, useNavigate } from 'react-router-dom'
 
 interface Props {
   iconOnly?: boolean
@@ -14,9 +13,10 @@ interface Props {
 
 const KokoroSettingCard: React.FC<Props> = ({ iconOnly = false }) => {
   const { appConfig } = useAppConfig()
-  const { mutateProfileConfig } = useProfileConfig()
-  const { kokoroCardStatus = 'col-span-1', disableAnimation = false } = appConfig || {}
-  const [showKokoroModal, setShowKokoroModal] = useState(false)
+  const { kokoroCardStatus = 'col-span-2', disableAnimation = false } = appConfig || {}
+  const location = useLocation()
+  const navigate = useNavigate()
+  const match = location.pathname.includes('/kokoro')
   const {
     attributes,
     listeners,
@@ -29,28 +29,21 @@ const KokoroSettingCard: React.FC<Props> = ({ iconOnly = false }) => {
     ? { x: sortableTransform.x, y: sortableTransform.y, scaleX: 1, scaleY: 1 }
     : null
 
-  const modal = showKokoroModal ? (
-    <KokoroSubscriptionModal
-      onClose={() => setShowKokoroModal(false)}
-      onImported={() => {
-        mutateProfileConfig()
-        window.electron.ipcRenderer.send('updateTrayMenu')
-      }}
-    />
-  ) : null
-
   if (iconOnly) {
     return (
-      <>
-        {modal}
-        <div className={`${kokoroCardStatus} flex justify-center`}>
-          <Tooltip content={tr('Kokoro 设置')} placement="right">
-            <Button size="sm" isIconOnly variant="light" onPress={() => setShowKokoroModal(true)}>
-              <LuHeartHandshake className="text-[20px]" />
-            </Button>
-          </Tooltip>
-        </div>
-      </>
+      <div className={`${kokoroCardStatus} flex justify-center`}>
+        <Tooltip content={tr('Kokoro 设置')} placement="right">
+          <Button
+            size="sm"
+            isIconOnly
+            color={match ? 'primary' : 'default'}
+            variant={match ? 'solid' : 'light'}
+            onPress={() => navigate('/kokoro')}
+          >
+            <LuHeartHandshake className="text-[20px]" />
+          </Button>
+        </Tooltip>
+      </div>
     )
   }
 
@@ -64,15 +57,12 @@ const KokoroSettingCard: React.FC<Props> = ({ iconOnly = false }) => {
       }}
       className={`${kokoroCardStatus} kokoro-setting-card`}
     >
-      {modal}
       <Card
         fullWidth
-        isPressable
         ref={setNodeRef}
         {...attributes}
         {...listeners}
-        onPress={() => setShowKokoroModal(true)}
-        className={`hover:bg-primary/30 ${isDragging ? `${disableAnimation ? '' : 'scale-[0.95]'} tap-highlight-transparent` : ''}`}
+        className={`${match ? 'bg-primary' : 'hover:bg-primary/30'} ${isDragging ? `${disableAnimation ? '' : 'scale-[0.95]'} tap-highlight-transparent` : ''}`}
       >
         <CardBody className="pb-1 pt-0 px-0 overflow-y-visible">
           <div className="flex justify-between">
@@ -82,12 +72,18 @@ const KokoroSettingCard: React.FC<Props> = ({ iconOnly = false }) => {
               variant="flat"
               color="default"
             >
-              <LuHeartHandshake className="text-foreground text-[24px]" />
+              <LuHeartHandshake
+                className={`${match ? 'text-primary-foreground' : 'text-foreground'} text-[24px]`}
+              />
             </Button>
           </div>
         </CardBody>
         <CardFooter className="pt-1">
-          <h3 className="text-md font-bold text-foreground">{tr('Kokoro 设置')}</h3>
+          <h3
+            className={`text-md font-bold ${match ? 'text-primary-foreground' : 'text-foreground'}`}
+          >
+            {tr('Kokoro 设置')}
+          </h3>
         </CardFooter>
       </Card>
     </div>

@@ -25,10 +25,12 @@ import { MdTune } from 'react-icons/md'
 import ProfileSettingDrawer from '@renderer/components/profiles/profile-setting-drawer'
 import { useCardDndSensors } from '@renderer/hooks/use-card-dnd-sensors'
 import { notify } from '@renderer/utils/notification'
+import { useNavigate } from 'react-router-dom'
 
 const emptyItems: ProfileItem[] = []
 
 const Profiles: React.FC = () => {
+  const navigate = useNavigate()
   const {
     profileConfig,
     setProfileConfig,
@@ -319,9 +321,16 @@ const Profiles: React.FC = () => {
                     setShowEditModal(true)
                     break
                   }
+                  case 'kokoro': {
+                    navigate('/kokoro')
+                    break
+                  }
                 }
               }}
             >
+              <DropdownItem key="kokoro" showDivider>
+                {tr('登录 Kokoro 获取订阅')}
+              </DropdownItem>
               <DropdownItem key="open">{tr('打开本地配置')}</DropdownItem>
               <DropdownItem key="new">{tr('新建本地配置')}</DropdownItem>
               <DropdownItem key="import">{tr('导入远程配置')}</DropdownItem>

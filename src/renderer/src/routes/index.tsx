@@ -4,6 +4,7 @@ import { markInitialContentPartReady } from '@renderer/utils/startup'
 import {
   Connections,
   DNS,
+  Kokoro,
   Logs,
   Mihomo,
   Override,
@@ -78,6 +79,10 @@ const routes = [
   {
     path: '/profiles',
     element: startupRoute(<Profiles />)
+  },
+  {
+    path: '/kokoro',
+    element: startupRoute(<Kokoro />)
   },
   {
     path: '/settings',

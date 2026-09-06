@@ -46,6 +46,7 @@ const siderCardRouteMap = {
   'conn-card': '/connections',
   'dns-card': '/dns',
   'sniff-card': '/sniffer',
+  'kokoro-setting-card': '/kokoro',
   'log-card': '/logs',
   'rule-card': '/rules',
   'resource-card': '/resources',
