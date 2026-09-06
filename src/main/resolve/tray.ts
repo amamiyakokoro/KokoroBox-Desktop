@@ -43,9 +43,11 @@ export let customTrayWindow: BrowserWindow | null = null
 let trayMenu: Menu | null = null
 let trayIconUpdateListenerRegistered = false
 let updateTrayMenuListenerRegistered = false
+let darwinTrayIconPromise: Promise<Electron.NativeImage> | null = null
 type TrayImage = Electron.NativeImage | string
 const customTrayIconSize = 16
 const customTrayIconScaleFactors = [1, 1.25, 1.5, 2, 2.5, 3]
+const darwinTrayIconSize = 18
 
 function formatDelayText(delay: number): string {
   if (delay === 0) {
@@ -56,10 +58,54 @@ function formatDelayText(delay: number): string {
   return ''
 }
 
-function createDarwinTrayIcon(): Electron.NativeImage {
+function createDarwinFallbackTrayIcon(): Electron.NativeImage {
   const icon = nativeImage.createFromPath(templateIcon).resize({ height: 16 })
   icon.setTemplateImage(true)
   return icon
+}
+
+async function renderDarwinEmojiTrayIcon(): Promise<Electron.NativeImage> {
+  const fallback = createDarwinFallbackTrayIcon()
+  const emojiWindow = new BrowserWindow({
+    width: darwinTrayIconSize,
+    height: darwinTrayIconSize,
+    show: false,
+    frame: false,
+    transparent: true,
+    backgroundColor: '#00000000',
+    focusable: false,
+    skipTaskbar: true,
+    webPreferences: {
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: true,
+      offscreen: true
+    }
+  })
+
+  try {
+    const document = `<style>html,body{margin:0;background:transparent;overflow:hidden}body{width:${darwinTrayIconSize}px;height:${darwinTrayIconSize}px;display:flex;align-items:center;justify-content:center;font:16px "Apple Color Emoji"}</style>🎐`
+    await emojiWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(document)}`)
+    const icon = await emojiWindow.webContents.capturePage({
+      x: 0,
+      y: 0,
+      width: darwinTrayIconSize,
+      height: darwinTrayIconSize
+    })
+    if (icon.isEmpty()) return fallback
+
+    icon.setTemplateImage(false)
+    return icon
+  } catch {
+    return fallback
+  } finally {
+    if (!emojiWindow.isDestroyed()) emojiWindow.destroy()
+  }
+}
+
+function createDarwinTrayIcon(): Promise<Electron.NativeImage> {
+  darwinTrayIconPromise ??= renderDarwinEmojiTrayIcon()
+  return darwinTrayIconPromise
 }
 
 function resizeTrayImageForScale(
@@ -115,11 +161,11 @@ function createCustomTrayImage(customTrayIcon: string): TrayImage | null {
   return createMultiScaleTrayImage(icon)
 }
 
-function createTrafficTrayImage(png: string, templateImage = true): Electron.NativeImage | null {
+function createTrafficTrayImage(png: string): Electron.NativeImage | null {
   const image = nativeImage.createFromDataURL(png).resize({ height: customTrayIconSize })
   if (image.isEmpty()) return null
 
-  image.setTemplateImage(templateImage)
+  image.setTemplateImage(false)
   return image
 }
 
@@ -529,7 +575,7 @@ export async function createTray(): Promise<void> {
     tray.setContextMenu(trayMenu)
   }
   if (process.platform === 'darwin') {
-    tray = new Tray(createDarwinTrayIcon())
+    tray = new Tray(await createDarwinTrayIcon())
   }
   if (process.platform === 'win32') {
     tray = new Tray(icoIcon)
@@ -546,13 +592,13 @@ export async function createTray(): Promise<void> {
         const { customTrayIcon = '' } = await getAppConfig()
         const customIcon = createCustomTrayImage(customTrayIcon)
         if (png) {
-          const image = createTrafficTrayImage(png, !customIcon)
+          const image = createTrafficTrayImage(png)
           if (image) {
             tray?.setImage(image)
             return
           }
         }
-        tray?.setImage(customIcon || createDarwinTrayIcon())
+        tray?.setImage(customIcon || (await createDarwinTrayIcon()))
       })
       trayIconUpdateListenerRegistered = true
     }
@@ -595,7 +641,7 @@ export async function updateTrayIcon(): Promise<void> {
   }
 
   if (process.platform === 'darwin') {
-    tray.setImage(createDarwinTrayIcon())
+    tray.setImage(await createDarwinTrayIcon())
     return
   }
   if (process.platform === 'win32') {

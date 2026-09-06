@@ -10,7 +10,6 @@ import { IoLink } from 'react-icons/io5'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { readImageFileDataURL } from '@renderer/utils/ipc'
 import { platform } from '@renderer/utils/init'
-import templateTrayIcon from '../../../../../resources/iconTemplate.png'
 import TrafficChart from './traffic-chart'
 
 let currentUpload: number | undefined = undefined
@@ -249,11 +248,13 @@ const drawTrayTrafficIcon = async (
 
   const uploadText = `${calcTraffic(upload)}/s`
   const downloadText = `${calcTraffic(download)}/s`
-  const trayIcon = await loadImage(
-    customTrayIcon && !customTrayIcon.startsWith('data:image/')
-      ? await readImageFileDataURL(customTrayIcon)
-      : customTrayIcon || templateTrayIcon
-  )
+  const trayIcon = customTrayIcon
+    ? await loadImage(
+        customTrayIcon.startsWith('data:image/')
+          ? customTrayIcon
+          : await readImageFileDataURL(customTrayIcon)
+      )
+    : null
 
   const canvas = document.createElement('canvas')
   canvas.width = 172
@@ -271,7 +272,13 @@ const drawTrayTrafficIcon = async (
   ctx.textAlign = 'right'
   ctx.fillText(uploadText, 116, 15)
   ctx.fillText(downloadText, 116, 34)
-  ctx.drawImage(trayIcon, 128, 0, 36, 36)
+  if (trayIcon) {
+    ctx.drawImage(trayIcon, 128, 0, 36, 36)
+  } else {
+    ctx.font = '32px "Apple Color Emoji"'
+    ctx.textAlign = 'center'
+    ctx.fillText('🎐', 146, 31)
+  }
 
   window.electron.ipcRenderer.send('trayIconUpdate', canvas.toDataURL('image/png'))
   currentUpload = upload
