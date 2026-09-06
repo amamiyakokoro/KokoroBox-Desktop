@@ -99,6 +99,7 @@ const ProxySettingDrawer: React.FC<Props> = (props) => {
               <SettingItem title={tr('代理节点展示列数')} {...settingItemProps} divider>
                 <Select
                   aria-label={tr('代理节点展示列数')}
+                  className="w-40!"
                   value={proxyCols}
                   variant="secondary"
                   onChange={async (value) => {
