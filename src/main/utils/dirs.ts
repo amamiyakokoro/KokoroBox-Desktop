@@ -127,6 +127,26 @@ export function kokoroAuthStorePath(): string {
   return path.join(dataDir(), 'kokoro-auth.json')
 }
 
+export function appRoutingDir(): string {
+  return path.join(dataDir(), 'app-routing')
+}
+
+export function appRoutingConfigPath(): string {
+  return path.join(appRoutingDir(), 'config.json')
+}
+
+export function appRoutingIconDir(): string {
+  return path.join(appRoutingDir(), 'icons')
+}
+
+export function processRouterDir(): string {
+  return path.join(resourcesFilesDir(), 'process-router')
+}
+
+export function processRouterPath(): string {
+  return path.join(processRouterDir(), 'kokorobox-process-router.exe')
+}
+
 export function appConfigPath(): string {
   return path.join(dataDir(), 'config.yaml')
 }

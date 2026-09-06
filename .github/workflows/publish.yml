@@ -90,6 +90,7 @@ jobs:
           body_path: dist/release/changelog.md
           files: |
             dist/release/kokorobox-desktop-*
+            dist/release/kokorobox-process-router-*.cdx.json
             dist/release/SHA256SUMS
           fail_on_unmatched_files: true
           draft: ${{ inputs.channel == 'stable' }}

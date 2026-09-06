@@ -69,6 +69,7 @@ interface AppConfig {
   dnsCardStatus?: CardStatus
   logCardStatus?: CardStatus
   kokoroCardStatus?: CardStatus
+  appRoutingCardStatus?: CardStatus
   pauseSSID?: string[]
   mihomoCoreCardStatus?: CardStatus
   overrideCardStatus?: CardStatus
@@ -146,6 +147,47 @@ interface AppConfig {
   displayAppName?: boolean
   disableGPU: boolean
   disableAnimation?: boolean
+}
+
+type AppRoutingAction = 'proxy' | 'direct' | 'block'
+type AppRoutingProtocol = 'tcp' | 'udp' | 'both'
+type AppRoutingRuntimeState =
+  'unsupported' | 'disabled' | 'starting' | 'running' | 'degraded' | 'error'
+
+interface AppRoutingRule {
+  id: string
+  enabled: boolean
+  priority: number
+  processPattern: string
+  sourcePath?: string
+  protocol: AppRoutingProtocol
+  action: AppRoutingAction
+}
+
+interface AppRoutingApplicationSelection {
+  executablePath: string
+  executableName: string
+  iconDataUrl?: string
+}
+
+interface AppRoutingConfig {
+  version: 1
+  enabled: boolean
+  failClosed: true
+  proxyUdpDns: boolean
+  defaultAction: AppRoutingAction
+  defaultProtocol: AppRoutingProtocol
+  diagnosticLogging: boolean
+  rules: AppRoutingRule[]
+}
+
+interface AppRoutingStatus {
+  supported: boolean
+  state: AppRoutingRuntimeState
+  message?: string
+  proxyPort?: number
+  mihomoAvailable: boolean
+  protectedApplicationCount?: number
 }
 
 interface ProfileConfig {

@@ -124,6 +124,30 @@ export async function getAppConfig(force = false): Promise<AppConfig> {
   return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('getAppConfig', force))
 }
 
+export async function getAppRoutingConfig(force = false): Promise<AppRoutingConfig> {
+  return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('getAppRoutingConfig', force))
+}
+
+export async function getAppRoutingStatus(): Promise<AppRoutingStatus> {
+  return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('getAppRoutingStatus'))
+}
+
+export async function replaceAppRoutingConfig(config: AppRoutingConfig): Promise<AppRoutingConfig> {
+  return ipcErrorWrapper(
+    await window.electron.ipcRenderer.invoke('replaceAppRoutingConfig', config)
+  )
+}
+
+export async function getApplicationPaths(): Promise<AppRoutingApplicationSelection[] | undefined> {
+  return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('getApplicationPaths'))
+}
+
+export async function getAppRoutingIcon(executablePath: string): Promise<string | undefined> {
+  return ipcErrorWrapper(
+    await window.electron.ipcRenderer.invoke('getAppRoutingIcon', executablePath)
+  )
+}
+
 export async function getCachedMihomoLogs(): Promise<
   Array<ControllerLog & { id?: string; seq?: number }>
 > {

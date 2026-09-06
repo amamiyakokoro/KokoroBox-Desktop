@@ -1,5 +1,70 @@
 // English. Keys are the Simplified Chinese source messages.
 export const messages: Readonly<Record<string, string>> = {
+  应用分流: 'Application routing',
+  应用分流设置: 'Application routing settings',
+  '代理应用程序 UDP DNS': 'Proxy application UDP DNS',
+  '将 Proxy 规则应用程序自行发出的 UDP/53 查询交给 Mihomo。':
+    'Send UDP/53 queries issued by applications with Proxy rules through Mihomo.',
+  新规则默认动作: 'Default action for new rules',
+  新规则默认协议: 'Default protocol for new rules',
+  进阶设置: 'Advanced settings',
+  诊断记录: 'Diagnostic logging',
+  '记录应用程序分流的匹配目标与处理结果；仅在排查问题时启用。':
+    'Log application routing destinations and decisions. Enable only while troubleshooting.',
+  应用程序: 'Application',
+  上游: 'Upstream',
+  操作: 'Controls',
+  '代理核心不可用，已封锁 {0} 个受保护应用的网络连接。':
+    'The proxy core is unavailable. Network access is blocked for {0} protected applications.',
+  'Windows 应用程序': 'Windows applications',
+  选择应用程序: 'Select applications',
+  'Windows 应用程序分流': 'Windows application routing',
+  '无需系统代理或 TUN，将指定应用程序交给本机 Mihomo 处理。':
+    'Route selected applications through local Mihomo without system proxy or TUN.',
+  正在加载: 'Loading',
+  不受支持: 'Unsupported',
+  已停用: 'Disabled',
+  正在启动: 'Starting',
+  阻断保护: 'Fail-closed',
+  应用程序规则: 'Application rules',
+  程序匹配: 'Process pattern',
+  '规则按从上到下的顺序匹配；支持文件名或含 * 的完整路径。':
+    'Rules match from top to bottom. Use a filename or a full path containing *.',
+  '例如：ChatGPT.exe、ChatGPT*.exe 或 C:\\Program Files\\*\\ChatGPT.exe':
+    'For example: ChatGPT.exe, ChatGPT*.exe, or C:\\Program Files\\*\\ChatGPT.exe',
+  新增匹配规则: 'Add pattern rule',
+  '输入程序匹配，或选择一个或多个 .exe，然后设定 Proxy、Direct 或 Block。':
+    'Enter a process pattern or select one or more .exe files, then choose Proxy, Direct, or Block.',
+  应用程序匹配规则已存在: 'The process pattern already exists',
+  或: 'or',
+  '规则按从上到下的顺序匹配；相同路径只能添加一次。':
+    'Rules match from top to bottom; the same executable path can be added only once.',
+  添加应用程序: 'Add applications',
+  '此 MVP 仅支持 Windows 10/11 x64。': 'This MVP supports Windows 10/11 x64 only.',
+  尚未添加应用程序: 'No applications added',
+  '选择一个或多个 .exe，然后设定 Proxy、Direct 或 Block。':
+    'Select one or more .exe files, then choose Proxy, Direct, or Block.',
+  动作: 'Action',
+  启用规则: 'Enable rule',
+  'Fail-closed 保护': 'Fail-closed protection',
+  'Mihomo 不可用时，Proxy 规则的连接会被阻断，不会自动改为直连。Direct 规则仍保持直连。':
+    'If Mihomo is unavailable, Proxy connections are blocked instead of falling back to direct. Direct rules remain direct.',
+  所选应用程序已存在: 'The selected applications already exist',
+  添加或启用规则以启动应用分流: 'Add or enable a rule to start application routing',
+  'Windows 封包拦截组件未安装': 'The Windows packet interception sidecar is not installed',
+  'Windows 封包拦截组件缺失或已损坏':
+    'The Windows packet interception component is missing or corrupted',
+  '请先启用本机 Mihomo SOCKS 或 mixed 监听端口':
+    'Enable a local Mihomo SOCKS or mixed listener first',
+  'Mihomo 不可用；匹配 Proxy 的流量已阻断（不会直连）':
+    'Mihomo is unavailable; matching Proxy traffic is blocked (no direct fallback)',
+  '应用分流 MVP 需要以管理员模式运行 KokoroBox':
+    'The application routing MVP requires KokoroBox to run as administrator',
+  '当前 KokoroBox Service 不支持应用分流，请更新或重新安装服务':
+    'The installed KokoroBox Service does not support application routing. Update or reinstall the service.',
+  封包拦截组件启动失败: 'The packet interception sidecar failed to start',
+  '封包拦截组件意外停止，正在重试':
+    'The packet interception sidecar stopped unexpectedly; retrying',
   任务栏: 'Taskbar',
   状态栏: 'Menu bar',
   ' (全局)': ' (Global)',

@@ -37,6 +37,7 @@ import {
   type KokoroCallbackRelay
 } from './resolve/kokoroCallbackRelay'
 import { isKokoroURI } from './kokoro/oauth'
+import { initializeAppRouting } from './app-routing/manager'
 
 export { setNotQuitDialog } from './resolve/appLifecycle'
 
@@ -254,6 +255,7 @@ function startPrimaryInstance(initialDeepLinks: string[]): void {
     const { showFloatingWindow: showFloating = false, disableTray = false } = appConfig
     registerIpcMainHandlers()
     runStartupTask('Windows scheduled task migration', migrateLegacyWindowsTasks())
+    runStartupTask('Windows application routing', initializeAppRouting())
 
     const createWindowPromise = createWindow(appConfig)
 

@@ -140,6 +140,7 @@ import {
   revokeKokoroSession,
   startKokoroLogin
 } from '../kokoro/client'
+import { registerAppRoutingIpcHandlers } from '../app-routing/ipc'
 
 function ipcErrorWrapper<T>( // eslint-disable-next-line @typescript-eslint/no-explicit-any
   fn: (...args: any[]) => T | Promise<T> // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -214,6 +215,7 @@ async function normalizeServiceModePatch(patch: Partial<AppConfig>): Promise<Par
 }
 
 export function registerIpcMainHandlers(): void {
+  registerAppRoutingIpcHandlers()
   ipcMain.handle('mihomoVersion', ipcErrorWrapper(mihomoVersion))
   ipcMain.handle('mihomoConfig', ipcErrorWrapper(mihomoConfig))
   ipcMain.handle('mihomoCloseConnection', (_e, id) => ipcErrorWrapper(mihomoCloseConnection)(id))

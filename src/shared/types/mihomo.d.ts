@@ -50,6 +50,15 @@ interface MihomoConfig {
   profile: MihomoProfileConfig
   'rule-providers'?: Record<string, unknown>
   'proxy-providers'?: Record<string, unknown>
+  listeners?: MihomoListenerConfig[]
+}
+
+interface MihomoListenerConfig {
+  name: string
+  type: 'socks' | 'mixed' | 'http' | 'redir' | 'tproxy' | 'tun'
+  port: number
+  listen?: string
+  udp?: boolean
 }
 
 interface MihomoTunConfig {

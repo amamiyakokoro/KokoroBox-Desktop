@@ -1,8 +1,10 @@
 import { tr } from '../../shared/i18n'
+import { normalizeWindowsExecutablePath } from '../../shared/app-routing'
 import { execFile, execFileSync, spawn } from 'child_process'
 import { app, dialog, nativeImage, nativeTheme, shell } from 'electron'
-import { readFile } from 'fs/promises'
+import { mkdir, readFile, realpath, stat, writeFile } from 'fs/promises'
 import path from 'path'
+import crypto from 'crypto'
 import { promisify } from 'util'
 import { runElevated, setupFirewallRules } from '@uruhalushia/sparkle-native'
 import {
@@ -13,7 +15,8 @@ import {
   profilePath,
   resourcesDir,
   resourcesFilesDir,
-  taskDir
+  taskDir,
+  appRoutingIconDir
 } from '../utils/dirs'
 import { existsSync, readFileSync, rmSync, writeFileSync } from 'fs'
 import { execWithElevation } from '../utils/elevation'
@@ -28,6 +31,57 @@ export function getFilePath(
     filters: [{ name: filterName, extensions: ext }],
     properties: ['openFile']
   })
+}
+
+export async function getApplicationPaths(): Promise<AppRoutingApplicationSelection[] | undefined> {
+  const selected = dialog.showOpenDialogSync({
+    title: tr('选择应用程序'),
+    filters: [{ name: tr('Windows 应用程序'), extensions: ['exe'] }],
+    properties: ['openFile', 'multiSelections']
+  })
+  if (!selected) return undefined
+
+  await mkdir(appRoutingIconDir(), { recursive: true })
+  const applications: AppRoutingApplicationSelection[] = []
+  for (const selectedPath of selected) {
+    const executablePath = normalizeWindowsExecutablePath(await realpath(selectedPath))
+    if (
+      path.extname(executablePath).toLowerCase() !== '.exe' ||
+      !(await stat(executablePath)).isFile()
+    ) {
+      throw new Error('Application routing requires an existing .exe file')
+    }
+    const executableName = path.win32.basename(executablePath)
+    const iconCacheKey = crypto
+      .createHash('sha256')
+      .update(executablePath.toLowerCase(), 'utf8')
+      .digest('hex')
+    const icon = await app.getFileIcon(executablePath, { size: 'normal' })
+    const iconDataUrl = icon.isEmpty() ? undefined : icon.toDataURL()
+    if (!icon.isEmpty()) {
+      await writeFile(path.join(appRoutingIconDir(), `${iconCacheKey}.png`), icon.toPNG())
+    }
+    applications.push({
+      executablePath,
+      executableName,
+      iconDataUrl
+    })
+  }
+  return applications
+}
+
+export async function getAppRoutingIcon(executablePath: string): Promise<string | undefined> {
+  if (!/^(?:[a-zA-Z]:\\|\\\\)[^\0]+\.exe$/i.test(executablePath)) {
+    throw new Error('Invalid application executable path')
+  }
+  const iconCacheKey = crypto
+    .createHash('sha256')
+    .update(executablePath.toLowerCase(), 'utf8')
+    .digest('hex')
+  const iconPath = path.join(appRoutingIconDir(), `${iconCacheKey}.png`)
+  if (!existsSync(iconPath)) return undefined
+  const icon = nativeImage.createFromBuffer(await readFile(iconPath))
+  return icon.isEmpty() ? undefined : icon.toDataURL()
 }
 
 export async function readTextFile(filePath: string): Promise<string> {

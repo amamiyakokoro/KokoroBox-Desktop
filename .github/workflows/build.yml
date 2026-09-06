@@ -53,6 +53,7 @@ jobs:
       - run: pnpm test:kokoro
       - run: pnpm test:localization
       - run: pnpm test:override-user-agent
+      - run: pnpm test:app-routing
       - run: pnpm typecheck
 
   build:
@@ -223,6 +224,25 @@ jobs:
             # Compile without secrets; packaging/signing runs in the isolated step below.
             pnpm exec electron-vite build
           fi
+
+      - name: Verify Windows x64 Application Routing Payload
+        if: matrix.os == 'windows-latest' && matrix.arch == 'x64'
+        shell: pwsh
+        run: |
+          $required = @(
+            "kokorobox-process-router.exe",
+            "ProxyBridgeCore.dll",
+            "WinDivert.dll",
+            "WinDivert64.sys",
+            "LICENSE.ProxyBridge",
+            "LICENSE.WinDivert",
+            "manifest.json",
+            "process-router-sbom.cdx.json"
+          )
+          foreach ($name in $required) {
+            $matches = @(Get-ChildItem dist -Recurse -File -Filter $name)
+            if ($matches.Count -eq 0) { throw "Missing packaged application routing file: $name" }
+          }
 
       - name: Sign and Notarize macOS PKG
         if: matrix.os == 'macos-latest'

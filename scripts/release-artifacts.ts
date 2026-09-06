@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto'
 import {
   copyFileSync,
+  existsSync,
   lstatSync,
   mkdirSync,
   readFileSync,
@@ -25,6 +26,41 @@ export interface MacSigningReceipt {
   sha: string
   filename: string
   checksum: string
+}
+
+interface ProcessRouterSbomReceipt {
+  filename: string
+  checksum: string
+  proxyBridgeRevision: string
+}
+
+const proxyBridgeRevision = 'cf2aee3de37c56d1c530f58295ff6c7521472129'
+const winDivertArchiveSha256 = '63cb41763bb4b20f600b6de04e991a9c2be73279e317d4d82f237b150c5f3f15'
+
+function processRouterSbomName(version: string): string {
+  return `kokorobox-process-router-${version}.cdx.json`
+}
+
+function validateProcessRouterSbom(file: string): void {
+  const sbom = JSON.parse(readFileSync(file, 'utf8')) as {
+    bomFormat?: string
+    specVersion?: string
+    metadata?: { properties?: { name?: string; value?: string }[] }
+  }
+  const revision = sbom.metadata?.properties?.find(
+    (property) => property.name === 'kokorobox:proxybridge-revision'
+  )?.value
+  const winDivertHash = sbom.metadata?.properties?.find(
+    (property) => property.name === 'kokorobox:windivert-archive-sha256'
+  )?.value
+  if (
+    sbom.bomFormat !== 'CycloneDX' ||
+    sbom.specVersion !== '1.6' ||
+    revision !== proxyBridgeRevision ||
+    winDivertHash !== winDivertArchiveSha256
+  ) {
+    throw new Error('Invalid process router SBOM provenance')
+  }
 }
 
 export function validateMacReceipt(
@@ -100,16 +136,32 @@ export function stageArtifact(
   sha: string,
   source: string,
   output: string,
-  signing?: MacSigningReceipt
+  signing?: MacSigningReceipt,
+  processRouterSbom?: string
 ) {
   const filename = artifactName(target, version)
   const checksum = digest(path.join(source, filename))
   if (target.os === 'macos-latest') validateMacReceipt(signing, version, sha, filename, checksum)
+  const includesProcessRouterSbom =
+    target.os === 'windows-latest' && target.arch === 'x64' && target.format === 'nsis'
+  let sbom: ProcessRouterSbomReceipt | undefined
+  if (includesProcessRouterSbom) {
+    if (!processRouterSbom) throw new Error('Missing Windows x64 process router SBOM')
+    validateProcessRouterSbom(processRouterSbom)
+    sbom = {
+      filename: processRouterSbomName(version),
+      checksum: digest(processRouterSbom),
+      proxyBridgeRevision
+    }
+  } else if (processRouterSbom) {
+    throw new Error('Process router SBOM supplied for the wrong release target')
+  }
   mkdirSync(output, { recursive: true })
   copyFileSync(path.join(source, filename), path.join(output, filename))
+  if (sbom) copyFileSync(processRouterSbom!, path.join(output, sbom.filename))
   writeFileSync(
     path.join(output, `manifest-${targetId(target)}.json`),
-    JSON.stringify({ target, version, sha, filename, checksum, signing })
+    JSON.stringify({ target, version, sha, filename, checksum, signing, sbom })
   )
 }
 
@@ -127,6 +179,7 @@ export function collectArtifacts(
   if ((tag === 'rolling') !== version.includes('-rolling-'))
     throw new Error('Release channel does not match version')
   const filenames: string[] = []
+  const supplementalFilenames: string[] = []
   const expectedFiles = new Set<string>()
   // Validate the entire matrix before creating any publication output.
   for (const target of releaseTargets) {
@@ -145,6 +198,24 @@ export function collectArtifacts(
       throw new Error(`Checksum mismatch: ${filename}`)
     if (target.os === 'macos-latest')
       validateMacReceipt(manifest.signing, version, sha, filename, manifest.checksum)
+    const includesProcessRouterSbom =
+      target.os === 'windows-latest' && target.arch === 'x64' && target.format === 'nsis'
+    if (includesProcessRouterSbom) {
+      const sbomName = processRouterSbomName(version)
+      if (
+        !existsSync(path.join(source, sbomName)) ||
+        manifest.sbom?.filename !== sbomName ||
+        manifest.sbom?.proxyBridgeRevision !== proxyBridgeRevision ||
+        digest(path.join(source, sbomName)) !== manifest.sbom?.checksum
+      ) {
+        throw new Error('Missing or mismatched process router SBOM')
+      }
+      validateProcessRouterSbom(path.join(source, sbomName))
+      supplementalFilenames.push(sbomName)
+      expectedFiles.add(sbomName)
+    } else if (manifest.sbom) {
+      throw new Error(`Unexpected process router SBOM: ${manifestName}`)
+    }
     filenames.push(filename)
     expectedFiles.add(filename).add(manifestName)
   }
@@ -152,10 +223,10 @@ export function collectArtifacts(
     throw new Error('Unexpected release artifacts')
   mkdirSync(output, { recursive: true })
   if (readdirSync(output).length !== 0) throw new Error('Release output directory must be empty')
-  for (const filename of filenames)
+  for (const filename of [...filenames, ...supplementalFilenames])
     copyFileSync(path.join(source, filename), path.join(output, filename))
   const checksums =
-    filenames
+    [...filenames, ...supplementalFilenames]
       .sort()
       .map((filename) => `${digest(path.join(output, filename))}  ${filename}`)
       .join('\n') + '\n'
@@ -181,6 +252,11 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
       'dist/release-artifacts',
       process.env.TARGET_OS === 'macos-latest'
         ? JSON.parse(readFileSync(`dist/macos-signing-${process.env.TARGET_ARCH}.json`, 'utf8'))
+        : undefined,
+      process.env.TARGET_OS === 'windows-latest' &&
+        process.env.TARGET_ARCH === 'x64' &&
+        process.env.TARGET_FORMAT === 'nsis'
+        ? 'extra/files/process-router/process-router-sbom.cdx.json'
         : undefined
     )
   } else if (process.argv[2] === 'collect') {
