@@ -1,6 +1,6 @@
 {
   "name": "kokorobox-desktop",
-  "version": "2.26.9-5",
+  "version": "2.26.9-6",
   "description": "KokoroBox",
   "main": "./out/main/index.js",
   "author": {
