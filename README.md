@@ -4,82 +4,61 @@
 
 # KokoroBox-Desktop
 
-A cross-platform Mihomo desktop client with native Kokoro subscription support.
+A cross-platform Mihomo desktop client with built-in Kokoro subscriptions.
+
+[Download](https://github.com/amamiyakokoro/KokoroBox-Desktop/releases) · [Build](#development) · [License](LICENSE)
 
 </div>
 
-## Features
+## Highlights
 
 - Bundled stable and preview [Mihomo](https://github.com/MetaCubeX/mihomo) cores
-- System proxy and TUN controls
-- Secure Kokoro sign-in and authenticated subscription updates
-- Profile overrides and subscription management tools
+- System proxy, TUN, DNS, sniffing, routing, and profile controls
+- Secure osu! OAuth sign-in for Kokoro subscriptions
+- Kokoro subscription options and editable `default` custom rules
+- Profile overrides and automatic subscription updates
 - WebDAV backup and restore
 - English, Simplified Chinese, and Traditional Chinese localization
 
-## Kokoro subscriptions
+## Kokoro
 
-KokoroBox signs in through osu! in the system browser and downloads Mihomo profiles using short-lived credentials. See the [Kokoro client authentication guide](docs/kokoro-client-api.md) for the PKCE S256 flow and callback contract.
+Open **Kokoro Settings** from the sidebar, sign in through osu! in the system browser, choose the subscription options, then select **Get and add**. The Kokoro shortcut is also the first item in the subscription page's **+** menu.
 
-Never include access tokens, refresh tokens, subscription credentials, or complete subscription URLs in logs or issue reports.
+After sign-in, the same page can edit the Kokoro `default` custom rule set. Authentication uses PKCE S256 and system-protected credential storage; see the [client API guide](docs/kokoro-client-api.md).
+
+> Never include tokens, credentials, generated profiles, or complete subscription URLs in logs and issue reports.
 
 ## Install
 
-Download the latest package from [GitHub Releases](https://github.com/amamiyakokoro/KokoroBox-Desktop/releases):
-
-- Windows x64/ARM64: installer or portable archive
-- macOS Intel/Apple Silicon: signed and notarized PKG
-- Linux x64/ARM64: DEB, RPM, or Pacman package
-
-The macOS PKG installs the permissions required by the bundled Mihomo core; running an intermediate `.app` from `dist` does not. Windows packages are not currently Authenticode-signed.
-
-Each release includes `SHA256SUMS`:
+Download a package for Windows, macOS, or Linux from [GitHub Releases](https://github.com/amamiyakokoro/KokoroBox-Desktop/releases). Releases include `SHA256SUMS` for verification:
 
 ```bash
 shasum -a 256 -c SHA256SUMS --ignore-missing
 ```
 
-## Build from source
+Windows packages are currently unsigned. On macOS, install the PKG so the bundled Mihomo core receives the required permissions.
 
-Requirements:
+## Development
 
-- Node.js 22.12 or later
-- pnpm 11
-- Go 1.23 or later when preparing Windows packages
+Requires Node.js 22.12+, pnpm 11, and Go 1.23+ when preparing Windows packages.
 
 ```bash
 git clone https://github.com/amamiyakokoro/KokoroBox-Desktop.git
 cd KokoroBox-Desktop
 pnpm install
 pnpm dev
+pnpm typecheck
+pnpm test:kokoro
+pnpm test:localization
+pnpm prepare
+pnpm build:win # or build:mac / build:linux
 ```
 
-Common commands:
-
-| Command                  | Purpose                                    |
-| ------------------------ | ------------------------------------------ |
-| `pnpm typecheck`         | Type-check the main and renderer processes |
-| `pnpm test:kokoro`       | Test Kokoro authentication and callbacks   |
-| `pnpm test:localization` | Test localization coverage                 |
-| `pnpm lint`              | Run ESLint and apply supported fixes       |
-| `pnpm format`            | Format the repository                      |
-| `pnpm prepare`           | Prepare cores and runtime resources        |
-| `pnpm build:win`         | Build Windows packages                     |
-| `pnpm build:mac`         | Build the macOS PKG                        |
-| `pnpm build:linux`       | Build Linux packages                       |
-
-Pass `--x64` or `--arm64` when targeting a specific architecture:
-
-```bash
-pnpm prepare --arm64
-pnpm build:mac --arm64
-```
-
-See the [release workflow guide](docs/releases.md) for signing, build targets, and publication details.
+Use `--x64` or `--arm64` to select an architecture. See the [release guide](docs/releases.md) for packaging, signing, and publishing.
 
 ## Contributing
 
-Bug reports and focused pull requests are welcome through [GitHub Issues](https://github.com/amamiyakokoro/KokoroBox-Desktop/issues). Before submitting a change, run `pnpm typecheck` and the relevant tests. Do not commit credentials, subscription URLs, generated profiles, or local runtime data.
+Bug reports and focused pull requests are welcome through [GitHub Issues](https://github.com/amamiyakokoro/KokoroBox-Desktop/issues). Run `pnpm typecheck` and the relevant tests before submitting changes.
 
 ## License
 
