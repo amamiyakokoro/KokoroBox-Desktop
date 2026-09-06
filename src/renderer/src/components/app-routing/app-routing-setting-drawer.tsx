@@ -1,9 +1,10 @@
 import { tr } from '../../../../shared/i18n'
 /* eslint-disable react/prop-types */
-import { Drawer, ListBox, Select, Separator, Switch } from '@heroui-v3/react'
+import { Button, Drawer, ListBox, Select, Separator, Switch, Tooltip } from '@heroui-v3/react'
 import SettingItem from '../base/base-setting-item'
 import { settingItemProps } from '../base/base-controls'
 import { useEffect, useRef, useState } from 'react'
+import { IoIosHelpCircle } from 'react-icons/io'
 
 interface Props {
   isDisabled: boolean
@@ -20,6 +21,17 @@ interface Props {
 }
 
 const DRAWER_CLOSE_ANIMATION_MS = 700
+
+function SettingHelp({ label, content }: { label: string; content: string }): React.ReactNode {
+  return (
+    <Tooltip delay={0}>
+      <Button aria-label={`${label} ${tr('说明')}`} isIconOnly size="sm" variant="ghost">
+        <IoIosHelpCircle className="text-lg" />
+      </Button>
+      <Tooltip.Content>{content}</Tooltip.Content>
+    </Tooltip>
+  )
+}
 
 const AppRoutingSettingDrawer: React.FC<Props> = (props) => {
   const {
@@ -79,13 +91,12 @@ const AppRoutingSettingDrawer: React.FC<Props> = (props) => {
           </Drawer.Header>
           <Drawer.Body className="no-scrollbar flex-1 overflow-y-auto px-5 py-3">
             <SettingItem
-              title={
-                <div>
-                  <div>{tr('代理应用程序 UDP DNS')}</div>
-                  <p className="mt-1 text-xs font-normal text-foreground-500">
-                    {tr('将 Proxy 规则应用程序自行发出的 UDP/53 查询交给 Mihomo。')}
-                  </p>
-                </div>
+              title={tr('代理应用程序 UDP DNS')}
+              actions={
+                <SettingHelp
+                  label={tr('代理应用程序 UDP DNS')}
+                  content={tr('将 Proxy 规则应用程序自行发出的 UDP/53 查询交给 Mihomo。')}
+                />
               }
               {...settingItemProps}
               divider
@@ -175,13 +186,12 @@ const AppRoutingSettingDrawer: React.FC<Props> = (props) => {
             <Separator className="my-4" />
             <h3 className="mb-2 text-sm font-semibold text-foreground-600">{tr('进阶设置')}</h3>
             <SettingItem
-              title={
-                <div>
-                  <div>{tr('诊断记录')}</div>
-                  <p className="mt-1 text-xs font-normal text-foreground-500">
-                    {tr('记录应用程序分流的匹配目标与处理结果；仅在排查问题时启用。')}
-                  </p>
-                </div>
+              title={tr('诊断记录')}
+              actions={
+                <SettingHelp
+                  label={tr('诊断记录')}
+                  content={tr('记录应用程序分流的匹配目标与处理结果；仅在排查问题时启用。')}
+                />
               }
               {...settingItemProps}
             >
