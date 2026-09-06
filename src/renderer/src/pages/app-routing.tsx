@@ -111,6 +111,7 @@ const AppRouting: React.FC = () => {
             )}
           </div>
           <Switch
+            aria-label={tr('应用分流')}
             isSelected={config?.enabled ?? false}
             isDisabled={!supported || !config || saving}
             onValueChange={(enabled) => config && void save({ ...config, enabled })}
@@ -119,7 +120,7 @@ const AppRouting: React.FC = () => {
 
         <Divider />
 
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <h3 className="font-semibold">{tr('应用程序规则')}</h3>
             <p className="text-sm text-foreground-500">
@@ -127,6 +128,7 @@ const AppRouting: React.FC = () => {
             </p>
           </div>
           <Button
+            className="w-full shrink-0 lg:w-auto"
             variant="flat"
             startContent={<MdAdd className="text-lg" />}
             isDisabled={!supported || !config || saving}
@@ -136,20 +138,24 @@ const AppRouting: React.FC = () => {
           </Button>
         </div>
 
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
-          <Input
-            className="flex-1"
-            label={tr('程序匹配')}
-            description={tr('例如：ChatGPT.exe、ChatGPT*.exe 或 C:\\Program Files\\*\\ChatGPT.exe')}
-            placeholder="example.exe"
-            value={processPattern}
-            isDisabled={!supported || !config || saving}
-            onValueChange={setProcessPattern}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter' && processPattern.trim()) void submitPattern()
-            }}
-          />
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-start">
+          <div className="min-w-0 flex-1">
+            <Input
+              label={tr('程序匹配')}
+              placeholder="example.exe"
+              value={processPattern}
+              isDisabled={!supported || !config || saving}
+              onValueChange={setProcessPattern}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' && processPattern.trim()) void submitPattern()
+              }}
+            />
+            <p className="mt-1 px-1 text-xs text-foreground-500">
+              {tr('例如：ChatGPT.exe、ChatGPT*.exe 或 C:\\Program Files\\*\\ChatGPT.exe')}
+            </p>
+          </div>
           <Button
+            className="w-full shrink-0 lg:w-auto"
             color="primary"
             startContent={<MdAdd className="text-lg" />}
             isDisabled={!supported || !config || saving || !processPattern.trim()}
