@@ -171,7 +171,7 @@ interface AppRoutingApplicationSelection {
 }
 
 interface AppRoutingConfig {
-  version: 2
+  version: 1
   enabled: boolean
   failClosed: true
   rules: AppRoutingRule[]

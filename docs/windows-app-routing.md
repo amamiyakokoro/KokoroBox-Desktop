@@ -21,9 +21,9 @@ versioned directory.
 
 The system picker accepts `.exe` files only. It uses the stable executable filename as the
 default `processPattern`, while retaining the selected canonical path only as the optional icon
-source. KokoroBox persists the version 2 schema: `id`, `enabled`, `priority`, `processPattern`,
-optional `sourcePath`, `protocol`, and `action`. Version 1 exact-path rules migrate automatically
-to filename patterns. The enclosing configuration still requires `failClosed: true`.
+source. KokoroBox persists the version 1 schema: `id`, `enabled`, `priority`, `processPattern`,
+optional `sourcePath`, `protocol`, and `action`. The enclosing configuration requires
+`failClosed: true`. Invalid development-time configuration files are discarded.
 
 KokoroBox converts this canonical schema to the private sidecar command in `profile.ts`; an
 upstream `.pbprofile` is never stored as application configuration.
@@ -103,7 +103,7 @@ claim that these files are signed. Do not publicly enable this feature in a rele
 is configured and verified with `Get-AuthenticodeSignature` (or SignPath's signed-artifact
 verification) for every executable and DLL.
 
-The automated suite covers schema validation and migration, the authenticated service contract,
+The automated suite covers strict schema validation, the authenticated service contract,
 ordering, disabled rules, mandatory policy generation, fail-closed command generation, SOCKS5
 greeting validation, provenance, and binary hash failures. Packet interception, TCP/UDP routing,
 IPv4/IPv6 behavior, crash leakage, sleep/resume, upgrade/uninstall cleanup,

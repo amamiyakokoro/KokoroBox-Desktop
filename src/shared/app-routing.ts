@@ -24,7 +24,7 @@ export function isProtectedAppRoutingProcess(executableName: string): boolean {
 }
 
 export const defaultAppRoutingConfig: AppRoutingConfig = {
-  version: 2,
+  version: 1,
   enabled: false,
   failClosed: true,
   rules: []
@@ -71,6 +71,9 @@ function containsInvalidProcessPatternCharacter(processPattern: string): boolean
 
 export function validateAppRoutingRule(rule: AppRoutingRule): void {
   if (!rule.id || rule.id.length > 128) throw new Error('Invalid application rule ID')
+  if (typeof rule.processPattern !== 'string') {
+    throw new Error('Application routing requires one valid .exe process pattern')
+  }
   const processPattern = normalizeProcessPattern(rule.processPattern)
   if (
     !processPattern ||
@@ -100,7 +103,7 @@ export function validateAppRoutingRule(rule: AppRoutingRule): void {
 export function validateAppRoutingConfig(config: AppRoutingConfig): void {
   if (
     !config ||
-    config.version !== 2 ||
+    config.version !== 1 ||
     typeof config.enabled !== 'boolean' ||
     config.failClosed !== true
   ) {
@@ -131,7 +134,7 @@ export function validateAppRoutingConfig(config: AppRoutingConfig): void {
 
 export function normalizeAppRoutingConfig(config: AppRoutingConfig): AppRoutingConfig {
   return {
-    version: 2,
+    version: 1,
     enabled: config.enabled,
     failClosed: config.failClosed,
     rules: [...config.rules]
@@ -150,73 +153,11 @@ export function normalizeAppRoutingConfig(config: AppRoutingConfig): AppRoutingC
   }
 }
 
-export function migrateAppRoutingConfig(value: unknown): AppRoutingConfig {
+export function parseAppRoutingConfig(value: unknown): AppRoutingConfig {
   if (!value || typeof value !== 'object') throw new Error('Invalid application routing data')
-  const source = value as Record<string, unknown>
-  if (source.version !== 1 && source.version !== 2) {
-    throw new Error('Unsupported application routing configuration version')
-  }
-  if (!Array.isArray(source.rules)) throw new Error('Invalid application routing rules')
-  const sourceRules = source.rules.map((item) => {
-    if (!item || typeof item !== 'object') throw new Error('Invalid application routing rule')
-    return item as Record<string, unknown>
-  })
-  const legacyPatternCounts = new Map<string, number>()
-  for (const rule of sourceRules) {
-    if (typeof rule.processPattern === 'string') continue
-    const legacyPath = typeof rule.executablePath === 'string' ? rule.executablePath : undefined
-    const legacyPattern = normalizeProcessPattern(
-      typeof rule.executableName === 'string'
-        ? rule.executableName
-        : typeof rule.processName === 'string'
-          ? rule.processName
-          : legacyPath
-            ? executableName(legacyPath)
-            : ''
-    ).toLowerCase()
-    legacyPatternCounts.set(legacyPattern, (legacyPatternCounts.get(legacyPattern) ?? 0) + 1)
-  }
-  const rules = sourceRules.map((rule, index) => {
-    const legacyPath = typeof rule.executablePath === 'string' ? rule.executablePath : undefined
-    const hasProcessPattern = typeof rule.processPattern === 'string'
-    let processPattern = normalizeProcessPattern(
-      hasProcessPattern
-        ? (rule.processPattern as string)
-        : typeof rule.executableName === 'string'
-          ? rule.executableName
-          : typeof rule.processName === 'string'
-            ? rule.processName
-            : legacyPath
-              ? executableName(legacyPath)
-              : ''
-    )
-    if (
-      !hasProcessPattern &&
-      legacyPath &&
-      (legacyPatternCounts.get(processPattern.toLowerCase()) ?? 0) > 1
-    ) {
-      processPattern = normalizeWindowsExecutablePath(legacyPath)
-    }
-    return {
-      id: rule.id,
-      enabled: rule.enabled,
-      priority: rule.priority || index + 1,
-      processPattern,
-      ...(typeof rule.sourcePath === 'string'
-        ? { sourcePath: rule.sourcePath }
-        : legacyPath
-          ? { sourcePath: legacyPath }
-          : {}),
-      protocol: rule.protocol,
-      action: rule.action
-    } as AppRoutingRule
-  })
-  const migrated = normalizeAppRoutingConfig({
-    version: 2,
-    enabled: source.enabled as boolean,
-    failClosed: true,
-    rules
-  })
-  validateAppRoutingConfig(migrated)
-  return migrated
+  const config = value as AppRoutingConfig
+  validateAppRoutingConfig(config)
+  const normalized = normalizeAppRoutingConfig(config)
+  validateAppRoutingConfig(normalized)
+  return normalized
 }

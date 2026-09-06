@@ -4,8 +4,8 @@ import path from 'path'
 import crypto from 'crypto'
 import {
   defaultAppRoutingConfig,
-  migrateAppRoutingConfig,
   normalizeAppRoutingConfig,
+  parseAppRoutingConfig,
   validateAppRoutingConfig
 } from '../../shared/app-routing'
 import { appRoutingConfigPath, appRoutingDir, appRoutingIconDir } from '../utils/dirs'
@@ -18,7 +18,7 @@ function cloneDefault(): AppRoutingConfig {
 }
 
 async function readValidatedConfig(filePath: string): Promise<AppRoutingConfig> {
-  return migrateAppRoutingConfig(JSON.parse(await readFile(filePath, 'utf8')))
+  return parseAppRoutingConfig(JSON.parse(await readFile(filePath, 'utf8')))
 }
 
 export async function getAppRoutingConfig(force = false): Promise<AppRoutingConfig> {
