@@ -154,6 +154,7 @@ const EditInfoModal: React.FC<Props> = (props) => {
                   tr('文件类型'),
                   <Select
                     aria-label={tr('文件类型')}
+                    className="w-40!"
                     value={values.ext}
                     variant="secondary"
                     onChange={(value) => {
