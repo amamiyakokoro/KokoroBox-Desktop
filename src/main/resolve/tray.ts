@@ -10,6 +10,7 @@ import {
 import icoIcon from '../../../resources/icon.ico?asset'
 import pngIcon from '../../../resources/icon.png?asset'
 import templateIcon from '../../../resources/iconTemplate.png?asset'
+import twemojiFont from '../../renderer/src/assets/twemoji.ttf?asset'
 import {
   mihomoChangeProxy,
   mihomoCloseConnections,
@@ -36,18 +37,18 @@ import { floatingWindow, triggerFloatingWindow } from './floatingWindow'
 import { is } from '@electron-toolkit/utils'
 import { extname, join } from 'path'
 import { applyTheme } from './theme'
-import { existsSync } from 'fs'
+import { existsSync, readFileSync } from 'fs'
 
 export let tray: Tray | null = null
 export let customTrayWindow: BrowserWindow | null = null
 let trayMenu: Menu | null = null
 let trayIconUpdateListenerRegistered = false
 let updateTrayMenuListenerRegistered = false
-let darwinTrayIconPromise: Promise<Electron.NativeImage> | null = null
+let defaultTrayIconPromise: Promise<Electron.NativeImage> | null = null
 type TrayImage = Electron.NativeImage | string
 const customTrayIconSize = 16
 const customTrayIconScaleFactors = [1, 1.25, 1.5, 2, 2.5, 3]
-const darwinTrayIconSize = 18
+const emojiTrayIconSize = 18
 
 function formatDelayText(delay: number): string {
   if (delay === 0) {
@@ -58,17 +59,19 @@ function formatDelayText(delay: number): string {
   return ''
 }
 
-function createDarwinFallbackTrayIcon(): Electron.NativeImage {
-  const icon = nativeImage.createFromPath(templateIcon).resize({ height: 16 })
-  icon.setTemplateImage(true)
+function createDefaultFallbackTrayIcon(): Electron.NativeImage {
+  const icon = nativeImage
+    .createFromPath(process.platform === 'darwin' ? templateIcon : pngIcon)
+    .resize({ height: process.platform === 'darwin' ? 16 : emojiTrayIconSize })
+  icon.setTemplateImage(process.platform === 'darwin')
   return icon
 }
 
-async function renderDarwinEmojiTrayIcon(): Promise<Electron.NativeImage> {
-  const fallback = createDarwinFallbackTrayIcon()
+async function renderEmojiTrayIcon(): Promise<Electron.NativeImage> {
+  const fallback = createDefaultFallbackTrayIcon()
   const emojiWindow = new BrowserWindow({
-    width: darwinTrayIconSize,
-    height: darwinTrayIconSize,
+    width: emojiTrayIconSize,
+    height: emojiTrayIconSize,
     show: false,
     frame: false,
     transparent: true,
@@ -84,13 +87,22 @@ async function renderDarwinEmojiTrayIcon(): Promise<Electron.NativeImage> {
   })
 
   try {
-    const document = `<style>html,body{margin:0;background:transparent;overflow:hidden}body{width:${darwinTrayIconSize}px;height:${darwinTrayIconSize}px;display:flex;align-items:center;justify-content:center;font:16px "Apple Color Emoji"}</style>🎐`
+    const bundledEmojiFont =
+      process.platform === 'linux'
+        ? `@font-face{font-family:KokoroTwemoji;src:url(data:font/ttf;base64,${readFileSync(twemojiFont).toString('base64')})}`
+        : ''
+    const emojiFonts =
+      process.platform === 'darwin'
+        ? '"Apple Color Emoji"'
+        : '"Noto Color Emoji",KokoroTwemoji,"Twemoji Mozilla","Segoe UI Emoji",sans-serif'
+    const document = `<style>${bundledEmojiFont}html,body{margin:0;background:transparent;overflow:hidden}body{width:${emojiTrayIconSize}px;height:${emojiTrayIconSize}px;display:flex;align-items:center;justify-content:center;font:16px ${emojiFonts}}</style>🎐`
     await emojiWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(document)}`)
+    await emojiWindow.webContents.executeJavaScript('document.fonts.ready.then(() => true)')
     const icon = await emojiWindow.webContents.capturePage({
       x: 0,
       y: 0,
-      width: darwinTrayIconSize,
-      height: darwinTrayIconSize
+      width: emojiTrayIconSize,
+      height: emojiTrayIconSize
     })
     if (icon.isEmpty()) return fallback
 
@@ -103,9 +115,9 @@ async function renderDarwinEmojiTrayIcon(): Promise<Electron.NativeImage> {
   }
 }
 
-function createDarwinTrayIcon(): Promise<Electron.NativeImage> {
-  darwinTrayIconPromise ??= renderDarwinEmojiTrayIcon()
-  return darwinTrayIconPromise
+function createDefaultTrayIcon(): Promise<Electron.NativeImage> {
+  defaultTrayIconPromise ??= renderEmojiTrayIcon()
+  return defaultTrayIconPromise
 }
 
 function resizeTrayImageForScale(
@@ -570,12 +582,12 @@ export async function createTray(): Promise<void> {
     return
   }
   if (process.platform === 'linux') {
-    tray = new Tray(pngIcon)
+    tray = new Tray(await createDefaultTrayIcon())
     trayMenu = await buildContextMenu()
     tray.setContextMenu(trayMenu)
   }
   if (process.platform === 'darwin') {
-    tray = new Tray(await createDarwinTrayIcon())
+    tray = new Tray(await createDefaultTrayIcon())
   }
   if (process.platform === 'win32') {
     tray = new Tray(icoIcon)
@@ -598,7 +610,7 @@ export async function createTray(): Promise<void> {
             return
           }
         }
-        tray?.setImage(customIcon || (await createDarwinTrayIcon()))
+        tray?.setImage(customIcon || (await createDefaultTrayIcon()))
       })
       trayIconUpdateListenerRegistered = true
     }
@@ -641,14 +653,14 @@ export async function updateTrayIcon(): Promise<void> {
   }
 
   if (process.platform === 'darwin') {
-    tray.setImage(await createDarwinTrayIcon())
+    tray.setImage(await createDefaultTrayIcon())
     return
   }
   if (process.platform === 'win32') {
     tray.setImage(icoIcon)
     return
   }
-  tray.setImage(pngIcon)
+  tray.setImage(await createDefaultTrayIcon())
 }
 
 async function updateTrayMenu(): Promise<void> {
