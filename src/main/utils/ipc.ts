@@ -134,7 +134,9 @@ import { appendAppLog, clearCachedMihomoLogs, getCachedMihomoLogs } from './log'
 import { ageIdentityToRecipient, generateAgeKeyPair } from './age'
 import {
   cancelKokoroLogin,
+  getKokoroDefaultRules,
   getKokoroSession,
+  replaceKokoroDefaultRules,
   revokeKokoroSession,
   startKokoroLogin
 } from '../kokoro/client'
@@ -287,6 +289,10 @@ export function registerIpcMainHandlers(): void {
   ipcMain.handle('getKokoroSession', () => ipcErrorWrapper(getKokoroSession)())
   ipcMain.handle('startKokoroLogin', () => ipcErrorWrapper(startKokoroLogin)())
   ipcMain.handle('cancelKokoroLogin', () => ipcErrorWrapper(cancelKokoroLogin)())
+  ipcMain.handle('getKokoroDefaultRules', () => ipcErrorWrapper(getKokoroDefaultRules)())
+  ipcMain.handle('replaceKokoroDefaultRules', (_e, expectedRevision, rules) =>
+    ipcErrorWrapper(replaceKokoroDefaultRules)(expectedRevision, rules)
+  )
   ipcMain.handle('addKokoroProfile', (_e, settings) => ipcErrorWrapper(addKokoroProfile)(settings))
   ipcMain.handle('revokeKokoroSession', () =>
     ipcErrorWrapper(async () => {

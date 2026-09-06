@@ -68,6 +68,7 @@ interface AppConfig {
   connectionCardStatus?: CardStatus
   dnsCardStatus?: CardStatus
   logCardStatus?: CardStatus
+  kokoroCardStatus?: CardStatus
   pauseSSID?: string[]
   mihomoCoreCardStatus?: CardStatus
   overrideCardStatus?: CardStatus
@@ -251,6 +252,43 @@ interface KokoroSession {
   authenticated: boolean
   user?: KokoroUser
   options?: KokoroSubscriptionOptions
+}
+
+type KokoroCustomRuleType =
+  'DOMAIN-SUFFIX' | 'DOMAIN-KEYWORD' | 'DOMAIN' | 'IP-CIDR' | 'PROCESS-NAME' | 'RULE-SET' | 'MATCH'
+
+interface KokoroCustomRuleInput {
+  type: KokoroCustomRuleType
+  payload: string | null
+  target: string
+}
+
+interface KokoroCustomRule extends KokoroCustomRuleInput {
+  id: number
+  priority: number
+  updated_at: string
+}
+
+interface KokoroRuleSet {
+  id: number
+  name: string
+  revision: number
+  created_at: string
+  updated_at: string
+  rules: KokoroCustomRule[]
+}
+
+interface KokoroCustomRulesOptions {
+  schema_version: 1
+  rule_types: KokoroCustomRuleType[]
+  targets: string[]
+  rule_providers: Array<{ name: string; behavior: string }>
+  limits: Record<string, number>
+}
+
+interface KokoroDefaultRules {
+  ruleSet: KokoroRuleSet
+  options: KokoroCustomRulesOptions
 }
 
 interface OverrideConfig {

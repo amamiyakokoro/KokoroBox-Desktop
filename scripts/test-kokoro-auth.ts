@@ -55,14 +55,34 @@ function harness(stored: KokoroCredentials | null = null) {
   const timers = new Map<object, () => void>()
   const urls: string[] = []
   const posts: { url: string; body: Record<string, string>; config: unknown }[] = []
-  const requests: { url: string; headers: Record<string, string> }[] = []
+  const requests: Array<{
+    url: string
+    headers: Record<string, string>
+    method?: string
+    data?: unknown
+  }> = []
   const saves: KokoroCredentials[] = []
   let deletes = 0
   let notifications = 0
-  const boundaries = {
+  const boundaries: {
+    browser: (url: string) => Promise<void>
+    post: (body: Record<string, string>) => Promise<{ data: typeof token }>
+    request: (config: {
+      url: string
+      headers: Record<string, string>
+      method?: string
+      data?: unknown
+    }) => Promise<{ data: unknown; headers: Record<string, string> }>
+    save: (next: KokoroCredentials) => Promise<void>
+  } = {
     browser: async (_url: string) => {},
     post: async (_body: Record<string, string>) => ({ data: token }),
-    request: async (_config: { url: string; headers: Record<string, string> }) => ({
+    request: async (_config: {
+      url: string
+      headers: Record<string, string>
+      method?: string
+      data?: unknown
+    }) => ({
       data: { username: 'Test', proxy_uuid: 'not-for-renderer' },
       headers: {}
     }),
@@ -73,7 +93,12 @@ function harness(stored: KokoroCredentials | null = null) {
       posts.push({ url, body, config })
       return boundaries.post(body)
     },
-    request: async (config: { url: string; headers: Record<string, string> }) => {
+    request: async (config: {
+      url: string
+      headers: Record<string, string>
+      method?: string
+      data?: unknown
+    }) => {
       requests.push(config)
       return boundaries.request(config)
     }
@@ -562,6 +587,172 @@ test('failed secure storage never exposes an authenticated session or releases w
   )
   assert.equal(h.requests.length, 0)
   assert.equal(h.saves.length, 0)
+})
+
+const customRulesOptions = {
+  schema_version: 1 as const,
+  rule_types: ['DOMAIN-SUFFIX', 'RULE-SET', 'MATCH'],
+  targets: ['DIRECT', 'REJECT', 'Tokyo'],
+  rule_providers: [
+    { name: 'geosite-private', behavior: 'domain' },
+    { name: 'geoip-private', behavior: 'ipcidr' }
+  ],
+  limits: { max_rules_per_set: 200, max_payload_length: 1024 }
+}
+
+const defaultRuleSet = {
+  id: 12,
+  name: 'default',
+  revision: 4,
+  created_at: '2026-09-05T10:00:00Z',
+  updated_at: '2026-09-05T11:30:00Z',
+  rules: [
+    {
+      id: 51,
+      type: 'DOMAIN-SUFFIX',
+      payload: 'example.com',
+      target: 'DIRECT',
+      priority: 0,
+      updated_at: '2026-09-05T11:30:00Z'
+    }
+  ]
+}
+
+function authenticatedCredentials(): KokoroCredentials {
+  return {
+    accessToken: 'rules-access',
+    refreshToken: 'rules-refresh',
+    accessExpiresAt: 1_900_000_000_000,
+    refreshExpiresAt: 1_900_000_000_000
+  }
+}
+
+test('custom-rules read exposes only default with current dynamic options', async () => {
+  const h = harness(authenticatedCredentials())
+  h.boundaries.request = async (config) => {
+    if (config.url.endsWith('/app/custom-rules/options'))
+      return { data: customRulesOptions, headers: {} }
+    if (config.url.endsWith('/app/custom-rules')) {
+      return {
+        data: {
+          schema_version: 1,
+          sets: [defaultRuleSet, { ...defaultRuleSet, id: 99, name: 'private', rules: [] }]
+        },
+        headers: {}
+      }
+    }
+    throw new Error('unexpected request')
+  }
+
+  const result = await h.client.getKokoroDefaultRules()
+  assert.deepEqual(result, { ruleSet: defaultRuleSet, options: customRulesOptions })
+  assert.equal(h.requests.length, 2)
+  assert.ok(h.requests.every((request) => request.method === 'GET'))
+  assert.ok(h.requests.every((request) => request.headers.Authorization === 'Bearer rules-access'))
+  assert.ok(h.requests.every((request) => !JSON.stringify(request).includes('private')))
+})
+
+test('custom-rules save replaces only default with its expected revision and current options', async () => {
+  const h = harness(authenticatedCredentials())
+  const rules = [
+    { type: 'RULE-SET' as const, payload: 'geosite-private', target: 'REJECT' },
+    { type: 'MATCH' as const, payload: null, target: 'DIRECT' }
+  ]
+  const updated = {
+    ...defaultRuleSet,
+    revision: 5,
+    rules: rules.map((rule, index) => ({
+      ...rule,
+      id: 60 + index,
+      priority: index,
+      updated_at: '2026-09-05T12:00:00Z'
+    }))
+  }
+  h.boundaries.request = async (config) => {
+    if (config.url.endsWith('/app/custom-rules/options'))
+      return { data: customRulesOptions, headers: {} }
+    if (config.url.endsWith('/app/custom-rules')) {
+      return { data: { schema_version: 1, sets: [defaultRuleSet] }, headers: {} }
+    }
+    if (config.url.endsWith('/app/custom-rules/sets/12/rules')) {
+      return { data: updated, headers: {} }
+    }
+    throw new Error('unexpected request')
+  }
+
+  assert.deepEqual(await h.client.replaceKokoroDefaultRules(4, rules), updated)
+  const writes = h.requests.filter((request) => request.method === 'PUT')
+  assert.equal(writes.length, 1)
+  assert.equal(writes[0].url, `${oauth.KOKORO_API_BASE}/app/custom-rules/sets/12/rules`)
+  assert.deepEqual(writes[0].data, { expected_revision: 4, rules })
+  assert.equal(writes[0].headers.Authorization, 'Bearer rules-access')
+})
+
+test('custom-rules save preserves local edits on a stale revision without writing', async () => {
+  const h = harness(authenticatedCredentials())
+  h.boundaries.request = async (config) => {
+    if (config.url.endsWith('/app/custom-rules/options'))
+      return { data: customRulesOptions, headers: {} }
+    if (config.url.endsWith('/app/custom-rules')) {
+      return {
+        data: { schema_version: 1, sets: [{ ...defaultRuleSet, revision: 5 }] },
+        headers: {}
+      }
+    }
+    throw new Error('unexpected write')
+  }
+
+  await assert.rejects(
+    h.client.replaceKokoroDefaultRules(4, [
+      { type: 'DOMAIN-SUFFIX', payload: 'local.example', target: 'DIRECT' }
+    ]),
+    /重新加载/
+  )
+  assert.equal(h.requests.filter((request) => request.method === 'PUT').length, 0)
+})
+
+test('custom-rules uncertain write is not retried and reconciles an applied result', async () => {
+  const h = harness(authenticatedCredentials())
+  const rules = [{ type: 'DOMAIN-SUFFIX' as const, payload: 'saved.example', target: 'DIRECT' }]
+  let stateReads = 0
+  h.boundaries.request = async (config) => {
+    if (config.url.endsWith('/app/custom-rules/options'))
+      return { data: customRulesOptions, headers: {} }
+    if (config.url.endsWith('/app/custom-rules')) {
+      stateReads += 1
+      return {
+        data: {
+          schema_version: 1,
+          sets: [
+            stateReads === 1
+              ? defaultRuleSet
+              : {
+                  ...defaultRuleSet,
+                  revision: 5,
+                  rules: [
+                    {
+                      ...rules[0],
+                      id: 75,
+                      priority: 0,
+                      updated_at: '2026-09-05T12:00:00Z'
+                    }
+                  ]
+                }
+          ]
+        },
+        headers: {}
+      }
+    }
+    if (config.url.endsWith('/app/custom-rules/sets/12/rules')) {
+      throw { isAxiosError: true, message: 'timeout-with-secret' }
+    }
+    throw new Error('unexpected request')
+  }
+
+  const result = await h.client.replaceKokoroDefaultRules(4, rules)
+  assert.equal(result.revision, 5)
+  assert.equal(stateReads, 2)
+  assert.equal(h.requests.filter((request) => request.method === 'PUT').length, 1)
 })
 
 test('desktop inbox handles pre-ready and warm deliveries and strips OAuth argv before relaunch', async () => {

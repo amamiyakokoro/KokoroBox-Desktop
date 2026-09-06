@@ -25,7 +25,6 @@ import { MdTune } from 'react-icons/md'
 import ProfileSettingDrawer from '@renderer/components/profiles/profile-setting-drawer'
 import { useCardDndSensors } from '@renderer/hooks/use-card-dnd-sensors'
 import { notify } from '@renderer/utils/notification'
-import KokoroSubscriptionModal from '@renderer/components/profiles/kokoro-subscription-modal'
 
 const emptyItems: ProfileItem[] = []
 
@@ -48,7 +47,6 @@ const Profiles: React.FC = () => {
   const [switching, setSwitching] = useState(false)
   const [fileOver, setFileOver] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
-  const [showKokoroModal, setShowKokoroModal] = useState(false)
   const [isSettingDrawerOpen, setIsSettingDrawerOpen] = useState(false)
   const [settingDrawerReopenSignal, setSettingDrawerReopenSignal] = useState(0)
   const [editingItem, setEditingItem] = useState<ProfileItem | null>(null)
@@ -233,15 +231,6 @@ const Profiles: React.FC = () => {
           }}
         />
       )}
-      {showKokoroModal && (
-        <KokoroSubscriptionModal
-          onClose={() => setShowKokoroModal(false)}
-          onImported={() => {
-            mutateProfileConfig()
-            window.electron.ipcRenderer.send('updateTrayMenu')
-          }}
-        />
-      )}
       <div className="sticky profiles-sticky top-0 z-40">
         <div className="flex p-2">
           <Input
@@ -294,10 +283,6 @@ const Profiles: React.FC = () => {
             <DropdownMenu
               onAction={async (key) => {
                 switch (key) {
-                  case 'kokoro': {
-                    setShowKokoroModal(true)
-                    break
-                  }
                   case 'open': {
                     try {
                       const files = await getFilePath(['yml', 'yaml'])
@@ -337,9 +322,6 @@ const Profiles: React.FC = () => {
                 }
               }}
             >
-              <DropdownItem key="kokoro" showDivider>
-                {tr('登录 Kokoro 获取订阅')}
-              </DropdownItem>
               <DropdownItem key="open">{tr('打开本地配置')}</DropdownItem>
               <DropdownItem key="new">{tr('新建本地配置')}</DropdownItem>
               <DropdownItem key="import">{tr('导入远程配置')}</DropdownItem>

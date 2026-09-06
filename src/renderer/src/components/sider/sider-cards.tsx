@@ -8,6 +8,7 @@ import { markInitialContentPartReady } from '@renderer/utils/startup'
 import ConnCard from './conn-card'
 import DNSCard from './dns-card'
 import LogCard from './log-card'
+import KokoroSettingCard from './kokoro-setting-card'
 import MihomoCoreCard from './mihomo-core-card'
 import OverrideCard from './override-card'
 import ProfileCard from './profile-card'
@@ -25,6 +26,7 @@ const defaultSiderOrder = [
   'tun',
   'dns',
   'sniff',
+  'kokoro',
   'proxy',
   'connection',
   'profile',
@@ -58,6 +60,7 @@ const componentMap = {
   sysproxy: SysproxySwitcher,
   tun: TunSwitcher,
   profile: ProfileCard,
+  kokoro: KokoroSettingCard,
   proxy: ProxyCard,
   mihomo: MihomoCoreCard,
   connection: ConnCard,

@@ -180,6 +180,17 @@ async function migration(): Promise<void> {
     }
   }
 
+  if (Array.isArray(appConfig.siderOrder) && !appConfig.siderOrder.includes('kokoro')) {
+    const siderOrder = [...appConfig.siderOrder]
+    const legacySubStoreIndex = siderOrder.indexOf('substore')
+    if (legacySubStoreIndex >= 0) {
+      siderOrder.splice(legacySubStoreIndex, 1)
+    }
+    const proxyIndex = siderOrder.indexOf('proxy')
+    siderOrder.splice(proxyIndex < 0 ? siderOrder.length : proxyIndex, 0, 'kokoro')
+    appConfigPatch.siderOrder = siderOrder
+  }
+
   if (Object.keys(appConfigPatch).length > 0) {
     await patchAppConfig(appConfigPatch)
   }

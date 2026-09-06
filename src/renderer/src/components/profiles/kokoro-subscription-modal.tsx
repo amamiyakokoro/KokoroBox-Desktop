@@ -13,6 +13,7 @@ import { notify } from '@renderer/utils/notification'
 import dayjs from 'dayjs'
 import React, { useEffect, useMemo, useState } from 'react'
 import { LuCloudDownload, LuLogIn, LuLogOut, LuRefreshCw } from 'react-icons/lu'
+import KokoroDefaultRules from './kokoro-default-rules'
 
 interface Props {
   onClose: () => void
@@ -171,7 +172,7 @@ const KokoroSubscriptionModal: React.FC<Props> = ({ onClose, onImported }) => {
         className="top-12 h-[calc(100%-48px)]"
       >
         <Modal.Container scroll="inside">
-          <Modal.Dialog className="w-[min(680px,calc(100%-24px))] max-w-none">
+          <Modal.Dialog className="w-[min(1120px,calc(100%-24px))] max-w-none">
             <Modal.Header className="app-drag border-b border-default-100 pb-4">
               <div>
                 <Modal.Heading>{tr('Kokoro 订阅')}</Modal.Heading>
@@ -267,170 +268,177 @@ const KokoroSubscriptionModal: React.FC<Props> = ({ onClose, onImported }) => {
                     </Button>
                   </section>
 
-                  {!mihomoAvailable && (
-                    <p className="rounded-lg bg-danger-50 px-3 py-2 text-sm text-danger">
-                      {tr('当前 Kokoro 帐号没有可用的 Mihomo 格式。')}
-                    </p>
-                  )}
-
-                  <section className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <Select
-                      label={tr('方案')}
-                      size="sm"
-                      selectedKeys={settings?.plan ? new Set([settings.plan]) : new Set()}
-                      isDisabled={options.plans.length === 0}
-                      disallowEmptySelection
-                      onSelectionChange={(value) =>
-                        updateSettings({ plan: String(value.currentKey), isp: null })
-                      }
-                    >
-                      {options.plans.map((plan) => (
-                        <SelectItem key={plan.name} description={plan.description || undefined}>
-                          {plan.name}
-                        </SelectItem>
-                      ))}
-                    </Select>
-                    <Select
-                      label={tr('网络运营商')}
-                      size="sm"
-                      selectedKeys={new Set([settings?.isp || ''])}
-                      disallowEmptySelection
-                      onSelectionChange={(value) =>
-                        updateSettings({
-                          isp: (String(value.currentKey) || null) as KokoroISP | null
-                        })
-                      }
-                    >
-                      {isps.map((isp) => (
-                        <SelectItem key={isp.value}>{isp.label}</SelectItem>
-                      ))}
-                    </Select>
-                    <Select
-                      label={tr('协议')}
-                      size="sm"
-                      selectedKeys={settings ? new Set([settings.protocol]) : new Set()}
-                      disallowEmptySelection
-                      onSelectionChange={(value) => {
-                        const protocol = String(value.currentKey) as KokoroProtocol
-                        updateSettings({
-                          protocol,
-                          mode: protocol === 'vmess' ? 'relay' : settings?.mode || 'relay'
-                        })
-                      }}
-                    >
-                      {protocols.map((protocol) => (
-                        <SelectItem key={protocol.value}>{protocol.label}</SelectItem>
-                      ))}
-                    </Select>
-                    {!supportsDirect ? (
-                      <div className="flex min-h-12 items-center rounded-lg bg-default-100 px-3 text-sm text-foreground-500">
-                        {settings?.protocol === 'vmess'
-                          ? tr('VMess 固定使用中继模式')
-                          : tr('此协议当前仅支持中继模式')}
-                      </div>
-                    ) : (
-                      <Select
-                        label={tr('连接模式')}
-                        size="sm"
-                        selectedKeys={settings ? new Set([settings.mode]) : new Set()}
-                        disallowEmptySelection
-                        onSelectionChange={(value) =>
-                          updateSettings({ mode: String(value.currentKey) as KokoroMode })
-                        }
-                      >
-                        <SelectItem key="relay">{tr('中继')}</SelectItem>
-                        <SelectItem key="direct">{tr('直连')}</SelectItem>
-                      </Select>
-                    )}
-                    <Select
-                      label={tr('规则来源')}
-                      size="sm"
-                      selectedKeys={settings ? new Set([settings.rule_source]) : new Set()}
-                      disallowEmptySelection
-                      onSelectionChange={(value) =>
-                        updateSettings({
-                          rule_source: String(value.currentKey) as KokoroRuleSource
-                        })
-                      }
-                    >
-                      {options.rule_sources.map((source) => (
-                        <SelectItem key={source}>
-                          {source === 'origin' ? tr('原始来源') : tr('镜像')}
-                        </SelectItem>
-                      ))}
-                    </Select>
-                    <Select
-                      label={tr('未匹配流量')}
-                      size="sm"
-                      selectedKeys={settings ? new Set([settings.final_route]) : new Set()}
-                      disallowEmptySelection
-                      onSelectionChange={(value) =>
-                        updateSettings({
-                          final_route: String(value.currentKey) as KokoroFinalRoute
-                        })
-                      }
-                    >
-                      {options.final_routes.map((route) => (
-                        <SelectItem key={route}>
-                          {route === 'proxy' ? tr('代理') : tr('直连')}
-                        </SelectItem>
-                      ))}
-                    </Select>
-                  </section>
-
-                  <section className="divide-y divide-default-100 border-y border-default-100">
-                    <div className="flex flex-wrap items-center justify-between gap-4 py-3">
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium">{tr('规则集自动更新')}</p>
-                        <p className="mt-0.5 text-xs text-foreground-500">
-                          {tr('更新远端 rule-provider')}
+                  <div className="grid min-h-0 grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(420px,1.08fr)]">
+                    <div className="flex min-w-0 flex-col gap-5">
+                      {!mihomoAvailable && (
+                        <p className="rounded-lg bg-danger-50 px-3 py-2 text-sm text-danger">
+                          {tr('当前 Kokoro 帐号没有可用的 Mihomo 格式。')}
                         </p>
-                      </div>
-                      <Switch
-                        size="sm"
-                        className="ml-auto shrink-0"
-                        isSelected={settings?.rule_provider_auto_update}
-                        onValueChange={(value) =>
-                          updateSettings({ rule_provider_auto_update: value })
-                        }
-                      />
-                    </div>
-                    <div className="flex flex-wrap items-center justify-between gap-4 py-3">
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium">{tr('订阅自动更新')}</p>
-                        <p className="mt-0.5 text-xs text-foreground-500">
-                          {tr('失败时保留上一份可用配置')}
-                        </p>
-                      </div>
-                      <div className="ml-auto flex shrink-0 items-center gap-3">
-                        <Input
-                          aria-label={tr('更新间隔')}
-                          type="number"
+                      )}
+
+                      <section className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <Select
+                          label={tr('方案')}
                           size="sm"
-                          className="w-32 shrink-0"
-                          min={options.profile_update.min_hours}
-                          max={options.profile_update.max_hours}
-                          endContent={
-                            <span className="shrink-0 whitespace-nowrap">{tr('小时')}</span>
+                          selectedKeys={settings?.plan ? new Set([settings.plan]) : new Set()}
+                          isDisabled={options.plans.length === 0}
+                          disallowEmptySelection
+                          onSelectionChange={(value) =>
+                            updateSettings({ plan: String(value.currentKey), isp: null })
                           }
-                          value={String(settings?.profile_update_hours || '')}
-                          onValueChange={(value) =>
+                        >
+                          {options.plans.map((plan) => (
+                            <SelectItem key={plan.name} description={plan.description || undefined}>
+                              {plan.name}
+                            </SelectItem>
+                          ))}
+                        </Select>
+                        <Select
+                          label={tr('网络运营商')}
+                          size="sm"
+                          selectedKeys={new Set([settings?.isp || ''])}
+                          disallowEmptySelection
+                          onSelectionChange={(value) =>
                             updateSettings({
-                              profile_update_hours: Math.min(
-                                options.profile_update.max_hours,
-                                Math.max(options.profile_update.min_hours, Number(value) || 0)
-                              )
+                              isp: (String(value.currentKey) || null) as KokoroISP | null
                             })
                           }
-                        />
-                        <Switch
+                        >
+                          {isps.map((isp) => (
+                            <SelectItem key={isp.value}>{isp.label}</SelectItem>
+                          ))}
+                        </Select>
+                        <Select
+                          label={tr('协议')}
                           size="sm"
-                          isSelected={settings?.profile_auto_update}
-                          onValueChange={(value) => updateSettings({ profile_auto_update: value })}
-                        />
-                      </div>
+                          selectedKeys={settings ? new Set([settings.protocol]) : new Set()}
+                          disallowEmptySelection
+                          onSelectionChange={(value) => {
+                            const protocol = String(value.currentKey) as KokoroProtocol
+                            updateSettings({
+                              protocol,
+                              mode: protocol === 'vmess' ? 'relay' : settings?.mode || 'relay'
+                            })
+                          }}
+                        >
+                          {protocols.map((protocol) => (
+                            <SelectItem key={protocol.value}>{protocol.label}</SelectItem>
+                          ))}
+                        </Select>
+                        {!supportsDirect ? (
+                          <div className="flex min-h-12 items-center rounded-lg bg-default-100 px-3 text-sm text-foreground-500">
+                            {settings?.protocol === 'vmess'
+                              ? tr('VMess 固定使用中继模式')
+                              : tr('此协议当前仅支持中继模式')}
+                          </div>
+                        ) : (
+                          <Select
+                            label={tr('连接模式')}
+                            size="sm"
+                            selectedKeys={settings ? new Set([settings.mode]) : new Set()}
+                            disallowEmptySelection
+                            onSelectionChange={(value) =>
+                              updateSettings({ mode: String(value.currentKey) as KokoroMode })
+                            }
+                          >
+                            <SelectItem key="relay">{tr('中继')}</SelectItem>
+                            <SelectItem key="direct">{tr('直连')}</SelectItem>
+                          </Select>
+                        )}
+                        <Select
+                          label={tr('规则来源')}
+                          size="sm"
+                          selectedKeys={settings ? new Set([settings.rule_source]) : new Set()}
+                          disallowEmptySelection
+                          onSelectionChange={(value) =>
+                            updateSettings({
+                              rule_source: String(value.currentKey) as KokoroRuleSource
+                            })
+                          }
+                        >
+                          {options.rule_sources.map((source) => (
+                            <SelectItem key={source}>
+                              {source === 'origin' ? tr('原始来源') : tr('镜像')}
+                            </SelectItem>
+                          ))}
+                        </Select>
+                        <Select
+                          label={tr('未匹配流量')}
+                          size="sm"
+                          selectedKeys={settings ? new Set([settings.final_route]) : new Set()}
+                          disallowEmptySelection
+                          onSelectionChange={(value) =>
+                            updateSettings({
+                              final_route: String(value.currentKey) as KokoroFinalRoute
+                            })
+                          }
+                        >
+                          {options.final_routes.map((route) => (
+                            <SelectItem key={route}>
+                              {route === 'proxy' ? tr('代理') : tr('直连')}
+                            </SelectItem>
+                          ))}
+                        </Select>
+                      </section>
+
+                      <section className="divide-y divide-default-100 border-y border-default-100">
+                        <div className="flex flex-wrap items-center justify-between gap-4 py-3">
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium">{tr('规则集自动更新')}</p>
+                            <p className="mt-0.5 text-xs text-foreground-500">
+                              {tr('更新远端 rule-provider')}
+                            </p>
+                          </div>
+                          <Switch
+                            size="sm"
+                            className="ml-auto shrink-0"
+                            isSelected={settings?.rule_provider_auto_update}
+                            onValueChange={(value) =>
+                              updateSettings({ rule_provider_auto_update: value })
+                            }
+                          />
+                        </div>
+                        <div className="flex flex-wrap items-center justify-between gap-4 py-3">
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium">{tr('订阅自动更新')}</p>
+                            <p className="mt-0.5 text-xs text-foreground-500">
+                              {tr('失败时保留上一份可用配置')}
+                            </p>
+                          </div>
+                          <div className="ml-auto flex shrink-0 items-center gap-3">
+                            <Input
+                              aria-label={tr('更新间隔')}
+                              type="number"
+                              size="sm"
+                              className="w-32 shrink-0"
+                              min={options.profile_update.min_hours}
+                              max={options.profile_update.max_hours}
+                              endContent={
+                                <span className="shrink-0 whitespace-nowrap">{tr('小时')}</span>
+                              }
+                              value={String(settings?.profile_update_hours || '')}
+                              onValueChange={(value) =>
+                                updateSettings({
+                                  profile_update_hours: Math.min(
+                                    options.profile_update.max_hours,
+                                    Math.max(options.profile_update.min_hours, Number(value) || 0)
+                                  )
+                                })
+                              }
+                            />
+                            <Switch
+                              size="sm"
+                              isSelected={settings?.profile_auto_update}
+                              onValueChange={(value) =>
+                                updateSettings({ profile_auto_update: value })
+                              }
+                            />
+                          </div>
+                        </div>
+                      </section>
                     </div>
-                  </section>
+                    <KokoroDefaultRules />
+                  </div>
                 </div>
               )}
             </Modal.Body>

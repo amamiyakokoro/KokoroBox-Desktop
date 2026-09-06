@@ -225,7 +225,8 @@ async function sendWithRetry<T>(config: AxiosRequestConfig): Promise<AxiosRespon
 
 async function authorizedRequest<T>(
   config: AxiosRequestConfig,
-  replayed = false
+  replayed = false,
+  retryTransport = true
 ): Promise<AxiosResponse<T>> {
   let current = await getCredentials()
   if (!current) throw new KokoroAPIError(tr('请先登录 Kokoro'), 401)
@@ -234,18 +235,19 @@ async function authorizedRequest<T>(
   }
 
   try {
-    return await sendWithRetry<T>({
+    const request = {
       ...config,
       timeout: config.timeout ?? 20_000,
       headers: {
         ...config.headers,
         Authorization: `Bearer ${current.accessToken}`
       }
-    })
+    }
+    return retryTransport ? await sendWithRetry<T>(request) : await http.request<T>(request)
   } catch (error) {
     if (!replayed && axios.isAxiosError(error) && error.response?.status === 401) {
       await refreshAccessToken(current.accessToken)
-      return authorizedRequest<T>(config, true)
+      return authorizedRequest<T>(config, true, retryTransport)
     }
     throw toKokoroError(error)
   }
@@ -374,6 +376,210 @@ export async function getKokoroSession(): Promise<KokoroSession> {
   } catch (error) {
     const apiError = toKokoroError(error)
     if (apiError.status === 401) return { authenticated: false }
+    throw apiError
+  }
+}
+
+interface KokoroCustomRulesState {
+  schema_version: 1
+  sets: KokoroRuleSet[]
+}
+
+const customRuleTypes = new Set<KokoroCustomRuleType>([
+  'DOMAIN-SUFFIX',
+  'DOMAIN-KEYWORD',
+  'DOMAIN',
+  'IP-CIDR',
+  'PROCESS-NAME',
+  'RULE-SET',
+  'MATCH'
+])
+
+function defaultRuleSet(state: KokoroCustomRulesState): KokoroRuleSet {
+  if (state?.schema_version !== 1 || !Array.isArray(state.sets)) {
+    throw new KokoroAPIError(tr('Kokoro 返回了不兼容的规则集格式'))
+  }
+  const ruleSet = state.sets.find((item) => item?.name?.toLowerCase() === 'default')
+  if (
+    !ruleSet ||
+    !Number.isSafeInteger(ruleSet.id) ||
+    !Number.isSafeInteger(ruleSet.revision) ||
+    ruleSet.revision < 1 ||
+    !Array.isArray(ruleSet.rules)
+  ) {
+    throw new KokoroAPIError(tr('Kokoro 默认规则集不存在'))
+  }
+  return ruleSet
+}
+
+function validateCustomRulesOptions(options: KokoroCustomRulesOptions): void {
+  if (
+    options?.schema_version !== 1 ||
+    !Array.isArray(options.rule_types) ||
+    !Array.isArray(options.targets) ||
+    !Array.isArray(options.rule_providers) ||
+    !options.limits ||
+    typeof options.limits !== 'object' ||
+    !options.rule_types.every((type) => customRuleTypes.has(type)) ||
+    !options.targets.every((target) => typeof target === 'string') ||
+    !options.rule_providers.every(
+      (provider) => typeof provider?.name === 'string' && typeof provider?.behavior === 'string'
+    )
+  ) {
+    throw new KokoroAPIError(tr('Kokoro 返回了不兼容的规则集格式'))
+  }
+}
+
+async function readKokoroCustomRulesState(): Promise<KokoroCustomRulesState> {
+  const response = await authorizedRequest<KokoroCustomRulesState>({
+    url: `${API_BASE}/app/custom-rules`,
+    method: 'GET'
+  })
+  return response.data
+}
+
+async function readKokoroCustomRulesOptions(): Promise<KokoroCustomRulesOptions> {
+  const response = await authorizedRequest<KokoroCustomRulesOptions>({
+    url: `${API_BASE}/app/custom-rules/options`,
+    method: 'GET'
+  })
+  validateCustomRulesOptions(response.data)
+  return response.data
+}
+
+export async function getKokoroDefaultRules(): Promise<KokoroDefaultRules> {
+  const [state, options] = await Promise.all([
+    readKokoroCustomRulesState(),
+    readKokoroCustomRulesOptions()
+  ])
+  return { ruleSet: defaultRuleSet(state), options }
+}
+
+function optionLimit(options: KokoroCustomRulesOptions, names: string[], fallback: number): number {
+  for (const name of names) {
+    const value = options.limits[name]
+    if (Number.isSafeInteger(value) && value > 0) return value
+  }
+  return fallback
+}
+
+function validateCustomRuleInputs(
+  rules: KokoroCustomRuleInput[],
+  options: KokoroCustomRulesOptions
+): void {
+  if (!Array.isArray(rules)) throw new KokoroAPIError(tr('Kokoro 规则内容无效'))
+  const maxRules = optionLimit(options, ['max_rules_per_set', 'rules_per_set'], 200)
+  const maxPayload = optionLimit(options, ['max_payload_length', 'payload_length'], 1024)
+  if (rules.length > maxRules) throw new KokoroAPIError(tr('Kokoro 规则内容无效'))
+
+  const availableTypes = new Set(options.rule_types.filter((type) => customRuleTypes.has(type)))
+  const availableTargets = new Set(options.targets)
+  const domainProviders = new Set(
+    options.rule_providers
+      .filter((provider) => provider.behavior === 'domain')
+      .map((provider) => provider.name)
+  )
+  let matchCount = 0
+  const invalidText = /[,\p{Cc}]/u
+
+  for (const [index, rule] of rules.entries()) {
+    if (!rule || !availableTypes.has(rule.type) || !availableTargets.has(rule.target)) {
+      throw new KokoroAPIError(tr('Kokoro 规则内容无效'))
+    }
+    if (
+      !rule.target ||
+      rule.target !== rule.target.trim() ||
+      rule.target.length > 128 ||
+      invalidText.test(rule.target)
+    ) {
+      throw new KokoroAPIError(tr('Kokoro 规则内容无效'))
+    }
+    if (rule.type === 'MATCH') {
+      matchCount += 1
+      if (
+        matchCount > 1 ||
+        index !== rules.length - 1 ||
+        rule.target === 'REJECT' ||
+        (rule.payload !== null && rule.payload !== '')
+      ) {
+        throw new KokoroAPIError(tr('Kokoro 规则内容无效'))
+      }
+      continue
+    }
+    if (
+      typeof rule.payload !== 'string' ||
+      !rule.payload ||
+      rule.payload !== rule.payload.trim() ||
+      rule.payload.length > maxPayload ||
+      invalidText.test(rule.payload) ||
+      (rule.type === 'RULE-SET' && !domainProviders.has(rule.payload))
+    ) {
+      throw new KokoroAPIError(tr('Kokoro 规则内容无效'))
+    }
+  }
+}
+
+function sameCustomRules(remote: KokoroCustomRule[], local: KokoroCustomRuleInput[]): boolean {
+  return (
+    remote.length === local.length &&
+    remote.every(
+      (rule, index) =>
+        rule.type === local[index]?.type &&
+        (rule.payload ?? null) === (local[index]?.payload ?? null) &&
+        rule.target === local[index]?.target
+    )
+  )
+}
+
+export async function replaceKokoroDefaultRules(
+  expectedRevision: number,
+  rules: KokoroCustomRuleInput[]
+): Promise<KokoroRuleSet> {
+  const current = await getKokoroDefaultRules()
+  if (current.ruleSet.revision !== expectedRevision) {
+    throw new KokoroAPIError(tr('Kokoro 规则集已更新，请重新加载后再保存'), 409)
+  }
+  validateCustomRuleInputs(rules, current.options)
+
+  try {
+    const response = await authorizedRequest<KokoroRuleSet>(
+      {
+        url: `${API_BASE}/app/custom-rules/sets/${current.ruleSet.id}/rules`,
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        data: { expected_revision: expectedRevision, rules }
+      },
+      false,
+      false
+    )
+    if (response.data?.name?.toLowerCase() !== 'default') {
+      throw new KokoroAPIError(tr('Kokoro 返回了不兼容的规则集格式'))
+    }
+    return response.data
+  } catch (error) {
+    const apiError = toKokoroError(error)
+    if (apiError.status === 409 || apiError.status === 404) {
+      throw new KokoroAPIError(tr('Kokoro 规则集已更新，请重新加载后再保存'), apiError.status)
+    }
+    if (apiError.status === 400 || apiError.status === 422) {
+      throw new KokoroAPIError(tr('Kokoro 规则内容无效'), apiError.status)
+    }
+    if (apiError.status === 429) {
+      throw new KokoroAPIError(tr('Kokoro 请求过于频繁，请稍后重试'), 429)
+    }
+    if (apiError.status === undefined) {
+      try {
+        const latest = await getKokoroDefaultRules()
+        if (
+          latest.ruleSet.revision > expectedRevision &&
+          sameCustomRules(latest.ruleSet.rules, rules)
+        ) {
+          return latest.ruleSet
+        }
+      } catch {
+        // The write result remains unknown; preserve the local edit and report the original error.
+      }
+    }
     throw apiError
   }
 }

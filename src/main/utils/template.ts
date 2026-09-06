@@ -42,6 +42,7 @@ export const defaultConfig: AppConfig = {
     'tun',
     'dns',
     'sniff',
+    'kokoro',
     'proxy',
     'connection',
     'profile',

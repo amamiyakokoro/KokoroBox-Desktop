@@ -190,6 +190,19 @@ export async function cancelKokoroLogin(): Promise<void> {
   return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('cancelKokoroLogin'))
 }
 
+export async function getKokoroDefaultRules(): Promise<KokoroDefaultRules> {
+  return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('getKokoroDefaultRules'))
+}
+
+export async function replaceKokoroDefaultRules(
+  expectedRevision: number,
+  rules: KokoroCustomRuleInput[]
+): Promise<KokoroRuleSet> {
+  return ipcErrorWrapper(
+    await window.electron.ipcRenderer.invoke('replaceKokoroDefaultRules', expectedRevision, rules)
+  )
+}
+
 export async function addKokoroProfile(settings: KokoroSubscriptionSettings): Promise<void> {
   return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('addKokoroProfile', settings))
 }

@@ -40,6 +40,7 @@ export const messages: Readonly<Record<string, string>> = {
     'Kokoro sign-in state is invalid or expired. Please sign in again',
   'Kokoro 订阅': 'Kokoro subscription',
   'Kokoro 订阅已添加': 'Kokoro subscription added',
+  'Kokoro 设置': 'Kokoro settings',
   'Kokoro 请求失败': 'Kokoro request failed',
   'Kokoro 授权失败，请重新登录': 'Kokoro authorization failed. Please sign in again',
   'Kokoro 登录正在进行中，请先取消或等待完成':
@@ -50,6 +51,34 @@ export const messages: Readonly<Record<string, string>> = {
   'Kokoro 返回了无效的配置下载地址': 'Kokoro returned an invalid configuration download URL',
   'Kokoro 配置响应不是 YAML': 'The Kokoro configuration response is not YAML',
   'Kokoro 配置校验失败：{0}': 'Kokoro configuration validation failed: {0}',
+  'Kokoro 规则内容无效': 'Invalid Kokoro rule content',
+  'Kokoro 规则集已更新，请重新加载后再保存':
+    'The Kokoro rule set changed. Reload it before saving again',
+  'Kokoro 返回了不兼容的规则集格式': 'Kokoro returned an incompatible rule-set format',
+  'Kokoro 请求过于频繁，请稍后重试': 'Too many Kokoro requests. Please try again later',
+  'Kokoro 默认规则集不存在': 'The Kokoro default rule set does not exist',
+  'Kokoro 规则集加载失败': 'Failed to load the Kokoro rule set',
+  'Kokoro 默认规则集已保存': 'Kokoro default rule set saved',
+  'MATCH 不需要规则内容': 'MATCH does not require rule content',
+  'MATCH 规则只能有一条、必须位于最后，且不能使用 REJECT':
+    'Only one MATCH rule is allowed; it must be last and cannot use REJECT',
+  'default 规则集目前为空': 'The default rule set is empty',
+  '仅编辑应用于 Kokoro 配置的 default 规则集，规则将按此顺序执行。':
+    'Edit only the default rule set used by Kokoro profiles. Rules run in this order.',
+  上移: 'Move up',
+  下移: 'Move down',
+  保存规则: 'Save rules',
+  '请选择可用的 RULE-SET provider': 'Select an available RULE-SET provider',
+  请选择可用的规则类型与目标: 'Select an available rule type and target',
+  '选择 RULE-SET provider': 'Select a RULE-SET provider',
+  新增规则: 'Add rule',
+  默认规则集: 'Default rule set',
+  规则内容: 'Rule content',
+  '规则内容不能为空，且不能包含逗号、首尾空格或控制字符':
+    'Rule content is required and cannot contain commas, surrounding spaces, or control characters',
+  规则目标: 'Rule target',
+  规则类型: 'Rule type',
+  规则数量超过当前限制: 'The current rule limit has been exceeded',
   'KokoroBox 提供强大的覆写功能，可以对您导入的订阅配置进行个性化修改，如添加规则、自定义代理组等，您可以直接导入别人写好的覆写文件，也可以自己动手编写，<b>编辑好覆写文件一定要记得在需要覆写的订阅上启用</b>，覆写文件的语法请参考 <a href="https://mihomo.party/docs/guide/override" target="_blank">官方文档</a>':
     'KokoroBox lets you customize imported profiles with overrides, including rules and proxy groups. Import an existing override or write your own. <b>Remember to enable the override on the profiles that should use it.</b> See the <a href="https://mihomo.party/docs/guide/override" target="_blank">official documentation</a> for the syntax.',
   'KokoroBox 支持多种订阅导入方式，在此输入订阅链接，点击导入即可导入您的订阅配置，如果您的订阅需要代理才能更新，请勾选"代理"再点击导入，当然这需要已经有一个可以正常使用的订阅才可以':
