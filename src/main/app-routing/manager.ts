@@ -10,6 +10,19 @@ import { prepareAppRoutingConfig } from './rules'
 import { canConnectToAppRoutingListener } from './health'
 import { verifyProcessRouterIntegrity } from './integrity'
 import { parseProcessRouterEvent } from './protocol'
+import {
+  getProcessRouterStatus,
+  replaceProcessRouterRules,
+  startProcessRouter,
+  stopProcessRouter,
+  ServiceAPIError,
+  isServiceConnectionError,
+  type ServiceProcessRouterStatus
+} from '../service/api'
+import {
+  buildServiceProcessRouterRules,
+  validateServiceProcessRouterStatus
+} from './service-protocol'
 
 const probeIntervalMs = 3000
 const restartDelayMs = 1500
@@ -26,6 +39,9 @@ let stopping = false
 const expectedExits = new WeakSet<ChildProcess>()
 let operation: Promise<void> = Promise.resolve()
 let configGeneration = 0
+let activeBackend: 'direct' | 'service' | undefined
+let servicePolicyKey = ''
+let serviceStopped = false
 let status: AppRoutingStatus = {
   supported: appRoutingSupported(process.platform, process.arch),
   state: appRoutingSupported(process.platform, process.arch) ? 'disabled' : 'unsupported',
@@ -37,6 +53,72 @@ function publishStatus(next: AppRoutingStatus): void {
   for (const window of BrowserWindow.getAllWindows()) {
     window.webContents.send('app-routing-status-changed', status)
   }
+}
+
+function publishServiceStatus(serviceStatus: ServiceProcessRouterStatus): void {
+  const state =
+    serviceStatus.state === 'blocked'
+      ? 'degraded'
+      : serviceStatus.state === 'stopped'
+        ? 'disabled'
+        : serviceStatus.state
+  publishStatus({
+    supported: serviceStatus.supported,
+    state,
+    message:
+      serviceStatus.state === 'blocked'
+        ? '代理核心不可用，受保护应用的网络连接已封锁'
+        : serviceStatus.last_error,
+    proxyPort: serviceStatus.proxy_port,
+    mihomoAvailable: serviceStatus.mihomo_available,
+    protectedApplicationCount: serviceStatus.protected_application_count
+  })
+}
+
+function serviceModeError(error: unknown): Error {
+  if (error instanceof ServiceAPIError && [404, 501].includes(error.status || 0)) {
+    return new Error('当前 KokoroBox Service 不支持应用分流，请更新或重新安装服务')
+  }
+  return error instanceof Error ? error : new Error(String(error))
+}
+
+async function reconcileService(config: AppRoutingConfig): Promise<void> {
+  await stopChild()
+  const policyKey = String(configGeneration)
+  let serviceStatus: ServiceProcessRouterStatus
+  try {
+    if (servicePolicyKey !== policyKey || serviceStopped) {
+      await replaceProcessRouterRules(buildServiceProcessRouterRules(config, appRoutingSocksPort))
+      serviceStatus = validateServiceProcessRouterStatus(await startProcessRouter())
+      servicePolicyKey = policyKey
+      serviceStopped = false
+    } else {
+      serviceStatus = validateServiceProcessRouterStatus(await getProcessRouterStatus())
+      if (serviceStatus.state === 'stopped') {
+        await replaceProcessRouterRules(buildServiceProcessRouterRules(config, appRoutingSocksPort))
+        serviceStatus = validateServiceProcessRouterStatus(await startProcessRouter())
+      }
+    }
+  } catch (error) {
+    throw serviceModeError(error)
+  }
+  publishServiceStatus(serviceStatus)
+}
+
+async function disableServiceRouter(allowUnavailable = false): Promise<void> {
+  if (serviceStopped) return
+  try {
+    await stopProcessRouter()
+  } catch (error) {
+    if (
+      !(error instanceof ServiceAPIError && [404, 501].includes(error.status || 0)) &&
+      !(allowUnavailable && isServiceConnectionError(error))
+    ) {
+      throw error
+    }
+  }
+  serviceStopped = true
+  servicePolicyKey = ''
 }
 
 function clearRestartTimer(): void {
@@ -183,11 +265,17 @@ async function reconcile(): Promise<void> {
     publishStatus({ supported: false, state: 'unsupported', mihomoAvailable: false })
     return
   }
-  const config = await getAppRoutingConfig()
+  const [config, appConfig] = await Promise.all([getAppRoutingConfig(), getAppConfig()])
   validateAppRoutingConfig(config)
   const enabledRules = config.rules.filter((rule) => rule.enabled)
   if (!config.enabled || enabledRules.length === 0) {
     await stopChild()
+    if (appConfig.corePermissionMode === 'service' || activeBackend === 'service') {
+      await disableServiceRouter().catch((error) =>
+        appendAppLog(`[App routing]: failed to stop service router, ${error}\n`)
+      )
+    }
+    activeBackend = undefined
     publishStatus({
       supported: true,
       state: 'disabled',
@@ -196,17 +284,16 @@ async function reconcile(): Promise<void> {
     })
     return
   }
-  const { corePermissionMode = 'elevated' } = await getAppConfig()
+  const { corePermissionMode = 'elevated' } = appConfig
   if (corePermissionMode === 'service') {
-    await stopChild()
-    publishStatus({
-      supported: true,
-      state: 'error',
-      message: '应用分流 MVP 需要以管理员模式运行 KokoroBox',
-      mihomoAvailable: false
-    })
+    activeBackend = 'service'
+    await reconcileService(config)
     return
   }
+  if (activeBackend === 'service' || !serviceStopped) {
+    await disableServiceRouter(activeBackend !== 'service')
+  }
+  activeBackend = 'direct'
   const requiresMihomo = enabledRules.some((rule) => rule.action === 'proxy')
   const proxyPort = appRoutingSocksPort
   const mihomoAvailable = requiresMihomo ? await canConnectToAppRoutingListener(proxyPort) : false
@@ -307,5 +394,6 @@ export async function stopAppRouting(): Promise<void> {
   stopping = true
   if (monitor) clearInterval(monitor)
   monitor = undefined
-  await stopChild()
+  if (activeBackend === 'service') await disableServiceRouter(true)
+  else await stopChild()
 }

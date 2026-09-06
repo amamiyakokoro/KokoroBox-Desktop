@@ -27,6 +27,10 @@ import {
   winDivertArchiveSha256,
   winDivertVersion
 } from '../src/main/app-routing/integrity-manifest'
+import {
+  buildServiceProcessRouterRules,
+  validateServiceProcessRouterStatus
+} from '../src/main/app-routing/service-protocol'
 
 function rule(overrides: Partial<AppRoutingRule> = {}): AppRoutingRule {
   return {
@@ -186,6 +190,43 @@ test('generates an ordered local-only process-router command', () => {
   )
   assert.ok(protectedProcessNames.includes('kokorobox-process-router.exe'))
   assert.ok(protectedNetworkTargets.includes('::1'))
+})
+
+test('generates and validates the authenticated service protocol', () => {
+  const config: AppRoutingConfig = {
+    version: 1,
+    enabled: true,
+    failClosed: true,
+    rules: [rule()]
+  }
+  assert.deepEqual(buildServiceProcessRouterRules(config, 7891), {
+    version: 1,
+    proxy_port: 7891,
+    fail_closed: true,
+    rules: [
+      {
+        id: 'rule-1',
+        executable_path: 'C:\\Program Files\\Example\\example.exe',
+        executable_name: 'example.exe',
+        action: 'proxy',
+        protocol: 'both',
+        enabled: true,
+        priority: 1
+      }
+    ]
+  })
+  const status = {
+    version: 1 as const,
+    supported: true,
+    state: 'blocked' as const,
+    generation: 3,
+    mihomo_available: false,
+    protected_application_count: 1,
+    proxy_port: 7891
+  }
+  assert.equal(validateServiceProcessRouterStatus(status), status)
+  assert.throws(() => validateServiceProcessRouterStatus({ ...status, version: 2 as 1 }))
+  assert.throws(() => validateServiceProcessRouterStatus({ ...status, proxy_port: 1080 }))
 })
 
 test('normalizes persisted order into unique priorities', () => {

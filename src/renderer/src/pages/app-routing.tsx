@@ -50,6 +50,9 @@ function statusMessage(message?: string, protectedApplicationCount = 0): string 
   if (message === '应用分流 MVP 需要以管理员模式运行 KokoroBox') {
     return tr('应用分流 MVP 需要以管理员模式运行 KokoroBox')
   }
+  if (message === '当前 KokoroBox Service 不支持应用分流，请更新或重新安装服务') {
+    return tr('当前 KokoroBox Service 不支持应用分流，请更新或重新安装服务')
+  }
   if (message === '封包拦截组件启动失败') {
     return tr('封包拦截组件启动失败')
   }

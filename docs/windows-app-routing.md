@@ -27,10 +27,11 @@ upstream `.pbprofile` is never stored as application configuration.
 
 ## Runtime architecture
 
-KokoroBox owns the UI, persistent configuration, generated profile, process lifecycle, and
-health state. A headless, pinned build of ProxyBridge runs as a controlled sidecar and uses
-WinDivert for packet interception. No ProxyBridge GUI, updater, external proxy selection, or
-profile import/export is included.
+KokoroBox owns the UI and canonical user configuration. In service permission mode, the
+authenticated Windows service owns the privileged process lifecycle, a hardened copy of the
+active rules, and the authoritative health state. A headless, pinned build of ProxyBridge runs
+as its controlled sidecar and uses WinDivert for packet interception. No ProxyBridge GUI,
+updater, external proxy selection, or profile import/export is included.
 
 While application routing is enabled, KokoroBox injects a dedicated SOCKS listener at
 `127.0.0.1:7891` into its generated Mihomo runtime profile. It is removed when the feature is
@@ -52,24 +53,30 @@ helpers, and the router's own process. Loopback, IPv4 link-local, multicast, bro
 link-local, and IPv6 multicast destinations are also Direct to prevent loops and avoid
 intercepting local network control traffic.
 
-ProxyBridge requires administrator access for WinDivert. The normal elevated KokoroBox startup
-mode provides it. The authenticated client contract reserves `/process-router/start`, `/stop`,
-`/rules`, `/status`, and `/cleanup`. The service source is maintained outside this repository, so
-service mode remains disabled for application routing until those handlers and their capability
-check are shipped.
+ProxyBridge requires administrator access for WinDivert. In service mode, an ordinary user
+KokoroBox process calls `/process-router/start`, `/stop`, `/rules`, `/status`, and `/cleanup` over
+the existing SID-bound, Ed25519-authenticated service connection. The service launches only the
+fixed packaged router path, never a caller-supplied executable or command line. Older services
+that do not expose the versioned endpoint are rejected without falling back to Direct. Elevated
+KokoroBox startup remains available as the non-service backend.
+
+The service uses a short client lease. Authenticated status polling renews it while KokoroBox is
+running. A normal exit stops the router immediately; if the UI crashes, lease expiry stops the
+router and releases WinDivert while retaining the canonical rules for the next application start.
 
 ## Failure behavior
 
-KokoroBox completes a SOCKS5 no-authentication handshake with the dedicated Mihomo listener
-before installing Proxy actions. The sidecar stays active if the listener becomes unavailable;
-KokoroBox atomically replaces every Proxy action with Block. When the handshake succeeds again,
-the Proxy actions are restored. Explicit Direct and Block rules retain their configured action.
-The packaged ProxyBridge source receives an additional defense-in-depth patch that treats a
-missing or incompatible proxy configuration as Block.
+The privileged service probes the dedicated Mihomo listener before installing Proxy actions.
+The sidecar stays active if the listener becomes unavailable; the service atomically replaces
+every Proxy action with Block. When the listener becomes reachable again, Proxy actions are
+restored. Explicit Direct and Block rules retain their configured action. The packaged
+ProxyBridge source receives an additional defense-in-depth patch that treats a missing or
+incompatible proxy configuration as Block.
 
-An unexpected sidecar or WinDivert failure is reported as an error and KokoroBox attempts to
-restart it. There can be a brief interception gap while a crashed sidecar restarts; production
-hardening beyond this MVP should move supervision into an elevated Windows service.
+An unexpected sidecar or WinDivert failure is reported as an error and the service attempts to
+restart it. There can still be a brief interception gap while a crashed sidecar or service
+restarts; preventing leakage across a service crash requires a separate persistent WFP or
+Windows Firewall kill switch and is outside this MVP.
 
 ## Reproducible native build
 
@@ -93,8 +100,9 @@ claim that these files are signed. Do not publicly enable this feature in a rele
 is configured and verified with `Get-AuthenticodeSignature` (or SignPath's signed-artifact
 verification) for every executable and DLL.
 
-The automated suite covers schema validation and migration, ordering, disabled rules, mandatory
-policy generation, fail-closed command generation, SOCKS5 greeting validation, provenance, and
-binary hash failures. Packet interception, TCP/UDP routing, IPv4/IPv6 behavior, crash leakage,
-sleep/resume, upgrade/uninstall cleanup, standard-user/service operation, and Microsoft Defender
-must be exercised on clean Windows 10 and Windows 11 x64 virtual machines before release.
+The automated suite covers schema validation and migration, the authenticated service contract,
+ordering, disabled rules, mandatory policy generation, fail-closed command generation, SOCKS5
+greeting validation, provenance, and binary hash failures. Packet interception, TCP/UDP routing,
+IPv4/IPv6 behavior, crash leakage, sleep/resume, upgrade/uninstall cleanup,
+standard-user/service operation, and Microsoft Defender must be exercised on clean Windows 10
+and Windows 11 x64 virtual machines before release.

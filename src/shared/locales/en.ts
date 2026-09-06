@@ -40,6 +40,8 @@ export const messages: Readonly<Record<string, string>> = {
     'Mihomo is unavailable; matching Proxy traffic is blocked (no direct fallback)',
   '应用分流 MVP 需要以管理员模式运行 KokoroBox':
     'The application routing MVP requires KokoroBox to run as administrator',
+  '当前 KokoroBox Service 不支持应用分流，请更新或重新安装服务':
+    'The installed KokoroBox Service does not support application routing. Update or reinstall the service.',
   封包拦截组件启动失败: 'The packet interception sidecar failed to start',
   '封包拦截组件意外停止，正在重试':
     'The packet interception sidecar stopped unexpectedly; retrying',

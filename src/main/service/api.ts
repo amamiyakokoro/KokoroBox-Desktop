@@ -378,8 +378,11 @@ export const getCoreStatus = async (): Promise<Record<string, unknown>> => {
 export interface ServiceProcessRouterRules {
   version: 1
   proxy_port: number
+  fail_closed: true
   rules: Array<{
-    process_name: string
+    id: string
+    executable_path: string
+    executable_name: string
     protocol: AppRoutingProtocol
     action: AppRoutingAction
     enabled: boolean
@@ -387,9 +390,21 @@ export interface ServiceProcessRouterRules {
   }>
 }
 
+export interface ServiceProcessRouterStatus {
+  version: 1
+  supported: boolean
+  state: 'stopped' | 'starting' | 'running' | 'blocked' | 'error'
+  generation: number
+  mihomo_available: boolean
+  protected_application_count: number
+  proxy_port?: number
+  router_pid?: number
+  last_error?: string
+}
+
 // These calls define the authenticated service boundary required by application routing.
 // The bundled service must advertise and implement them before service mode is enabled.
-export const startProcessRouter = async (): Promise<Record<string, unknown>> => {
+export const startProcessRouter = async (): Promise<ServiceProcessRouterStatus> => {
   return await getServiceAxios().post('/process-router/start')
 }
 
@@ -399,11 +414,11 @@ export const stopProcessRouter = async (): Promise<void> => {
 
 export const replaceProcessRouterRules = async (
   payload: ServiceProcessRouterRules
-): Promise<Record<string, unknown>> => {
+): Promise<ServiceProcessRouterStatus> => {
   return await getServiceAxios().put('/process-router/rules', payload)
 }
 
-export const getProcessRouterStatus = async (): Promise<Record<string, unknown>> => {
+export const getProcessRouterStatus = async (): Promise<ServiceProcessRouterStatus> => {
   return await getServiceAxios().get('/process-router/status')
 }
 

@@ -37,6 +37,8 @@ export const messages: Readonly<Record<string, string>> = {
   'Mihomo 不可用；匹配 Proxy 的流量已阻断（不会直连）':
     'Mihomo 不可用；符合 Proxy 規則的流量已阻斷（不會直連）',
   '应用分流 MVP 需要以管理员模式运行 KokoroBox': '應用程式分流 MVP 需要以管理員模式執行 KokoroBox',
+  '当前 KokoroBox Service 不支持应用分流，请更新或重新安装服务':
+    '目前的 KokoroBox Service 不支援應用程式分流，請更新或重新安裝服務',
   封包拦截组件启动失败: '封包攔截元件啟動失敗',
   '封包拦截组件意外停止，正在重试': '封包攔截元件意外停止，正在重試',
   任务栏: '工作列',
