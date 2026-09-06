@@ -56,10 +56,6 @@ pnpm build:win # or build:mac / build:linux
 
 Use `--x64` or `--arm64` to select an architecture. See the [release guide](docs/releases.md) for packaging, signing, and publishing.
 
-## Contributing
-
-Bug reports and focused pull requests are welcome through [GitHub Issues](https://github.com/amamiyakokoro/KokoroBox-Desktop/issues). Run `pnpm typecheck` and the relevant tests before submitting changes.
-
 ## License
 
 KokoroBox-Desktop is derived from [Sparkle](https://github.com/xishang0128/sparkle) and retains compatible internal identifiers where required for upgrades.
