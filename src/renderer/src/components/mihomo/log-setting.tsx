@@ -181,11 +181,11 @@ const LogSetting: React.FC = () => {
             onChangeNeedRestart({ 'log-level': value.currentKey as LogLevel })
           }
         >
-          <SelectItem key="silent">{tr('静默')}</SelectItem>
-          <SelectItem key="error">{tr('错误')}</SelectItem>
-          <SelectItem key="warning">{tr('警告')}</SelectItem>
-          <SelectItem key="info">{tr('信息')}</SelectItem>
-          <SelectItem key="debug">{tr('调试')}</SelectItem>
+          <SelectItem key="silent">silent</SelectItem>
+          <SelectItem key="error">error</SelectItem>
+          <SelectItem key="warning">warning</SelectItem>
+          <SelectItem key="info">info</SelectItem>
+          <SelectItem key="debug">debug</SelectItem>
         </Select>
       </SettingItem>
     </SettingCard>
