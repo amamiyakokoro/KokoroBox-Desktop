@@ -194,3 +194,19 @@ test('application translation calls have catalog entries and complete arguments'
   }
   assert.ok(calls > 0)
 })
+
+test('guided tour introduces Kokoro settings before profile import', () => {
+  const tour = readFileSync('src/renderer/src/utils/driver.ts', 'utf8')
+  const kokoroCardStep = tour.indexOf("element: '.kokoro-setting-card'")
+  const kokoroPageStep = tour.indexOf("element: '.kokoro-settings-guide'")
+  const profileStep = tour.indexOf("element: '.profile-card'")
+
+  assert.ok(kokoroCardStep >= 0)
+  assert.ok(kokoroPageStep > kokoroCardStep)
+  assert.ok(profileStep > kokoroPageStep)
+  assert.match(tour.slice(kokoroCardStep, kokoroPageStep), /navigate\('\/kokoro'\)/)
+  assert.match(
+    readFileSync('src/renderer/src/components/profiles/kokoro-subscription-modal.tsx', 'utf8'),
+    /kokoro-settings-guide/
+  )
+})

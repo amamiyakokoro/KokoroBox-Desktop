@@ -31,7 +31,7 @@ const KokoroSettingCard: React.FC<Props> = ({ iconOnly = false }) => {
 
   if (iconOnly) {
     return (
-      <div className={`${kokoroCardStatus} flex justify-center`}>
+      <div className={`${kokoroCardStatus} kokoro-setting-card flex justify-center`}>
         <Tooltip content={tr('Kokoro 设置')} placement="right">
           <Button
             size="sm"

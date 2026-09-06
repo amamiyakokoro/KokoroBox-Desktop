@@ -725,6 +725,8 @@ export const messages: Readonly<Record<string, string>> = {
   登出: 'Sign out',
   '登录 Kokoro': 'Sign in to Kokoro',
   '登录 Kokoro 获取订阅': 'Sign in to Kokoro for subscriptions',
+  '登录后选择方案、网络运营商和协议，按需调整路由与更新设置，然后点击“获取并添加”。':
+    'After signing in, choose your plan, ISP, and protocol, adjust routing and update settings as needed, then select “Fetch and add”.',
   监听地址: 'Listen address',
   '目标 ASN': 'Destination ASN',
   '目标 GeoIP': 'Destination GeoIP',

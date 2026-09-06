@@ -71,6 +71,32 @@ export async function createDriver(navigate: NavigateFunction): Promise<Driver> 
         }
       },
       {
+        element: '.kokoro-setting-card',
+        popover: {
+          title: tr('Kokoro 设置'),
+          description: tr('通过 osu! 登录，并从 Kokoro 安全获取 Mihomo 配置'),
+          side: 'right',
+          align: 'start',
+          onNextClick: async (): Promise<void> => {
+            navigate('/kokoro')
+            setTimeout(() => {
+              driverInstance?.moveNext()
+            }, 0)
+          }
+        }
+      },
+      {
+        element: '.kokoro-settings-guide',
+        popover: {
+          title: tr('Kokoro 订阅'),
+          description: tr(
+            '登录后选择方案、网络运营商和协议，按需调整路由与更新设置，然后点击“获取并添加”。'
+          ),
+          side: 'left',
+          align: 'start'
+        }
+      },
+      {
         element: '.profile-card',
         popover: {
           title: tr('订阅管理'),
