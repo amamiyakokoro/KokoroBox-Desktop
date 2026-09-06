@@ -60,6 +60,8 @@ function formatDelayText(delay: number): string {
 }
 
 function createDefaultFallbackTrayIcon(): Electron.NativeImage {
+  if (process.platform === 'win32') return nativeImage.createFromPath(icoIcon)
+
   const icon = nativeImage
     .createFromPath(process.platform === 'darwin' ? templateIcon : pngIcon)
     .resize({ height: process.platform === 'darwin' ? 16 : emojiTrayIconSize })
@@ -88,13 +90,15 @@ async function renderEmojiTrayIcon(): Promise<Electron.NativeImage> {
 
   try {
     const bundledEmojiFont =
-      process.platform === 'linux'
+      process.platform !== 'darwin'
         ? `@font-face{font-family:KokoroTwemoji;src:url(data:font/ttf;base64,${readFileSync(twemojiFont).toString('base64')})}`
         : ''
     const emojiFonts =
       process.platform === 'darwin'
         ? '"Apple Color Emoji"'
-        : '"Noto Color Emoji",KokoroTwemoji,"Twemoji Mozilla","Segoe UI Emoji",sans-serif'
+        : process.platform === 'win32'
+          ? '"Segoe UI Emoji",KokoroTwemoji,sans-serif'
+          : '"Noto Color Emoji",KokoroTwemoji,"Twemoji Mozilla","Segoe UI Emoji",sans-serif'
     const document = `<style>${bundledEmojiFont}html,body{margin:0;background:transparent;overflow:hidden}body{width:${emojiTrayIconSize}px;height:${emojiTrayIconSize}px;display:flex;align-items:center;justify-content:center;font:16px ${emojiFonts}}</style>🎐`
     await emojiWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(document)}`)
     await emojiWindow.webContents.executeJavaScript('document.fonts.ready.then(() => true)')
@@ -590,7 +594,7 @@ export async function createTray(): Promise<void> {
     tray = new Tray(await createDefaultTrayIcon())
   }
   if (process.platform === 'win32') {
-    tray = new Tray(icoIcon)
+    tray = new Tray(await createDefaultTrayIcon())
   }
   tray?.setToolTip('KokoroBox')
   tray?.setIgnoreDoubleClickEvents(true)
@@ -657,7 +661,7 @@ export async function updateTrayIcon(): Promise<void> {
     return
   }
   if (process.platform === 'win32') {
-    tray.setImage(icoIcon)
+    tray.setImage(await createDefaultTrayIcon())
     return
   }
   tray.setImage(await createDefaultTrayIcon())
