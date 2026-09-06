@@ -136,6 +136,20 @@ const EditInfoModal: React.FC<Props> = (props) => {
                       }}
                     />
                   )}
+                {values.type === 'remote' &&
+                  renderField(
+                    tr('指定 UA'),
+                    <Input
+                      aria-label={tr('指定 UA')}
+                      data-setting-input="edit-modal"
+                      value={values.ua ?? ''}
+                      variant="secondary"
+                      onChange={(event) => {
+                        const v = event.target.value
+                        setValues({ ...values, ua: v.trim() || undefined })
+                      }}
+                    />
+                  )}
                 {renderField(
                   tr('文件类型'),
                   <Select

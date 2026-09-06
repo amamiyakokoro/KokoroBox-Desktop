@@ -303,6 +303,7 @@ interface OverrideItem {
   updated: number
   global?: boolean
   url?: string
+  ua?: string
   file?: string
   fingerprint?: string
 }

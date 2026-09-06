@@ -50,6 +50,7 @@ pnpm dev
 pnpm typecheck
 pnpm test:kokoro
 pnpm test:localization
+pnpm test:override-user-agent
 pnpm prepare
 pnpm build:win # or build:mac / build:linux
 ```

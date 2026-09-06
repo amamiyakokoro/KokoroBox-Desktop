@@ -52,6 +52,7 @@ jobs:
       - run: pnpm test:macos-signing
       - run: pnpm test:kokoro
       - run: pnpm test:localization
+      - run: pnpm test:override-user-agent
       - run: pnpm typecheck
 
   build:

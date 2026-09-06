@@ -1,4 +1,4 @@
-import { getAppConfig } from '../config'
+import { getAppConfig } from '../config/app'
 import { mihomoVersion } from '../core/mihomoApi'
 
 const TIMEOUT_MS = 300
