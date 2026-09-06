@@ -1,5 +1,5 @@
 param(
-    [string]$OutputDir = "extra/files/proxybridge"
+    [string]$OutputDir = "extra/files/process-router"
 )
 
 $ErrorActionPreference = "Stop"
@@ -15,6 +15,7 @@ $SourceRoot = Join-Path $BuildRoot "source"
 $ArchivePath = Join-Path $BuildRoot "windivert.zip"
 $WinDivertRoot = Join-Path $BuildRoot "windivert/WinDivert-2.2.2-A"
 $PatchPath = Join-Path $RepositoryRoot "build/proxybridge/fail-closed.patch"
+$ProcessListPatchPath = Join-Path $RepositoryRoot "build/proxybridge/process-list-capacity.patch"
 $RouterSource = Join-Path $RepositoryRoot "build/proxybridge/kokorobox_process_router.c"
 
 if (Test-Path $BuildRoot) { Remove-Item $BuildRoot -Recurse -Force }
@@ -30,6 +31,10 @@ git -C $SourceRoot apply --check --unidiff-zero $PatchPath
 if ($LASTEXITCODE -ne 0) { throw "ProxyBridge fail-closed patch no longer applies" }
 git -C $SourceRoot apply --unidiff-zero $PatchPath
 if ($LASTEXITCODE -ne 0) { throw "ProxyBridge fail-closed patch failed" }
+git -C $SourceRoot apply --check $ProcessListPatchPath
+if ($LASTEXITCODE -ne 0) { throw "ProxyBridge process-list patch no longer applies" }
+git -C $SourceRoot apply $ProcessListPatchPath
+if ($LASTEXITCODE -ne 0) { throw "ProxyBridge process-list patch failed" }
 
 Invoke-WebRequest -Uri $WinDivertUrl -OutFile $ArchivePath
 $DownloadedHash = (Get-FileHash -Algorithm SHA256 $ArchivePath).Hash.ToLowerInvariant()
@@ -72,7 +77,68 @@ if ($LASTEXITCODE -ne 0 -or -not (Test-Path $RouterOutput)) { throw "KokoroBox p
 
 Copy-Item (Join-Path $WinDivertRoot "x64\WinDivert.dll") $Destination -Force
 Copy-Item (Join-Path $WinDivertRoot "x64\WinDivert64.sys") $Destination -Force
-Copy-Item (Join-Path $SourceRoot "LICENSE") (Join-Path $Destination "LICENSE.ProxyBridge.txt") -Force
-Copy-Item (Join-Path $WinDivertRoot "LICENSE") (Join-Path $Destination "LICENSE.WinDivert.txt") -Force
+Copy-Item (Join-Path $SourceRoot "LICENSE") (Join-Path $Destination "LICENSE.ProxyBridge") -Force
+Copy-Item (Join-Path $WinDivertRoot "LICENSE") (Join-Path $Destination "LICENSE.WinDivert") -Force
+
+$DriverSignature = Get-AuthenticodeSignature (Join-Path $Destination "WinDivert64.sys")
+if ($DriverSignature.Status -ne "Valid") {
+    throw "The upstream WinDivert driver signature is not valid: $($DriverSignature.Status)"
+}
+
+$BinaryNames = @("kokorobox-process-router.exe", "ProxyBridgeCore.dll", "WinDivert.dll", "WinDivert64.sys")
+$BinaryHashes = [ordered]@{}
+foreach ($Name in $BinaryNames) {
+    $BinaryHashes[$Name] = (Get-FileHash -Algorithm SHA256 (Join-Path $Destination $Name)).Hash.ToLowerInvariant()
+}
+$Manifest = [ordered]@{
+    version = 1
+    proxyBridgeRevision = $ProxyBridgeCommit
+    winDivertVersion = "2.2.2"
+    winDivertArchiveSha256 = $WinDivertSha256
+    sha256 = $BinaryHashes
+}
+$Manifest | ConvertTo-Json -Depth 5 | Set-Content (Join-Path $Destination "manifest.json") -Encoding utf8NoBOM
+
+$Sbom = [ordered]@{
+    bomFormat = "CycloneDX"
+    specVersion = "1.6"
+    version = 1
+    metadata = [ordered]@{
+        component = [ordered]@{ type = "application"; name = "KokoroBox Process Router" }
+        properties = @(
+            [ordered]@{ name = "kokorobox:proxybridge-revision"; value = $ProxyBridgeCommit },
+            [ordered]@{ name = "kokorobox:windivert-archive-sha256"; value = $WinDivertSha256 }
+        )
+    }
+    components = @(
+        [ordered]@{
+            type = "application"; name = "kokorobox-process-router"; version = $ProxyBridgeCommit
+            licenses = @([ordered]@{ license = [ordered]@{ id = "MIT" } })
+            hashes = @([ordered]@{ alg = "SHA-256"; content = $BinaryHashes["kokorobox-process-router.exe"] })
+        },
+        [ordered]@{
+            type = "library"; name = "ProxyBridgeCore"; version = $ProxyBridgeCommit
+            licenses = @([ordered]@{ license = [ordered]@{ id = "MIT" } })
+            hashes = @([ordered]@{ alg = "SHA-256"; content = $BinaryHashes["ProxyBridgeCore.dll"] })
+        },
+        [ordered]@{
+            type = "library"; name = "WinDivert DLL"; version = "2.2.2"
+            licenses = @(
+                [ordered]@{ license = [ordered]@{ id = "LGPL-3.0-only" } },
+                [ordered]@{ license = [ordered]@{ id = "GPL-2.0-only" } }
+            )
+            hashes = @([ordered]@{ alg = "SHA-256"; content = $BinaryHashes["WinDivert.dll"] })
+        },
+        [ordered]@{
+            type = "library"; name = "WinDivert Driver"; version = "2.2.2"
+            licenses = @(
+                [ordered]@{ license = [ordered]@{ id = "LGPL-3.0-only" } },
+                [ordered]@{ license = [ordered]@{ id = "GPL-2.0-only" } }
+            )
+            hashes = @([ordered]@{ alg = "SHA-256"; content = $BinaryHashes["WinDivert64.sys"] })
+        }
+    )
+}
+$Sbom | ConvertTo-Json -Depth 8 | Set-Content (Join-Path $Destination "process-router-sbom.cdx.json") -Encoding utf8NoBOM
 
 Get-ChildItem $Destination | ForEach-Object { Write-Host "Staged $($_.Name)" }

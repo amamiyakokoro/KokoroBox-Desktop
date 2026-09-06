@@ -28,18 +28,24 @@ function statusLabel(status?: AppRoutingStatus): string {
   return labels[status.state]
 }
 
-function statusMessage(message?: string): string | undefined {
+function statusMessage(message?: string, protectedApplicationCount = 0): string | undefined {
   if (message === '添加或启用规则以启动应用分流') {
     return tr('添加或启用规则以启动应用分流')
   }
   if (message === 'Windows 封包拦截组件未安装') {
     return tr('Windows 封包拦截组件未安装')
   }
+  if (message === 'Windows 封包拦截组件缺失或已损坏') {
+    return tr('Windows 封包拦截组件缺失或已损坏')
+  }
   if (message === '请先启用本机 Mihomo SOCKS 或 mixed 监听端口') {
     return tr('请先启用本机 Mihomo SOCKS 或 mixed 监听端口')
   }
   if (message === 'Mihomo 不可用；匹配 Proxy 的流量已阻断（不会直连）') {
     return tr('Mihomo 不可用；匹配 Proxy 的流量已阻断（不会直连）')
+  }
+  if (message === '代理核心不可用，受保护应用的网络连接已封锁') {
+    return tr('代理核心不可用，已封锁 {0} 个受保护应用的网络连接。', [protectedApplicationCount])
   }
   if (message === '应用分流 MVP 需要以管理员模式运行 KokoroBox') {
     return tr('应用分流 MVP 需要以管理员模式运行 KokoroBox')
@@ -66,7 +72,7 @@ const AppRouting: React.FC = () => {
     moveRule,
     deleteRule
   } = useAppRouting()
-  const currentStatusMessage = statusMessage(status?.message)
+  const currentStatusMessage = statusMessage(status?.message, status?.protectedApplicationCount)
 
   return (
     <BasePage title={tr('应用分流')} contentClassName="no-scrollbar">
@@ -108,7 +114,7 @@ const AppRouting: React.FC = () => {
           <div>
             <h3 className="font-semibold">{tr('应用程序规则')}</h3>
             <p className="text-sm text-foreground-500">
-              {tr('规则按从上到下的顺序匹配；同名 exe 只能添加一次。')}
+              {tr('规则按从上到下的顺序匹配；相同路径只能添加一次。')}
             </p>
           </div>
           <Button
@@ -150,7 +156,7 @@ const AppRouting: React.FC = () => {
                 rule={rule}
                 index={index}
                 count={config.rules.length}
-                icon={rule.iconCacheKey ? icons[rule.iconCacheKey] : undefined}
+                icon={icons[rule.executablePath]}
                 disabled={saving}
                 onChange={(patch) => updateRule(index, patch)}
                 onMove={(offset) => moveRule(index, offset)}

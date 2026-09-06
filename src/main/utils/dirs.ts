@@ -139,12 +139,12 @@ export function appRoutingIconDir(): string {
   return path.join(appRoutingDir(), 'icons')
 }
 
-export function proxyBridgeDir(): string {
-  return path.join(resourcesFilesDir(), 'proxybridge')
+export function processRouterDir(): string {
+  return path.join(resourcesFilesDir(), 'process-router')
 }
 
-export function proxyBridgePath(): string {
-  return path.join(proxyBridgeDir(), 'kokorobox-process-router.exe')
+export function processRouterPath(): string {
+  return path.join(processRouterDir(), 'kokorobox-process-router.exe')
 }
 
 export function appConfigPath(): string {

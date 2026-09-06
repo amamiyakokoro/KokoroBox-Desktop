@@ -1,31 +1,31 @@
 import { BrowserWindow } from 'electron'
-import { existsSync } from 'fs'
 import { spawn, type ChildProcess } from 'child_process'
-import {
-  appRoutingSupported,
-  buildProcessRouterCommand,
-  validateAppRoutingConfig
-} from '../../shared/app-routing'
+import { appRoutingSupported, validateAppRoutingConfig } from '../../shared/app-routing'
 import { getAppConfig } from '../config/app'
 import { appendAppLog } from '../utils/log'
-import { proxyBridgeDir, proxyBridgePath } from '../utils/dirs'
+import { processRouterDir, processRouterPath } from '../utils/dirs'
 import { getAppRoutingConfig, saveAppRoutingConfig } from './config'
-import { appRoutingSocksPort } from './profile'
+import { appRoutingSocksPort, buildProcessRouterCommand } from './profile'
 import { prepareAppRoutingConfig } from './rules'
 import { canConnectToAppRoutingListener } from './health'
+import { verifyProcessRouterIntegrity } from './integrity'
+import { parseProcessRouterEvent } from './protocol'
 
 const probeIntervalMs = 3000
 const restartDelayMs = 1500
+const commandTimeoutMs = 5000
 let child: ChildProcess | undefined
 let activePort: number | undefined
 let rulesApplied = false
+let activePolicyKey = ''
+let pendingPolicyKey = ''
+let pendingPolicyStartedAt = 0
 let monitor: NodeJS.Timeout | undefined
 let restartTimer: NodeJS.Timeout | undefined
 let stopping = false
 const expectedExits = new WeakSet<ChildProcess>()
 let operation: Promise<void> = Promise.resolve()
 let configGeneration = 0
-let activeGeneration = -1
 let status: AppRoutingStatus = {
   supported: appRoutingSupported(process.platform, process.arch),
   state: appRoutingSupported(process.platform, process.arch) ? 'disabled' : 'unsupported',
@@ -55,8 +55,10 @@ async function stopChild(): Promise<void> {
   if (!runningChild || runningChild.exitCode !== null) {
     child = undefined
     activePort = undefined
-    activeGeneration = -1
     rulesApplied = false
+    activePolicyKey = ''
+    pendingPolicyKey = ''
+    pendingPolicyStartedAt = 0
     return
   }
   expectedExits.add(runningChild)
@@ -78,32 +80,41 @@ async function stopChild(): Promise<void> {
   })
   if (child === runningChild) child = undefined
   activePort = undefined
-  activeGeneration = -1
   rulesApplied = false
+  activePolicyKey = ''
+  pendingPolicyKey = ''
+  pendingPolicyStartedAt = 0
 }
 
 async function startChild(
   config: AppRoutingConfig,
   port: number,
-  requiresMihomo: boolean
+  requiresMihomo: boolean,
+  mihomoAvailable: boolean,
+  policyKey: string
 ): Promise<void> {
   publishStatus({
     supported: true,
     state: 'starting',
     proxyPort: requiresMihomo ? port : undefined,
-    mihomoAvailable: requiresMihomo ? await canConnectToAppRoutingListener(port) : false
+    mihomoAvailable,
+    protectedApplicationCount: requiresMihomo
+      ? config.rules.filter((rule) => rule.enabled && rule.action === 'proxy').length
+      : 0
   })
-  const executable = proxyBridgePath()
+  const executable = processRouterPath()
   const nextChild = spawn(executable, [], {
-    cwd: proxyBridgeDir(),
+    cwd: processRouterDir(),
     windowsHide: true,
     shell: false,
     stdio: ['pipe', 'pipe', 'pipe']
   })
   child = nextChild
   rulesApplied = false
+  activePolicyKey = ''
+  pendingPolicyKey = policyKey
+  pendingPolicyStartedAt = Date.now()
   activePort = port
-  activeGeneration = configGeneration
   let outputBuffer = ''
   nextChild.stdout?.setEncoding('utf8')
   nextChild.stdout?.on('data', (chunk: string) => {
@@ -113,18 +124,23 @@ async function startChild(
     for (const line of lines) {
       if (!line.trim()) continue
       try {
-        const event = JSON.parse(line) as { version?: number; event?: string; message?: string }
-        if (event.version !== 1) continue
+        const event = parseProcessRouterEvent(line)
         if (event.event === 'rules_replaced') {
           rulesApplied = true
+          activePolicyKey = pendingPolicyKey
+          pendingPolicyKey = ''
+          pendingPolicyStartedAt = 0
           void reconcileAppRouting()
         }
         if (event.event === 'error') {
           rulesApplied = false
+          pendingPolicyKey = ''
+          pendingPolicyStartedAt = 0
           void appendAppLog(`[App routing]: router command failed, ${event.message || 'unknown'}\n`)
         }
       } catch {
-        void appendAppLog('[App routing]: ignored malformed router output\n')
+        void appendAppLog('[App routing]: rejected incompatible router output\n')
+        if (nextChild.exitCode === null) nextChild.kill()
       }
     }
   })
@@ -159,7 +175,7 @@ async function startChild(
   nextChild.stdin?.on('error', () => {
     if (nextChild.exitCode === null) nextChild.kill()
   })
-  sendRouterCommand(nextChild, buildProcessRouterCommand(config, port))
+  sendRouterCommand(nextChild, buildProcessRouterCommand(config, mihomoAvailable))
 }
 
 async function reconcile(): Promise<void> {
@@ -180,16 +196,6 @@ async function reconcile(): Promise<void> {
     })
     return
   }
-  if (!existsSync(proxyBridgePath())) {
-    await stopChild()
-    publishStatus({
-      supported: true,
-      state: 'error',
-      message: 'Windows 封包拦截组件未安装',
-      mihomoAvailable: false
-    })
-    return
-  }
   const { corePermissionMode = 'elevated' } = await getAppConfig()
   if (corePermissionMode === 'service') {
     await stopChild()
@@ -203,30 +209,64 @@ async function reconcile(): Promise<void> {
   }
   const requiresMihomo = enabledRules.some((rule) => rule.action === 'proxy')
   const proxyPort = appRoutingSocksPort
+  const mihomoAvailable = requiresMihomo ? await canConnectToAppRoutingListener(proxyPort) : false
+  const policyKey = `${configGeneration}:${requiresMihomo ? Number(mihomoAvailable) : 'direct'}`
+  if (
+    child &&
+    child.exitCode === null &&
+    pendingPolicyKey &&
+    Date.now() - pendingPolicyStartedAt > commandTimeoutMs
+  ) {
+    await appendAppLog('[App routing]: process router command timed out\n')
+    child.kill()
+    return
+  }
   if (!child || child.exitCode !== null || activePort !== proxyPort) {
     await stopChild()
-    await startChild(config, proxyPort, requiresMihomo)
-  } else if (activeGeneration !== configGeneration) {
+    try {
+      await verifyProcessRouterIntegrity()
+    } catch (error) {
+      await appendAppLog(`[App routing]: process router integrity check failed, ${error}\n`)
+      publishStatus({
+        supported: true,
+        state: 'error',
+        message: 'Windows 封包拦截组件缺失或已损坏',
+        mihomoAvailable,
+        protectedApplicationCount: config.rules.filter(
+          (rule) => rule.enabled && rule.action === 'proxy'
+        ).length
+      })
+      return
+    }
+    await startChild(config, proxyPort, requiresMihomo, mihomoAvailable, policyKey)
+  } else if (activePolicyKey !== policyKey && pendingPolicyKey !== policyKey) {
     rulesApplied = false
+    pendingPolicyKey = policyKey
+    pendingPolicyStartedAt = Date.now()
     publishStatus({
       supported: true,
       state: 'starting',
       proxyPort: requiresMihomo ? proxyPort : undefined,
-      mihomoAvailable: requiresMihomo ? await canConnectToAppRoutingListener(proxyPort) : false
+      mihomoAvailable,
+      protectedApplicationCount: config.rules.filter(
+        (rule) => rule.enabled && rule.action === 'proxy'
+      ).length
     })
-    sendRouterCommand(child, buildProcessRouterCommand(config, proxyPort))
-    activeGeneration = configGeneration
+    sendRouterCommand(child, buildProcessRouterCommand(config, mihomoAvailable))
   }
-  const mihomoAvailable = requiresMihomo ? await canConnectToAppRoutingListener(proxyPort) : false
+  const protectedApplicationCount = config.rules.filter(
+    (rule) => rule.enabled && rule.action === 'proxy'
+  ).length
   publishStatus({
     supported: true,
-    state: !rulesApplied ? 'starting' : !requiresMihomo || mihomoAvailable ? 'running' : 'degraded',
+    state: !rulesApplied ? 'starting' : requiresMihomo && !mihomoAvailable ? 'degraded' : 'running',
     message:
-      !requiresMihomo || mihomoAvailable
+      !rulesApplied || !requiresMihomo || mihomoAvailable
         ? undefined
-        : 'Mihomo 不可用；匹配 Proxy 的流量已阻断（不会直连）',
+        : '代理核心不可用，受保护应用的网络连接已封锁',
     proxyPort: requiresMihomo ? proxyPort : undefined,
-    mihomoAvailable
+    mihomoAvailable,
+    protectedApplicationCount
   })
 }
 

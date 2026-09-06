@@ -239,8 +239,10 @@ jobs:
             "ProxyBridgeCore.dll",
             "WinDivert.dll",
             "WinDivert64.sys",
-            "LICENSE.ProxyBridge.txt",
-            "LICENSE.WinDivert.txt"
+            "LICENSE.ProxyBridge",
+            "LICENSE.WinDivert",
+            "manifest.json",
+            "process-router-sbom.cdx.json"
           )
           foreach ($name in $required) {
             $matches = @(Get-ChildItem dist -Recurse -File -Filter $name)

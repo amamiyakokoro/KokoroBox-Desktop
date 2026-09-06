@@ -4,13 +4,18 @@
 
 KokoroBox uses a modified subset of [ProxyBridge](https://github.com/InterceptSuite/ProxyBridge)
 as the packet-interception core behind its Windows x64 native router. The build is pinned to commit
-`02703a0672a8b94011a4698368a392f7734c10dc` and changes missing-proxy handling to fail closed.
+`02703a0672a8b94011a4698368a392f7734c10dc`. KokoroBox changes missing-proxy handling to fail
+closed and raises the internal process-pattern capacity so an atomic guard can cover the complete
+bounded rule set.
 
 ProxyBridge is distributed under the MIT License. Copyright (c) 2025
 Anof-cyber/InterceptSuite. The complete license is packaged next to the sidecar as
-`LICENSE.ProxyBridge.txt`.
+`LICENSE.ProxyBridge`.
 
 ## WinDivert
 
-The Windows sidecar includes WinDivert 2.2.2. Its complete license is packaged next to the
-sidecar as `LICENSE.WinDivert.txt`.
+The Windows sidecar dynamically links to the unmodified WinDivert 2.2.2 runtime and uses the
+LGPL-3.0-only licensing option. The official release archive and corresponding source are
+available from [WinDivert releases](https://github.com/basil00/WinDivert/releases/tag/v2.2.2).
+Its complete license is packaged next to the sidecar as `LICENSE.WinDivert`; recipients may
+replace the dynamically linked library in accordance with that license.

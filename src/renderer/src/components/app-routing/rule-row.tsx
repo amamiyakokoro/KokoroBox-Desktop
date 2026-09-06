@@ -41,8 +41,8 @@ export function AppRoutingRuleRow({
         <div className="flex min-w-0 items-center gap-3">
           {icon && <img src={icon} alt="" className="size-9 shrink-0 rounded-lg" />}
           <div className="min-w-0 flex-1">
-            <div className="truncate font-medium" title={rule.processName}>
-              {rule.displayName}
+            <div className="truncate font-medium" title={rule.executableName}>
+              {rule.executableName}
             </div>
             <div className="truncate text-xs text-foreground-500" title={rule.executablePath}>
               {rule.executablePath}

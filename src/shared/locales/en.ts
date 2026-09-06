@@ -4,6 +4,8 @@ export const messages: Readonly<Record<string, string>> = {
   应用程序: 'Application',
   上游: 'Upstream',
   操作: 'Controls',
+  '代理核心不可用，已封锁 {0} 个受保护应用的网络连接。':
+    'The proxy core is unavailable. Network access is blocked for {0} protected applications.',
   'Windows 应用程序': 'Windows applications',
   选择应用程序: 'Select applications',
   'Windows 应用程序分流': 'Windows application routing',
@@ -15,8 +17,8 @@ export const messages: Readonly<Record<string, string>> = {
   正在启动: 'Starting',
   阻断保护: 'Fail-closed',
   应用程序规则: 'Application rules',
-  '规则按从上到下的顺序匹配；同名 exe 只能添加一次。':
-    'Rules match from top to bottom; each executable name can be added only once.',
+  '规则按从上到下的顺序匹配；相同路径只能添加一次。':
+    'Rules match from top to bottom; the same executable path can be added only once.',
   添加应用程序: 'Add applications',
   '此 MVP 仅支持 Windows 10/11 x64。': 'This MVP supports Windows 10/11 x64 only.',
   尚未添加应用程序: 'No applications added',
@@ -30,6 +32,8 @@ export const messages: Readonly<Record<string, string>> = {
   所选应用程序已存在: 'The selected applications already exist',
   添加或启用规则以启动应用分流: 'Add or enable a rule to start application routing',
   'Windows 封包拦截组件未安装': 'The Windows packet interception sidecar is not installed',
+  'Windows 封包拦截组件缺失或已损坏':
+    'The Windows packet interception component is missing or corrupted',
   '请先启用本机 Mihomo SOCKS 或 mixed 监听端口':
     'Enable a local Mihomo SOCKS or mixed listener first',
   'Mihomo 不可用；匹配 Proxy 的流量已阻断（不会直连）':

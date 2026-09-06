@@ -35,7 +35,7 @@ export function registerAppRoutingIpcHandlers(): void {
     })
   )
   ipcMain.handle('getApplicationPaths', () => invokeSafely(getApplicationPaths))
-  ipcMain.handle('getAppRoutingIcon', (_event, iconCacheKey: string) =>
-    invokeSafely(() => getAppRoutingIcon(iconCacheKey))
+  ipcMain.handle('getAppRoutingIcon', (_event, executablePath: string) =>
+    invokeSafely(() => getAppRoutingIcon(executablePath))
   )
 }

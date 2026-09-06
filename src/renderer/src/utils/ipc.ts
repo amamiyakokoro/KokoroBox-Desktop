@@ -142,9 +142,9 @@ export async function getApplicationPaths(): Promise<AppRoutingApplicationSelect
   return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('getApplicationPaths'))
 }
 
-export async function getAppRoutingIcon(iconCacheKey: string): Promise<string | undefined> {
+export async function getAppRoutingIcon(executablePath: string): Promise<string | undefined> {
   return ipcErrorWrapper(
-    await window.electron.ipcRenderer.invoke('getAppRoutingIcon', iconCacheKey)
+    await window.electron.ipcRenderer.invoke('getAppRoutingIcon', executablePath)
   )
 }
 

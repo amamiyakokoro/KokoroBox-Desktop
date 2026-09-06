@@ -1,8 +1,10 @@
 import { copyFile, mkdir, readFile, readdir, rename, unlink, writeFile } from 'fs/promises'
 import { existsSync } from 'fs'
 import path from 'path'
+import crypto from 'crypto'
 import {
   defaultAppRoutingConfig,
+  migrateAppRoutingConfig,
   normalizeAppRoutingConfig,
   validateAppRoutingConfig
 } from '../../shared/app-routing'
@@ -16,17 +18,7 @@ function cloneDefault(): AppRoutingConfig {
 }
 
 async function readValidatedConfig(filePath: string): Promise<AppRoutingConfig> {
-  const parsed = JSON.parse(await readFile(filePath, 'utf8')) as AppRoutingConfig
-  const migrated = normalizeAppRoutingConfig({
-    ...parsed,
-    rules: parsed.rules.map((rule, index) => ({
-      ...rule,
-      displayName: rule.displayName || rule.processName,
-      priority: rule.priority || index + 1
-    }))
-  })
-  validateAppRoutingConfig(migrated)
-  return migrated
+  return migrateAppRoutingConfig(JSON.parse(await readFile(filePath, 'utf8')))
 }
 
 export async function getAppRoutingConfig(force = false): Promise<AppRoutingConfig> {
@@ -61,7 +53,10 @@ export async function saveAppRoutingConfig(config: AppRoutingConfig): Promise<Ap
     await rename(temporaryPath, appRoutingConfigPath())
     cachedConfig = next
     const activeIcons = new Set(
-      next.rules.flatMap((rule) => (rule.iconCacheKey ? [`${rule.iconCacheKey}.png`] : []))
+      next.rules.map(
+        (rule) =>
+          `${crypto.createHash('sha256').update(rule.executablePath.toLowerCase()).digest('hex')}.png`
+      )
     )
     for (const file of await readdir(appRoutingIconDir()).catch(() => [] as string[])) {
       if (/^[a-f0-9]{64}\.png$/.test(file) && !activeIcons.has(file)) {

@@ -4,6 +4,8 @@ export const messages: Readonly<Record<string, string>> = {
   应用程序: '應用程式',
   上游: '上游',
   操作: '操作',
+  '代理核心不可用，已封锁 {0} 个受保护应用的网络连接。':
+    '代理核心無法使用，已封鎖 {0} 個受保護應用程式的網路連線。',
   'Windows 应用程序': 'Windows 應用程式',
   选择应用程序: '選擇應用程式',
   'Windows 应用程序分流': 'Windows 應用程式分流',
@@ -15,8 +17,8 @@ export const messages: Readonly<Record<string, string>> = {
   正在启动: '正在啟動',
   阻断保护: '阻斷保護',
   应用程序规则: '應用程式規則',
-  '规则按从上到下的顺序匹配；同名 exe 只能添加一次。':
-    '規則按從上到下的順序比對；同名 exe 只能新增一次。',
+  '规则按从上到下的顺序匹配；相同路径只能添加一次。':
+    '規則按從上到下的順序比對；相同路徑只能新增一次。',
   添加应用程序: '新增應用程式',
   '此 MVP 仅支持 Windows 10/11 x64。': '此 MVP 僅支援 Windows 10/11 x64。',
   尚未添加应用程序: '尚未新增應用程式',
@@ -30,6 +32,7 @@ export const messages: Readonly<Record<string, string>> = {
   所选应用程序已存在: '所選應用程式已存在',
   添加或启用规则以启动应用分流: '新增或啟用規則以啟動應用程式分流',
   'Windows 封包拦截组件未安装': 'Windows 封包攔截元件未安裝',
+  'Windows 封包拦截组件缺失或已损坏': 'Windows 封包攔截元件遺失或已損壞',
   '请先启用本机 Mihomo SOCKS 或 mixed 监听端口': '請先啟用本機 Mihomo SOCKS 或 mixed 監聽連接埠',
   'Mihomo 不可用；匹配 Proxy 的流量已阻断（不会直连）':
     'Mihomo 不可用；符合 Proxy 規則的流量已阻斷（不會直連）',

@@ -144,6 +144,27 @@ function fixtures(fn: (source: string, output: string) => void, version = '2.26.
   const packages = path.join(dir, 'packages')
   mkdirSync(packages)
   try {
+    const processRouterSbom = path.join(packages, 'process-router-sbom.cdx.json')
+    writeFileSync(
+      processRouterSbom,
+      JSON.stringify({
+        bomFormat: 'CycloneDX',
+        specVersion: '1.6',
+        version: 1,
+        metadata: {
+          properties: [
+            {
+              name: 'kokorobox:proxybridge-revision',
+              value: '02703a0672a8b94011a4698368a392f7734c10dc'
+            },
+            {
+              name: 'kokorobox:windivert-archive-sha256',
+              value: '63cb41763bb4b20f600b6de04e991a9c2be73279e317d4d82f237b150c5f3f15'
+            }
+          ]
+        }
+      })
+    )
     for (const target of releaseTargets) {
       writeFileSync(
         path.join(packages, artifactName(target, version)),
@@ -164,7 +185,17 @@ function fixtures(fn: (source: string, output: string) => void, version = '2.26.
                 .digest('hex')
             }
           : undefined
-      stageArtifact(target, version, sha, packages, source, signing)
+      stageArtifact(
+        target,
+        version,
+        sha,
+        packages,
+        source,
+        signing,
+        target.os === 'windows-latest' && target.arch === 'x64' && target.format === 'nsis'
+          ? processRouterSbom
+          : undefined
+      )
     }
     fn(source, output)
   } finally {
@@ -181,9 +212,9 @@ test('collects complete builds, generates hashes and concise updater-compatible 
     assert.doesNotMatch(latest.changelog, /## Downloads|releases\/download\//)
     assert.match(latest.changelog, /- A change/)
     assert.match(latest.changelog, /Developer ID-signed, notarized by Apple/)
-    assert.equal(readdirSync(output).length, 15)
+    assert.equal(readdirSync(output).length, 16)
     const lines = readFileSync(path.join(output, 'SHA256SUMS'), 'utf8').trim().split('\n')
-    assert.equal(lines.length, 12)
+    assert.equal(lines.length, 13)
     for (const line of lines) {
       const [digest, name] = line.split('  ')
       assert.equal(
@@ -195,6 +226,31 @@ test('collects complete builds, generates hashes and concise updater-compatible 
     }
   })
 })
+
+for (const problem of ['missing', 'tampered', 'wrong-revision']) {
+  test(`refuses ${problem} process router SBOM before producing publishable output`, () => {
+    fixtures((source, output) => {
+      const sbomName = 'kokorobox-process-router-2.26.8.cdx.json'
+      const sbomFile = path.join(source, sbomName)
+      if (problem === 'missing') rmSync(sbomFile)
+      else if (problem === 'tampered') writeFileSync(sbomFile, '{}')
+      else {
+        const sbom = JSON.parse(readFileSync(sbomFile, 'utf8'))
+        sbom.metadata.properties[0].value = 'a'.repeat(40)
+        writeFileSync(sbomFile, JSON.stringify(sbom))
+        const manifestFile = path.join(source, 'manifest-windows-latest-x64-nsis.json')
+        const manifest = JSON.parse(readFileSync(manifestFile, 'utf8'))
+        manifest.sbom.checksum = createHash('sha256').update(readFileSync(sbomFile)).digest('hex')
+        writeFileSync(manifestFile, JSON.stringify(manifest))
+      }
+      assert.throws(
+        () => collectArtifacts('2.26.8', 'v2.26.8', sha, source, output, 'notes'),
+        /SBOM/
+      )
+      assert.equal(existsSync(output), false)
+    })
+  })
+}
 
 test('rolling metadata keeps the dedicated rolling tag', () => {
   const version = '2.26.9-rolling-1234567'
@@ -278,6 +334,7 @@ test('workflows gate publication on all builds and do not invoke upstream-only s
   assert.equal(ciMac.mac.notarize, false)
   assert.equal(parse(readFileSync('electron-builder.yml', 'utf8')).linux.executableName, 'sparkle')
   const publish = readFileSync('.github/workflows/publish.yml', 'utf8')
+  assert.match(publish, /kokorobox-process-router-\*\.cdx\.json/)
   assert.doesNotMatch(publish, /API_KEY|API_URL|AUR_SSH|delete-release-assets/)
 })
 
@@ -292,7 +349,7 @@ test('Fedora validation gates the reusable build on both supported RPM architect
     { arch: 'arm64', runner: 'ubuntu-24.04-arm' }
   ])
   const download = job.steps.find((step) => step.uses?.startsWith('actions/download-artifact@'))
-  assert.equal(download.with.name, 'packages-ubuntu-latest-${{ matrix.arch }}-rpm')
+  assert.equal(download.with.name, `packages-ubuntu-latest-\${{ matrix.arch }}-rpm`)
   const smoke = job.steps.find((step) => step.run?.includes('check-fedora-rpm.sh'))
   assert.ok(smoke)
   assert.equal(smoke['continue-on-error'], undefined)

@@ -156,27 +156,24 @@ type AppRoutingRuntimeState =
 
 interface AppRoutingRule {
   id: string
-  executablePath: string
-  processName: string
-  displayName: string
-  iconCacheKey?: string
-  action: AppRoutingAction
-  protocol: AppRoutingProtocol
   enabled: boolean
   priority: number
+  executablePath: string
+  executableName: string
+  protocol: AppRoutingProtocol
+  action: AppRoutingAction
 }
 
 interface AppRoutingApplicationSelection {
   executablePath: string
-  processName: string
-  displayName: string
-  iconCacheKey?: string
+  executableName: string
   iconDataUrl?: string
 }
 
 interface AppRoutingConfig {
   version: 1
   enabled: boolean
+  failClosed: true
   rules: AppRoutingRule[]
 }
 
@@ -186,6 +183,7 @@ interface AppRoutingStatus {
   message?: string
   proxyPort?: number
   mihomoAvailable: boolean
+  protectedApplicationCount?: number
 }
 
 interface ProfileConfig {

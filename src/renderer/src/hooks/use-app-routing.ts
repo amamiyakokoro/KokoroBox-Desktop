@@ -51,9 +51,9 @@ export function useAppRouting(): {
   useEffect(() => {
     if (!config) return
     for (const rule of config.rules) {
-      if (!rule.iconCacheKey || icons[rule.iconCacheKey]) continue
-      void getAppRoutingIcon(rule.iconCacheKey).then((icon) => {
-        if (icon) setIcons((current) => ({ ...current, [rule.iconCacheKey!]: icon }))
+      if (icons[rule.executablePath]) continue
+      void getAppRoutingIcon(rule.executablePath).then((icon) => {
+        if (icon) setIcons((current) => ({ ...current, [rule.executablePath]: icon }))
       })
     }
   }, [config, icons])
@@ -76,25 +76,23 @@ export function useAppRouting(): {
     if (!config) return
     const applications = await getApplicationPaths()
     if (!applications?.length) return
-    const existingNames = new Set(config.rules.map((rule) => rule.processName.toLowerCase()))
+    const existingPaths = new Set(config.rules.map((rule) => rule.executablePath.toLowerCase()))
     const additions: AppRoutingRule[] = []
     for (const application of applications) {
-      const { executablePath, processName, displayName, iconCacheKey, iconDataUrl } = application
-      if (!processName || existingNames.has(processName.toLowerCase())) continue
-      existingNames.add(processName.toLowerCase())
+      const { executablePath, executableName, iconDataUrl } = application
+      if (!executableName || existingPaths.has(executablePath.toLowerCase())) continue
+      existingPaths.add(executablePath.toLowerCase())
       additions.push({
         id: nanoid(),
         executablePath,
-        processName,
-        displayName,
-        iconCacheKey,
+        executableName,
         action: 'proxy',
         protocol: 'both',
         enabled: true,
         priority: config.rules.length + additions.length + 1
       })
-      if (iconCacheKey && iconDataUrl) {
-        setIcons((current) => ({ ...current, [iconCacheKey]: iconDataUrl }))
+      if (iconDataUrl) {
+        setIcons((current) => ({ ...current, [executablePath]: iconDataUrl }))
       }
     }
     if (additions.length === 0) {

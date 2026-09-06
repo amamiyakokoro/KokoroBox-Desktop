@@ -1,4 +1,5 @@
 import { tr } from '../../shared/i18n'
+import { normalizeWindowsExecutablePath } from '../../shared/app-routing'
 import { execFile, execFileSync, spawn } from 'child_process'
 import { app, dialog, nativeImage, nativeTheme, shell } from 'electron'
 import { mkdir, readFile, realpath, stat, writeFile } from 'fs/promises'
@@ -43,14 +44,14 @@ export async function getApplicationPaths(): Promise<AppRoutingApplicationSelect
   await mkdir(appRoutingIconDir(), { recursive: true })
   const applications: AppRoutingApplicationSelection[] = []
   for (const selectedPath of selected) {
-    const executablePath = await realpath(selectedPath)
+    const executablePath = normalizeWindowsExecutablePath(await realpath(selectedPath))
     if (
       path.extname(executablePath).toLowerCase() !== '.exe' ||
       !(await stat(executablePath)).isFile()
     ) {
       throw new Error('Application routing requires an existing .exe file')
     }
-    const processName = path.win32.basename(executablePath)
+    const executableName = path.win32.basename(executablePath)
     const iconCacheKey = crypto
       .createHash('sha256')
       .update(executablePath.toLowerCase(), 'utf8')
@@ -62,17 +63,21 @@ export async function getApplicationPaths(): Promise<AppRoutingApplicationSelect
     }
     applications.push({
       executablePath,
-      processName,
-      displayName: processName,
-      iconCacheKey: icon.isEmpty() ? undefined : iconCacheKey,
+      executableName,
       iconDataUrl
     })
   }
   return applications
 }
 
-export async function getAppRoutingIcon(iconCacheKey: string): Promise<string | undefined> {
-  if (!/^[a-f0-9]{64}$/.test(iconCacheKey)) throw new Error('Invalid application icon cache key')
+export async function getAppRoutingIcon(executablePath: string): Promise<string | undefined> {
+  if (!/^(?:[a-zA-Z]:\\|\\\\)[^\0]+\.exe$/i.test(executablePath)) {
+    throw new Error('Invalid application executable path')
+  }
+  const iconCacheKey = crypto
+    .createHash('sha256')
+    .update(executablePath.toLowerCase(), 'utf8')
+    .digest('hex')
   const iconPath = path.join(appRoutingIconDir(), `${iconCacheKey}.png`)
   if (!existsSync(iconPath)) return undefined
   const icon = nativeImage.createFromBuffer(await readFile(iconPath))

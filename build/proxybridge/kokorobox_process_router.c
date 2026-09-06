@@ -9,13 +9,26 @@
 
 #define PROTOCOL_VERSION 1
 #define KOKORO_SOCKS_PORT 7891
-#define MAX_COMMAND_SIZE 65536
-#define MAX_RULES 256
+#define MAX_COMMAND_SIZE 262144
+#define MAX_USER_RULES 256
+#define MAX_MANAGED_RULES 258
+#define MAX_PROCESS_PATH 1024
+#define MAX_PROCESS_LIST 65536
 
-static UINT32 rule_ids[MAX_RULES];
+typedef struct ParsedRule {
+    char executable_path[MAX_PROCESS_PATH];
+    RuleProtocol protocol;
+    RuleAction action;
+    BOOL enabled;
+    UINT32 priority;
+} ParsedRule;
+
+static UINT32 rule_ids[MAX_MANAGED_RULES];
 static size_t rule_count = 0;
 static UINT32 proxy_id = 0;
+static UINT32 guard_id = 0;
 static BOOL engine_running = FALSE;
+static char active_processes[MAX_PROCESS_LIST] = "";
 
 static void emit(const char *event, const char *message) {
     if (message && message[0])
@@ -37,7 +50,10 @@ static BOOL read_string(const char *object, const char *key, char *output, size_
     size_t index = 0;
     if (!value || *value++ != '"') return FALSE;
     while (*value && *value != '"' && index + 1 < output_size) {
-        if (*value == '\\') return FALSE;
+        if (*value == '\\') {
+            value++;
+            if (*value != '\\' && *value != '/' && *value != '"') return FALSE;
+        }
         output[index++] = *value++;
     }
     if (*value != '"') return FALSE;
@@ -82,43 +98,98 @@ static const char *find_object_end(const char *object) {
     return NULL;
 }
 
-static BOOL valid_process_name(const char *name) {
-    size_t length = strlen(name);
-    return length > 4 && length < MAX_PATH &&
-           _stricmp(name + length - 4, ".exe") == 0 &&
-           strpbrk(name, "*?\\/") == NULL;
+static BOOL valid_executable_path(const char *path) {
+    size_t length = strlen(path);
+    BOOL drive_path = length > 3 && path[1] == ':' && path[2] == '\\';
+    BOOL unc_path = length > 4 && path[0] == '\\' && path[1] == '\\';
+    return length > 4 && length < MAX_PROCESS_PATH && (drive_path || unc_path) &&
+           _stricmp(path + length - 4, ".exe") == 0 &&
+           strpbrk(path, "*?;,") == NULL;
 }
 
-static void clear_rules(void) {
+static BOOL clear_rules(void) {
     size_t index;
-    for (index = 0; index < rule_count; ++index)
-        ProxyBridge_DeleteRule(rule_ids[index]);
-    rule_count = 0;
+    size_t remaining = 0;
+    for (index = 0; index < rule_count; ++index) {
+        if (!ProxyBridge_DeleteRule(rule_ids[index]))
+            rule_ids[remaining++] = rule_ids[index];
+    }
+    rule_count = remaining;
+    return remaining == 0;
 }
 
-static BOOL replace_rules(const char *command) {
-    const char *cursor;
-    if (!strstr(command, "\"host\":\"127.0.0.1\"") ||
-        !strstr(command, "\"port\":7891")) {
-        emit("error", "proxy endpoint rejected");
-        return FALSE;
-    }
-
-    if (engine_running) {
-        ProxyBridge_Stop();
-        engine_running = FALSE;
-    }
-    clear_rules();
-
-    if (!proxy_id) {
-        proxy_id = ProxyBridge_AddProxyConfig(
-            PROXY_TYPE_SOCKS5, "127.0.0.1", KOKORO_SOCKS_PORT, "", "", TRUE);
-        if (!proxy_id) {
-            emit("error", "unable to configure local SOCKS proxy");
+static BOOL install_guard(const char *processes) {
+    UINT32 next_guard;
+    if (guard_id) {
+        if (!ProxyBridge_EditRule(guard_id, processes, "*", "0-65535", "*",
+                                  RULE_PROTOCOL_BOTH, RULE_ACTION_BLOCK, 0) ||
+            !ProxyBridge_MoveRuleToPosition(guard_id, 1)) {
+            emit("error", "unable to update atomic replacement guard");
             return FALSE;
         }
+        return TRUE;
     }
+    /* The port filter ensures this process-scoped rule is evaluated before fallback rules. */
+    next_guard = ProxyBridge_AddRule(processes, "*", "0-65535", "*", RULE_PROTOCOL_BOTH,
+                                     RULE_ACTION_BLOCK, 0);
+    if (!next_guard) {
+        emit("error", "unable to install atomic replacement guard");
+        return FALSE;
+    }
+    if (!ProxyBridge_MoveRuleToPosition(next_guard, 1)) {
+        ProxyBridge_DeleteRule(next_guard);
+        emit("error", "unable to install atomic replacement guard");
+        return FALSE;
+    }
+    guard_id = next_guard;
+    return TRUE;
+}
 
+static BOOL add_managed_rule(const char *process_name, const char *target_hosts,
+                             RuleProtocol protocol, RuleAction action,
+                             UINT32 selected_proxy, BOOL enabled) {
+    UINT32 id;
+    if (rule_count >= MAX_MANAGED_RULES) return FALSE;
+    id = ProxyBridge_AddRule(process_name, target_hosts, "*", "*", protocol, action,
+                             selected_proxy);
+    if (!id) return FALSE;
+    if (!enabled && !ProxyBridge_DisableRule(id)) {
+        ProxyBridge_DeleteRule(id);
+        return FALSE;
+    }
+    rule_ids[rule_count++] = id;
+    return TRUE;
+}
+
+static BOOL add_mandatory_exclusions(void) {
+    static const char *network_targets =
+        "127.*.*.*;169.254.*.*;224.0.0.0-239.255.255.255;*.*.*.255;"
+        "::1;fe80::/10;ff00::/8";
+    static const char *process_names =
+        "KokoroBox.exe;mihomo.exe;mihomo-alpha.exe;sparkle-service.exe;"
+        "kokorobox-process-router.exe;crashpad_handler.exe;elevate.exe;"
+        "kokorobox-desktop-windows-*-setup.exe";
+    return add_managed_rule("*", network_targets, RULE_PROTOCOL_BOTH,
+                            RULE_ACTION_DIRECT, 0, TRUE) &&
+           add_managed_rule(process_names, "*", RULE_PROTOCOL_BOTH,
+                            RULE_ACTION_DIRECT, 0, TRUE);
+}
+
+static BOOL append_process_path(char *list, size_t capacity, const char *path) {
+    size_t used = strlen(list);
+    size_t length = strlen(path);
+    size_t separator = used ? 1 : 0;
+    if (used + separator + length + 1 > capacity) return FALSE;
+    if (separator) list[used++] = ';';
+    memcpy(list + used, path, length + 1);
+    return TRUE;
+}
+
+static BOOL parse_rules(const char *command, ParsedRule *rules, size_t *parsed_count,
+                        char *enabled_processes) {
+    const char *cursor;
+    *parsed_count = 0;
+    enabled_processes[0] = '\0';
     cursor = strstr(command, "\"rules\":[");
     if (!cursor) {
         emit("error", "rules are missing");
@@ -129,18 +200,13 @@ static BOOL replace_rules(const char *command) {
     while (*cursor && *cursor != ']') {
         const char *end;
         char object[2048];
-        char process_name[MAX_PATH];
+        ParsedRule *rule;
         char protocol_name[16];
         char action_name[16];
-        UINT32 priority;
-        BOOL enabled;
-        RuleProtocol protocol;
-        RuleAction action;
-        UINT32 id;
         size_t object_length;
 
         while (*cursor == ',' || *cursor == ' ') ++cursor;
-        if (*cursor != '{' || rule_count >= MAX_RULES) {
+        if (*cursor != '{' || *parsed_count >= MAX_USER_RULES) {
             emit("error", "invalid or excessive rules");
             return FALSE;
         }
@@ -150,44 +216,115 @@ static BOOL replace_rules(const char *command) {
         if (object_length >= sizeof(object)) { emit("error", "rule is too large"); return FALSE; }
         memcpy(object, cursor, object_length);
         object[object_length] = '\0';
+        rule = &rules[*parsed_count];
 
-        if (!read_string(object, "processName", process_name, sizeof(process_name)) ||
+        if (!read_string(object, "executablePath", rule->executable_path,
+                         sizeof(rule->executable_path)) ||
             !read_string(object, "protocol", protocol_name, sizeof(protocol_name)) ||
             !read_string(object, "action", action_name, sizeof(action_name)) ||
-            !read_bool(object, "enabled", &enabled) ||
-            !read_uint(object, "priority", &priority) ||
-            !valid_process_name(process_name) || priority != rule_count + 1) {
+            !read_bool(object, "enabled", &rule->enabled) ||
+            !read_uint(object, "priority", &rule->priority) ||
+            !valid_executable_path(rule->executable_path) ||
+            rule->priority != (UINT32)(*parsed_count + 1)) {
             emit("error", "invalid rule");
             return FALSE;
         }
 
-        if (_stricmp(protocol_name, "TCP") == 0) protocol = RULE_PROTOCOL_TCP;
-        else if (_stricmp(protocol_name, "UDP") == 0) protocol = RULE_PROTOCOL_UDP;
-        else if (_stricmp(protocol_name, "BOTH") == 0) protocol = RULE_PROTOCOL_BOTH;
+        if (_stricmp(protocol_name, "TCP") == 0) rule->protocol = RULE_PROTOCOL_TCP;
+        else if (_stricmp(protocol_name, "UDP") == 0) rule->protocol = RULE_PROTOCOL_UDP;
+        else if (_stricmp(protocol_name, "BOTH") == 0) rule->protocol = RULE_PROTOCOL_BOTH;
         else { emit("error", "invalid protocol"); return FALSE; }
 
-        if (_stricmp(action_name, "PROXY") == 0) action = RULE_ACTION_PROXY;
-        else if (_stricmp(action_name, "DIRECT") == 0) action = RULE_ACTION_DIRECT;
-        else if (_stricmp(action_name, "BLOCK") == 0) action = RULE_ACTION_BLOCK;
+        if (_stricmp(action_name, "PROXY") == 0) rule->action = RULE_ACTION_PROXY;
+        else if (_stricmp(action_name, "DIRECT") == 0) rule->action = RULE_ACTION_DIRECT;
+        else if (_stricmp(action_name, "BLOCK") == 0) rule->action = RULE_ACTION_BLOCK;
         else { emit("error", "invalid action"); return FALSE; }
 
-        id = ProxyBridge_AddRule(process_name, "*", "*", "*", protocol, action,
-                                 action == RULE_ACTION_PROXY ? proxy_id : 0);
-        if (!id || (!enabled && !ProxyBridge_DisableRule(id))) {
+        if (rule->enabled && !append_process_path(enabled_processes, MAX_PROCESS_LIST,
+                                                  rule->executable_path)) {
+            emit("error", "application paths exceed the process guard limit");
+            return FALSE;
+        }
+        (*parsed_count)++;
+        cursor = end + 1;
+    }
+    if (*cursor != ']') {
+        emit("error", "unterminated rules");
+        return FALSE;
+    }
+    return TRUE;
+}
+
+static BOOL replace_rules(const char *command) {
+    ParsedRule rules[MAX_USER_RULES];
+    size_t parsed_count;
+    size_t index;
+    char next_processes[MAX_PROCESS_LIST];
+    char guarded_processes[MAX_PROCESS_LIST];
+    BOOL fail_closed;
+
+    if (!strstr(command, "\"host\":\"127.0.0.1\"") ||
+        !strstr(command, "\"port\":7891") ||
+        !read_bool(command, "failClosed", &fail_closed) || !fail_closed) {
+        emit("error", "proxy endpoint rejected");
+        return FALSE;
+    }
+    if (!parse_rules(command, rules, &parsed_count, next_processes)) return FALSE;
+    guarded_processes[0] = '\0';
+    if ((active_processes[0] &&
+         !append_process_path(guarded_processes, sizeof(guarded_processes), active_processes)) ||
+        (next_processes[0] &&
+         !append_process_path(guarded_processes, sizeof(guarded_processes), next_processes))) {
+        emit("error", "application paths exceed the atomic guard limit");
+        return FALSE;
+    }
+    if (!guarded_processes[0]) {
+        emit("error", "at least one enabled rule is required");
+        return FALSE;
+    }
+    if (!install_guard(guarded_processes)) return FALSE;
+    if (!clear_rules()) {
+        emit("error", "unable to remove the previous rule set");
+        return FALSE;
+    }
+
+    if (!proxy_id) {
+        proxy_id = ProxyBridge_AddProxyConfig(
+            PROXY_TYPE_SOCKS5, "127.0.0.1", KOKORO_SOCKS_PORT, "", "", TRUE);
+        if (!proxy_id) {
+            emit("error", "unable to configure local SOCKS proxy");
+            return FALSE;
+        }
+    }
+
+    if (!add_mandatory_exclusions()) {
+        emit("error", "unable to install mandatory exclusions");
+        return FALSE;
+    }
+    for (index = 0; index < parsed_count; ++index) {
+        UINT32 selected_proxy = rules[index].action == RULE_ACTION_PROXY ? proxy_id : 0;
+        if (!add_managed_rule(rules[index].executable_path, "*", rules[index].protocol,
+                              rules[index].action, selected_proxy, rules[index].enabled)) {
             emit("error", "unable to install rule");
             return FALSE;
         }
-        rule_ids[rule_count++] = id;
-        cursor = end + 1;
     }
 
     ProxyBridge_SetLocalhostViaProxy(FALSE);
     ProxyBridge_SetTrafficLoggingEnabled(FALSE);
-    if (!ProxyBridge_Start()) {
-        emit("error", "packet interception failed to start");
+    if (!engine_running) {
+        if (!ProxyBridge_Start()) {
+            emit("error", "packet interception failed to start");
+            return FALSE;
+        }
+        engine_running = TRUE;
+    }
+    strcpy_s(active_processes, sizeof(active_processes), next_processes);
+    if (!ProxyBridge_DeleteRule(guard_id)) {
+        emit("error", "unable to commit atomic rule replacement");
         return FALSE;
     }
-    engine_running = TRUE;
+    guard_id = 0;
     emit("rules_replaced", NULL);
     return TRUE;
 }
@@ -200,8 +337,13 @@ static BOOL WINAPI control_handler(DWORD event) {
     return FALSE;
 }
 
-int main(void) {
+int main(int argc, char **argv) {
     char command[MAX_COMMAND_SIZE];
+    (void)argv;
+    if (argc != 1) {
+        emit("error", "command-line arguments are not supported");
+        return 2;
+    }
     if (!IsUserAnAdmin()) {
         emit("error", "administrator privileges required");
         return 5;
@@ -210,15 +352,21 @@ int main(void) {
     emit("ready", NULL);
 
     while (fgets(command, sizeof(command), stdin)) {
-        if (!strstr(command, "\"version\":1")) {
+        UINT32 version;
+        char command_name[32];
+        if (!read_uint(command, "version", &version) || version != PROTOCOL_VERSION) {
             emit("error", "unsupported protocol version");
             continue;
         }
-        if (strstr(command, "\"command\":\"replace_rules\"")) {
-            if (!replace_rules(command)) break;
-        } else if (strstr(command, "\"command\":\"status\"")) {
+        if (!read_string(command, "command", command_name, sizeof(command_name))) {
+            emit("error", "command is missing");
+            continue;
+        }
+        if (strcmp(command_name, "replace_rules") == 0) {
+            replace_rules(command);
+        } else if (strcmp(command_name, "status") == 0) {
             emit(engine_running ? "running" : "ready", NULL);
-        } else if (strstr(command, "\"command\":\"shutdown\"")) {
+        } else if (strcmp(command_name, "shutdown") == 0) {
             break;
         } else {
             emit("error", "unsupported command");
@@ -227,6 +375,7 @@ int main(void) {
 
     if (engine_running) ProxyBridge_Stop();
     clear_rules();
+    if (guard_id) ProxyBridge_DeleteRule(guard_id);
     if (proxy_id) ProxyBridge_DeleteProxyConfig(proxy_id);
     emit("stopped", NULL);
     return 0;
