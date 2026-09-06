@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState, type MouseEvent } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type MouseEvent } from 'react'
 import { closestCorners, DndContext, type DragEndEvent } from '@dnd-kit/core'
 import { SortableContext } from '@dnd-kit/sortable'
 import { useNavigate } from 'react-router-dom'
@@ -18,12 +18,14 @@ import RuleCard from './rule-card'
 import SniffCard from './sniff-card'
 import SysproxySwitcher from './sysproxy-switcher'
 import TunSwitcher from './tun-switcher'
+import AppRoutingCard from './app-routing-card'
 
 const interactiveSelector = 'button:not(.pointer-events-none), [role="switch"]'
 
 const defaultSiderOrder = [
   'sysproxy',
   'tun',
+  'app-routing',
   'dns',
   'sniff',
   'kokoro',
@@ -40,6 +42,7 @@ const defaultSiderOrder = [
 const siderCardRouteMap = {
   'sysproxy-card': '/sysproxy',
   'tun-card': '/tun',
+  'app-routing-card': '/app-routing',
   'profile-card': '/profiles',
   'proxy-card': '/proxies',
   'mihomo-core-card': '/mihomo',
@@ -60,6 +63,7 @@ const siderCardSelector = Object.keys(siderCardRouteMap)
 const componentMap = {
   sysproxy: SysproxySwitcher,
   tun: TunSwitcher,
+  'app-routing': AppRoutingCard,
   profile: ProfileCard,
   kokoro: KokoroSettingCard,
   proxy: ProxyCard,
@@ -79,7 +83,17 @@ interface Props {
 
 export default function SiderCards({ iconOnly = false }: Props): React.JSX.Element {
   const { appConfig, patchAppConfig } = useAppConfig()
-  const siderOrder = appConfig?.siderOrder ?? defaultSiderOrder
+  const configuredOrder = appConfig?.siderOrder ?? defaultSiderOrder
+  const supportsAppRouting = window.api.platform === 'win32' && window.api.arch === 'x64'
+  const siderOrder = useMemo(
+    () =>
+      supportsAppRouting
+        ? configuredOrder.includes('app-routing')
+          ? configuredOrder
+          : [...configuredOrder.slice(0, 2), 'app-routing', ...configuredOrder.slice(2)]
+        : configuredOrder.filter((key) => key !== 'app-routing'),
+    [configuredOrder, supportsAppRouting]
+  )
   const [order, setOrder] = useState(siderOrder)
   const suppressClickRef = useRef(false)
   const suppressClickTimerRef = useRef<number | undefined>(undefined)

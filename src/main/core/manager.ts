@@ -58,6 +58,7 @@ import {
   isUpdaterFinishedLog
 } from './startup-chain'
 import { createServiceCoreRuntime } from './service-core-runtime'
+import { stopAppRouting } from '../app-routing/manager'
 
 const ctlParam = process.platform === 'win32' ? '-ext-ctl-pipe' : '-ext-ctl-unix'
 
@@ -751,6 +752,7 @@ export async function keepCoreAlive(): Promise<void> {
 }
 
 export async function quitWithoutCore(): Promise<void> {
+  await stopAppRouting()
   await keepCoreAlive()
   await startMonitor(true)
   app.exit()

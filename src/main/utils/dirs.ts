@@ -127,6 +127,26 @@ export function kokoroAuthStorePath(): string {
   return path.join(dataDir(), 'kokoro-auth.json')
 }
 
+export function appRoutingDir(): string {
+  return path.join(dataDir(), 'app-routing')
+}
+
+export function appRoutingConfigPath(): string {
+  return path.join(appRoutingDir(), 'config.json')
+}
+
+export function appRoutingProfilePath(): string {
+  return path.join(appRoutingDir(), 'kokorobox.pbprofile')
+}
+
+export function proxyBridgeDir(): string {
+  return path.join(resourcesFilesDir(), 'proxybridge')
+}
+
+export function proxyBridgePath(): string {
+  return path.join(proxyBridgeDir(), 'ProxyBridge_CLI.exe')
+}
+
 export function appConfigPath(): string {
   return path.join(dataDir(), 'config.yaml')
 }

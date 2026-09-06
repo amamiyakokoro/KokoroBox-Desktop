@@ -7,6 +7,7 @@ import { useAppConfig } from '@renderer/hooks/use-app-config'
 const titleMap = {
   sysproxyCardStatus: tr('系统代理'),
   tunCardStatus: tr('虚拟网卡'),
+  appRoutingCardStatus: tr('应用分流'),
   profileCardStatus: tr('订阅管理'),
   kokoroCardStatus: tr('Kokoro 设置'),
   proxyCardStatus: tr('代理组'),
@@ -24,6 +25,7 @@ const SiderConfig: React.FC = () => {
   const {
     sysproxyCardStatus = 'col-span-1',
     tunCardStatus = 'col-span-1',
+    appRoutingCardStatus = 'col-span-2',
     profileCardStatus = 'col-span-2',
     kokoroCardStatus = 'col-span-2',
     proxyCardStatus = 'col-span-2',
@@ -40,6 +42,9 @@ const SiderConfig: React.FC = () => {
   const cardStatus = {
     sysproxyCardStatus,
     tunCardStatus,
+    ...(window.api.platform === 'win32' && window.api.arch === 'x64'
+      ? { appRoutingCardStatus }
+      : {}),
     profileCardStatus,
     kokoroCardStatus,
     proxyCardStatus,

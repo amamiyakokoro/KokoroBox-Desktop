@@ -16,6 +16,7 @@
     "typecheck": "pnpm run typecheck:node && pnpm run typecheck:web",
     "test:localization": "tsx --test scripts/test-localization.ts",
     "test:override-user-agent": "tsx --test scripts/test-override-user-agent.ts",
+    "test:app-routing": "tsx --test scripts/test-app-routing.ts",
     "test:release": "tsx --test scripts/test-release.ts",
     "test:macos-signing": "tsx --test scripts/test-macos-signing.ts",
     "test:kokoro": "tsx --test scripts/test-kokoro-auth.ts",

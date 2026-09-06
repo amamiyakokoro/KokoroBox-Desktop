@@ -15,7 +15,8 @@ import {
   Settings,
   Sniffer,
   Sysproxy,
-  Tun
+  Tun,
+  AppRouting
 } from './route-pages'
 
 export { useDeferredRoutePreload } from './route-pages'
@@ -43,6 +44,10 @@ const routes = [
   {
     path: '/tun',
     element: startupRoute(<Tun />)
+  },
+  {
+    path: '/app-routing',
+    element: startupRoute(<AppRouting />)
   },
   {
     path: '/proxies',

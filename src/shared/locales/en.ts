@@ -1,5 +1,41 @@
 // English. Keys are the Simplified Chinese source messages.
 export const messages: Readonly<Record<string, string>> = {
+  应用分流: 'Application routing',
+  'Windows 应用程序': 'Windows applications',
+  选择应用程序: 'Select applications',
+  'Windows 应用程序分流': 'Windows application routing',
+  '无需系统代理或 TUN，将指定应用程序交给本机 Mihomo 处理。':
+    'Route selected applications through local Mihomo without system proxy or TUN.',
+  正在加载: 'Loading',
+  不受支持: 'Unsupported',
+  已停用: 'Disabled',
+  正在启动: 'Starting',
+  阻断保护: 'Fail-closed',
+  应用程序规则: 'Application rules',
+  '规则按从上到下的顺序匹配；同名 exe 只能添加一次。':
+    'Rules match from top to bottom; each executable name can be added only once.',
+  添加应用程序: 'Add applications',
+  '此 MVP 仅支持 Windows 10/11 x64。': 'This MVP supports Windows 10/11 x64 only.',
+  尚未添加应用程序: 'No applications added',
+  '选择一个或多个 .exe，然后设定 Proxy、Direct 或 Block。':
+    'Select one or more .exe files, then choose Proxy, Direct, or Block.',
+  动作: 'Action',
+  启用规则: 'Enable rule',
+  'Fail-closed 保护': 'Fail-closed protection',
+  'Mihomo 不可用时，Proxy 规则的连接会被阻断，不会自动改为直连。Direct 规则仍保持直连。':
+    'If Mihomo is unavailable, Proxy connections are blocked instead of falling back to direct. Direct rules remain direct.',
+  所选应用程序已存在: 'The selected applications already exist',
+  添加或启用规则以启动应用分流: 'Add or enable a rule to start application routing',
+  'Windows 封包拦截组件未安装': 'The Windows packet interception sidecar is not installed',
+  '请先启用本机 Mihomo SOCKS 或 mixed 监听端口':
+    'Enable a local Mihomo SOCKS or mixed listener first',
+  'Mihomo 不可用；匹配 Proxy 的流量已阻断（不会直连）':
+    'Mihomo is unavailable; matching Proxy traffic is blocked (no direct fallback)',
+  '应用分流 MVP 需要以管理员模式运行 KokoroBox':
+    'The application routing MVP requires KokoroBox to run as administrator',
+  封包拦截组件启动失败: 'The packet interception sidecar failed to start',
+  '封包拦截组件意外停止，正在重试':
+    'The packet interception sidecar stopped unexpectedly; retrying',
   任务栏: 'Taskbar',
   状态栏: 'Menu bar',
   ' (全局)': ' (Global)',

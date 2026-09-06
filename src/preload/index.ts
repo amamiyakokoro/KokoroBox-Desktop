@@ -9,7 +9,8 @@ const api = {
       ? 'zh-TW'
       : 'zh-CN',
   webUtils: webUtils,
-  platform: process.platform
+  platform: process.platform,
+  arch: process.arch
 }
 // Use `contextBridge` APIs to expose Electron APIs to
 // renderer only if context isolation is enabled, otherwise

@@ -30,6 +30,14 @@ export function getFilePath(
   })
 }
 
+export function getApplicationPaths(): string[] | undefined {
+  return dialog.showOpenDialogSync({
+    title: tr('选择应用程序'),
+    filters: [{ name: tr('Windows 应用程序'), extensions: ['exe'] }],
+    properties: ['openFile', 'multiSelections']
+  })
+}
+
 export async function readTextFile(filePath: string): Promise<string> {
   return await readFile(filePath, 'utf8')
 }

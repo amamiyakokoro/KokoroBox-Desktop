@@ -14,6 +14,7 @@ A cross-platform Mihomo desktop client with built-in Kokoro subscriptions.
 
 - Bundled stable and preview [Mihomo](https://github.com/MetaCubeX/mihomo) cores
 - System proxy, TUN, DNS, sniffing, routing, and profile controls
+- Windows x64 per-application Proxy, Direct, and Block routing ([MVP details](docs/windows-app-routing.md))
 - Secure osu! OAuth sign-in for Kokoro subscriptions
 - Kokoro subscription options and editable `default` custom rules
 - Profile overrides and automatic subscription updates
@@ -51,6 +52,7 @@ pnpm typecheck
 pnpm test:kokoro
 pnpm test:localization
 pnpm test:override-user-agent
+pnpm test:app-routing
 pnpm prepare
 pnpm build:win # or build:mac / build:linux
 ```

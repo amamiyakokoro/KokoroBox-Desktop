@@ -1,0 +1,16 @@
+diff --git a/Windows/src/pb_rules.c b/Windows/src/pb_rules.c
+index a3655cf..08d7408 100644
+--- a/Windows/src/pb_rules.c
++++ b/Windows/src/pb_rules.c
+@@ -41 +41 @@ RuleAction check_process_rule_v6(const UINT8 src_ip6[16], UINT16 src_port, const
+-            return RULE_ACTION_DIRECT;
++            return RULE_ACTION_BLOCK;  // Fail closed: never leak a PROXY rule to direct
+@@ -43 +43 @@ RuleAction check_process_rule_v6(const UINT8 src_ip6[16], UINT16 src_port, const
+-            return RULE_ACTION_DIRECT;
++            return RULE_ACTION_BLOCK;
+@@ -746 +746 @@ RuleAction check_process_rule(UINT32 src_ip, UINT16 src_port, UINT32 dest_ip, UI
+-            return RULE_ACTION_DIRECT;  // No proxy configured
++            return RULE_ACTION_BLOCK;  // Fail closed: never leak a PROXY rule to direct
+@@ -750 +750 @@ RuleAction check_process_rule(UINT32 src_ip, UINT16 src_port, UINT32 dest_ip, UI
+-            return RULE_ACTION_DIRECT;
++            return RULE_ACTION_BLOCK;

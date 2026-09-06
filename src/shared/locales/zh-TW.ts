@@ -1,5 +1,38 @@
 // Traditional Chinese (Taiwan). Keys are the Simplified Chinese source messages.
 export const messages: Readonly<Record<string, string>> = {
+  应用分流: '程式分流',
+  'Windows 应用程序': 'Windows 應用程式',
+  选择应用程序: '選擇應用程式',
+  'Windows 应用程序分流': 'Windows 應用程式分流',
+  '无需系统代理或 TUN，将指定应用程序交给本机 Mihomo 处理。':
+    '無需系統代理或 TUN，將指定應用程式交給本機 Mihomo 處理。',
+  正在加载: '正在載入',
+  不受支持: '不支援',
+  已停用: '已停用',
+  正在启动: '正在啟動',
+  阻断保护: '阻斷保護',
+  应用程序规则: '應用程式規則',
+  '规则按从上到下的顺序匹配；同名 exe 只能添加一次。':
+    '規則按從上到下的順序比對；同名 exe 只能新增一次。',
+  添加应用程序: '新增應用程式',
+  '此 MVP 仅支持 Windows 10/11 x64。': '此 MVP 僅支援 Windows 10/11 x64。',
+  尚未添加应用程序: '尚未新增應用程式',
+  '选择一个或多个 .exe，然后设定 Proxy、Direct 或 Block。':
+    '選擇一個或多個 .exe，然後設定 Proxy、Direct 或 Block。',
+  动作: '動作',
+  启用规则: '啟用規則',
+  'Fail-closed 保护': 'Fail-closed 保護',
+  'Mihomo 不可用时，Proxy 规则的连接会被阻断，不会自动改为直连。Direct 规则仍保持直连。':
+    'Mihomo 不可用時，Proxy 規則的連線會被阻斷，不會自動改為直連。Direct 規則仍保持直連。',
+  所选应用程序已存在: '所選應用程式已存在',
+  添加或启用规则以启动应用分流: '新增或啟用規則以啟動應用程式分流',
+  'Windows 封包拦截组件未安装': 'Windows 封包攔截元件未安裝',
+  '请先启用本机 Mihomo SOCKS 或 mixed 监听端口': '請先啟用本機 Mihomo SOCKS 或 mixed 監聽連接埠',
+  'Mihomo 不可用；匹配 Proxy 的流量已阻断（不会直连）':
+    'Mihomo 不可用；符合 Proxy 規則的流量已阻斷（不會直連）',
+  '应用分流 MVP 需要以管理员模式运行 KokoroBox': '應用程式分流 MVP 需要以管理員模式執行 KokoroBox',
+  封包拦截组件启动失败: '封包攔截元件啟動失敗',
+  '封包拦截组件意外停止，正在重试': '封包攔截元件意外停止，正在重試',
   任务栏: '工作列',
   状态栏: '狀態列',
   ' (全局)': ' (全域)',
