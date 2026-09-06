@@ -1,5 +1,5 @@
 import { tr } from '../../../../shared/i18n'
-import { Button, Card, CardBody, Select, SelectItem, Switch } from '@heroui/react'
+import { Button, Card, CardBody, Input, Select, SelectItem, Switch } from '@heroui/react'
 import { MdArrowDownward, MdArrowUpward, MdDeleteOutline } from 'react-icons/md'
 
 const actionLabels: Record<AppRoutingAction, string> = {
@@ -41,12 +41,25 @@ export function AppRoutingRuleRow({
         <div className="flex min-w-0 items-center gap-3">
           {icon && <img src={icon} alt="" className="size-9 shrink-0 rounded-lg" />}
           <div className="min-w-0 flex-1">
-            <div className="truncate font-medium" title={rule.executableName}>
-              {rule.executableName}
-            </div>
-            <div className="truncate text-xs text-foreground-500" title={rule.executablePath}>
-              {rule.executablePath}
-            </div>
+            <Input
+              key={rule.processPattern}
+              aria-label={tr('程序匹配')}
+              size="sm"
+              variant="underlined"
+              isDisabled={disabled}
+              defaultValue={rule.processPattern}
+              onBlur={(event) => {
+                const processPattern = event.currentTarget.value.trim()
+                if (processPattern !== rule.processPattern) {
+                  onChange({ processPattern })
+                }
+              }}
+            />
+            {rule.sourcePath && (
+              <div className="truncate text-xs text-foreground-500" title={rule.sourcePath}>
+                {rule.sourcePath}
+              </div>
+            )}
           </div>
         </div>
         <Select

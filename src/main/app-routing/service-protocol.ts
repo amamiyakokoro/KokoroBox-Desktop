@@ -12,8 +12,8 @@ export function buildServiceProcessRouterRules(
     fail_closed: true,
     rules: config.rules.map((rule) => ({
       id: rule.id,
-      executable_path: rule.executablePath,
-      executable_name: rule.executableName,
+      executable_path: rule.processPattern,
+      executable_name: rule.processPattern,
       protocol: rule.protocol,
       action: rule.action,
       enabled: rule.enabled,

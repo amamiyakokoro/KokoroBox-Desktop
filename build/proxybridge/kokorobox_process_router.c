@@ -12,11 +12,11 @@
 #define MAX_COMMAND_SIZE 262144
 #define MAX_USER_RULES 256
 #define MAX_MANAGED_RULES 258
-#define MAX_PROCESS_PATH 1024
+#define MAX_PROCESS_PATTERN 1024
 #define MAX_PROCESS_LIST 65536
 
 typedef struct ParsedRule {
-    char executable_path[MAX_PROCESS_PATH];
+    char process_pattern[MAX_PROCESS_PATTERN];
     RuleProtocol protocol;
     RuleAction action;
     BOOL enabled;
@@ -98,13 +98,18 @@ static const char *find_object_end(const char *object) {
     return NULL;
 }
 
-static BOOL valid_executable_path(const char *path) {
-    size_t length = strlen(path);
-    BOOL drive_path = length > 3 && path[1] == ':' && path[2] == '\\';
-    BOOL unc_path = length > 4 && path[0] == '\\' && path[1] == '\\';
-    return length > 4 && length < MAX_PROCESS_PATH && (drive_path || unc_path) &&
-           _stricmp(path + length - 4, ".exe") == 0 &&
-           strpbrk(path, "*?;,") == NULL;
+static BOOL valid_process_pattern(const char *pattern) {
+    size_t index;
+    size_t length = strlen(pattern);
+    if (length <= 4 || length >= MAX_PROCESS_PATTERN ||
+        _stricmp(pattern + length - 4, ".exe") != 0 ||
+        strpbrk(pattern, "?;,\"") != NULL) {
+        return FALSE;
+    }
+    for (index = 0; index < length; ++index) {
+        if ((unsigned char)pattern[index] < 0x20) return FALSE;
+    }
+    return TRUE;
 }
 
 static BOOL clear_rules(void) {
@@ -175,13 +180,13 @@ static BOOL add_mandatory_exclusions(void) {
                             RULE_ACTION_DIRECT, 0, TRUE);
 }
 
-static BOOL append_process_path(char *list, size_t capacity, const char *path) {
+static BOOL append_process_pattern(char *list, size_t capacity, const char *pattern) {
     size_t used = strlen(list);
-    size_t length = strlen(path);
+    size_t length = strlen(pattern);
     size_t separator = used ? 1 : 0;
     if (used + separator + length + 1 > capacity) return FALSE;
     if (separator) list[used++] = ';';
-    memcpy(list + used, path, length + 1);
+    memcpy(list + used, pattern, length + 1);
     return TRUE;
 }
 
@@ -218,13 +223,13 @@ static BOOL parse_rules(const char *command, ParsedRule *rules, size_t *parsed_c
         object[object_length] = '\0';
         rule = &rules[*parsed_count];
 
-        if (!read_string(object, "executablePath", rule->executable_path,
-                         sizeof(rule->executable_path)) ||
+        if (!read_string(object, "processPattern", rule->process_pattern,
+                         sizeof(rule->process_pattern)) ||
             !read_string(object, "protocol", protocol_name, sizeof(protocol_name)) ||
             !read_string(object, "action", action_name, sizeof(action_name)) ||
             !read_bool(object, "enabled", &rule->enabled) ||
             !read_uint(object, "priority", &rule->priority) ||
-            !valid_executable_path(rule->executable_path) ||
+            !valid_process_pattern(rule->process_pattern) ||
             rule->priority != (UINT32)(*parsed_count + 1)) {
             emit("error", "invalid rule");
             return FALSE;
@@ -240,9 +245,9 @@ static BOOL parse_rules(const char *command, ParsedRule *rules, size_t *parsed_c
         else if (_stricmp(action_name, "BLOCK") == 0) rule->action = RULE_ACTION_BLOCK;
         else { emit("error", "invalid action"); return FALSE; }
 
-        if (rule->enabled && !append_process_path(enabled_processes, MAX_PROCESS_LIST,
-                                                  rule->executable_path)) {
-            emit("error", "application paths exceed the process guard limit");
+        if (rule->enabled && !append_process_pattern(enabled_processes, MAX_PROCESS_LIST,
+                                                     rule->process_pattern)) {
+            emit("error", "application patterns exceed the process guard limit");
             return FALSE;
         }
         (*parsed_count)++;
@@ -272,10 +277,10 @@ static BOOL replace_rules(const char *command) {
     if (!parse_rules(command, rules, &parsed_count, next_processes)) return FALSE;
     guarded_processes[0] = '\0';
     if ((active_processes[0] &&
-         !append_process_path(guarded_processes, sizeof(guarded_processes), active_processes)) ||
+         !append_process_pattern(guarded_processes, sizeof(guarded_processes), active_processes)) ||
         (next_processes[0] &&
-         !append_process_path(guarded_processes, sizeof(guarded_processes), next_processes))) {
-        emit("error", "application paths exceed the atomic guard limit");
+         !append_process_pattern(guarded_processes, sizeof(guarded_processes), next_processes))) {
+        emit("error", "application patterns exceed the atomic guard limit");
         return FALSE;
     }
     if (!guarded_processes[0]) {
@@ -303,7 +308,7 @@ static BOOL replace_rules(const char *command) {
     }
     for (index = 0; index < parsed_count; ++index) {
         UINT32 selected_proxy = rules[index].action == RULE_ACTION_PROXY ? proxy_id : 0;
-        if (!add_managed_rule(rules[index].executable_path, "*", rules[index].protocol,
+        if (!add_managed_rule(rules[index].process_pattern, "*", rules[index].protocol,
                               rules[index].action, selected_proxy, rules[index].enabled)) {
             emit("error", "unable to install rule");
             return FALSE;

@@ -24,7 +24,7 @@ export function isProtectedAppRoutingProcess(executableName: string): boolean {
 }
 
 export const defaultAppRoutingConfig: AppRoutingConfig = {
-  version: 1,
+  version: 2,
   enabled: false,
   failClosed: true,
   rules: []
@@ -46,26 +46,48 @@ export function normalizeWindowsExecutablePath(executablePath: string): string {
   return normalized
 }
 
+export function normalizeProcessPattern(processPattern: string): string {
+  return processPattern.trim().replaceAll('/', '\\')
+}
+
+function wildcardPatternMatches(pattern: string, value: string): boolean {
+  const expression = pattern.replace(/[.+^${}()|[\]\\]/g, '\\$&').replaceAll('*', '.*')
+  return new RegExp(`^${expression}$`, 'i').test(value)
+}
+
+export function isProtectedAppRoutingPattern(processPattern: string): boolean {
+  const filenamePattern = executableName(normalizeProcessPattern(processPattern))
+  return (
+    [...reservedProcessNames].some((name) => wildcardPatternMatches(filenamePattern, name)) ||
+    wildcardPatternMatches(filenamePattern, 'kokorobox-desktop-windows-2.0.0-x64-setup.exe')
+  )
+}
+
+function containsInvalidProcessPatternCharacter(processPattern: string): boolean {
+  return [...processPattern].some(
+    (character) => character.charCodeAt(0) < 0x20 || '?;,"'.includes(character)
+  )
+}
+
 export function validateAppRoutingRule(rule: AppRoutingRule): void {
   if (!rule.id || rule.id.length > 128) throw new Error('Invalid application rule ID')
-  if (!/^(?:[a-zA-Z]:\\|\\\\)[^\0]+\.exe$/i.test(rule.executablePath)) {
-    throw new Error('Application routing requires an absolute Windows .exe path')
+  const processPattern = normalizeProcessPattern(rule.processPattern)
+  if (
+    !processPattern ||
+    !processPattern.toLowerCase().endsWith('.exe') ||
+    new TextEncoder().encode(processPattern).length >= 1024 ||
+    containsInvalidProcessPatternCharacter(processPattern)
+  ) {
+    throw new Error('Application routing requires one valid .exe process pattern')
+  }
+  if (isProtectedAppRoutingPattern(processPattern)) {
+    throw new Error(`${processPattern} cannot be intercepted`)
   }
   if (
-    new TextEncoder().encode(rule.executablePath).length >= 1024 ||
-    /[*?;,]/.test(rule.executablePath)
+    rule.sourcePath !== undefined &&
+    !/^(?:[a-zA-Z]:\\|\\\\)[^\0]+\.exe$/i.test(rule.sourcePath)
   ) {
-    throw new Error('Application routing path is not supported by the native router')
-  }
-  const derivedName = executableName(rule.executablePath)
-  if (derivedName.includes('*') || derivedName.includes('?')) {
-    throw new Error('Application routing does not allow process wildcards')
-  }
-  if (!derivedName || derivedName.toLowerCase() !== rule.executableName.toLowerCase()) {
-    throw new Error('Application rule process name does not match its executable path')
-  }
-  if (isProtectedAppRoutingProcess(derivedName)) {
-    throw new Error(`${derivedName} cannot be intercepted`)
+    throw new Error('Application routing icon source must be an absolute Windows .exe path')
   }
   if (!validActions.has(rule.action)) throw new Error('Invalid application routing action')
   if (!validProtocols.has(rule.protocol)) throw new Error('Invalid application routing protocol')
@@ -78,7 +100,7 @@ export function validateAppRoutingRule(rule: AppRoutingRule): void {
 export function validateAppRoutingConfig(config: AppRoutingConfig): void {
   if (
     !config ||
-    config.version !== 1 ||
+    config.version !== 2 ||
     typeof config.enabled !== 'boolean' ||
     config.failClosed !== true
   ) {
@@ -88,28 +110,28 @@ export function validateAppRoutingConfig(config: AppRoutingConfig): void {
     throw new Error('Application routing supports at most 256 rules')
   }
   const ids = new Set<string>()
-  const executablePaths = new Set<string>()
+  const processPatterns = new Set<string>()
   const priorities = new Set<number>()
-  let totalPathBytes = 0
+  let totalPatternBytes = 0
   for (const rule of config.rules) {
     validateAppRoutingRule(rule)
-    const executablePath = rule.executablePath.toLowerCase()
-    totalPathBytes += new TextEncoder().encode(rule.executablePath).length + 1
+    const processPattern = normalizeProcessPattern(rule.processPattern).toLowerCase()
+    totalPatternBytes += new TextEncoder().encode(processPattern).length + 1
     if (ids.has(rule.id)) throw new Error('Application rule IDs must be unique')
-    if (executablePaths.has(executablePath)) {
-      throw new Error(`Only one rule can target ${rule.executablePath}`)
+    if (processPatterns.has(processPattern)) {
+      throw new Error(`Only one rule can target ${rule.processPattern}`)
     }
     if (priorities.has(rule.priority)) throw new Error('Application rule priorities must be unique')
     ids.add(rule.id)
-    executablePaths.add(executablePath)
+    processPatterns.add(processPattern)
     priorities.add(rule.priority)
   }
-  if (totalPathBytes > 30000) throw new Error('Application routing paths are too large')
+  if (totalPatternBytes > 30000) throw new Error('Application routing patterns are too large')
 }
 
 export function normalizeAppRoutingConfig(config: AppRoutingConfig): AppRoutingConfig {
   return {
-    version: config.version,
+    version: 2,
     enabled: config.enabled,
     failClosed: config.failClosed,
     rules: [...config.rules]
@@ -120,8 +142,8 @@ export function normalizeAppRoutingConfig(config: AppRoutingConfig): AppRoutingC
         id: rule.id,
         enabled: rule.enabled,
         priority: index + 1,
-        executablePath: rule.executablePath,
-        executableName: rule.executableName,
+        processPattern: normalizeProcessPattern(rule.processPattern),
+        ...(rule.sourcePath ? { sourcePath: normalizeWindowsExecutablePath(rule.sourcePath) } : {}),
         protocol: rule.protocol,
         action: rule.action
       }))
@@ -131,22 +153,66 @@ export function normalizeAppRoutingConfig(config: AppRoutingConfig): AppRoutingC
 export function migrateAppRoutingConfig(value: unknown): AppRoutingConfig {
   if (!value || typeof value !== 'object') throw new Error('Invalid application routing data')
   const source = value as Record<string, unknown>
+  if (source.version !== 1 && source.version !== 2) {
+    throw new Error('Unsupported application routing configuration version')
+  }
   if (!Array.isArray(source.rules)) throw new Error('Invalid application routing rules')
-  const rules = source.rules.map((item, index) => {
+  const sourceRules = source.rules.map((item) => {
     if (!item || typeof item !== 'object') throw new Error('Invalid application routing rule')
-    const rule = item as Record<string, unknown>
+    return item as Record<string, unknown>
+  })
+  const legacyPatternCounts = new Map<string, number>()
+  for (const rule of sourceRules) {
+    if (typeof rule.processPattern === 'string') continue
+    const legacyPath = typeof rule.executablePath === 'string' ? rule.executablePath : undefined
+    const legacyPattern = normalizeProcessPattern(
+      typeof rule.executableName === 'string'
+        ? rule.executableName
+        : typeof rule.processName === 'string'
+          ? rule.processName
+          : legacyPath
+            ? executableName(legacyPath)
+            : ''
+    ).toLowerCase()
+    legacyPatternCounts.set(legacyPattern, (legacyPatternCounts.get(legacyPattern) ?? 0) + 1)
+  }
+  const rules = sourceRules.map((rule, index) => {
+    const legacyPath = typeof rule.executablePath === 'string' ? rule.executablePath : undefined
+    const hasProcessPattern = typeof rule.processPattern === 'string'
+    let processPattern = normalizeProcessPattern(
+      hasProcessPattern
+        ? (rule.processPattern as string)
+        : typeof rule.executableName === 'string'
+          ? rule.executableName
+          : typeof rule.processName === 'string'
+            ? rule.processName
+            : legacyPath
+              ? executableName(legacyPath)
+              : ''
+    )
+    if (
+      !hasProcessPattern &&
+      legacyPath &&
+      (legacyPatternCounts.get(processPattern.toLowerCase()) ?? 0) > 1
+    ) {
+      processPattern = normalizeWindowsExecutablePath(legacyPath)
+    }
     return {
       id: rule.id,
       enabled: rule.enabled,
       priority: rule.priority || index + 1,
-      executablePath: rule.executablePath,
-      executableName: rule.executableName || rule.processName,
+      processPattern,
+      ...(typeof rule.sourcePath === 'string'
+        ? { sourcePath: rule.sourcePath }
+        : legacyPath
+          ? { sourcePath: legacyPath }
+          : {}),
       protocol: rule.protocol,
       action: rule.action
     } as AppRoutingRule
   })
   const migrated = normalizeAppRoutingConfig({
-    version: source.version as 1,
+    version: 2,
     enabled: source.enabled as boolean,
     failClosed: true,
     rules

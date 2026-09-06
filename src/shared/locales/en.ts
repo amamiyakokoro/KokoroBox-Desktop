@@ -17,6 +17,15 @@ export const messages: Readonly<Record<string, string>> = {
   正在启动: 'Starting',
   阻断保护: 'Fail-closed',
   应用程序规则: 'Application rules',
+  程序匹配: 'Process pattern',
+  '规则按从上到下的顺序匹配；支持文件名或含 * 的完整路径。':
+    'Rules match from top to bottom. Use a filename or a full path containing *.',
+  '例如：ChatGPT.exe、ChatGPT*.exe 或 C:\\Program Files\\*\\ChatGPT.exe':
+    'For example: ChatGPT.exe, ChatGPT*.exe, or C:\\Program Files\\*\\ChatGPT.exe',
+  新增匹配规则: 'Add pattern rule',
+  '输入程序匹配，或选择一个或多个 .exe，然后设定 Proxy、Direct 或 Block。':
+    'Enter a process pattern or select one or more .exe files, then choose Proxy, Direct, or Block.',
+  应用程序匹配规则已存在: 'The process pattern already exists',
   '规则按从上到下的顺序匹配；相同路径只能添加一次。':
     'Rules match from top to bottom; the same executable path can be added only once.',
   添加应用程序: 'Add applications',

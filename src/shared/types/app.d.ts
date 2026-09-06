@@ -158,8 +158,8 @@ interface AppRoutingRule {
   id: string
   enabled: boolean
   priority: number
-  executablePath: string
-  executableName: string
+  processPattern: string
+  sourcePath?: string
   protocol: AppRoutingProtocol
   action: AppRoutingAction
 }
@@ -171,7 +171,7 @@ interface AppRoutingApplicationSelection {
 }
 
 interface AppRoutingConfig {
-  version: 1
+  version: 2
   enabled: boolean
   failClosed: true
   rules: AppRoutingRule[]

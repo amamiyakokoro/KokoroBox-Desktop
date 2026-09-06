@@ -2,8 +2,9 @@ import { tr } from '../../../shared/i18n'
 import BasePage from '@renderer/components/base/base-page'
 import { AppRoutingRuleRow } from '@renderer/components/app-routing/rule-row'
 import { useAppRouting } from '@renderer/hooks/use-app-routing'
-import { Button, Card, CardBody, Chip, Divider, Switch } from '@heroui/react'
+import { Button, Card, CardBody, Chip, Divider, Input, Switch } from '@heroui/react'
 import { MdAdd } from 'react-icons/md'
+import { useState } from 'react'
 
 function statusColor(
   status?: AppRoutingStatus
@@ -71,11 +72,16 @@ const AppRouting: React.FC = () => {
     icons,
     save,
     addApplications,
+    addPattern,
     updateRule,
     moveRule,
     deleteRule
   } = useAppRouting()
+  const [processPattern, setProcessPattern] = useState('')
   const currentStatusMessage = statusMessage(status?.message, status?.protectedApplicationCount)
+  const submitPattern = async (): Promise<void> => {
+    if (await addPattern(processPattern)) setProcessPattern('')
+  }
 
   return (
     <BasePage title={tr('应用分流')} contentClassName="no-scrollbar">
@@ -117,16 +123,39 @@ const AppRouting: React.FC = () => {
           <div>
             <h3 className="font-semibold">{tr('应用程序规则')}</h3>
             <p className="text-sm text-foreground-500">
-              {tr('规则按从上到下的顺序匹配；相同路径只能添加一次。')}
+              {tr('规则按从上到下的顺序匹配；支持文件名或含 * 的完整路径。')}
             </p>
           </div>
           <Button
-            color="primary"
+            variant="flat"
             startContent={<MdAdd className="text-lg" />}
             isDisabled={!supported || !config || saving}
             onPress={() => void addApplications()}
           >
-            {tr('添加应用程序')}
+            {tr('选择应用程序')}
+          </Button>
+        </div>
+
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
+          <Input
+            className="flex-1"
+            label={tr('程序匹配')}
+            description={tr('例如：ChatGPT.exe、ChatGPT*.exe 或 C:\\Program Files\\*\\ChatGPT.exe')}
+            placeholder="example.exe"
+            value={processPattern}
+            isDisabled={!supported || !config || saving}
+            onValueChange={setProcessPattern}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' && processPattern.trim()) void submitPattern()
+            }}
+          />
+          <Button
+            color="primary"
+            startContent={<MdAdd className="text-lg" />}
+            isDisabled={!supported || !config || saving || !processPattern.trim()}
+            onPress={() => void submitPattern()}
+          >
+            {tr('新增匹配规则')}
           </Button>
         </div>
 
@@ -141,14 +170,14 @@ const AppRouting: React.FC = () => {
             <CardBody className="items-center gap-2 p-8 text-center">
               <p className="font-medium">{tr('尚未添加应用程序')}</p>
               <p className="text-sm text-foreground-500">
-                {tr('选择一个或多个 .exe，然后设定 Proxy、Direct 或 Block。')}
+                {tr('输入程序匹配，或选择一个或多个 .exe，然后设定 Proxy、Direct 或 Block。')}
               </p>
             </CardBody>
           </Card>
         ) : (
           <div className="flex flex-col gap-2">
             <div className="hidden grid-cols-[1fr_9rem_9rem_9rem] gap-3 px-3 text-xs font-medium text-foreground-500 md:grid">
-              <span>{tr('应用程序')}</span>
+              <span>{tr('程序匹配')}</span>
               <span>{tr('协议')}</span>
               <span>{tr('动作')}</span>
               <span className="text-right">{tr('操作')}</span>
@@ -159,7 +188,7 @@ const AppRouting: React.FC = () => {
                 rule={rule}
                 index={index}
                 count={config.rules.length}
-                icon={icons[rule.executablePath]}
+                icon={icons[rule.id]}
                 disabled={saving}
                 onChange={(patch) => updateRule(index, patch)}
                 onMove={(offset) => moveRule(index, offset)}

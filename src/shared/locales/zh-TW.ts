@@ -17,6 +17,15 @@ export const messages: Readonly<Record<string, string>> = {
   正在启动: '正在啟動',
   阻断保护: '阻斷保護',
   应用程序规则: '應用程式規則',
+  程序匹配: '程式比對',
+  '规则按从上到下的顺序匹配；支持文件名或含 * 的完整路径。':
+    '規則按從上到下的順序比對；支援檔名或包含 * 的完整路徑。',
+  '例如：ChatGPT.exe、ChatGPT*.exe 或 C:\\Program Files\\*\\ChatGPT.exe':
+    '例如：ChatGPT.exe、ChatGPT*.exe 或 C:\\Program Files\\*\\ChatGPT.exe',
+  新增匹配规则: '新增比對規則',
+  '输入程序匹配，或选择一个或多个 .exe，然后设定 Proxy、Direct 或 Block。':
+    '輸入程式比對，或選擇一個或多個 .exe，然後設定 Proxy、Direct 或 Block。',
+  应用程序匹配规则已存在: '應用程式比對規則已存在',
   '规则按从上到下的顺序匹配；相同路径只能添加一次。':
     '規則按從上到下的順序比對；相同路徑只能新增一次。',
   添加应用程序: '新增應用程式',

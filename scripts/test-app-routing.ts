@@ -4,6 +4,7 @@ import { test } from 'node:test'
 import {
   appRoutingSupported,
   executableName,
+  isProtectedAppRoutingPattern,
   isProtectedAppRoutingProcess,
   migrateAppRoutingConfig,
   normalizeAppRoutingConfig,
@@ -35,8 +36,8 @@ import {
 function rule(overrides: Partial<AppRoutingRule> = {}): AppRoutingRule {
   return {
     id: 'rule-1',
-    executablePath: 'C:\\Program Files\\Example\\example.exe',
-    executableName: 'example.exe',
+    processPattern: 'example.exe',
+    sourcePath: 'C:\\Program Files\\Example\\example.exe',
     action: 'proxy',
     protocol: 'both',
     enabled: true,
@@ -52,8 +53,8 @@ test('application routing is limited to Windows x64', () => {
   assert.equal(appRoutingSupported('linux', 'x64'), false)
 })
 
-test('validates absolute exe paths and prevents ambiguous or internal process rules', () => {
-  validateAppRoutingConfig({ version: 1, enabled: true, failClosed: true, rules: [rule()] })
+test('validates filename and wildcard patterns while protecting internal processes', () => {
+  validateAppRoutingConfig({ version: 2, enabled: true, failClosed: true, rules: [rule()] })
   assert.equal(executableName('C:/Program Files/Example/example.exe'), 'example.exe')
   assert.equal(
     normalizeWindowsExecutablePath('\\\\?\\C:\\Apps\\example.exe'),
@@ -65,15 +66,39 @@ test('validates absolute exe paths and prevents ambiguous or internal process ru
   )
   assert.doesNotThrow(() =>
     validateAppRoutingConfig({
-      version: 1,
+      version: 2,
       enabled: true,
       failClosed: true,
-      rules: [rule(), rule({ id: 'rule-2', executablePath: 'D:\\Other\\example.exe', priority: 2 })]
+      rules: [
+        rule(),
+        rule({
+          id: 'rule-2',
+          processPattern: 'D:\\Other\\example.exe',
+          sourcePath: 'D:\\Other\\example.exe',
+          priority: 2
+        })
+      ]
+    })
+  )
+  assert.doesNotThrow(() =>
+    validateAppRoutingConfig({
+      version: 2,
+      enabled: true,
+      failClosed: true,
+      rules: [rule({ processPattern: 'example*.exe' })]
+    })
+  )
+  assert.doesNotThrow(() =>
+    validateAppRoutingConfig({
+      version: 2,
+      enabled: true,
+      failClosed: true,
+      rules: [rule({ processPattern: 'C:\\Program Files\\*\\example.exe' })]
     })
   )
   assert.throws(() =>
     validateAppRoutingConfig({
-      version: 1,
+      version: 2,
       enabled: true,
       failClosed: true,
       rules: [rule(), rule({ id: 'rule-2', priority: 2 })]
@@ -81,24 +106,36 @@ test('validates absolute exe paths and prevents ambiguous or internal process ru
   )
   assert.throws(() =>
     validateAppRoutingConfig({
-      version: 1,
+      version: 2,
       enabled: true,
       failClosed: true,
-      rules: [rule({ executablePath: 'relative.exe', executableName: 'relative.exe' })]
+      rules: [rule({ sourcePath: 'relative.exe' })]
     })
   )
   assert.throws(() =>
     validateAppRoutingConfig({
-      version: 1,
+      version: 2,
       enabled: true,
       failClosed: true,
-      rules: [rule({ executablePath: 'C:\\KokoroBox.exe', executableName: 'KokoroBox.exe' })]
+      rules: [rule({ processPattern: 'KokoroBox.exe' })]
     })
   )
+  for (const processPattern of ['example?.exe', 'example.exe;other.exe', 'example.dll']) {
+    assert.throws(() =>
+      validateAppRoutingConfig({
+        version: 2,
+        enabled: true,
+        failClosed: true,
+        rules: [rule({ processPattern })]
+      })
+    )
+  }
   assert.equal(isProtectedAppRoutingProcess('sparkle-service.exe'), true)
   assert.equal(isProtectedAppRoutingProcess('kokorobox-desktop-windows-2.0.0-x64-setup.exe'), true)
+  assert.equal(isProtectedAppRoutingPattern('kokoro*.exe'), true)
+  assert.equal(isProtectedAppRoutingPattern('*.exe'), true)
   assert.throws(() =>
-    validateAppRoutingConfig({ version: 1, enabled: true, failClosed: false as true, rules: [] })
+    validateAppRoutingConfig({ version: 2, enabled: true, failClosed: false as true, rules: [] })
   )
 })
 
@@ -140,23 +177,23 @@ test('rejects malformed or mismatched sidecar protocol events', () => {
 
 test('generates an ordered local-only process-router command', () => {
   const config: AppRoutingConfig = {
-    version: 1,
+    version: 2,
     enabled: true,
     failClosed: true,
     rules: [
       rule(),
       rule({
         id: 'rule-2',
-        executablePath: 'D:\\Tools\\blocked.exe',
-        executableName: 'blocked.exe',
+        processPattern: 'blocked*.exe',
+        sourcePath: 'D:\\Tools\\blocked.exe',
         action: 'block',
         protocol: 'udp',
         priority: 2
       }),
       rule({
         id: 'rule-3',
-        executablePath: '\\\\server\\apps\\direct.exe',
-        executableName: 'direct.exe',
+        processPattern: '\\\\server\\apps\\*\\direct.exe',
+        sourcePath: '\\\\server\\apps\\direct.exe',
         action: 'direct',
         protocol: 'tcp',
         enabled: false,
@@ -170,16 +207,16 @@ test('generates an ordered local-only process-router command', () => {
   assert.equal(command.command, 'replace_rules')
   assert.deepEqual(
     command.rules.map((item: Record<string, unknown>) => [
-      item.executablePath,
+      item.processPattern,
       item.action,
       item.protocol,
       item.enabled,
       item.priority
     ]),
     [
-      ['C:\\Program Files\\Example\\example.exe', 'PROXY', 'BOTH', true, 1],
-      ['D:\\Tools\\blocked.exe', 'BLOCK', 'UDP', true, 2],
-      ['\\\\server\\apps\\direct.exe', 'DIRECT', 'TCP', false, 3]
+      ['example.exe', 'PROXY', 'BOTH', true, 1],
+      ['blocked*.exe', 'BLOCK', 'UDP', true, 2],
+      ['\\\\server\\apps\\*\\direct.exe', 'DIRECT', 'TCP', false, 3]
     ]
   )
   const failClosed = JSON.parse(buildProcessRouterCommand(config, false))
@@ -194,7 +231,7 @@ test('generates an ordered local-only process-router command', () => {
 
 test('generates and validates the authenticated service protocol', () => {
   const config: AppRoutingConfig = {
-    version: 1,
+    version: 2,
     enabled: true,
     failClosed: true,
     rules: [rule()]
@@ -206,7 +243,7 @@ test('generates and validates the authenticated service protocol', () => {
     rules: [
       {
         id: 'rule-1',
-        executable_path: 'C:\\Program Files\\Example\\example.exe',
+        executable_path: 'example.exe',
         executable_name: 'example.exe',
         action: 'proxy',
         protocol: 'both',
@@ -231,16 +268,16 @@ test('generates and validates the authenticated service protocol', () => {
 
 test('normalizes persisted order into unique priorities', () => {
   const normalized = normalizeAppRoutingConfig({
-    version: 1,
+    version: 2,
     enabled: true,
     failClosed: true,
     rules: [
       rule({ priority: 20 }),
-      rule({ id: 'second', executableName: 'b.exe', executablePath: 'C:\\b.exe', priority: 10 })
+      rule({ id: 'second', processPattern: 'b.exe', sourcePath: 'C:\\b.exe', priority: 10 })
     ]
   })
   assert.deepEqual(
-    normalized.rules.map((item) => [item.executableName, item.priority]),
+    normalized.rules.map((item) => [item.processPattern, item.priority]),
     [
       ['b.exe', 1],
       ['example.exe', 2]
@@ -266,7 +303,7 @@ test('migrates the previous AppConfig into the canonical fail-closed schema', ()
     ]
   })
   assert.deepEqual(migrated, {
-    version: 1,
+    version: 2,
     enabled: true,
     failClosed: true,
     rules: [
@@ -274,8 +311,8 @@ test('migrates the previous AppConfig into the canonical fail-closed schema', ()
         id: 'legacy',
         enabled: true,
         priority: 1,
-        executablePath: 'C:\\legacy.exe',
-        executableName: 'legacy.exe',
+        processPattern: 'legacy.exe',
+        sourcePath: 'C:\\legacy.exe',
         protocol: 'tcp',
         action: 'proxy'
       }
@@ -285,12 +322,43 @@ test('migrates the previous AppConfig into the canonical fail-closed schema', ()
   assert.deepEqual(Object.keys(migrated.rules[0]).sort(), [
     'action',
     'enabled',
-    'executableName',
-    'executablePath',
     'id',
     'priority',
-    'protocol'
+    'processPattern',
+    'protocol',
+    'sourcePath'
   ])
+})
+
+test('preserves distinct legacy rules that shared an executable filename', () => {
+  const migrated = migrateAppRoutingConfig({
+    version: 1,
+    enabled: true,
+    rules: [
+      {
+        id: 'first',
+        executablePath: 'C:\\Apps\\Stable\\client.exe',
+        executableName: 'client.exe',
+        protocol: 'both',
+        action: 'proxy',
+        enabled: true,
+        priority: 1
+      },
+      {
+        id: 'second',
+        executablePath: 'D:\\Portable\\client.exe',
+        executableName: 'client.exe',
+        protocol: 'both',
+        action: 'direct',
+        enabled: true,
+        priority: 2
+      }
+    ]
+  })
+  assert.deepEqual(
+    migrated.rules.map((item) => item.processPattern),
+    ['C:\\Apps\\Stable\\client.exe', 'D:\\Portable\\client.exe']
+  )
 })
 
 test('requires every pinned native binary to match its build manifest', () => {
@@ -330,8 +398,8 @@ test('native build is pinned to the controlled KokoroBox ProxyBridge fork', () =
   assert.match(router, /atomic replacement guard/)
   assert.match(router, /ProxyBridge_MoveRuleToPosition\(guard_id, 1\)/)
   assert.match(router, /ProxyBridge_DeleteRule\(guard_id\)/)
-  assert.match(router, /read_string\(object, "executablePath"/)
-  assert.doesNotMatch(router, /read_string\(object, "executableName"/)
+  assert.match(router, /read_string\(object, "processPattern"/)
+  assert.doesNotMatch(router, /read_string\(object, "executablePath"/)
   assert.match(router, /KokoroBox\.exe;mihomo\.exe;mihomo-alpha\.exe;sparkle-service\.exe/)
   assert.match(router, /127\.\*\.\*\.\*.*fe80::\/10/s)
   assert.match(build, /manifest\.json/)

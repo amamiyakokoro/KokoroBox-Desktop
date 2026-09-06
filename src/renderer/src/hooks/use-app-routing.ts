@@ -7,6 +7,7 @@ import {
   replaceAppRoutingConfig
 } from '@renderer/utils/ipc'
 import { notify } from '@renderer/utils/notification'
+import { normalizeProcessPattern, validateAppRoutingRule } from '../../../shared/app-routing'
 import { nanoid } from 'nanoid'
 import { useCallback, useEffect, useState } from 'react'
 
@@ -16,8 +17,9 @@ export function useAppRouting(): {
   saving: boolean
   supported: boolean
   icons: Record<string, string>
-  save: (config: AppRoutingConfig) => Promise<void>
+  save: (config: AppRoutingConfig) => Promise<boolean>
   addApplications: () => Promise<void>
+  addPattern: (processPattern: string) => Promise<boolean>
   updateRule: (index: number, patch: Partial<AppRoutingRule>) => void
   moveRule: (index: number, offset: number) => void
   deleteRule: (id: string) => void
@@ -51,22 +53,24 @@ export function useAppRouting(): {
   useEffect(() => {
     if (!config) return
     for (const rule of config.rules) {
-      if (icons[rule.executablePath]) continue
-      void getAppRoutingIcon(rule.executablePath).then((icon) => {
-        if (icon) setIcons((current) => ({ ...current, [rule.executablePath]: icon }))
+      if (!rule.sourcePath || icons[rule.id]) continue
+      void getAppRoutingIcon(rule.sourcePath).then((icon) => {
+        if (icon) setIcons((current) => ({ ...current, [rule.id]: icon }))
       })
     }
   }, [config, icons])
 
-  const save = async (next: AppRoutingConfig): Promise<void> => {
+  const save = async (next: AppRoutingConfig): Promise<boolean> => {
     setSaving(true)
     setConfig(next)
     try {
       setConfig(await replaceAppRoutingConfig(next))
       setStatus(await getAppRoutingStatus())
+      return true
     } catch (error) {
       notify(error, { variant: 'danger' })
       await load()
+      return false
     } finally {
       setSaving(false)
     }
@@ -76,23 +80,25 @@ export function useAppRouting(): {
     if (!config) return
     const applications = await getApplicationPaths()
     if (!applications?.length) return
-    const existingPaths = new Set(config.rules.map((rule) => rule.executablePath.toLowerCase()))
+    const existingPatterns = new Set(config.rules.map((rule) => rule.processPattern.toLowerCase()))
     const additions: AppRoutingRule[] = []
     for (const application of applications) {
       const { executablePath, executableName, iconDataUrl } = application
-      if (!executableName || existingPaths.has(executablePath.toLowerCase())) continue
-      existingPaths.add(executablePath.toLowerCase())
+      const processPattern = normalizeProcessPattern(executableName)
+      if (!processPattern || existingPatterns.has(processPattern.toLowerCase())) continue
+      existingPatterns.add(processPattern.toLowerCase())
       additions.push({
         id: nanoid(),
-        executablePath,
-        executableName,
+        processPattern,
+        sourcePath: executablePath,
         action: 'proxy',
         protocol: 'both',
         enabled: true,
         priority: config.rules.length + additions.length + 1
       })
       if (iconDataUrl) {
-        setIcons((current) => ({ ...current, [executablePath]: iconDataUrl }))
+        const id = additions.at(-1)?.id
+        if (id) setIcons((current) => ({ ...current, [id]: iconDataUrl }))
       }
     }
     if (additions.length === 0) {
@@ -100,6 +106,34 @@ export function useAppRouting(): {
       return
     }
     await save({ ...config, rules: [...config.rules, ...additions] })
+  }
+
+  const addPattern = async (value: string): Promise<boolean> => {
+    if (!config) return false
+    const processPattern = normalizeProcessPattern(value)
+    if (
+      config.rules.some(
+        (rule) => rule.processPattern.toLowerCase() === processPattern.toLowerCase()
+      )
+    ) {
+      notify(tr('应用程序匹配规则已存在'), { variant: 'warning' })
+      return false
+    }
+    const nextRule: AppRoutingRule = {
+      id: nanoid(),
+      processPattern,
+      action: 'proxy',
+      protocol: 'both',
+      enabled: true,
+      priority: config.rules.length + 1
+    }
+    try {
+      validateAppRoutingRule(nextRule)
+    } catch (error) {
+      notify(error, { variant: 'danger' })
+      return false
+    }
+    return save({ ...config, rules: [...config.rules, nextRule] })
   }
 
   const updateRule = (index: number, patch: Partial<AppRoutingRule>): void => {
@@ -138,6 +172,7 @@ export function useAppRouting(): {
     icons,
     save,
     addApplications,
+    addPattern,
     updateRule,
     moveRule,
     deleteRule

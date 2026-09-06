@@ -43,7 +43,7 @@ export function buildProcessRouterCommand(
     rules: [...config.rules]
       .sort((a, b) => a.priority - b.priority)
       .map((rule) => ({
-        executablePath: rule.executablePath,
+        processPattern: rule.processPattern,
         protocol: toRouterProtocol(rule.protocol),
         action: toRouterAction(rule.action === 'proxy' && !proxyAvailable ? 'block' : rule.action),
         enabled: rule.enabled,

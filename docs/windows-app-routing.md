@@ -5,22 +5,25 @@ MVP is available on Windows 10/11 x64 only.
 
 ## User model
 
-Open **Application routing** in the sidebar, add one or more `.exe` files, then choose an
-action and protocol for each rule:
+Open **Application routing** in the sidebar, enter a process pattern or select one or more
+`.exe` files, then choose an action and protocol for each rule:
 
 - **Proxy** sends TCP, UDP, or both through KokoroBox's dedicated Mihomo SOCKS5 listener.
 - **Direct** explicitly leaves matching traffic untouched.
 - **Block** drops matching traffic.
 
-Rules can be enabled, disabled, reordered, and deleted. They are persisted separately from
-profiles and restored when KokoroBox starts. Matching uses the canonical, case-insensitive full
-executable path, so unrelated applications with the same `.exe` basename remain independent.
+Rules can be enabled, disabled, reordered, edited, and deleted. They are persisted separately
+from profiles and restored when KokoroBox starts. Matching is case-insensitive and accepts an
+exact filename such as `ChatGPT.exe`, a filename wildcard such as `ChatGPT*.exe`, or a full path
+pattern such as `C:\Program Files\*\ChatGPT.exe`. `*` matches any sequence; each rule contains
+one pattern. Filename patterns survive application upgrades that move the executable into a new
+versioned directory.
 
-The system picker accepts `.exe` files only. KokoroBox resolves each selection to its canonical
-path and persists only the versioned KokoroBox schema: `id`, `enabled`, `priority`,
-`executablePath`, `executableName`, `protocol`, and `action`. The enclosing configuration also
-requires `failClosed: true`. Icons are an application-owned cache derived from the canonical path
-and are not part of the rules schema. Process wildcards are rejected.
+The system picker accepts `.exe` files only. It uses the stable executable filename as the
+default `processPattern`, while retaining the selected canonical path only as the optional icon
+source. KokoroBox persists the version 2 schema: `id`, `enabled`, `priority`, `processPattern`,
+optional `sourcePath`, `protocol`, and `action`. Version 1 exact-path rules migrate automatically
+to filename patterns. The enclosing configuration still requires `failClosed: true`.
 
 KokoroBox converts this canonical schema to the private sidecar command in `profile.ts`; an
 upstream `.pbprofile` is never stored as application configuration.
@@ -42,7 +45,7 @@ The packaged native process is `kokorobox-process-router.exe`. It accepts newlin
 versioned JSON commands over inherited standard input and emits JSON lifecycle events. It does
 not accept command-line profile paths, external proxy credentials, or update commands. Rules are
 replaced inside the controlled process without restarting the executable. The native process
-installs a highest-priority Block guard scoped to the old and new executable paths, rebuilds the
+installs a highest-priority Block guard scoped to the old and new process patterns, rebuilds the
 complete rule set behind that guard, and removes the guard only after the new list is ready. Rule
 replacement may briefly block selected applications but does not interrupt unrelated processes
 or expose a Direct window.
@@ -80,9 +83,9 @@ Windows Firewall kill switch and is outside this MVP.
 
 ## Reproducible native build
 
-`scripts/build-proxybridge.ps1` builds only in the Windows x64 release job. It checks out an exact
-commit from the controlled KokoroBox ProxyBridge fork, verifies the WinDivert archive SHA-256,
-and packages only the KokoroBox router, core DLL, WinDivert runtime, and license files. See
+Every Windows x64 package runs `scripts/build-proxybridge.ps1` first. It checks out an exact commit
+from the controlled KokoroBox ProxyBridge fork, verifies the WinDivert archive SHA-256, and
+packages only the KokoroBox router, core DLL, WinDivert runtime, and license files. See
 [`THIRD_PARTY_NOTICES.md`](../THIRD_PARTY_NOTICES.md) for attribution.
 
 The packaged files live under `extra/files/process-router/`; the upstream `.sys` payload is

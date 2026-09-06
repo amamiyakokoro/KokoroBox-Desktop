@@ -53,9 +53,12 @@ export async function saveAppRoutingConfig(config: AppRoutingConfig): Promise<Ap
     await rename(temporaryPath, appRoutingConfigPath())
     cachedConfig = next
     const activeIcons = new Set(
-      next.rules.map(
-        (rule) =>
-          `${crypto.createHash('sha256').update(rule.executablePath.toLowerCase()).digest('hex')}.png`
+      next.rules.flatMap((rule) =>
+        rule.sourcePath
+          ? [
+              `${crypto.createHash('sha256').update(rule.sourcePath.toLowerCase()).digest('hex')}.png`
+            ]
+          : []
       )
     )
     for (const file of await readdir(appRoutingIconDir()).catch(() => [] as string[])) {
