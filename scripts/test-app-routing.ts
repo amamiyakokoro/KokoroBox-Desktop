@@ -337,3 +337,19 @@ test('native build is pinned to the controlled KokoroBox ProxyBridge fork', () =
   assert.match(build, /manifest\.json/)
   assert.match(build, /process-router-sbom\.cdx\.json/)
 })
+
+test('Windows packaging rebuilds the architecture-matched process router payload', () => {
+  const packageJson = JSON.parse(readFileSync('package.json', 'utf8')) as {
+    scripts: Record<string, string>
+  }
+  const prepare = readFileSync('scripts/prepare-windows-routing.ts', 'utf8')
+  const workflow = readFileSync('.github/workflows/build.yml', 'utf8')
+
+  assert.match(packageJson.scripts['build:win'], /^pnpm run prepare:windows-routing &&/)
+  assert.match(packageJson.scripts['prepare:windows-routing'], /prepare-windows-routing\.ts/)
+  assert.match(prepare, /npm_config_target_arch \|\| process\.arch/)
+  assert.match(prepare, /targetArch !== 'x64'/)
+  assert.match(prepare, /'pwsh\.exe'/)
+  assert.match(prepare, /build-proxybridge\.ps1/)
+  assert.doesNotMatch(workflow, /Build Windows x64 Application Routing Sidecar/)
+})
