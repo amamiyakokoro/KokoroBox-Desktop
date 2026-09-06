@@ -28,6 +28,9 @@ export const defaultAppRoutingConfig: AppRoutingConfig = {
   enabled: false,
   failClosed: true,
   proxyUdpDns: true,
+  defaultAction: 'proxy',
+  defaultProtocol: 'both',
+  diagnosticLogging: false,
   rules: []
 }
 
@@ -107,7 +110,10 @@ export function validateAppRoutingConfig(config: AppRoutingConfig): void {
     config.version !== 1 ||
     typeof config.enabled !== 'boolean' ||
     config.failClosed !== true ||
-    typeof config.proxyUdpDns !== 'boolean'
+    typeof config.proxyUdpDns !== 'boolean' ||
+    !validActions.has(config.defaultAction) ||
+    !validProtocols.has(config.defaultProtocol) ||
+    typeof config.diagnosticLogging !== 'boolean'
   ) {
     throw new Error('Invalid application routing configuration')
   }
@@ -140,6 +146,9 @@ export function normalizeAppRoutingConfig(config: AppRoutingConfig): AppRoutingC
     enabled: config.enabled,
     failClosed: config.failClosed,
     proxyUdpDns: config.proxyUdpDns,
+    defaultAction: config.defaultAction,
+    defaultProtocol: config.defaultProtocol,
+    diagnosticLogging: config.diagnosticLogging,
     rules: [...config.rules]
       .sort(
         (a, b) => (a.priority ?? Number.MAX_SAFE_INTEGER) - (b.priority ?? Number.MAX_SAFE_INTEGER)

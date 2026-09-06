@@ -380,6 +380,7 @@ export interface ServiceProcessRouterRules {
   proxy_port: number
   fail_closed: true
   proxy_udp_dns: boolean
+  diagnostic_logging: boolean
   rules: Array<{
     id: string
     executable_path: string

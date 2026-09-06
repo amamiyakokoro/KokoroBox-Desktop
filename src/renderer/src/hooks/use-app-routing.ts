@@ -91,8 +91,8 @@ export function useAppRouting(): {
         id: nanoid(),
         processPattern,
         sourcePath: executablePath,
-        action: 'proxy',
-        protocol: 'both',
+        action: config.defaultAction,
+        protocol: config.defaultProtocol,
         enabled: true,
         priority: config.rules.length + additions.length + 1
       })
@@ -122,8 +122,8 @@ export function useAppRouting(): {
     const nextRule: AppRoutingRule = {
       id: nanoid(),
       processPattern,
-      action: 'proxy',
-      protocol: 'both',
+      action: config.defaultAction,
+      protocol: config.defaultProtocol,
       enabled: true,
       priority: config.rules.length + 1
     }

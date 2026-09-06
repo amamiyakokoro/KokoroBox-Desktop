@@ -5,6 +5,12 @@ export const messages: Readonly<Record<string, string>> = {
   '代理应用程序 UDP DNS': 'Proxy application UDP DNS',
   '将 Proxy 规则应用程序自行发出的 UDP/53 查询交给 Mihomo。':
     'Send UDP/53 queries issued by applications with Proxy rules through Mihomo.',
+  新规则默认动作: 'Default action for new rules',
+  新规则默认协议: 'Default protocol for new rules',
+  进阶设置: 'Advanced settings',
+  诊断记录: 'Diagnostic logging',
+  '记录应用程序分流的匹配目标与处理结果；仅在排查问题时启用。':
+    'Log application routing destinations and decisions. Enable only while troubleshooting.',
   应用程序: 'Application',
   上游: 'Upstream',
   操作: 'Controls',

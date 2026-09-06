@@ -11,6 +11,7 @@ export function buildServiceProcessRouterRules(
     proxy_port: proxyPort,
     fail_closed: true,
     proxy_udp_dns: config.proxyUdpDns,
+    diagnostic_logging: config.diagnosticLogging,
     rules: config.rules.map((rule) => ({
       id: rule.id,
       executable_path: rule.processPattern,

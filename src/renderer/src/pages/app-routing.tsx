@@ -111,7 +111,15 @@ const AppRouting: React.FC = () => {
           reopenSignal={settingDrawerReopenSignal}
           isDisabled={!supported || saving}
           isProxyUdpDnsEnabled={config.proxyUdpDns}
+          defaultAction={config.defaultAction}
+          defaultProtocol={config.defaultProtocol}
+          diagnosticLogging={config.diagnosticLogging}
           onProxyUdpDnsChange={(proxyUdpDns) => void save({ ...config, proxyUdpDns })}
+          onDefaultActionChange={(defaultAction) => void save({ ...config, defaultAction })}
+          onDefaultProtocolChange={(defaultProtocol) => void save({ ...config, defaultProtocol })}
+          onDiagnosticLoggingChange={(diagnosticLogging) =>
+            void save({ ...config, diagnosticLogging })
+          }
           onClose={() => setIsSettingDrawerOpen(false)}
         />
       )}

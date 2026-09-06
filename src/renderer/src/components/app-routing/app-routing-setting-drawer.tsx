@@ -1,6 +1,6 @@
 import { tr } from '../../../../shared/i18n'
 /* eslint-disable react/prop-types */
-import { Drawer, Switch } from '@heroui-v3/react'
+import { Drawer, ListBox, Select, Separator, Switch } from '@heroui-v3/react'
 import SettingItem from '../base/base-setting-item'
 import { settingItemProps } from '../base/base-controls'
 import { useEffect, useRef, useState } from 'react'
@@ -8,7 +8,13 @@ import { useEffect, useRef, useState } from 'react'
 interface Props {
   isDisabled: boolean
   isProxyUdpDnsEnabled: boolean
+  defaultAction: AppRoutingAction
+  defaultProtocol: AppRoutingProtocol
+  diagnosticLogging: boolean
   onProxyUdpDnsChange: (enabled: boolean) => void
+  onDefaultActionChange: (action: AppRoutingAction) => void
+  onDefaultProtocolChange: (protocol: AppRoutingProtocol) => void
+  onDiagnosticLoggingChange: (enabled: boolean) => void
   onClose: () => void
   reopenSignal?: number
 }
@@ -16,7 +22,19 @@ interface Props {
 const DRAWER_CLOSE_ANIMATION_MS = 700
 
 const AppRoutingSettingDrawer: React.FC<Props> = (props) => {
-  const { isDisabled, isProxyUdpDnsEnabled, onProxyUdpDnsChange, onClose, reopenSignal } = props
+  const {
+    isDisabled,
+    isProxyUdpDnsEnabled,
+    defaultAction,
+    defaultProtocol,
+    diagnosticLogging,
+    onProxyUdpDnsChange,
+    onDefaultActionChange,
+    onDefaultProtocolChange,
+    onDiagnosticLoggingChange,
+    onClose,
+    reopenSignal
+  } = props
   const [isOpen, setIsOpen] = useState(true)
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -70,12 +88,108 @@ const AppRoutingSettingDrawer: React.FC<Props> = (props) => {
                 </div>
               }
               {...settingItemProps}
+              divider
             >
               <Switch
                 aria-label={tr('代理应用程序 UDP DNS')}
                 isSelected={isProxyUdpDnsEnabled}
                 isDisabled={isDisabled}
                 onChange={onProxyUdpDnsChange}
+              >
+                <Switch.Content>
+                  <Switch.Control>
+                    <Switch.Thumb />
+                  </Switch.Control>
+                </Switch.Content>
+              </Switch>
+            </SettingItem>
+            <SettingItem title={tr('新规则默认动作')} {...settingItemProps} divider>
+              <Select
+                aria-label={tr('新规则默认动作')}
+                className="w-36"
+                variant="secondary"
+                value={defaultAction}
+                isDisabled={isDisabled}
+                onChange={(value) => {
+                  if (Array.isArray(value) || value == null) return
+                  onDefaultActionChange(value as AppRoutingAction)
+                }}
+              >
+                <Select.Trigger className="h-8 min-h-8 py-0">
+                  <Select.Value />
+                  <Select.Indicator />
+                </Select.Trigger>
+                <Select.Popover>
+                  <ListBox>
+                    <ListBox.Item id="proxy" textValue="Proxy">
+                      Proxy
+                      <ListBox.ItemIndicator />
+                    </ListBox.Item>
+                    <ListBox.Item id="direct" textValue="Direct">
+                      Direct
+                      <ListBox.ItemIndicator />
+                    </ListBox.Item>
+                    <ListBox.Item id="block" textValue="Block">
+                      Block
+                      <ListBox.ItemIndicator />
+                    </ListBox.Item>
+                  </ListBox>
+                </Select.Popover>
+              </Select>
+            </SettingItem>
+            <SettingItem title={tr('新规则默认协议')} {...settingItemProps}>
+              <Select
+                aria-label={tr('新规则默认协议')}
+                className="w-36"
+                variant="secondary"
+                value={defaultProtocol}
+                isDisabled={isDisabled}
+                onChange={(value) => {
+                  if (Array.isArray(value) || value == null) return
+                  onDefaultProtocolChange(value as AppRoutingProtocol)
+                }}
+              >
+                <Select.Trigger className="h-8 min-h-8 py-0">
+                  <Select.Value />
+                  <Select.Indicator />
+                </Select.Trigger>
+                <Select.Popover>
+                  <ListBox>
+                    <ListBox.Item id="both" textValue="TCP + UDP">
+                      TCP + UDP
+                      <ListBox.ItemIndicator />
+                    </ListBox.Item>
+                    <ListBox.Item id="tcp" textValue="TCP">
+                      TCP
+                      <ListBox.ItemIndicator />
+                    </ListBox.Item>
+                    <ListBox.Item id="udp" textValue="UDP">
+                      UDP
+                      <ListBox.ItemIndicator />
+                    </ListBox.Item>
+                  </ListBox>
+                </Select.Popover>
+              </Select>
+            </SettingItem>
+
+            <Separator className="my-4" />
+            <h3 className="mb-2 text-sm font-semibold text-foreground-600">{tr('进阶设置')}</h3>
+            <SettingItem
+              title={
+                <div>
+                  <div>{tr('诊断记录')}</div>
+                  <p className="mt-1 text-xs font-normal text-foreground-500">
+                    {tr('记录应用程序分流的匹配目标与处理结果；仅在排查问题时启用。')}
+                  </p>
+                </div>
+              }
+              {...settingItemProps}
+            >
+              <Switch
+                aria-label={tr('诊断记录')}
+                isSelected={diagnosticLogging}
+                isDisabled={isDisabled}
+                onChange={onDiagnosticLoggingChange}
               >
                 <Switch.Content>
                   <Switch.Control>

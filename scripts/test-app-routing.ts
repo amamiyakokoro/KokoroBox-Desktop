@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { test } from 'node:test'
 import {
   appRoutingSupported,
@@ -59,6 +60,9 @@ test('validates filename and wildcard patterns while protecting internal process
     enabled: true,
     failClosed: true,
     proxyUdpDns: true,
+    defaultAction: 'proxy',
+    defaultProtocol: 'both',
+    diagnosticLogging: false,
     rules: [rule()]
   })
   assert.equal(executableName('C:/Program Files/Example/example.exe'), 'example.exe')
@@ -76,6 +80,9 @@ test('validates filename and wildcard patterns while protecting internal process
       enabled: true,
       failClosed: true,
       proxyUdpDns: true,
+      defaultAction: 'proxy',
+      defaultProtocol: 'both',
+      diagnosticLogging: false,
       rules: [
         rule(),
         rule({
@@ -93,6 +100,9 @@ test('validates filename and wildcard patterns while protecting internal process
       enabled: true,
       failClosed: true,
       proxyUdpDns: true,
+      defaultAction: 'proxy',
+      defaultProtocol: 'both',
+      diagnosticLogging: false,
       rules: [rule({ processPattern: 'example*.exe' })]
     })
   )
@@ -102,6 +112,9 @@ test('validates filename and wildcard patterns while protecting internal process
       enabled: true,
       failClosed: true,
       proxyUdpDns: true,
+      defaultAction: 'proxy',
+      defaultProtocol: 'both',
+      diagnosticLogging: false,
       rules: [rule({ processPattern: 'C:\\Program Files\\*\\example.exe' })]
     })
   )
@@ -111,6 +124,9 @@ test('validates filename and wildcard patterns while protecting internal process
       enabled: true,
       failClosed: true,
       proxyUdpDns: true,
+      defaultAction: 'proxy',
+      defaultProtocol: 'both',
+      diagnosticLogging: false,
       rules: [rule(), rule({ id: 'rule-2', priority: 2 })]
     })
   )
@@ -120,6 +136,9 @@ test('validates filename and wildcard patterns while protecting internal process
       enabled: true,
       failClosed: true,
       proxyUdpDns: true,
+      defaultAction: 'proxy',
+      defaultProtocol: 'both',
+      diagnosticLogging: false,
       rules: [rule({ sourcePath: 'relative.exe' })]
     })
   )
@@ -129,6 +148,9 @@ test('validates filename and wildcard patterns while protecting internal process
       enabled: true,
       failClosed: true,
       proxyUdpDns: true,
+      defaultAction: 'proxy',
+      defaultProtocol: 'both',
+      diagnosticLogging: false,
       rules: [rule({ processPattern: 'KokoroBox.exe' })]
     })
   )
@@ -139,6 +161,9 @@ test('validates filename and wildcard patterns while protecting internal process
         enabled: true,
         failClosed: true,
         proxyUdpDns: true,
+        defaultAction: 'proxy',
+        defaultProtocol: 'both',
+        diagnosticLogging: false,
         rules: [rule({ processPattern })]
       })
     )
@@ -153,6 +178,9 @@ test('validates filename and wildcard patterns while protecting internal process
       enabled: true,
       failClosed: false as true,
       proxyUdpDns: true,
+      defaultAction: 'proxy',
+      defaultProtocol: 'both',
+      diagnosticLogging: false,
       rules: []
     })
   )
@@ -200,6 +228,9 @@ test('generates an ordered local-only process-router command', () => {
     enabled: true,
     failClosed: true,
     proxyUdpDns: true,
+    defaultAction: 'direct',
+    defaultProtocol: 'tcp',
+    diagnosticLogging: true,
     rules: [
       rule(),
       rule({
@@ -226,6 +257,7 @@ test('generates an ordered local-only process-router command', () => {
   assert.equal(command.version, 1)
   assert.equal(command.command, 'replace_rules')
   assert.equal(command.proxyUdpDns, true)
+  assert.equal(command.diagnosticLogging, true)
   assert.deepEqual(
     command.rules.map((item: Record<string, unknown>) => [
       item.processPattern,
@@ -256,6 +288,9 @@ test('generates and validates the authenticated service protocol', () => {
     enabled: true,
     failClosed: true,
     proxyUdpDns: true,
+    defaultAction: 'proxy',
+    defaultProtocol: 'both',
+    diagnosticLogging: true,
     rules: [rule()]
   }
   assert.deepEqual(buildServiceProcessRouterRules(config, 7891), {
@@ -263,6 +298,7 @@ test('generates and validates the authenticated service protocol', () => {
     proxy_port: 7891,
     fail_closed: true,
     proxy_udp_dns: true,
+    diagnostic_logging: true,
     rules: [
       {
         id: 'rule-1',
@@ -295,6 +331,9 @@ test('normalizes persisted order into unique priorities', () => {
     enabled: true,
     failClosed: true,
     proxyUdpDns: false,
+    defaultAction: 'block',
+    defaultProtocol: 'udp',
+    diagnosticLogging: true,
     rules: [
       rule({ priority: 20 }),
       rule({ id: 'second', processPattern: 'b.exe', sourcePath: 'C:\\b.exe', priority: 10 })
@@ -307,6 +346,9 @@ test('normalizes persisted order into unique priorities', () => {
       ['example.exe', 2]
     ]
   )
+  assert.equal(normalized.defaultAction, 'block')
+  assert.equal(normalized.defaultProtocol, 'udp')
+  assert.equal(normalized.diagnosticLogging, true)
 })
 
 test('parses only the canonical process-pattern schema', () => {
@@ -315,6 +357,9 @@ test('parses only the canonical process-pattern schema', () => {
     enabled: true,
     failClosed: true,
     proxyUdpDns: true,
+    defaultAction: 'direct',
+    defaultProtocol: 'tcp',
+    diagnosticLogging: true,
     rules: [
       {
         id: 'current',
@@ -332,6 +377,9 @@ test('parses only the canonical process-pattern schema', () => {
     enabled: true,
     failClosed: true,
     proxyUdpDns: true,
+    defaultAction: 'direct',
+    defaultProtocol: 'tcp',
+    diagnosticLogging: true,
     rules: [
       {
         id: 'current',
@@ -345,6 +393,9 @@ test('parses only the canonical process-pattern schema', () => {
     ]
   })
   assert.deepEqual(Object.keys(parsed).sort(), [
+    'defaultAction',
+    'defaultProtocol',
+    'diagnosticLogging',
     'enabled',
     'failClosed',
     'proxyUdpDns',
@@ -366,6 +417,9 @@ test('parses only the canonical process-pattern schema', () => {
       enabled: true,
       failClosed: true,
       proxyUdpDns: true,
+      defaultAction: 'proxy',
+      defaultProtocol: 'both',
+      diagnosticLogging: false,
       rules: [
         {
           id: 'old',
@@ -421,11 +475,22 @@ test('native build is pinned to the controlled KokoroBox ProxyBridge fork', () =
   assert.match(router, /read_string\(object, "processPattern"/)
   assert.match(router, /read_bool\(command, "proxyUdpDns"/)
   assert.match(router, /ProxyBridge_SetProxyUdpDnsEnabled\(proxy_udp_dns\)/)
+  assert.match(router, /read_bool\(command, "diagnosticLogging"/)
+  assert.match(router, /ProxyBridge_SetConnectionCallback\(diagnostic_connection\)/)
   assert.doesNotMatch(router, /read_string\(object, "executablePath"/)
   assert.match(router, /KokoroBox\.exe;mihomo\.exe;mihomo-alpha\.exe;sparkle-service\.exe/)
   assert.match(router, /127\.\*\.\*\.\*.*fe80::\/10/s)
   assert.match(build, /manifest\.json/)
   assert.match(build, /process-router-sbom\.cdx\.json/)
+})
+
+test('new application rules use the configured defaults', () => {
+  const hook = readFileSync(
+    resolve(process.cwd(), 'src/renderer/src/hooks/use-app-routing.ts'),
+    'utf8'
+  )
+  assert.equal((hook.match(/action: config\.defaultAction/g) || []).length, 2)
+  assert.equal((hook.match(/protocol: config\.defaultProtocol/g) || []).length, 2)
 })
 
 test('Windows packaging rebuilds the architecture-matched process router payload', () => {

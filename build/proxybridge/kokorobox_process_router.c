@@ -1,6 +1,7 @@
 #define _CRT_SECURE_NO_WARNINGS
 #include <windows.h>
 #include <shellapi.h>
+#include <ctype.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -29,6 +30,67 @@ static UINT32 proxy_id = 0;
 static UINT32 guard_id = 0;
 static BOOL engine_running = FALSE;
 static char active_processes[MAX_PROCESS_LIST] = "";
+static SRWLOCK active_processes_lock = SRWLOCK_INIT;
+
+static BOOL wildcard_match_ci(const char *pattern, const char *value) {
+    const char *star = NULL;
+    const char *retry = NULL;
+    while (*value) {
+        if (*pattern == '*') {
+            star = pattern++;
+            retry = value;
+        } else if (*pattern && tolower((unsigned char)*pattern) ==
+                                  tolower((unsigned char)*value)) {
+            ++pattern;
+            ++value;
+        } else if (star) {
+            pattern = star + 1;
+            value = ++retry;
+        } else {
+            return FALSE;
+        }
+    }
+    while (*pattern == '*') ++pattern;
+    return *pattern == '\0';
+}
+
+static BOOL is_managed_process(const char *process_name) {
+    const char *cursor;
+    BOOL matched = FALSE;
+    AcquireSRWLockShared(&active_processes_lock);
+    cursor = active_processes;
+    while (*cursor) {
+        const char *end = strchr(cursor, ';');
+        const char *basename = cursor;
+        const char *scan;
+        char pattern[MAX_PROCESS_PATTERN];
+        size_t length = end ? (size_t)(end - cursor) : strlen(cursor);
+        for (scan = cursor; scan < cursor + length; ++scan) {
+            if (*scan == '\\' || *scan == '/') basename = scan + 1;
+        }
+        length = (size_t)((cursor + length) - basename);
+        if (length > 0 && length < sizeof(pattern)) {
+            memcpy(pattern, basename, length);
+            pattern[length] = '\0';
+            if (wildcard_match_ci(pattern, process_name)) {
+                matched = TRUE;
+                break;
+            }
+        }
+        if (!end) break;
+        cursor = end + 1;
+    }
+    ReleaseSRWLockShared(&active_processes_lock);
+    return matched;
+}
+
+static void diagnostic_connection(const char *process_name, DWORD pid, const char *dest_ip,
+                                  UINT16 dest_port, const char *proxy_info) {
+    if (!is_managed_process(process_name)) return;
+    fprintf(stderr, "diagnostic route process=%s pid=%lu destination=%s:%u result=%s\n",
+            process_name, (unsigned long)pid, dest_ip, dest_port, proxy_info);
+    fflush(stderr);
+}
 
 static void emit(const char *event, const char *message) {
     if (message && message[0])
@@ -265,21 +327,27 @@ static BOOL replace_rules(const char *command) {
     size_t parsed_count;
     size_t index;
     char next_processes[MAX_PROCESS_LIST];
+    char previous_processes[MAX_PROCESS_LIST];
     char guarded_processes[MAX_PROCESS_LIST];
     BOOL fail_closed;
     BOOL proxy_udp_dns;
+    BOOL diagnostic_logging;
 
     if (!strstr(command, "\"host\":\"127.0.0.1\"") ||
         !strstr(command, "\"port\":7891") ||
         !read_bool(command, "failClosed", &fail_closed) || !fail_closed ||
-        !read_bool(command, "proxyUdpDns", &proxy_udp_dns)) {
+        !read_bool(command, "proxyUdpDns", &proxy_udp_dns) ||
+        !read_bool(command, "diagnosticLogging", &diagnostic_logging)) {
         emit("error", "proxy endpoint rejected");
         return FALSE;
     }
     if (!parse_rules(command, rules, &parsed_count, next_processes)) return FALSE;
+    AcquireSRWLockShared(&active_processes_lock);
+    strcpy_s(previous_processes, sizeof(previous_processes), active_processes);
+    ReleaseSRWLockShared(&active_processes_lock);
     guarded_processes[0] = '\0';
-    if ((active_processes[0] &&
-         !append_process_pattern(guarded_processes, sizeof(guarded_processes), active_processes)) ||
+    if ((previous_processes[0] &&
+         !append_process_pattern(guarded_processes, sizeof(guarded_processes), previous_processes)) ||
         (next_processes[0] &&
          !append_process_pattern(guarded_processes, sizeof(guarded_processes), next_processes))) {
         emit("error", "application patterns exceed the atomic guard limit");
@@ -319,7 +387,13 @@ static BOOL replace_rules(const char *command) {
 
     ProxyBridge_SetLocalhostViaProxy(FALSE);
     ProxyBridge_SetProxyUdpDnsEnabled(proxy_udp_dns);
-    ProxyBridge_SetTrafficLoggingEnabled(FALSE);
+    if (diagnostic_logging) {
+        ProxyBridge_SetTrafficLoggingEnabled(TRUE);
+        ProxyBridge_SetConnectionCallback(diagnostic_connection);
+    } else {
+        ProxyBridge_SetConnectionCallback(NULL);
+        ProxyBridge_SetTrafficLoggingEnabled(FALSE);
+    }
     if (!engine_running) {
         if (!ProxyBridge_Start()) {
             emit("error", "packet interception failed to start");
@@ -327,7 +401,9 @@ static BOOL replace_rules(const char *command) {
         }
         engine_running = TRUE;
     }
+    AcquireSRWLockExclusive(&active_processes_lock);
     strcpy_s(active_processes, sizeof(active_processes), next_processes);
+    ReleaseSRWLockExclusive(&active_processes_lock);
     if (!ProxyBridge_DeleteRule(guard_id)) {
         emit("error", "unable to commit atomic rule replacement");
         return FALSE;

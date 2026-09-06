@@ -227,8 +227,20 @@ async function startChild(
     }
   })
   nextChild.stderr?.setEncoding('utf8')
+  let errorBuffer = ''
   nextChild.stderr?.on('data', (chunk: string) => {
-    void appendAppLog(`[App routing]: router error, ${chunk.slice(0, 1000)}\n`)
+    errorBuffer += chunk
+    const lines = errorBuffer.split('\n')
+    errorBuffer = lines.pop() || ''
+    for (const rawLine of lines) {
+      const line = rawLine.trim()
+      if (!line) continue
+      if (line.startsWith('diagnostic ')) {
+        void appendAppLog(`[App routing diagnostic]: ${line.slice('diagnostic '.length, 1000)}\n`)
+      } else {
+        void appendAppLog(`[App routing]: router error, ${line.slice(0, 1000)}\n`)
+      }
+    }
   })
   let terminationHandled = false
   const handleTermination = (message: string): void => {

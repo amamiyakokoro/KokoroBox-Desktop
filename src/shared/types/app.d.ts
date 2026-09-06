@@ -175,6 +175,9 @@ interface AppRoutingConfig {
   enabled: boolean
   failClosed: true
   proxyUdpDns: boolean
+  defaultAction: AppRoutingAction
+  defaultProtocol: AppRoutingProtocol
+  diagnosticLogging: boolean
   rules: AppRoutingRule[]
 }
 

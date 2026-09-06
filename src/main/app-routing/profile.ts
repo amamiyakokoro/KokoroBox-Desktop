@@ -41,6 +41,7 @@ export function buildProcessRouterCommand(
     proxy: { host: '127.0.0.1', port: appRoutingSocksPort },
     failClosed: true,
     proxyUdpDns: config.proxyUdpDns,
+    diagnosticLogging: config.diagnosticLogging,
     rules: [...config.rules]
       .sort((a, b) => a.priority - b.priority)
       .map((rule) => ({
