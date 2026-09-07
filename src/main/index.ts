@@ -41,6 +41,13 @@ import { initializeAppRouting } from './app-routing/manager'
 
 export { setNotQuitDialog } from './resolve/appLifecycle'
 
+// The release workflow executes this after code signing. It must run before Electron acquires
+// the single-instance lock or starts any service so macOS AMFI launch-policy failures are caught.
+if (process.argv.includes('--kokorobox-amfi-probe')) {
+  process.stdout.write('kokorobox-amfi-probe-ok\n')
+  app.exit(0)
+}
+
 let quitTimeout: NodeJS.Timeout | null = null
 export let mainWindow: BrowserWindow | null = null
 let isCreatingWindow = false

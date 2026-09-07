@@ -21,6 +21,7 @@ import {
   appleSecrets,
   assertAccepted,
   assertDeveloperId,
+  assertSystemExtensionHostEntitlements,
   assertProvisioningProfilePermissions,
   cleanupSigning,
   decodeCertificate,
@@ -38,6 +39,10 @@ const teamId = kokoroBoxAppleTeamId
 const sha = '1234567890abcdef1234567890abcdef12345678'
 const submissionId = '12345678-1234-1234-1234-123456789abc'
 const details = `Authority=Developer ID Application: Test (${teamId})\nTeamIdentifier=${teamId}\nCodeDirectory flags=0x10000(runtime)\nTimestamp=Sep 5, 2026\n`
+const safeHostEntitlements = `
+<key>com.apple.developer.system-extension.install</key><true/>
+<key>com.apple.security.cs.allow-jit</key><true/>
+`
 
 function fixture(callback: (env: NodeJS.ProcessEnv, directory: string) => void) {
   const directory = realpathSync(mkdtempSync(path.join(os.tmpdir(), 'kokorobox-signing-test-')))
@@ -128,6 +133,8 @@ function mockRunner(env: NodeJS.ProcessEnv, projectDir: string, failure?: string
       writeFileSync(path.join(projectDir, 'dist', name), 'signed package before stapling')
     }
     if (label === 'Inspect App/helper signing identity') return details
+    if (label === 'Inspect App entitlements') return safeHostEntitlements
+    if (label === 'Launch signed App AMFI probe') return 'kokorobox-amfi-probe-ok\n'
     if (label.includes('PKG signature'))
       return `Developer ID Installer: Test (${teamId})\nSigned with a trusted timestamp`
     if (label === 'Submit PKG for notarization') {
@@ -215,6 +222,27 @@ test('Developer ID checks reject ad-hoc, wrong-team, unhardened and untimestampe
   ]) {
     assert.throws(() => assertDeveloperId(text, teamId))
   }
+})
+
+test('System Extension host rejects Hardened Runtime relaxations that make AMFI kill Electron', () => {
+  assertSystemExtensionHostEntitlements(safeHostEntitlements)
+  assertSystemExtensionHostEntitlements(readFileSync('build/entitlements.mac.plist', 'utf8'))
+  for (const forbidden of [
+    'com.apple.security.cs.allow-dyld-environment-variables',
+    'com.apple.security.cs.allow-unsigned-executable-memory',
+    'com.apple.security.cs.disable-executable-page-protection',
+    'com.apple.security.cs.disable-library-validation'
+  ]) {
+    assert.throws(() => assertSystemExtensionHostEntitlements(`${safeHostEntitlements}${forbidden}`))
+  }
+  assert.throws(() =>
+    assertSystemExtensionHostEntitlements(
+      '<key>com.apple.developer.system-extension.install</key><true/>'
+    )
+  )
+  assert.throws(() =>
+    assertSystemExtensionHostEntitlements('<key>com.apple.security.cs.allow-jit</key><true/>')
+  )
 })
 
 test('embedded provisioning profiles remain readable after a root-owned PKG install', () => {
@@ -306,6 +334,8 @@ for (const failure of [
   'Import application certificate',
   'Validate Apple notarization credentials',
   'Sign App and PKG',
+  'Inspect App entitlements',
+  'Launch signed App AMFI probe',
   'Submit PKG for notarization',
   'Rejected',
   'Staple PKG ticket',

@@ -195,6 +195,27 @@ export function assertDeveloperId(details: string, teamId: string) {
   }
 }
 
+export function assertSystemExtensionHostEntitlements(entitlements: string) {
+  if (
+    !entitlements.includes('com.apple.developer.system-extension.install') ||
+    !entitlements.includes('com.apple.security.cs.allow-jit')
+  ) {
+    throw new Error('The macOS host is missing required System Extension or Electron entitlements')
+  }
+  for (const forbidden of [
+    'com.apple.security.cs.allow-dyld-environment-variables',
+    'com.apple.security.cs.allow-unsigned-executable-memory',
+    'com.apple.security.cs.disable-executable-page-protection',
+    'com.apple.security.cs.disable-library-validation'
+  ]) {
+    if (entitlements.includes(forbidden)) {
+      throw new Error(
+        `The macOS System Extension host uses a disallowed Hardened Runtime relaxation: ${forbidden}`
+      )
+    }
+  }
+}
+
 export function assertProvisioningProfilePermissions(appPath: string) {
   const profiles = [
     path.join(appPath, 'Contents', 'embedded.provisionprofile'),
@@ -415,6 +436,23 @@ export function signMacRelease(
         childEnv
       )
       assertDeveloperId(details, teamId)
+    }
+    const appEntitlements = run(
+      'Inspect App entitlements',
+      '/usr/bin/codesign',
+      ['--display', '--entitlements', '-', appPath],
+      childEnv
+    )
+    assertSystemExtensionHostEntitlements(appEntitlements)
+    const probe = run(
+      'Launch signed App AMFI probe',
+      path.join(appPath, 'Contents', 'MacOS', 'KokoroBox'),
+      ['--kokorobox-amfi-probe'],
+      childEnv,
+      30_000
+    )
+    if (probe.trim() !== 'kokorobox-amfi-probe-ok') {
+      throw new Error('The signed macOS App did not complete its AMFI launch probe')
     }
     const pkgSignature = run(
       'Verify PKG signature',
