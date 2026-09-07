@@ -387,9 +387,16 @@ static NSDictionary *KBInvoke(NSDictionary *request, NSError **error) {
     state = KBCurrentStatus(error);
   } else if ([command isEqualToString:@"open-settings"]) {
     dispatch_async(dispatch_get_main_queue(), ^{
-      NSURL *url = [NSURL
-          URLWithString:@"x-apple.systempreferences:com.apple.NetworkExtensionSettings"];
-      if (url) [[NSWorkspace sharedWorkspace] openURL:url];
+      NSWorkspace *workspace = [NSWorkspace sharedWorkspace];
+      // This is the same route used by Apple's current Mac User Guide. Network
+      // Extensions are managed under General > Login Items & Extensions on
+      // modern macOS; the old NetworkExtensionSettings pane no longer points
+      // at the approval controls.
+      NSURL *url = [NSURL URLWithString:
+          @"x-help-action://openPrefPane?bundleId=com.apple.LoginItems-Settings.extension"];
+      if (!url || ![workspace openURL:url]) {
+        [workspace openURL:[NSURL fileURLWithPath:@"/System/Applications/System Settings.app"]];
+      }
     });
     state = KBCurrentStatus(error);
   } else {
