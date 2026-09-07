@@ -1,6 +1,6 @@
 import { tr } from '../../shared/i18n'
 import axios, { type AxiosRequestConfig, type AxiosResponse } from 'axios'
-import { BrowserWindow, shell } from 'electron'
+import { app, BrowserWindow, shell } from 'electron'
 import {
   KOKORO_API_BASE as API_BASE,
   KOKORO_REDIRECT_URI,
@@ -24,6 +24,21 @@ export { KOKORO_REDIRECT_URI } from './oauth'
 const ACCESS_EXPIRY_LEEWAY_MS = 60_000
 // Isolate credential-bearing requests from shared Axios interceptors. Never follow redirects.
 const http = axios.create({ maxRedirects: 0 })
+
+export function kokoroSubscriptionUserAgent(
+  platform: NodeJS.Platform = process.platform,
+  version: string = app.getVersion()
+): string {
+  const platformName =
+    platform === 'win32'
+      ? 'Windows'
+      : platform === 'darwin'
+        ? 'macOS'
+        : platform === 'linux'
+          ? 'Linux'
+          : 'Desktop'
+  return `KokoroBox-${platformName}/${version}`
+}
 
 interface TokenResponse {
   token_type: 'Bearer'
@@ -600,10 +615,14 @@ function validateAuthenticatedConfigUrl(value: string): string {
 export async function downloadKokoroProfile(
   settings: KokoroSubscriptionSettings
 ): Promise<DownloadedKokoroProfile> {
+  const userAgent = kokoroSubscriptionUserAgent()
   const resolveResponse = await authorizedRequest<ResolvedSubscription>({
     url: `${API_BASE}/app/subscription/resolve`,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'User-Agent': userAgent
+    },
     data: { ...settings, format: 'mihomo' }
   })
   const resolved = resolveResponse.data
@@ -614,6 +633,7 @@ export async function downloadKokoroProfile(
   const response = await authorizedRequest<string>({
     url: validateAuthenticatedConfigUrl(resolved.authenticated_config_url),
     method: 'GET',
+    headers: { 'User-Agent': userAgent },
     responseType: 'text',
     transformResponse: [(value) => value]
   })

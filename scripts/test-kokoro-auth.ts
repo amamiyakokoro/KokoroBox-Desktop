@@ -113,6 +113,9 @@ function harness(stored: KokoroCredentials | null = null) {
       isAxiosError: (error: { isAxiosError?: boolean }) => !!error?.isAxiosError
     },
     electron: {
+      app: {
+        getVersion: () => '2.26.9-7'
+      },
       shell: {
         openExternal: async (url: string) => {
           urls.push(url)
@@ -574,6 +577,72 @@ test('refresh 401 clears credentials and does not send a verifier or retry', asy
   assert.equal(h.deletes, 1)
   assert.equal(h.requests.length, 0)
   assert.equal(h.posts[0].body.code_verifier, undefined)
+})
+
+test('Kokoro subscription User-Agent identifies the platform and application version', () => {
+  const h = harness()
+  assert.equal(
+    h.client.kokoroSubscriptionUserAgent('win32', '2.26.9-7'),
+    'KokoroBox-Windows/2.26.9-7'
+  )
+  assert.equal(
+    h.client.kokoroSubscriptionUserAgent('darwin', '2.26.9-7'),
+    'KokoroBox-macOS/2.26.9-7'
+  )
+  assert.equal(
+    h.client.kokoroSubscriptionUserAgent('linux', '2.26.9-7'),
+    'KokoroBox-Linux/2.26.9-7'
+  )
+  assert.equal(
+    h.client.kokoroSubscriptionUserAgent('freebsd', '2.26.9-7'),
+    'KokoroBox-Desktop/2.26.9-7'
+  )
+})
+
+test('Kokoro subscription resolve and config download send the same platform User-Agent', async () => {
+  const h = harness(authenticatedCredentials())
+  h.boundaries.request = async (config) => {
+    if (config.url.endsWith('/app/subscription/resolve')) {
+      return {
+        data: {
+          format: 'mihomo',
+          content_type: 'text/yaml',
+          filename: 'config.yaml',
+          profile_name: 'Kokoro Test',
+          authenticated_config_url: `${oauth.KOKORO_API_BASE}/app/subscription/config?format=mihomo`,
+          external_subscription_url: 'redacted',
+          import_uri: null
+        },
+        headers: {} as Record<string, string>
+      }
+    }
+    if (config.url.includes('/app/subscription/config?')) {
+      return {
+        data: 'proxies: []\n',
+        headers: { 'content-type': 'text/yaml; charset=utf-8' }
+      }
+    }
+    throw new Error('unexpected request')
+  }
+
+  await h.client.downloadKokoroProfile({
+    format: 'mihomo',
+    protocol: 'vmess',
+    plan: null,
+    isp: null,
+    mode: 'relay',
+    rule_source: 'origin',
+    final_route: 'proxy',
+    rule_provider_auto_update: true,
+    profile_auto_update: true,
+    profile_update_hours: 1
+  })
+
+  assert.equal(h.requests.length, 2)
+  assert.ok(
+    h.requests.every((request) => request.headers['User-Agent'] === 'KokoroBox-macOS/2.26.9-7')
+  )
+  assert.ok(h.requests.every((request) => request.headers.Authorization === 'Bearer rules-access'))
 })
 
 test('failed secure storage never exposes an authenticated session or releases waiting APIs', async () => {
