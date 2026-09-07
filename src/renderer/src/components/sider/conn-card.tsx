@@ -11,6 +11,7 @@ import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { readImageFileDataURL } from '@renderer/utils/ipc'
 import { platform } from '@renderer/utils/init'
 import TrafficChart from './traffic-chart'
+import defaultTrayIconUrl from '../../../../../resources/iconTemplate.png?url'
 
 let currentUpload: number | undefined = undefined
 let currentDownload: number | undefined = undefined
@@ -248,13 +249,13 @@ const drawTrayTrafficIcon = async (
 
   const uploadText = `${calcTraffic(upload)}/s`
   const downloadText = `${calcTraffic(download)}/s`
-  const trayIcon = customTrayIcon
-    ? await loadImage(
-        customTrayIcon.startsWith('data:image/')
-          ? customTrayIcon
-          : await readImageFileDataURL(customTrayIcon)
-      )
-    : null
+  const trayIcon = await loadImage(
+    customTrayIcon
+      ? customTrayIcon.startsWith('data:image/')
+        ? customTrayIcon
+        : await readImageFileDataURL(customTrayIcon)
+      : defaultTrayIconUrl
+  )
 
   const canvas = document.createElement('canvas')
   canvas.width = 172
@@ -272,13 +273,13 @@ const drawTrayTrafficIcon = async (
   ctx.textAlign = 'right'
   ctx.fillText(uploadText, 116, 15)
   ctx.fillText(downloadText, 116, 34)
-  if (trayIcon) {
-    ctx.drawImage(trayIcon, 128, 0, 36, 36)
-  } else {
-    ctx.font = '32px "Apple Color Emoji"'
-    ctx.textAlign = 'center'
-    ctx.fillText('🎐', 146, 31)
+  if (!customTrayIcon) {
+    ctx.filter = window.matchMedia('(prefers-color-scheme: dark)').matches
+      ? 'brightness(0) invert(1)'
+      : 'brightness(0)'
   }
+  ctx.drawImage(trayIcon, 128, 0, 36, 36)
+  ctx.filter = 'none'
 
   window.electron.ipcRenderer.send('trayIconUpdate', canvas.toDataURL('image/png'))
   currentUpload = upload

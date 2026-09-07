@@ -7,10 +7,10 @@ import {
   patchAppConfig,
   patchControledMihomoConfig
 } from '../config'
-import icoIcon from '../../../resources/icon.ico?asset'
-import pngIcon from '../../../resources/icon.png?asset'
+import trayIcoIcon from '../../../resources/iconTemplate.ico?asset'
+import trayWhiteIcoIcon from '../../../resources/iconTemplateWhite.ico?asset'
 import templateIcon from '../../../resources/iconTemplate.png?asset'
-import twemojiFont from '../../renderer/src/assets/twemoji.ttf?asset'
+import trayWhitePngIcon from '../../../resources/iconTemplateWhite.png?asset'
 import {
   mihomoChangeProxy,
   mihomoCloseConnections,
@@ -26,6 +26,7 @@ import {
   ipcMain,
   Menu,
   nativeImage,
+  nativeTheme,
   screen,
   shell,
   Tray
@@ -37,18 +38,19 @@ import { floatingWindow, triggerFloatingWindow } from './floatingWindow'
 import { is } from '@electron-toolkit/utils'
 import { extname, join } from 'path'
 import { applyTheme } from './theme'
-import { existsSync, readFileSync } from 'fs'
+import { existsSync } from 'fs'
 
 export let tray: Tray | null = null
 export let customTrayWindow: BrowserWindow | null = null
 let trayMenu: Menu | null = null
 let trayIconUpdateListenerRegistered = false
 let updateTrayMenuListenerRegistered = false
-let defaultTrayIconPromise: Promise<Electron.NativeImage> | null = null
+let trayThemeListenerRegistered = false
+let defaultTrayIcon: Electron.NativeImage | null = null
 type TrayImage = Electron.NativeImage | string
 const customTrayIconSize = 16
 const customTrayIconScaleFactors = [1, 1.25, 1.5, 2, 2.5, 3]
-const emojiTrayIconSize = 18
+const defaultTrayIconSize = 18
 
 function formatDelayText(delay: number): string {
   if (delay === 0) {
@@ -59,69 +61,26 @@ function formatDelayText(delay: number): string {
   return ''
 }
 
-function createDefaultFallbackTrayIcon(): Electron.NativeImage {
-  if (process.platform === 'win32') return nativeImage.createFromPath(icoIcon)
+function createDefaultTrayIcon(): Electron.NativeImage {
+  if (defaultTrayIcon) return defaultTrayIcon
 
-  const icon = nativeImage
-    .createFromPath(process.platform === 'darwin' ? templateIcon : pngIcon)
-    .resize({ height: process.platform === 'darwin' ? 16 : emojiTrayIconSize })
+  const useWhiteIcon = process.platform !== 'darwin' && nativeTheme.shouldUseDarkColors
+  const iconPath =
+    process.platform === 'win32'
+      ? useWhiteIcon
+        ? trayWhiteIcoIcon
+        : trayIcoIcon
+      : useWhiteIcon
+        ? trayWhitePngIcon
+        : templateIcon
+  const sourceIcon = nativeImage.createFromPath(iconPath)
+  const icon =
+    process.platform === 'win32'
+      ? sourceIcon
+      : sourceIcon.resize({ height: process.platform === 'darwin' ? 16 : defaultTrayIconSize })
   icon.setTemplateImage(process.platform === 'darwin')
+  defaultTrayIcon = icon
   return icon
-}
-
-async function renderEmojiTrayIcon(): Promise<Electron.NativeImage> {
-  const fallback = createDefaultFallbackTrayIcon()
-  const emojiWindow = new BrowserWindow({
-    width: emojiTrayIconSize,
-    height: emojiTrayIconSize,
-    show: false,
-    frame: false,
-    transparent: true,
-    backgroundColor: '#00000000',
-    focusable: false,
-    skipTaskbar: true,
-    webPreferences: {
-      contextIsolation: true,
-      nodeIntegration: false,
-      sandbox: true,
-      offscreen: true
-    }
-  })
-
-  try {
-    const bundledEmojiFont =
-      process.platform !== 'darwin'
-        ? `@font-face{font-family:KokoroTwemoji;src:url(data:font/ttf;base64,${readFileSync(twemojiFont).toString('base64')})}`
-        : ''
-    const emojiFonts =
-      process.platform === 'darwin'
-        ? '"Apple Color Emoji"'
-        : process.platform === 'win32'
-          ? '"Segoe UI Emoji",KokoroTwemoji,sans-serif'
-          : '"Noto Color Emoji",KokoroTwemoji,"Twemoji Mozilla","Segoe UI Emoji",sans-serif'
-    const document = `<style>${bundledEmojiFont}html,body{margin:0;background:transparent;overflow:hidden}body{width:${emojiTrayIconSize}px;height:${emojiTrayIconSize}px;display:flex;align-items:center;justify-content:center;font:16px ${emojiFonts}}</style>🎐`
-    await emojiWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(document)}`)
-    await emojiWindow.webContents.executeJavaScript('document.fonts.ready.then(() => true)')
-    const icon = await emojiWindow.webContents.capturePage({
-      x: 0,
-      y: 0,
-      width: emojiTrayIconSize,
-      height: emojiTrayIconSize
-    })
-    if (icon.isEmpty()) return fallback
-
-    icon.setTemplateImage(false)
-    return icon
-  } catch {
-    return fallback
-  } finally {
-    if (!emojiWindow.isDestroyed()) emojiWindow.destroy()
-  }
-}
-
-function createDefaultTrayIcon(): Promise<Electron.NativeImage> {
-  defaultTrayIconPromise ??= renderEmojiTrayIcon()
-  return defaultTrayIconPromise
 }
 
 function resizeTrayImageForScale(
@@ -584,6 +543,13 @@ export async function createTray(): Promise<void> {
   const { useDockIcon = true } = await getAppConfig()
   if (tray) {
     return
+  }
+  if (!trayThemeListenerRegistered) {
+    nativeTheme.on('updated', () => {
+      defaultTrayIcon = null
+      void updateTrayIcon()
+    })
+    trayThemeListenerRegistered = true
   }
   if (process.platform === 'linux') {
     tray = new Tray(await createDefaultTrayIcon())
