@@ -7,6 +7,89 @@ export interface KeyPair {
   privateKey: string
 }
 
+function invalidServiceAuthKey(): Error {
+  return new Error(tr('服务鉴权密钥无效'))
+}
+
+function parsePublicKey(publicKey: string): {
+  key: crypto.KeyObject
+  der: Buffer
+  encoded: string
+} {
+  try {
+    const encoded = publicKey.replace(/\s/g, '')
+    if (!encoded || encoded.length % 4 !== 0 || !/^[A-Za-z0-9+/]+={0,2}$/.test(encoded)) {
+      throw invalidServiceAuthKey()
+    }
+
+    const der = Buffer.from(encoded, 'base64')
+    if (der.toString('base64') !== encoded) {
+      throw invalidServiceAuthKey()
+    }
+
+    const key = crypto.createPublicKey({ key: der, format: 'der', type: 'spki' })
+    if (key.asymmetricKeyType !== 'ed25519') {
+      throw invalidServiceAuthKey()
+    }
+
+    const canonicalDer = key.export({ format: 'der', type: 'spki' })
+    return {
+      key,
+      der: canonicalDer,
+      encoded: canonicalDer.toString('base64')
+    }
+  } catch {
+    throw invalidServiceAuthKey()
+  }
+}
+
+function parsePrivateKey(privateKey: string): { key: crypto.KeyObject; pem: string } {
+  try {
+    const key = crypto.createPrivateKey({ key: privateKey.trim(), format: 'pem' })
+    if (key.asymmetricKeyType !== 'ed25519') {
+      throw invalidServiceAuthKey()
+    }
+
+    return {
+      key,
+      pem: key.export({ format: 'pem', type: 'pkcs8' }).toString()
+    }
+  } catch {
+    throw invalidServiceAuthKey()
+  }
+}
+
+export function validateKeyPair(publicKey: string, privateKey: string, keyId?: string): KeyPair {
+  try {
+    const parsedPublicKey = parsePublicKey(publicKey)
+    const parsedPrivateKey = parsePrivateKey(privateKey)
+    const derivedPublicKey = crypto
+      .createPublicKey(parsedPrivateKey.key)
+      .export({ format: 'der', type: 'spki' })
+
+    if (
+      derivedPublicKey.length !== parsedPublicKey.der.length ||
+      !crypto.timingSafeEqual(derivedPublicKey, parsedPublicKey.der)
+    ) {
+      throw invalidServiceAuthKey()
+    }
+
+    const computedKeyId = crypto.createHash('sha256').update(parsedPublicKey.der).digest('hex')
+    const normalizedKeyId = keyId?.trim() || computedKeyId
+    if (normalizedKeyId !== computedKeyId) {
+      throw invalidServiceAuthKey()
+    }
+
+    return {
+      keyId: normalizedKeyId,
+      publicKey: parsedPublicKey.encoded,
+      privateKey: parsedPrivateKey.pem
+    }
+  } catch {
+    throw invalidServiceAuthKey()
+  }
+}
+
 export class KeyManager {
   private keyId: string | null = null
   private publicKey: string | null = null
@@ -33,26 +116,19 @@ export class KeyManager {
       .replace('-----END PUBLIC KEY-----', '')
       .replace(/[\n\r\s]/g, '')
 
-    const keyId = computeKeyId(publicKey)
-    this.keyId = keyId
-    this.publicKey = publicKey
-    this.privateKey = privKeyPem
+    const keyPair = validateKeyPair(publicKey, privKeyPem)
+    this.keyId = keyPair.keyId
+    this.publicKey = keyPair.publicKey
+    this.privateKey = keyPair.privateKey
 
-    return { keyId, publicKey, privateKey: privKeyPem }
+    return keyPair
   }
 
   setKeyPair(publicKey: string, privateKey: string, keyId?: string): void {
-    if (!publicKey || !privateKey || publicKey.trim() === '' || privateKey.trim() === '') {
-      throw new Error(tr('密钥不能为空'))
-    }
-    const computedKeyId = computeKeyId(publicKey)
-    const normalizedKeyId = keyId?.trim() || computedKeyId
-    if (normalizedKeyId !== computedKeyId) {
-      throw new Error(tr('密钥 ID 与公钥不匹配'))
-    }
-    this.keyId = normalizedKeyId
-    this.publicKey = publicKey
-    this.privateKey = privateKey
+    const keyPair = validateKeyPair(publicKey, privateKey, keyId)
+    this.keyId = keyPair.keyId
+    this.publicKey = keyPair.publicKey
+    this.privateKey = keyPair.privateKey
   }
 
   getKeyID(): string {
@@ -81,13 +157,7 @@ export class KeyManager {
       throw new Error(tr('私钥未初始化'))
     }
 
-    const keyObject = crypto.createPrivateKey({
-      key: this.privateKey,
-      format: 'pem'
-    })
-
-    const signature = crypto.sign(null, Buffer.from(data), keyObject)
-    return signature.toString('base64')
+    return signData(this.privateKey, data)
   }
 
   isInitialized(): boolean {
@@ -108,17 +178,8 @@ export class KeyManager {
 }
 
 export function computeKeyId(publicKey: string): string {
-  const normalizedKey = publicKey.trim()
-  if (!normalizedKey) {
-    throw new Error(tr('公钥不能为空'))
-  }
-
-  const keyBytes = Buffer.from(normalizedKey, 'base64')
-  if (keyBytes.length === 0) {
-    throw new Error(tr('公钥格式无效'))
-  }
-
-  return crypto.createHash('sha256').update(keyBytes).digest('hex')
+  const { der } = parsePublicKey(publicKey)
+  return crypto.createHash('sha256').update(der).digest('hex')
 }
 
 export function generateKeyPair(): KeyPair {
@@ -127,11 +188,10 @@ export function generateKeyPair(): KeyPair {
 }
 
 export function signData(privateKey: string, data: string): string {
-  const keyObject = crypto.createPrivateKey({
-    key: privateKey,
-    format: 'pem'
-  })
-
-  const signature = crypto.sign(null, Buffer.from(data), keyObject)
-  return signature.toString('base64')
+  try {
+    const { key } = parsePrivateKey(privateKey)
+    return crypto.sign(null, Buffer.from(data), key).toString('base64')
+  } catch {
+    throw invalidServiceAuthKey()
+  }
 }

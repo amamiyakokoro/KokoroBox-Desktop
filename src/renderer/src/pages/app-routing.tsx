@@ -56,6 +56,9 @@ function statusMessage(message?: string, protectedApplicationCount = 0): string 
   if (message === '当前 KokoroBox Service 不支持应用分流，请更新或重新安装服务') {
     return tr('当前 KokoroBox Service 不支持应用分流，请更新或重新安装服务')
   }
+  if (message === 'KokoroBox Service 认证已失效，请在内核设置中重置认证') {
+    return tr('KokoroBox Service 认证已失效，请在内核设置中重置认证')
+  }
   if (message === '封包拦截组件启动失败') {
     return tr('封包拦截组件启动失败')
   }

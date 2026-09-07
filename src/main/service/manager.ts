@@ -1,7 +1,7 @@
 import { tr } from '../../shared/i18n'
 import { servicePath } from '../utils/dirs'
 import { execWithElevation } from '../utils/elevation'
-import { KeyManager, type KeyPair, computeKeyId } from './key'
+import { KeyManager, type KeyPair, validateKeyPair } from './key'
 import { initServiceAPI, getServiceAxios, ping, test, ServiceAPIError } from './api'
 import { getAppConfig, patchAppConfig } from '../config/app'
 import { execFile } from 'child_process'
@@ -25,11 +25,7 @@ function parseLegacyServiceAuth(value: string): ServiceAuthSecret | null {
       return null
     }
 
-    return {
-      keyId: computeKeyId(publicKey),
-      publicKey,
-      privateKey
-    }
+    return validateKeyPair(publicKey, privateKey)
   } catch {
     return null
   }
@@ -111,11 +107,11 @@ export async function initKeyManager(): Promise<KeyManager> {
     return keyManager
   }
 
-  keyManager = new KeyManager()
-  const existingSecret = await loadAvailableServiceAuth()
-  applyServiceAuthSecret(keyManager, existingSecret)
-  initServiceAPI(keyManager)
-  return keyManager
+  const nextKeyManager = new KeyManager()
+  await ensurePersistedServiceAuth(nextKeyManager)
+  keyManager = nextKeyManager
+  initServiceAPI(nextKeyManager)
+  return nextKeyManager
 }
 
 export function getKeyManager(): KeyManager {

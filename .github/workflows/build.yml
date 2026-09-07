@@ -58,6 +58,7 @@ jobs:
       - run: pnpm test:localization
       - run: pnpm test:override-user-agent
       - run: pnpm test:app-routing
+      - run: pnpm test:service-auth
       - run: pnpm typecheck
 
   build:

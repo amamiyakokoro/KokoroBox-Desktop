@@ -3,7 +3,7 @@ import { existsSync } from 'fs'
 import { mkdir, readFile, rename, unlink, writeFile } from 'fs/promises'
 import { dirname } from 'path'
 import { serviceAuthStorePath } from '../utils/dirs'
-import { computeKeyId, type KeyPair } from './key'
+import { validateKeyPair, type KeyPair } from './key'
 
 interface PlainServiceAuthEnvelope extends ServiceAuthSecret {
   version: 2
@@ -19,23 +19,14 @@ function normalizeServiceAuthSecret(secret: {
   publicKey?: string
   privateKey?: string
 }): ServiceAuthSecret {
-  const publicKey = secret.publicKey?.trim() || ''
-  const privateKey = secret.privateKey?.trim() || ''
-
-  if (!publicKey || !privateKey) {
+  try {
+    return validateKeyPair(
+      secret.publicKey?.trim() || '',
+      secret.privateKey?.trim() || '',
+      secret.keyId
+    )
+  } catch {
     throw new Error(tr('服务鉴权密钥无效'))
-  }
-
-  const computedKeyId = computeKeyId(publicKey)
-  const keyId = secret.keyId?.trim() || computedKeyId
-  if (keyId !== computedKeyId) {
-    throw new Error(tr('服务鉴权密钥无效'))
-  }
-
-  return {
-    keyId,
-    publicKey,
-    privateKey
   }
 }
 

@@ -82,6 +82,9 @@ function serviceModeError(error: unknown): Error {
   if (error instanceof ServiceAPIError && [404, 501].includes(error.status || 0)) {
     return new Error('当前 KokoroBox Service 不支持应用分流，请更新或重新安装服务')
   }
+  if (error instanceof ServiceAPIError && [401, 403, 409].includes(error.status || 0)) {
+    return new Error('KokoroBox Service 认证已失效，请在内核设置中重置认证')
+  }
   return error instanceof Error ? error : new Error(String(error))
 }
 

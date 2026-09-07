@@ -71,6 +71,8 @@ export const messages: Readonly<Record<string, string>> = {
     'The application routing MVP requires KokoroBox to run as administrator',
   '当前 KokoroBox Service 不支持应用分流，请更新或重新安装服务':
     'The installed KokoroBox Service does not support application routing. Update or reinstall the service.',
+  'KokoroBox Service 认证已失效，请在内核设置中重置认证':
+    'KokoroBox Service authentication is no longer valid. Reset authentication in Core Settings.',
   封包拦截组件启动失败: 'The packet interception sidecar failed to start',
   '封包拦截组件意外停止，正在重试':
     'The packet interception sidecar stopped unexpectedly; retrying',
