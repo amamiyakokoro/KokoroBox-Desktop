@@ -195,6 +195,26 @@ export function assertDeveloperId(details: string, teamId: string) {
   }
 }
 
+export function assertProvisioningProfilePermissions(appPath: string) {
+  const profiles = [
+    path.join(appPath, 'Contents', 'embedded.provisionprofile'),
+    path.join(
+      appPath,
+      'Contents',
+      'Library',
+      'SystemExtensions',
+      'KokoroBoxProxyExtension.systemextension',
+      'Contents',
+      'embedded.provisionprofile'
+    )
+  ]
+  for (const profile of profiles) {
+    if (!existsSync(profile) || (lstatSync(profile).mode & 0o777) !== 0o644) {
+      throw new Error('Embedded provisioning profiles must use mode 0644 for root-owned installs')
+    }
+  }
+}
+
 export function assertAccepted(response: string): string {
   let result: { status?: string; id?: string }
   try {
@@ -298,8 +318,10 @@ export function signMacRelease(
     }
     const appProfilePath = path.join(directory, 'KokoroBox.provisionprofile')
     const extensionProfilePath = path.join(directory, 'KokoroBoxProxyExtension.provisionprofile')
-    writeFileSync(appProfilePath, appProvisioningProfile, { mode: 0o600 })
-    writeFileSync(extensionProfilePath, extensionProvisioningProfile, { mode: 0o600 })
+    // The directory is private (mkdtemp creates 0700), while electron-osx-sign
+    // preserves these file modes when embedding the profiles in the app.
+    writeFileSync(appProfilePath, appProvisioningProfile, { mode: 0o644 })
+    writeFileSync(extensionProfilePath, extensionProvisioningProfile, { mode: 0o644 })
     run(
       'Authorize Apple signing tools',
       '/usr/bin/security',
@@ -370,6 +392,7 @@ export function signMacRelease(
       'KokoroBox.app'
     )
     const pkgPath = path.join(projectDir, 'dist', filename)
+    assertProvisioningProfilePermissions(appPath)
     for (const file of [
       appPath,
       ...signingConfig(projectDir, teamId).mac.binaries.map((file) => path.join(appPath, file)),

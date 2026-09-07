@@ -1,5 +1,5 @@
 const { execFileSync } = require('node:child_process')
-const { copyFileSync, existsSync } = require('node:fs')
+const { chmodSync, copyFileSync, existsSync } = require('node:fs')
 const path = require('node:path')
 
 function sign(target, entitlements) {
@@ -44,6 +44,10 @@ module.exports = async function afterPack(context) {
   if (!existsSync(extensionPath) || !extensionProfile) {
     throw new Error('Incomplete macOS application-routing payload')
   }
-  copyFileSync(extensionProfile, path.join(extensionPath, 'Contents', 'embedded.provisionprofile'))
+  const embeddedProfile = path.join(extensionPath, 'Contents', 'embedded.provisionprofile')
+  copyFileSync(extensionProfile, embeddedProfile)
+  // The PKG is installed as root. Keep the embedded profile readable by the
+  // user launching the app while the containing bundle protects its integrity.
+  chmodSync(embeddedProfile, 0o644)
   sign(extensionPath, path.join(projectDir, 'build', 'entitlements.mac.extension.plist'))
 }

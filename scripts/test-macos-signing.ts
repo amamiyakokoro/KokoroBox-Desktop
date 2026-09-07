@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { createHash } from 'node:crypto'
 import {
+  chmodSync,
   existsSync,
   mkdirSync,
   mkdtempSync,
@@ -20,6 +21,7 @@ import {
   appleSecrets,
   assertAccepted,
   assertDeveloperId,
+  assertProvisioningProfilePermissions,
   cleanupSigning,
   decodeCertificate,
   runCommand,
@@ -93,9 +95,35 @@ function mockRunner(env: NodeJS.ProcessEnv, projectDir: string, failure?: string
       assert.equal(config.forceCodeSigning, true)
       assert.equal(config.mac.identity, teamId)
       assert.equal(config.pkg.identity, teamId)
+      assert.equal(statSync(config.mac.provisioningProfile).mode & 0o777, 0o644)
+      assert.equal(
+        statSync(childEnv.KOKOROBOX_EXTENSION_PROVISIONING_PROFILE_PATH!).mode & 0o777,
+        0o644
+      )
       const name = artifactName(
         { os: 'macos-latest', arch: env.TARGET_ARCH!, format: 'pkg' },
         env.RELEASE_VERSION!
+      )
+      const appPath = path.join(
+        projectDir,
+        'dist',
+        env.TARGET_ARCH === 'arm64' ? 'mac-arm64' : 'mac',
+        'KokoroBox.app'
+      )
+      const extensionContents = path.join(
+        appPath,
+        'Contents/Library/SystemExtensions/KokoroBoxProxyExtension.systemextension/Contents'
+      )
+      mkdirSync(extensionContents, { recursive: true })
+      writeFileSync(path.join(appPath, 'Contents/embedded.provisionprofile'), 'app profile', {
+        mode: 0o644
+      })
+      writeFileSync(
+        path.join(extensionContents, 'embedded.provisionprofile'),
+        'extension profile',
+        {
+          mode: 0o644
+        }
       )
       writeFileSync(path.join(projectDir, 'dist', name), 'signed package before stapling')
     }
@@ -187,6 +215,24 @@ test('Developer ID checks reject ad-hoc, wrong-team, unhardened and untimestampe
   ]) {
     assert.throws(() => assertDeveloperId(text, teamId))
   }
+})
+
+test('embedded provisioning profiles remain readable after a root-owned PKG install', () => {
+  fixture((_env, directory) => {
+    const appPath = path.join(directory, 'KokoroBox.app')
+    const extensionContents = path.join(
+      appPath,
+      'Contents/Library/SystemExtensions/KokoroBoxProxyExtension.systemextension/Contents'
+    )
+    mkdirSync(extensionContents, { recursive: true })
+    const appProfile = path.join(appPath, 'Contents/embedded.provisionprofile')
+    const extensionProfile = path.join(extensionContents, 'embedded.provisionprofile')
+    writeFileSync(appProfile, 'app profile', { mode: 0o644 })
+    writeFileSync(extensionProfile, 'extension profile', { mode: 0o644 })
+    assert.doesNotThrow(() => assertProvisioningProfilePermissions(appPath))
+    chmodSync(extensionProfile, 0o600)
+    assert.throws(() => assertProvisioningProfilePermissions(appPath), /mode 0644/)
+  })
 })
 
 test('notarization must return Accepted with a valid submission ID', () => {

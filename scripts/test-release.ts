@@ -404,6 +404,11 @@ test('CI macOS config loads through electron-builder and preserves PKG installat
   assert.deepEqual(config.mac.target, ['pkg'])
   assert.equal(config.mac.identity, null)
   assert.equal(config.mac.notarize, false)
+  assert.equal(
+    config.mac.extendInfo.NSSystemExtensionUsageDescription,
+    'KokoroBox uses a system extension to route only the applications you select.'
+  )
+  assert.equal(Array.isArray(config.mac.extendInfo), false)
   assert.equal(config.pkg.installLocation, '/Applications')
   assert.equal(config.pkg.allowCurrentUserHome, false)
   assert.notEqual(config.pkg.scripts, null)

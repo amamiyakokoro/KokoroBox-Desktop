@@ -58,11 +58,11 @@ mac:
     - from: './extra/macos-app-routing-system-extension/KokoroBoxProxyExtension.systemextension'
       to: 'Library/SystemExtensions/KokoroBoxProxyExtension.systemextension'
   extendInfo:
-    - NSSystemExtensionUsageDescription: KokoroBox uses a system extension to route only the applications you select.
-    - NSCameraUsageDescription: Application requests access to the device's camera.
-    - NSMicrophoneUsageDescription: Application requests access to the device's microphone.
-    - NSDocumentsFolderUsageDescription: Application requests access to the user's Documents folder.
-    - NSDownloadsFolderUsageDescription: Application requests access to the user's Downloads folder.
+    NSSystemExtensionUsageDescription: KokoroBox uses a system extension to route only the applications you select.
+    NSCameraUsageDescription: Application requests access to the device's camera.
+    NSMicrophoneUsageDescription: Application requests access to the device's microphone.
+    NSDocumentsFolderUsageDescription: Application requests access to the user's Documents folder.
+    NSDownloadsFolderUsageDescription: Application requests access to the user's Downloads folder.
   notarize: true
   artifactName: ${name}-macos-${version}-${arch}.${ext}
 pkg:
