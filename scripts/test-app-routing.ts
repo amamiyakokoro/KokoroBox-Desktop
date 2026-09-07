@@ -39,6 +39,7 @@ import {
   buildMacAppRoutingConfiguration,
   macAppRoutingOperatingSystemSupported
 } from '../src/main/app-routing/macos-profile'
+import { macOSBundleVersion } from './macos-bundle-version'
 
 function rule(overrides: Partial<AppRoutingRule> = {}): AppRoutingRule {
   return {
@@ -550,6 +551,23 @@ test('native build is pinned to the controlled KokoroBox ProxyBridge fork', () =
   assert.match(router, /127\.\*\.\*\.\*.*fe80::\/10/s)
   assert.match(build, /manifest\.json/)
   assert.match(build, /process-router-sbom\.cdx\.json/)
+})
+
+test('macOS bundle versions support stable revisions and rolling builds', () => {
+  assert.deepEqual(macOSBundleVersion('2.26.9-7'), {
+    marketingVersion: '2.26.9',
+    bundleVersion: '2.26.9007'
+  })
+  assert.deepEqual(macOSBundleVersion('2.26.10-rolling-2d6c507'), {
+    marketingVersion: '2.26.10',
+    bundleVersion: '2.26.10575'
+  })
+  assert.deepEqual(macOSBundleVersion('2.27.0'), {
+    marketingVersion: '2.27.0',
+    bundleVersion: '2.27.0'
+  })
+  assert.throws(() => macOSBundleVersion('2.26.10-beta.1'), /Unsupported macOS bundle version/)
+  assert.throws(() => macOSBundleVersion('2.26.10-rolling-not-a-sha'), /Unsupported macOS/)
 })
 
 test('new application rules use the configured defaults', () => {

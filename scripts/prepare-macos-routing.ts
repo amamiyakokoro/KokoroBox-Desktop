@@ -3,6 +3,7 @@ import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } fr
 import os from 'node:os'
 import path from 'node:path'
 import { proxyBridgeSourceRevision } from '../src/main/app-routing/integrity-manifest.ts'
+import { macOSBundleVersion } from './macos-bundle-version.ts'
 
 const repositoryRoot = path.resolve(import.meta.dirname, '..')
 const targetArch = process.env.npm_config_target_arch || process.arch
@@ -37,10 +38,7 @@ const electronVersion = JSON.parse(
 ).version as string
 const packageVersion = JSON.parse(readFileSync(path.join(repositoryRoot, 'package.json'), 'utf8'))
   .version as string
-const versionParts = packageVersion.match(/^(\d+)\.(\d+)\.(\d+)(?:-(\d+))?$/)
-if (!versionParts) throw new Error(`Unsupported macOS bundle version: ${packageVersion}`)
-const marketingVersion = `${versionParts[1]}.${versionParts[2]}.${versionParts[3]}`
-const bundleVersion = `${versionParts[1]}.${versionParts[2]}.${Number(versionParts[3]) * 1000 + Number(versionParts[4] ?? 0)}`
+const { marketingVersion, bundleVersion } = macOSBundleVersion(packageVersion)
 
 rmSync(buildRoot, { recursive: true, force: true })
 mkdirSync(buildRoot, { recursive: true })
