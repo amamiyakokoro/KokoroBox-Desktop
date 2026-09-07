@@ -90,7 +90,11 @@ export async function reconcileMacAppRouting(
     response.state === 'error'
   ) {
     response = await invokeBridge('apply', configuration)
-    activePolicyKey = response.state === 'running' ? policyKey : ''
+    // `apply` persists the policy before starting the provider. macOS normally
+    // reports `starting` for a short time, so remember that policy as accepted
+    // as well. Forgetting it caused the monitor to submit the same policy again
+    // every three seconds while the provider was coming online.
+    activePolicyKey = ['starting', 'running'].includes(response.state) ? policyKey : ''
   }
   const protectedApplicationCount = config.rules.filter(
     (rule) => rule.enabled && rule.action === 'proxy'

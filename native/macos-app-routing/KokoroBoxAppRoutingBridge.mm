@@ -231,17 +231,28 @@ static BOOL KBSendConfiguration(NSDictionary *configuration,
   for (NSUInteger attempt = 0; attempt < maximumAttempts; ++attempt) {
     dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
     __block NSData *providerResponse = nil;
-    NSError *sendError = nil;
-    BOOL sent = [(NETunnelProviderSession *)manager.connection
-        sendProviderMessage:messageData
-               returnError:&sendError
-           responseHandler:^(NSData *responseData) {
-             providerResponse = responseData;
-             dispatch_semaphore_signal(semaphore);
-           }];
+    __block NSError *sendError = nil;
+    __block BOOL sent = NO;
+    NETunnelProviderSession *session = (NETunnelProviderSession *)manager.connection;
+
+    // Apple delivers provider-message responses through the app's dispatch
+    // context. The N-API work item itself runs on a libuv worker thread with no
+    // Cocoa run loop, so initiating this operation there can leave the response
+    // handler permanently undelivered even though the extension handled the
+    // request. Submit it on the main queue and only block this worker thread.
+    dispatch_async(dispatch_get_main_queue(), ^{
+      sent = [session sendProviderMessage:messageData
+                              returnError:&sendError
+                          responseHandler:^(NSData *responseData) {
+                            providerResponse = responseData;
+                            dispatch_semaphore_signal(semaphore);
+                          }];
+      if (!sent || sendError) dispatch_semaphore_signal(semaphore);
+    });
+    BOOL completed = KBWait(semaphore, 5);
     if (!sent || sendError) {
       lastSendError = sendError ?: KBError(@"Sending the provider policy failed");
-    } else if (KBWait(semaphore, 5)) {
+    } else if (completed) {
       NSError *responseError = nil;
       id decodedResponse = providerResponse
                                ? [NSJSONSerialization JSONObjectWithData:providerResponse
@@ -275,15 +286,39 @@ static BOOL KBSendConfiguration(NSDictionary *configuration,
   return NO;
 }
 
+static NSDictionary *KBStoredConfiguration(NETransparentProxyManager *manager) {
+  NETunnelProviderProtocol *protocol =
+      (NETunnelProviderProtocol *)manager.protocolConfiguration;
+  if (![protocol isKindOfClass:[NETunnelProviderProtocol class]] ||
+      ![protocol.providerBundleIdentifier isEqualToString:KBExtensionIdentifier]) {
+    return nil;
+  }
+  id stored = protocol.providerConfiguration[@"kokoroBoxConfiguration"];
+  if ([stored isKindOfClass:[NSDictionary class]]) return stored;
+  if (![stored isKindOfClass:[NSData class]]) return nil;
+  id decoded = [NSJSONSerialization JSONObjectWithData:stored options:0 error:nil];
+  return [decoded isKindOfClass:[NSDictionary class]] ? decoded : nil;
+}
+
 static NSString *KBApply(NSDictionary *configuration, NSError **error) {
   if (!KBValidateConfiguration(configuration, error)) return nil;
   NETransparentProxyManager *manager = KBLoadManager(error);
   if (!manager && error && *error) return nil;
   if (!manager) manager = [[NETransparentProxyManager alloc] init];
 
-  if (manager.connection.status == NEVPNStatusConnected &&
-      !KBSendConfiguration(configuration, manager, error)) {
-    return nil;
+  NSString *currentState = KBStatusName(manager.connection.status);
+  NSDictionary *storedConfiguration = KBStoredConfiguration(manager);
+  if ([storedConfiguration isEqualToDictionary:configuration] &&
+      ([currentState isEqualToString:@"running"] ||
+       [currentState isEqualToString:@"starting"])) {
+    // The initial apply stores this exact policy before startVPNTunnel. Avoid a
+    // redundant provider message both during startup and after an app restart.
+    // The provider reads the policy from providerConfiguration in startProxy.
+    return currentState;
+  }
+
+  if (manager.connection.status == NEVPNStatusConnected) {
+    if (!KBSendConfiguration(configuration, manager, error)) return nil;
   }
 
   NSData *configurationData =
