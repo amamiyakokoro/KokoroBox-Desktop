@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="build/icon.png" width="128" height="128" alt="KokoroBox app icon">
+<img src="images/kokorobox-readme.png" width="128" height="128" alt="KokoroBox">
 
 # KokoroBox-Desktop
 
