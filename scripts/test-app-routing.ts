@@ -64,6 +64,17 @@ test('application routing supports Windows x64 and both macOS architectures', ()
   assert.equal(macAppRoutingOperatingSystemSupported('22.0.0'), true)
 })
 
+test('renderer exposes application routing everywhere the shared capability supports it', () => {
+  for (const file of [
+    'src/renderer/src/components/sider/sider-cards.tsx',
+    'src/renderer/src/components/settings/sider-config.tsx'
+  ]) {
+    const source = readFileSync(resolve(file), 'utf8')
+    assert.match(source, /appRoutingSupported\(window\.api\.platform, window\.api\.arch\)/)
+    assert.doesNotMatch(source, /window\.api\.platform === 'win32' && window\.api\.arch === 'x64'/)
+  }
+})
+
 test('validates macOS signing identifiers and translates rules atomically', () => {
   const macRule = rule({
     processPattern: 'com.openai.chat*',

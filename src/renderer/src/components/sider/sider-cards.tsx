@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState, type MouseEvent 
 import { closestCorners, DndContext, type DragEndEvent } from '@dnd-kit/core'
 import { SortableContext } from '@dnd-kit/sortable'
 import { useNavigate } from 'react-router-dom'
+import { appRoutingSupported } from '../../../../shared/app-routing'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { useCardDndSensors } from '@renderer/hooks/use-card-dnd-sensors'
 import { markInitialContentPartReady } from '@renderer/utils/startup'
@@ -84,7 +85,7 @@ interface Props {
 export default function SiderCards({ iconOnly = false }: Props): React.JSX.Element {
   const { appConfig, patchAppConfig } = useAppConfig()
   const configuredOrder = appConfig?.siderOrder ?? defaultSiderOrder
-  const supportsAppRouting = window.api.platform === 'win32' && window.api.arch === 'x64'
+  const supportsAppRouting = appRoutingSupported(window.api.platform, window.api.arch)
   const siderOrder = useMemo(
     () =>
       supportsAppRouting

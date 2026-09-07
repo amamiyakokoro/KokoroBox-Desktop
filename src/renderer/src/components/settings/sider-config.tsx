@@ -1,4 +1,5 @@
 import { tr } from '../../../../shared/i18n'
+import { appRoutingSupported } from '../../../../shared/app-routing'
 import React from 'react'
 import SettingCard from '../base/base-setting-card'
 import SettingItem from '../base/base-setting-item'
@@ -42,7 +43,7 @@ const SiderConfig: React.FC = () => {
   const cardStatus = {
     sysproxyCardStatus,
     tunCardStatus,
-    ...(window.api.platform === 'win32' && window.api.arch === 'x64'
+    ...(appRoutingSupported(window.api.platform, window.api.arch)
       ? { appRoutingCardStatus }
       : {}),
     profileCardStatus,
