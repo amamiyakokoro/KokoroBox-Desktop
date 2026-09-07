@@ -34,13 +34,11 @@ function loadOverrideModule(defaultUserAgent = 'KokoroBox/default') {
     fs: { existsSync: () => false },
     axios: { __esModule: true, default: axios },
     https: { __esModule: true, default: { Agent: class {} } },
-    http: { __esModule: true, default: {} },
-    tls: { __esModule: true, default: {} },
     '../utils/yaml': {
       parseYaml: () => ({ items: [] }),
       stringifyYaml: () => ''
     },
-    './profile': { getCertFingerprint: () => '' },
+    '../utils/pinnedHttpsAgent': { createPinnedHttpsAgent: () => ({}) },
     '../utils/userAgent': {
       getUserAgent: async () => {
         defaultUserAgentCalls++

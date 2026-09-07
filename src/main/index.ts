@@ -226,92 +226,96 @@ function startPrimaryInstance(initialDeepLinks: string[]): void {
   // This method will be called when Electron has finished
   // initialization and is ready to create browser windows.
   // Some APIs can only be used after this event occurs.
-  app.whenReady().then(async () => {
-    // Set app user model id for windows
-    electronApp.setAppUserModelId('com.amamiyakokoro.app')
-    if (process.platform === 'win32') {
-      try {
-        callbackRelay = await startKokoroCallbackRelay(
-          kokoroCallbackRelayPath(app.getPath('userData')),
-          createPendingKokoroRelayProof,
-          inbox.receive
-        )
-        if (quitting) {
-          await callbackRelay.close()
-          return
+  runStartupTask(
+    'application initialization',
+    app.whenReady().then(async () => {
+      // Set app user model id for windows
+      electronApp.setAppUserModelId('com.amamiyakokoro.app')
+      if (process.platform === 'win32') {
+        try {
+          callbackRelay = await startKokoroCallbackRelay(
+            kokoroCallbackRelayPath(app.getPath('userData')),
+            createPendingKokoroRelayProof,
+            inbox.receive
+          )
+          if (quitting) {
+            await callbackRelay.close()
+            return
+          }
+        } catch {
+          void appendAppLog('[App]: Kokoro callback relay unavailable\n')
         }
-      } catch {
-        void appendAppLog('[App]: Kokoro callback relay unavailable\n')
       }
-    }
-    let appConfig: AppConfig
-    try {
-      appConfig = await initPromise
-    } catch (e) {
-      void showNotification({ title: tr('应用初始化失败'), body: `${e}`, variant: 'danger' })
-      app.quit()
-      return
-    }
-
-    // Default open or close DevTools by F12 in development
-    // and ignore CommandOrControl + R in production.
-    // see https://github.com/alex8088/electron-toolkit/tree/master/packages/utils
-    app.on('browser-window-created', (_, window) => {
-      optimizer.watchWindowShortcuts(window)
-    })
-    const { showFloatingWindow: showFloating = false, disableTray = false } = appConfig
-    registerIpcMainHandlers()
-    runStartupTask('Windows scheduled task migration', migrateLegacyWindowsTasks())
-    runStartupTask('Windows application routing', initializeAppRouting())
-
-    const createWindowPromise = createWindow(appConfig)
-
-    let coreStarted = false
-
-    const coreStartPromise = (async (): Promise<void> => {
+      let appConfig: AppConfig
       try {
-        if (is.dev) {
-          await initialWindowDisplayPromise
-        }
-        const [startPromise] = await startCore()
-        startPromise.then(async () => {
-          await initProfileUpdater()
-        })
-        coreStarted = true
+        appConfig = await initPromise
       } catch (e) {
-        void showNotification({ title: tr('内核启动出错'), body: `${e}`, variant: 'danger' })
+        void showNotification({ title: tr('应用初始化失败'), body: `${e}`, variant: 'danger' })
+        app.quit()
+        return
       }
-    })()
 
-    runStartupTask('traffic monitor', startMonitor())
+      // Default open or close DevTools by F12 in development
+      // and ignore CommandOrControl + R in production.
+      // see https://github.com/alex8088/electron-toolkit/tree/master/packages/utils
+      app.on('browser-window-created', (_, window) => {
+        optimizer.watchWindowShortcuts(window)
+      })
+      const { showFloatingWindow: showFloating = false, disableTray = false } = appConfig
+      registerIpcMainHandlers()
+      runStartupTask('Windows scheduled task migration', migrateLegacyWindowsTasks())
+      runStartupTask('Windows application routing', initializeAppRouting())
 
-    await createWindowPromise
+      const createWindowPromise = createWindow(appConfig)
 
-    initialized = true
-    inbox.start()
+      let coreStarted = false
 
-    const uiTasks: Promise<void>[] = [initShortcut()]
+      const coreStartPromise = (async (): Promise<void> => {
+        try {
+          if (is.dev) {
+            await initialWindowDisplayPromise
+          }
+          const [startPromise] = await startCore()
+          runStartupTask('profile updater', startPromise.then(initProfileUpdater))
+          coreStarted = true
+        } catch (e) {
+          void showNotification({ title: tr('内核启动出错'), body: `${e}`, variant: 'danger' })
+        }
+      })()
 
-    if (showFloating) {
-      uiTasks.push(Promise.resolve(showFloatingWindow()))
-    }
-    if (!disableTray) {
-      uiTasks.push(createTray())
-    }
+      runStartupTask('traffic monitor', startMonitor())
 
-    runStartupTask('ui extras', Promise.all(uiTasks))
-    coreStartPromise.then(() => {
-      if (coreStarted) {
-        mainWindow?.webContents.send('core-started')
+      await createWindowPromise
+
+      initialized = true
+      inbox.start()
+
+      const uiTasks: Promise<void>[] = [initShortcut()]
+
+      if (showFloating) {
+        uiTasks.push(Promise.resolve(showFloatingWindow()))
       }
-    })
+      if (!disableTray) {
+        uiTasks.push(createTray())
+      }
 
-    app.on('activate', function () {
-      // On macOS it's common to re-create a window in the app when the
-      // dock icon is clicked and there are no other windows open.
-      showMainWindow()
+      runStartupTask('ui extras', Promise.all(uiTasks))
+      runStartupTask(
+        'core startup notification',
+        coreStartPromise.then(() => {
+          if (coreStarted) {
+            mainWindow?.webContents.send('core-started')
+          }
+        })
+      )
+
+      app.on('activate', function () {
+        // On macOS it's common to re-create a window in the app when the
+        // dock icon is clicked and there are no other windows open.
+        runStartupTask('show main window', showMainWindow())
+      })
     })
-  })
+  )
 }
 
 export async function createWindow(appConfig?: AppConfig): Promise<void> {

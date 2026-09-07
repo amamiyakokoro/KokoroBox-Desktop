@@ -9,10 +9,6 @@ import { getAppConfig } from './app'
 import { existsSync } from 'fs'
 import axios, { AxiosResponse } from 'axios'
 import https from 'https'
-import http from 'http'
-import tls from 'tls'
-import crypto from 'crypto'
-import { URL } from 'url'
 import { parseYaml, stringifyYaml } from '../utils/yaml'
 import { defaultProfile } from '../utils/template'
 import { dirname, isAbsolute, join, relative, resolve } from 'path'
@@ -23,13 +19,10 @@ import { decryptAgeText, encryptAgeText, isAgeEncryptedText } from '../utils/age
 import { isHttpUrl } from '../utils/url'
 import { downloadKokoroProfile } from '../kokoro/client'
 import { validateMihomoProfileContent } from '../kokoro/profile-check'
+import { createPinnedHttpsAgent } from '../utils/pinnedHttpsAgent'
 
 let profileConfig: ProfileConfig // profile.yaml
 const FILE_PERMISSION_ELEVATION_REQUIRED = 'FILE_PERMISSION_ELEVATION_REQUIRED'
-
-export function getCertFingerprint(cert: tls.PeerCertificate) {
-  return crypto.createHash('sha256').update(cert.raw).digest('hex').toUpperCase()
-}
 
 export async function getProfileConfig(force = false): Promise<ProfileConfig> {
   if (force || !profileConfig) {
@@ -184,55 +177,18 @@ export async function createProfile(item: Partial<ProfileItem>): Promise<Profile
       if (!item.url) throw new Error('Empty URL')
       let res: AxiosResponse
       try {
-        const httpsAgent = new https.Agent({ rejectUnauthorized: !item.fingerprint })
-
-        if (item.fingerprint) {
-          const expected = item.fingerprint.replace(/:/g, '').toUpperCase()
-          const verify = (s: tls.TLSSocket) => {
-            if (getCertFingerprint(s.getPeerCertificate()) !== expected)
-              s.destroy(new Error(tr('证书指纹不匹配')))
-          }
-
-          if (newItem.useProxy && mixedPort != 0) {
-            const urlObj = new URL(item.url)
-            const hostname = urlObj.hostname
-            const port = urlObj.port || '443'
-            httpsAgent.createConnection = (_, cb) => {
-              const req = http.request({
-                host: '127.0.0.1',
-                port: mixedPort,
-                method: 'CONNECT',
-                path: `${hostname}:${port}`
-              })
-
-              req.on('connect', (res, sock, head) => {
-                if (res.statusCode !== 200) {
-                  cb?.(new Error(tr('代理连接失败，状态码：{0}', [res.statusCode])), null!)
-                  return
-                }
-                if (head.length > 0) sock.unshift(head)
-                const tls$ = tls.connect(
-                  { socket: sock, servername: hostname, rejectUnauthorized: false },
-                  () => verify(tls$)
-                )
-                cb?.(null, tls$)
-              })
-
-              req.on('error', (e) => cb?.(e, null!))
-              req.end()
-              return null!
-            }
-          } else {
-            const conn = httpsAgent.createConnection.bind(httpsAgent)
-            httpsAgent.createConnection = (o, c) => {
-              const sock = conn(o, c)
-              sock?.once('secureConnect', function (this: tls.TLSSocket) {
-                verify(this)
-              })
-              return sock
-            }
-          }
-        }
+        const httpsAgent = item.fingerprint
+          ? createPinnedHttpsAgent(
+              item.url,
+              item.fingerprint,
+              newItem.useProxy && mixedPort != 0 ? mixedPort : undefined,
+              {
+                fingerprintMismatch: () => new Error(tr('证书指纹不匹配')),
+                proxyConnectFailed: (statusCode) =>
+                  new Error(tr('代理连接失败，状态码：{0}', [statusCode]))
+              }
+            )
+          : new https.Agent({ rejectUnauthorized: true })
 
         res = await axios.get(item.url, {
           httpsAgent,
