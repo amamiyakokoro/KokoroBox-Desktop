@@ -7,10 +7,9 @@ import {
   patchAppConfig,
   patchControledMihomoConfig
 } from '../config'
-import trayIcoIcon from '../../../resources/iconTemplate.ico?asset'
-import trayWhiteIcoIcon from '../../../resources/iconTemplateWhite.ico?asset'
-import templateIcon from '../../../resources/iconTemplate.png?asset'
-import trayWhitePngIcon from '../../../resources/iconTemplateWhite.png?asset'
+import macTrayIcon from '../../../resources/tray-icon-macos.png?asset'
+import notoTrayIcon from '../../../resources/tray-icon-noto.png?asset'
+import notoTrayIcoIcon from '../../../resources/tray-icon-noto.ico?asset'
 import {
   mihomoChangeProxy,
   mihomoCloseConnections,
@@ -64,15 +63,12 @@ function formatDelayText(delay: number): string {
 function createDefaultTrayIcon(): Electron.NativeImage {
   if (defaultTrayIcon) return defaultTrayIcon
 
-  const useWhiteIcon = process.platform !== 'darwin' && nativeTheme.shouldUseDarkColors
   const iconPath =
     process.platform === 'win32'
-      ? useWhiteIcon
-        ? trayWhiteIcoIcon
-        : trayIcoIcon
-      : useWhiteIcon
-        ? trayWhitePngIcon
-        : templateIcon
+      ? notoTrayIcoIcon
+      : process.platform === 'darwin'
+        ? macTrayIcon
+        : notoTrayIcon
   const sourceIcon = nativeImage.createFromPath(iconPath)
   const icon =
     process.platform === 'win32'
