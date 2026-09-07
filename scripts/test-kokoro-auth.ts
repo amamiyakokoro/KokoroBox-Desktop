@@ -639,8 +639,9 @@ test('Kokoro subscription resolve and config download send the same platform Use
   })
 
   assert.equal(h.requests.length, 2)
+  const expectedUserAgent = h.client.kokoroSubscriptionUserAgent(process.platform, '2.26.9-7')
   assert.ok(
-    h.requests.every((request) => request.headers['User-Agent'] === 'KokoroBox-macOS/2.26.9-7')
+    h.requests.every((request) => request.headers['User-Agent'] === expectedUserAgent)
   )
   assert.ok(h.requests.every((request) => request.headers.Authorization === 'Bearer rules-access'))
 })
