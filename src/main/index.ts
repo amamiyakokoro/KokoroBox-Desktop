@@ -38,6 +38,7 @@ import {
 } from './resolve/kokoroCallbackRelay'
 import { isKokoroURI } from './kokoro/oauth'
 import { initializeAppRouting } from './app-routing/manager'
+import { installEarlyTlsDisconnectRecovery } from './utils/earlyTlsDisconnect'
 
 export { setNotQuitDialog } from './resolve/appLifecycle'
 
@@ -132,6 +133,31 @@ function runStartupTask(name: string, task: Promise<unknown>): void {
     appendAppLog(`[App]: startup task ${name} failed, ${error}\n`).catch(() => {})
   })
 }
+
+const reportedEarlyTlsDisconnects = new WeakSet<Error>()
+let lastEarlyTlsDisconnectNotification = 0
+installEarlyTlsDisconnectRecovery((error, origin) => {
+  if (reportedEarlyTlsDisconnects.has(error)) return
+  reportedEarlyTlsDisconnects.add(error)
+
+  runStartupTask(
+    'early TLS disconnect logging',
+    appendAppLog(`[App]: recovered ${origin}, ${error.stack || error.message}\n`)
+  )
+
+  const now = Date.now()
+  if (app.isReady() && now - lastEarlyTlsDisconnectNotification >= 30_000) {
+    lastEarlyTlsDisconnectNotification = now
+    runStartupTask(
+      'early TLS disconnect notification',
+      showNotification({
+        title: tr('请求失败'),
+        body: error.message,
+        variant: 'warning'
+      })
+    )
+  }
+})
 
 function showWindow(): number {
   if (mainWindow) {
