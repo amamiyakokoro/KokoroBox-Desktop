@@ -2,7 +2,10 @@ import { spawnSync } from 'node:child_process'
 import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
-import { proxyBridgeSourceRevision } from '../src/main/app-routing/integrity-manifest.ts'
+import {
+  proxyBridgeRepository,
+  proxyBridgeSourceRevision
+} from '../src/main/app-routing/integrity-manifest.ts'
 import { macOSBundleVersion } from './macos-bundle-version.ts'
 
 const repositoryRoot = path.resolve(import.meta.dirname, '..')
@@ -49,13 +52,7 @@ mkdirSync(buildRoot, { recursive: true })
 if (!process.env.PROXYBRIDGE_SOURCE_DIR) {
   const clone = spawnSync(
     'git',
-    [
-      'clone',
-      '--filter=blob:none',
-      '--no-checkout',
-      'https://github.com/amamiyakokoro/ProxyBridge.git',
-      sourceRoot
-    ],
+    ['clone', '--filter=blob:none', '--no-checkout', proxyBridgeRepository, sourceRoot],
     { stdio: 'inherit' }
   )
   if (clone.status !== 0) throw new Error('ProxyBridge clone failed')
@@ -108,13 +105,7 @@ cpSync(extensionOutput, path.join(stagingRoot, extensionBundleName), {
   recursive: true
 })
 rmSync(
-  path.join(
-    stagingRoot,
-    extensionBundleName,
-    'Contents',
-    'Resources',
-    'Info.KokoroBox.plist'
-  ),
+  path.join(stagingRoot, extensionBundleName, 'Contents', 'Resources', 'Info.KokoroBox.plist'),
   { force: true }
 )
 

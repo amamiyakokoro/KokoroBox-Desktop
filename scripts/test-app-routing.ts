@@ -26,6 +26,7 @@ import { isSuccessfulSocks5Greeting } from '../src/main/app-routing/health'
 import { parseProcessRouterEvent } from '../src/main/app-routing/protocol'
 import {
   processRouterBinaryNames,
+  proxyBridgeRepository,
   proxyBridgeSourceRevision,
   validateProcessRouterManifest,
   winDivertArchiveSha256,
@@ -520,15 +521,21 @@ test('requires every pinned native binary to match its build manifest', () => {
 })
 
 test('native build is pinned to the controlled KokoroBox ProxyBridge fork', () => {
+  const sourceManifest = JSON.parse(readFileSync('build/proxybridge/source-manifest.json', 'utf8'))
   const build = readFileSync('scripts/build-proxybridge.ps1', 'utf8')
   const macBuild = readFileSync('scripts/prepare-macos-routing.ts', 'utf8')
   const buildWorkflow = readFileSync('.github/workflows/build.yml', 'utf8')
   const macBridge = readFileSync('native/macos-app-routing/KokoroBoxAppRoutingBridge.mm', 'utf8')
   const macCoordinator = readFileSync('src/main/app-routing/macos.ts', 'utf8')
   const router = readFileSync('build/proxybridge/kokorobox_process_router.c', 'utf8')
-  assert.match(build, /https:\/\/github\.com\/amamiyakokoro\/ProxyBridge\.git/)
-  assert.match(build, new RegExp(proxyBridgeSourceRevision))
-  assert.match(macBuild, /https:\/\/github\.com\/amamiyakokoro\/ProxyBridge\.git/)
+  assert.equal(sourceManifest.proxyBridgeRepository, proxyBridgeRepository)
+  assert.equal(sourceManifest.proxyBridgeRevision, proxyBridgeSourceRevision)
+  assert.equal(sourceManifest.winDivertVersion, winDivertVersion)
+  assert.equal(sourceManifest.winDivertArchiveSha256, winDivertArchiveSha256)
+  assert.match(proxyBridgeRepository, /https:\/\/github\.com\/amamiyakokoro\/ProxyBridge\.git/)
+  assert.match(build, /build\/proxybridge\/source-manifest\.json/)
+  assert.match(build, /SourceManifest\.proxyBridgeRevision/)
+  assert.match(macBuild, /proxyBridgeRepository/)
   assert.match(macBuild, /proxyBridgeSourceRevision/)
   assert.match(macBuild, /extensionBundleIdentifier = 'com\.amamiyakokoro\.app\.proxy-extension'/)
   assert.match(macBuild, /extensionBundleName = `\$\{extensionBundleIdentifier\}\.systemextension`/)
@@ -549,7 +556,7 @@ test('native build is pinned to the controlled KokoroBox ProxyBridge fork', () =
   assert.doesNotMatch(macBridge, /SecCodeCheckValidity|certificate leaf/)
   assert.match(macCoordinator, /process\.dlopen/)
   assert.doesNotMatch(macCoordinator, /spawn\(|child_process/)
-  assert.match(build, /63cb41763bb4b20f600b6de04e991a9c2be73279e317d4d82f237b150c5f3f15/)
+  assert.match(build, /SourceManifest\.winDivertArchiveSha256/)
   assert.doesNotMatch(build, /git -C \$SourceRoot apply/)
   assert.match(build, /kokorobox-process-router\.exe/)
   assert.match(router, /version != PROTOCOL_VERSION/)

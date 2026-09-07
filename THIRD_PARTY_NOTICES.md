@@ -6,7 +6,7 @@ KokoroBox uses a modified subset of the
 [KokoroBox ProxyBridge fork](https://github.com/amamiyakokoro/ProxyBridge) as the
 packet-interception core behind its Windows x64 native router and macOS app-proxy System
 Extension. The build is pinned to commit
-`ad904d8cd689659e1250bd683deca3d58d49ff7f`. The fork changes missing-proxy handling to fail
+`475525eaa48e4d75926b408d2994f42cb99da922`. The fork changes missing-proxy handling to fail
 closed and raises the internal process-pattern capacity so an atomic guard can cover the complete
 bounded rule set. It also exposes the opt-in UDP/53 routing control used by KokoroBox application
 routing. Its history retains the upstream source and license.

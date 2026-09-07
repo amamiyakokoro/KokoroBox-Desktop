@@ -22,6 +22,10 @@ import {
   targetId
 } from './release-artifacts.ts'
 import { compareVersions, normalizeVersion, planRelease } from './release-plan.ts'
+import {
+  proxyBridgeSourceRevision,
+  winDivertArchiveSha256
+} from '../src/main/app-routing/integrity-manifest.ts'
 
 const sha = '1234567890abcdef1234567890abcdef12345678'
 const base = { packageVersion: '2.26.8', sha }
@@ -164,11 +168,11 @@ function fixtures(fn: (source: string, output: string) => void, version = '2.26.
           properties: [
             {
               name: 'kokorobox:proxybridge-revision',
-              value: 'ad904d8cd689659e1250bd683deca3d58d49ff7f'
+              value: proxyBridgeSourceRevision
             },
             {
               name: 'kokorobox:windivert-archive-sha256',
-              value: '63cb41763bb4b20f600b6de04e991a9c2be73279e317d4d82f237b150c5f3f15'
+              value: winDivertArchiveSha256
             }
           ]
         }

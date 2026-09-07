@@ -1,7 +1,10 @@
-export const proxyBridgeSourceRevision = '475525eaa48e4d75926b408d2994f42cb99da922'
-export const winDivertVersion = '2.2.2'
-export const winDivertArchiveSha256 =
-  '63cb41763bb4b20f600b6de04e991a9c2be73279e317d4d82f237b150c5f3f15'
+import sourceManifest from '../../../build/proxybridge/source-manifest.json'
+
+export const proxyBridgeRepository = sourceManifest.proxyBridgeRepository
+export const proxyBridgeSourceRevision = sourceManifest.proxyBridgeRevision
+export const winDivertVersion = sourceManifest.winDivertVersion
+export const winDivertUrl = sourceManifest.winDivertUrl
+export const winDivertArchiveSha256 = sourceManifest.winDivertArchiveSha256
 export const processRouterBinaryNames = Object.freeze([
   'kokorobox-process-router.exe',
   'ProxyBridgeCore.dll',
