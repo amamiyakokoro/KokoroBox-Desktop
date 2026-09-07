@@ -17,6 +17,7 @@
     "test:localization": "tsx --test scripts/test-localization.ts",
     "test:override-user-agent": "tsx --test scripts/test-override-user-agent.ts",
     "test:app-routing": "tsx --test scripts/test-app-routing.ts",
+    "test:dns": "tsx --test scripts/test-dns.ts",
     "test:service-auth": "tsx --test scripts/test-service-auth.ts",
     "test:release": "tsx --test scripts/test-release.ts",
     "test:macos-signing": "tsx --test scripts/test-macos-signing.ts",

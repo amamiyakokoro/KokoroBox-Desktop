@@ -148,7 +148,6 @@ export const isValidDnsServer = (s: string | undefined, ipOnly = false): Validat
       return { ok: false, error: tr('# 后面的参数不能为空') }
     }
     const boolParams = ['ecs-override', 'h3', 'skip-cert-verify', 'disable-ipv4', 'disable-ipv6']
-    const allowedParams = ['ecs', ...boolParams]
 
     const params = paramsPart
       .split('&')
@@ -166,16 +165,19 @@ export const isValidDnsServer = (s: string | undefined, ipOnly = false): Validat
         if (!/^[a-zA-Z0-9-_]+$/.test(key)) {
           return { ok: false, error: tr('参数名 "{0}" 不合法', [key]) }
         }
-        if (!allowedParams.includes(key)) {
-          return {
-            ok: false,
-            error: tr('不支持的参数 "{0}"，允许的参数：{1}', [key, allowedParams.join(', ')])
-          }
-        }
-        if (boolParams.includes(key) && value !== 'true' && value !== 'false') {
+        // Endpoint parameters are extended by Mihomo over time. Validate their
+        // syntax instead of maintaining an incomplete allow-list here.
+        if (
+          (boolParams.includes(key) || /^disable-qtype-\d+$/.test(key)) &&
+          value !== 'true' &&
+          value !== 'false'
+        ) {
           return { ok: false, error: tr('参数 "{0}" 的值必须是 true 或 false', [key]) }
         }
         if (key === 'ecs' && !/^[a-zA-Z0-9-_./:]+$/.test(value)) {
+          return { ok: false, error: tr('参数值 "{0}" 不合法', [value]) }
+        }
+        if (key === 'name-cert-verify' && !/^[a-zA-Z0-9*.-]+$/.test(value)) {
           return { ok: false, error: tr('参数值 "{0}" 不合法', [value]) }
         }
       } else {

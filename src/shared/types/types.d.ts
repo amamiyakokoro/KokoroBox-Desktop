@@ -47,7 +47,7 @@ type MihomoProxyType =
 type TunStack = 'gvisor' | 'mixed' | 'system'
 type FindProcessMode = 'off' | 'strict' | 'always'
 type DnsMode = 'normal' | 'fake-ip' | 'redir-host'
-type FilterMode = 'blacklist' | 'whitelist'
+type FilterMode = 'blacklist' | 'whitelist' | 'rule'
 type NetworkInterfaceInfo = os.NetworkInterfaceInfo
 type Fingerprints =
   | ''
