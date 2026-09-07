@@ -566,10 +566,7 @@ test('native build is pinned to the controlled KokoroBox ProxyBridge fork', () =
   assert.match(macBridge, /CFNotificationCenterPostNotification/)
   assert.match(macBridge, /application-routing-policy-ack\.json/)
   assert.match(macBridge, /@"revision" : revision/)
-  assert.match(
-    macBridge,
-    /x-help-action:\/\/openPrefPane\?bundleId=com\.apple\.LoginItems-Settings\.extension/
-  )
+  assert.match(macBridge, /x-apple\.systempreferences:com\.apple\.LoginItems-Settings\.extension/)
   assert.doesNotMatch(macBridge, /com\.apple\.NetworkExtensionSettings/)
   assert.match(macBridge, /KBStoredConfiguration/)
   assert.match(macBridge, /KBClearSharedPolicy/)
