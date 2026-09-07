@@ -99,7 +99,9 @@ export function signingConfig(projectDir: string, teamId: string, appProvisionin
       type: 'distribution',
       hardenedRuntime: true,
       ...(appProvisioningProfile ? { provisioningProfile: appProvisioningProfile } : {}),
-      signIgnore: ['Contents/Library/SystemExtensions/KokoroBoxProxyExtension.systemextension'],
+      signIgnore: [
+        'Contents/Library/SystemExtensions/com.amamiyakokoro.app.proxy-extension.systemextension'
+      ],
       // The final PKG is explicitly notarized below; never rely on optional auto-notarization.
       notarize: false,
       binaries: [
@@ -224,7 +226,7 @@ export function assertProvisioningProfilePermissions(appPath: string) {
       'Contents',
       'Library',
       'SystemExtensions',
-      'KokoroBoxProxyExtension.systemextension',
+      'com.amamiyakokoro.app.proxy-extension.systemextension',
       'Contents',
       'embedded.provisionprofile'
     )
@@ -419,7 +421,7 @@ export function signMacRelease(
       ...signingConfig(projectDir, teamId).mac.binaries.map((file) => path.join(appPath, file)),
       path.join(
         appPath,
-        'Contents/Library/SystemExtensions/KokoroBoxProxyExtension.systemextension'
+        'Contents/Library/SystemExtensions/com.amamiyakokoro.app.proxy-extension.systemextension'
       )
     ]) {
       run(

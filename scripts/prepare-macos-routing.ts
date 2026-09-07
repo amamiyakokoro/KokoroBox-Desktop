@@ -9,6 +9,9 @@ const repositoryRoot = path.resolve(import.meta.dirname, '..')
 const targetArch = process.env.npm_config_target_arch || process.arch
 const stagingRoot = path.join(repositoryRoot, 'extra', 'macos-app-routing-system-extension')
 const moduleStagingRoot = path.join(repositoryRoot, 'extra', 'files', 'macos-app-routing')
+const extensionBundleIdentifier = 'com.amamiyakokoro.app.proxy-extension'
+// sysextd requires the service-path basename to exactly match CFBundleIdentifier.
+const extensionBundleName = `${extensionBundleIdentifier}.systemextension`
 
 if (process.platform !== 'darwin' || !['arm64', 'x64'].includes(targetArch)) {
   rmSync(stagingRoot, { recursive: true, force: true })
@@ -101,13 +104,13 @@ rmSync(stagingRoot, { recursive: true, force: true })
 rmSync(moduleStagingRoot, { recursive: true, force: true })
 mkdirSync(stagingRoot, { recursive: true })
 mkdirSync(moduleStagingRoot, { recursive: true })
-cpSync(extensionOutput, path.join(stagingRoot, 'KokoroBoxProxyExtension.systemextension'), {
+cpSync(extensionOutput, path.join(stagingRoot, extensionBundleName), {
   recursive: true
 })
 rmSync(
   path.join(
     stagingRoot,
-    'KokoroBoxProxyExtension.systemextension',
+    extensionBundleName,
     'Contents',
     'Resources',
     'Info.KokoroBox.plist'

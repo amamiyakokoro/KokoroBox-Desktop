@@ -117,7 +117,7 @@ function mockRunner(env: NodeJS.ProcessEnv, projectDir: string, failure?: string
       )
       const extensionContents = path.join(
         appPath,
-        'Contents/Library/SystemExtensions/KokoroBoxProxyExtension.systemextension/Contents'
+        'Contents/Library/SystemExtensions/com.amamiyakokoro.app.proxy-extension.systemextension/Contents'
       )
       mkdirSync(extensionContents, { recursive: true })
       writeFileSync(path.join(appPath, 'Contents/embedded.provisionprofile'), 'app profile', {
@@ -250,7 +250,7 @@ test('embedded provisioning profiles remain readable after a root-owned PKG inst
     const appPath = path.join(directory, 'KokoroBox.app')
     const extensionContents = path.join(
       appPath,
-      'Contents/Library/SystemExtensions/KokoroBoxProxyExtension.systemextension/Contents'
+      'Contents/Library/SystemExtensions/com.amamiyakokoro.app.proxy-extension.systemextension/Contents'
     )
     mkdirSync(extensionContents, { recursive: true })
     const appProfile = path.join(appPath, 'Contents/embedded.provisionprofile')
@@ -414,10 +414,12 @@ test('generated signing config passes electron-builder validation with required 
   assert.match(config.afterPack, /macos-after-pack\.cjs$/)
   assert.equal(config.mac.entitlementsInherit, 'build/entitlements.mac.helper.plist')
   assert.deepEqual(config.mac.signIgnore, [
-    'Contents/Library/SystemExtensions/KokoroBoxProxyExtension.systemextension'
+    'Contents/Library/SystemExtensions/com.amamiyakokoro.app.proxy-extension.systemextension'
   ])
   const afterPack = readFileSync('scripts/macos-after-pack.cjs', 'utf8')
   assert.doesNotMatch(afterPack, /entitlements\.mac\.bridge|app-routing-bridge/)
+  assert.match(afterPack, /extensionIdentifier !== extensionServiceName/)
+  assert.match(afterPack, /bundle name must match its identifier/)
   assert.equal(config.pkg.identity, teamId)
 })
 

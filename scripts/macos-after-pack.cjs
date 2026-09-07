@@ -38,11 +38,20 @@ module.exports = async function afterPack(context) {
     'Contents',
     'Library',
     'SystemExtensions',
-    'KokoroBoxProxyExtension.systemextension'
+    'com.amamiyakokoro.app.proxy-extension.systemextension'
   )
   const extensionProfile = process.env.KOKOROBOX_EXTENSION_PROVISIONING_PROFILE_PATH
   if (!existsSync(extensionPath) || !extensionProfile) {
     throw new Error('Incomplete macOS application-routing payload')
+  }
+  const extensionIdentifier = execFileSync(
+    '/usr/bin/plutil',
+    ['-extract', 'CFBundleIdentifier', 'raw', path.join(extensionPath, 'Contents', 'Info.plist')],
+    { encoding: 'utf8' }
+  ).trim()
+  const extensionServiceName = path.basename(extensionPath, '.systemextension')
+  if (extensionIdentifier !== extensionServiceName) {
+    throw new Error('macOS System Extension bundle name must match its identifier')
   }
   const embeddedProfile = path.join(extensionPath, 'Contents', 'embedded.provisionprofile')
   copyFileSync(extensionProfile, embeddedProfile)

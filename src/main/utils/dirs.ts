@@ -159,7 +159,7 @@ export function macAppRoutingExtensionPath(): string {
     path.dirname(resourcesDir()),
     'Library',
     'SystemExtensions',
-    'KokoroBoxProxyExtension.systemextension'
+    'com.amamiyakokoro.app.proxy-extension.systemextension'
   )
 }
 

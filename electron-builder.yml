@@ -55,8 +55,8 @@ mac:
   entitlements: build/entitlements.mac.plist
   entitlementsInherit: build/entitlements.mac.helper.plist
   extraFiles:
-    - from: './extra/macos-app-routing-system-extension/KokoroBoxProxyExtension.systemextension'
-      to: 'Library/SystemExtensions/KokoroBoxProxyExtension.systemextension'
+    - from: './extra/macos-app-routing-system-extension/com.amamiyakokoro.app.proxy-extension.systemextension'
+      to: 'Library/SystemExtensions/com.amamiyakokoro.app.proxy-extension.systemextension'
   extendInfo:
     NSSystemExtensionUsageDescription: KokoroBox uses a system extension to route only the applications you select.
     NSCameraUsageDescription: Application requests access to the device's camera.
