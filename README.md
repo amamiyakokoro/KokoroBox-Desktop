@@ -14,7 +14,8 @@ A cross-platform Mihomo desktop client with built-in Kokoro subscriptions.
 
 - Bundled stable and preview [Mihomo](https://github.com/MetaCubeX/mihomo) cores
 - System proxy, TUN, DNS, sniffing, routing, and profile controls
-- Windows x64 per-application Proxy, Direct, and Block routing ([MVP details](docs/windows-app-routing.md))
+- Per-application Proxy, Direct, and Block routing powered by a controlled
+  [ProxyBridge fork](https://github.com/amamiyakokoro/ProxyBridge)
 - Secure osu! OAuth sign-in for Kokoro subscriptions
 - Kokoro subscription options and editable `default` custom rules
 - Profile overrides and automatic subscription updates
@@ -29,6 +30,28 @@ After sign-in, the same page can edit the Kokoro `default` custom rule set. Auth
 
 > Never include tokens, credentials, generated profiles, or complete subscription URLs in logs and issue reports.
 
+## Application routing
+
+**Application routing** sends only selected applications through KokoroBox without requiring
+system proxy or TUN. Add an executable or application, choose TCP, UDP, or both, then assign a
+**Proxy**, **Direct**, or **Block** action. Rules are ordered, persisted, and restored at startup.
+
+- **Windows 10/11 x64:** a headless ProxyBridge sidecar uses WinDivert and the authenticated
+  KokoroBox privileged service. Windows ARM64 is not supported.
+- **macOS 13+:** an experimental ProxyBridge transparent-proxy System Extension supports Apple
+  Silicon and Intel. macOS asks the user to approve the extension before first use.
+- **Linux:** application routing is not yet supported.
+
+Proxy traffic uses a dedicated loopback-only Mihomo SOCKS5 listener. If Mihomo becomes
+unavailable, matching Proxy rules fail closed as Block instead of leaking through Direct.
+KokoroBox, Mihomo, routing components, loopback, link-local, multicast, and broadcast traffic
+are always excluded to prevent proxy loops.
+
+KokoroBox builds a pinned ProxyBridge revision from source and packages only the controlled
+routing components—not the upstream GUI, updater, or external proxy configuration. See the
+[Windows MVP](docs/windows-app-routing.md), [macOS integration](docs/macos-app-routing.md), and
+[third-party notices](THIRD_PARTY_NOTICES.md) for architecture, verification status, and licenses.
+
 ## Install
 
 Download a package for Windows, macOS, or Linux from [GitHub Releases](https://github.com/amamiyakokoro/KokoroBox-Desktop/releases). Releases include `SHA256SUMS` for verification:
@@ -37,11 +60,13 @@ Download a package for Windows, macOS, or Linux from [GitHub Releases](https://g
 shasum -a 256 -c SHA256SUMS --ignore-missing
 ```
 
-Windows packages are currently unsigned. On macOS, install the PKG so the bundled Mihomo core receives the required permissions.
+Windows packages are currently unsigned. On macOS, install the PKG so the bundled Mihomo core
+and optional application-routing System Extension can receive the required permissions.
 
 ## Development
 
-Requires Node.js 22.12+, pnpm 11, and Go 1.23+ when preparing Windows packages.
+Requires Node.js 22.12+ and pnpm 11. Windows package preparation also requires Go 1.23+;
+building the macOS application-routing payload requires Xcode.
 
 ```bash
 git clone https://github.com/amamiyakokoro/KokoroBox-Desktop.git
@@ -61,6 +86,9 @@ Use `--x64` or `--arm64` to select an architecture. See the [release guide](docs
 
 ## License
 
-KokoroBox-Desktop is derived from [Sparkle](https://github.com/xishang0128/sparkle) and retains compatible internal identifiers where required for upgrades.
+KokoroBox-Desktop is derived from [Sparkle](https://github.com/xishang0128/sparkle) and retains
+compatible internal identifiers where required for upgrades. Application routing incorporates
+MIT-licensed ProxyBridge components and platform networking dependencies listed in
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
 Licensed under [GNU GPLv3](LICENSE). Third-party components remain subject to their respective licenses.
