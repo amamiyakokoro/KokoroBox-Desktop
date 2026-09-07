@@ -41,6 +41,16 @@ While application routing is enabled, KokoroBox injects a dedicated SOCKS listen
 disabled, binds only to loopback, and is independent of user-controlled mixed-port settings.
 Remote endpoints and credentials cannot be supplied through this feature.
 
+When **DNS leak protection** is enabled, KokoroBox also exposes Mihomo's DNS listener only on
+`127.0.0.1:7892`. ProxyBridge redirects plaintext UDP/53 and TCP/53 from Proxy applications to
+that listener. Windows normally sends many application resolver requests through the shared DNS
+Client service (`svchost.exe`), where the originating application identity is no longer visible;
+those brokered requests are therefore redirected as well. This closes the system-resolver leak,
+but it also means a Direct application using Windows DNS Client can have its plaintext lookup
+resolved by Mihomo while protection is enabled. Direct application connections remain Direct.
+DoH, DoT, and other encrypted DNS are ordinary application traffic and follow the application's
+configured TCP/UDP action; ProxyBridge does not inspect their encrypted payloads.
+
 The packaged native process is `kokorobox-process-router.exe`. It accepts newline-delimited,
 versioned JSON commands over inherited standard input and emits JSON lifecycle events. It does
 not accept command-line profile paths, external proxy credentials, or update commands. Rules are
@@ -104,8 +114,9 @@ is configured and verified with `Get-AuthenticodeSignature` (or SignPath's signe
 verification) for every executable and DLL.
 
 The automated suite covers strict schema validation, the authenticated service contract,
-ordering, disabled rules, mandatory policy generation, fail-closed command generation, SOCKS5
-greeting validation, provenance, and binary hash failures. Packet interception, TCP/UDP routing,
+ordering, disabled rules, mandatory policy generation, fail-closed command generation, isolated
+SOCKS and DNS listener generation, SOCKS5 greeting validation, provenance, and binary hash
+failures. Packet interception, TCP/UDP routing,
 IPv4/IPv6 behavior, crash leakage, sleep/resume, upgrade/uninstall cleanup,
 standard-user/service operation, and Microsoft Defender must be exercised on clean Windows 10
 and Windows 11 x64 virtual machines before release.

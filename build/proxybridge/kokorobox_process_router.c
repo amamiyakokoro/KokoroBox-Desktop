@@ -386,7 +386,10 @@ static BOOL replace_rules(const char *command) {
     }
 
     ProxyBridge_SetLocalhostViaProxy(FALSE);
-    ProxyBridge_SetProxyUdpDnsEnabled(proxy_udp_dns);
+    if (!ProxyBridge_ConfigureDnsHijack(proxy_udp_dns, 7892)) {
+        emit("error", "unable to configure DNS hijack");
+        return FALSE;
+    }
     if (diagnostic_logging) {
         ProxyBridge_SetTrafficLoggingEnabled(TRUE);
         ProxyBridge_SetConnectionCallback(diagnostic_connection);

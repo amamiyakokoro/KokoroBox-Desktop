@@ -91,18 +91,20 @@ const AppRoutingSettingDrawer: React.FC<Props> = (props) => {
           </Drawer.Header>
           <Drawer.Body className="no-scrollbar flex-1 overflow-y-auto px-5 py-3">
             <SettingItem
-              title={tr('代理应用程序 UDP DNS')}
+              title={tr('DNS 泄漏保护')}
               actions={
                 <SettingHelp
-                  label={tr('代理应用程序 UDP DNS')}
-                  content={tr('将 Proxy 规则应用程序自行发出的 UDP/53 查询交给 Mihomo。')}
+                  label={tr('DNS 泄漏保护')}
+                  content={tr(
+                    '将 Proxy 应用程序的明文 DNS 查询交给 Mihomo；Windows DNS Client 代发的查询也会受到保护。'
+                  )}
                 />
               }
               {...settingItemProps}
               divider
             >
               <Switch
-                aria-label={tr('代理应用程序 UDP DNS')}
+                aria-label={tr('DNS 泄漏保护')}
                 isSelected={isProxyUdpDnsEnabled}
                 isDisabled={isDisabled}
                 onChange={onProxyUdpDnsChange}
