@@ -13,6 +13,12 @@ static const size_t KBMaximumRequestBytes = 256 * 1024;
 static NSString *const KBExtensionIdentifier = @"com.amamiyakokoro.app.proxy-extension";
 static NSString *const KBManagerDescription = @"KokoroBox Application Routing";
 static NSString *const KBErrorDomain = @"com.amamiyakokoro.app.routing-bridge";
+static NSString *const KBAppGroupIdentifier = @"group.com.amamiyakokoro.app";
+static NSString *const KBPolicyNotificationName =
+    @"com.amamiyakokoro.app.routing-policy.changed";
+static NSString *const KBPolicyFilename = @"application-routing-policy.json";
+static NSString *const KBPolicyAcknowledgementFilename =
+    @"application-routing-policy-ack.json";
 static NSString *const KBUserApprovalPendingDefaultsKey =
     @"KokoroBoxApplicationRoutingUserApprovalPending";
 
@@ -213,76 +219,64 @@ static BOOL KBSendConfiguration(NSDictionary *configuration,
     if (error) *error = KBError(@"The transparent proxy provider is unavailable");
     return NO;
   }
-  NSDictionary *message = @{
-    @"action" : @"replaceKokoroBoxConfiguration",
+  NSURL *containerURL = [[NSFileManager defaultManager]
+      containerURLForSecurityApplicationGroupIdentifier:KBAppGroupIdentifier];
+  if (!containerURL) {
+    if (error) *error = KBError(@"The application-routing App Group is unavailable");
+    return NO;
+  }
+  NSURL *policyURL = [containerURL URLByAppendingPathComponent:KBPolicyFilename];
+  NSURL *acknowledgementURL =
+      [containerURL URLByAppendingPathComponent:KBPolicyAcknowledgementFilename];
+  NSString *revision = NSUUID.UUID.UUIDString;
+  NSDictionary *envelope = @{
+    @"version" : @(KBProtocolVersion),
+    @"revision" : revision,
     @"configuration" : configuration
   };
-  NSData *messageData = [NSJSONSerialization dataWithJSONObject:message options:0 error:error];
-  if (!messageData) return NO;
+  NSData *policyData =
+      [NSJSONSerialization dataWithJSONObject:envelope options:0 error:error];
+  if (!policyData || ![policyData writeToURL:policyURL options:NSDataWritingAtomic error:error]) {
+    return NO;
+  }
+  [[NSFileManager defaultManager] removeItemAtURL:acknowledgementURL error:nil];
 
-  // A transparent-proxy connection can report Connected slightly before the
-  // provider is ready to answer application messages.  In that small window
-  // NetworkExtension may invoke the response handler with nil.  Retrying a
-  // bounded number of times is safe: no policy is accepted until the provider
-  // sends the versioned acknowledgement below, and we never fall back to
-  // Direct traffic.
+  // NETunnelProviderSession callbacks are unreliable when invoked through an
+  // Electron N-API worker. Exchange the policy through the signed App Group
+  // instead, notify the running provider, and require an acknowledgement with
+  // the same one-time revision before accepting the update.
   const NSUInteger maximumAttempts = 3;
-  NSError *lastSendError = nil;
   for (NSUInteger attempt = 0; attempt < maximumAttempts; ++attempt) {
-    dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
-    __block NSData *providerResponse = nil;
-    __block NSError *sendError = nil;
-    __block BOOL sent = NO;
-    NETunnelProviderSession *session = (NETunnelProviderSession *)manager.connection;
-
-    // Apple delivers provider-message responses through the app's dispatch
-    // context. The N-API work item itself runs on a libuv worker thread with no
-    // Cocoa run loop, so initiating this operation there can leave the response
-    // handler permanently undelivered even though the extension handled the
-    // request. Submit it on the main queue and only block this worker thread.
-    dispatch_async(dispatch_get_main_queue(), ^{
-      sent = [session sendProviderMessage:messageData
-                              returnError:&sendError
-                          responseHandler:^(NSData *responseData) {
-                            providerResponse = responseData;
-                            dispatch_semaphore_signal(semaphore);
-                          }];
-      if (!sent || sendError) dispatch_semaphore_signal(semaphore);
-    });
-    BOOL completed = KBWait(semaphore, 5);
-    if (!sent || sendError) {
-      lastSendError = sendError ?: KBError(@"Sending the provider policy failed");
-    } else if (completed) {
-      NSError *responseError = nil;
-      id decodedResponse = providerResponse
-                               ? [NSJSONSerialization JSONObjectWithData:providerResponse
-                                                                 options:0
-                                                                   error:&responseError]
-                               : nil;
-      NSDictionary *response = [decodedResponse isKindOfClass:[NSDictionary class]]
-                                   ? decodedResponse
-                                   : nil;
-      if ([response[@"status"] isEqualToString:@"ok"] &&
-          [response[@"version"] integerValue] == KBProtocolVersion) {
-        return YES;
-      }
-      if ([response[@"status"] isEqualToString:@"error"]) {
-        // The provider deliberately exposes only stable error codes.  Do not
-        // surface untrusted response content or the policy itself to logs/UI.
-        if (error) *error = KBError(@"The network extension rejected the application-routing policy");
+    CFNotificationCenterPostNotification(
+        CFNotificationCenterGetDarwinNotifyCenter(),
+        (__bridge CFNotificationName)KBPolicyNotificationName,
+        NULL,
+        NULL,
+        true);
+    NSDate *deadline = [NSDate dateWithTimeIntervalSinceNow:2];
+    while (deadline.timeIntervalSinceNow > 0) {
+      NSData *acknowledgementData = [NSData dataWithContentsOfURL:acknowledgementURL];
+      id decoded = acknowledgementData
+                       ? [NSJSONSerialization JSONObjectWithData:acknowledgementData
+                                                         options:0
+                                                           error:nil]
+                       : nil;
+      NSDictionary *acknowledgement =
+          [decoded isKindOfClass:[NSDictionary class]] ? decoded : nil;
+      if ([acknowledgement[@"revision"] isEqualToString:revision] &&
+          [acknowledgement[@"version"] integerValue] == KBProtocolVersion) {
+        if ([acknowledgement[@"status"] isEqualToString:@"ok"]) return YES;
+        if (error) {
+          *error = KBError(@"The network extension rejected the application-routing policy");
+        }
         return NO;
       }
-      lastSendError = responseError ?: KBError(
-          @"The network extension did not acknowledge the application-routing policy");
-    } else {
-      lastSendError = KBError(@"The network extension did not acknowledge the application-routing policy");
-    }
-
-    if (attempt + 1 < maximumAttempts) {
-      [NSThread sleepForTimeInterval:0.25 * (attempt + 1)];
+      [NSThread sleepForTimeInterval:0.05];
     }
   }
-  if (error) *error = lastSendError ?: KBError(@"Sending the provider policy failed");
+  if (error) {
+    *error = KBError(@"The network extension did not acknowledge the application-routing policy");
+  }
   return NO;
 }
 
