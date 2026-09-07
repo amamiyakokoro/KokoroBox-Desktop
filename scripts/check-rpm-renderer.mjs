@@ -6,17 +6,24 @@ import { setTimeout as delay } from 'node:timers/promises'
 const child = spawn(
   '/usr/bin/sparkle',
   ['--no-sandbox', '--disable-gpu', '--ozone-platform=x11', '--remote-debugging-port=9222'],
-  { stdio: 'inherit' }
+  // Electron creates renderer and utility subprocesses. Give the application
+  // its own process group so the smoke test can reliably tear down all of them.
+  { stdio: 'inherit', detached: true }
 )
 let startupError
 child.on('error', (error) => {
   startupError = error
 })
 let socket
+let failure
 const deadline = Date.now() + 60_000
 const watchdog = setTimeout(() => {
   console.error('Timed out waiting for the packaged renderer and IPC')
-  child.kill('SIGKILL')
+  try {
+    process.kill(-child.pid, 'SIGKILL')
+  } catch {
+    child.kill('SIGKILL')
+  }
   process.exit(1)
 }, 65_000)
 
@@ -89,8 +96,26 @@ try {
   assert.equal(child.exitCode, null, 'Application exited after rendering')
   assert.equal(child.signalCode, null, 'Application crashed after rendering')
   console.log('Packaged renderer mounted and main-process IPC succeeded')
+} catch (error) {
+  failure = error
 } finally {
   clearTimeout(watchdog)
   socket?.close()
-  child.kill('SIGKILL')
+  if (child.exitCode === null && child.signalCode === null) {
+    const closed = new Promise((resolve) => child.once('close', resolve))
+    try {
+      process.kill(-child.pid, 'SIGKILL')
+    } catch {
+      child.kill('SIGKILL')
+    }
+    await Promise.race([closed, delay(5000)])
+  }
 }
+
+// Node's built-in WebSocket may retain its socket while Chromium is being
+// killed. This is a short-lived CI probe, so exit explicitly after cleanup.
+if (failure) {
+  console.error(failure)
+  process.exit(1)
+}
+process.exit(0)

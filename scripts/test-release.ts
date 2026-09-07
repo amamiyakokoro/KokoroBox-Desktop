@@ -374,12 +374,21 @@ test('openSUSE Tumbleweed validation gates the reusable build for x64 RPMs', () 
   assert.equal(job.needs, 'build')
   assert.equal(job['continue-on-error'], undefined)
   assert.equal(job['runs-on'], 'ubuntu-latest')
+  assert.equal(job['timeout-minutes'], 30)
   const download = job.steps.find((step) => step.uses?.startsWith('actions/download-artifact@'))
   assert.equal(download.with.name, 'packages-ubuntu-latest-x64-rpm')
   const smoke = job.steps.find((step) => step.run?.includes('check-opensuse-rpm.sh'))
   assert.ok(smoke)
   assert.equal(smoke['continue-on-error'], undefined)
   assert.match(smoke.run, /registry\.opensuse\.org\/opensuse\/tumbleweed:latest/)
+})
+
+test('RPM renderer smoke test terminates the complete Electron process group', () => {
+  const smokeTest = readFileSync('scripts/check-rpm-renderer.mjs', 'utf8')
+  assert.match(smokeTest, /detached:\s*true/)
+  assert.match(smokeTest, /process\.kill\(-child\.pid, 'SIGKILL'\)/)
+  assert.match(smokeTest, /await Promise\.race\(\[closed, delay\(5000\)\]\)/)
+  assert.match(smokeTest, /process\.exit\(0\)/)
 })
 
 test('CI macOS config loads through electron-builder and preserves PKG installation settings', async () => {
