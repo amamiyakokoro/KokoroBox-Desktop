@@ -553,6 +553,10 @@ test('native build is pinned to the controlled KokoroBox ProxyBridge fork', () =
   assert.match(macBridge, /napi_create_async_work/)
   assert.match(macBridge, /OSSystemExtensionRequest/)
   assert.match(macBridge, /NETransparentProxyManager/)
+  assert.match(macBridge, /const NSUInteger maximumAttempts = 3/)
+  assert.match(macBridge, /NetworkExtension may invoke the response handler with nil/)
+  assert.match(macBridge, /The network extension rejected the application-routing policy/)
+  assert.match(macBridge, /The network extension did not acknowledge the application-routing policy/)
   assert.doesNotMatch(macBridge, /SecCodeCheckValidity|certificate leaf/)
   assert.match(macCoordinator, /process\.dlopen/)
   assert.doesNotMatch(macCoordinator, /spawn\(|child_process/)
@@ -592,6 +596,7 @@ test('macOS approval guidance returns promptly and remains visible across app re
   assert.match(page, /needsMacApproval/)
   assert.match(page, /打开 macOS 网络扩展设置/)
   assert.match(page, /我已启用，立即检查/)
+  assert.match(page, /网络扩展正在启动，请稍后重试/)
 })
 
 test('macOS bundle versions support stable revisions and rolling builds', () => {

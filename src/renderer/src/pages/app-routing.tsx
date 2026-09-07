@@ -71,6 +71,12 @@ function statusMessage(message?: string, protectedApplicationCount = 0): string 
   if (message === 'macOS application-routing system extension is not installed') {
     return tr('macOS 系统扩展未安装')
   }
+  if (message === 'The network extension rejected the application-routing policy') {
+    return tr('网络扩展拒绝了应用分流规则。请检查规则后重试。')
+  }
+  if (message === 'The network extension did not acknowledge the application-routing policy') {
+    return tr('网络扩展正在启动，请稍后重试。')
+  }
   if (message === 'macOS 应用分流需要 macOS 13 或更新版本') {
     return tr('macOS 应用分流需要 macOS 13 或更新版本')
   }

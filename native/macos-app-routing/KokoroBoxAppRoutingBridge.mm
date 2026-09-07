@@ -220,36 +220,59 @@ static BOOL KBSendConfiguration(NSDictionary *configuration,
   NSData *messageData = [NSJSONSerialization dataWithJSONObject:message options:0 error:error];
   if (!messageData) return NO;
 
-  dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
-  __block NSData *providerResponse = nil;
-  NSError *sendError = nil;
-  BOOL sent = [(NETunnelProviderSession *)manager.connection
-      sendProviderMessage:messageData
-             returnError:&sendError
-         responseHandler:^(NSData *responseData) {
-           providerResponse = responseData;
-           dispatch_semaphore_signal(semaphore);
-         }];
-  if (!sent || sendError) {
-    if (error) *error = sendError ?: KBError(@"Sending the provider policy failed");
-    return NO;
-  }
-  if (!KBWait(semaphore, 30)) {
-    if (error) *error = KBError(@"The transparent proxy provider did not acknowledge the policy");
-    return NO;
-  }
-  NSDictionary *response = providerResponse
+  // A transparent-proxy connection can report Connected slightly before the
+  // provider is ready to answer application messages.  In that small window
+  // NetworkExtension may invoke the response handler with nil.  Retrying a
+  // bounded number of times is safe: no policy is accepted until the provider
+  // sends the versioned acknowledgement below, and we never fall back to
+  // Direct traffic.
+  const NSUInteger maximumAttempts = 3;
+  NSError *lastSendError = nil;
+  for (NSUInteger attempt = 0; attempt < maximumAttempts; ++attempt) {
+    dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
+    __block NSData *providerResponse = nil;
+    NSError *sendError = nil;
+    BOOL sent = [(NETunnelProviderSession *)manager.connection
+        sendProviderMessage:messageData
+               returnError:&sendError
+           responseHandler:^(NSData *responseData) {
+             providerResponse = responseData;
+             dispatch_semaphore_signal(semaphore);
+           }];
+    if (!sent || sendError) {
+      lastSendError = sendError ?: KBError(@"Sending the provider policy failed");
+    } else if (KBWait(semaphore, 5)) {
+      NSError *responseError = nil;
+      id decodedResponse = providerResponse
                                ? [NSJSONSerialization JSONObjectWithData:providerResponse
                                                                  options:0
-                                                                   error:error]
+                                                                   error:&responseError]
                                : nil;
-  if (![response isKindOfClass:[NSDictionary class]] ||
-      ![response[@"status"] isEqualToString:@"ok"] ||
-      [response[@"version"] integerValue] != KBProtocolVersion) {
-    if (error && !*error) *error = KBError(@"The provider returned an invalid response");
-    return NO;
+      NSDictionary *response = [decodedResponse isKindOfClass:[NSDictionary class]]
+                                   ? decodedResponse
+                                   : nil;
+      if ([response[@"status"] isEqualToString:@"ok"] &&
+          [response[@"version"] integerValue] == KBProtocolVersion) {
+        return YES;
+      }
+      if ([response[@"status"] isEqualToString:@"error"]) {
+        // The provider deliberately exposes only stable error codes.  Do not
+        // surface untrusted response content or the policy itself to logs/UI.
+        if (error) *error = KBError(@"The network extension rejected the application-routing policy");
+        return NO;
+      }
+      lastSendError = responseError ?: KBError(
+          @"The network extension did not acknowledge the application-routing policy");
+    } else {
+      lastSendError = KBError(@"The network extension did not acknowledge the application-routing policy");
+    }
+
+    if (attempt + 1 < maximumAttempts) {
+      [NSThread sleepForTimeInterval:0.25 * (attempt + 1)];
+    }
   }
-  return YES;
+  if (error) *error = lastSendError ?: KBError(@"Sending the provider policy failed");
+  return NO;
 }
 
 static NSString *KBApply(NSDictionary *configuration, NSError **error) {
