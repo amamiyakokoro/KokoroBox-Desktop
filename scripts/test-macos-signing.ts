@@ -420,6 +420,9 @@ test('generated signing config passes electron-builder validation with required 
   assert.doesNotMatch(afterPack, /entitlements\.mac\.bridge|app-routing-bridge/)
   assert.match(afterPack, /extensionIdentifier !== extensionServiceName/)
   assert.match(afterPack, /bundle name must match its identifier/)
+  assert.match(afterPack, /plistString\(appInfo, 'NSSystemExtensionUsageDescription'\)/)
+  assert.match(afterPack, /plistString\(extensionInfo, 'NSSystemExtensionUsageDescription'\)/)
+  assert.match(afterPack, /host and System Extension must include usage descriptions/)
   assert.equal(config.pkg.identity, teamId)
 })
 

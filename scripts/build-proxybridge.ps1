@@ -4,7 +4,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 $ProxyBridgeRepository = "https://github.com/amamiyakokoro/ProxyBridge.git"
-$ProxyBridgeCommit = "ad904d8cd689659e1250bd683deca3d58d49ff7f"
+$ProxyBridgeCommit = "475525eaa48e4d75926b408d2994f42cb99da922"
 $WinDivertUrl = "https://github.com/basil00/WinDivert/releases/download/v2.2.2/WinDivert-2.2.2-A.zip"
 $WinDivertSha256 = "63cb41763bb4b20f600b6de04e991a9c2be73279e317d4d82f237b150c5f3f15"
 $RepositoryRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
