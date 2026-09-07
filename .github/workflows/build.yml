@@ -57,6 +57,8 @@ jobs:
       - run: pnpm test:kokoro
       - run: pnpm test:localization
       - run: pnpm test:override-user-agent
+      - run: pnpm test:pinned-https-agent
+      - run: pnpm test:main-process-errors
       - run: pnpm test:app-routing
       - run: pnpm test:service-auth
       - run: pnpm typecheck

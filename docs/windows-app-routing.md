@@ -41,6 +41,14 @@ While application routing is enabled, KokoroBox injects a dedicated SOCKS listen
 disabled, binds only to loopback, and is independent of user-controlled mixed-port settings.
 Remote endpoints and credentials cannot be supplied through this feature.
 
+The optional **Proxy application UDP DNS** setting applies only to UDP/53 packets emitted by a
+process that directly matches an enabled Proxy rule. Those packets use the same dedicated SOCKS5
+listener and are carried through Mihomo. KokoroBox does not intercept Windows DNS Client
+(`svchost.exe`), redirect TCP/53, bind a separate DNS listener, or modify the system DNS settings.
+Applications that delegate name resolution to Windows therefore continue to use the system
+resolver; Mihomo's existing DNS and fake-IP configuration remains authoritative wherever it is
+already in the traffic path.
+
 The packaged native process is `kokorobox-process-router.exe`. It accepts newline-delimited,
 versioned JSON commands over inherited standard input and emits JSON lifecycle events. It does
 not accept command-line profile paths, external proxy credentials, or update commands. Rules are
