@@ -38,12 +38,14 @@ export async function getApplicationPaths(): Promise<AppRoutingApplicationSelect
   const isMac = process.platform === 'darwin'
   const selected = dialog.showOpenDialogSync({
     title: tr('选择应用程序'),
-    filters: [
-      {
-        name: isMac ? tr('macOS 应用程序') : tr('Windows 应用程序'),
-        extensions: [isMac ? 'app' : 'exe']
-      }
-    ],
+    filters: isMac
+      ? []
+      : [
+          {
+            name: isMac ? tr('macOS 应用程序') : tr('Windows 应用程序'),
+            extensions: [isMac ? 'app' : 'exe']
+          }
+        ],
     properties: ['openFile', 'multiSelections']
   })
   if (!selected) return undefined
@@ -54,14 +56,17 @@ export async function getApplicationPaths(): Promise<AppRoutingApplicationSelect
     const canonicalPath = await realpath(selectedPath)
     const executablePath = isMac ? canonicalPath : normalizeWindowsExecutablePath(canonicalPath)
     const fileStat = await stat(executablePath)
-    const expectedExtension = isMac ? '.app' : '.exe'
+    const isMacBundle =
+      fileStat.isDirectory() && path.extname(executablePath).toLowerCase() === '.app'
+    const isMacExecutable = fileStat.isFile() && (fileStat.mode & 0o111) !== 0
     if (
-      path.extname(executablePath).toLowerCase() !== expectedExtension ||
-      (isMac ? !fileStat.isDirectory() : !fileStat.isFile())
+      isMac
+        ? !isMacBundle && !isMacExecutable
+        : path.extname(executablePath).toLowerCase() !== '.exe' || !fileStat.isFile()
     ) {
       throw new Error(
         isMac
-          ? 'Application routing requires an existing macOS .app bundle'
+          ? 'Select a signed macOS application or executable'
           : 'Application routing requires an existing .exe file'
       )
     }
@@ -75,7 +80,7 @@ export async function getApplicationPaths(): Promise<AppRoutingApplicationSelect
       const { stderr } = await execFilePromise(
         '/usr/bin/codesign',
         ['--display', '--verbose=2', executablePath],
-        { encoding: 'utf8' }
+        { encoding: 'utf8', timeout: 5000, maxBuffer: 64 * 1024 }
       )
       const match = stderr.match(/^Identifier=(.+)$/m)
       if (!match?.[1] || /[\r\n]/.test(match[1])) {

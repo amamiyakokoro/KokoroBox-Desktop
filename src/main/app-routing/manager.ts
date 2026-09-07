@@ -439,7 +439,10 @@ export function reconcileAppRouting(): Promise<void> {
 export async function initializeAppRouting(): Promise<void> {
   if (!appRoutingSupported(process.platform, process.arch)) return
   stopping = false
-  monitor = setInterval(() => void reconcileAppRouting(), probeIntervalMs)
+  monitor = setInterval(() => {
+    // A health poll must not enqueue another pass behind a slow OS operation.
+    if (!operation) void reconcileAppRouting()
+  }, probeIntervalMs)
   monitor.unref()
   // Network/System Extension activation is controlled by macOS and may wait
   // for system state. Never make application startup depend on that work.
@@ -449,7 +452,7 @@ export async function initializeAppRouting(): Promise<void> {
 export async function replaceAppRoutingConfig(config: AppRoutingConfig): Promise<AppRoutingConfig> {
   const saved = await saveAppRoutingConfig(await prepareAppRoutingConfig(config))
   configGeneration++
-  await reconcileAppRouting()
+  void reconcileAppRouting()
   return saved
 }
 
@@ -458,7 +461,7 @@ export function getAppRoutingStatus(): AppRoutingStatus {
 }
 
 export async function refreshAppRoutingStatus(): Promise<AppRoutingStatus> {
-  await reconcileAppRouting()
+  void reconcileAppRouting()
   return getAppRoutingStatus()
 }
 

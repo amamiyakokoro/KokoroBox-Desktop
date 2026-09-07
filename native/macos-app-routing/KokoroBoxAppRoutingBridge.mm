@@ -404,17 +404,15 @@ static NSDictionary *KBInvoke(NSDictionary *request, NSError **error) {
   } else if ([command isEqualToString:@"open-settings"]) {
     dispatch_async(dispatch_get_main_queue(), ^{
       NSWorkspace *workspace = [NSWorkspace sharedWorkspace];
-      // This is the same route used by Apple's current Mac User Guide. Network
-      // Extensions are managed under General > Login Items & Extensions on
-      // modern macOS; the old NetworkExtensionSettings pane no longer points
-      // at the approval controls.
+      // Help Viewer actions are not Launch Services URLs. Address System
+      // Settings directly and check for a handler before opening the URL.
       NSURL *url = [NSURL URLWithString:
-          @"x-help-action://openPrefPane?bundleId=com.apple.LoginItems-Settings.extension"];
-      if (!url || ![workspace openURL:url]) {
+          @"x-apple.systempreferences:com.apple.LoginItems-Settings.extension"];
+      if (!url || ![workspace URLForApplicationToOpenURL:url] || ![workspace openURL:url]) {
         [workspace openURL:[NSURL fileURLWithPath:@"/System/Applications/System Settings.app"]];
       }
     });
-    state = KBCurrentStatus(error);
+    state = @"starting";
   } else {
     if (error) *error = KBError(@"Invalid bridge request");
     return nil;
