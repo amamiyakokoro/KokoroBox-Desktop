@@ -3,6 +3,7 @@ import BasePage from '@renderer/components/base/base-page'
 import { AppRoutingRuleRow } from '@renderer/components/app-routing/rule-row'
 import AppRoutingSettingDrawer from '@renderer/components/app-routing/app-routing-setting-drawer'
 import { useAppRouting } from '@renderer/hooks/use-app-routing'
+import { openAppRoutingSystemSettings } from '@renderer/utils/ipc'
 import { Button, Card, CardBody, Chip, Divider, Input, Switch } from '@heroui/react'
 import { MdAdd, MdTune } from 'react-icons/md'
 import { useState } from 'react'
@@ -61,10 +62,23 @@ function statusMessage(message?: string, protectedApplicationCount = 0): string 
   if (message === '封包拦截组件意外停止，正在重试') {
     return tr('封包拦截组件意外停止，正在重试')
   }
+  if (message === '请在系统设置中允许 KokoroBox 网络扩展') {
+    return tr('请在系统设置中允许 KokoroBox 网络扩展')
+  }
+  if (message === 'macOS application-routing bridge is not installed') {
+    return tr('macOS 应用分流组件未安装')
+  }
+  if (message === 'macOS application-routing system extension is not installed') {
+    return tr('macOS 系统扩展未安装')
+  }
+  if (message === 'macOS 应用分流需要 macOS 13 或更新版本') {
+    return tr('macOS 应用分流需要 macOS 13 或更新版本')
+  }
   return message
 }
 
 const AppRouting: React.FC = () => {
+  const isMac = window.api.platform === 'darwin'
   const {
     config,
     status,
@@ -142,6 +156,16 @@ const AppRouting: React.FC = () => {
                 {currentStatusMessage}
               </p>
             )}
+            {isMac && config?.enabled && ['starting', 'error'].includes(status?.state ?? '') && (
+              <Button
+                className="mt-2"
+                size="sm"
+                variant="flat"
+                onPress={() => void openAppRoutingSystemSettings()}
+              >
+                {tr('打开网络扩展设置')}
+              </Button>
+            )}
             {config?.enabled && (
               <p className="mt-2 text-sm text-foreground-500">
                 {tr('上游')}：KokoroBox / 127.0.0.1:7891
@@ -161,7 +185,9 @@ const AppRouting: React.FC = () => {
         <div>
           <h3 className="font-semibold">{tr('应用程序规则')}</h3>
           <p className="text-sm text-foreground-500">
-            {tr('规则按从上到下的顺序匹配；支持文件名或含 * 的完整路径。')}
+            {isMac
+              ? tr('规则按从上到下的顺序匹配；使用应用签名标识，可在末尾加入 *。')
+              : tr('规则按从上到下的顺序匹配；支持文件名或含 * 的完整路径。')}
           </p>
         </div>
 
@@ -169,8 +195,8 @@ const AppRouting: React.FC = () => {
           <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto_auto_auto] sm:items-center">
             <Input
               size="sm"
-              label={tr('程序匹配')}
-              placeholder="example.exe"
+              label={isMac ? tr('签名标识') : tr('程序匹配')}
+              placeholder={isMac ? 'com.example.app' : 'example.exe'}
               value={processPattern}
               isDisabled={!supported || !config || saving}
               onValueChange={setProcessPattern}
@@ -199,14 +225,16 @@ const AppRouting: React.FC = () => {
             </Button>
           </div>
           <p className="px-1 text-xs text-foreground-500">
-            {tr('例如：ChatGPT.exe、ChatGPT*.exe 或 C:\\Program Files\\*\\ChatGPT.exe')}
+            {isMac
+              ? tr('例如：com.openai.chat 或 com.openai.chat*')
+              : tr('例如：ChatGPT.exe、ChatGPT*.exe 或 C:\\Program Files\\*\\ChatGPT.exe')}
           </p>
         </div>
 
         {!supported ? (
           <Card shadow="sm">
             <CardBody className="p-5 text-sm text-foreground-500">
-              {tr('此 MVP 仅支持 Windows 10/11 x64。')}
+              {tr('应用分流支持 Windows 10/11 x64 与 macOS 13 或更新版本。')}
             </CardBody>
           </Card>
         ) : config?.rules.length === 0 ? (
@@ -214,14 +242,16 @@ const AppRouting: React.FC = () => {
             <CardBody className="items-center gap-2 p-8 text-center">
               <p className="font-medium">{tr('尚未添加应用程序')}</p>
               <p className="text-sm text-foreground-500">
-                {tr('输入程序匹配，或选择一个或多个 .exe，然后设定 Proxy、Direct 或 Block。')}
+                {isMac
+                  ? tr('输入签名标识，或选择一个或多个 .app，然后设定 Proxy、Direct 或 Block。')
+                  : tr('输入程序匹配，或选择一个或多个 .exe，然后设定 Proxy、Direct 或 Block。')}
               </p>
             </CardBody>
           </Card>
         ) : (
           <div className="flex flex-col gap-2">
             <div className="hidden grid-cols-[1fr_9rem_9rem_9rem] gap-3 px-3 text-xs font-medium text-foreground-500 md:grid">
-              <span>{tr('程序匹配')}</span>
+              <span>{isMac ? tr('签名标识') : tr('程序匹配')}</span>
               <span>{tr('协议')}</span>
               <span>{tr('动作')}</span>
               <span className="text-right">{tr('操作')}</span>

@@ -23,6 +23,8 @@ import {
   buildServiceProcessRouterRules,
   validateServiceProcessRouterStatus
 } from './service-protocol'
+import { reconcileMacAppRouting, stopMacAppRouting } from './macos'
+import { macAppRoutingOperatingSystemSupported } from './macos-profile'
 
 const probeIntervalMs = 3000
 const restartDelayMs = 1500
@@ -277,9 +279,42 @@ async function reconcile(): Promise<void> {
     publishStatus({ supported: false, state: 'unsupported', mihomoAvailable: false })
     return
   }
+  if (process.platform === 'darwin' && !macAppRoutingOperatingSystemSupported()) {
+    publishStatus({
+      supported: false,
+      state: 'unsupported',
+      message: 'macOS 应用分流需要 macOS 13 或更新版本',
+      mihomoAvailable: false
+    })
+    return
+  }
   const [config, appConfig] = await Promise.all([getAppRoutingConfig(), getAppConfig()])
   validateAppRoutingConfig(config)
   const enabledRules = config.rules.filter((rule) => rule.enabled)
+  if (process.platform === 'darwin') {
+    if (!config.enabled || enabledRules.length === 0) {
+      await stopMacAppRouting()
+      publishStatus({
+        supported: true,
+        state: 'disabled',
+        message: config.enabled ? '添加或启用规则以启动应用分流' : undefined,
+        mihomoAvailable: false
+      })
+      return
+    }
+    const requiresMihomo = enabledRules.some((rule) => rule.action === 'proxy')
+    const mihomoAvailable = requiresMihomo
+      ? await canConnectToAppRoutingListener(appRoutingSocksPort)
+      : false
+    publishStatus({
+      supported: true,
+      state: 'starting',
+      proxyPort: requiresMihomo ? appRoutingSocksPort : undefined,
+      mihomoAvailable
+    })
+    publishStatus(await reconcileMacAppRouting(config, mihomoAvailable))
+    return
+  }
   if (!config.enabled || enabledRules.length === 0) {
     await stopChild()
     if (appConfig.corePermissionMode === 'service' || activeBackend === 'service') {
@@ -406,6 +441,7 @@ export async function stopAppRouting(): Promise<void> {
   stopping = true
   if (monitor) clearInterval(monitor)
   monitor = undefined
-  if (activeBackend === 'service') await disableServiceRouter(true)
+  if (process.platform === 'darwin') await stopMacAppRouting()
+  else if (activeBackend === 'service') await disableServiceRouter(true)
   else await stopChild()
 }

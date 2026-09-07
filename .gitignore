@@ -17,3 +17,6 @@ out
 *.keychain-db
 *.mobileprovision
 *.provisionprofile
+
+# Generated Node-API build output
+native/macos-app-routing/build/

@@ -26,12 +26,13 @@ import {
   sanitizedChildEnvironment,
   signMacRelease,
   signingConfig,
+  kokoroBoxAppleTeamId,
   validateSigningEnvironment
 } from './macos-signing.ts'
 import type { CommandRunner } from './macos-signing.ts'
 import { artifactName, stageArtifact, validateMacReceipt } from './release-artifacts.ts'
 
-const teamId = 'TESTTEAM00'
+const teamId = kokoroBoxAppleTeamId
 const sha = '1234567890abcdef1234567890abcdef12345678'
 const submissionId = '12345678-1234-1234-1234-123456789abc'
 const details = `Authority=Developer ID Application: Test (${teamId})\nTeamIdentifier=${teamId}\nCodeDirectory flags=0x10000(runtime)\nTimestamp=Sep 5, 2026\n`
@@ -47,6 +48,8 @@ function fixture(callback: (env: NodeJS.ProcessEnv, directory: string) => void) 
     APPLE_ID: 'test@example.invalid',
     APPLE_APP_SPECIFIC_PASSWORD: 'fake-notary-password',
     APPLE_TEAM_ID: teamId,
+    MACOS_APP_PROVISIONING_PROFILE: Buffer.from('fake app profile').toString('base64'),
+    MACOS_EXTENSION_PROVISIONING_PROFILE: Buffer.from('fake extension profile').toString('base64'),
     TARGET_ARCH: 'arm64',
     RELEASE_VERSION: '2.26.8',
     GITHUB_SHA: sha,
@@ -77,6 +80,9 @@ function mockRunner(env: NodeJS.ProcessEnv, projectDir: string, failure?: string
     if (label === failure) throw new Error(`${label} failed`)
     if (label === 'Read Keychain search list') return '"/tmp/original.keychain-db"\n'
     if (label === 'Create temporary Keychain') writeFileSync(args.at(-1)!, 'fake keychain')
+    if (label === 'Find Developer ID signing identity') {
+      return `  1) 1234567890ABCDEF1234567890ABCDEF12345678 "Developer ID Application: Test (${teamId})"\n`
+    }
     if (label.startsWith('Import ') && label.endsWith(' certificate'))
       assert.equal(statSync(args[1]).mode & 0o777, 0o600)
     if (label === 'Sign App and PKG') {
@@ -112,7 +118,7 @@ function mockRunner(env: NodeJS.ProcessEnv, projectDir: string, failure?: string
   return { calls, run }
 }
 
-test('all seven credentials are required and signing rejects untrusted contexts', () => {
+test('all signing credentials are required and signing rejects untrusted contexts', () => {
   fixture((env) => {
     validateSigningEnvironment(env)
     for (const name of appleSecrets)
@@ -220,7 +226,7 @@ for (const arch of ['x64', 'arm64']) {
         receipt.checksum,
         createHash('sha256').update('signed package with stapled ticket').digest('hex')
       )
-      assert.equal(mock.calls.filter((label) => label === 'Verify App/helper signature').length, 4)
+      assert.equal(mock.calls.filter((label) => label === 'Verify App/helper signature').length, 6)
       assert.ok(
         mock.calls.indexOf('Submit PKG for notarization') < mock.calls.indexOf('Staple PKG ticket')
       )
@@ -323,11 +329,23 @@ test('generated signing config passes electron-builder validation with required 
   const config = await getConfig(process.cwd(), undefined, signingConfig(process.cwd(), teamId))
   await validateConfiguration(config)
   assert.equal(config.forceCodeSigning, true)
-  assert.equal(config.mac.binaries.length, 3)
+  assert.equal(config.mac.binaries.length, 4)
+  assert.ok(
+    config.mac.binaries.includes(
+      'Contents/Resources/files/macos-app-routing/kokorobox-app-routing.node'
+    )
+  )
+  assert.match(config.afterPack, /macos-after-pack\.cjs$/)
+  assert.equal(config.mac.entitlementsInherit, 'build/entitlements.mac.helper.plist')
+  assert.deepEqual(config.mac.signIgnore, [
+    'Contents/Library/SystemExtensions/KokoroBoxProxyExtension.systemextension'
+  ])
+  const afterPack = readFileSync('scripts/macos-after-pack.cjs', 'utf8')
+  assert.doesNotMatch(afterPack, /entitlements\.mac\.bridge|app-routing-bridge/)
   assert.equal(config.pkg.identity, teamId)
 })
 
-test('both callers forward only the seven signing secrets and non-macOS steps do not receive them', () => {
+test('both callers forward only the required signing secrets and non-macOS steps do not receive them', () => {
   for (const file of ['release', 'rolling']) {
     const config = parse(readFileSync(`.github/workflows/${file}.yml`, 'utf8'))
     assert.deepEqual(Object.keys(config.jobs.build.secrets).sort(), [...appleSecrets].sort())

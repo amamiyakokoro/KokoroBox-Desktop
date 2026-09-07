@@ -34,7 +34,7 @@ interface ProcessRouterSbomReceipt {
   proxyBridgeRevision: string
 }
 
-const proxyBridgeRevision = 'cf2aee3de37c56d1c530f58295ff6c7521472129'
+const proxyBridgeRevision = 'ad904d8cd689659e1250bd683deca3d58d49ff7f'
 const winDivertArchiveSha256 = '63cb41763bb4b20f600b6de04e991a9c2be73279e317d4d82f237b150c5f3f15'
 
 function processRouterSbomName(version: string): string {

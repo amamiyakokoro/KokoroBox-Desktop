@@ -155,7 +155,7 @@ function fixtures(fn: (source: string, output: string) => void, version = '2.26.
           properties: [
             {
               name: 'kokorobox:proxybridge-revision',
-              value: 'cf2aee3de37c56d1c530f58295ff6c7521472129'
+              value: 'ad904d8cd689659e1250bd683deca3d58d49ff7f'
             },
             {
               name: 'kokorobox:windivert-archive-sha256',

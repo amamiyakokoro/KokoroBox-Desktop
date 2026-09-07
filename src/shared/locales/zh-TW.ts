@@ -17,6 +17,7 @@ export const messages: Readonly<Record<string, string>> = {
   '代理核心不可用，已封锁 {0} 个受保护应用的网络连接。':
     '代理核心無法使用，已封鎖 {0} 個受保護應用程式的網路連線。',
   'Windows 应用程序': 'Windows 應用程式',
+  'macOS 应用程序': 'macOS 應用程式',
   选择应用程序: '選擇應用程式',
   'Windows 应用程序分流': 'Windows 應用程式分流',
   '无需系统代理或 TUN，将指定应用程序交给本机 Mihomo 处理。':
@@ -41,6 +42,14 @@ export const messages: Readonly<Record<string, string>> = {
     '規則按從上到下的順序比對；相同路徑只能新增一次。',
   添加应用程序: '新增應用程式',
   '此 MVP 仅支持 Windows 10/11 x64。': '此 MVP 僅支援 Windows 10/11 x64。',
+  '应用分流支持 Windows 10/11 x64 与 macOS 13 或更新版本。':
+    '應用程式分流支援 Windows 10/11 x64 與 macOS 13 或更新版本。',
+  签名标识: '簽署識別碼',
+  '规则按从上到下的顺序匹配；使用应用签名标识，可在末尾加入 *。':
+    '規則按從上到下的順序比對；使用應用程式簽署識別碼，可在結尾加入 *。',
+  '例如：com.openai.chat 或 com.openai.chat*': '例如：com.openai.chat 或 com.openai.chat*',
+  '输入签名标识，或选择一个或多个 .app，然后设定 Proxy、Direct 或 Block。':
+    '輸入簽署識別碼，或選擇一個或多個 .app，然後設定 Proxy、Direct 或 Block。',
   尚未添加应用程序: '尚未新增應用程式',
   '选择一个或多个 .exe，然后设定 Proxy、Direct 或 Block。':
     '選擇一個或多個 .exe，然後設定 Proxy、Direct 或 Block。',
@@ -61,6 +70,11 @@ export const messages: Readonly<Record<string, string>> = {
     '目前的 KokoroBox Service 不支援應用程式分流，請更新或重新安裝服務',
   封包拦截组件启动失败: '封包攔截元件啟動失敗',
   '封包拦截组件意外停止，正在重试': '封包攔截元件意外停止，正在重試',
+  '请在系统设置中允许 KokoroBox 网络扩展': '請在「系統設定」中允許 KokoroBox 網路延伸功能。',
+  打开网络扩展设置: '開啟網路延伸功能設定',
+  'macOS 应用分流组件未安装': 'macOS 應用程式分流橋接元件未安裝',
+  'macOS 系统扩展未安装': 'macOS 系統延伸功能未安裝',
+  'macOS 应用分流需要 macOS 13 或更新版本': 'macOS 應用程式分流需要 macOS 13 或更新版本',
   任务栏: '工作列',
   状态栏: '狀態列',
   ' (全局)': ' (全域)',

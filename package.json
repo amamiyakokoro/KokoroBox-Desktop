@@ -22,13 +22,14 @@
     "test:kokoro": "tsx --test scripts/test-kokoro-auth.ts",
     "prepare": "node scripts/prepare.ts",
     "prepare:windows-routing": "node scripts/prepare-windows-routing.ts",
+    "prepare:macos-routing": "node scripts/prepare-macos-routing.ts",
     "updater": "node scripts/updater.ts",
     "checksum": "node scripts/checksum.ts",
     "telegram": "node scripts/telegram.ts",
     "dev": "install-electron && electron-vite dev",
     "postinstall": "install-electron && electron-builder install-app-deps",
     "build:win": "pnpm run prepare:windows-routing && electron-vite build && electron-builder --publish never --win",
-    "build:mac": "electron-vite build && electron-builder --publish never --mac",
+    "build:mac": "pnpm run prepare:macos-routing && electron-vite build && electron-builder --publish never --mac",
     "build:linux": "electron-vite build && node scripts/package-linux.ts"
   },
   "dependencies": {

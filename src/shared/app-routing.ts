@@ -14,6 +14,12 @@ const reservedProcessNames = new Set([
   'crashpad_handler.exe',
   'elevate.exe'
 ])
+const reservedMacSigningIdentifiers = Object.freeze([
+  'com.amamiyakokoro.app',
+  'com.amamiyakokoro.app.*',
+  'mihomo',
+  'mihomo-alpha'
+])
 
 export function isProtectedAppRoutingProcess(executableName: string): boolean {
   const normalized = executableName.toLowerCase()
@@ -35,7 +41,10 @@ export const defaultAppRoutingConfig: AppRoutingConfig = {
 }
 
 export function appRoutingSupported(platform: NodeJS.Platform, arch: string): boolean {
-  return platform === 'win32' && arch === 'x64'
+  return (
+    (platform === 'win32' && arch === 'x64') ||
+    (platform === 'darwin' && (arch === 'x64' || arch === 'arm64'))
+  )
 }
 
 export function executableName(executablePath: string): string {
@@ -54,6 +63,23 @@ export function normalizeProcessPattern(processPattern: string): string {
   return processPattern.trim().replaceAll('/', '\\')
 }
 
+export function appRoutingIdentifierKind(rule: AppRoutingRule): AppRoutingIdentifierKind {
+  return rule.identifierKind ?? 'windows-executable'
+}
+
+export function normalizeMacSigningIdentifier(identifier: string): string {
+  return identifier.trim()
+}
+
+export function normalizeAppRoutingIdentifier(
+  identifier: string,
+  kind: AppRoutingIdentifierKind
+): string {
+  return kind === 'macos-signing-identifier'
+    ? normalizeMacSigningIdentifier(identifier)
+    : normalizeProcessPattern(identifier)
+}
+
 function wildcardPatternMatches(pattern: string, value: string): boolean {
   const expression = pattern.replace(/[.+^${}()|[\]\\]/g, '\\$&').replaceAll('*', '.*')
   return new RegExp(`^${expression}$`, 'i').test(value)
@@ -67,6 +93,15 @@ export function isProtectedAppRoutingPattern(processPattern: string): boolean {
   )
 }
 
+export function isProtectedMacSigningIdentifier(identifier: string): boolean {
+  const normalized = normalizeMacSigningIdentifier(identifier)
+  return reservedMacSigningIdentifiers.some(
+    (reserved) =>
+      wildcardPatternMatches(normalized, reserved.replace('*', 'helper')) ||
+      wildcardPatternMatches(reserved, normalized)
+  )
+}
+
 function containsInvalidProcessPatternCharacter(processPattern: string): boolean {
   return [...processPattern].some(
     (character) => character.charCodeAt(0) < 0x20 || '?;,"'.includes(character)
@@ -76,25 +111,42 @@ function containsInvalidProcessPatternCharacter(processPattern: string): boolean
 export function validateAppRoutingRule(rule: AppRoutingRule): void {
   if (!rule.id || rule.id.length > 128) throw new Error('Invalid application rule ID')
   if (typeof rule.processPattern !== 'string') {
-    throw new Error('Application routing requires one valid .exe process pattern')
+    throw new Error('Application routing requires one valid application identifier')
   }
-  const processPattern = normalizeProcessPattern(rule.processPattern)
-  if (
-    !processPattern ||
-    !processPattern.toLowerCase().endsWith('.exe') ||
-    new TextEncoder().encode(processPattern).length >= 1024 ||
-    containsInvalidProcessPatternCharacter(processPattern)
-  ) {
-    throw new Error('Application routing requires one valid .exe process pattern')
-  }
-  if (isProtectedAppRoutingPattern(processPattern)) {
-    throw new Error(`${processPattern} cannot be intercepted`)
-  }
-  if (
-    rule.sourcePath !== undefined &&
-    !/^(?:[a-zA-Z]:\\|\\\\)[^\0]+\.exe$/i.test(rule.sourcePath)
-  ) {
-    throw new Error('Application routing icon source must be an absolute Windows .exe path')
+  const kind = appRoutingIdentifierKind(rule)
+  const processPattern = normalizeAppRoutingIdentifier(rule.processPattern, kind)
+  if (kind === 'windows-executable') {
+    if (
+      !processPattern ||
+      !processPattern.toLowerCase().endsWith('.exe') ||
+      new TextEncoder().encode(processPattern).length >= 1024 ||
+      containsInvalidProcessPatternCharacter(processPattern)
+    ) {
+      throw new Error('Application routing requires one valid .exe process pattern')
+    }
+    if (isProtectedAppRoutingPattern(processPattern)) {
+      throw new Error(`${processPattern} cannot be intercepted`)
+    }
+    if (
+      rule.sourcePath !== undefined &&
+      !/^(?:[a-zA-Z]:\\|\\\\)[^\0]+\.exe$/i.test(rule.sourcePath)
+    ) {
+      throw new Error('Application routing icon source must be an absolute Windows .exe path')
+    }
+  } else {
+    if (
+      !/^[A-Za-z0-9][A-Za-z0-9._-]*(?:\*[A-Za-z0-9._-]*)?$/.test(processPattern) ||
+      processPattern === '*' ||
+      new TextEncoder().encode(processPattern).length > 512
+    ) {
+      throw new Error('Application routing requires one valid macOS signing identifier')
+    }
+    if (isProtectedMacSigningIdentifier(processPattern)) {
+      throw new Error(`${processPattern} cannot be intercepted`)
+    }
+    if (rule.sourcePath !== undefined && !/^\/[^\0]+\.app$/i.test(rule.sourcePath)) {
+      throw new Error('Application routing icon source must be an absolute macOS .app path')
+    }
   }
   if (!validActions.has(rule.action)) throw new Error('Invalid application routing action')
   if (!validProtocols.has(rule.protocol)) throw new Error('Invalid application routing protocol')
@@ -126,15 +178,18 @@ export function validateAppRoutingConfig(config: AppRoutingConfig): void {
   let totalPatternBytes = 0
   for (const rule of config.rules) {
     validateAppRoutingRule(rule)
-    const processPattern = normalizeProcessPattern(rule.processPattern).toLowerCase()
-    totalPatternBytes += new TextEncoder().encode(processPattern).length + 1
+    const identifier = normalizeAppRoutingIdentifier(
+      rule.processPattern,
+      appRoutingIdentifierKind(rule)
+    ).toLowerCase()
+    totalPatternBytes += new TextEncoder().encode(identifier).length + 1
     if (ids.has(rule.id)) throw new Error('Application rule IDs must be unique')
-    if (processPatterns.has(processPattern)) {
+    if (processPatterns.has(identifier)) {
       throw new Error(`Only one rule can target ${rule.processPattern}`)
     }
     if (priorities.has(rule.priority)) throw new Error('Application rule priorities must be unique')
     ids.add(rule.id)
-    processPatterns.add(processPattern)
+    processPatterns.add(identifier)
     priorities.add(rule.priority)
   }
   if (totalPatternBytes > 30000) throw new Error('Application routing patterns are too large')
@@ -157,8 +212,19 @@ export function normalizeAppRoutingConfig(config: AppRoutingConfig): AppRoutingC
         id: rule.id,
         enabled: rule.enabled,
         priority: index + 1,
-        processPattern: normalizeProcessPattern(rule.processPattern),
-        ...(rule.sourcePath ? { sourcePath: normalizeWindowsExecutablePath(rule.sourcePath) } : {}),
+        processPattern: normalizeAppRoutingIdentifier(
+          rule.processPattern,
+          appRoutingIdentifierKind(rule)
+        ),
+        ...(rule.identifierKind ? { identifierKind: rule.identifierKind } : {}),
+        ...(rule.sourcePath
+          ? {
+              sourcePath:
+                appRoutingIdentifierKind(rule) === 'windows-executable'
+                  ? normalizeWindowsExecutablePath(rule.sourcePath)
+                  : rule.sourcePath
+            }
+          : {}),
         protocol: rule.protocol,
         action: rule.action
       }))
