@@ -3,21 +3,35 @@ import React, { useState } from 'react'
 import SettingCard from '../base/base-setting-card'
 import SettingItem from '../base/base-setting-item'
 import EditableList from '../base/base-list-editor'
-import { Switch } from '@heroui/react'
+import { Input, Select, SelectItem, Switch } from '@heroui/react'
 import { isValidDnsServer, isValidDomainWildcard } from '@renderer/utils/validate'
+import DnsServerList from './dns-server-list'
 
 interface AdvancedDnsSettingProps {
   respectRules: boolean
+  directNameserverFollowPolicy: boolean
+  preferH3: boolean
+  cacheAlgorithm: string
   directNameserver: string[]
   proxyServerNameserver: string[]
+  fallback: string[]
+  fallbackFilter: Record<string, boolean | string | string[]>
+  fallbackLazyQuery: boolean
   nameserverPolicy: Record<string, string | string[]>
   proxyServerNameserverPolicy: Record<string, string | string[]>
   hosts?: IHost[]
   useHosts: boolean
   useSystemHosts: boolean
+  proxyGroups?: string[]
   onRespectRulesChange: (v: boolean) => void
+  onDirectNameserverFollowPolicyChange: (v: boolean) => void
+  onPreferH3Change: (v: boolean) => void
+  onCacheAlgorithmChange: (v: string) => void
   onDirectNameserverChange: (list: string[]) => void
   onProxyNameserverChange: (list: string[]) => void
+  onFallbackChange: (list: string[]) => void
+  onFallbackFilterChange: (filter: Record<string, boolean | string | string[]>) => void
+  onFallbackLazyQueryChange: (v: boolean) => void
   onNameserverPolicyChange: (policy: Record<string, string | string[]>) => void
   onProxyServerNameserverPolicyChange: (policy: Record<string, string | string[]>) => void
   onUseSystemHostsChange: (v: boolean) => void
@@ -28,16 +42,29 @@ interface AdvancedDnsSettingProps {
 
 const AdvancedDnsSetting: React.FC<AdvancedDnsSettingProps> = ({
   respectRules,
+  directNameserverFollowPolicy,
+  preferH3,
+  cacheAlgorithm,
   directNameserver,
   proxyServerNameserver,
+  fallback,
+  fallbackFilter,
+  fallbackLazyQuery,
   nameserverPolicy,
   proxyServerNameserverPolicy,
   hosts,
   useHosts,
   useSystemHosts,
+  proxyGroups,
   onRespectRulesChange,
+  onDirectNameserverFollowPolicyChange,
+  onPreferH3Change,
+  onCacheAlgorithmChange,
   onDirectNameserverChange,
   onProxyNameserverChange,
+  onFallbackChange,
+  onFallbackFilterChange,
+  onFallbackLazyQueryChange,
   onNameserverPolicyChange,
   onProxyServerNameserverPolicyChange,
   onUseSystemHostsChange,
@@ -47,6 +74,7 @@ const AdvancedDnsSetting: React.FC<AdvancedDnsSettingProps> = ({
 }) => {
   const [directNameserverError, setDirectNameserverError] = useState<string | null>(null)
   const [proxyNameserverError, setProxyNameserverError] = useState<string | null>(null)
+  const [fallbackError, setFallbackError] = useState<string | null>(null)
   const [nameserverPolicyError, setNameserverPolicyError] = useState<string | null>(null)
   const [proxyNameserverPolicyError, setProxyNameserverPolicyError] = useState<string | null>(null)
   const [hostsError, setHostsError] = useState<string | null>(null)
@@ -55,6 +83,7 @@ const AdvancedDnsSetting: React.FC<AdvancedDnsSettingProps> = ({
     const hasError = Boolean(
       directNameserverError ||
       proxyNameserverError ||
+      fallbackError ||
       nameserverPolicyError ||
       proxyNameserverPolicyError ||
       hostsError
@@ -63,6 +92,7 @@ const AdvancedDnsSetting: React.FC<AdvancedDnsSettingProps> = ({
   }, [
     directNameserverError,
     proxyNameserverError,
+    fallbackError,
     nameserverPolicyError,
     proxyNameserverPolicyError,
     hostsError,
@@ -79,32 +109,28 @@ const AdvancedDnsSetting: React.FC<AdvancedDnsSettingProps> = ({
           onValueChange={onRespectRulesChange}
         />
       </SettingItem>
-      <EditableList
+      <DnsServerList
         title={tr('直连解析服务器')}
         items={directNameserver}
-        validate={(part) => isValidDnsServer(part as string)}
-        onChange={(list) => {
-          const arr = list as string[]
-          onDirectNameserverChange(arr)
-          const firstInvalid = arr.find((f) => !isValidDnsServer(f).ok)
-          setDirectNameserverError(
-            firstInvalid ? (isValidDnsServer(firstInvalid).error ?? tr('格式错误')) : null
-          )
-        }}
+        proxyGroups={proxyGroups}
+        onChange={onDirectNameserverChange}
+        onErrorChange={setDirectNameserverError}
         placeholder={tr('例：tls://dns.alidns.com')}
       />
-      <EditableList
+      <SettingItem compatKey="legacy" title={tr('直连解析遵守策略')} divider>
+        <Switch
+          size="sm"
+          isSelected={directNameserverFollowPolicy}
+          isDisabled={directNameserver.length === 0}
+          onValueChange={onDirectNameserverFollowPolicyChange}
+        />
+      </SettingItem>
+      <DnsServerList
         title={tr('代理节点解析服务器')}
         items={proxyServerNameserver}
-        validate={(part) => isValidDnsServer(part as string)}
-        onChange={(list) => {
-          const arr = list as string[]
-          onProxyNameserverChange(arr)
-          const firstInvalid = arr.find((f) => !isValidDnsServer(f).ok)
-          setProxyNameserverError(
-            firstInvalid ? (isValidDnsServer(firstInvalid).error ?? tr('格式错误')) : null
-          )
-        }}
+        proxyGroups={proxyGroups}
+        onChange={onProxyNameserverChange}
+        onErrorChange={setProxyNameserverError}
         placeholder={tr('例：tls://dns.alidns.com')}
       />
       {proxyServerNameserver.length > 0 && (
@@ -225,6 +251,59 @@ const AdvancedDnsSetting: React.FC<AdvancedDnsSettingProps> = ({
         part2Placeholder={tr('DNS 服务器，用逗号分隔')}
         objectMode="record"
       />
+      <DnsServerList
+        title={tr('备用解析服务器')}
+        items={fallback}
+        proxyGroups={proxyGroups}
+        onChange={onFallbackChange}
+        onErrorChange={setFallbackError}
+        placeholder={tr('例：tls://1.1.1.1')}
+      />
+      {fallback.length > 0 && (
+        <>
+          <SettingItem compatKey="legacy" title={tr('Fallback GeoIP 过滤')} divider>
+            <Switch
+              size="sm"
+              isSelected={fallbackFilter.geoip !== false}
+              onValueChange={(geoip) => onFallbackFilterChange({ ...fallbackFilter, geoip })}
+            />
+          </SettingItem>
+          <SettingItem compatKey="legacy" title={tr('Fallback GeoIP 国家')} divider>
+            <Input
+              aria-label={tr('Fallback GeoIP 国家')}
+              size="sm"
+              className="w-32"
+              value={String(fallbackFilter['geoip-code'] || 'CN')}
+              onValueChange={(code) =>
+                onFallbackFilterChange({ ...fallbackFilter, 'geoip-code': code.toUpperCase() })
+              }
+            />
+          </SettingItem>
+          <SettingItem compatKey="legacy" title={tr('延迟查询备用 DNS')} divider>
+            <Switch
+              size="sm"
+              isSelected={fallbackLazyQuery}
+              onValueChange={onFallbackLazyQueryChange}
+            />
+          </SettingItem>
+        </>
+      )}
+      <SettingItem compatKey="legacy" title={tr('优先使用 HTTP/3')} divider>
+        <Switch size="sm" isSelected={preferH3} onValueChange={onPreferH3Change} />
+      </SettingItem>
+      <SettingItem compatKey="legacy" title={tr('DNS 缓存算法')} divider>
+        <Select
+          aria-label={tr('DNS 缓存算法')}
+          className="w-28"
+          size="sm"
+          selectedKeys={new Set([cacheAlgorithm])}
+          disallowEmptySelection
+          onSelectionChange={(keys) => onCacheAlgorithmChange(keys.currentKey as string)}
+        >
+          <SelectItem key="lru">LRU</SelectItem>
+          <SelectItem key="arc">ARC</SelectItem>
+        </Select>
+      </SettingItem>
       <SettingItem compatKey="legacy" title={tr('使用系统 Hosts')} divider>
         <Switch size="sm" isSelected={useSystemHosts} onValueChange={onUseSystemHostsChange} />
       </SettingItem>

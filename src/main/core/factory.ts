@@ -246,7 +246,8 @@ function cleanDnsConfig(profile: MihomoConfig, controlDns: boolean): void {
     'fake-ip-filter',
     'proxy-server-nameserver',
     'direct-nameserver',
-    'nameserver'
+    'nameserver',
+    'fallback'
   ]
 
   dnsArrayConfigs.forEach((key) => {
@@ -267,8 +268,25 @@ function cleanDnsConfig(profile: MihomoConfig, controlDns: boolean): void {
     delete dnsConfig['proxy-server-nameserver-policy']
   }
 
-  delete dnsConfig.fallback
-  delete dnsConfig['fallback-filter']
+  if (!dnsConfig.fallback?.length) {
+    delete dnsConfig.fallback
+    delete dnsConfig['fallback-filter']
+    delete dnsConfig['fallback-lazy-query']
+  } else if (
+    dnsConfig['fallback-filter'] &&
+    Object.keys(dnsConfig['fallback-filter']).length === 0
+  ) {
+    delete dnsConfig['fallback-filter']
+  }
+
+  if (!dnsConfig['direct-nameserver']?.length || !dnsConfig['direct-nameserver-follow-policy']) {
+    delete dnsConfig['direct-nameserver-follow-policy']
+  }
+  if (!dnsConfig['prefer-h3']) delete dnsConfig['prefer-h3']
+  if (!dnsConfig['fallback-lazy-query']) delete dnsConfig['fallback-lazy-query']
+  if (!dnsConfig['cache-algorithm'] || dnsConfig['cache-algorithm'] === 'lru') {
+    delete dnsConfig['cache-algorithm']
+  }
 }
 
 function cleanSnifferConfig(profile: MihomoConfig, controlSniff: boolean): void {

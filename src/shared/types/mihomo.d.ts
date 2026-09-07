@@ -104,6 +104,7 @@ interface MihomoDNSConfig {
   'fake-ip-range6'?: string
   'fake-ip-filter'?: string[]
   'fake-ip-filter-mode'?: FilterMode
+  'fake-ip-ttl'?: number
   'use-hosts'?: boolean
   'use-system-hosts'?: boolean
   'respect-rules'?: boolean
@@ -111,6 +112,7 @@ interface MihomoDNSConfig {
   nameserver?: string[]
   fallback?: string[]
   'fallback-filter'?: { [key: string]: boolean | string | string[] }
+  'fallback-lazy-query'?: boolean
   'proxy-server-nameserver'?: string[]
   'direct-nameserver'?: string[]
   'direct-nameserver-follow-policy'?: boolean
