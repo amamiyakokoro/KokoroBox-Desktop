@@ -511,6 +511,7 @@ test('requires every pinned native binary to match its build manifest', () => {
 test('native build is pinned to the controlled KokoroBox ProxyBridge fork', () => {
   const build = readFileSync('scripts/build-proxybridge.ps1', 'utf8')
   const macBuild = readFileSync('scripts/prepare-macos-routing.ts', 'utf8')
+  const buildWorkflow = readFileSync('.github/workflows/build.yml', 'utf8')
   const macBridge = readFileSync('native/macos-app-routing/KokoroBoxAppRoutingBridge.mm', 'utf8')
   const macCoordinator = readFileSync('src/main/app-routing/macos.ts', 'utf8')
   const router = readFileSync('build/proxybridge/kokorobox_process_router.c', 'utf8')
@@ -525,6 +526,9 @@ test('native build is pinned to the controlled KokoroBox ProxyBridge fork', () =
   assert.match(macBuild, /electronjs\.org\/headers/)
   assert.match(macBuild, /kokorobox-app-routing\.node/)
   assert.doesNotMatch(macBuild, /swiftc|KokoroBoxAppRoutingBridge\.swift/)
+  assert.match(buildWorkflow, /pnpm prepare:macos-routing/)
+  assert.doesNotMatch(buildWorkflow, /git -C .*ProxyBridge.* checkout --detach/)
+  assert.doesNotMatch(buildWorkflow, /002864ff606ddeb4c6dce6dc1247596a3d317fc5/)
   assert.match(macBridge, /NAPI_MODULE/)
   assert.match(macBridge, /napi_create_async_work/)
   assert.match(macBridge, /OSSystemExtensionRequest/)
