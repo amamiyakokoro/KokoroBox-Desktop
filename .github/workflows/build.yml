@@ -66,7 +66,7 @@ jobs:
       github.repository == 'amamiyakokoro/KokoroBox-Desktop' &&
       (github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/')) &&
       (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule')
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.runner || matrix.os }}
     timeout-minutes: 90
     env:
       SKIP_PREPARE: '1'
@@ -108,9 +108,11 @@ jobs:
             format: pacman
 
           - os: macos-latest
+            runner: macos-15-intel
             arch: x64
             format: pkg
           - os: macos-latest
+            runner: macos-latest
             arch: arm64
             format: pkg
 

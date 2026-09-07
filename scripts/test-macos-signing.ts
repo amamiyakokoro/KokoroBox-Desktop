@@ -428,6 +428,17 @@ test('both callers forward only the required signing secrets and non-macOS steps
     assert.equal(config.jobs.publish.secrets, undefined)
   }
   const config = parse(readFileSync('.github/workflows/build.yml', 'utf8'))
+  assert.equal(config.jobs.build['runs-on'], '${{ matrix.runner || matrix.os }}')
+  const macTargets = config.jobs.build.strategy.matrix.include.filter(
+    (target: { os: string }) => target.os === 'macos-latest'
+  )
+  assert.deepEqual(
+    macTargets.map((target: { arch: string; runner: string }) => [target.arch, target.runner]),
+    [
+      ['x64', 'macos-15-intel'],
+      ['arm64', 'macos-latest']
+    ]
+  )
   for (const step of config.jobs.build.steps) {
     if (JSON.stringify(step.env ?? {}).includes('secrets.')) {
       assert.equal(step.name, 'Sign and Notarize macOS PKG')

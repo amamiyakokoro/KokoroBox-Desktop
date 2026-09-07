@@ -90,7 +90,16 @@ test('monthly releases bootstrap without a stable tag, skip unchanged/non-month-
 
 test('build matrix exactly matches the 12 required release artifacts', () => {
   const build = workflow('build')
-  assert.deepEqual(build.jobs.build.strategy.matrix.include, releaseTargets)
+  assert.deepEqual(
+    build.jobs.build.strategy.matrix.include.map(
+      ({ os, arch, format }: { os: string; arch: string; format: string }) => ({
+        os,
+        arch,
+        format
+      })
+    ),
+    releaseTargets
+  )
   assert.equal(new Set(releaseTargets.map(targetId)).size, 12)
   assert.equal(new Set(releaseTargets.map((target) => artifactName(target, '2.26.8'))).size, 12)
   assert.match(artifactName(releaseTargets[0], '2.26.9-1'), /2\.26\.9-1/)
