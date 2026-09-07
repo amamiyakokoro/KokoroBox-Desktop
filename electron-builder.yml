@@ -67,6 +67,7 @@ mac:
   artifactName: ${name}-macos-${version}-${arch}.${ext}
 pkg:
   installLocation: /Applications
+  isRelocatable: false
   allowAnywhere: false
   allowCurrentUserHome: false
   # background:

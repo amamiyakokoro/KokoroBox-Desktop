@@ -419,6 +419,7 @@ test('CI macOS config loads through electron-builder and preserves PKG installat
   )
   assert.equal(Array.isArray(config.mac.extendInfo), false)
   assert.equal(config.pkg.installLocation, '/Applications')
+  assert.equal(config.pkg.isRelocatable, false)
   assert.equal(config.pkg.allowCurrentUserHome, false)
   assert.notEqual(config.pkg.scripts, null)
   for (const file of ['build/pkg-scripts/preinstall', 'build/pkg-scripts/postinstall'])
