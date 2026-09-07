@@ -577,6 +577,23 @@ test('native build is pinned to the controlled KokoroBox ProxyBridge fork', () =
   assert.match(build, /process-router-sbom\.cdx\.json/)
 })
 
+test('macOS approval guidance returns promptly and remains visible across app restarts', () => {
+  const bridge = readFileSync('native/macos-app-routing/KokoroBoxAppRoutingBridge.mm', 'utf8')
+  const coordinator = readFileSync('src/main/app-routing/macos.ts', 'utf8')
+  const page = readFileSync('src/renderer/src/pages/app-routing.tsx', 'utf8')
+  const hook = readFileSync('src/renderer/src/hooks/use-app-routing.ts', 'utf8')
+
+  assert.match(bridge, /KBUserApprovalPendingDefaultsKey/)
+  assert.match(bridge, /- \(void\)requestNeedsUserApproval[\s\S]*?\[self signalOnce\]/)
+  assert.match(bridge, /state = needsUserApproval \? @"starting" : KBApply/)
+  assert.match(bridge, /needsUserApproval = KBUserApprovalPending\(\)/)
+  assert.match(coordinator, /needsUserApproval: response\.needsUserApproval/)
+  assert.match(hook, /refreshAppRoutingStatus/)
+  assert.match(page, /needsMacApproval/)
+  assert.match(page, /打开 macOS 网络扩展设置/)
+  assert.match(page, /我已启用，立即检查/)
+})
+
 test('macOS bundle versions support stable revisions and rolling builds', () => {
   assert.deepEqual(macOSBundleVersion('2.26.9-7'), {
     marketingVersion: '2.26.9',

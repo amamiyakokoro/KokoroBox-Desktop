@@ -13,11 +13,22 @@ static const size_t KBMaximumRequestBytes = 256 * 1024;
 static NSString *const KBExtensionIdentifier = @"com.amamiyakokoro.app.proxy-extension";
 static NSString *const KBManagerDescription = @"KokoroBox Application Routing";
 static NSString *const KBErrorDomain = @"com.amamiyakokoro.app.routing-bridge";
+static NSString *const KBUserApprovalPendingDefaultsKey =
+    @"KokoroBoxApplicationRoutingUserApprovalPending";
 
 static NSError *KBError(NSString *message) {
   return [NSError errorWithDomain:KBErrorDomain
                              code:1
                          userInfo:@{NSLocalizedDescriptionKey : message}];
+}
+
+static BOOL KBUserApprovalPending(void) {
+  return [[NSUserDefaults standardUserDefaults] boolForKey:KBUserApprovalPendingDefaultsKey];
+}
+
+static void KBSetUserApprovalPending(BOOL pending) {
+  [[NSUserDefaults standardUserDefaults] setBool:pending
+                                          forKey:KBUserApprovalPendingDefaultsKey];
 }
 
 static BOOL KBWait(dispatch_semaphore_t semaphore, NSTimeInterval seconds) {
@@ -30,6 +41,7 @@ static BOOL KBWait(dispatch_semaphore_t semaphore, NSTimeInterval seconds) {
 @property(nonatomic) dispatch_semaphore_t semaphore;
 @property(nonatomic, strong, nullable) NSError *error;
 @property(nonatomic) BOOL needsUserApproval;
+@property(nonatomic) BOOL signaled;
 @end
 
 @implementation KBExtensionActivationDelegate
@@ -39,8 +51,15 @@ static BOOL KBWait(dispatch_semaphore_t semaphore, NSTimeInterval seconds) {
   return self;
 }
 
+- (void)signalOnce {
+  if (self.signaled) return;
+  self.signaled = YES;
+  dispatch_semaphore_signal(self.semaphore);
+}
+
 - (void)requestNeedsUserApproval:(OSSystemExtensionRequest *)request {
   self.needsUserApproval = YES;
+  [self signalOnce];
 }
 
 - (OSSystemExtensionReplacementAction)request:(OSSystemExtensionRequest *)request
@@ -51,12 +70,12 @@ static BOOL KBWait(dispatch_semaphore_t semaphore, NSTimeInterval seconds) {
 
 - (void)request:(OSSystemExtensionRequest *)request
     didFinishWithResult:(OSSystemExtensionRequestResult)result {
-  dispatch_semaphore_signal(self.semaphore);
+  [self signalOnce];
 }
 
 - (void)request:(OSSystemExtensionRequest *)request didFailWithError:(NSError *)error {
   self.error = error;
-  dispatch_semaphore_signal(self.semaphore);
+  [self signalOnce];
 }
 @end
 
@@ -88,11 +107,17 @@ static BOOL KBActivateExtension(BOOL *needsUserApproval, NSError **error) {
     if (error) *error = KBError(@"The macOS System Extension operation timed out");
     return NO;
   }
+  if (delegate.needsUserApproval) {
+    KBSetUserApprovalPending(YES);
+    if (needsUserApproval) *needsUserApproval = YES;
+    return YES;
+  }
   if (delegate.error) {
     if (error) *error = delegate.error;
     return NO;
   }
-  if (needsUserApproval) *needsUserApproval = delegate.needsUserApproval;
+  KBSetUserApprovalPending(NO);
+  if (needsUserApproval) *needsUserApproval = NO;
   return YES;
 }
 
@@ -258,7 +283,9 @@ static NSString *KBApply(NSDictionary *configuration, NSError **error) {
       return nil;
     }
   }
-  return KBStatusName(manager.connection.status);
+  NSString *state = KBStatusName(manager.connection.status);
+  if ([state isEqualToString:@"running"]) KBSetUserApprovalPending(NO);
+  return state;
 }
 
 static NSString *KBStop(NSError **error) {
@@ -274,7 +301,9 @@ static NSString *KBCurrentStatus(NSError **error) {
   NETransparentProxyManager *manager = KBLoadManager(error);
   if (!manager && error && *error) return nil;
   if (!manager || !manager.enabled) return @"disabled";
-  return KBStatusName(manager.connection.status);
+  NSString *state = KBStatusName(manager.connection.status);
+  if ([state isEqualToString:@"running"]) KBSetUserApprovalPending(NO);
+  return state;
 }
 
 static NSDictionary *KBInvoke(NSDictionary *request, NSError **error) {
@@ -287,15 +316,19 @@ static NSDictionary *KBInvoke(NSDictionary *request, NSError **error) {
 
   NSString *command = request[@"command"];
   NSString *state = nil;
-  BOOL needsUserApproval = NO;
+  BOOL needsUserApproval = KBUserApprovalPending();
   if ([command isEqualToString:@"apply"]) {
     NSDictionary *configuration = request[@"configuration"];
+    BOOL activationNeedsUserApproval = NO;
     if (![configuration isKindOfClass:[NSDictionary class]] ||
-        !KBActivateExtension(&needsUserApproval, error)) {
+        !KBActivateExtension(&activationNeedsUserApproval, error)) {
       if (error && !*error) *error = KBError(@"Invalid bridge request");
       return nil;
     }
-    state = KBApply(configuration, error);
+    needsUserApproval = KBUserApprovalPending() || activationNeedsUserApproval;
+    // macOS requires explicit user consent. Do not block Electron while the consent sheet is open,
+    // and do not create an enabled transparent-proxy manager until the extension is approved.
+    state = needsUserApproval ? @"starting" : KBApply(configuration, error);
   } else if ([command isEqualToString:@"stop"]) {
     state = KBStop(error);
   } else if ([command isEqualToString:@"status"]) {
@@ -313,6 +346,8 @@ static NSDictionary *KBInvoke(NSDictionary *request, NSError **error) {
   }
 
   if (!state) return nil;
+  if ([state isEqualToString:@"running"]) KBSetUserApprovalPending(NO);
+  needsUserApproval = KBUserApprovalPending();
   return @{
     @"version" : @(KBProtocolVersion),
     @"ok" : @YES,

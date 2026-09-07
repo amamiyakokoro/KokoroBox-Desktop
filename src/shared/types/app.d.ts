@@ -189,6 +189,7 @@ interface AppRoutingStatus {
   supported: boolean
   state: AppRoutingRuntimeState
   message?: string
+  needsUserApproval?: boolean
   proxyPort?: number
   mihomoAvailable: boolean
   protectedApplicationCount?: number

@@ -437,6 +437,11 @@ export function getAppRoutingStatus(): AppRoutingStatus {
   return { ...status }
 }
 
+export async function refreshAppRoutingStatus(): Promise<AppRoutingStatus> {
+  await reconcileAppRouting()
+  return getAppRoutingStatus()
+}
+
 export async function stopAppRouting(): Promise<void> {
   stopping = true
   if (monitor) clearInterval(monitor)

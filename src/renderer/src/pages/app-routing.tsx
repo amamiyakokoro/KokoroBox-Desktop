@@ -5,7 +5,7 @@ import AppRoutingSettingDrawer from '@renderer/components/app-routing/app-routin
 import { useAppRouting } from '@renderer/hooks/use-app-routing'
 import { openAppRoutingSystemSettings } from '@renderer/utils/ipc'
 import { Button, Card, CardBody, Chip, Divider, Input, Switch } from '@heroui/react'
-import { MdAdd, MdTune } from 'react-icons/md'
+import { MdAdd, MdOpenInNew, MdRefresh, MdTune } from 'react-icons/md'
 import { useState } from 'react'
 
 function statusColor(
@@ -86,6 +86,7 @@ const AppRouting: React.FC = () => {
     supported,
     icons,
     save,
+    refresh,
     addApplications,
     addPattern,
     updateRule,
@@ -96,6 +97,7 @@ const AppRouting: React.FC = () => {
   const [isSettingDrawerOpen, setIsSettingDrawerOpen] = useState(false)
   const [settingDrawerReopenSignal, setSettingDrawerReopenSignal] = useState(0)
   const currentStatusMessage = statusMessage(status?.message, status?.protectedApplicationCount)
+  const needsMacApproval = isMac && config?.enabled && status?.needsUserApproval === true
   const submitPattern = async (): Promise<void> => {
     if (await addPattern(processPattern)) setProcessPattern('')
   }
@@ -149,23 +151,26 @@ const AppRouting: React.FC = () => {
             <p className="mt-1 text-sm text-foreground-500">
               {tr('无需系统代理或 TUN，将指定应用程序交给本机 Mihomo 处理。')}
             </p>
-            {currentStatusMessage && (
+            {currentStatusMessage && !needsMacApproval && (
               <p
                 className={`mt-2 text-sm ${status?.state === 'error' ? 'text-danger' : 'text-warning'}`}
               >
                 {currentStatusMessage}
               </p>
             )}
-            {isMac && config?.enabled && ['starting', 'error'].includes(status?.state ?? '') && (
-              <Button
-                className="mt-2"
-                size="sm"
-                variant="flat"
-                onPress={() => void openAppRoutingSystemSettings()}
-              >
-                {tr('打开网络扩展设置')}
-              </Button>
-            )}
+            {isMac &&
+              !needsMacApproval &&
+              config?.enabled &&
+              ['starting', 'error'].includes(status?.state ?? '') && (
+                <Button
+                  className="mt-2"
+                  size="sm"
+                  variant="flat"
+                  onPress={() => void openAppRoutingSystemSettings()}
+                >
+                  {tr('打开网络扩展设置')}
+                </Button>
+              )}
             {config?.enabled && (
               <p className="mt-2 text-sm text-foreground-500">
                 {tr('上游')}：KokoroBox / 127.0.0.1:7891
@@ -181,6 +186,47 @@ const AppRouting: React.FC = () => {
         </div>
 
         <Divider />
+
+        {needsMacApproval && (
+          <Card
+            className="border border-warning/40 bg-warning-50 dark:bg-warning-900/20"
+            shadow="sm"
+          >
+            <CardBody className="gap-3 p-5">
+              <div>
+                <h3 className="font-semibold text-warning-900 dark:text-warning-200">
+                  {tr('需要批准网络扩展')}
+                </h3>
+                <p className="mt-1 text-sm text-warning-800 dark:text-warning-300">
+                  {tr('macOS 需要你的批准才能开始应用分流。')}
+                </p>
+              </div>
+              <ol className="list-decimal space-y-1 pl-5 text-sm text-warning-800 dark:text-warning-300">
+                <li>{tr('打开系统设置中的“网络扩展”。')}</li>
+                <li>{tr('启用 KokoroBox，然后完成 macOS 的确认提示。')}</li>
+                <li>{tr('返回 KokoroBox；应用分流会自动继续启动。')}</li>
+              </ol>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  color="primary"
+                  startContent={<MdOpenInNew className="text-base" />}
+                  isDisabled={saving}
+                  onPress={() => void openAppRoutingSystemSettings()}
+                >
+                  {tr('打开 macOS 网络扩展设置')}
+                </Button>
+                <Button
+                  variant="flat"
+                  startContent={<MdRefresh className="text-base" />}
+                  isDisabled={saving}
+                  onPress={() => void refresh()}
+                >
+                  {tr('我已启用，立即检查')}
+                </Button>
+              </div>
+            </CardBody>
+          </Card>
+        )}
 
         <div>
           <h3 className="font-semibold">{tr('应用程序规则')}</h3>

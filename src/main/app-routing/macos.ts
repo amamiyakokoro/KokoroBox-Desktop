@@ -98,6 +98,7 @@ export async function reconcileMacAppRouting(
   return {
     supported: true,
     state: response.state === 'stopping' ? 'starting' : response.state,
+    needsUserApproval: response.needsUserApproval,
     message: response.needsUserApproval
       ? '请在系统设置中允许 KokoroBox 网络扩展'
       : !proxyAvailable && protectedApplicationCount > 0

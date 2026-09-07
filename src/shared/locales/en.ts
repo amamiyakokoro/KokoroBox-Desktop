@@ -77,6 +77,16 @@ export const messages: Readonly<Record<string, string>> = {
   '请在系统设置中允许 KokoroBox 网络扩展':
     'Allow the KokoroBox network extension in System Settings.',
   打开网络扩展设置: 'Open Network Extension Settings',
+  需要批准网络扩展: 'Network Extension approval required',
+  'macOS 需要你的批准才能开始应用分流。':
+    'macOS needs your approval before application routing can start.',
+  '打开系统设置中的“网络扩展”。': 'Open Network Extensions in System Settings.',
+  '启用 KokoroBox，然后完成 macOS 的确认提示。':
+    'Enable KokoroBox, then complete the macOS confirmation prompt.',
+  '返回 KokoroBox；应用分流会自动继续启动。':
+    'Return to KokoroBox; application routing will continue starting automatically.',
+  '打开 macOS 网络扩展设置': 'Open macOS Network Extension Settings',
+  '我已启用，立即检查': 'I enabled it — check now',
   'macOS 应用分流组件未安装': 'The macOS application-routing bridge is not installed',
   'macOS 系统扩展未安装': 'The macOS system extension is not installed',
   'macOS 应用分流需要 macOS 13 或更新版本': 'macOS application routing requires macOS 13 or later',

@@ -132,6 +132,10 @@ export async function getAppRoutingStatus(): Promise<AppRoutingStatus> {
   return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('getAppRoutingStatus'))
 }
 
+export async function refreshAppRoutingStatus(): Promise<AppRoutingStatus> {
+  return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('refreshAppRoutingStatus'))
+}
+
 export async function replaceAppRoutingConfig(config: AppRoutingConfig): Promise<AppRoutingConfig> {
   return ipcErrorWrapper(
     await window.electron.ipcRenderer.invoke('replaceAppRoutingConfig', config)

@@ -4,6 +4,7 @@ import {
   getAppRoutingConfig,
   getAppRoutingIcon,
   getAppRoutingStatus,
+  refreshAppRoutingStatus,
   replaceAppRoutingConfig
 } from '@renderer/utils/ipc'
 import { notify } from '@renderer/utils/notification'
@@ -17,6 +18,7 @@ export function useAppRouting(): {
   saving: boolean
   supported: boolean
   icons: Record<string, string>
+  refresh: () => Promise<void>
   save: (config: AppRoutingConfig) => Promise<boolean>
   addApplications: () => Promise<void>
   addPattern: (processPattern: string) => Promise<boolean>
@@ -73,6 +75,14 @@ export function useAppRouting(): {
       return false
     } finally {
       setSaving(false)
+    }
+  }
+
+  const refresh = async (): Promise<void> => {
+    try {
+      setStatus(await refreshAppRoutingStatus())
+    } catch (error) {
+      notify(error, { variant: 'danger' })
     }
   }
 
@@ -177,6 +187,7 @@ export function useAppRouting(): {
       ((window.api.platform === 'win32' && window.api.arch === 'x64') ||
         (window.api.platform === 'darwin' && ['x64', 'arm64'].includes(window.api.arch))),
     icons,
+    refresh,
     save,
     addApplications,
     addPattern,
