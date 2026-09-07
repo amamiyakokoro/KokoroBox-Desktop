@@ -225,9 +225,9 @@ test('collects complete builds, generates hashes and concise updater-compatible 
     assert.doesNotMatch(latest.changelog, /## Downloads|releases\/download\//)
     assert.match(latest.changelog, /- A change/)
     assert.match(latest.changelog, /Developer ID-signed, notarized by Apple/)
-    assert.equal(readdirSync(output).length, 16)
+    assert.equal(readdirSync(output).length, 15)
     const lines = readFileSync(path.join(output, 'SHA256SUMS'), 'utf8').trim().split('\n')
-    assert.equal(lines.length, 13)
+    assert.equal(lines.length, 12)
     for (const line of lines) {
       const [digest, name] = line.split('  ')
       assert.equal(
@@ -347,7 +347,8 @@ test('workflows gate publication on all builds and do not invoke upstream-only s
   assert.equal(ciMac.mac.notarize, false)
   assert.equal(parse(readFileSync('electron-builder.yml', 'utf8')).linux.executableName, 'sparkle')
   const publish = readFileSync('.github/workflows/publish.yml', 'utf8')
-  assert.match(publish, /kokorobox-process-router-\*\.cdx\.json/)
+  assert.doesNotMatch(publish, /dist\/release\/kokorobox-process-router-\*\.cdx\.json/)
+  assert.match(publish, /asset\.name\.startsWith\('kokorobox-process-router-'/)
   assert.doesNotMatch(publish, /API_KEY|API_URL|AUR_SSH|delete-release-assets/)
 })
 

@@ -182,7 +182,6 @@ export function collectArtifacts(
   if ((tag === 'rolling') !== version.includes('-rolling-'))
     throw new Error('Release channel does not match version')
   const filenames: string[] = []
-  const supplementalFilenames: string[] = []
   const expectedFiles = new Set<string>()
   // Validate the entire matrix before creating any publication output.
   for (const target of releaseTargets) {
@@ -214,7 +213,6 @@ export function collectArtifacts(
         throw new Error('Missing or mismatched process router SBOM')
       }
       validateProcessRouterSbom(path.join(source, sbomName))
-      supplementalFilenames.push(sbomName)
       expectedFiles.add(sbomName)
     } else if (manifest.sbom) {
       throw new Error(`Unexpected process router SBOM: ${manifestName}`)
@@ -226,10 +224,12 @@ export function collectArtifacts(
     throw new Error('Unexpected release artifacts')
   mkdirSync(output, { recursive: true })
   if (readdirSync(output).length !== 0) throw new Error('Release output directory must be empty')
-  for (const filename of [...filenames, ...supplementalFilenames])
-    copyFileSync(path.join(source, filename), path.join(output, filename))
+  // The SBOM is retained in the private CI artifact and validated above, but
+  // it is not an end-user download.  Publishing one on every rolling build
+  // makes the release page noisy without helping installation or updates.
+  for (const filename of filenames) copyFileSync(path.join(source, filename), path.join(output, filename))
   const checksums =
-    [...filenames, ...supplementalFilenames]
+    [...filenames]
       .sort()
       .map((filename) => `${digest(path.join(output, filename))}  ${filename}`)
       .join('\n') + '\n'

@@ -90,7 +90,6 @@ jobs:
           body_path: dist/release/changelog.md
           files: |
             dist/release/kokorobox-desktop-*
-            dist/release/kokorobox-process-router-*.cdx.json
             dist/release/SHA256SUMS
           fail_on_unmatched_files: true
           draft: ${{ inputs.channel == 'stable' }}
@@ -147,7 +146,10 @@ jobs:
               await github.rest.git.updateRef({ ...context.repo, ref: 'tags/rolling', sha: context.sha, force: true });
               // Clean up old package versions only after the new assets uploaded successfully.
               for (const asset of assets) {
-                if (asset.name.startsWith('kokorobox-desktop-') && !expected.includes(asset.name)) {
+                if (
+                  (asset.name.startsWith('kokorobox-desktop-') && !expected.includes(asset.name)) ||
+                  (asset.name.startsWith('kokorobox-process-router-') && asset.name.endsWith('.cdx.json'))
+                ) {
                   await github.rest.repos.deleteReleaseAsset({ ...context.repo, asset_id: asset.id });
                 }
               }
