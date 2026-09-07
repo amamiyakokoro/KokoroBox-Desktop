@@ -3,7 +3,9 @@ import { macAppRoutingExtensionPath, macAppRoutingModulePath } from '../utils/di
 import { appRoutingSocksPort } from './profile'
 import { buildMacAppRoutingConfiguration, type MacBridgeConfiguration } from './macos-profile'
 
-const bridgeTimeoutMs = 330_000
+// Native operations have their own bounded waits. This outer limit prevents a
+// broken OS callback from holding an Electron worker indefinitely.
+const bridgeTimeoutMs = 90_000
 let activePolicyKey = ''
 let nativeBridge: MacNativeBridge | undefined
 

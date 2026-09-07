@@ -109,7 +109,7 @@ static BOOL KBActivateExtension(BOOL *needsUserApproval, NSError **error) {
       [OSSystemExtensionRequest activationRequestForExtension:KBExtensionIdentifier queue:queue];
   request.delegate = delegate;
   [[OSSystemExtensionManager sharedManager] submitRequest:request];
-  if (!KBWait(delegate.semaphore, 300)) {
+  if (!KBWait(delegate.semaphore, 30)) {
     if (error) *error = KBError(@"The macOS System Extension operation timed out");
     return NO;
   }
@@ -138,7 +138,7 @@ static NSArray<NETransparentProxyManager *> *KBLoadManagers(NSError **error) {
         loadError = managerError;
         dispatch_semaphore_signal(semaphore);
       }];
-  if (!KBWait(semaphore, 30)) {
+  if (!KBWait(semaphore, 15)) {
     if (error) *error = KBError(@"Loading transparent proxy preferences timed out");
     return nil;
   }
@@ -170,7 +170,7 @@ static BOOL KBSaveManager(NETransparentProxyManager *manager, NSError **error) {
     saveError = managerError;
     dispatch_semaphore_signal(saveSemaphore);
   }];
-  if (!KBWait(saveSemaphore, 30)) {
+  if (!KBWait(saveSemaphore, 15)) {
     if (error) *error = KBError(@"Saving transparent proxy preferences timed out");
     return NO;
   }
@@ -185,7 +185,7 @@ static BOOL KBSaveManager(NETransparentProxyManager *manager, NSError **error) {
     loadError = managerError;
     dispatch_semaphore_signal(loadSemaphore);
   }];
-  if (!KBWait(loadSemaphore, 30)) {
+  if (!KBWait(loadSemaphore, 15)) {
     if (error) *error = KBError(@"Reloading transparent proxy preferences timed out");
     return NO;
   }
@@ -294,6 +294,18 @@ static NSDictionary *KBStoredConfiguration(NETransparentProxyManager *manager) {
   return [decoded isKindOfClass:[NSDictionary class]] ? decoded : nil;
 }
 
+static void KBClearSharedPolicy(void) {
+  NSURL *containerURL = [[NSFileManager defaultManager]
+      containerURLForSecurityApplicationGroupIdentifier:KBAppGroupIdentifier];
+  if (!containerURL) return;
+  NSFileManager *files = [NSFileManager defaultManager];
+  [files removeItemAtURL:[containerURL URLByAppendingPathComponent:KBPolicyFilename]
+                   error:nil];
+  [files removeItemAtURL:
+             [containerURL URLByAppendingPathComponent:KBPolicyAcknowledgementFilename]
+                   error:nil];
+}
+
 static NSString *KBApply(NSDictionary *configuration, NSError **error) {
   if (!KBValidateConfiguration(configuration, error)) return nil;
   NETransparentProxyManager *manager = KBLoadManager(error);
@@ -329,6 +341,10 @@ static NSString *KBApply(NSDictionary *configuration, NSError **error) {
 
   if (manager.connection.status == NEVPNStatusDisconnected ||
       manager.connection.status == NEVPNStatusInvalid) {
+    // A policy envelope belongs to a running provider instance. Remove an old
+    // envelope before a cold start so the providerConfiguration saved above
+    // cannot be overwritten by stale App Group state.
+    KBClearSharedPolicy();
     NSError *startError = nil;
     if (![manager.connection startVPNTunnelAndReturnError:&startError]) {
       if (error) *error = startError ?: KBError(@"Starting the transparent proxy failed");

@@ -72,6 +72,16 @@ const actualRevision = spawnSync('git', ['-C', sourceRoot, 'rev-parse', 'HEAD'],
 if (actualRevision !== proxyBridgeSourceRevision) {
   throw new Error(`Unexpected ProxyBridge revision: ${actualRevision}`)
 }
+const providerSource = readFileSync(
+  path.join(sourceRoot, 'MacOS', 'ProxyBridge', 'extension', 'AppProxyProvider.swift'),
+  'utf8'
+)
+if (
+  !providerSource.includes('DispatchSource.makeTimerSource') ||
+  !providerSource.includes('lastKokoroBoxPolicyRevision')
+) {
+  throw new Error('Pinned ProxyBridge revision lacks reliable live-policy acknowledgement support')
+}
 
 const xcodeProjectRoot = path.join(sourceRoot, 'MacOS', 'ProxyBridge')
 const xcodeArgs = [

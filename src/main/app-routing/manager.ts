@@ -39,7 +39,8 @@ let monitor: NodeJS.Timeout | undefined
 let restartTimer: NodeJS.Timeout | undefined
 let stopping = false
 const expectedExits = new WeakSet<ChildProcess>()
-let operation: Promise<void> = Promise.resolve()
+let operation: Promise<void> | undefined
+let reconcileRequested = false
 let configGeneration = 0
 let activeBackend: 'direct' | 'service' | undefined
 let servicePolicyKey = ''
@@ -405,15 +406,29 @@ async function reconcile(): Promise<void> {
 }
 
 export function reconcileAppRouting(): Promise<void> {
-  const next = operation.then(reconcile, reconcile)
-  operation = next.catch((error) => {
-    publishStatus({
-      supported: appRoutingSupported(process.platform, process.arch),
-      state: 'error',
-      message: error instanceof Error ? error.message : String(error),
-      proxyPort: activePort,
-      mihomoAvailable: false
-    })
+  reconcileRequested = true
+  if (operation) return operation
+  operation = (async (): Promise<void> => {
+    while (reconcileRequested) {
+      if (stopping) break
+      reconcileRequested = false
+      try {
+        await reconcile()
+      } catch (error) {
+        publishStatus({
+          supported: appRoutingSupported(process.platform, process.arch),
+          state: 'error',
+          message: error instanceof Error ? error.message : String(error),
+          proxyPort: activePort,
+          mihomoAvailable: false
+        })
+      }
+    }
+  })().finally(() => {
+    operation = undefined
+    // A request can arrive after the loop condition and before the finalizer.
+    // Start one fresh pass instead of leaving that edge-triggered request idle.
+    if (reconcileRequested && !stopping) void reconcileAppRouting()
   })
   return operation
 }
@@ -421,9 +436,11 @@ export function reconcileAppRouting(): Promise<void> {
 export async function initializeAppRouting(): Promise<void> {
   if (!appRoutingSupported(process.platform, process.arch)) return
   stopping = false
-  await reconcileAppRouting()
   monitor = setInterval(() => void reconcileAppRouting(), probeIntervalMs)
   monitor.unref()
+  // Network/System Extension activation is controlled by macOS and may wait
+  // for system state. Never make application startup depend on that work.
+  void reconcileAppRouting()
 }
 
 export async function replaceAppRoutingConfig(config: AppRoutingConfig): Promise<AppRoutingConfig> {
@@ -444,6 +461,7 @@ export async function refreshAppRoutingStatus(): Promise<AppRoutingStatus> {
 
 export async function stopAppRouting(): Promise<void> {
   stopping = true
+  reconcileRequested = false
   if (monitor) clearInterval(monitor)
   monitor = undefined
   if (process.platform === 'darwin') await stopMacAppRouting()

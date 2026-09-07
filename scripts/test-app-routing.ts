@@ -527,6 +527,7 @@ test('native build is pinned to the controlled KokoroBox ProxyBridge fork', () =
   const buildWorkflow = readFileSync('.github/workflows/build.yml', 'utf8')
   const macBridge = readFileSync('native/macos-app-routing/KokoroBoxAppRoutingBridge.mm', 'utf8')
   const macCoordinator = readFileSync('src/main/app-routing/macos.ts', 'utf8')
+  const manager = readFileSync('src/main/app-routing/manager.ts', 'utf8')
   const router = readFileSync('build/proxybridge/kokorobox_process_router.c', 'utf8')
   assert.equal(sourceManifest.proxyBridgeRepository, proxyBridgeRepository)
   assert.equal(sourceManifest.proxyBridgeRevision, proxyBridgeSourceRevision)
@@ -545,6 +546,8 @@ test('native build is pinned to the controlled KokoroBox ProxyBridge fork', () =
   assert.match(macBuild, /node-gyp\.js/)
   assert.match(macBuild, /electronjs\.org\/headers/)
   assert.match(macBuild, /kokorobox-app-routing\.node/)
+  assert.match(macBuild, /DispatchSource\.makeTimerSource/)
+  assert.match(macBuild, /lastKokoroBoxPolicyRevision/)
   assert.doesNotMatch(macBuild, /swiftc|KokoroBoxAppRoutingBridge\.swift/)
   assert.match(buildWorkflow, /pnpm prepare:macos-routing/)
   assert.doesNotMatch(buildWorkflow, /git -C .*ProxyBridge.* checkout --detach/)
@@ -555,19 +558,26 @@ test('native build is pinned to the controlled KokoroBox ProxyBridge fork', () =
   assert.match(macBridge, /NETransparentProxyManager/)
   assert.match(macBridge, /const NSUInteger maximumAttempts = 3/)
   assert.match(macBridge, /The network extension rejected the application-routing policy/)
-  assert.match(macBridge, /The network extension did not acknowledge the application-routing policy/)
+  assert.match(
+    macBridge,
+    /The network extension did not acknowledge the application-routing policy/
+  )
   assert.match(macBridge, /containerURLForSecurityApplicationGroupIdentifier/)
   assert.match(macBridge, /CFNotificationCenterPostNotification/)
   assert.match(macBridge, /application-routing-policy-ack\.json/)
-  assert.match(macBridge, /\@"revision" : revision/)
+  assert.match(macBridge, /@"revision" : revision/)
   assert.match(
     macBridge,
     /x-help-action:\/\/openPrefPane\?bundleId=com\.apple\.LoginItems-Settings\.extension/
   )
   assert.doesNotMatch(macBridge, /com\.apple\.NetworkExtensionSettings/)
   assert.match(macBridge, /KBStoredConfiguration/)
+  assert.match(macBridge, /KBClearSharedPolicy/)
   assert.match(macBridge, /isEqualToDictionary:configuration/)
   assert.match(macCoordinator, /\['starting', 'running'\]\.includes\(response\.state\)/)
+  assert.match(manager, /while \(reconcileRequested\)/)
+  assert.match(manager, /void reconcileAppRouting\(\)/)
+  assert.doesNotMatch(manager, /await reconcileAppRouting\(\)\s+monitor = setInterval/)
   assert.doesNotMatch(macBridge, /SecCodeCheckValidity|certificate leaf/)
   assert.match(macCoordinator, /process\.dlopen/)
   assert.doesNotMatch(macCoordinator, /spawn\(|child_process/)
