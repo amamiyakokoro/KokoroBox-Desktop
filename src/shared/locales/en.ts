@@ -2,9 +2,9 @@
 export const messages: Readonly<Record<string, string>> = {
   应用分流: 'Application routing',
   应用分流设置: 'Application routing settings',
-  'DNS 泄漏保护': 'DNS leak protection',
-  '将 Proxy 应用程序的明文 DNS 查询交给 Mihomo；Windows DNS Client 代发的查询也会受到保护。':
-    'Send plaintext DNS from Proxy applications through Mihomo, including queries brokered by Windows DNS Client.',
+  '代理应用程序 UDP DNS': 'Proxy application UDP DNS',
+  '将 Proxy 规则应用程序自行发出的 UDP/53 查询交给 Mihomo。':
+    'Send UDP/53 queries issued by applications with Proxy rules through Mihomo.',
   新规则默认动作: 'Default action for new rules',
   新规则默认协议: 'Default protocol for new rules',
   进阶设置: 'Advanced settings',

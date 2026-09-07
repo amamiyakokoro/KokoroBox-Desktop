@@ -59,12 +59,9 @@ export async function generateProfile(): Promise<void> {
 
   const profile = deepMerge(JSON.parse(JSON.stringify(currentProfile)), configToMerge)
 
-  const appRoutingEnabled =
-    appRoutingConfig.enabled && appRoutingSupported(process.platform, process.arch)
   applyAppRoutingListener(
     profile,
-    appRoutingEnabled,
-    appRoutingEnabled && process.platform === 'win32' && appRoutingConfig.proxyUdpDns
+    appRoutingConfig.enabled && appRoutingSupported(process.platform, process.arch)
   )
 
   await cleanProfile(profile, controlDns, controlSniff)

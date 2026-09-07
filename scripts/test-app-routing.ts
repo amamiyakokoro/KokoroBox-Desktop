@@ -16,7 +16,6 @@ import {
 } from '../src/shared/app-routing'
 import {
   appRoutingListenerName,
-  appRoutingDnsPort,
   appRoutingSocksPort,
   applyAppRoutingListener,
   buildProcessRouterCommand,
@@ -264,15 +263,8 @@ test('injects and removes the isolated loopback Mihomo listener', () => {
       udp: true
     }
   ])
-  assert.equal(profile.dns, undefined)
   applyAppRoutingListener(profile, false)
   assert.deepEqual(profile.listeners, [{ name: 'user-listener', type: 'mixed', port: 7890 }])
-
-  profile.dns = { enable: false, nameserver: ['https://dns.example/dns-query'] }
-  applyAppRoutingListener(profile, true, true)
-  assert.equal(profile.dns?.enable, true)
-  assert.equal(profile.dns?.listen, `127.0.0.1:${appRoutingDnsPort}`)
-  assert.deepEqual(profile.dns?.nameserver, ['https://dns.example/dns-query'])
 })
 
 test('requires a complete no-auth SOCKS5 handshake response', () => {
@@ -600,7 +592,7 @@ test('native build is pinned to the controlled KokoroBox ProxyBridge fork', () =
   assert.match(router, /ProxyBridge_DeleteRule\(guard_id\)/)
   assert.match(router, /read_string\(object, "processPattern"/)
   assert.match(router, /read_bool\(command, "proxyUdpDns"/)
-  assert.match(router, /ProxyBridge_ConfigureDnsHijack\(proxy_udp_dns, 7892\)/)
+  assert.match(router, /ProxyBridge_SetProxyUdpDnsEnabled\(proxy_udp_dns\)/)
   assert.match(router, /read_bool\(command, "diagnosticLogging"/)
   assert.match(router, /ProxyBridge_SetConnectionCallback\(diagnostic_connection\)/)
   assert.doesNotMatch(router, /read_string\(object, "executablePath"/)

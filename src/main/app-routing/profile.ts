@@ -2,7 +2,6 @@ import { validateAppRoutingConfig } from '../../shared/app-routing'
 
 export const appRoutingListenerName = 'kokorobox-app-routing'
 export const appRoutingSocksPort = 7891
-export const appRoutingDnsPort = 7892
 export const protectedProcessNames = Object.freeze([
   'KokoroBox.exe',
   'mihomo.exe',
@@ -55,11 +54,7 @@ export function buildProcessRouterCommand(
   })
 }
 
-export function applyAppRoutingListener(
-  profile: MihomoConfig,
-  enabled: boolean,
-  dnsHijackEnabled = false
-): void {
+export function applyAppRoutingListener(profile: MihomoConfig, enabled: boolean): void {
   const existing = (profile.listeners || []).filter(
     (listener) => listener.name !== appRoutingListenerName
   )
@@ -76,12 +71,4 @@ export function applyAppRoutingListener(
 
   if (existing.length > 0) profile.listeners = existing
   else delete profile.listeners
-
-  if (enabled && dnsHijackEnabled) {
-    profile.dns = {
-      ...(profile.dns || {}),
-      enable: true,
-      listen: `127.0.0.1:${appRoutingDnsPort}`
-    }
-  }
 }
