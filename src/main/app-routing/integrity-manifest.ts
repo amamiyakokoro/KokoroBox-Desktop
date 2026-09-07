@@ -1,4 +1,4 @@
-import sourceManifest from '../../../build/proxybridge/source-manifest.json'
+import sourceManifest from '../../../build/proxybridge/source-manifest.json' with { type: 'json' }
 
 export const proxyBridgeRepository = sourceManifest.proxyBridgeRepository
 export const proxyBridgeSourceRevision = sourceManifest.proxyBridgeRevision
