@@ -89,6 +89,9 @@ export const messages: Readonly<Record<string, string>> = {
   '我已启用，立即检查': 'I enabled it — check now',
   'macOS 应用分流组件未安装': 'The macOS application-routing bridge is not installed',
   'macOS 系统扩展未安装': 'The macOS system extension is not installed',
+  '网络扩展拒绝了应用分流规则。请检查规则后重试。':
+    'The Network Extension rejected the application-routing rules. Check the rules and try again.',
+  '网络扩展正在启动，请稍后重试。': 'The Network Extension is starting. Try again shortly.',
   'macOS 应用分流需要 macOS 13 或更新版本': 'macOS application routing requires macOS 13 or later',
   任务栏: 'Taskbar',
   状态栏: 'Menu bar',
