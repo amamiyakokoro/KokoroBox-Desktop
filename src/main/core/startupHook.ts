@@ -6,6 +6,7 @@ import { mkdir, rm } from 'fs/promises'
 import path from 'path'
 import { randomUUID } from 'crypto'
 import { dataDir } from '../utils/dirs'
+import { resolveCoreHookDirectory } from './coreHookPath'
 
 const coreHookTimeout = 30000
 
@@ -31,10 +32,7 @@ function hookTouchCommand(file: string): string {
 }
 
 function coreHookDir(): string {
-  if (process.platform === 'win32' && process.env.ProgramData) {
-    return path.join(process.env.ProgramData, 'sparkle', 'core-hooks')
-  }
-  return path.join(dataDir(), 'core-hooks')
+  return resolveCoreHookDirectory(process.platform, process.env.ProgramData, dataDir())
 }
 
 export async function createCoreStartupHook(): Promise<CoreStartupHook> {

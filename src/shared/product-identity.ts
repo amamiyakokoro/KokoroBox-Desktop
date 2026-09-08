@@ -7,6 +7,7 @@
 export const productIdentity = {
   name: 'KokoroBox',
   userDataDirectory: 'KokoroBox',
+  systemStateDirectory: 'KokoroBox',
   legacyUserDataDirectories: ['sparkle'],
   uriScheme: 'kokorobox',
   legacyUriSchemes: ['sparkle']
