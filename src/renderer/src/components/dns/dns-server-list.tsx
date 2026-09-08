@@ -16,6 +16,7 @@ interface DnsServerListProps {
   placeholder: string
   divider?: boolean
   ipOnly?: boolean
+  followRoutingRules?: boolean
   onErrorChange?: (error: string | null) => void
 }
 
@@ -31,6 +32,7 @@ const DnsServerList: React.FC<DnsServerListProps> = ({
   placeholder,
   divider = true,
   ipOnly = false,
+  followRoutingRules = false,
   onErrorChange
 }) => {
   const endpoints = items.map(parseDnsServerEndpoint)
@@ -56,7 +58,9 @@ const DnsServerList: React.FC<DnsServerListProps> = ({
     <div className={divider ? 'border-b border-divider pb-4' : ''}>
       <h4 className="mb-2 text-base font-medium">{title}</h4>
       <p className="mb-3 text-xs text-foreground-500">
-        {tr('选择 DNS 的连接方式；代理解析请同时设置代理节点解析服务器。')}
+        {followRoutingRules
+          ? tr('DNS 连接将遵守全局路由规则。')
+          : tr('选择 DNS 的连接方式；代理解析请同时设置代理节点解析服务器。')}
       </p>
       <div className="space-y-2">
         {displayed.map((endpoint, index) => {
@@ -89,7 +93,7 @@ const DnsServerList: React.FC<DnsServerListProps> = ({
                   onValueChange={(address) => update(index, { ...endpoint, address })}
                 />
               </Tooltip>
-              {!ipOnly && (
+              {!ipOnly && !followRoutingRules && (
                 <>
                   <Select
                     aria-label={tr('连接方式')}

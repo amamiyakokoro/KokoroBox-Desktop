@@ -3,7 +3,8 @@ import React, { useState } from 'react'
 import SettingCard from '../base/base-setting-card'
 import SettingItem from '../base/base-setting-item'
 import EditableList from '../base/base-list-editor'
-import { Input, Select, SelectItem, Switch } from '@heroui/react'
+import { Input, Select, SelectItem, Switch, Tooltip } from '@heroui/react'
+import { MdHelpOutline } from 'react-icons/md'
 import { isValidDnsServer, isValidDomainWildcard } from '@renderer/utils/validate'
 import DnsServerList from './dns-server-list'
 
@@ -113,8 +114,20 @@ const AdvancedDnsSetting: React.FC<AdvancedDnsSettingProps> = ({
         onChange={onDirectNameserverChange}
         onErrorChange={setDirectNameserverError}
         placeholder={tr('例：tls://dns.alidns.com')}
+        followRoutingRules={respectRules}
       />
-      <SettingItem compatKey="legacy" title={tr('直连解析遵守策略')} divider>
+      <SettingItem
+        compatKey="legacy"
+        title={tr('直连 DNS 套用网域策略')}
+        actions={
+          <Tooltip content={tr('启用后，直连流量使用直连 DNS 时，仍会优先套用网域解析策略；关闭则一律使用直连 DNS。')}>
+            <span className="ml-1 inline-flex cursor-help text-foreground-400" aria-label={tr('说明')}>
+              <MdHelpOutline />
+            </span>
+          </Tooltip>
+        }
+        divider
+      >
         <Switch
           size="sm"
           isSelected={directNameserverFollowPolicy}
@@ -128,6 +141,7 @@ const AdvancedDnsSetting: React.FC<AdvancedDnsSettingProps> = ({
         onChange={onProxyNameserverChange}
         onErrorChange={setProxyNameserverError}
         placeholder={tr('例：tls://dns.alidns.com')}
+        followRoutingRules={respectRules}
       />
       {proxyServerNameserver.length > 0 && (
         <EditableList
@@ -253,6 +267,7 @@ const AdvancedDnsSetting: React.FC<AdvancedDnsSettingProps> = ({
         onChange={onFallbackChange}
         onErrorChange={setFallbackError}
         placeholder={tr('例：tls://1.1.1.1')}
+        followRoutingRules={respectRules}
       />
       {fallback.length > 0 && (
         <>

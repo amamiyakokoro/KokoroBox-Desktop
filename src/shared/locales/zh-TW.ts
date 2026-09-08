@@ -1072,6 +1072,7 @@ export const messages: Readonly<Record<string, string>> = {
   默认解析服务器: '預設解析伺服器',
   '选择 DNS 的连接方式；代理解析请同时设置代理节点解析服务器。':
     '選擇 DNS 的連線方式；代理解析請同時設定代理節點解析伺服器。',
+  'DNS 连接将遵守全局路由规则。': 'DNS 連線將遵守全局路由規則。',
   'DNS 服务器': 'DNS 伺服器',
   连接方式: '連線方式',
   遵守规则: '遵守規則',
@@ -1082,7 +1083,9 @@ export const messages: Readonly<Record<string, string>> = {
   黑名单: '黑名單',
   白名单: '白名單',
   规则: '規則',
-  直连解析遵守策略: '直連解析遵守策略',
+  '直连 DNS 套用网域策略': '直連 DNS 套用網域策略',
+  '启用后，直连流量使用直连 DNS 时，仍会优先套用网域解析策略；关闭则一律使用直连 DNS。':
+    '啟用後，直連流量使用直連 DNS 時，仍會優先套用網域解析策略；關閉則一律使用直連 DNS。',
   备用解析服务器: '備用解析伺服器',
   'Fallback GeoIP 过滤': 'Fallback GeoIP 過濾',
   'Fallback GeoIP 国家': 'Fallback GeoIP 國家',

@@ -1101,6 +1101,7 @@ export const messages: Readonly<Record<string, string>> = {
   默认解析服务器: 'Default DNS servers',
   '选择 DNS 的连接方式；代理解析请同时设置代理节点解析服务器。':
     'Choose how this DNS server connects. Configure Proxy DNS servers as well when using a proxy.',
+  'DNS 连接将遵守全局路由规则。': 'DNS connections follow the global routing rules.',
   'DNS 服务器': 'DNS server',
   连接方式: 'Connection',
   遵守规则: 'Follow rules',
@@ -1111,7 +1112,9 @@ export const messages: Readonly<Record<string, string>> = {
   黑名单: 'Blacklist',
   白名单: 'Whitelist',
   规则: 'Rules',
-  直连解析遵守策略: 'Direct DNS follows policy',
+  '直连 DNS 套用网域策略': 'Apply domain DNS policy to direct DNS',
+  '启用后，直连流量使用直连 DNS 时，仍会优先套用网域解析策略；关闭则一律使用直连 DNS。':
+    'When enabled, direct traffic still checks the domain DNS policy before using Direct DNS. When disabled, it always uses Direct DNS.',
   备用解析服务器: 'Fallback DNS servers',
   'Fallback GeoIP 过滤': 'Fallback GeoIP filter',
   'Fallback GeoIP 国家': 'Fallback GeoIP country',

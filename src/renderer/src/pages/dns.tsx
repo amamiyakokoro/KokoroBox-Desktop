@@ -389,6 +389,7 @@ const DNS: React.FC = () => {
           onErrorChange={setNameserverError}
           placeholder={tr('例：https://dns.alidns.com/dns-query')}
           divider={false}
+          followRoutingRules={values.respectRules}
         />
       </SettingCard>
       <AdvancedDnsSetting

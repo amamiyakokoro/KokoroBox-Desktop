@@ -43,3 +43,14 @@ test('anti-pollution preset does not assume a proxy group named PROXY', () => {
   const page = readFileSync('src/renderer/src/pages/dns.tsx', 'utf8')
   assert.doesNotMatch(page, /antiPollutionDnsPreset[\s\S]*?#PROXY/)
 })
+
+test('global DNS rule routing hides redundant per-server connection selectors', () => {
+  const component = readFileSync('src/renderer/src/components/dns/dns-server-list.tsx', 'utf8')
+  const page = readFileSync('src/renderer/src/pages/dns.tsx', 'utf8')
+  const advanced = readFileSync('src/renderer/src/components/dns/advanced-dns-setting.tsx', 'utf8')
+
+  assert.match(component, /followRoutingRules = false/)
+  assert.match(component, /!ipOnly && !followRoutingRules/)
+  assert.match(page, /followRoutingRules=\{values\.respectRules\}/)
+  assert.match(advanced, /followRoutingRules=\{respectRules\}/)
+})
