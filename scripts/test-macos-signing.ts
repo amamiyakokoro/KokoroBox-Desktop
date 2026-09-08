@@ -40,6 +40,12 @@ const sha = '1234567890abcdef1234567890abcdef12345678'
 const submissionId = '12345678-1234-1234-1234-123456789abc'
 const details = `Authority=Developer ID Application: Test (${teamId})\nTeamIdentifier=${teamId}\nCodeDirectory flags=0x10000(runtime)\nTimestamp=Sep 5, 2026\n`
 const safeHostEntitlements = `
+<key>com.apple.application-identifier</key>
+\t<string>755TNLRN92.com.amamiyakokoro.app</string>
+<key>com.apple.developer.team-identifier</key>
+\t<string>755TNLRN92</string>
+<key>com.apple.developer.networking.networkextension</key>
+<array><string>app-proxy-provider-systemextension</string></array>
 <key>com.apple.developer.system-extension.install</key><true/>
 <key>com.apple.security.cs.allow-jit</key><true/>
 `
@@ -233,7 +239,9 @@ test('System Extension host rejects Hardened Runtime relaxations that make AMFI 
     'com.apple.security.cs.disable-executable-page-protection',
     'com.apple.security.cs.disable-library-validation'
   ]) {
-    assert.throws(() => assertSystemExtensionHostEntitlements(`${safeHostEntitlements}${forbidden}`))
+    assert.throws(() =>
+      assertSystemExtensionHostEntitlements(`${safeHostEntitlements}${forbidden}`)
+    )
   }
   assert.throws(() =>
     assertSystemExtensionHostEntitlements(
@@ -242,6 +250,19 @@ test('System Extension host rejects Hardened Runtime relaxations that make AMFI 
   )
   assert.throws(() =>
     assertSystemExtensionHostEntitlements('<key>com.apple.security.cs.allow-jit</key><true/>')
+  )
+  assert.throws(() =>
+    assertSystemExtensionHostEntitlements(
+      safeHostEntitlements.replace(
+        '<key>com.apple.application-identifier</key>\n\t<string>755TNLRN92.com.amamiyakokoro.app</string>',
+        ''
+      )
+    )
+  )
+  assert.throws(() =>
+    assertSystemExtensionHostEntitlements(
+      safeHostEntitlements.replace('app-proxy-provider-systemextension', 'packet-tunnel-provider')
+    )
   )
 })
 

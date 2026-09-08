@@ -199,10 +199,18 @@ export function assertDeveloperId(details: string, teamId: string) {
 
 export function assertSystemExtensionHostEntitlements(entitlements: string) {
   if (
+    !entitlements.includes('com.apple.application-identifier') ||
+    !entitlements.includes('755TNLRN92.com.amamiyakokoro.app') ||
+    !entitlements.includes('com.apple.developer.team-identifier') ||
+    !entitlements.includes('755TNLRN92') ||
+    !entitlements.includes('com.apple.developer.networking.networkextension') ||
+    !entitlements.includes('app-proxy-provider-systemextension') ||
     !entitlements.includes('com.apple.developer.system-extension.install') ||
     !entitlements.includes('com.apple.security.cs.allow-jit')
   ) {
-    throw new Error('The macOS host is missing required System Extension or Electron entitlements')
+    throw new Error(
+      'The macOS host is missing its signed application identity, Network Extension, System Extension, or Electron entitlement'
+    )
   }
   for (const forbidden of [
     'com.apple.security.cs.allow-dyld-environment-variables',
