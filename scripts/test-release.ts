@@ -373,6 +373,15 @@ test('AUR publication uses KokoroBox package names and layouts', () => {
   }
 })
 
+test('service release download tolerates GitHub asset publication delay', () => {
+  const prepare = readFileSync('scripts/prepare.ts', 'utf8')
+  assert.match(
+    prepare,
+    /name: 'kokorobox-service',[\s\S]*retry: 24,[\s\S]*retryDelayMs: 5000/
+  )
+  assert.match(prepare, /await new Promise\(\(resolve\) => setTimeout\(resolve, task\.retryDelayMs\)\)/)
+})
+
 test('Fedora validation gates the reusable build for x64 RPMs', () => {
   const job = workflow('build').jobs['fedora-rpm']
   assert.equal(job.needs, 'build')

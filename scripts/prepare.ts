@@ -396,6 +396,7 @@ type Task = {
   name: string
   func: () => Promise<void>
   retry: number
+  retryDelayMs?: number
   winOnly?: boolean
   linuxOnly?: boolean
   unixOnly?: boolean
@@ -432,7 +433,10 @@ const tasks: Task[] = [
   {
     name: 'kokorobox-service',
     func: resolveKokoroBoxService,
-    retry: 5
+    // Desktop and service workflows can start together. GitHub may take a few
+    // seconds to expose a newly uploaded pre-release asset.
+    retry: 24,
+    retryDelayMs: 5000
   },
   {
     name: 'runner',
@@ -468,6 +472,9 @@ async function runTask() {
     } catch (err) {
       console.error(`[ERROR]: task::${task.name} try ${i} ==`, getErrorMessage(err))
       if (i === task.retry - 1) throw err
+      if (task.retryDelayMs) {
+        await new Promise((resolve) => setTimeout(resolve, task.retryDelayMs))
+      }
     }
   }
   return runTask()
