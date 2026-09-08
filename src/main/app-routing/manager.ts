@@ -51,7 +51,20 @@ let status: AppRoutingStatus = {
   mihomoAvailable: false
 }
 
+function appRoutingStatusEquals(left: AppRoutingStatus, right: AppRoutingStatus): boolean {
+  return (
+    left.supported === right.supported &&
+    left.state === right.state &&
+    left.message === right.message &&
+    left.needsUserApproval === right.needsUserApproval &&
+    left.proxyPort === right.proxyPort &&
+    left.mihomoAvailable === right.mihomoAvailable &&
+    left.protectedApplicationCount === right.protectedApplicationCount
+  )
+}
+
 function publishStatus(next: AppRoutingStatus): void {
+  if (appRoutingStatusEquals(status, next)) return
   status = next
   for (const window of BrowserWindow.getAllWindows()) {
     window.webContents.send('app-routing-status-changed', status)
@@ -310,12 +323,6 @@ async function reconcile(): Promise<void> {
     const mihomoAvailable = requiresMihomo
       ? await canConnectToAppRoutingListener(appRoutingSocksPort)
       : false
-    publishStatus({
-      supported: true,
-      state: 'starting',
-      proxyPort: requiresMihomo ? appRoutingSocksPort : undefined,
-      mihomoAvailable
-    })
     publishStatus(await reconcileMacAppRouting(config, mihomoAvailable))
     return
   }

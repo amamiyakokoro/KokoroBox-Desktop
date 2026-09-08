@@ -621,6 +621,22 @@ test('macOS approval guidance returns promptly and remains visible across app re
   assert.match(page, /网络扩展正在启动，请稍后重试/)
 })
 
+test('macOS health polling does not publish a transient start status', () => {
+  const manager = readFileSync('src/main/app-routing/manager.ts', 'utf8')
+  assert.match(manager, /function appRoutingStatusEquals/)
+  assert.match(manager, /if \(appRoutingStatusEquals\(status, next\)\) return/)
+
+  const macBranchStart = manager.indexOf(
+    "if (process.platform === 'darwin') {\n    if (!config.enabled"
+  )
+  const macBranchEnd = manager.indexOf(
+    '\n  if (!config.enabled || enabledRules.length === 0)',
+    macBranchStart
+  )
+  assert.ok(macBranchStart >= 0 && macBranchEnd > macBranchStart)
+  assert.doesNotMatch(manager.slice(macBranchStart, macBranchEnd), /state: 'starting'/)
+})
+
 test('macOS bundle versions support stable revisions and rolling builds', () => {
   assert.deepEqual(macOSBundleVersion('2.26.9-7'), {
     marketingVersion: '2.26.9',
