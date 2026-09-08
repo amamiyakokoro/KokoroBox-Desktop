@@ -667,6 +667,18 @@ test('new application rules use the configured defaults', () => {
   assert.equal((hook.match(/protocol: config\.defaultProtocol/g) || []).length, 2)
 })
 
+test('application routing rules use a two-line identity-first card layout', () => {
+  const page = readFileSync('src/renderer/src/pages/app-routing.tsx', 'utf8')
+  const row = readFileSync('src/renderer/src/components/app-routing/rule-row.tsx', 'utf8')
+
+  assert.match(row, /grid-cols-\[2\.75rem_minmax\(0,1fr\)\]/)
+  assert.match(row, /row-span-2/)
+  assert.match(row, /border-t border-divider\/70 pt-2/)
+  assert.match(row, /content=\{rule\.processPattern\}/)
+  assert.match(row, /content=\{rule\.sourcePath\}/)
+  assert.doesNotMatch(page, /grid-cols-\[1fr_9rem_9rem_9rem\]/)
+})
+
 test('Windows packaging rebuilds the architecture-matched process router payload', () => {
   const packageJson = JSON.parse(readFileSync('package.json', 'utf8')) as {
     scripts: Record<string, string>

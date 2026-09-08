@@ -304,13 +304,7 @@ const AppRouting: React.FC = () => {
             </CardBody>
           </Card>
         ) : (
-          <div className="flex flex-col gap-2">
-            <div className="hidden grid-cols-[1fr_9rem_9rem_9rem] gap-3 px-3 text-xs font-medium text-foreground-500 md:grid">
-              <span>{isMac ? tr('签名标识') : tr('程序匹配')}</span>
-              <span>{tr('协议')}</span>
-              <span>{tr('动作')}</span>
-              <span className="text-right">{tr('操作')}</span>
-            </div>
+          <div className="flex flex-col gap-3">
             {config?.rules.map((rule, index) => (
               <AppRoutingRuleRow
                 key={rule.id}
