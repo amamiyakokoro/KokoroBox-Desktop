@@ -14,6 +14,17 @@ let serviceUnavailableFallbackTimer: NodeJS.Timeout | null = null
 let serviceUnavailableFallbackPromise: Promise<void> | null = null
 const serviceUnavailableFallbackDelay = 2000
 const serviceUnavailableStatuses = [401, 403, 409, 503]
+type ServiceAuthVersion = '2' | '3'
+const currentServiceAuthVersion: ServiceAuthVersion = '3'
+const serviceAuthDomains: Record<ServiceAuthVersion, string> = {
+  '2': 'SPARKLE-AUTH-V2',
+  '3': 'KOKOROBOX-AUTH-V3'
+}
+
+type ServiceAuthRequestConfig = InternalAxiosRequestConfig & {
+  __kokoroboxServiceAuthVersion?: ServiceAuthVersion
+  __kokoroboxServiceAuthFallbackAttempted?: boolean
+}
 
 export class ServiceAPIError extends Error {
   status?: number
@@ -108,14 +119,15 @@ function buildCanonicalRequest(
   timestamp: string,
   nonce: string,
   keyId: string,
-  bodyHash: string
+  bodyHash: string,
+  version: ServiceAuthVersion
 ): string {
   const resolvedUrl = resolveRequestUrl(instance, config)
   const path = resolvedUrl.pathname || '/'
   const query = canonicalizeQuery(resolvedUrl)
 
   return [
-    'SPARKLE-AUTH-V2',
+    serviceAuthDomains[version],
     timestamp,
     nonce,
     keyId,
@@ -131,15 +143,17 @@ function signServiceRequest(
   config: InternalAxiosRequestConfig
 ): InternalAxiosRequestConfig {
   if (keyManager?.isInitialized()) {
+    const authConfig = config as ServiceAuthRequestConfig
+    const version = authConfig.__kokoroboxServiceAuthVersion || currentServiceAuthVersion
     const bodyBytes = getRequestBodyBytes(config)
     const bodyHash = crypto.createHash('sha256').update(bodyBytes).digest('hex')
     const timestamp = Date.now().toString()
     const nonce = crypto.randomBytes(16).toString('base64url')
     const keyId = keyManager.getKeyID()
-    const canonical = buildCanonicalRequest(instance, config, timestamp, nonce, keyId, bodyHash)
+    const canonical = buildCanonicalRequest(instance, config, timestamp, nonce, keyId, bodyHash, version)
     const signature = keyManager.signData(canonical)
 
-    config.headers['X-Auth-Version'] = '2'
+    config.headers['X-Auth-Version'] = version
     config.headers['X-Key-Id'] = keyId
     config.headers['X-Nonce'] = nonce
     config.headers['X-Content-SHA256'] = bodyHash
@@ -152,6 +166,25 @@ function signServiceRequest(
 
 function attachServiceAuth(instance: AxiosInstance): void {
   instance.interceptors.request.use((config) => signServiceRequest(instance, config))
+  instance.interceptors.response.use(undefined, async (error) => {
+    const config = (error as { config?: ServiceAuthRequestConfig }).config
+    const status = (error as { response?: { status?: number } }).response?.status
+    if (
+      status !== 401 ||
+      !config ||
+      config.__kokoroboxServiceAuthVersion === '2' ||
+      config.__kokoroboxServiceAuthFallbackAttempted ||
+      !keyManager?.isInitialized()
+    ) {
+      return Promise.reject(error)
+    }
+
+    // A pre-upgrade service only understands V2. Retry once with the legacy
+    // domain separator; a current service validates V3 on the first request.
+    config.__kokoroboxServiceAuthVersion = '2'
+    config.__kokoroboxServiceAuthFallbackAttempted = true
+    return instance.request(config)
+  })
 }
 
 export function setServiceUnavailableFallbackHandler(
@@ -313,7 +346,8 @@ export const createSignedServiceAxios = (baseURL = 'http://localhost'): AxiosIns
 export const getServiceAuthHeaders = (
   method: string,
   pathWithQuery: string,
-  body: Buffer = Buffer.alloc(0)
+  body: Buffer = Buffer.alloc(0),
+  version: ServiceAuthVersion = currentServiceAuthVersion
 ): Record<string, string> => {
   if (!keyManager?.isInitialized()) {
     throw new Error(tr('服务 API 未初始化'))
@@ -325,7 +359,7 @@ export const getServiceAuthHeaders = (
   const keyId = keyManager.getKeyID()
   const urlObj = new URL(pathWithQuery, 'http://localhost')
   const canonical = [
-    'SPARKLE-AUTH-V2',
+    serviceAuthDomains[version],
     timestamp,
     nonce,
     keyId,
@@ -337,7 +371,7 @@ export const getServiceAuthHeaders = (
   const signature = keyManager.signData(canonical)
 
   return {
-    'X-Auth-Version': '2',
+    'X-Auth-Version': version,
     'X-Key-Id': keyId,
     'X-Nonce': nonce,
     'X-Content-SHA256': bodyHash,

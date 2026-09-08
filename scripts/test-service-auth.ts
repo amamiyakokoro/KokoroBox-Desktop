@@ -91,3 +91,13 @@ test('startup persists a replacement pair when stored authentication is unavaila
   assert.match(routingSource, /\[401, 403, 409\]/)
   assert.match(routingSource, /重置认证/)
 })
+
+test('Desktop signs service requests with Auth V3 and retries a legacy service once with V2', () => {
+  const apiSource = readFileSync(resolve('src/main/service/api.ts'), 'utf8')
+
+  assert.match(apiSource, /currentServiceAuthVersion: ServiceAuthVersion = '3'/)
+  assert.match(apiSource, /'2': 'SPARKLE-AUTH-V2'/)
+  assert.match(apiSource, /'3': 'KOKOROBOX-AUTH-V3'/)
+  assert.match(apiSource, /config\.__kokoroboxServiceAuthVersion = '2'/)
+  assert.match(apiSource, /config\.__kokoroboxServiceAuthFallbackAttempted = true/)
+})
