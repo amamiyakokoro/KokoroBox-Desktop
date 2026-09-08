@@ -1,4 +1,4 @@
-pkgname=sparkle-electron-git
+pkgname=kokorobox-electron-git
 _pkgname=${pkgname%-electron-git}
 pkgver=1.26.7.r17.g2fed67e
 pkgrel=1
@@ -7,9 +7,11 @@ arch=('x86_64' 'aarch64')
 url="https://github.com/amamiyakokoro/KokoroBox-Desktop"
 license=('GPL-3.0-only')
 provides=("$_pkgname=$pkgver")
-conflicts=("$_pkgname" "$_pkgname-git" "$_pkgname-bin" "$_pkgname-rolling-bin" "$_pkgname-electron" "$_pkgname-electron-bin")
+replaces=('sparkle-electron-git')
+conflicts=("$_pkgname" "$_pkgname-git" "$_pkgname-bin" "$_pkgname-rolling-bin" "$_pkgname-electron" "$_pkgname-electron-bin"
+           'sparkle' 'sparkle-bin' 'sparkle-git' 'sparkle-rolling-bin' 'sparkle-electron' 'sparkle-electron-bin' 'sparkle-electron-git')
 depends=('electron' 'alsa-lib' 'gtk3' 'libnotify' 'nss' 'libxss' 'libxtst' 'xdg-utils' 'at-spi2-core' 'util-linux-libs' 'libsecret')
-optdepends=('libappindicator-gtk3: Allow sparkle to extend a menu via Ayatana indicators in Unity, KDE or Systray (GTK+ 3 library).')
+optdepends=('libappindicator-gtk3: Allow KokoroBox to extend a menu via Ayatana indicators in Unity, KDE or Systray (GTK+ 3 library).')
 makedepends=('git' 'nodejs' 'pnpm' 'libxcrypt-compat' 'asar')
 install=$_pkgname.install
 source=(
@@ -18,8 +20,8 @@ source=(
     "${_pkgname}::git+$url.git"
 )
 sha256sums=(
-    "b17d85f6d862285a53a24d0f8dedd08f1f3c852ba6a901fabc487177598803cc"
-    "ce855656fb0682d403685244c77dd2d90ec6efb207753fb7a6ddc1e9b6aa2c49"
+    "2e3c4314e0ed25dd80ef70ce8644dea06119a127fb33ac4e3b42fd2286ff5ee4"
+    "25fa0f187393c8d9e614b044dfc6e2a46a65b422ca7ece784f82cbc3c8947c8f"
     "SKIP"
 )
 options=('!debug' '!lto')
@@ -34,7 +36,6 @@ pkgver() {
 
 prepare(){
     cd $srcdir/${_pkgname}
-    sed -i "s/productName: KokoroBox/productName: sparkle/" electron-builder.yml
     pnpm install
 }
 
@@ -44,15 +45,15 @@ build(){
 }
 
 package() {
-    asar extract $srcdir/${_pkgname}/dist/linux-unpacked/resources/app.asar ${pkgdir}/opt/sparkle
-    cp -r $srcdir/${_pkgname}/extra/sidecar ${pkgdir}/opt/sparkle/resources/
-    cp -r $srcdir/${_pkgname}/extra/files ${pkgdir}/opt/sparkle/resources/
-    chmod +x ${pkgdir}/opt/sparkle/resources/files/sparkle-service
-    chmod +sx ${pkgdir}/opt/sparkle/resources/sidecar/mihomo
-    chmod +sx ${pkgdir}/opt/sparkle/resources/sidecar/mihomo-alpha
+    asar extract $srcdir/${_pkgname}/dist/linux-unpacked/resources/app.asar ${pkgdir}/opt/kokorobox
+    cp -r $srcdir/${_pkgname}/extra/sidecar ${pkgdir}/opt/kokorobox/resources/
+    cp -r $srcdir/${_pkgname}/extra/files ${pkgdir}/opt/kokorobox/resources/
+    chmod +x ${pkgdir}/opt/kokorobox/resources/files/sparkle-service
+    chmod +sx ${pkgdir}/opt/kokorobox/resources/sidecar/mihomo
+    chmod +sx ${pkgdir}/opt/kokorobox/resources/sidecar/mihomo-alpha
     install -Dm755 "${_pkgname}.sh" "${pkgdir}/usr/bin/${_pkgname}"
     install -Dm644 "${_pkgname}.desktop" "${pkgdir}/usr/share/applications/${_pkgname}.desktop"
-    install -Dm644 "${pkgdir}/opt/sparkle/resources/icon.png" "${pkgdir}/usr/share/icons/hicolor/512x512/apps/${_pkgname}.png"
+    install -Dm644 "${pkgdir}/opt/kokorobox/resources/icon.png" "${pkgdir}/usr/share/icons/hicolor/512x512/apps/${_pkgname}.png"
 
     chown -R root:root ${pkgdir}
 }

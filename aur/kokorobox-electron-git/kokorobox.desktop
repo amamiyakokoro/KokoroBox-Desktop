@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=KokoroBox
+Exec=kokorobox %U
+Terminal=false
+Type=Application
+Icon=kokorobox
+StartupWMClass=kokorobox
+MimeType=x-scheme-handler/clash;x-scheme-handler/mihomo;x-scheme-handler/kokorobox;x-scheme-handler/sparkle;x-scheme-handler/kokoro;
+Comment=KokoroBox
+Categories=Utility;

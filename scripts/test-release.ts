@@ -357,6 +357,22 @@ test('workflows gate publication on all builds and do not invoke upstream-only s
   assert.doesNotMatch(publish, /API_KEY|API_URL|AUR_SSH|delete-release-assets/)
 })
 
+test('AUR publication uses KokoroBox package names and layouts', () => {
+  const aurWorkflow = workflow('aur')
+  const packages = aurWorkflow.jobs.publish.strategy.matrix.package
+  assert.deepEqual(packages, [
+    'kokorobox-rolling-bin',
+    'kokorobox-git',
+    'kokorobox-electron-git'
+  ])
+
+  for (const packageName of packages) {
+    const pkgbuild = readFileSync(`aur/${packageName}/PKGBUILD`, 'utf8')
+    assert.match(pkgbuild, new RegExp(`^pkgname=${packageName}$`, 'm'))
+    assert.match(pkgbuild, /\/opt\/kokorobox/)
+  }
+})
+
 test('Fedora validation gates the reusable build for x64 RPMs', () => {
   const job = workflow('build').jobs['fedora-rpm']
   assert.equal(job.needs, 'build')

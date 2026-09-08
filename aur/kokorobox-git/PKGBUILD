@@ -1,4 +1,4 @@
-pkgname=sparkle-git
+pkgname=kokorobox-git
 _pkgname=${pkgname%-git}
 pkgver=1.26.7.r17.g2fed67e
 pkgrel=1
@@ -7,13 +7,15 @@ arch=('x86_64' 'aarch64')
 url="https://github.com/amamiyakokoro/KokoroBox-Desktop"
 license=('GPL-3.0-only')
 provides=("$_pkgname=$pkgver")
-conflicts=("$_pkgname" "$_pkgname-bin" "$_pkgname-rolling-bin" "$_pkgname-electron" "$_pkgname-electron-bin" "$_pkgname-electron-git")
+replaces=('sparkle-git')
+conflicts=("$_pkgname" "$_pkgname-bin" "$_pkgname-rolling-bin" "$_pkgname-electron" "$_pkgname-electron-bin" "$_pkgname-electron-git"
+           'sparkle' 'sparkle-bin' 'sparkle-git' 'sparkle-rolling-bin' 'sparkle-electron' 'sparkle-electron-bin' 'sparkle-electron-git')
 depends=('alsa-lib' 'gtk3' 'libnotify' 'nss' 'libxss' 'libxtst' 'xdg-utils' 'at-spi2-core' 'util-linux-libs' 'libsecret')
-optdepends=('libappindicator-gtk3: Allow sparkle to extend a menu via Ayatana indicators in Unity, KDE or Systray (GTK+ 3 library).')
+optdepends=('libappindicator-gtk3: Allow KokoroBox to extend a menu via Ayatana indicators in Unity, KDE or Systray (GTK+ 3 library).')
 makedepends=('git' 'nodejs' 'pnpm' 'jq' 'libxcrypt-compat' 'libarchive')
 install=$_pkgname.install
 source=("${_pkgname}.sh" "${_pkgname}::git+$url.git")
-sha256sums=("03eb601fe981716e90f9170eeb36a2e7938587f05a1bdaa09adadb1229c77a0a" "SKIP")
+sha256sums=("24f4e0d8f452566f0cba9af5e6c2297eb443f84613eb4ff1a774c0ae03afbba0" "SKIP")
 options=('!debug' '!lto')
 
 pkgver() {
@@ -26,7 +28,6 @@ pkgver() {
 
 prepare(){
     cd $srcdir/${_pkgname}
-    sed -i "s/productName: KokoroBox/productName: sparkle/" electron-builder.yml
     pnpm install
 }
 
@@ -39,12 +40,12 @@ package() {
 	cd $srcdir/${_pkgname}/dist
     bsdtar -xf kokorobox-desktop-linux-$(jq '.version' $srcdir/${_pkgname}/package.json | tr -d 'v"')*.deb
     bsdtar -xf data.tar.xz -C "${pkgdir}/"
-    chmod +x ${pkgdir}/opt/sparkle/sparkle
-    chmod +x ${pkgdir}/opt/sparkle/resources/files/sparkle-service
-    chmod +sx ${pkgdir}/opt/sparkle/resources/sidecar/mihomo
-    chmod +sx ${pkgdir}/opt/sparkle/resources/sidecar/mihomo-alpha
+    chmod +x ${pkgdir}/opt/kokorobox/kokorobox
+    chmod +x ${pkgdir}/opt/kokorobox/resources/files/sparkle-service
+    chmod +sx ${pkgdir}/opt/kokorobox/resources/sidecar/mihomo
+    chmod +sx ${pkgdir}/opt/kokorobox/resources/sidecar/mihomo-alpha
     install -Dm755 "${srcdir}/../${_pkgname}.sh" "${pkgdir}/usr/bin/${_pkgname}"
-    sed -i '3s!/opt/sparkle/sparkle!sparkle!' "${pkgdir}/usr/share/applications/${_pkgname}.desktop"
+    sed -i '3s!/opt/kokorobox/kokorobox!kokorobox!' "${pkgdir}/usr/share/applications/${_pkgname}.desktop"
 
     chown -R root:root ${pkgdir}
 }

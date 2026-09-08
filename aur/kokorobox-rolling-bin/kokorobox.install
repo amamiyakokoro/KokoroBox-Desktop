@@ -8,6 +8,6 @@ _blue="${_bold}$(tput setaf 4)"
 _yellow="${_bold}$(tput setaf 3)"
 
 post_install() {
-    note "Custom flags should be put directly in: ~/.config/sparkle-flags.conf"
-    note "The launcher is called: 'sparkle'"
+    note "Custom flags should be put directly in: ~/.config/kokorobox-flags.conf"
+    note "The launcher is called: 'kokorobox'"
 }

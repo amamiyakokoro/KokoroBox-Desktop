@@ -1,5 +1,5 @@
-pkgname=sparkle-rolling-bin
-_pkgname=sparkle
+pkgname=kokorobox-rolling-bin
+_pkgname=kokorobox
 pkgver=1.26.8.r1278.2fed67e
 _releasever=1.26.8-rolling-2fed67e
 pkgrel=1
@@ -13,24 +13,27 @@ depends=('alsa-lib' 'at-spi2-core' 'cairo' 'dbus' 'expat' 'gcc-libs' 'glib2'
          'pango' 'systemd-libs')
 makedepends=('libarchive')
 options=('!debug')
-provides=("sparkle=${pkgver}")
-conflicts=('sparkle' 'sparkle-bin' 'sparkle-git' 'sparkle-electron'
+provides=("kokorobox=${pkgver}")
+replaces=('sparkle-rolling-bin')
+conflicts=('kokorobox' 'kokorobox-bin' 'kokorobox-git' 'kokorobox-electron'
+           'kokorobox-electron-bin' 'kokorobox-electron-git'
+           'sparkle' 'sparkle-bin' 'sparkle-git' 'sparkle-electron'
            'sparkle-electron-bin' 'sparkle-electron-git')
 install=${_pkgname}.install
 source=("${_pkgname}.sh")
 source_x86_64=("${_pkgname}-${_releasever}-x86_64.deb::${url}/releases/download/rolling/kokorobox-desktop-linux-${_releasever}-amd64.deb")
 source_aarch64=("${_pkgname}-${_releasever}-aarch64.deb::${url}/releases/download/rolling/kokorobox-desktop-linux-${_releasever}-arm64.deb")
-sha256sums=('68c3b948301007f29e4f0db9b1b413766c2bcacf7eaf5305c7e7b83f547df3b5')
+sha256sums=('d0e18b5e770749d89880bfb8add6b3c2bd530dfb3faf964ec6201956ff38c76b')
 sha256sums_x86_64=('a3f55648bb6c6c1b1deabf6bbe354c3d8960ef0c672e9b47bb623bcbecfd5829')
 sha256sums_aarch64=('2a7dada64a8ef3e76b11cfaa3b9a3acb98cc9e8d4da506100e7eb750dd12049d')
 
 package() {
     bsdtar -xf data.tar.xz -C "$pkgdir"
-    chmod +x "$pkgdir/opt/sparkle/sparkle"
-    chmod +x "$pkgdir/opt/sparkle/resources/files/sparkle-service"
-    chmod +sx "$pkgdir/opt/sparkle/resources/sidecar/mihomo"
-    chmod +sx "$pkgdir/opt/sparkle/resources/sidecar/mihomo-alpha"
+    chmod +x "$pkgdir/opt/kokorobox/kokorobox"
+    chmod +x "$pkgdir/opt/kokorobox/resources/files/sparkle-service"
+    chmod +sx "$pkgdir/opt/kokorobox/resources/sidecar/mihomo"
+    chmod +sx "$pkgdir/opt/kokorobox/resources/sidecar/mihomo-alpha"
     install -Dm755 "$srcdir/${_pkgname}.sh" "$pkgdir/usr/bin/${_pkgname}"
-    sed -i 's|^Exec=/opt/sparkle/sparkle|Exec=sparkle|' \
+    sed -i 's|^Exec=/opt/kokorobox/kokorobox|Exec=kokorobox|' \
         "$pkgdir/usr/share/applications/${_pkgname}.desktop"
 }

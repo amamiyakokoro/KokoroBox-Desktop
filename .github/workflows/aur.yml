@@ -22,9 +22,9 @@ jobs:
       fail-fast: false
       matrix:
         package:
-          - sparkle-rolling-bin
-          - sparkle-git
-          - sparkle-electron-git
+          - kokorobox-rolling-bin
+          - kokorobox-git
+          - kokorobox-electron-git
     steps:
       - name: Install Dependencies
         run: pacman -Syu --noconfirm git github-cli jq
@@ -47,7 +47,7 @@ jobs:
           set -euo pipefail
           pkgbuild="aur/${PACKAGE}/PKGBUILD"
 
-          if [[ "$PACKAGE" == sparkle-rolling-bin ]]; then
+          if [[ "$PACKAGE" == kokorobox-rolling-bin ]]; then
             release=$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/rolling")
             release_version=$(jq -er '.assets[].name | select(endswith("-amd64.deb")) | sub("^kokorobox-desktop-linux-"; "") | sub("-amd64.deb$"; "")' <<< "$release")
             pkgver=${release_version/-rolling-/.r$(git rev-list --count HEAD).}
