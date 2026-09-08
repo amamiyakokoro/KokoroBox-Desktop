@@ -2,16 +2,18 @@
 !include FileFunc.nsh
 !insertmacro DriveSpace
 
-!define SPARKLE_MIN_TEMP_SPACE_MB 1024
+!define KOKOROBOX_MIN_TEMP_SPACE_MB 1024
+!define KOKOROBOX_SERVICE_NAME "KokoroBoxService"
+!define LEGACY_SERVICE_NAME "SparkleService"
 
 !macro customHeader
-  Var sparkleServiceWasRunning
+  Var kokoroboxServiceWasRunning
 !macroend
 
 !macro EnsureTempSpace
   ${DriveSpace} "$TEMP" "/D=F /S=M" $R0
-  ${If} $R0 < ${SPARKLE_MIN_TEMP_SPACE_MB}
-    MessageBox MB_ICONSTOP "Not enough space in the temp directory. Free at least ${SPARKLE_MIN_TEMP_SPACE_MB} MB on the temp drive or set TEMP/TMP to another drive, then run the installer again."
+  ${If} $R0 < ${KOKOROBOX_MIN_TEMP_SPACE_MB}
+    MessageBox MB_ICONSTOP "Not enough space in the temp directory. Free at least ${KOKOROBOX_MIN_TEMP_SPACE_MB} MB on the temp drive or set TEMP/TMP to another drive, then run the installer again."
     Abort
   ${EndIf}
 !macroend
@@ -31,8 +33,8 @@
   ${LoopUntil} $R5 >= $R6
 !macroend
 
-!macro QuerySparkleServiceState RESULT
-  nsExec::ExecToStack '"$SYSDIR\sc.exe" query SparkleService'
+!macro QueryServiceState NAME RESULT
+  nsExec::ExecToStack '"$SYSDIR\sc.exe" query "${NAME}"'
   Pop $R2
   Pop $R3
 
@@ -57,10 +59,10 @@
   ${EndIf}
 !macroend
 
-!macro WaitSparkleServiceStopped
+!macro WaitServiceStopped NAME
   StrCpy $R0 0
   ${Do}
-    !insertmacro QuerySparkleServiceState $R1
+    !insertmacro QueryServiceState "${NAME}" $R1
     ${If} $R1 == "stopped"
     ${OrIf} $R1 == "not-installed"
       ${Break}
@@ -69,7 +71,7 @@
     IntOp $R0 $R0 + 1
   ${LoopUntil} $R0 >= 30
 
-  !insertmacro QuerySparkleServiceState $R1
+  !insertmacro QueryServiceState "${NAME}" $R1
   ${If} $R1 != "stopped"
   ${AndIf} $R1 != "not-installed"
     MessageBox MB_ICONSTOP "KokoroBox service is still running. Please stop the service and run the installer again."
@@ -78,7 +80,10 @@
 !macroend
 
 !macro DisableSysProxy
-  StrCpy $R1 "$INSTDIR\resources\files\sparkle-service.exe"
+  StrCpy $R1 "$INSTDIR\resources\files\kokorobox-service.exe"
+  ${IfNot} ${FileExists} "$R1"
+    StrCpy $R1 "$INSTDIR\resources\files\sparkle-service.exe"
+  ${EndIf}
   ${If} ${FileExists} "$R1"
     DetailPrint "Disabling system proxy: $R1"
     nsExec::ExecToLog '"$R1" sysproxy disable'
@@ -89,25 +94,26 @@
   ${EndIf}
 !macroend
 
-!macro StopSparkleServiceIfRunning
-  !insertmacro QuerySparkleServiceState $R1
+!macro StopServiceIfRunning NAME
+  !insertmacro QueryServiceState "${NAME}" $R1
 
   ${If} $R1 != "stopped"
   ${AndIf} $R1 != "not-installed"
-    StrCpy $sparkleServiceWasRunning "true"
+    StrCpy $kokoroboxServiceWasRunning "true"
     DetailPrint "Stopping KokoroBox service"
-    nsExec::ExecToStack '"$SYSDIR\sc.exe" stop SparkleService'
+    nsExec::ExecToStack '"$SYSDIR\sc.exe" stop "${NAME}"'
     Pop $R2
     Pop $R3
-    !insertmacro WaitSparkleServiceStopped
+    !insertmacro WaitServiceStopped "${NAME}"
     !insertmacro DisableSysProxy
   ${EndIf}
 !macroend
 
 !macro customInit
   !insertmacro EnsureTempSpace
-  StrCpy $sparkleServiceWasRunning "false"
-  !insertmacro StopSparkleServiceIfRunning
+  StrCpy $kokoroboxServiceWasRunning "false"
+  !insertmacro StopServiceIfRunning "${LEGACY_SERVICE_NAME}"
+  !insertmacro StopServiceIfRunning "${KOKOROBOX_SERVICE_NAME}"
 !macroend
 
 !macro customInstall
@@ -115,8 +121,8 @@
     CreateShortcut "$DESKTOP\${PRODUCT_FILENAME}.lnk" "$INSTDIR\${PRODUCT_FILENAME}.exe"
   ${endIf}
 
-  ${If} $sparkleServiceWasRunning == "true"
-    StrCpy $R1 "$INSTDIR\resources\files\sparkle-service.exe"
+  ${If} $kokoroboxServiceWasRunning == "true"
+    StrCpy $R1 "$INSTDIR\resources\files\kokorobox-service.exe"
     ${If} ${FileExists} "$R1"
       DetailPrint "Starting KokoroBox service: $R1"
       nsExec::ExecToLog '"$R1" service start'

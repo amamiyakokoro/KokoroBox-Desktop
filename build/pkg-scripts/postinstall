@@ -7,9 +7,9 @@ chown root:admin "$APP_PATH/Contents/Resources/sidecar/mihomo-alpha"
 chmod +s "$APP_PATH/Contents/Resources/sidecar/mihomo"
 chmod +s "$APP_PATH/Contents/Resources/sidecar/mihomo-alpha"
 
-restore_sparkle_service_if_was_running() {
-  SERVICE_BIN="$APP_PATH/Contents/Resources/files/sparkle-service"
-  SERVICE_STATE_FILE="/tmp/sparkle-service-was-running"
+restore_kokorobox_service_if_was_running() {
+  SERVICE_BIN="$APP_PATH/Contents/Resources/files/kokorobox-service"
+  SERVICE_STATE_FILE="/tmp/kokorobox-service-was-running"
 
   if [ ! -f "$SERVICE_STATE_FILE" ]; then
     return
@@ -21,6 +21,6 @@ restore_sparkle_service_if_was_running() {
   fi
 }
 
-restore_sparkle_service_if_was_running
+restore_kokorobox_service_if_was_running
 
 exit 0

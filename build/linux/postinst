@@ -36,9 +36,9 @@ chmod 4755 '/opt/kokorobox/chrome-sandbox' || true
 chmod +sx /opt/kokorobox/resources/sidecar/mihomo
 chmod +sx /opt/kokorobox/resources/sidecar/mihomo-alpha
 
-restore_sparkle_service_if_was_running() {
-    SERVICE_NAME='SparkleService'
-    STATE_FILE='/run/sparkle/service-was-running'
+restore_kokorobox_service_if_was_running() {
+    SERVICE_NAME='KokoroBoxService'
+    STATE_FILE='/run/kokorobox/service-was-running'
 
     if [ ! -f "$STATE_FILE" ]; then
         return
@@ -54,7 +54,7 @@ restore_sparkle_service_if_was_running() {
     fi
 }
 
-restore_sparkle_service_if_was_running
+restore_kokorobox_service_if_was_running
 
 if hash update-mime-database 2>/dev/null; then
     update-mime-database /usr/share/mime || true
