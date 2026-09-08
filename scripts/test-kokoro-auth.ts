@@ -859,7 +859,9 @@ test('packaging registers the shared scheme and Windows callback relay precedes 
   const config = parseYaml(readFileSync('electron-builder.yml', 'utf8'))
   const protocols = Array.isArray(config.protocols) ? config.protocols : [config.protocols]
   assert.ok(protocols.some((item: { schemes: string[] }) => item.schemes.includes('kokoro')))
+  assert.ok(protocols.some((item: { schemes: string[] }) => item.schemes.includes('kokorobox')))
   assert.match(JSON.stringify(config.linux.desktop), /x-scheme-handler\/kokoro/)
+  assert.match(JSON.stringify(config.linux.desktop), /x-scheme-handler\/kokorobox/)
   const init = readFileSync('src/main/utils/init.ts', 'utf8')
   assert.match(init, /['"]kokoro['"]/) // Runtime Windows/dev registration.
   const main = readFileSync('src/main/index.ts', 'utf8')
@@ -897,6 +899,7 @@ test('Windows packaging uses KokoroBox names and migrates legacy Sparkle tasks',
   assert.match(runner, /KokoroBox Runner/)
   assert.doesNotMatch(runner, /Sparkle Runner/)
   assert.match(runner, /clash:\/\//)
+  assert.match(runner, /kokorobox:\/\//)
   assert.doesNotMatch(runner, /kokoro:\/\//)
 
   const misc = readFileSync('src/main/sys/misc.ts', 'utf8')

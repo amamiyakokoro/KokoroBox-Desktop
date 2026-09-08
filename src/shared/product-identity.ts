@@ -11,3 +11,16 @@ export const productIdentity = {
   uriScheme: 'kokorobox',
   legacyUriSchemes: ['sparkle']
 } as const
+
+/** Configuration-import URI schemes handled outside the Kokoro OAuth callback. */
+export const configUriSchemes = [
+  'clash',
+  'mihomo',
+  productIdentity.uriScheme,
+  ...productIdentity.legacyUriSchemes
+] as const
+
+export function isConfigUri(value: string): boolean {
+  const normalized = value.toLowerCase()
+  return configUriSchemes.some((scheme) => normalized.startsWith(`${scheme}://`))
+}

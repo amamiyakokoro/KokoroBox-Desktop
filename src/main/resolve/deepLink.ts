@@ -5,6 +5,7 @@ import { getUserAgent } from '../utils/userAgent'
 import { showNotification } from '../utils/notification'
 import { handleKokoroCallback, KokoroAPIError } from '../kokoro/client'
 import { isKokoroURI } from '../kokoro/oauth'
+import { isConfigUri } from '../../shared/product-identity'
 
 interface DeepLinkContext {
   getMainWindow: () => BrowserWindow | null
@@ -31,8 +32,7 @@ export async function handleDeepLink(url: string, context: DeepLinkContext): Pro
     return
   }
 
-  if (!url.startsWith('clash://') && !url.startsWith('mihomo://') && !url.startsWith('sparkle://'))
-    return
+  if (!isConfigUri(url)) return
 
   const urlObj = new URL(url)
   switch (urlObj.host) {

@@ -31,6 +31,7 @@ protocols:
   schemes:
     - 'clash'
     - 'mihomo'
+    - 'kokorobox'
     - 'sparkle'
     - 'kokoro'
 win:
@@ -79,7 +80,7 @@ linux:
   desktop:
     entry:
       Name: KokoroBox
-      MimeType: 'x-scheme-handler/clash;x-scheme-handler/mihomo;x-scheme-handler/sparkle;x-scheme-handler/kokoro'
+      MimeType: 'x-scheme-handler/clash;x-scheme-handler/mihomo;x-scheme-handler/kokorobox;x-scheme-handler/sparkle;x-scheme-handler/kokoro'
   target:
     - deb
     - rpm

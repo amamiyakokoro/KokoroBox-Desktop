@@ -80,6 +80,7 @@ func readParams(paramsPath string) ([]string, error) {
 		if len(param) > 8192 ||
 			(!strings.HasPrefix(lower, "clash://") &&
 				!strings.HasPrefix(lower, "mihomo://") &&
+				!strings.HasPrefix(lower, "kokorobox://") &&
 				!strings.HasPrefix(lower, "sparkle://")) {
 			return nil, errors.New("unsafe startup parameter")
 		}

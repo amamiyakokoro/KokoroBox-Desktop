@@ -1,7 +1,8 @@
 import { isKokoroURI } from '../kokoro/oauth'
+import { isConfigUri } from '../../shared/product-identity'
 
 export function isAppDeepLink(value: string): boolean {
-  return isKokoroURI(value) || /^(clash|mihomo|sparkle):\/\//.test(value)
+  return isKokoroURI(value) || isConfigUri(value)
 }
 
 // Call only after the single-instance lock has forwarded the original arguments.

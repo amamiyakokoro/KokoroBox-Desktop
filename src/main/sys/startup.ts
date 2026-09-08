@@ -15,9 +15,10 @@ import {
 } from './misc'
 import { showNotification } from '../utils/notification'
 import { isRunningAsAdmin } from '@uruhalushia/sparkle-native'
+import { isConfigUri } from '../../shared/product-identity'
 
 function safeRunnerArguments(argv: string[]): string[] {
-  return argv.filter((value) => value.length <= 8192 && /^(clash|mihomo|sparkle):\/\//i.test(value))
+  return argv.filter((value) => value.length <= 8192 && isConfigUri(value))
 }
 
 export function ensureWindowsElevatedStartup(
