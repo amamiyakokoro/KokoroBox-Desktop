@@ -1,6 +1,6 @@
 import os from 'os'
 import { appRoutingIdentifierKind, validateAppRoutingConfig } from '../../shared/app-routing'
-import { appRoutingSocksPort } from './profile'
+import { appRoutingDnsHost, appRoutingDnsPort, appRoutingSocksPort } from './profile'
 
 export interface MacBridgeConfiguration {
   version: 1
@@ -8,6 +8,9 @@ export interface MacBridgeConfiguration {
   proxyAvailable: boolean
   proxyHost: '127.0.0.1'
   proxyPort: 7891
+  proxyUdpDns: boolean
+  dnsHost: '127.0.0.1'
+  dnsPort: 7892
   diagnosticLogging: boolean
   rules: Array<{
     signingIdentifier: string
@@ -44,6 +47,9 @@ export function buildMacAppRoutingConfiguration(
     proxyAvailable,
     proxyHost: '127.0.0.1',
     proxyPort: appRoutingSocksPort,
+    proxyUdpDns: config.proxyUdpDns,
+    dnsHost: appRoutingDnsHost,
+    dnsPort: appRoutingDnsPort,
     diagnosticLogging: config.diagnosticLogging,
     rules: config.rules
       .filter((rule) => appRoutingIdentifierKind(rule) === 'macos-signing-identifier')

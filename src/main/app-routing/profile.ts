@@ -2,6 +2,8 @@ import { validateAppRoutingConfig } from '../../shared/app-routing'
 
 export const appRoutingListenerName = 'kokorobox-app-routing'
 export const appRoutingSocksPort = 7891
+export const appRoutingDnsHost = '127.0.0.1' as const
+export const appRoutingDnsPort = 7892 as const
 export const protectedProcessNames = Object.freeze([
   'KokoroBox.exe',
   'mihomo.exe',
@@ -55,7 +57,11 @@ export function buildProcessRouterCommand(
   })
 }
 
-export function applyAppRoutingListener(profile: MihomoConfig, enabled: boolean): void {
+export function applyAppRoutingListener(
+  profile: MihomoConfig,
+  enabled: boolean,
+  proxyUdpDns = false
+): void {
   const existing = (profile.listeners || []).filter(
     (listener) => listener.name !== appRoutingListenerName
   )
@@ -68,6 +74,18 @@ export function applyAppRoutingListener(profile: MihomoConfig, enabled: boolean)
       listen: '127.0.0.1',
       udp: true
     })
+
+    // A SOCKS listener treats UDP/53 as an ordinary connection and therefore
+    // never enters Mihomo's DNS engine. Expose a dedicated loopback DNS
+    // listener so the platform routers can submit protected applications'
+    // queries to Mihomo without contacting the original resolver.
+    if (proxyUdpDns) {
+      profile.dns = {
+        ...(profile.dns || {}),
+        enable: true,
+        listen: `${appRoutingDnsHost}:${appRoutingDnsPort}`
+      }
+    }
   }
 
   if (existing.length > 0) profile.listeners = existing

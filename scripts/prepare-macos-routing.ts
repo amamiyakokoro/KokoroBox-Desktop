@@ -78,9 +78,11 @@ const providerSource = readFileSync(
 )
 if (
   !providerSource.includes('case "replaceKokoroBoxConfiguration":') ||
-  !providerSource.includes('try installKokoroBoxConfiguration(data)')
+  !providerSource.includes('try installKokoroBoxConfiguration(data)') ||
+  !providerSource.includes('configuration.proxyUdpDns') ||
+  !providerSource.includes('readAndForwardDnsUDP(association)')
 ) {
-  throw new Error('Pinned ProxyBridge revision lacks provider-message policy update support')
+  throw new Error('Pinned ProxyBridge revision lacks required KokoroBox routing support')
 }
 
 const xcodeProjectRoot = path.join(sourceRoot, 'MacOS', 'ProxyBridge')

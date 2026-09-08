@@ -17,6 +17,8 @@ import {
 import {
   appRoutingListenerName,
   appRoutingSocksPort,
+  appRoutingDnsHost,
+  appRoutingDnsPort,
   applyAppRoutingListener,
   buildProcessRouterCommand,
   protectedNetworkTargets,
@@ -95,7 +97,16 @@ test('validates macOS signing identifiers and translates rules atomically', () =
     rules: [macRule]
   }
   validateAppRoutingConfig(config)
-  assert.deepEqual(buildMacAppRoutingConfiguration(config, true).rules, [
+  const macConfiguration = buildMacAppRoutingConfiguration(config, true)
+  assert.deepEqual(
+    {
+      proxyUdpDns: macConfiguration.proxyUdpDns,
+      dnsHost: macConfiguration.dnsHost,
+      dnsPort: macConfiguration.dnsPort
+    },
+    { proxyUdpDns: true, dnsHost: '127.0.0.1', dnsPort: 7892 }
+  )
+  assert.deepEqual(macConfiguration.rules, [
     {
       signingIdentifier: 'com.openai.chat*',
       ruleProtocol: 'BOTH',
@@ -253,7 +264,7 @@ test('injects and removes the isolated loopback Mihomo listener', () => {
   const profile = {
     listeners: [{ name: 'user-listener', type: 'mixed', port: 7890 }]
   } as MihomoConfig
-  applyAppRoutingListener(profile, true)
+  applyAppRoutingListener(profile, true, true)
   assert.deepEqual(profile.listeners, [
     { name: 'user-listener', type: 'mixed', port: 7890 },
     {
@@ -264,8 +275,16 @@ test('injects and removes the isolated loopback Mihomo listener', () => {
       udp: true
     }
   ])
+  assert.deepEqual(profile.dns, {
+    enable: true,
+    listen: `${appRoutingDnsHost}:${appRoutingDnsPort}`
+  })
   applyAppRoutingListener(profile, false)
   assert.deepEqual(profile.listeners, [{ name: 'user-listener', type: 'mixed', port: 7890 }])
+  assert.deepEqual(profile.dns, {
+    enable: true,
+    listen: `${appRoutingDnsHost}:${appRoutingDnsPort}`
+  })
 })
 
 test('requires a complete no-auth SOCKS5 handshake response', () => {
@@ -549,6 +568,8 @@ test('native build is pinned to the controlled KokoroBox ProxyBridge fork', () =
   assert.match(macBuild, /kokorobox-app-routing\.node/)
   assert.match(macBuild, /replaceKokoroBoxConfiguration/)
   assert.match(macBuild, /installKokoroBoxConfiguration/)
+  assert.match(macBuild, /configuration\.proxyUdpDns/)
+  assert.match(macBuild, /readAndForwardDnsUDP\(association\)/)
   assert.doesNotMatch(macBuild, /swiftc|KokoroBoxAppRoutingBridge\.swift/)
   assert.match(buildWorkflow, /pnpm prepare:macos-routing/)
   assert.doesNotMatch(buildWorkflow, /git -C .*ProxyBridge.* checkout --detach/)
@@ -568,6 +589,8 @@ test('native build is pinned to the controlled KokoroBox ProxyBridge fork', () =
   assert.doesNotMatch(macBridge, /CFNotificationCenterPostNotification/)
   assert.match(macBridge, /application-routing-policy-ack\.json/)
   assert.match(macBridge, /@"action" : @"replaceKokoroBoxConfiguration"/)
+  assert.match(macBridge, /configuration\[@"proxyUdpDns"\]/)
+  assert.match(macBridge, /configuration\[@"dnsPort"\]/)
   assert.match(macBridge, /activationRequestForExtension:KBExtensionIdentifier/)
   assert.match(macBridge, /queue:dispatch_get_main_queue\(\)/)
   assert.match(macBridge, /openURLs:@\[settingsURL\]/)

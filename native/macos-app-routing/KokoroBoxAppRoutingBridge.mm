@@ -239,10 +239,15 @@ static BOOL KBValidateConfiguration(NSDictionary *configuration, NSError **error
   NSNumber *failClosed = configuration[@"failClosed"];
   NSString *proxyHost = configuration[@"proxyHost"];
   NSNumber *proxyPort = configuration[@"proxyPort"];
+  NSNumber *proxyUdpDns = configuration[@"proxyUdpDns"];
+  NSString *dnsHost = configuration[@"dnsHost"];
+  NSNumber *dnsPort = configuration[@"dnsPort"];
   NSArray *rules = configuration[@"rules"];
   if (![version isKindOfClass:[NSNumber class]] || version.integerValue != KBProtocolVersion ||
       ![failClosed isKindOfClass:[NSNumber class]] || !failClosed.boolValue ||
       ![proxyHost isEqualToString:@"127.0.0.1"] || proxyPort.integerValue != 7891 ||
+      ![proxyUdpDns isKindOfClass:[NSNumber class]] ||
+      ![dnsHost isEqualToString:@"127.0.0.1"] || dnsPort.integerValue != 7892 ||
       ![rules isKindOfClass:[NSArray class]] || rules.count > 256) {
     if (error) *error = KBError(@"Invalid application-routing configuration");
     return NO;
