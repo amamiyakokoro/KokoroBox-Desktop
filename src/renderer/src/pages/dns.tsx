@@ -8,7 +8,7 @@ import AdvancedDnsSetting from '@renderer/components/dns/advanced-dns-setting'
 import DnsServerList from '@renderer/components/dns/dns-server-list'
 import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
-import { getRuntimeConfig, restartCore } from '@renderer/utils/ipc'
+import { restartCore } from '@renderer/utils/ipc'
 import React, { Key, useState } from 'react'
 import { notify } from '@renderer/utils/notification'
 import {
@@ -25,17 +25,16 @@ const antiPollutionDnsPreset = {
   fakeIPFilterMode: 'blacklist' as FilterMode,
   fakeIPFilter: defaultFakeIpFilter,
   defaultNameserver: ['223.5.5.5', '119.29.29.29'],
-  nameserver: ['https://1.1.1.1/dns-query#PROXY', 'https://8.8.8.8/dns-query#PROXY'],
+  // `#<name>` selects a concrete Mihomo proxy group; `PROXY` is not a
+  // built-in outbound. Do not ship a preset that assumes such a group exists.
+  nameserver: ['https://1.1.1.1/dns-query', 'https://8.8.8.8/dns-query'],
   proxyServerNameserver: ['https://doh.pub/dns-query', 'https://dns.alidns.com/dns-query'],
   directNameserver: ['https://doh.pub/dns-query', 'https://dns.alidns.com/dns-query'],
   directNameserverFollowPolicy: true,
   nameserverPolicy: {
     '+.arpa': ['system'],
     'geosite:cn': ['https://doh.pub/dns-query', 'https://dns.alidns.com/dns-query'],
-    'geosite:geolocation-!cn': [
-      'https://1.1.1.1/dns-query#PROXY',
-      'https://8.8.8.8/dns-query#PROXY'
-    ]
+    'geosite:geolocation-!cn': ['https://1.1.1.1/dns-query', 'https://8.8.8.8/dns-query']
   }
 }
 
@@ -92,7 +91,6 @@ const DNS: React.FC = () => {
     proxyServerNameserverPolicy,
     hosts: useHosts ? hosts : undefined
   })
-  const [proxyGroups, setProxyGroups] = useState<string[]>([])
   const [fakeIPRangeError, setFakeIPRangeError] = useState<string | null>(() => {
     const r = isValidIPv4Cidr(fakeIPRange)
     return r.ok ? null : (r.error ?? tr('格式错误'))
@@ -137,17 +135,6 @@ const DNS: React.FC = () => {
     values.fallback.length === 0 &&
     JSON.stringify(values.nameserverPolicy) ===
       JSON.stringify(antiPollutionDnsPreset.nameserverPolicy)
-
-  React.useEffect(() => {
-    void getRuntimeConfig()
-      .then((config) => {
-        const groups = (config?.['proxy-groups'] || []) as Array<{ name?: string }>
-        setProxyGroups(
-          groups.map((group) => group.name).filter((name): name is string => Boolean(name))
-        )
-      })
-      .catch(() => setProxyGroups([]))
-  }, [])
 
   const setValues = (v: typeof values): void => {
     originSetValues(v)
@@ -392,7 +379,6 @@ const DNS: React.FC = () => {
         <DnsServerList
           title={tr('默认解析服务器')}
           items={values.nameserver}
-          proxyGroups={proxyGroups}
           onChange={(arr) => {
             setValues({ ...values, nameserver: arr })
             const firstInvalid = arr.find((f) => !isValidDnsServer(f).ok)
@@ -420,7 +406,6 @@ const DNS: React.FC = () => {
         hosts={values.hosts}
         useHosts={values.useHosts}
         useSystemHosts={values.useSystemHosts}
-        proxyGroups={proxyGroups}
         onRespectRulesChange={(v) => {
           setValues({
             ...values,

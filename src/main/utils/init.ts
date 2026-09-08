@@ -168,6 +168,66 @@ async function migration(): Promise<void> {
     mihomoConfigPatch['global-client-fingerprint'] = undefined as never
   }
 
+  // Older KokoroBox releases wrote `*` into the blacklist-style Fake-IP
+  // filter. That excludes every domain and makes Fake-IP a no-op. Only
+  // migrate the exact historic default so intentional user rules stay intact.
+  const legacyFakeIpFilter = [
+    '*',
+    '+.lan',
+    '+.local',
+    'time.*.com',
+    'ntp.*.com',
+    '+.market.xiaomi.com'
+  ]
+  const currentFakeIpFilter = mihomoConfig.dns?.['fake-ip-filter']
+  if (
+    Array.isArray(currentFakeIpFilter) &&
+    JSON.stringify(currentFakeIpFilter) === JSON.stringify(legacyFakeIpFilter) &&
+    (!mihomoConfig.dns?.['fake-ip-filter-mode'] ||
+      mihomoConfig.dns['fake-ip-filter-mode'] === 'blacklist')
+  ) {
+    mihomoConfigPatch.dns = {
+      'fake-ip-filter': defaultControledMihomoConfig.dns?.['fake-ip-filter'],
+      'fake-ip-filter-mode': 'blacklist'
+    }
+  }
+
+  // The initial Anti-Pollution preset incorrectly treated `PROXY` as a
+  // built-in outbound. In Mihomo it instead names a concrete proxy group.
+  // Migrate only the two endpoints shipped by that preset, without touching
+  // a user's other custom outbound selections.
+  const obsoleteProxyDnsEndpoints: Record<string, string> = {
+    'https://1.1.1.1/dns-query#PROXY': 'https://1.1.1.1/dns-query',
+    'https://8.8.8.8/dns-query#PROXY': 'https://8.8.8.8/dns-query'
+  }
+  const migrateDnsServers = (servers?: string[]): string[] | undefined => {
+    if (!servers?.some((server) => server in obsoleteProxyDnsEndpoints)) return undefined
+    return servers.map((server) => obsoleteProxyDnsEndpoints[server] || server)
+  }
+  const migrateDnsServerValue = (value: string | string[]): string | string[] | undefined => {
+    if (Array.isArray(value)) return migrateDnsServers(value)
+    return obsoleteProxyDnsEndpoints[value]
+  }
+  const migratedNameserver = migrateDnsServers(mihomoConfig.dns?.nameserver)
+  const currentPolicy = mihomoConfig.dns?.['nameserver-policy']
+  let migratedPolicy: MihomoDNSConfig['nameserver-policy'] | undefined
+  if (currentPolicy) {
+    for (const [key, value] of Object.entries(currentPolicy)) {
+      const migrated = migrateDnsServerValue(value)
+      if (migrated) {
+        migratedPolicy = migratedPolicy || { ...currentPolicy }
+        migratedPolicy[key] = migrated
+      }
+    }
+  }
+  if (migratedNameserver || migratedPolicy) {
+    mihomoConfigPatch.dns = {
+      ...mihomoConfigPatch.dns,
+      ...(migratedNameserver ? { nameserver: migratedNameserver } : {}),
+      ...(migratedPolicy ? { 'nameserver-policy': migratedPolicy } : {})
+    }
+  }
+
   if (Object.keys(mihomoConfigPatch).length > 0) {
     await patchControledMihomoConfig(mihomoConfigPatch)
   }

@@ -14,35 +14,26 @@ interface DnsServerListProps {
   items: string[]
   onChange: (items: string[]) => void
   placeholder: string
-  proxyGroups?: string[]
   divider?: boolean
   ipOnly?: boolean
   onErrorChange?: (error: string | null) => void
 }
 
-const connectionLabels: Record<DnsServerEndpoint['connection'], string> = {
-  direct: tr('直连'),
-  rules: tr('遵守规则'),
-  proxy: tr('代理组')
-}
+const connectionChoices = [
+  { key: 'direct', label: tr('直连') },
+  { key: 'rules', label: tr('遵守规则') }
+] as const
 
 const DnsServerList: React.FC<DnsServerListProps> = ({
   title,
   items,
   onChange,
   placeholder,
-  proxyGroups = [],
   divider = true,
   ipOnly = false,
   onErrorChange
 }) => {
   const endpoints = items.map(parseDnsServerEndpoint)
-  const choices = [
-    ...new Set(['PROXY', ...proxyGroups, ...endpoints.map((item) => item.proxyName)])
-  ]
-    .filter((item): item is string => Boolean(item))
-    .sort((a, b) => a.localeCompare(b))
-
   const update = (index: number, next: DnsServerEndpoint): void => {
     const updated = [...endpoints]
     if (!next.address.trim()) {
@@ -104,35 +95,22 @@ const DnsServerList: React.FC<DnsServerListProps> = ({
                     aria-label={tr('连接方式')}
                     size="sm"
                     className="w-30"
-                    selectedKeys={new Set([endpoint.connection])}
+                    selectedKeys={
+                      new Set([endpoint.connection === 'proxy' ? 'direct' : endpoint.connection])
+                    }
                     disallowEmptySelection
                     onSelectionChange={(keys) =>
                       update(index, {
                         ...endpoint,
-                        connection: keys.currentKey as DnsServerEndpoint['connection']
+                        connection: keys.currentKey as 'direct' | 'rules',
+                        proxyName: undefined
                       })
                     }
                   >
-                    {Object.entries(connectionLabels).map(([key, label]) => (
+                    {connectionChoices.map(({ key, label }) => (
                       <SelectItem key={key}>{label}</SelectItem>
                     ))}
                   </Select>
-                  {endpoint.connection === 'proxy' && (
-                    <Select
-                      aria-label={tr('代理组')}
-                      size="sm"
-                      className="w-36"
-                      selectedKeys={new Set([endpoint.proxyName || 'PROXY'])}
-                      disallowEmptySelection
-                      onSelectionChange={(keys) =>
-                        update(index, { ...endpoint, proxyName: keys.currentKey as string })
-                      }
-                    >
-                      {choices.map((name) => (
-                        <SelectItem key={name}>{name}</SelectItem>
-                      ))}
-                    </Select>
-                  )}
                 </>
               )}
               {!isExtra && (

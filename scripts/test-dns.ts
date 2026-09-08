@@ -33,8 +33,13 @@ test('DNS endpoint validation supports current and future-safe Mihomo parameters
   assert.equal(isValidDnsServer('https://1.1.1.1/dns-query#disable-qtype-65=maybe').ok, false)
 })
 
-test('default DNS template preserves the compatible Fake-IP filter', () => {
+test('default DNS template does not blacklist every Fake-IP mapping', () => {
   const template = readFileSync('src/main/utils/template.ts', 'utf8')
-  assert.match(template, /'fake-ip-filter': \['\*'/)
+  assert.doesNotMatch(template, /'fake-ip-filter': \['\*'/)
   assert.match(template, /'fake-ip-filter-mode': 'blacklist'/)
+})
+
+test('anti-pollution preset does not assume a proxy group named PROXY', () => {
+  const page = readFileSync('src/renderer/src/pages/dns.tsx', 'utf8')
+  assert.doesNotMatch(page, /antiPollutionDnsPreset[\s\S]*?#PROXY/)
 })

@@ -22,7 +22,6 @@ interface AdvancedDnsSettingProps {
   hosts?: IHost[]
   useHosts: boolean
   useSystemHosts: boolean
-  proxyGroups?: string[]
   onRespectRulesChange: (v: boolean) => void
   onDirectNameserverFollowPolicyChange: (v: boolean) => void
   onPreferH3Change: (v: boolean) => void
@@ -55,7 +54,6 @@ const AdvancedDnsSetting: React.FC<AdvancedDnsSettingProps> = ({
   hosts,
   useHosts,
   useSystemHosts,
-  proxyGroups,
   onRespectRulesChange,
   onDirectNameserverFollowPolicyChange,
   onPreferH3Change,
@@ -112,7 +110,6 @@ const AdvancedDnsSetting: React.FC<AdvancedDnsSettingProps> = ({
       <DnsServerList
         title={tr('直连解析服务器')}
         items={directNameserver}
-        proxyGroups={proxyGroups}
         onChange={onDirectNameserverChange}
         onErrorChange={setDirectNameserverError}
         placeholder={tr('例：tls://dns.alidns.com')}
@@ -128,7 +125,6 @@ const AdvancedDnsSetting: React.FC<AdvancedDnsSettingProps> = ({
       <DnsServerList
         title={tr('代理节点解析服务器')}
         items={proxyServerNameserver}
-        proxyGroups={proxyGroups}
         onChange={onProxyNameserverChange}
         onErrorChange={setProxyNameserverError}
         placeholder={tr('例：tls://dns.alidns.com')}
@@ -254,7 +250,6 @@ const AdvancedDnsSetting: React.FC<AdvancedDnsSettingProps> = ({
       <DnsServerList
         title={tr('备用解析服务器')}
         items={fallback}
-        proxyGroups={proxyGroups}
         onChange={onFallbackChange}
         onErrorChange={setFallbackError}
         placeholder={tr('例：tls://1.1.1.1')}
