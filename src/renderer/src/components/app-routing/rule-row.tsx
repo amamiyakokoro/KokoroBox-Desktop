@@ -1,6 +1,7 @@
 import { tr } from '../../../../shared/i18n'
 import { Button, Card, CardBody, Input, Select, SelectItem, Switch, Tooltip } from '@heroui/react'
-import { MdApps, MdArrowDownward, MdArrowUpward, MdDeleteOutline } from 'react-icons/md'
+import { MdArrowDownward, MdArrowUpward, MdDeleteOutline } from 'react-icons/md'
+import defaultApplicationIcon from '../../../../../resources/app-routing-default-icon.svg?url'
 
 const actionLabels: Record<AppRoutingAction, string> = {
   proxy: 'Proxy',
@@ -39,13 +40,11 @@ export function AppRoutingRuleRow({
     <Card shadow="sm">
       <CardBody className="grid grid-cols-[2.75rem_minmax(0,1fr)] gap-x-3 gap-y-2 p-3.5">
         <div className="row-span-2 flex items-center justify-center self-stretch">
-          {icon ? (
-            <img src={icon} alt="" className="size-11 shrink-0 rounded-xl object-cover" />
-          ) : (
-            <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-default-100 text-foreground-400">
-              <MdApps className="text-2xl" />
-            </div>
-          )}
+          <img
+            src={icon || defaultApplicationIcon}
+            alt=""
+            className="size-11 shrink-0 rounded-xl object-cover"
+          />
         </div>
         <div className="flex min-w-0 items-center gap-1">
           <Tooltip content={rule.processPattern} placement="top-start">
