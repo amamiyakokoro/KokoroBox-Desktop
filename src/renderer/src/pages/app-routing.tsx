@@ -4,6 +4,7 @@ import { AppRoutingRuleRow } from '@renderer/components/app-routing/rule-row'
 import AppRoutingSettingDrawer from '@renderer/components/app-routing/app-routing-setting-drawer'
 import { useAppRouting } from '@renderer/hooks/use-app-routing'
 import { openAppRoutingSystemSettings } from '@renderer/utils/ipc'
+import { notify } from '@renderer/utils/notification'
 import { Button, Card, CardBody, Chip, Divider, Input, Switch } from '@heroui/react'
 import { MdAdd, MdOpenInNew, MdRefresh, MdTune } from 'react-icons/md'
 import { useState } from 'react'
@@ -103,6 +104,19 @@ const AppRouting: React.FC = () => {
     deleteRule
   } = useAppRouting()
   const [processPattern, setProcessPattern] = useState('')
+  const [openingSettings, setOpeningSettings] = useState(false)
+  const openApprovalSettings = async (): Promise<void> => {
+    if (openingSettings) return
+    setOpeningSettings(true)
+    try {
+      await openAppRoutingSystemSettings()
+      await refresh()
+    } catch (error) {
+      notify(error, { variant: 'danger' })
+    } finally {
+      setOpeningSettings(false)
+    }
+  }
   const [isSettingDrawerOpen, setIsSettingDrawerOpen] = useState(false)
   const [settingDrawerReopenSignal, setSettingDrawerReopenSignal] = useState(0)
   const currentStatusMessage = statusMessage(status?.message, status?.protectedApplicationCount)
@@ -215,7 +229,8 @@ const AppRouting: React.FC = () => {
                   color="primary"
                   startContent={<MdOpenInNew className="text-base" />}
                   isDisabled={saving}
-                  onPress={() => void openAppRoutingSystemSettings()}
+                  isLoading={openingSettings}
+                  onPress={() => void openApprovalSettings()}
                 >
                   {tr('打开系统设置并请求批准')}
                 </Button>

@@ -130,15 +130,39 @@ static BOOL KBActivateExtension(BOOL *needsUserApproval, NSError **error) {
   return YES;
 }
 
-static void KBOpenSystemSettings(void) {
+static BOOL KBOpenSystemSettings(NSError **error) {
+  dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
+  __block NSError *openError = nil;
   dispatch_async(dispatch_get_main_queue(), ^{
-    NSURL *settingsURL =
+    NSURL *applicationURL =
         [NSURL fileURLWithPath:@"/System/Applications/System Settings.app" isDirectory:YES];
+    // Network Extensions moved to Login Items & Extensions in macOS 15.
+    // Target its parent pane: the inner network-extension sheet has no stable
+    // public deep link. Never send Help Viewer's x-help-action URLs to Finder.
+    NSString *destination = @"x-apple.systempreferences:com.apple.preference.security?General";
+    if (@available(macOS 15.0, *)) {
+      destination = @"x-apple.systempreferences:com.apple.LoginItems-Settings.extension?ExtensionItems";
+    }
+    NSURL *settingsURL = [NSURL URLWithString:destination];
     NSWorkspaceOpenConfiguration *configuration = [[NSWorkspaceOpenConfiguration alloc] init];
-    [[NSWorkspace sharedWorkspace] openApplicationAtURL:settingsURL
-                                           configuration:configuration
-                                       completionHandler:nil];
+    configuration.activates = YES;
+    [[NSWorkspace sharedWorkspace] openURLs:@[settingsURL]
+                      withApplicationAtURL:applicationURL
+                             configuration:configuration
+                         completionHandler:^(NSRunningApplication *application, NSError *failure) {
+      openError = failure;
+      dispatch_semaphore_signal(semaphore);
+    }];
   });
+  if (!KBWait(semaphore, 10)) {
+    if (error) *error = KBError(@"Opening System Settings timed out");
+    return NO;
+  }
+  if (openError) {
+    if (error) *error = openError;
+    return NO;
+  }
+  return YES;
 }
 
 static NSArray<NETransparentProxyManager *> *KBLoadManagers(NSError **error) {
@@ -438,12 +462,11 @@ static NSDictionary *KBInvoke(NSDictionary *request, NSError **error) {
   } else if ([command isEqualToString:@"status"]) {
     state = KBCurrentStatus(error);
   } else if ([command isEqualToString:@"open-settings"]) {
-    // Follow ProxyBridge's activation flow. macOS owns the approval prompt;
-    // there is no supported URL that deep-links directly to Network Extensions.
+    // Navigation must not depend on activation succeeding or completing first.
+    if (!KBOpenSystemSettings(error)) return nil;
     BOOL activationNeedsUserApproval = NO;
     if (!KBActivateExtension(&activationNeedsUserApproval, error)) return nil;
     needsUserApproval = KBUserApprovalPending() || activationNeedsUserApproval;
-    KBOpenSystemSettings();
     state = needsUserApproval ? @"starting" : KBCurrentStatus(error);
   } else {
     if (error) *error = KBError(@"Invalid bridge request");
