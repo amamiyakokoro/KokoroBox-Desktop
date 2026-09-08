@@ -77,10 +77,10 @@ const providerSource = readFileSync(
   'utf8'
 )
 if (
-  !providerSource.includes('DispatchSource.makeTimerSource') ||
-  !providerSource.includes('lastKokoroBoxPolicyRevision')
+  !providerSource.includes('case "replaceKokoroBoxConfiguration":') ||
+  !providerSource.includes('try installKokoroBoxConfiguration(data)')
 ) {
-  throw new Error('Pinned ProxyBridge revision lacks reliable live-policy acknowledgement support')
+  throw new Error('Pinned ProxyBridge revision lacks provider-message policy update support')
 }
 
 const xcodeProjectRoot = path.join(sourceRoot, 'MacOS', 'ProxyBridge')

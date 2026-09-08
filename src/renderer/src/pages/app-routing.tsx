@@ -78,7 +78,7 @@ function statusMessage(message?: string, protectedApplicationCount = 0): string 
     return tr('网络扩展拒绝了应用分流规则。请检查规则后重试。')
   }
   if (message === 'The network extension did not acknowledge the application-routing policy') {
-    return tr('网络扩展正在启动，请稍后重试。')
+    return tr('网络扩展未确认规则更新，无法确认当前分流规则已生效。请重试。')
   }
   if (message === 'macOS 应用分流需要 macOS 13 或更新版本') {
     return tr('macOS 应用分流需要 macOS 13 或更新版本')
@@ -171,13 +171,8 @@ const AppRouting: React.FC = () => {
               !needsMacApproval &&
               config?.enabled &&
               ['starting', 'error'].includes(status?.state ?? '') && (
-                <Button
-                  className="mt-2"
-                  size="sm"
-                  variant="flat"
-                  onPress={() => void openAppRoutingSystemSettings()}
-                >
-                  {tr('请求网络扩展批准')}
+                <Button className="mt-2" size="sm" variant="flat" onPress={() => void refresh()}>
+                  {tr('重试')}
                 </Button>
               )}
             {config?.enabled && (

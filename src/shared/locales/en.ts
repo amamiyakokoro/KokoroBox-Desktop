@@ -26,6 +26,7 @@ export const messages: Readonly<Record<string, string>> = {
   不受支持: 'Unsupported',
   已停用: 'Disabled',
   正在启动: 'Starting',
+  重试: 'Retry',
   阻断保护: 'Fail-closed',
   应用程序规则: 'Application rules',
   程序匹配: 'Process pattern',
@@ -95,6 +96,8 @@ export const messages: Readonly<Record<string, string>> = {
   '网络扩展拒绝了应用分流规则。请检查规则后重试。':
     'The Network Extension rejected the application-routing rules. Check the rules and try again.',
   '网络扩展正在启动，请稍后重试。': 'The Network Extension is starting. Try again shortly.',
+  '网络扩展未确认规则更新，无法确认当前分流规则已生效。请重试。':
+    'The Network Extension did not acknowledge the update. The current routing rules could not be confirmed. Please retry.',
   'macOS 应用分流需要 macOS 13 或更新版本': 'macOS application routing requires macOS 13 or later',
   任务栏: 'Taskbar',
   状态栏: 'Menu bar',

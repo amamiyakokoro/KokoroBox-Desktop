@@ -92,22 +92,21 @@ export async function reconcileMacAppRouting(
     response.state === 'error'
   ) {
     response = await invokeBridge('apply', configuration)
-    // `apply` persists the policy before starting the provider. macOS normally
-    // reports `starting` for a short time, so remember that policy as accepted
-    // as well. Forgetting it caused the monitor to submit the same policy again
-    // every three seconds while the provider was coming online.
-    activePolicyKey = ['starting', 'running'].includes(response.state) ? policyKey : ''
+    // Starting only describes the session, not acceptance of this policy.
+    // A changed policy must be retried once the provider is connected.
+    activePolicyKey = response.state === 'running' ? policyKey : ''
   }
   const protectedApplicationCount = config.rules.filter(
     (rule) => rule.enabled && rule.action === 'proxy'
   ).length
+  const degraded = response.state === 'running' && !proxyAvailable && protectedApplicationCount > 0
   return {
     supported: true,
-    state: response.state === 'stopping' ? 'starting' : response.state,
+    state: degraded ? 'degraded' : response.state === 'stopping' ? 'starting' : response.state,
     needsUserApproval: response.needsUserApproval,
     message: response.needsUserApproval
       ? '请在系统设置中允许 KokoroBox 网络扩展'
-      : !proxyAvailable && protectedApplicationCount > 0
+      : degraded
         ? '代理核心不可用，受保护应用的网络连接已封锁'
         : undefined,
     proxyPort: appRoutingSocksPort,
