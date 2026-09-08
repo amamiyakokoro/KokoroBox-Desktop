@@ -7,7 +7,7 @@ import { useAppConfig } from '@renderer/hooks/use-app-config'
 import {
   ageIdentityToRecipient,
   generateAgeKeyPair,
-  getGistUrl,
+  getGistRawUrl,
   getUserAgent
 } from '@renderer/utils/ipc'
 import debounce from '@renderer/utils/debounce'
@@ -204,10 +204,9 @@ const ProfileSettingDrawer: React.FC<Props> = (props) => {
                       variant="ghost"
                       onPress={async () => {
                         try {
-                          const url = await getGistUrl()
+                          const url = await getGistRawUrl()
                           if (url !== '') {
-                            const fileName = gistEncrypted ? 'sparkle.yaml.age' : 'sparkle.yaml'
-                            await navigator.clipboard.writeText(`${url}/raw/${fileName}`)
+                            await navigator.clipboard.writeText(url)
                             notify(tr('已复制 Gist URL'), { variant: 'success' })
                           }
                         } catch (e) {

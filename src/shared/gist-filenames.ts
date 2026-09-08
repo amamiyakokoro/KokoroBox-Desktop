@@ -25,3 +25,11 @@ export function resolveGistFileNames(
   const staleFileName = encrypted ? `${prefix}.yaml` : `${prefix}.yaml.age`
   return { fileName, staleFileName }
 }
+
+export function buildGistRawUrl(
+  gistUrl: string,
+  files: Record<string, unknown> | undefined,
+  encrypted: boolean
+): string {
+  return `${gistUrl}/raw/${resolveGistFileNames(files, encrypted).fileName}`
+}

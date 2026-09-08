@@ -123,7 +123,7 @@ import {
 } from '../resolve/theme'
 import path from 'path'
 import v8 from 'v8'
-import { getGistUrl } from '../resolve/gistApi'
+import { getGistRawUrl } from '../resolve/gistApi'
 import { getIconDataURL, getImageDataURL } from './icon'
 import { startMonitor } from '../resolve/trafficMonitor'
 import { closeFloatingWindow, showContextMenu, showFloatingWindow } from '../resolve/floatingWindow'
@@ -367,7 +367,7 @@ export function registerIpcMainHandlers(): void {
   ipcMain.handle('registerShortcut', (_e, oldShortcut, newShortcut, action) =>
     ipcErrorWrapper(registerShortcut)(oldShortcut, newShortcut, action)
   )
-  ipcMain.handle('getGistUrl', ipcErrorWrapper(getGistUrl))
+  ipcMain.handle('getGistRawUrl', ipcErrorWrapper(getGistRawUrl))
   ipcMain.handle('setNativeTheme', (_e, theme) => {
     setNativeTheme(theme)
   })

@@ -2,9 +2,9 @@ import axios from 'axios'
 import { getAppConfig, getControledMihomoConfig } from '../config'
 import { getRuntimeConfigStr } from '../core/factory'
 import { encryptAgeText } from '../utils/age'
-import { resolveGistFileNames } from '../../shared/gist-filenames'
+import { buildGistRawUrl, resolveGistFileNames } from '../../shared/gist-filenames'
 
-export { resolveGistFileNames } from '../../shared/gist-filenames'
+export { buildGistRawUrl, resolveGistFileNames } from '../../shared/gist-filenames'
 
 export interface GistInfo {
   id: string
@@ -126,6 +126,23 @@ export async function getGistUrl(): Promise<string> {
     if (!gist) throw new Error('Gist not found')
     return gist.html_url
   }
+}
+
+export async function getGistRawUrl(): Promise<string> {
+  const { githubToken, gistSyncEnabled = Boolean(githubToken), gistEncrypted = false } =
+    await getAppConfig()
+  if (!gistSyncEnabled || !githubToken) return ''
+
+  let gists = await listGists(githubToken)
+  let gist = gists.find((item) => item.description === GIST_DESCRIPTION)
+  if (!gist) {
+    await uploadRuntimeConfig()
+    gists = await listGists(githubToken)
+    gist = gists.find((item) => item.description === GIST_DESCRIPTION)
+  }
+  if (!gist) throw new Error('Gist not found')
+
+  return buildGistRawUrl(gist.html_url, gist.files, gistEncrypted)
 }
 
 export async function uploadRuntimeConfig(): Promise<void> {

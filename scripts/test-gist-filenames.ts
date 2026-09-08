@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { resolveGistFileNames } from '../src/shared/gist-filenames'
+import { buildGistRawUrl, resolveGistFileNames } from '../src/shared/gist-filenames'
 
 test('new runtime-sync Gists use KokoroBox filenames', () => {
   assert.deepEqual(resolveGistFileNames(undefined, false), {
@@ -22,6 +22,10 @@ test('existing Sparkle Gists retain their public filename during sync', () => {
     fileName: 'sparkle.yaml.age',
     staleFileName: 'sparkle.yaml'
   })
+  assert.equal(
+    buildGistRawUrl('https://gist.github.com/example', { 'sparkle.yaml': {} }, false),
+    'https://gist.github.com/example/raw/sparkle.yaml'
+  )
 })
 
 test('KokoroBox filenames win if a Gist contains both migration generations', () => {

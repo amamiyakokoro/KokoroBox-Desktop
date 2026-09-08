@@ -518,8 +518,8 @@ export async function setNativeTheme(theme: 'system' | 'light' | 'dark'): Promis
   return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('setNativeTheme', theme))
 }
 
-export async function getGistUrl(): Promise<string> {
-  return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('getGistUrl'))
+export async function getGistRawUrl(): Promise<string> {
+  return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('getGistRawUrl'))
 }
 
 export async function showTrayIcon(): Promise<void> {
