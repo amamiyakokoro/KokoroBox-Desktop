@@ -6,7 +6,7 @@
 
 A cross-platform Mihomo desktop client with built-in Kokoro subscriptions.
 
-[Download](https://github.com/amamiyakokoro/KokoroBox-Desktop/releases) · [Build](#development) · [License](LICENSE)
+[Download](https://github.com/amamiyakokoro/KokoroBox-Desktop/releases) · [Build](#development) · [Privacy](PRIVACY_POLICY.md) · [License](LICENSE)
 
 </div>
 
