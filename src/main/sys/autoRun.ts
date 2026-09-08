@@ -9,7 +9,12 @@ import { LEGACY_WINDOWS_ELEVATE_TASK_NAME } from './misc'
 
 export const WINDOWS_AUTO_RUN_TASK_NAME = 'KokoroBox'
 export const LEGACY_WINDOWS_AUTO_RUN_TASK_NAME = 'sparkle'
-const linuxAppName = 'sparkle'
+const linuxAppName = 'kokorobox'
+const legacyLinuxAppName = 'sparkle'
+
+function linuxAutoRunPath(appName: string): string {
+  return path.join(homeDir, '.config', 'autostart', `${appName}.desktop`)
+}
 
 function escapeXml(value: string): string {
   return value
@@ -90,7 +95,7 @@ export async function checkAutoRun(): Promise<boolean> {
   }
 
   if (process.platform === 'linux') {
-    return existsSync(path.join(homeDir, '.config', 'autostart', `${linuxAppName}.desktop`))
+    return existsSync(linuxAutoRunPath(linuxAppName)) || existsSync(linuxAutoRunPath(legacyLinuxAppName))
   }
   return false
 }
@@ -122,21 +127,25 @@ Name=KokoroBox
 Exec=${exePath()} %U
 Terminal=false
 Type=Application
-Icon=sparkle
-StartupWMClass=sparkle
+Icon=kokorobox
+StartupWMClass=kokorobox
 Comment=KokoroBox
 Categories=Utility;
 `
 
-    if (existsSync(`/usr/share/applications/${linuxAppName}.desktop`)) {
-      desktop = await readFile(`/usr/share/applications/${linuxAppName}.desktop`, 'utf8')
+    for (const appName of [linuxAppName, legacyLinuxAppName]) {
+      const source = `/usr/share/applications/${appName}.desktop`
+      if (existsSync(source)) {
+        desktop = await readFile(source, 'utf8')
+        break
+      }
     }
     const autostartDir = path.join(homeDir, '.config', 'autostart')
     if (!existsSync(autostartDir)) {
       await mkdir(autostartDir, { recursive: true })
     }
-    const desktopFilePath = path.join(autostartDir, `${linuxAppName}.desktop`)
-    await writeFile(desktopFilePath, desktop)
+    await writeFile(linuxAutoRunPath(linuxAppName), desktop)
+    await rm(linuxAutoRunPath(legacyLinuxAppName), { force: true })
   }
 }
 
@@ -155,8 +164,9 @@ export async function disableAutoRun(): Promise<void> {
     ])
   }
   if (process.platform === 'linux') {
-    const desktopFilePath = path.join(homeDir, '.config', 'autostart', `${linuxAppName}.desktop`)
-    await rm(desktopFilePath)
+    await Promise.all(
+      [linuxAppName, legacyLinuxAppName].map((appName) => rm(linuxAutoRunPath(appName), { force: true }))
+    )
   }
 }
 
