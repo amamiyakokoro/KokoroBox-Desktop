@@ -126,5 +126,8 @@ export async function openMacAppRoutingSystemSettings(): Promise<void> {
   if (!existsSync(macAppRoutingModulePath())) {
     throw new Error('macOS application-routing module is not installed')
   }
+  if (!existsSync(macAppRoutingExtensionPath())) {
+    throw new Error('macOS application-routing system extension is not installed')
+  }
   await invokeBridge('open-settings')
 }

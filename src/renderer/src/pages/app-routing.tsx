@@ -177,7 +177,7 @@ const AppRouting: React.FC = () => {
                   variant="flat"
                   onPress={() => void openAppRoutingSystemSettings()}
                 >
-                  {tr('打开网络扩展设置')}
+                  {tr('请求网络扩展批准')}
                 </Button>
               )}
             {config?.enabled && (
@@ -211,7 +211,7 @@ const AppRouting: React.FC = () => {
                 </p>
               </div>
               <ol className="list-decimal space-y-1 pl-5 text-sm text-warning-800 dark:text-warning-300">
-                <li>{tr('打开系统设置中的“网络扩展”。')}</li>
+                <li>{tr('在系统设置中前往“通用 → 登录项与扩展 → 网络扩展”。')}</li>
                 <li>{tr('启用 KokoroBox，然后完成 macOS 的确认提示。')}</li>
                 <li>{tr('返回 KokoroBox；应用分流会自动继续启动。')}</li>
               </ol>
@@ -222,7 +222,7 @@ const AppRouting: React.FC = () => {
                   isDisabled={saving}
                   onPress={() => void openAppRoutingSystemSettings()}
                 >
-                  {tr('打开 macOS 网络扩展设置')}
+                  {tr('打开系统设置并请求批准')}
                 </Button>
                 <Button
                   variant="flat"

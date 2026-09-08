@@ -78,16 +78,17 @@ export const messages: Readonly<Record<string, string>> = {
     'The packet interception sidecar stopped unexpectedly; retrying',
   '请在系统设置中允许 KokoroBox 网络扩展':
     'Allow the KokoroBox network extension in System Settings.',
-  打开网络扩展设置: 'Open Network Extension Settings',
+  请求网络扩展批准: 'Request Network Extension Approval',
   需要批准网络扩展: 'Network Extension approval required',
   'macOS 需要你的批准才能开始应用分流。':
     'macOS needs your approval before application routing can start.',
-  '打开系统设置中的“网络扩展”。': 'Open Network Extensions in System Settings.',
+  '在系统设置中前往“通用 → 登录项与扩展 → 网络扩展”。':
+    'In System Settings, go to General → Login Items & Extensions → Network Extensions.',
   '启用 KokoroBox，然后完成 macOS 的确认提示。':
     'Enable KokoroBox, then complete the macOS confirmation prompt.',
   '返回 KokoroBox；应用分流会自动继续启动。':
     'Return to KokoroBox; application routing will continue starting automatically.',
-  '打开 macOS 网络扩展设置': 'Open macOS Network Extension Settings',
+  打开系统设置并请求批准: 'Open System Settings and Request Approval',
   '我已启用，立即检查': 'I enabled it — check now',
   'macOS 应用分流组件未安装': 'The macOS application-routing bridge is not installed',
   'macOS 系统扩展未安装': 'The macOS system extension is not installed',

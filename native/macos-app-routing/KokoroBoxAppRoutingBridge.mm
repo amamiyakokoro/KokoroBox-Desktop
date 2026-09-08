@@ -103,10 +103,9 @@ static NSString *KBStatusName(NEVPNStatus status) {
 
 static BOOL KBActivateExtension(BOOL *needsUserApproval, NSError **error) {
   KBExtensionActivationDelegate *delegate = [[KBExtensionActivationDelegate alloc] init];
-  dispatch_queue_t queue = dispatch_queue_create(
-      "com.amamiyakokoro.app.routing-bridge.system-extension", DISPATCH_QUEUE_SERIAL);
   OSSystemExtensionRequest *request =
-      [OSSystemExtensionRequest activationRequestForExtension:KBExtensionIdentifier queue:queue];
+      [OSSystemExtensionRequest activationRequestForExtension:KBExtensionIdentifier
+                                                       queue:dispatch_get_main_queue()];
   request.delegate = delegate;
   [[OSSystemExtensionManager sharedManager] submitRequest:request];
   if (!KBWait(delegate.semaphore, 30)) {
@@ -125,6 +124,17 @@ static BOOL KBActivateExtension(BOOL *needsUserApproval, NSError **error) {
   KBSetUserApprovalPending(NO);
   if (needsUserApproval) *needsUserApproval = NO;
   return YES;
+}
+
+static void KBOpenSystemSettings(void) {
+  dispatch_async(dispatch_get_main_queue(), ^{
+    NSURL *settingsURL =
+        [NSURL fileURLWithPath:@"/System/Applications/System Settings.app" isDirectory:YES];
+    NSWorkspaceOpenConfiguration *configuration = [[NSWorkspaceOpenConfiguration alloc] init];
+    [[NSWorkspace sharedWorkspace] openApplicationAtURL:settingsURL
+                                           configuration:configuration
+                                       completionHandler:nil];
+  });
 }
 
 static NSArray<NETransparentProxyManager *> *KBLoadManagers(NSError **error) {
@@ -402,17 +412,13 @@ static NSDictionary *KBInvoke(NSDictionary *request, NSError **error) {
   } else if ([command isEqualToString:@"status"]) {
     state = KBCurrentStatus(error);
   } else if ([command isEqualToString:@"open-settings"]) {
-    dispatch_async(dispatch_get_main_queue(), ^{
-      NSWorkspace *workspace = [NSWorkspace sharedWorkspace];
-      // Help Viewer actions are not Launch Services URLs. Address System
-      // Settings directly and check for a handler before opening the URL.
-      NSURL *url = [NSURL URLWithString:
-          @"x-apple.systempreferences:com.apple.LoginItems-Settings.extension"];
-      if (!url || ![workspace URLForApplicationToOpenURL:url] || ![workspace openURL:url]) {
-        [workspace openURL:[NSURL fileURLWithPath:@"/System/Applications/System Settings.app"]];
-      }
-    });
-    state = @"starting";
+    // Follow ProxyBridge's activation flow. macOS owns the approval prompt;
+    // there is no supported URL that deep-links directly to Network Extensions.
+    BOOL activationNeedsUserApproval = NO;
+    if (!KBActivateExtension(&activationNeedsUserApproval, error)) return nil;
+    needsUserApproval = KBUserApprovalPending() || activationNeedsUserApproval;
+    KBOpenSystemSettings();
+    state = needsUserApproval ? @"starting" : KBCurrentStatus(error);
   } else {
     if (error) *error = KBError(@"Invalid bridge request");
     return nil;
