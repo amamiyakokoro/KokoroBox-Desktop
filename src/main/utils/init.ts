@@ -168,30 +168,6 @@ async function migration(): Promise<void> {
     mihomoConfigPatch['global-client-fingerprint'] = undefined as never
   }
 
-  // Older KokoroBox releases wrote `*` into the blacklist-style Fake-IP
-  // filter. That excludes every domain and makes Fake-IP a no-op. Only
-  // migrate the exact historic default so intentional user rules stay intact.
-  const legacyFakeIpFilter = [
-    '*',
-    '+.lan',
-    '+.local',
-    'time.*.com',
-    'ntp.*.com',
-    '+.market.xiaomi.com'
-  ]
-  const currentFakeIpFilter = mihomoConfig.dns?.['fake-ip-filter']
-  if (
-    Array.isArray(currentFakeIpFilter) &&
-    JSON.stringify(currentFakeIpFilter) === JSON.stringify(legacyFakeIpFilter) &&
-    (!mihomoConfig.dns?.['fake-ip-filter-mode'] ||
-      mihomoConfig.dns['fake-ip-filter-mode'] === 'blacklist')
-  ) {
-    mihomoConfigPatch.dns = {
-      'fake-ip-filter': defaultControledMihomoConfig.dns?.['fake-ip-filter'],
-      'fake-ip-filter-mode': 'blacklist'
-    }
-  }
-
   if (Object.keys(mihomoConfigPatch).length > 0) {
     await patchControledMihomoConfig(mihomoConfigPatch)
   }

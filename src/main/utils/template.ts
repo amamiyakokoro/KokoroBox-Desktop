@@ -120,9 +120,9 @@ export const defaultControledMihomoConfig: Partial<MihomoConfig> = {
     'respect-rules': false,
     'enhanced-mode': 'fake-ip',
     'fake-ip-range': '198.18.0.1/16',
-    // `fake-ip-filter` is a blacklist by default. Do not add `*` here: it
-    // would exclude every domain and silently disable Fake-IP mapping.
-    'fake-ip-filter': ['+.lan', '+.local', 'time.*.com', 'ntp.*.com', '+.market.xiaomi.com'],
+    // Keep the historic compatibility default: `*` makes Fake-IP opt-in
+    // through user rules instead of changing existing routing behaviour.
+    'fake-ip-filter': ['*', '+.lan', '+.local', 'time.*.com', 'ntp.*.com', '+.market.xiaomi.com'],
     'fake-ip-filter-mode': 'blacklist',
     'use-hosts': false,
     'use-system-hosts': false,
