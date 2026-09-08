@@ -18,6 +18,7 @@
     "test:override-user-agent": "tsx --test scripts/test-override-user-agent.ts",
     "test:pinned-https-agent": "tsx --test scripts/test-pinned-https-agent.ts",
     "test:main-process-errors": "tsx --test scripts/test-main-process-errors.ts",
+    "test:user-data-migration": "tsx --test scripts/test-user-data-migration.ts",
     "test:app-routing": "tsx --test scripts/test-app-routing.ts",
     "test:dns": "tsx --test scripts/test-dns.ts",
     "test:service-auth": "tsx --test scripts/test-service-auth.ts",

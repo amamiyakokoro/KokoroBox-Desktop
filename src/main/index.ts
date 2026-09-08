@@ -39,6 +39,7 @@ import {
 import { isKokoroURI } from './kokoro/oauth'
 import { initializeAppRouting } from './app-routing/manager'
 import { installEarlyTlsDisconnectRecovery } from './utils/earlyTlsDisconnect'
+import { migrateUserDataDirectory } from './utils/userDataMigration'
 
 export { setNotQuitDialog } from './resolve/appLifecycle'
 
@@ -110,8 +111,16 @@ async function scheduleLightweightMode(): Promise<void> {
   quitTimeout = setTimeout(enterLightweightMode, autoLightweightDelay * 1000)
 }
 
-// Keep the existing data directory so upgrades from Sparkle retain all user settings.
-app.setPath('userData', join(app.getPath('appData'), 'sparkle'))
+// This must happen before configuration, credentials, or the single-instance lock
+// can read userData.  On an upgrade we atomically move the old Sparkle directory;
+// conflicts intentionally keep using the legacy directory rather than merging data.
+const userDataMigration = migrateUserDataDirectory(app.getPath('appData'))
+app.setPath('userData', userDataMigration.userDataPath)
+if (userDataMigration.status === 'conflict' || userDataMigration.status === 'failed') {
+  console.warn(
+    `[KokoroBox] user-data migration ${userDataMigration.status}; continuing with ${userDataMigration.legacyPath}${userDataMigration.error ? `: ${userDataMigration.error.message}` : ''}`
+  )
+}
 const syncConfig = getAppConfigSync()
 setLocale(resolveLocale(syncConfig.language, app.getPreferredSystemLanguages()))
 app.setName('KokoroBox')
