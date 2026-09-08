@@ -1,22 +1,40 @@
 #!/bin/bash
 
+install_launcher() {
+    launcher="$1"
+    target="$2"
+    alternative="$3"
+
+    if [ ! -f "$launcher" ] || [ -L "$launcher" ]; then
+        if type update-alternatives >/dev/null 2>&1; then
+            if [ -L "$launcher" ] && [ -e "$launcher" ] && [ "$(readlink "$launcher")" != "/etc/alternatives/$alternative" ]; then
+                rm -f "$launcher"
+            fi
+            update-alternatives --install "$launcher" "$alternative" "$target" 100 || ln -sf "$target" "$launcher"
+        else
+            ln -sf "$target" "$launcher"
+        fi
+    fi
+}
+
+install_launcher '/usr/bin/kokorobox' '/opt/kokorobox/kokorobox' 'kokorobox'
+
+# Keep command-line upgrades working when the old launcher belongs to this
+# package. New installations should use /usr/bin/kokorobox.
 if [ ! -f '/usr/bin/sparkle' ] || [ -L '/usr/bin/sparkle' ]; then
     if type update-alternatives 2>/dev/null >&1; then
-        # Remove previous link if it doesn't use update-alternatives
         if [ -L '/usr/bin/sparkle' -a -e '/usr/bin/sparkle' -a "`readlink '/usr/bin/sparkle'`" != '/etc/alternatives/sparkle' ]; then
             rm -f '/usr/bin/sparkle'
         fi
-        update-alternatives --install '/usr/bin/sparkle' 'sparkle' '/opt/sparkle/sparkle' 100 || ln -sf '/opt/sparkle/sparkle' '/usr/bin/sparkle'
+        update-alternatives --install '/usr/bin/sparkle' 'sparkle' '/opt/kokorobox/kokorobox' 10 || ln -sf '/opt/kokorobox/kokorobox' '/usr/bin/sparkle'
     else
-        ln -sf '/opt/sparkle/sparkle' '/usr/bin/sparkle'
+        ln -sf '/opt/kokorobox/kokorobox' '/usr/bin/sparkle'
     fi
 fi
 
-sed -i 's/Name=sparkle/Name=KokoroBox/' '/usr/share/applications/sparkle.desktop'
-
-chmod 4755 '/opt/sparkle/chrome-sandbox' || true
-chmod +sx /opt/sparkle/resources/sidecar/mihomo
-chmod +sx /opt/sparkle/resources/sidecar/mihomo-alpha
+chmod 4755 '/opt/kokorobox/chrome-sandbox' || true
+chmod +sx /opt/kokorobox/resources/sidecar/mihomo
+chmod +sx /opt/kokorobox/resources/sidecar/mihomo-alpha
 
 restore_sparkle_service_if_was_running() {
     SERVICE_NAME='SparkleService'

@@ -4,7 +4,7 @@ import { setTimeout as delay } from 'node:timers/promises'
 
 // Container-only flags: this checks X11 startup, not desktop sandbox/Wayland policy.
 const child = spawn(
-  '/usr/bin/sparkle',
+  '/usr/bin/kokorobox',
   ['--no-sandbox', '--disable-gpu', '--ozone-platform=x11', '--remote-debugging-port=9222'],
   // Electron creates renderer and utility subprocesses. Give the application
   // its own process group so the smoke test can reliably tear down all of them.

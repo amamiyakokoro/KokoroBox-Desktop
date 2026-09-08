@@ -75,8 +75,7 @@ pkg:
   #   alignment: bottomleft
   #   file: build/background.png
 linux:
-  # Preserve the executable expected by the upstream install/service scripts.
-  executableName: sparkle
+  executableName: kokorobox
   desktop:
     entry:
       Name: KokoroBox
@@ -131,7 +130,7 @@ pacman:
     - --before-install=build/linux/preinst
     - --pacman-compression
     - zstd
-    - build/linux/sparkle.sh=/usr/bin/sparkle
+    - build/linux/kokorobox.sh=/usr/bin/kokorobox
   depends:
     - alsa-lib
     - gtk3

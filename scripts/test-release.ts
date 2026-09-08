@@ -345,7 +345,7 @@ test('workflows gate publication on all builds and do not invoke upstream-only s
   const ciMac = parse(readFileSync('electron-builder.ci.yml', 'utf8'))
   assert.equal(ciMac.mac.identity, null)
   assert.equal(ciMac.mac.notarize, false)
-  assert.equal(parse(readFileSync('electron-builder.yml', 'utf8')).linux.executableName, 'sparkle')
+  assert.equal(parse(readFileSync('electron-builder.yml', 'utf8')).linux.executableName, 'kokorobox')
   const buildEnvironment = readFileSync('scripts/build-env.ts', 'utf8')
   assert.match(buildEnvironment, /KOKOROBOX_SYSTEM_CORE/)
   assert.match(buildEnvironment, /KOKOROBOX_SYSTEM_SERVICE/)

@@ -3,14 +3,17 @@
 # The command may be installed after KokoroBox, so removal cannot assume the
 # same branch that postinst used when it created the launcher.
 if command -v update-alternatives >/dev/null 2>&1; then
-    update-alternatives --remove 'sparkle' '/opt/sparkle/sparkle' >/dev/null 2>&1 || true
+    update-alternatives --remove 'kokorobox' '/opt/kokorobox/kokorobox' >/dev/null 2>&1 || true
+    update-alternatives --remove 'sparkle' '/opt/kokorobox/kokorobox' >/dev/null 2>&1 || true
 fi
 
-if [ -L '/usr/bin/sparkle' ]; then
-    target="$(readlink '/usr/bin/sparkle' 2>/dev/null || true)"
-    if [ "$target" = '/opt/sparkle/sparkle' ] || { [ "$target" = '/etc/alternatives/sparkle' ] && [ ! -e '/usr/bin/sparkle' ]; }; then
-        rm -f '/usr/bin/sparkle'
+for launcher in '/usr/bin/kokorobox' '/usr/bin/sparkle'; do
+    if [ -L "$launcher" ]; then
+        target="$(readlink "$launcher" 2>/dev/null || true)"
+        if [ "$target" = '/opt/kokorobox/kokorobox' ] || { [ "$target" = "/etc/alternatives/$(basename "$launcher")" ] && [ ! -e "$launcher" ]; }; then
+            rm -f "$launcher"
+        fi
     fi
-fi
+done
 
 exit 0

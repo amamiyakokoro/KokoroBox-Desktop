@@ -47,13 +47,13 @@ const electronBuilder = path.join(
   '.bin',
   process.platform === 'win32' ? 'electron-builder.cmd' : 'electron-builder'
 )
-// Install/service scripts require /opt/sparkle; apply this to local builds as
-// well as CI. The desktop entry keeps the user-facing KokoroBox name.
-const args = ['-c.productName=sparkle', '--publish', 'never', '--linux', ...process.argv.slice(2)]
+// Keep the package layout, desktop entry and executable in the KokoroBox
+// namespace. Legacy launchers are installed only by post-install migration.
+const args = ['-c.productName=kokorobox', '--publish', 'never', '--linux', ...process.argv.slice(2)]
 let tempConfigDir: string | undefined
 
 if (systemCoreOnlyBuild) {
-  tempConfigDir = mkdtempSync(path.join(os.tmpdir(), 'sparkle-electron-builder-'))
+  tempConfigDir = mkdtempSync(path.join(os.tmpdir(), 'kokorobox-electron-builder-'))
   const configPath = path.join(tempConfigDir, 'config.json')
   writeFileSync(configPath, JSON.stringify(createSystemPackageConfig()))
   args.unshift('--config', configPath)
