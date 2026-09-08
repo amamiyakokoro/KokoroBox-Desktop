@@ -14,7 +14,7 @@ Each release must contain all 12 packages, `latest.yml`, and `SHA256SUMS`. The u
 
 All targets use GitHub-hosted runners and the locked project dependencies. The native module for each target architecture is checked before packaging.
 
-Linux retains the internal `/opt/sparkle/sparkle` executable and service identifiers for compatibility with the existing installer and service scripts. The shared `pnpm build:linux` packaging entry point sets this installation path for both local and CI builds. The desktop display name remains KokoroBox.
+Linux installs the application at `/opt/kokorobox/kokorobox` and uses the `KokoroBoxService` service identity. The shared `pnpm build:linux` packaging entry point uses this layout for both local and CI builds. Legacy launchers and service registrations are stopped or retained only where needed for safe upgrades.
 
 ### RPM compatibility
 
@@ -107,7 +107,7 @@ node --import tsx --test scripts/test-release.ts scripts/test-macos-signing.ts s
 
 Windows CI packages are currently **not Authenticode-signed**. SignPath signing must be configured after project approval; this workflow does not claim Foundation sponsorship or signed Windows releases.
 
-Windows packages build the small elevation runner from the reviewed Go source in `build/windows/runner`; release builds never download the legacy Sparkle-branded runner. The installed executable, shortcuts, auto-start task, and elevation task use KokoroBox names. On the first upgraded launch, the app migrates an enabled legacy `sparkle` auto-start task to `KokoroBox` and removes obsolete scheduled tasks and runner files. Internal data, service, IPC, and legacy URI identifiers retain their Sparkle names where changing them would break existing installations or the bundled service protocol.
+Windows packages build the small elevation runner from the reviewed Go source in `build/windows/runner`; release builds never download the legacy Sparkle-branded runner. The installed executable, shortcuts, auto-start task, elevation task, service, data and IPC names use KokoroBox names. On the first upgraded launch, the app migrates an enabled legacy `sparkle` auto-start task to `KokoroBox` and removes obsolete scheduled tasks and runner files. Legacy URI identifiers and the authenticated service wire-format remain supported for compatibility.
 
 Both Intel and Apple Silicon macOS releases require **Developer ID-signed, Apple-notarized PKGs with stapled tickets**. There is no unsigned fallback in either Stable or Rolling releases. The upstream PKG installation scripts remain enabled for proxy/service operation.
 
@@ -139,7 +139,7 @@ Signing is restricted to this repository's `master` branch or stable SemVer tags
 
 1. Checks every required secret and creates a private temporary directory and Keychain under `RUNNER_TEMP`.
 2. Imports both certificates, authorizes Apple signing tools, and validates notarization credentials in a temporary Keychain profile.
-3. Packages the already compiled app using `forceCodeSigning: true`, the specified team, hardened runtime, and explicit signing of both Mihomo binaries and `sparkle-service`.
+3. Packages the already compiled app using `forceCodeSigning: true`, the specified team, hardened runtime, and explicit signing of both Mihomo binaries and `kokorobox-service`.
 4. Verifies the app/helpers' Developer ID identity, team, hardened runtime, timestamp, and signatures, plus the Installer signature on the PKG.
 5. Submits the **final signed PKG** using `notarytool`, waiting up to 45 minutes for `Accepted`. Automatic electron-builder notarization is disabled in this generated configuration to avoid duplicate or silently skipped submissions.
 6. Staples the PKG ticket, runs `stapler validate`, assesses the installer with Gatekeeper, and rechecks its package signature.
