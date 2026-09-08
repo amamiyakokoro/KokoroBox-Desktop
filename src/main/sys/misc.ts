@@ -2,11 +2,12 @@ import { tr } from '../../shared/i18n'
 import { normalizeWindowsExecutablePath } from '../../shared/app-routing'
 import { execFile, execFileSync, spawn } from 'child_process'
 import { app, dialog, nativeImage, nativeTheme, shell } from 'electron'
-import { mkdir, readFile, realpath, stat, writeFile } from 'fs/promises'
+import { mkdir, mkdtemp, readFile, realpath, rm, stat, writeFile } from 'fs/promises'
+import { tmpdir } from 'os'
 import path from 'path'
 import crypto from 'crypto'
 import { promisify } from 'util'
-import { runElevated, setupFirewallRules } from '@uruhalushia/sparkle-native'
+import { fileToDataUrl, runElevated, setupFirewallRules } from '@uruhalushia/sparkle-native'
 import {
   dataDir,
   exePath,
@@ -89,15 +90,7 @@ export async function getApplicationPaths(): Promise<AppRoutingApplicationSelect
       identifier = match[1]
       identifierKind = 'macos-signing-identifier'
     }
-    const iconCacheKey = crypto
-      .createHash('sha256')
-      .update(executablePath.toLowerCase(), 'utf8')
-      .digest('hex')
-    const icon = await app.getFileIcon(executablePath, { size: 'normal' })
-    const iconDataUrl = icon.isEmpty() ? undefined : icon.toDataURL()
-    if (!icon.isEmpty()) {
-      await writeFile(path.join(appRoutingIconDir(), `${iconCacheKey}.png`), icon.toPNG())
-    }
+    const iconDataUrl = await loadApplicationIcon(executablePath)
     applications.push({
       executablePath,
       executableName,
@@ -115,14 +108,77 @@ export async function getAppRoutingIcon(executablePath: string): Promise<string 
   if (!validWindowsPath && !validMacPath) {
     throw new Error('Invalid application path')
   }
+  return loadApplicationIcon(executablePath)
+}
+
+async function loadApplicationIcon(executablePath: string): Promise<string | undefined> {
   const iconCacheKey = crypto
     .createHash('sha256')
-    .update(executablePath.toLowerCase(), 'utf8')
+    .update(`native-v2:${executablePath}`, 'utf8')
     .digest('hex')
   const iconPath = path.join(appRoutingIconDir(), `${iconCacheKey}.png`)
-  if (!existsSync(iconPath)) return undefined
-  const icon = nativeImage.createFromBuffer(await readFile(iconPath))
-  return icon.isEmpty() ? undefined : icon.toDataURL()
+  try {
+    let icon: Electron.NativeImage
+    try {
+      icon =
+        process.platform === 'darwin' && executablePath.endsWith('.app')
+          ? await loadMacBundleIcon(executablePath)
+          : nativeImage.createFromDataURL(fileToDataUrl(executablePath))
+    } catch {
+      icon = nativeImage.createEmpty()
+    }
+    if (icon.isEmpty()) icon = await app.getFileIcon(executablePath, { size: 'large' })
+    if (!icon.isEmpty()) {
+      await mkdir(appRoutingIconDir(), { recursive: true })
+      await writeFile(iconPath, icon.toPNG()).catch(() => {})
+      return icon.toDataURL()
+    }
+  } catch {
+    // An unavailable application must not prevent editing its routing rule.
+  }
+  try {
+    const cached = nativeImage.createFromBuffer(await readFile(iconPath))
+    return cached.isEmpty() ? undefined : cached.toDataURL()
+  } catch {
+    return undefined
+  }
+}
+
+async function loadMacBundleIcon(bundlePath: string): Promise<Electron.NativeImage> {
+  const run = promisify(execFile)
+  const { stdout } = await run(
+    '/usr/bin/plutil',
+    [
+      '-extract',
+      'CFBundleIconFile',
+      'raw',
+      '-o',
+      '-',
+      path.join(bundlePath, 'Contents', 'Info.plist')
+    ],
+    { timeout: 5000, maxBuffer: 64 * 1024 }
+  )
+  const name = stdout.trim()
+  if (!name || path.basename(name) !== name || name === '.' || name === '..') {
+    return nativeImage.createEmpty()
+  }
+  const resource = path.join(
+    bundlePath,
+    'Contents',
+    'Resources',
+    path.extname(name) ? name : `${name}.icns`
+  )
+  const temporary = await mkdtemp(path.join(tmpdir(), 'kokorobox-app-icon-'))
+  try {
+    const png = path.join(temporary, 'icon.png')
+    await run('/usr/bin/sips', ['-s', 'format', 'png', resource, '--out', png], {
+      timeout: 5000,
+      maxBuffer: 64 * 1024
+    })
+    return nativeImage.createFromBuffer(await readFile(png)).resize({ width: 128, height: 128 })
+  } finally {
+    await rm(temporary, { recursive: true, force: true })
+  }
 }
 
 export async function readTextFile(filePath: string): Promise<string> {

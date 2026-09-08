@@ -43,23 +43,35 @@ export function AppRoutingRuleRow({
           <img
             src={icon || defaultApplicationIcon}
             alt=""
-            className="size-11 shrink-0 rounded-xl object-cover"
+            className="size-11 shrink-0 rounded-xl object-contain"
+            onError={(event) => {
+              event.currentTarget.onerror = null
+              event.currentTarget.src = defaultApplicationIcon
+            }}
           />
         </div>
         <div className="flex min-w-0 items-center gap-1">
-          <Tooltip content={rule.processPattern} placement="top-start">
+          <Tooltip
+            content={
+              <div className="max-w-sm break-all">
+                {rule.processPattern}
+                {rule.sourcePath && <p className="mt-1 text-xs">{rule.sourcePath}</p>}
+              </div>
+            }
+            placement="top-start"
+          >
             <div className="min-w-0 flex-1">
               <Input
                 key={rule.processPattern}
                 aria-label={tr('程序匹配')}
                 size="sm"
-                variant="underlined"
+                variant="flat"
                 isDisabled={disabled}
                 defaultValue={rule.processPattern}
                 classNames={{
                   base: 'min-w-0',
                   input: 'truncate text-base font-semibold',
-                  inputWrapper: 'min-h-9 h-9 px-0'
+                  inputWrapper: 'min-h-9 h-9 px-1 bg-transparent shadow-none'
                 }}
                 onBlur={(event) => {
                   const processPattern = event.currentTarget.value.trim()
@@ -102,20 +114,13 @@ export function AppRoutingRuleRow({
             <MdDeleteOutline className="text-lg" />
           </Button>
         </div>
-        <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2 border-t border-divider/70 pt-2">
-          {rule.sourcePath && (
-            <Tooltip content={rule.sourcePath} placement="bottom-start">
-              <p className="min-w-28 flex-1 truncate text-xs text-foreground-500">
-                {rule.sourcePath}
-              </p>
-            </Tooltip>
-          )}
-          <div className="flex items-center gap-1.5 text-xs text-foreground-500">
-            <span>{tr('协议')}</span>
+        <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] items-center gap-2">
+          <div className="min-w-0">
             <Select
               aria-label={tr('协议')}
               size="sm"
-              className="w-32"
+              className="w-full min-w-0"
+              disallowEmptySelection
               isDisabled={disabled}
               selectedKeys={new Set([rule.protocol])}
               onSelectionChange={(keys) =>
@@ -127,12 +132,12 @@ export function AppRoutingRuleRow({
               ))}
             </Select>
           </div>
-          <div className="flex items-center gap-1.5 text-xs text-foreground-500">
-            <span>{tr('动作')}</span>
+          <div className="min-w-0">
             <Select
               aria-label={tr('动作')}
               size="sm"
-              className="w-28"
+              className="w-full min-w-0"
+              disallowEmptySelection
               isDisabled={disabled}
               selectedKeys={new Set([rule.action])}
               onSelectionChange={(keys) =>

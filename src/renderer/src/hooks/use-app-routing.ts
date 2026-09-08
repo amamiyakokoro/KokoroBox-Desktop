@@ -10,7 +10,7 @@ import {
 import { notify } from '@renderer/utils/notification'
 import { normalizeAppRoutingIdentifier, validateAppRoutingRule } from '../../../shared/app-routing'
 import { nanoid } from 'nanoid'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 export function useAppRouting(): {
   config?: AppRoutingConfig
@@ -30,6 +30,7 @@ export function useAppRouting(): {
   const [status, setStatus] = useState<AppRoutingStatus>()
   const [saving, setSaving] = useState(false)
   const [icons, setIcons] = useState<Record<string, string>>({})
+  const requestedIcons = useRef(new Set<string>())
 
   const load = useCallback(async (): Promise<void> => {
     try {
@@ -55,10 +56,14 @@ export function useAppRouting(): {
   useEffect(() => {
     if (!config) return
     for (const rule of config.rules) {
-      if (!rule.sourcePath || icons[rule.id]) continue
-      void getAppRoutingIcon(rule.sourcePath).then((icon) => {
-        if (icon) setIcons((current) => ({ ...current, [rule.id]: icon }))
-      })
+      const requestKey = `${rule.id}:${rule.sourcePath}`
+      if (!rule.sourcePath || icons[rule.id] || requestedIcons.current.has(requestKey)) continue
+      requestedIcons.current.add(requestKey)
+      void getAppRoutingIcon(rule.sourcePath)
+        .then((icon) => {
+          if (icon) setIcons((current) => ({ ...current, [rule.id]: icon }))
+        })
+        .catch(() => {})
     }
   }, [config, icons])
 

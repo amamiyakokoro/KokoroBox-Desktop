@@ -673,9 +673,6 @@ test('application routing rules use a two-line identity-first card layout', () =
 
   assert.match(row, /grid-cols-\[2\.75rem_minmax\(0,1fr\)\]/)
   assert.match(row, /row-span-2/)
-  assert.match(row, /border-t border-divider\/70 pt-2/)
-  assert.match(row, /content=\{rule\.processPattern\}/)
-  assert.match(row, /content=\{rule\.sourcePath\}/)
   assert.match(row, /app-routing-default-icon\.svg\?url/)
   assert.match(row, /src=\{icon \|\| defaultApplicationIcon\}/)
   assert.doesNotMatch(page, /grid-cols-\[1fr_9rem_9rem_9rem\]/)
