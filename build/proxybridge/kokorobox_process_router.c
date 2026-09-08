@@ -92,6 +92,12 @@ static void diagnostic_connection(const char *process_name, DWORD pid, const cha
     fflush(stderr);
 }
 
+static void diagnostic_log(const char *message) {
+    if (!message || !message[0]) return;
+    fprintf(stderr, "diagnostic engine=%.*s\n", 900, message);
+    fflush(stderr);
+}
+
 static void emit(const char *event, const char *message) {
     if (message && message[0])
         printf("{\"version\":1,\"event\":\"%s\",\"message\":\"%s\"}\n", event, message);
@@ -388,11 +394,13 @@ static BOOL replace_rules(const char *command) {
     ProxyBridge_SetLocalhostViaProxy(FALSE);
     ProxyBridge_SetProxyUdpDnsEnabled(proxy_udp_dns);
     if (diagnostic_logging) {
+        ProxyBridge_SetLogCallback(diagnostic_log);
         ProxyBridge_SetTrafficLoggingEnabled(TRUE);
         ProxyBridge_SetConnectionCallback(diagnostic_connection);
     } else {
         ProxyBridge_SetConnectionCallback(NULL);
         ProxyBridge_SetTrafficLoggingEnabled(FALSE);
+        ProxyBridge_SetLogCallback(NULL);
     }
     if (!engine_running) {
         if (!ProxyBridge_Start()) {
@@ -423,6 +431,7 @@ static BOOL WINAPI control_handler(DWORD event) {
 
 int main(int argc, char **argv) {
     char command[MAX_COMMAND_SIZE];
+    int exit_code = 0;
     (void)argv;
     if (argc != 1) {
         emit("error", "command-line arguments are not supported");
@@ -447,7 +456,10 @@ int main(int argc, char **argv) {
             continue;
         }
         if (strcmp(command_name, "replace_rules") == 0) {
-            replace_rules(command);
+            if (!replace_rules(command)) {
+                exit_code = 6;
+                break;
+            }
         } else if (strcmp(command_name, "status") == 0) {
             emit(engine_running ? "running" : "ready", NULL);
         } else if (strcmp(command_name, "shutdown") == 0) {
@@ -462,5 +474,5 @@ int main(int argc, char **argv) {
     if (guard_id) ProxyBridge_DeleteRule(guard_id);
     if (proxy_id) ProxyBridge_DeleteProxyConfig(proxy_id);
     emit("stopped", NULL);
-    return 0;
+    return exit_code;
 }

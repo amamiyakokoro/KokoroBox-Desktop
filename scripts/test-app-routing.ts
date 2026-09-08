@@ -620,7 +620,9 @@ test('native build is pinned to the controlled KokoroBox ProxyBridge fork', () =
   assert.match(router, /read_bool\(command, "proxyUdpDns"/)
   assert.match(router, /ProxyBridge_SetProxyUdpDnsEnabled\(proxy_udp_dns\)/)
   assert.match(router, /read_bool\(command, "diagnosticLogging"/)
+  assert.match(router, /ProxyBridge_SetLogCallback\(diagnostic_log\)/)
   assert.match(router, /ProxyBridge_SetConnectionCallback\(diagnostic_connection\)/)
+  assert.match(router, /if \(!replace_rules\(command\)\) \{\s*exit_code = 6;\s*break;/)
   assert.doesNotMatch(router, /read_string\(object, "executablePath"/)
   assert.match(
     router,
@@ -661,7 +663,7 @@ test('macOS approval guidance returns promptly and remains visible across app re
 })
 
 test('macOS health polling does not publish a transient start status', () => {
-  const manager = readFileSync('src/main/app-routing/manager.ts', 'utf8')
+  const manager = readFileSync('src/main/app-routing/manager.ts', 'utf8').replaceAll('\r\n', '\n')
   assert.match(manager, /function appRoutingStatusEquals/)
   assert.match(manager, /if \(appRoutingStatusEquals\(status, next\)\) return/)
 
