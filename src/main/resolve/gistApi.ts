@@ -2,29 +2,23 @@ import axios from 'axios'
 import { getAppConfig, getControledMihomoConfig } from '../config'
 import { getRuntimeConfigStr } from '../core/factory'
 import { encryptAgeText } from '../utils/age'
+import { resolveGistFileNames } from '../../shared/gist-filenames'
 
-interface GistInfo {
+export { resolveGistFileNames } from '../../shared/gist-filenames'
+
+export interface GistInfo {
   id: string
   description: string
   html_url: string
+  files?: Record<string, unknown>
 }
 
 const GIST_DESCRIPTION = 'Auto Synced KokoroBox Runtime Config'
-const GIST_FILE_NAME = 'sparkle.yaml'
-const GIST_ENCRYPTED_FILE_NAME = 'sparkle.yaml.age'
-
-function getGistFileName(encrypted: boolean): string {
-  return encrypted ? GIST_ENCRYPTED_FILE_NAME : GIST_FILE_NAME
-}
-
-function getStaleGistFileName(encrypted: boolean): string {
-  return encrypted ? GIST_FILE_NAME : GIST_ENCRYPTED_FILE_NAME
-}
-
-async function getGistUploadContent(): Promise<{
+async function getGistUploadContent(gist?: GistInfo): Promise<{
   content: string
   encrypted: boolean
   fileName: string
+  staleFileName: string
 }> {
   const { gistEncrypted = false, gistAgeRecipient = '' } = await getAppConfig()
   const config = await getRuntimeConfigStr()
@@ -33,7 +27,7 @@ async function getGistUploadContent(): Promise<{
   return {
     content,
     encrypted: gistEncrypted,
-    fileName: getGistFileName(gistEncrypted)
+    ...resolveGistFileNames(gist?.files, gistEncrypted)
   }
 }
 
@@ -88,7 +82,7 @@ async function updateGist(
   id: string,
   fileName: string,
   content: string,
-  encrypted: boolean
+  staleFileName: string
 ): Promise<void> {
   const { 'mixed-port': port = 7890 } = await getControledMihomoConfig()
   return await axios.patch(
@@ -97,7 +91,7 @@ async function updateGist(
       description: GIST_DESCRIPTION,
       files: {
         [fileName]: { content },
-        [getStaleGistFileName(encrypted)]: null
+        [staleFileName]: null
       }
     },
     {
@@ -140,9 +134,9 @@ export async function uploadRuntimeConfig(): Promise<void> {
   if (!githubToken) return
   const gists = await listGists(githubToken)
   const gist = gists.find((gist) => gist.description === GIST_DESCRIPTION)
-  const { content, encrypted, fileName } = await getGistUploadContent()
+  const { content, fileName, staleFileName } = await getGistUploadContent(gist)
   if (gist) {
-    await updateGist(githubToken, gist.id, fileName, content, encrypted)
+    await updateGist(githubToken, gist.id, fileName, content, staleFileName)
   } else {
     await createGist(githubToken, fileName, content)
   }
