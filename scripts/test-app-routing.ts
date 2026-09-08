@@ -231,6 +231,7 @@ test('validates filename and wildcard patterns while protecting internal process
     )
   }
   assert.equal(isProtectedAppRoutingProcess('sparkle-service.exe'), true)
+  assert.equal(isProtectedAppRoutingProcess('kokorobox-service.exe'), true)
   assert.equal(isProtectedAppRoutingProcess('kokorobox-desktop-windows-2.0.0-x64-setup.exe'), true)
   assert.equal(isProtectedAppRoutingPattern('kokoro*.exe'), true)
   assert.equal(isProtectedAppRoutingPattern('*.exe'), true)
@@ -595,7 +596,10 @@ test('native build is pinned to the controlled KokoroBox ProxyBridge fork', () =
   assert.match(router, /read_bool\(command, "diagnosticLogging"/)
   assert.match(router, /ProxyBridge_SetConnectionCallback\(diagnostic_connection\)/)
   assert.doesNotMatch(router, /read_string\(object, "executablePath"/)
-  assert.match(router, /KokoroBox\.exe;mihomo\.exe;mihomo-alpha\.exe;sparkle-service\.exe/)
+  assert.match(
+    router,
+    /KokoroBox\.exe;mihomo\.exe;mihomo-alpha\.exe;kokorobox-service\.exe;sparkle-service\.exe/
+  )
   assert.match(router, /127\.\*\.\*\.\*.*fe80::\/10/s)
   assert.match(build, /manifest\.json/)
   assert.match(build, /process-router-sbom\.cdx\.json/)

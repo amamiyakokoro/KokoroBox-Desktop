@@ -308,15 +308,15 @@ const resolveEnableLoopback = () =>
     file: 'enableLoopback.exe',
     downloadURL: `https://github.com/Kuingsmile/uwp-tool/releases/download/latest/enableLoopback.exe`
   })
-const resolveSparkleService = () => {
+const resolveKokoroBoxService = () => {
   const map = {
-    'win32-x64': 'sparkle-service-windows-amd64-v3',
-    'win32-ia32': 'sparkle-service-windows-386',
-    'win32-arm64': 'sparkle-service-windows-arm64',
-    'darwin-x64': 'sparkle-service-darwin-amd64-v3',
-    'darwin-arm64': 'sparkle-service-darwin-arm64',
-    'linux-x64': 'sparkle-service-linux-amd64-v3',
-    'linux-arm64': 'sparkle-service-linux-arm64'
+    'win32-x64': 'kokorobox-service-windows-amd64-v3',
+    'win32-ia32': 'kokorobox-service-windows-386',
+    'win32-arm64': 'kokorobox-service-windows-arm64',
+    'darwin-x64': 'kokorobox-service-darwin-amd64-v3',
+    'darwin-arm64': 'kokorobox-service-darwin-arm64',
+    'linux-x64': 'kokorobox-service-linux-amd64-v3',
+    'linux-arm64': 'kokorobox-service-linux-arm64'
   }
   if (!map[`${platform}-${arch}`]) {
     throw new Error(`unsupported platform "${platform}-${arch}"`)
@@ -325,8 +325,8 @@ const resolveSparkleService = () => {
   const ext = platform == 'win32' ? '.exe' : ''
 
   return resolveResource({
-    file: `sparkle-service${ext}`,
-    downloadURL: `https://github.com/UruhaLushia/sparkle-service/releases/download/pre-release/${base}${ext}`,
+    file: `kokorobox-service${ext}`,
+    downloadURL: `https://github.com/amamiyakokoro/kokorobox-service/releases/download/pre-release/${base}${ext}`,
     needExecutable: true
   })
 }
@@ -430,8 +430,8 @@ const tasks: Task[] = [
     winOnly: true
   },
   {
-    name: 'sparkle-service',
-    func: resolveSparkleService,
+    name: 'kokorobox-service',
+    func: resolveKokoroBoxService,
     retry: 5
   },
   {

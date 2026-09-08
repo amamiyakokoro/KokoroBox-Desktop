@@ -64,23 +64,23 @@ export function themesDir(): string {
 
 export function mihomoIpcPath(): string {
   if (process.platform === 'win32') {
-    return '\\\\.\\pipe\\Sparkle\\mihomo'
+    return '\\\\.\\pipe\\KokoroBox\\mihomo'
   }
   const { core = 'mihomo' } = getAppConfigSync()
   if (core === 'system') {
-    return '/tmp/sparkle-mihomo-external.sock'
+    return '/tmp/kokorobox-mihomo-external.sock'
   }
   if (!checkCorePermissionPathSync(mihomoCorePath(core))) {
-    return '/tmp/sparkle-mihomo-api-noperm.sock'
+    return '/tmp/kokorobox-mihomo-api-noperm.sock'
   }
-  return '/tmp/sparkle-mihomo-api.sock'
+  return '/tmp/kokorobox-mihomo-api.sock'
 }
 
 export function serviceIpcPath(): string {
   if (process.platform === 'win32') {
-    return '\\\\.\\pipe\\sparkle\\service'
+    return '\\\\.\\pipe\\kokorobox\\service'
   }
-  return '/tmp/sparkle-service.sock'
+  return '/tmp/kokorobox-service.sock'
 }
 
 export function mihomoCoreDir(): string {
@@ -116,7 +116,7 @@ function systemCorePath(): string {
 export function servicePath(): string {
   if (systemCoreOnlyBuild) return systemServicePath
   const isWin = process.platform === 'win32'
-  return path.join(resourcesFilesDir(), `sparkle-service${isWin ? '.exe' : ''}`)
+  return path.join(resourcesFilesDir(), `kokorobox-service${isWin ? '.exe' : ''}`)
 }
 
 export function serviceAuthStorePath(): string {

@@ -107,7 +107,7 @@ export function signingConfig(projectDir: string, teamId: string, appProvisionin
       binaries: [
         'Contents/Resources/sidecar/mihomo',
         'Contents/Resources/sidecar/mihomo-alpha',
-        'Contents/Resources/files/sparkle-service',
+        'Contents/Resources/files/kokorobox-service',
         'Contents/Resources/files/macos-app-routing/kokorobox-app-routing.node'
       ]
     },

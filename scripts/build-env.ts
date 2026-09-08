@@ -16,9 +16,7 @@ const systemServiceBuildValue = readBuildEnvironment(
 )
 const configuredSystemServicePath =
   !systemServiceBuildValue || systemServiceBuildValue === '1'
-    // This binary is renamed in the service migration batch.  Keep the old
-    // default until that paired service release is available.
-    ? '/usr/bin/sparkle-service'
+    ? '/usr/bin/kokorobox-service'
     : systemServiceBuildValue
 
 if (

@@ -6,6 +6,7 @@ export const protectedProcessNames = Object.freeze([
   'KokoroBox.exe',
   'mihomo.exe',
   'mihomo-alpha.exe',
+  'kokorobox-service.exe',
   'sparkle-service.exe',
   'kokorobox-process-router.exe',
   'crashpad_handler.exe',

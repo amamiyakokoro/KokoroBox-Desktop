@@ -10,6 +10,7 @@ const reservedProcessNames = new Set([
   'proxybridge_cli.exe',
   'kokorobox-proxybridge.exe',
   'kokorobox-process-router.exe',
+  'kokorobox-service.exe',
   'sparkle-service.exe',
   'crashpad_handler.exe',
   'elevate.exe'

@@ -233,7 +233,7 @@ static BOOL add_mandatory_exclusions(void) {
         "127.*.*.*;169.254.*.*;224.0.0.0-239.255.255.255;*.*.*.255;"
         "::1;fe80::/10;ff00::/8";
     static const char *process_names =
-        "KokoroBox.exe;mihomo.exe;mihomo-alpha.exe;sparkle-service.exe;"
+        "KokoroBox.exe;mihomo.exe;mihomo-alpha.exe;kokorobox-service.exe;sparkle-service.exe;"
         "kokorobox-process-router.exe;crashpad_handler.exe;elevate.exe;"
         "kokorobox-desktop-windows-*-setup.exe";
     return add_managed_rule("*", network_targets, RULE_PROTOCOL_BOTH,
