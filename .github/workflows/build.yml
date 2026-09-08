@@ -294,6 +294,8 @@ jobs:
         run: node scripts/release-artifacts.ts stage
 
       - name: Upload Artifacts
+        id: upload_artifacts
+        continue-on-error: true
         uses: actions/upload-artifact@v7
         with:
           name: packages-${{ matrix.os }}-${{ matrix.arch }}-${{ matrix.format }}
@@ -301,6 +303,20 @@ jobs:
           if-no-files-found: error
           compression-level: 0
           retention-days: 14
+
+      # GitHub's artifact service can accept every blob and then transiently
+      # reject FinalizeArtifact. Retry only that failed step; overwrite removes
+      # any incomplete artifact reservation left by the first attempt.
+      - name: Retry Artifact Upload
+        if: steps.upload_artifacts.outcome == 'failure'
+        uses: actions/upload-artifact@v7
+        with:
+          name: packages-${{ matrix.os }}-${{ matrix.arch }}-${{ matrix.format }}
+          path: dist/release-artifacts/*
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 14
+          overwrite: true
 
   fedora-rpm:
     name: Fedora ${{ matrix.fedora }} RPM (x64)

@@ -120,6 +120,15 @@ test('build matrix exactly matches the 12 required release artifacts', () => {
     artifactName({ os: 'windows-latest', arch: 'ia32', format: 'nsis' }, '2.26.8')
   )
   assert.throws(() => artifactName(releaseTargets[0], '../../bad'))
+
+  const uploadSteps = build.jobs.build.steps.filter(
+    (step: { uses?: string }) => step.uses === 'actions/upload-artifact@v7'
+  )
+  assert.equal(uploadSteps.length, 2)
+  assert.equal(uploadSteps[0].id, 'upload_artifacts')
+  assert.equal(uploadSteps[0]['continue-on-error'], true)
+  assert.equal(uploadSteps[1].if, "steps.upload_artifacts.outcome == 'failure'")
+  assert.equal(uploadSteps[1].with.overwrite, true)
 })
 
 test('Linux artifact architecture names agree with electron-builder, including ARM64 Pacman', () => {
