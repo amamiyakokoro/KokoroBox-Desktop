@@ -48,7 +48,7 @@ package() {
     asar extract $srcdir/${_pkgname}/dist/linux-unpacked/resources/app.asar ${pkgdir}/opt/kokorobox
     cp -r $srcdir/${_pkgname}/extra/sidecar ${pkgdir}/opt/kokorobox/resources/
     cp -r $srcdir/${_pkgname}/extra/files ${pkgdir}/opt/kokorobox/resources/
-    chmod +x ${pkgdir}/opt/kokorobox/resources/files/sparkle-service
+    chmod +x ${pkgdir}/opt/kokorobox/resources/files/kokorobox-service
     chmod +sx ${pkgdir}/opt/kokorobox/resources/sidecar/mihomo
     chmod +sx ${pkgdir}/opt/kokorobox/resources/sidecar/mihomo-alpha
     install -Dm755 "${_pkgname}.sh" "${pkgdir}/usr/bin/${_pkgname}"

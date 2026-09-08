@@ -41,7 +41,7 @@ package() {
     bsdtar -xf kokorobox-desktop-linux-$(jq '.version' $srcdir/${_pkgname}/package.json | tr -d 'v"')*.deb
     bsdtar -xf data.tar.xz -C "${pkgdir}/"
     chmod +x ${pkgdir}/opt/kokorobox/kokorobox
-    chmod +x ${pkgdir}/opt/kokorobox/resources/files/sparkle-service
+    chmod +x ${pkgdir}/opt/kokorobox/resources/files/kokorobox-service
     chmod +sx ${pkgdir}/opt/kokorobox/resources/sidecar/mihomo
     chmod +sx ${pkgdir}/opt/kokorobox/resources/sidecar/mihomo-alpha
     install -Dm755 "${srcdir}/../${_pkgname}.sh" "${pkgdir}/usr/bin/${_pkgname}"
