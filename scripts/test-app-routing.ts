@@ -5,12 +5,15 @@ import { join, resolve } from 'node:path'
 import { test } from 'node:test'
 import {
   appRoutingSupported,
+  appRoutingExecutableName,
   appRoutingIdentifierKind,
   executableName,
   isAppRoutingRuleEffectivelyEnabled,
   isProtectedAppRoutingPattern,
   isProtectedAppRoutingProcess,
+  isProtectedLinuxExecutablePath,
   normalizeAppRoutingConfig,
+  normalizeLinuxExecutablePath,
   normalizeMacSigningIdentifier,
   normalizeWindowsExecutablePath,
   parseAppRoutingConfig,
@@ -60,14 +63,56 @@ function rule(overrides: Partial<AppRoutingRule> = {}): AppRoutingRule {
   }
 }
 
-test('application routing supports Windows x64 and both macOS architectures', () => {
+test('application routing supports Windows x64, macOS, and Linux desktop architectures', () => {
   assert.equal(appRoutingSupported('win32', 'x64'), true)
   assert.equal(appRoutingSupported('win32', 'arm64'), false)
   assert.equal(appRoutingSupported('darwin', 'x64'), true)
   assert.equal(appRoutingSupported('darwin', 'arm64'), true)
-  assert.equal(appRoutingSupported('linux', 'x64'), false)
+  assert.equal(appRoutingSupported('linux', 'x64'), true)
+  assert.equal(appRoutingSupported('linux', 'arm64'), true)
+  assert.equal(appRoutingSupported('linux', 'ia32'), false)
   assert.equal(macAppRoutingOperatingSystemSupported('21.6.0'), false)
   assert.equal(macAppRoutingOperatingSystemSupported('22.0.0'), true)
+})
+
+test('validates canonical Linux executable paths without intercepting KokoroBox components', () => {
+  const linuxRule = rule({
+    processPattern: '/usr/lib/firefox/firefox',
+    identifierKind: 'linux-executable',
+    sourcePath: '/usr/lib/firefox/firefox'
+  })
+  const config: AppRoutingConfig = {
+    version: 1,
+    enabled: true,
+    failClosed: true,
+    proxyUdpDns: true,
+    defaultAction: 'proxy',
+    defaultProtocol: 'both',
+    diagnosticLogging: false,
+    rules: [linuxRule]
+  }
+  assert.equal(
+    normalizeLinuxExecutablePath('  /usr//lib/firefox/firefox  '),
+    '/usr/lib/firefox/firefox'
+  )
+  assert.equal(appRoutingIdentifierKind(linuxRule), 'linux-executable')
+  assert.equal(appRoutingExecutableName(linuxRule.processPattern, 'linux-executable'), 'firefox')
+  assert.equal(isProtectedLinuxExecutablePath('/opt/kokorobox/kokorobox'), true)
+  assert.doesNotThrow(() => validateAppRoutingConfig(config))
+  assert.equal(buildServiceProcessRouterRules(config, 7894).rules[0].executable_name, 'firefox')
+  for (const processPattern of [
+    'usr/bin/firefox',
+    '/usr/../bin/firefox',
+    '/opt/kokorobox/kokorobox',
+    '/usr/bin/fire*'
+  ]) {
+    assert.throws(() =>
+      validateAppRoutingConfig({
+        ...config,
+        rules: [{ ...linuxRule, processPattern, sourcePath: processPattern }]
+      })
+    )
+  }
 })
 
 test('renderer exposes application routing everywhere the shared capability supports it', () => {

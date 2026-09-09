@@ -44,6 +44,9 @@ export const messages: Readonly<Record<string, string>> = {
   程序匹配: 'Process pattern',
   '规则按从上到下的顺序匹配；支持文件名或含 * 的完整路径。':
     'Rules match from top to bottom. Use a filename or a full path containing *.',
+  '每条规则使用一个绝对可执行文件路径；更改后需重新启动目标程序。':
+    'Each rule uses one absolute executable path. Restart the target application after changing it.',
+  可执行文件路径: 'Executable path',
   '例如：ChatGPT.exe、ChatGPT*.exe 或 C:\\Program Files\\*\\ChatGPT.exe':
     'For example: ChatGPT.exe, ChatGPT*.exe, or C:\\Program Files\\*\\ChatGPT.exe',
   新增匹配规则: 'Add pattern rule',
@@ -57,15 +60,21 @@ export const messages: Readonly<Record<string, string>> = {
   '此 MVP 仅支持 Windows 10/11 x64。': 'This MVP supports Windows 10/11 x64 only.',
   '应用分流支持 Windows 10/11 x64 与 macOS 13 或更新版本。':
     'Application routing supports Windows 10/11 x64 and macOS 13 or later.',
+  '应用分流支持 Windows 10/11 x64、macOS 13 或更新版本及 Linux x64/arm64。':
+    'Application routing supports Windows 10/11 x64, macOS 13 or later, and Linux x64/arm64.',
   签名标识: 'Signing identifier',
   '规则按从上到下的顺序匹配；使用应用签名标识，可在末尾加入 *。':
     'Rules match from top to bottom. Use an application signing identifier, optionally ending in *.',
   '例如：com.openai.chat 或 com.openai.chat*': 'For example: com.openai.chat or com.openai.chat*',
+  '例如：/usr/bin/firefox 或 /opt/example/example':
+    'For example: /usr/bin/firefox or /opt/example/example',
   '输入签名标识，或选择一个或多个 .app，然后设定 Proxy、Direct 或 Block。':
     'Enter a signing identifier or select one or more .app bundles, then choose Proxy, Direct, or Block.',
   尚未添加应用程序: 'No applications added',
   '选择一个或多个 .exe，然后设定 Proxy、Direct 或 Block。':
     'Select one or more .exe files, then choose Proxy, Direct, or Block.',
+  '输入绝对可执行文件路径，或选择一个或多个程序，然后设定 Proxy、Direct 或 Block。':
+    'Enter an absolute executable path or select one or more applications, then choose Proxy, Direct, or Block.',
   动作: 'Action',
   启用规则: 'Enable rule',
   代理失效保护: 'Proxy failure protection',

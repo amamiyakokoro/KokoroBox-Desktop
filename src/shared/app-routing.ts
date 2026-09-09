@@ -22,6 +22,14 @@ const reservedMacSigningIdentifiers = Object.freeze([
   'mihomo',
   'mihomo-alpha'
 ])
+const reservedLinuxExecutableNames = new Set([
+  'kokorobox',
+  'mihomo',
+  'mihomo-alpha',
+  'kokorobox-service',
+  'crashpad_handler',
+  'chrome_crashpad_handler'
+])
 
 export function isProtectedAppRoutingProcess(executableName: string): boolean {
   const normalized = executableName.toLowerCase()
@@ -45,7 +53,7 @@ export const defaultAppRoutingConfig: AppRoutingConfig = {
 export function appRoutingSupported(platform: NodeJS.Platform, arch: string): boolean {
   return (
     (platform === 'win32' && arch === 'x64') ||
-    (platform === 'darwin' && (arch === 'x64' || arch === 'arm64'))
+    ((platform === 'darwin' || platform === 'linux') && (arch === 'x64' || arch === 'arm64'))
   )
 }
 
@@ -59,6 +67,10 @@ export function normalizeWindowsExecutablePath(executablePath: string): string {
   if (normalized.startsWith('\\\\?\\UNC\\')) return `\\\\${normalized.slice(8)}`
   if (normalized.startsWith('\\\\?\\')) return normalized.slice(4)
   return normalized
+}
+
+export function normalizeLinuxExecutablePath(executablePath: string): string {
+  return executablePath.trim().replace(/\/{2,}/g, '/')
 }
 
 export function normalizeProcessPattern(processPattern: string): string {
@@ -77,9 +89,18 @@ export function normalizeAppRoutingIdentifier(
   identifier: string,
   kind: AppRoutingIdentifierKind
 ): string {
-  return kind === 'macos-signing-identifier'
-    ? normalizeMacSigningIdentifier(identifier)
-    : normalizeProcessPattern(identifier)
+  if (kind === 'macos-signing-identifier') return normalizeMacSigningIdentifier(identifier)
+  if (kind === 'linux-executable') return normalizeLinuxExecutablePath(identifier)
+  return normalizeProcessPattern(identifier)
+}
+
+export function appRoutingExecutableName(
+  identifier: string,
+  kind: AppRoutingIdentifierKind
+): string {
+  const normalized = normalizeAppRoutingIdentifier(identifier, kind)
+  const separator = kind === 'windows-executable' ? '\\' : '/'
+  return normalized.slice(normalized.lastIndexOf(separator) + 1)
 }
 
 function wildcardPatternMatches(pattern: string, value: string): boolean {
@@ -102,6 +123,27 @@ export function isProtectedMacSigningIdentifier(identifier: string): boolean {
       wildcardPatternMatches(normalized, reserved.replace('*', 'helper')) ||
       wildcardPatternMatches(reserved, normalized)
   )
+}
+
+export function isProtectedLinuxExecutablePath(executablePath: string): boolean {
+  return reservedLinuxExecutableNames.has(
+    appRoutingExecutableName(executablePath, 'linux-executable').toLowerCase()
+  )
+}
+
+function validLinuxExecutablePath(executablePath: string): boolean {
+  if (
+    !executablePath.startsWith('/') ||
+    executablePath.length < 2 ||
+    new TextEncoder().encode(executablePath).length >= 1024 ||
+    /[\0\r\n*?;,]/.test(executablePath)
+  ) {
+    return false
+  }
+  return executablePath
+    .split('/')
+    .slice(1)
+    .every((segment) => segment && segment !== '.' && segment !== '..')
 }
 
 function containsInvalidProcessPatternCharacter(processPattern: string): boolean {
@@ -135,7 +177,7 @@ export function validateAppRoutingRule(rule: AppRoutingRule): void {
     ) {
       throw new Error('Application routing icon source must be an absolute Windows .exe path')
     }
-  } else {
+  } else if (kind === 'macos-signing-identifier') {
     if (
       !/^[A-Za-z0-9][A-Za-z0-9._-]*(?:\*[A-Za-z0-9._-]*)?$/.test(processPattern) ||
       processPattern === '*' ||
@@ -148,6 +190,19 @@ export function validateAppRoutingRule(rule: AppRoutingRule): void {
     }
     if (rule.sourcePath !== undefined && !/^\/[^\0]+\.app$/i.test(rule.sourcePath)) {
       throw new Error('Application routing icon source must be an absolute macOS .app path')
+    }
+  } else {
+    if (!validLinuxExecutablePath(processPattern)) {
+      throw new Error('Application routing requires one absolute Linux executable path')
+    }
+    if (isProtectedLinuxExecutablePath(processPattern)) {
+      throw new Error(`${processPattern} cannot be intercepted`)
+    }
+    if (
+      rule.sourcePath !== undefined &&
+      normalizeLinuxExecutablePath(rule.sourcePath) !== processPattern
+    ) {
+      throw new Error('Application routing icon source must match the Linux executable path')
     }
   }
   if (!validActions.has(rule.action)) throw new Error('Invalid application routing action')
@@ -281,7 +336,9 @@ export function normalizeAppRoutingConfig(config: AppRoutingConfig): AppRoutingC
             sourcePath:
               appRoutingIdentifierKind(rule) === 'windows-executable'
                 ? normalizeWindowsExecutablePath(rule.sourcePath)
-                : rule.sourcePath
+                : appRoutingIdentifierKind(rule) === 'linux-executable'
+                  ? normalizeLinuxExecutablePath(rule.sourcePath)
+                  : rule.sourcePath
           }
         : {}),
       protocol: rule.protocol,

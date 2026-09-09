@@ -1,5 +1,8 @@
 import { tr } from '../../shared/i18n'
-import { normalizeWindowsExecutablePath } from '../../shared/app-routing'
+import {
+  normalizeLinuxExecutablePath,
+  normalizeWindowsExecutablePath
+} from '../../shared/app-routing'
 import { execFile, spawn } from 'child_process'
 import { app, dialog, nativeImage, nativeTheme, shell } from 'electron'
 import { mkdir, mkdtemp, readFile, realpath, rm, stat, writeFile } from 'fs/promises'
@@ -35,18 +38,20 @@ export function getFilePath(
 }
 
 export async function getApplicationPaths(): Promise<AppRoutingApplicationSelection[] | undefined> {
-  if (process.platform !== 'win32' && process.platform !== 'darwin') return undefined
+  if (!['win32', 'darwin', 'linux'].includes(process.platform)) return undefined
   const isMac = process.platform === 'darwin'
+  const isLinux = process.platform === 'linux'
   const selected = dialog.showOpenDialogSync({
     title: tr('选择应用程序'),
-    filters: isMac
-      ? []
-      : [
-          {
-            name: isMac ? tr('macOS 应用程序') : tr('Windows 应用程序'),
-            extensions: [isMac ? 'app' : 'exe']
-          }
-        ],
+    filters:
+      isMac || isLinux
+        ? []
+        : [
+            {
+              name: isMac ? tr('macOS 应用程序') : tr('Windows 应用程序'),
+              extensions: [isMac ? 'app' : 'exe']
+            }
+          ],
     properties: ['openFile', 'multiSelections']
   })
   if (!selected) return undefined
@@ -55,27 +60,40 @@ export async function getApplicationPaths(): Promise<AppRoutingApplicationSelect
   const applications: AppRoutingApplicationSelection[] = []
   for (const selectedPath of selected) {
     const canonicalPath = await realpath(selectedPath)
-    const executablePath = isMac ? canonicalPath : normalizeWindowsExecutablePath(canonicalPath)
+    const executablePath = isMac
+      ? canonicalPath
+      : isLinux
+        ? normalizeLinuxExecutablePath(canonicalPath)
+        : normalizeWindowsExecutablePath(canonicalPath)
     const fileStat = await stat(executablePath)
     const isMacBundle =
       fileStat.isDirectory() && path.extname(executablePath).toLowerCase() === '.app'
-    const isMacExecutable = fileStat.isFile() && (fileStat.mode & 0o111) !== 0
+    const isUnixExecutable = fileStat.isFile() && (fileStat.mode & 0o111) !== 0
     if (
       isMac
-        ? !isMacBundle && !isMacExecutable
-        : path.extname(executablePath).toLowerCase() !== '.exe' || !fileStat.isFile()
+        ? !isMacBundle && !isUnixExecutable
+        : isLinux
+          ? !isUnixExecutable
+          : path.extname(executablePath).toLowerCase() !== '.exe' || !fileStat.isFile()
     ) {
       throw new Error(
         isMac
           ? 'Select a signed macOS application or executable'
-          : 'Application routing requires an existing .exe file'
+          : isLinux
+            ? 'Application routing requires an executable Linux file'
+            : 'Application routing requires an existing .exe file'
       )
     }
     const executableName = isMac
       ? path.basename(executablePath, path.extname(executablePath))
-      : path.win32.basename(executablePath)
+      : isLinux
+        ? path.basename(executablePath)
+        : path.win32.basename(executablePath)
     let identifier = executableName
-    let identifierKind: AppRoutingIdentifierKind = 'windows-executable'
+    let identifierKind: AppRoutingIdentifierKind = isLinux
+      ? 'linux-executable'
+      : 'windows-executable'
+    if (isLinux) identifier = executablePath
     if (isMac) {
       const execFilePromise = promisify(execFile)
       const { stderr } = await execFilePromise(
@@ -139,7 +157,8 @@ export async function scanAppRoutingDirectory(
 export async function getAppRoutingIcon(executablePath: string): Promise<string | undefined> {
   const validWindowsPath = /^(?:[a-zA-Z]:\\|\\\\)[^\0]+\.exe$/i.test(executablePath)
   const validMacPath = /^\/[^\0]+\.app$/i.test(executablePath)
-  if (!validWindowsPath && !validMacPath) {
+  const validLinuxPath = process.platform === 'linux' && /^\/[^\0\r\n]+$/.test(executablePath)
+  if (!validWindowsPath && !validMacPath && !validLinuxPath) {
     throw new Error('Invalid application path')
   }
   return loadApplicationIcon(executablePath)

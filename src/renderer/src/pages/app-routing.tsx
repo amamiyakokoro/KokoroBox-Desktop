@@ -105,6 +105,8 @@ function statusMessage(message?: string, protectedApplicationCount = 0): string 
 
 const AppRouting: React.FC = () => {
   const isMac = window.api.platform === 'darwin'
+  const isLinux = window.api.platform === 'linux'
+  const isWindows = window.api.platform === 'win32'
   const {
     config,
     status,
@@ -280,7 +282,9 @@ const AppRouting: React.FC = () => {
           <p className="text-sm text-foreground-500">
             {isMac
               ? tr('规则按从上到下的顺序匹配；使用应用签名标识，可在末尾加入 *。')
-              : tr('规则按从上到下的顺序匹配；支持文件名或含 * 的完整路径。')}
+              : isLinux
+                ? tr('每条规则使用一个绝对可执行文件路径；更改后需重新启动目标程序。')
+                : tr('规则按从上到下的顺序匹配；支持文件名或含 * 的完整路径。')}
           </p>
         </div>
 
@@ -288,8 +292,8 @@ const AppRouting: React.FC = () => {
           <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
             <Input
               size="sm"
-              label={isMac ? tr('签名标识') : tr('程序匹配')}
-              placeholder={isMac ? 'com.example.app' : 'example.exe'}
+              label={isMac ? tr('签名标识') : isLinux ? tr('可执行文件路径') : tr('程序匹配')}
+              placeholder={isMac ? 'com.example.app' : isLinux ? '/usr/bin/example' : 'example.exe'}
               value={processPattern}
               isDisabled={!supported || !config || saving}
               onValueChange={setProcessPattern}
@@ -317,7 +321,7 @@ const AppRouting: React.FC = () => {
               >
                 {tr('选择应用程序')}
               </Button>
-              {!isMac && (
+              {isWindows && (
                 <Button
                   className="shrink-0"
                   variant="flat"
@@ -333,14 +337,16 @@ const AppRouting: React.FC = () => {
           <p className="px-1 text-xs text-foreground-500">
             {isMac
               ? tr('例如：com.openai.chat 或 com.openai.chat*')
-              : tr('例如：ChatGPT.exe、ChatGPT*.exe 或 C:\\Program Files\\*\\ChatGPT.exe')}
+              : isLinux
+                ? tr('例如：/usr/bin/firefox 或 /opt/example/example')
+                : tr('例如：ChatGPT.exe、ChatGPT*.exe 或 C:\\Program Files\\*\\ChatGPT.exe')}
           </p>
         </div>
 
         {!supported ? (
           <Card shadow="sm">
             <CardBody className="p-5 text-sm text-foreground-500">
-              {tr('应用分流支持 Windows 10/11 x64 与 macOS 13 或更新版本。')}
+              {tr('应用分流支持 Windows 10/11 x64、macOS 13 或更新版本及 Linux x64/arm64。')}
             </CardBody>
           </Card>
         ) : config?.rules.length === 0 ? (
@@ -350,7 +356,11 @@ const AppRouting: React.FC = () => {
               <p className="text-sm text-foreground-500">
                 {isMac
                   ? tr('输入签名标识，或选择一个或多个 .app，然后设定 Proxy、Direct 或 Block。')
-                  : tr('输入程序匹配，或选择一个或多个 .exe，然后设定 Proxy、Direct 或 Block。')}
+                  : isLinux
+                    ? tr(
+                        '输入绝对可执行文件路径，或选择一个或多个程序，然后设定 Proxy、Direct 或 Block。'
+                      )
+                    : tr('输入程序匹配，或选择一个或多个 .exe，然后设定 Proxy、Direct 或 Block。')}
               </p>
             </CardBody>
           </Card>
