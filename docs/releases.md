@@ -107,7 +107,7 @@ node --import tsx --test scripts/test-release.ts scripts/test-macos-signing.ts s
 
 Windows CI packages are currently **not Authenticode-signed**. SignPath signing must be configured after project approval; this workflow does not claim Foundation sponsorship or signed Windows releases.
 
-Windows elevation tasks launch the installed KokoroBox executable directly with a fixed argument. Configuration links are transferred through a short-lived, validated data file that KokoroBox consumes itself; there is no intermediate launcher executable. The installed executable, shortcuts, auto-start task, elevation task, service, data and IPC names use KokoroBox names. On the first upgraded launch, the app migrates an enabled legacy `sparkle` auto-start task to `KokoroBox` and removes obsolete scheduled tasks and runner files. Legacy URI identifiers and the authenticated service wire-format remain supported for compatibility.
+Windows packages declare `requireAdministrator` in the signed KokoroBox executable manifest. Windows performs elevation before the application starts; KokoroBox does not create a launcher process, stage startup arguments, or run an elevation scheduled task. Installation and upgrades remove obsolete elevation tasks and runner files. The installed executable, shortcuts, auto-start task, service, data and IPC names use KokoroBox names. Legacy URI identifiers and the authenticated service wire-format remain supported for compatibility.
 
 Both Intel and Apple Silicon macOS releases require **Developer ID-signed, Apple-notarized PKGs with stapled tickets**. There is no unsigned fallback in either Stable or Rolling releases. The upstream PKG installation scripts remain enabled for proxy/service operation.
 

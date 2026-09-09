@@ -12,12 +12,9 @@ import { platform } from '@renderer/utils/init'
 import { IoMdCloudDownload } from 'react-icons/io'
 import PubSub from 'pubsub-js'
 import {
-  manualGrantCorePermition,
   mihomoUpgrade,
   restartCore,
-  revokeCorePermission,
   findSystemMihomo,
-  deleteElevateTask,
   installService,
   uninstallService,
   startService,
@@ -145,24 +142,7 @@ const Mihomo: React.FC = () => {
   return (
     <BasePage title={tr('内核设置')} contentClassName="no-scrollbar">
       {!systemCoreOnlyBuild && showPermissionModal && (
-        <PermissionModal
-          onChange={setShowPermissionModal}
-          onRevoke={async () => {
-            if (platform === 'win32') {
-              await deleteElevateTask()
-              notify(tr('提权配置已取消'))
-            } else {
-              await revokeCorePermission()
-              notify(tr('内核权限已撤销'))
-            }
-            await restartCore()
-          }}
-          onGrant={async () => {
-            await manualGrantCorePermition()
-            notify(platform === 'win32' ? tr('提权配置成功') : tr('内核授权成功'))
-            await restartCore()
-          }}
-        />
+        <PermissionModal onChange={setShowPermissionModal} />
       )}
       {showServiceModal && (
         <ServiceModal

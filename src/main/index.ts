@@ -18,11 +18,7 @@ import { showFloatingWindow } from './resolve/floatingWindow'
 import { getAppConfigSync } from './config/app'
 import { createMainWindowStateManager } from './resolve/windowState'
 import { isHttpUrl } from './utils/url'
-import {
-  applyWindowsGpuWorkaround,
-  ensureWindowsElevatedStartup,
-  useLinuxCustomRelaunch
-} from './sys/startup'
+import { applyWindowsGpuWorkaround, useLinuxCustomRelaunch } from './sys/startup'
 import { handleDeepLink } from './resolve/deepLink'
 import { createDeepLinkInbox, takeInitialDeepLinks } from './resolve/deepLinkInbox'
 import { initAppQuitLifecycle } from './resolve/appLifecycle'
@@ -40,11 +36,6 @@ import { isKokoroURI } from './kokoro/oauth'
 import { initializeAppRouting } from './app-routing/manager'
 import { installEarlyTlsDisconnectRecovery } from './utils/earlyTlsDisconnect'
 import { migrateUserDataDirectory } from './utils/userDataMigration'
-import {
-  takeElevatedDeepLinks,
-  WINDOWS_ELEVATED_DEEP_LINKS_FILENAME
-} from './sys/elevatedStartupArgs'
-import { taskDir } from './utils/dirs'
 
 export { setNotQuitDialog } from './resolve/appLifecycle'
 
@@ -214,12 +205,7 @@ if (windowsKokoroCallback) {
 }
 
 function requestPrimaryInstance(): void {
-  const initialDeepLinks = [
-    ...takeInitialDeepLinks(process.argv),
-    ...(process.platform === 'win32'
-      ? takeElevatedDeepLinks(join(taskDir(), WINDOWS_ELEVATED_DEEP_LINKS_FILENAME), process.argv)
-      : [])
-  ]
+  const initialDeepLinks = takeInitialDeepLinks(process.argv)
   const gotTheLock = app.requestSingleInstanceLock({ deepLinks: initialDeepLinks })
   if (!gotTheLock) {
     app.quit()
@@ -262,7 +248,6 @@ function startPrimaryInstance(initialDeepLinks: string[]): void {
     })
   }
 
-  ensureWindowsElevatedStartup(syncConfig.corePermissionMode, exitApp)
   useLinuxCustomRelaunch()
   const initPromise = init()
 

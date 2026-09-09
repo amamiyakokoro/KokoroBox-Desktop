@@ -3,7 +3,7 @@ import { execFile } from 'child_process'
 import { promisify } from 'util'
 import { mihomoCorePath } from '../utils/dirs'
 import { checkCorePermissionPathSync, hasSetuidPermission } from './permission-check'
-import { createElevateTask } from '../sys/misc'
+import { isRunningAsAdmin } from '@uruhalushia/sparkle-native'
 
 type CoreName = 'mihomo' | 'mihomo-alpha'
 
@@ -30,14 +30,7 @@ function isUserCancelledError(error: unknown): boolean {
 
 export async function manualGrantCorePermition(cores?: CoreName[]): Promise<void> {
   if (process.platform === 'win32') {
-    try {
-      await createElevateTask()
-    } catch (error) {
-      if (isUserCancelledError(error)) {
-        throw new UserCancelledError()
-      }
-      throw error
-    }
+    if (!isRunningAsAdmin()) throw new Error(tr('首次启动请以管理员权限运行'))
     return
   }
 

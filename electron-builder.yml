@@ -37,6 +37,7 @@ protocols:
     - 'kokoro'
 win:
   executableName: KokoroBox
+  requestedExecutionLevel: requireAdministrator
   target:
     - nsis
     - 7z

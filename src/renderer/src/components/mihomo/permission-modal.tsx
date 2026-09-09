@@ -14,12 +14,10 @@ import { notify } from '@renderer/utils/notification'
 
 interface Props {
   onChange: (open: boolean) => void
-  onRevoke: () => Promise<void>
-  onGrant: () => Promise<void>
 }
 
 const PermissionModal: React.FC<Props> = (props) => {
-  const { onChange, onRevoke, onGrant } = props
+  const { onChange } = props
   useAppConfig()
   const [loading, setLoading] = useState<{ mihomo?: boolean; 'mihomo-alpha'?: boolean }>({})
   const [hasPermission, setHasPermission] = useState<
@@ -39,28 +37,6 @@ const PermissionModal: React.FC<Props> = (props) => {
   useEffect(() => {
     checkPermissions()
   }, [])
-
-  const handleAction = async (action: () => Promise<void>): Promise<void> => {
-    setLoading({ mihomo: true, 'mihomo-alpha': true })
-    try {
-      await action()
-      onChange(false)
-    } catch (e) {
-      // 忽略用户取消操作的错误
-      const errorMsg = String(e)
-      if (
-        /(?:用户|用戶|使用者)取消操作/.test(errorMsg) ||
-        errorMsg.includes('UserCancelledError')
-      ) {
-        // 静默失败，只刷新状态
-        await checkPermissions()
-        return
-      }
-      notify(e, { variant: 'danger' })
-    } finally {
-      setLoading({})
-    }
-  }
 
   const handleCoreAction = async (
     coreName: 'mihomo' | 'mihomo-alpha',
@@ -129,7 +105,7 @@ const PermissionModal: React.FC<Props> = (props) => {
                       <CardBody className="py-4">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            <span className="text-sm font-medium">{tr('提权配置状态')}</span>
+                            <span className="text-sm font-medium">{tr('管理员权限状态')}</span>
                           </div>
                           <Chip
                             color={
@@ -146,8 +122,8 @@ const PermissionModal: React.FC<Props> = (props) => {
                               ? tr('检查中...')
                               : typeof hasPermission === 'boolean'
                                 ? hasPermission
-                                  ? tr('已配置')
-                                  : tr('未配置')
+                                  ? tr('已授权')
+                                  : tr('未授权')
                                 : tr('未知')}
                           </Chip>
                         </div>
@@ -159,15 +135,11 @@ const PermissionModal: React.FC<Props> = (props) => {
                     <div className="text-xs text-default-500 space-y-2">
                       <div className="flex items-start gap-2">
                         <span className="mt-0.5">•</span>
-                        <span>{tr('提权配置会让直接运行模式具备必要的系统权限')}</span>
+                        <span>{tr('Windows 会在启动 KokoroBox 前显示标准 UAC 提示')}</span>
                       </div>
                       <div className="flex items-start gap-2">
                         <span className="mt-0.5">•</span>
-                        <span>{tr('可以让内核以管理员权限运行，无需每次 UAC 提示')}</span>
-                      </div>
-                      <div className="flex items-start gap-2">
-                        <span className="mt-0.5">•</span>
-                        <span>{tr('取消注册后可能需要手动提权才能使用某些功能')}</span>
+                        <span>{tr('应用程序不再使用计划任务或额外启动程序提升权限')}</span>
                       </div>
                     </div>
                   </>
@@ -286,32 +258,6 @@ const PermissionModal: React.FC<Props> = (props) => {
               >
                 {tr('关闭')}
               </Button>
-              {isWindows &&
-                (() => {
-                  const hasAnyPermission =
-                    typeof hasPermission === 'boolean' ? hasPermission : false
-                  const isLoading = Object.values(loading).some((v) => v)
-
-                  return hasAnyPermission ? (
-                    <Button
-                      size="sm"
-                      color="warning"
-                      onPress={() => handleAction(onRevoke)}
-                      isLoading={isLoading}
-                    >
-                      {tr('取消提权')}
-                    </Button>
-                  ) : (
-                    <Button
-                      size="sm"
-                      color="primary"
-                      onPress={() => handleAction(onGrant)}
-                      isLoading={isLoading}
-                    >
-                      {tr('配置提权')}
-                    </Button>
-                  )
-                })()}
             </Modal.Footer>
           </Modal.Dialog>
         </Modal.Container>

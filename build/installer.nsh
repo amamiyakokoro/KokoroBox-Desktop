@@ -6,6 +6,7 @@
 !define KOKOROBOX_SERVICE_NAME "KokoroBoxService"
 !define LEGACY_SERVICE_NAME "SparkleService"
 !define KOKOROBOX_ELEVATED_TASK_NAME "KokoroBox Elevated"
+!define LEGACY_ELEVATED_TASK_NAME "sparkle-run"
 
 !macro customHeader
   Var kokoroboxServiceWasRunning
@@ -141,19 +142,18 @@
   ${EndIf}
 !macroend
 
-!macro RemoveLegacyElevationRunner
-  StrCpy $R0 "$INSTDIR\resources\files\kokorobox-run.exe"
-  ${If} ${FileExists} "$R0"
-    DetailPrint "Removing obsolete KokoroBox elevation runner and scheduled task"
+!macro RemoveLegacyElevationArtifacts
+  DetailPrint "Removing obsolete KokoroBox elevation tasks and launcher files"
     nsExec::ExecToLog '"$SYSDIR\schtasks.exe" /Delete /TN "${KOKOROBOX_ELEVATED_TASK_NAME}" /F'
     Pop $R2
-    Delete /REBOOTOK "$R0"
+    nsExec::ExecToLog '"$SYSDIR\schtasks.exe" /Delete /TN "${LEGACY_ELEVATED_TASK_NAME}" /F'
+    Pop $R2
+    Delete /REBOOTOK "$INSTDIR\resources\files\kokorobox-run.exe"
     Delete /REBOOTOK "$APPDATA\KokoroBox\tasks\kokorobox-runner-params.json"
-  ${EndIf}
-!macroend
+    Delete /REBOOTOK "$APPDATA\KokoroBox\tasks\kokorobox-elevated-deep-links.json"
+    Delete /REBOOTOK "$APPDATA\KokoroBox\tasks\kokorobox-elevated-task.json"
+    Delete /REBOOTOK "$APPDATA\KokoroBox\tasks\kokorobox-elevated.xml"
 
-!macro RemoveElevationTask
-  DetailPrint "Removing KokoroBox elevation scheduled task"
   nsExec::ExecToLog '"$SYSDIR\schtasks.exe" /Delete /TN "${KOKOROBOX_ELEVATED_TASK_NAME}" /F'
   Pop $R2
 !macroend
@@ -166,7 +166,7 @@
 !macroend
 
 !macro customInstall
-  !insertmacro RemoveLegacyElevationRunner
+  !insertmacro RemoveLegacyElevationArtifacts
 
   ${ifNot} ${isUpdated}
     CreateShortcut "$DESKTOP\${PRODUCT_FILENAME}.lnk" "$INSTDIR\${PRODUCT_FILENAME}.exe"
@@ -188,7 +188,7 @@
 !macroend
 
 !macro customUnInstall
-  !insertmacro RemoveElevationTask
+  !insertmacro RemoveLegacyElevationArtifacts
   !insertmacro RemoveAppRoutingFirewall
 !macroend
 
