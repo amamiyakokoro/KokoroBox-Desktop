@@ -5,6 +5,7 @@
 !define KOKOROBOX_MIN_TEMP_SPACE_MB 1024
 !define KOKOROBOX_SERVICE_NAME "KokoroBoxService"
 !define LEGACY_SERVICE_NAME "SparkleService"
+!define KOKOROBOX_ELEVATED_TASK_NAME "KokoroBox Elevated"
 
 !macro customHeader
   Var kokoroboxServiceWasRunning
@@ -140,6 +141,23 @@
   ${EndIf}
 !macroend
 
+!macro RemoveLegacyElevationRunner
+  StrCpy $R0 "$INSTDIR\resources\files\kokorobox-run.exe"
+  ${If} ${FileExists} "$R0"
+    DetailPrint "Removing obsolete KokoroBox elevation runner and scheduled task"
+    nsExec::ExecToLog '"$SYSDIR\schtasks.exe" /Delete /TN "${KOKOROBOX_ELEVATED_TASK_NAME}" /F'
+    Pop $R2
+    Delete /REBOOTOK "$R0"
+    Delete /REBOOTOK "$APPDATA\KokoroBox\tasks\kokorobox-runner-params.json"
+  ${EndIf}
+!macroend
+
+!macro RemoveElevationTask
+  DetailPrint "Removing KokoroBox elevation scheduled task"
+  nsExec::ExecToLog '"$SYSDIR\schtasks.exe" /Delete /TN "${KOKOROBOX_ELEVATED_TASK_NAME}" /F'
+  Pop $R2
+!macroend
+
 !macro customInit
   !insertmacro EnsureTempSpace
   StrCpy $kokoroboxServiceWasRunning "false"
@@ -148,6 +166,8 @@
 !macroend
 
 !macro customInstall
+  !insertmacro RemoveLegacyElevationRunner
+
   ${ifNot} ${isUpdated}
     CreateShortcut "$DESKTOP\${PRODUCT_FILENAME}.lnk" "$INSTDIR\${PRODUCT_FILENAME}.exe"
   ${endIf}
@@ -168,6 +188,7 @@
 !macroend
 
 !macro customUnInstall
+  !insertmacro RemoveElevationTask
   !insertmacro RemoveAppRoutingFirewall
 !macroend
 

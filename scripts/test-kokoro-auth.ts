@@ -917,6 +917,13 @@ test('Windows packaging uses KokoroBox names and launches the signed app directl
   assert.equal(config.nsis.shortcutName, 'KokoroBox')
   assert.ok(config.extraResources[0].filter.includes('!files/kokorobox-run.exe'))
 
+  const installer = readFileSync('build/installer.nsh', 'utf8')
+  assert.match(installer, /RemoveLegacyElevationRunner/)
+  assert.match(installer, /resources\\files\\kokorobox-run\.exe/)
+  assert.match(installer, /Delete \/REBOOTOK "\$R0"/)
+  assert.match(installer, /kokorobox-runner-params\.json/)
+  assert.match(installer, /RemoveElevationTask/)
+
   const prepare = readFileSync('scripts/prepare.ts', 'utf8')
   assert.match(prepare, /removeLegacyRunner/)
   assert.doesNotMatch(prepare, /execFileSync\(\s*['"]go['"]/)
