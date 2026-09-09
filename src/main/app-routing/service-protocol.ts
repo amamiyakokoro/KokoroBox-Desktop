@@ -1,4 +1,5 @@
 import type { ServiceProcessRouterRules, ServiceProcessRouterStatus } from '../service/api'
+import { isAppRoutingRuleEffectivelyEnabled } from '../../shared/app-routing'
 
 const serviceStates = new Set(['stopped', 'starting', 'running', 'blocked', 'error'])
 
@@ -18,7 +19,7 @@ export function buildServiceProcessRouterRules(
       executable_name: rule.processPattern,
       protocol: rule.protocol,
       action: rule.action,
-      enabled: rule.enabled,
+      enabled: isAppRoutingRuleEffectivelyEnabled(config, rule),
       priority: rule.priority
     }))
   }

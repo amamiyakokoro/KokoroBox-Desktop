@@ -21,6 +21,7 @@ import {
 } from '../utils/dirs'
 import { existsSync, readFileSync, rmSync, writeFileSync } from 'fs'
 import { execWithElevation } from '../utils/elevation'
+import { scanWindowsExecutableDirectory } from '../app-routing/directory'
 
 export function getFilePath(
   ext: string[],
@@ -100,6 +101,40 @@ export async function getApplicationPaths(): Promise<AppRoutingApplicationSelect
     })
   }
   return applications
+}
+
+export async function scanAppRoutingDirectory(
+  requestedDirectory?: string
+): Promise<AppRoutingDirectorySelection | undefined> {
+  if (process.platform !== 'win32') return undefined
+  const selectedDirectory =
+    requestedDirectory ??
+    dialog.showOpenDialogSync({
+      title: tr('扫描应用程序文件夹'),
+      properties: ['openDirectory']
+    })?.[0]
+  if (!selectedDirectory) return undefined
+
+  const directoryPath = normalizeWindowsExecutablePath(await realpath(selectedDirectory))
+  if (!(await stat(directoryPath)).isDirectory()) {
+    throw new Error('Application routing scan requires an existing directory')
+  }
+  const { executablePaths, truncated, unreadableDirectoryCount } =
+    await scanWindowsExecutableDirectory(directoryPath)
+  return {
+    directoryPath,
+    name: path.win32.basename(directoryPath) || directoryPath,
+    applications: executablePaths.map((executablePath) => ({
+      executablePath,
+      executableName: path.win32.basename(executablePath),
+      // Folder scans deliberately use the absolute path so identically named
+      // executables in different subfolders remain independently editable.
+      identifier: executablePath,
+      identifierKind: 'windows-executable'
+    })),
+    truncated,
+    unreadableDirectoryCount
+  }
 }
 
 export async function getAppRoutingIcon(executablePath: string): Promise<string | undefined> {

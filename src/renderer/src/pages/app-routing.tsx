@@ -6,7 +6,14 @@ import { useAppRouting } from '@renderer/hooks/use-app-routing'
 import { openAppRoutingSystemSettings } from '@renderer/utils/ipc'
 import { notify } from '@renderer/utils/notification'
 import { Button, Card, CardBody, Chip, Divider, Input, Switch } from '@heroui/react'
-import { MdAdd, MdOpenInNew, MdRefresh, MdTune } from 'react-icons/md'
+import {
+  MdAdd,
+  MdFolderOpen,
+  MdKeyboardArrowDown,
+  MdOpenInNew,
+  MdRefresh,
+  MdTune
+} from 'react-icons/md'
 import { useState } from 'react'
 
 function statusColor(
@@ -104,12 +111,15 @@ const AppRouting: React.FC = () => {
     save,
     refresh,
     addApplications,
+    scanDirectory,
     addPattern,
     updateRule,
+    updateGroup,
     moveRule,
     deleteRule
   } = useAppRouting()
   const [processPattern, setProcessPattern] = useState('')
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(() => new Set())
   const [openingSettings, setOpeningSettings] = useState(false)
   const openApprovalSettings = async (): Promise<void> => {
     if (openingSettings) return
@@ -130,6 +140,15 @@ const AppRouting: React.FC = () => {
   const submitPattern = async (): Promise<void> => {
     if (await addPattern(processPattern)) setProcessPattern('')
   }
+  const toggleGroup = (groupId: string): void => {
+    setCollapsedGroups((current) => {
+      const next = new Set(current)
+      if (next.has(groupId)) next.delete(groupId)
+      else next.add(groupId)
+      return next
+    })
+  }
+  const ungroupedRules = config?.rules.filter((rule) => !rule.groupId) ?? []
 
   return (
     <BasePage
@@ -263,7 +282,7 @@ const AppRouting: React.FC = () => {
         </div>
 
         <div className="flex flex-col gap-1">
-          <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto_auto_auto] sm:items-center">
+          <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
             <Input
               size="sm"
               label={isMac ? tr('签名标识') : tr('程序匹配')}
@@ -284,16 +303,29 @@ const AppRouting: React.FC = () => {
             >
               {tr('新增匹配规则')}
             </Button>
-            <span className="text-center text-sm text-foreground-500">{tr('或')}</span>
-            <Button
-              className="w-full shrink-0 sm:w-auto"
-              variant="flat"
-              startContent={<MdAdd className="text-lg" />}
-              isDisabled={!supported || !config || saving}
-              onPress={() => void addApplications()}
-            >
-              {tr('选择应用程序')}
-            </Button>
+            <div className="flex flex-wrap items-center justify-end gap-2 sm:col-span-2">
+              <span className="text-sm text-foreground-500">{tr('或')}</span>
+              <Button
+                className="shrink-0"
+                variant="flat"
+                startContent={<MdAdd className="text-lg" />}
+                isDisabled={!supported || !config || saving}
+                onPress={() => void addApplications()}
+              >
+                {tr('选择应用程序')}
+              </Button>
+              {!isMac && (
+                <Button
+                  className="shrink-0"
+                  variant="flat"
+                  startContent={<MdFolderOpen className="text-lg" />}
+                  isDisabled={!supported || !config || saving}
+                  onPress={() => void scanDirectory()}
+                >
+                  {tr('扫描文件夹')}
+                </Button>
+              )}
+            </div>
           </div>
           <p className="px-1 text-xs text-foreground-500">
             {isMac
@@ -320,20 +352,94 @@ const AppRouting: React.FC = () => {
             </CardBody>
           </Card>
         ) : (
-          <div className="flex flex-col gap-3">
-            {config?.rules.map((rule, index) => (
+          <div className="flex flex-col gap-4">
+            {(config?.groups?.length ?? 0) > 0 && ungroupedRules.length > 0 && (
+              <div className="px-1 text-xs font-medium uppercase tracking-wide text-foreground-500">
+                {tr('单独规则')}
+              </div>
+            )}
+            {ungroupedRules.map((rule, index) => (
               <AppRoutingRuleRow
                 key={rule.id}
                 rule={rule}
                 index={index}
-                count={config.rules.length}
+                count={ungroupedRules.length}
                 icon={icons[rule.id]}
                 disabled={saving}
-                onChange={(patch) => updateRule(index, patch)}
-                onMove={(offset) => moveRule(index, offset)}
+                onChange={(patch) => updateRule(rule.id, patch)}
+                onMove={(offset) => moveRule(rule.id, offset)}
                 onDelete={() => deleteRule(rule.id)}
               />
             ))}
+            {config?.groups?.map((group) => {
+              const rules = config.rules.filter((rule) => rule.groupId === group.id)
+              const isCollapsed = collapsedGroups.has(group.id)
+              return (
+                <section key={group.id} className="flex flex-col gap-2">
+                  <div className="flex min-w-0 items-center gap-2 rounded-xl border border-default-200 bg-default-50 px-3 py-2.5 dark:bg-default-100/40">
+                    <button
+                      type="button"
+                      className="flex min-w-0 flex-1 items-center gap-2 text-left"
+                      aria-expanded={!isCollapsed}
+                      onClick={() => toggleGroup(group.id)}
+                    >
+                      <MdKeyboardArrowDown
+                        className={`shrink-0 text-xl text-foreground-500 transition-transform duration-150 ${isCollapsed ? '-rotate-90' : ''}`}
+                      />
+                      <MdFolderOpen className="shrink-0 text-xl text-primary" />
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-sm font-semibold">{group.name}</span>
+                        <span
+                          className="block truncate text-xs text-foreground-500"
+                          title={group.sourceDirectory}
+                        >
+                          {group.sourceDirectory}
+                        </span>
+                      </span>
+                      <Chip size="sm" variant="flat" className="shrink-0">
+                        {tr('{0} 个应用程序', [rules.length])}
+                      </Chip>
+                    </button>
+                    <Button
+                      isIconOnly
+                      size="sm"
+                      variant="light"
+                      aria-label={tr('重新扫描文件夹')}
+                      isDisabled={saving}
+                      onPress={() => void scanDirectory(group.id)}
+                    >
+                      <MdRefresh className="text-lg" />
+                    </Button>
+                    <Switch
+                      size="sm"
+                      aria-label={tr('启用规则组')}
+                      isSelected={group.enabled}
+                      isDisabled={saving}
+                      onValueChange={(enabled) => updateGroup(group.id, { enabled })}
+                    />
+                  </div>
+                  {!isCollapsed && (
+                    <div
+                      className={`ml-4 flex flex-col gap-3 border-l-2 pl-3 transition-opacity duration-150 ${group.enabled ? 'border-primary-200' : 'border-default-200 opacity-70'}`}
+                    >
+                      {rules.map((rule, index) => (
+                        <AppRoutingRuleRow
+                          key={rule.id}
+                          rule={rule}
+                          index={index}
+                          count={rules.length}
+                          icon={icons[rule.id]}
+                          disabled={saving}
+                          onChange={(patch) => updateRule(rule.id, patch)}
+                          onMove={(offset) => moveRule(rule.id, offset)}
+                          onDelete={() => deleteRule(rule.id)}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </section>
+              )
+            })}
           </div>
         )}
 

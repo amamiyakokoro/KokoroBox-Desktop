@@ -19,6 +19,18 @@ export const messages: Readonly<Record<string, string>> = {
   'Windows 应用程序': 'Windows applications',
   'macOS 应用程序': 'macOS applications',
   选择应用程序: 'Select applications',
+  扫描应用程序文件夹: 'Scan application folder',
+  扫描文件夹: 'Scan folder',
+  重新扫描文件夹: 'Rescan folder',
+  启用规则组: 'Enable rule group',
+  单独规则: 'Individual rules',
+  '{0} 个应用程序': '{0} applications',
+  '应用程序规则组最多支持 64 个': 'Application routing supports at most 64 groups',
+  '所选文件夹中没有可添加的 .exe': 'The selected folder contains no .exe files to add',
+  '所选文件夹中没有新的可添加 .exe': 'The selected folder contains no new .exe files to add',
+  '已从 {0} 添加 {1} 个应用程序': 'Added {1} applications from {0}',
+  '部分项目因重复、权限或规则数量限制未添加。':
+    'Some items were not added because of duplicates, permissions, or rule limits.',
   'Windows 应用程序分流': 'Windows application routing',
   '无需系统代理或 TUN，将指定应用程序交给本机 Mihomo 处理。':
     'Route selected applications through local Mihomo without system proxy or TUN.',
