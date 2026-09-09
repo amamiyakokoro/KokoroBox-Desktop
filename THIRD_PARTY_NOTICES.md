@@ -28,3 +28,19 @@ LGPL-3.0-only licensing option. The official release archive and corresponding s
 available from [WinDivert releases](https://github.com/basil00/WinDivert/releases/tag/v2.2.2).
 Its complete license is packaged next to the sidecar as `LICENSE.WinDivert`; recipients may
 replace the dynamically linked library in accordance with that license.
+
+## TrafficMonitor
+
+The Windows taskbar traffic display packages the unmodified official TrafficMonitor V1.86 Lite
+release from [zhongyang219/TrafficMonitor](https://github.com/zhongyang219/TrafficMonitor).
+KokoroBox verifies the upstream release archive against the SHA-256 digest published by GitHub
+before packaging it. TrafficMonitor is distributed under the Anti 996 License Version 1.0
+(Draft); the complete license is packaged beside `TrafficMonitor.exe` as
+`LICENSE.TrafficMonitor`.
+
+KokoroBox does not package the binary-only `Sparkle.dll` previously obtained from
+`xishang0128/sparkle-run`. Instead, `KokoroBoxTrafficPlugin.dll` is built from source in this
+repository. It uses TrafficMonitor's MIT-licensed plugin interface and reads upload/download
+rates directly from Mihomo's `/traffic` endpoint over KokoroBox's local named pipe. The plugin
+SDK license is packaged as `LICENSE.TrafficMonitorPluginSDK`. The KokoroBox plugin itself is
+covered by this repository's GNU GPLv3 license.
