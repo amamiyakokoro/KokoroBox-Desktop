@@ -42,6 +42,12 @@ function statusMessage(message?: string, protectedApplicationCount = 0): string 
   if (message === 'Windows 封包拦截组件缺失或已损坏') {
     return tr('Windows 封包拦截组件缺失或已损坏')
   }
+  if (
+    message?.includes('application-routing firewall') ||
+    message?.includes('Windows 应用分流防火墙')
+  ) {
+    return tr('Windows 应用分流防火墙规则缺失或无法生效，router 未启动')
+  }
   if (message === '请先启用本机 Mihomo SOCKS 或 mixed 监听端口') {
     return tr('请先启用本机 Mihomo SOCKS 或 mixed 监听端口')
   }

@@ -35,6 +35,7 @@ export function validateServiceProcessRouterStatus(
     !Number.isSafeInteger(value.generation) ||
     value.generation < 0 ||
     typeof value.mihomo_available !== 'boolean' ||
+    typeof value.firewall_ready !== 'boolean' ||
     !Number.isSafeInteger(value.protected_application_count) ||
     value.protected_application_count < 0
   ) {
@@ -42,6 +43,9 @@ export function validateServiceProcessRouterStatus(
   }
   if (value.proxy_port !== undefined && value.proxy_port !== 7891) {
     throw new Error('KokoroBox Service returned an unexpected proxy port')
+  }
+  if (['running', 'blocked'].includes(value.state) && !value.firewall_ready) {
+    throw new Error('KokoroBox Service reported application routing without firewall protection')
   }
   return value
 }

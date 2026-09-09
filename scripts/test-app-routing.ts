@@ -399,12 +399,14 @@ test('generates and validates the authenticated service protocol', () => {
     state: 'blocked' as const,
     generation: 3,
     mihomo_available: false,
+    firewall_ready: true,
     protected_application_count: 1,
     proxy_port: 7891
   }
   assert.equal(validateServiceProcessRouterStatus(status), status)
   assert.throws(() => validateServiceProcessRouterStatus({ ...status, version: 2 as 1 }))
   assert.throws(() => validateServiceProcessRouterStatus({ ...status, proxy_port: 1080 }))
+  assert.throws(() => validateServiceProcessRouterStatus({ ...status, firewall_ready: false }))
 })
 
 test('normalizes persisted order into unique priorities', () => {
@@ -632,6 +634,23 @@ test('native build is pinned to the controlled KokoroBox ProxyBridge fork', () =
   assert.match(router, /127\.\*\.\*\.\*.*fe80::\/10/s)
   assert.match(build, /manifest\.json/)
   assert.match(build, /process-router-sbom\.cdx\.json/)
+})
+
+test('Windows application routing requires the privileged firewall lifecycle', () => {
+  const manager = readFileSync('src/main/app-routing/manager.ts', 'utf8')
+  const firewall = readFileSync('src/main/app-routing/firewall.ts', 'utf8')
+  const serviceProtocol = readFileSync('src/main/app-routing/service-protocol.ts', 'utf8')
+  const installer = readFileSync('build/installer.nsh', 'utf8')
+
+  assert.match(firewall, /\['process-router', 'firewall', command\]/)
+  assert.match(manager, /await ensureDirectFirewall\(true\)[\s\S]*await startChild\(/)
+  assert.match(manager, /await stopDirectRouter\(\)/)
+  assert.match(manager, /firewallReady: serviceStatus\.firewall_ready/)
+  assert.match(serviceProtocol, /typeof value\.firewall_ready !== 'boolean'/)
+  assert.match(serviceProtocol, /application routing without firewall protection/)
+  assert.match(installer, /process-router firewall ensure/)
+  assert.match(installer, /process-router firewall remove/)
+  assert.match(installer, /!macro customUnInstall/)
 })
 
 test('macOS approval guidance returns promptly and remains visible across app restarts', () => {

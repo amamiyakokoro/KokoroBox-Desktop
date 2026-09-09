@@ -36,6 +36,15 @@ active rules, and the authoritative health state. A headless, pinned build of Pr
 as its controlled sidecar and uses WinDivert for packet interception. No ProxyBridge GUI,
 updater, external proxy selection, or profile import/export is included.
 
+Before the router starts, the privileged service creates or repairs the fixed Windows Firewall
+rule group `KokoroBox Application Routing`. The two inbound allow rules are scoped to the exact
+packaged `kokorobox-process-router.exe`: TCP local port 34010 for the TCP relay and UDP local port
+34011 for the UDP and proxied-DNS relay. They apply to every firewall profile and intentionally do
+not constrain the remote address because a packet reinjected by WinDivert retains the original
+remote peer as its source. The service verifies the complete rule shape before reporting the
+router healthy, repairs drift during reconciliation, and refuses to start the router if the rules
+cannot be created or verified.
+
 While application routing is enabled, KokoroBox injects a dedicated SOCKS listener at
 `127.0.0.1:7891` into its generated Mihomo runtime profile. It is removed when the feature is
 disabled, binds only to loopback, and is independent of user-controlled mixed-port settings.
@@ -82,7 +91,11 @@ KokoroBox startup remains available as the non-service backend.
 
 The service uses a short client lease. Authenticated status polling renews it while KokoroBox is
 running. A normal exit stops the router immediately; if the UI crashes, lease expiry stops the
-router and releases WinDivert while retaining the canonical rules for the next application start.
+router, removes the firewall rule group, and releases WinDivert while retaining the canonical
+rules for the next application start. Disabling or cleaning up application routing also removes
+the rules. The NSIS installer creates them during install and upgrade and removes them on
+uninstall. A portable installation invokes the same service helper with elevation when application
+routing is first enabled.
 
 ## Failure behavior
 
@@ -93,10 +106,11 @@ restored. Explicit Direct and Block rules retain their configured action. The pi
 ProxyBridge fork treats a missing or incompatible proxy configuration as Block as an additional
 defense-in-depth measure.
 
-An unexpected sidecar or WinDivert failure is reported as an error and the service attempts to
-restart it. There can still be a brief interception gap while a crashed sidecar or service
-restarts; preventing leakage across a service crash requires a separate persistent WFP or
-Windows Firewall kill switch and is outside this MVP.
+An unexpected sidecar, WinDivert, or firewall-health failure is reported as an error. The router
+is not left running when its required firewall rules cannot be verified. There can still be a
+brief interception gap while a crashed sidecar or service restarts; preventing leakage across a
+service crash requires a separate persistent WFP or Windows Firewall kill switch and is outside
+this MVP.
 
 ## Reproducible native build
 

@@ -150,7 +150,15 @@ function signServiceRequest(
     const timestamp = Date.now().toString()
     const nonce = crypto.randomBytes(16).toString('base64url')
     const keyId = keyManager.getKeyID()
-    const canonical = buildCanonicalRequest(instance, config, timestamp, nonce, keyId, bodyHash, version)
+    const canonical = buildCanonicalRequest(
+      instance,
+      config,
+      timestamp,
+      nonce,
+      keyId,
+      bodyHash,
+      version
+    )
     const signature = keyManager.signData(canonical)
 
     config.headers['X-Auth-Version'] = version
@@ -432,6 +440,7 @@ export interface ServiceProcessRouterStatus {
   state: 'stopped' | 'starting' | 'running' | 'blocked' | 'error'
   generation: number
   mihomo_available: boolean
+  firewall_ready: boolean
   protected_application_count: number
   proxy_port?: number
   router_pid?: number

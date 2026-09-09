@@ -63,6 +63,8 @@ export const messages: Readonly<Record<string, string>> = {
   添加或启用规则以启动应用分流: '新增或啟用規則以啟動應用程式分流',
   'Windows 封包拦截组件未安装': 'Windows 封包攔截元件未安裝',
   'Windows 封包拦截组件缺失或已损坏': 'Windows 封包攔截元件遺失或已損壞',
+  'Windows 应用分流防火墙规则缺失或无法生效，router 未启动':
+    'Windows 程式分流防火牆規則遺失或無法生效，因此 router 未啟動',
   '请先启用本机 Mihomo SOCKS 或 mixed 监听端口': '請先啟用本機 Mihomo SOCKS 或 mixed 監聽連接埠',
   'Mihomo 不可用；匹配 Proxy 的流量已阻断（不会直连）':
     'Mihomo 不可用；符合 Proxy 規則的流量已阻斷（不會直連）',

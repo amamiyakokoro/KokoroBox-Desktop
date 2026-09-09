@@ -109,6 +109,37 @@
   ${EndIf}
 !macroend
 
+!macro EnsureAppRoutingFirewall
+  StrCpy $R0 "$INSTDIR\resources\files\process-router\kokorobox-process-router.exe"
+  ${If} ${FileExists} "$R0"
+    StrCpy $R1 "$INSTDIR\resources\files\kokorobox-service.exe"
+    ${IfNot} ${FileExists} "$R1"
+      MessageBox MB_ICONSTOP "KokoroBox application-routing firewall setup is unavailable because the privileged service helper is missing."
+      Abort
+    ${EndIf}
+    DetailPrint "Creating KokoroBox application-routing firewall rules"
+    nsExec::ExecToStack '"$R1" process-router firewall ensure'
+    Pop $R2
+    Pop $R3
+    ${If} $R2 != 0
+      MessageBox MB_ICONSTOP "KokoroBox could not create or verify the application-routing firewall rules. Installation cannot continue safely.$\r$\n$\r$\n$R3"
+      Abort
+    ${EndIf}
+  ${EndIf}
+!macroend
+
+!macro RemoveAppRoutingFirewall
+  StrCpy $R1 "$INSTDIR\resources\files\kokorobox-service.exe"
+  ${If} ${FileExists} "$R1"
+    DetailPrint "Removing KokoroBox application-routing firewall rules"
+    nsExec::ExecToLog '"$R1" process-router firewall remove'
+    Pop $R2
+    ${If} $R2 != 0
+      DetailPrint "Application-routing firewall cleanup exited with code $R2"
+    ${EndIf}
+  ${EndIf}
+!macroend
+
 !macro customInit
   !insertmacro EnsureTempSpace
   StrCpy $kokoroboxServiceWasRunning "false"
@@ -121,6 +152,8 @@
     CreateShortcut "$DESKTOP\${PRODUCT_FILENAME}.lnk" "$INSTDIR\${PRODUCT_FILENAME}.exe"
   ${endIf}
 
+  !insertmacro EnsureAppRoutingFirewall
+
   ${If} $kokoroboxServiceWasRunning == "true"
     StrCpy $R1 "$INSTDIR\resources\files\kokorobox-service.exe"
     ${If} ${FileExists} "$R1"
@@ -132,6 +165,10 @@
       ${EndIf}
     ${EndIf}
   ${EndIf}
+!macroend
+
+!macro customUnInstall
+  !insertmacro RemoveAppRoutingFirewall
 !macroend
 
 !endif

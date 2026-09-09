@@ -192,6 +192,7 @@ interface AppRoutingStatus {
   needsUserApproval?: boolean
   proxyPort?: number
   mihomoAvailable: boolean
+  firewallReady?: boolean
   protectedApplicationCount?: number
 }
 
