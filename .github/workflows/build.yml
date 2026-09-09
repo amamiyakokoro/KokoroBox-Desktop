@@ -87,7 +87,12 @@ jobs:
         run: |
           $plugin = "$env:RUNNER_TEMP/traffic-monitor-plugin/KokoroBoxTrafficPlugin.dll"
           if (-not (Test-Path $plugin)) { throw "TrafficMonitor plugin was not built" }
-          $exports = dumpbin /exports $plugin
+          $vswhere = "${env:ProgramFiles(x86)}/Microsoft Visual Studio/Installer/vswhere.exe"
+          if (-not (Test-Path $vswhere)) { throw "Visual Studio locator was not found" }
+          $dumpbin = & $vswhere -latest -products * -find "VC/Tools/MSVC/**/bin/Hostx64/x64/dumpbin.exe" |
+            Select-Object -First 1
+          if (-not $dumpbin) { throw "Visual Studio dumpbin was not found" }
+          $exports = & $dumpbin /exports $plugin
           if ($exports -notmatch "TMPluginGetInstance") { throw "Missing TMPluginGetInstance export" }
 
   build:
