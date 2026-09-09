@@ -38,7 +38,10 @@ import {
 } from './resolve/kokoroCallbackRelay'
 import { isKokoroURI } from './kokoro/oauth'
 import { initializeAppRouting } from './app-routing/manager'
-import { installEarlyTlsDisconnectRecovery } from './utils/earlyTlsDisconnect'
+import {
+  installEarlyTlsDisconnectRecovery,
+  isExpectedNetworkTransition
+} from './utils/earlyTlsDisconnect'
 import { migrateUserDataDirectory } from './utils/userDataMigration'
 
 export { setNotQuitDialog } from './resolve/appLifecycle'
@@ -149,10 +152,16 @@ installEarlyTlsDisconnectRecovery((error, origin) => {
   if (reportedEarlyTlsDisconnects.has(error)) return
   reportedEarlyTlsDisconnects.add(error)
 
+  const expectedNetworkTransition = isExpectedNetworkTransition()
+
   runStartupTask(
     'early TLS disconnect logging',
-    appendAppLog(`[App]: recovered ${origin}, ${error.stack || error.message}\n`)
+    appendAppLog(
+      `[App]: recovered ${expectedNetworkTransition ? 'expected network transition ' : ''}${origin}, ${error.stack || error.message}\n`
+    )
   )
+
+  if (expectedNetworkTransition) return
 
   const now = Date.now()
   if (app.isReady() && now - lastEarlyTlsDisconnectNotification >= 30_000) {

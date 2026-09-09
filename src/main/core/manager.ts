@@ -60,6 +60,7 @@ import {
 } from './startup-chain'
 import { createServiceCoreRuntime } from './service-core-runtime'
 import { stopAppRouting } from '../app-routing/manager'
+import { beginExpectedNetworkTransition } from '../utils/earlyTlsDisconnect'
 
 const ctlParam = process.platform === 'win32' ? '-ext-ctl-pipe' : '-ext-ctl-unix'
 
@@ -741,6 +742,7 @@ function clearTailscaleAuthNotifications(name?: string): void {
 }
 
 export async function restartCore(): Promise<void> {
+  const finishNetworkTransition = beginExpectedNetworkTransition()
   try {
     clearTailscaleAuthNotifications()
     await stopCore()
@@ -748,6 +750,8 @@ export async function restartCore(): Promise<void> {
     await Promise.all(promises)
   } catch (e) {
     void showNotification({ title: tr('内核启动出错'), body: `${e}`, variant: 'danger' })
+  } finally {
+    finishNetworkTransition()
   }
 }
 
