@@ -10,7 +10,7 @@ import { tmpdir } from 'os'
 import path from 'path'
 import crypto from 'crypto'
 import { promisify } from 'util'
-import { fileToDataUrl, isRunningAsAdmin, setupFirewallRules } from '@uruhalushia/sparkle-native'
+import { fileToDataUrl, isRunningAsAdmin, setupFirewallRules } from 'kokorobox-native'
 import {
   dataDir,
   exePath,

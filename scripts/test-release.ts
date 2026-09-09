@@ -173,6 +173,44 @@ test('build matrix exactly matches the 12 required release artifacts', () => {
   assert.equal(uploadSteps[1].with.overwrite, true)
 })
 
+test('desktop uses the independently maintained KokoroBox native packages', () => {
+  const packageJson = JSON.parse(readFileSync('package.json', 'utf8'))
+  assert.equal(packageJson.dependencies['kokorobox-native'], '^0.1.0')
+  assert.equal(packageJson.dependencies['@uruhalushia/sparkle-native'], undefined)
+
+  const platformPackages = [
+    'win32-x64-msvc',
+    'win32-arm64-msvc',
+    'darwin-x64',
+    'darwin-arm64',
+    'linux-x64-gnu',
+    'linux-arm64-gnu'
+  ].map((target) => `kokorobox-native-${target}`)
+  const buildWorkflow = readFileSync('.github/workflows/build.yml', 'utf8')
+  const lockfile = readFileSync('pnpm-lock.yaml', 'utf8')
+
+  for (const packageName of platformPackages) {
+    assert.match(buildWorkflow, new RegExp(packageName))
+    assert.match(lockfile, new RegExp(`${packageName}@0\\.1\\.0`))
+  }
+  assert.doesNotMatch(buildWorkflow, /@uruhalushia\/sparkle-native/)
+  assert.doesNotMatch(lockfile, /@uruhalushia\/sparkle-native/)
+
+  for (const file of [
+    'src/main/config/profile.ts',
+    'src/main/core/permission.ts',
+    'src/main/service/manager.ts',
+    'src/main/sys/misc.ts',
+    'src/main/utils/elevation.ts',
+    'src/main/utils/icon.ts',
+    'src/main/utils/ipc.ts'
+  ]) {
+    const source = readFileSync(file, 'utf8')
+    assert.match(source, /from 'kokorobox-native'/, file)
+    assert.doesNotMatch(source, /sparkle-native/, file)
+  }
+})
+
 test('Linux artifact architecture names agree with electron-builder, including ARM64 Pacman', () => {
   const { Arch, getArtifactArchName } = createRequire(import.meta.url)('builder-util/out/arch.js')
   for (const target of releaseTargets.filter((target) => target.os === 'ubuntu-latest')) {

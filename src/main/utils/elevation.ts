@@ -1,10 +1,7 @@
 import { tr } from '../../shared/i18n'
 import { execFile } from 'child_process'
 import { promisify } from 'util'
-import {
-  isRunningAsAdmin as nativeIsRunningAsAdmin,
-  runElevated
-} from '@uruhalushia/sparkle-native'
+import { isRunningAsAdmin as nativeIsRunningAsAdmin, runElevated } from 'kokorobox-native'
 import { systemCoreOnlyBuild, systemServicePath } from '../../shared/build-flags'
 
 const execFilePromise = promisify(execFile)
