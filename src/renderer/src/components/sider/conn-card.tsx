@@ -12,9 +12,9 @@ import { readImageFileDataURL } from '@renderer/utils/ipc'
 import { platform } from '@renderer/utils/init'
 import TrafficChart from './traffic-chart'
 import macTrayIconUrl from '../../../../../resources/tray-icon-macos.png?url'
-import notoTrayIconUrl from '../../../../../resources/tray-icon-noto.png?url'
+import windowsTrayIconUrl from '../../../../../resources/tray-icon-windows.png?url'
 
-const defaultTrayIconUrl = platform === 'darwin' ? macTrayIconUrl : notoTrayIconUrl
+const defaultTrayIconUrl = platform === 'darwin' ? macTrayIconUrl : windowsTrayIconUrl
 
 let currentUpload: number | undefined = undefined
 let currentDownload: number | undefined = undefined
