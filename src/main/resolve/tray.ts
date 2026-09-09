@@ -51,10 +51,7 @@ const customTrayIconScaleFactors = [1, 1.25, 1.5, 2, 2.5, 3]
 const defaultTrayIconSize = 18
 const windowsTrayIconSize = 16
 
-function recolorWindowsTrayImage(
-  sourceIcon: Electron.NativeImage,
-  color: number
-): Electron.NativeImage {
+function recolorWindowsTrayImage(sourceIcon: Electron.NativeImage): Electron.NativeImage {
   const { width, height } = sourceIcon.getSize()
   const bitmap = Buffer.from(sourceIcon.toBitmap())
 
@@ -62,9 +59,10 @@ function recolorWindowsTrayImage(
   // a transparent glyph instead of the opaque square from the old emoji icon.
   for (let offset = 0; offset < bitmap.length; offset += 4) {
     if (bitmap[offset + 3] === 0) continue
-    bitmap[offset] = color
-    bitmap[offset + 1] = color
-    bitmap[offset + 2] = color
+    // NativeImage bitmaps are BGRA on Windows. #0D7BFF is KokoroBox blue.
+    bitmap[offset] = 0xff
+    bitmap[offset + 1] = 0x7b
+    bitmap[offset + 2] = 0x0d
   }
 
   return nativeImage.createFromBitmap(bitmap, { width, height, scaleFactor: 1 })
@@ -75,21 +73,20 @@ function createWindowsTrayIcon(): Electron.NativeImage {
   if (sourceIcon.isEmpty()) return sourceIcon
 
   const icon = nativeImage.createEmpty()
-  const color = nativeTheme.shouldUseDarkColors ? 0xff : 0x1f
 
   for (const scaleFactor of customTrayIconScaleFactors) {
     const resizedIcon = sourceIcon.resize({
       height: Math.round(windowsTrayIconSize * scaleFactor),
       quality: 'best'
     })
-    const recoloredIcon = recolorWindowsTrayImage(resizedIcon, color)
+    const recoloredIcon = recolorWindowsTrayImage(resizedIcon)
     if (recoloredIcon.isEmpty()) continue
 
     icon.addRepresentation({ scaleFactor, buffer: recoloredIcon.toPNG() })
   }
 
   return icon.isEmpty()
-    ? recolorWindowsTrayImage(sourceIcon.resize({ height: windowsTrayIconSize }), color)
+    ? recolorWindowsTrayImage(sourceIcon.resize({ height: windowsTrayIconSize }))
     : icon
 }
 
