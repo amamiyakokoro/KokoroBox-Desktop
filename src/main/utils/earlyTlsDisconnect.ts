@@ -1,5 +1,6 @@
 export const EARLY_TLS_DISCONNECT_MESSAGE =
   'Client network socket disconnected before secure TLS connection was established'
+const NETWORK_TRANSITION_GRACE_MS = 5_000
 
 type ErrorEventListener = (...args: unknown[]) => void
 
@@ -9,6 +10,39 @@ interface ProcessErrorEmitter {
 }
 
 export type MainProcessErrorOrigin = 'uncaughtException' | 'unhandledRejection'
+
+let activeNetworkTransitions = 0
+let networkTransitionGraceUntil = 0
+
+/**
+ * Marks an intentional network interruption, such as restarting Mihomo after
+ * changing TUN mode. Existing TLS handshakes may fail while routes and local
+ * proxy listeners are replaced; those failures are expected and should be
+ * logged without alarming the user.
+ */
+export function beginExpectedNetworkTransition(
+  now: () => number = Date.now,
+  graceMs = NETWORK_TRANSITION_GRACE_MS
+): () => void {
+  activeNetworkTransitions += 1
+  let finished = false
+
+  return () => {
+    if (finished) return
+    finished = true
+    activeNetworkTransitions = Math.max(0, activeNetworkTransitions - 1)
+    networkTransitionGraceUntil = Math.max(networkTransitionGraceUntil, now() + graceMs)
+  }
+}
+
+export function isExpectedNetworkTransition(now: number = Date.now()): boolean {
+  return activeNetworkTransitions > 0 || now <= networkTransitionGraceUntil
+}
+
+export function resetExpectedNetworkTransitionForTest(): void {
+  activeNetworkTransitions = 0
+  networkTransitionGraceUntil = 0
+}
 
 function errorCause(value: unknown): unknown {
   if (!value || typeof value !== 'object' || !('cause' in value)) return undefined

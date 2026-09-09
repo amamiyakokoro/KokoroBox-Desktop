@@ -3,8 +3,11 @@ import { EventEmitter } from 'node:events'
 import { test } from 'node:test'
 import {
   EARLY_TLS_DISCONNECT_MESSAGE,
+  beginExpectedNetworkTransition,
   installEarlyTlsDisconnectRecovery,
   isEarlyTlsDisconnect,
+  isExpectedNetworkTransition,
+  resetExpectedNetworkTransitionForTest,
   type MainProcessErrorOrigin
 } from '../src/main/utils/earlyTlsDisconnect'
 
@@ -48,4 +51,26 @@ test('recovers only early TLS disconnect process errors', () => {
   assert.equal(emitter.listenerCount('unhandledRejection'), 0)
 
   uninstall()
+})
+
+test('tracks nested expected network transitions and keeps a completion grace period', () => {
+  resetExpectedNetworkTransitionForTest()
+  let now = 1_000
+  const clock = (): number => now
+  const finishFirst = beginExpectedNetworkTransition(clock, 5_000)
+  const finishSecond = beginExpectedNetworkTransition(clock, 5_000)
+
+  assert.equal(isExpectedNetworkTransition(now), true)
+  finishFirst()
+  assert.equal(isExpectedNetworkTransition(now), true)
+
+  now = 2_000
+  finishSecond()
+  assert.equal(isExpectedNetworkTransition(6_999), true)
+  assert.equal(isExpectedNetworkTransition(7_001), false)
+
+  // Completion callbacks are idempotent and cannot corrupt transition depth.
+  finishSecond()
+  assert.equal(isExpectedNetworkTransition(7_001), false)
+  resetExpectedNetworkTransitionForTest()
 })
