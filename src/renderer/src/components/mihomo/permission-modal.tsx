@@ -135,7 +135,11 @@ const PermissionModal: React.FC<Props> = (props) => {
                     <div className="text-xs text-default-500 space-y-2">
                       <div className="flex items-start gap-2">
                         <span className="mt-0.5">•</span>
-                        <span>{tr('Windows 会在启动 KokoroBox 前显示标准 UAC 提示')}</span>
+                        <span>
+                          {tr(
+                            '自动 UAC 版会在启动时请求权限；手动提权版需要使用“以管理员身份运行”'
+                          )}
+                        </span>
                       </div>
                       <div className="flex items-start gap-2">
                         <span className="mt-0.5">•</span>

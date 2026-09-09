@@ -24,8 +24,8 @@ for (const line of changelog.split('\n')) {
 }
 
 content += '\n<b>下载地址：</b>\n<b>Windows10/11：</b>\n'
-content += `安装版：<a href="${downloadUrl}/kokorobox-desktop-windows-${version}-x64-setup.exe">64 位</a> | <a href="${downloadUrl}/kokorobox-desktop-windows-${version}-arm64-setup.exe">ARM64</a>\n`
-content += `便携版：<a href="${downloadUrl}/kokorobox-desktop-windows-${version}-x64-portable.7z">64 位</a> | <a href="${downloadUrl}/kokorobox-desktop-windows-${version}-arm64-portable.7z">ARM64</a>\n`
+content += `自动 UAC 版：<a href="${downloadUrl}/kokorobox-desktop-windows-${version}-x64-auto-elevate-setup.exe">64 位</a> | <a href="${downloadUrl}/kokorobox-desktop-windows-${version}-arm64-auto-elevate-setup.exe">ARM64</a>\n`
+content += `手动提权版：<a href="${downloadUrl}/kokorobox-desktop-windows-${version}-x64-manual-elevation-setup.exe">64 位</a> | <a href="${downloadUrl}/kokorobox-desktop-windows-${version}-arm64-manual-elevation-setup.exe">ARM64</a>\n`
 content += '\n<b>macOS 11+:</b>\n'
 content += `PKG：<a href="${downloadUrl}/kokorobox-desktop-macos-${version}-x64.pkg">Intel</a> | <a href="${downloadUrl}/kokorobox-desktop-macos-${version}-arm64.pkg">Apple Silicon</a>\n`
 content += '\n<b>Linux:</b>\n'

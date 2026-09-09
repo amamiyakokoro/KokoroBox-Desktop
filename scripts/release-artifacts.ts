@@ -20,6 +20,7 @@ export interface Target {
   os: string
   arch: string
   format: string
+  elevation?: 'auto-elevate' | 'manual-elevation'
 }
 
 export interface MacSigningReceipt {
@@ -88,7 +89,12 @@ export function validateMacReceipt(
 }
 export const releaseTargets: Target[] = [
   ...['x64', 'arm64'].flatMap((arch) =>
-    ['7z', 'nsis'].map((format) => ({ os: 'windows-latest', arch, format }))
+    (['auto-elevate', 'manual-elevation'] as const).map((elevation) => ({
+      os: 'windows-latest',
+      arch,
+      format: 'nsis',
+      elevation
+    }))
   ),
   ...['x64', 'arm64'].flatMap((arch) =>
     ['deb', 'rpm', 'pacman'].map((format) => ({ os: 'ubuntu-latest', arch, format }))
@@ -99,12 +105,16 @@ export const releaseTargets: Target[] = [
 export function targetId(target: Target): string {
   if (
     !releaseTargets.some(
-      (item) => item.os === target.os && item.arch === target.arch && item.format === target.format
+      (item) =>
+        item.os === target.os &&
+        item.arch === target.arch &&
+        item.format === target.format &&
+        item.elevation === target.elevation
     )
   ) {
     throw new Error('Unsupported release target')
   }
-  return `${target.os}-${target.arch}-${target.format}`
+  return `${target.os}-${target.arch}-${target.format}${target.elevation ? `-${target.elevation}` : ''}`
 }
 
 export function artifactName(target: Target, version: string): string {
@@ -113,7 +123,7 @@ export function artifactName(target: Target, version: string): string {
     throw new Error('Invalid artifact version')
   const prefix = `kokorobox-desktop-${target.os.split('-')[0]}-${version}`
   if (target.os === 'windows-latest')
-    return `${prefix}-${target.arch}-${target.format === 'nsis' ? 'setup.exe' : 'portable.7z'}`
+    return `${prefix}-${target.arch}-${target.elevation}-setup.exe`
   if (target.os === 'macos-latest') return `${prefix}-${target.arch}.pkg`
   const arch =
     target.format === 'deb'
@@ -146,7 +156,7 @@ export function stageArtifact(
   const checksum = digest(path.join(source, filename))
   if (target.os === 'macos-latest') validateMacReceipt(signing, version, sha, filename, checksum)
   const includesProcessRouterSbom =
-    target.os === 'windows-latest' && target.arch === 'x64' && target.format === 'nsis'
+    target.os === 'windows-latest' && target.arch === 'x64' && target.elevation === 'auto-elevate'
   let sbom: ProcessRouterSbomReceipt | undefined
   if (includesProcessRouterSbom) {
     if (!processRouterSbom) throw new Error('Missing Windows x64 process router SBOM')
@@ -201,7 +211,7 @@ export function collectArtifacts(
     if (target.os === 'macos-latest')
       validateMacReceipt(manifest.signing, version, sha, filename, manifest.checksum)
     const includesProcessRouterSbom =
-      target.os === 'windows-latest' && target.arch === 'x64' && target.format === 'nsis'
+      target.os === 'windows-latest' && target.arch === 'x64' && target.elevation === 'auto-elevate'
     if (includesProcessRouterSbom) {
       const sbomName = processRouterSbomName(version)
       if (
@@ -227,14 +237,26 @@ export function collectArtifacts(
   // The SBOM is retained in the private CI artifact and validated above, but
   // it is not an end-user download.  Publishing one on every rolling build
   // makes the release page noisy without helping installation or updates.
-  for (const filename of filenames) copyFileSync(path.join(source, filename), path.join(output, filename))
+  for (const filename of filenames)
+    copyFileSync(path.join(source, filename), path.join(output, filename))
+  // Builds released before the elevation split request the legacy setup name.
+  // Keep a byte-identical alias for one-step migration to the automatic-UAC build.
+  for (const arch of ['x64', 'arm64']) {
+    const sourceName = artifactName(
+      { os: 'windows-latest', arch, format: 'nsis', elevation: 'auto-elevate' },
+      version
+    )
+    const legacyName = `kokorobox-desktop-windows-${version}-${arch}-setup.exe`
+    copyFileSync(path.join(source, sourceName), path.join(output, legacyName))
+    filenames.push(legacyName)
+  }
   const checksums =
     [...filenames]
       .sort()
       .map((filename) => `${digest(path.join(output, filename))}  ${filename}`)
       .join('\n') + '\n'
   writeFileSync(path.join(output, 'SHA256SUMS'), checksums)
-  const notes = `${changelog.trim()}\n\n## Signing status\n\nmacOS PKG installers are Developer ID-signed, notarized by Apple, and include a stapled notarization ticket. Windows packages are not Authenticode-signed. SHA256SUMS provides integrity checks, not publisher authentication.\n`
+  const notes = `${changelog.trim()}\n\n## Windows elevation variants\n\nThe automatic-UAC installer runs KokoroBox with the standard Windows administrator prompt on launch. The manual-elevation installer starts normally and requires **Run as administrator** when privileged features are needed. Neither variant uses the legacy elevation runner or scheduled task. The unsuffixed Windows setup files are byte-identical automatic-UAC aliases retained so older installations can update once to the new naming scheme.\n\n## Signing status\n\nmacOS PKG installers are Developer ID-signed, notarized by Apple, and include a stapled notarization ticket. Windows packages are not Authenticode-signed. SHA256SUMS provides integrity checks, not publisher authentication.\n`
   writeFileSync(path.join(output, 'changelog.md'), notes)
   writeFileSync(path.join(output, 'latest.yml'), stringify({ version, tag, changelog: notes }))
 }
@@ -247,7 +269,8 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
       {
         os: process.env.TARGET_OS ?? '',
         arch: process.env.TARGET_ARCH ?? '',
-        format: process.env.TARGET_FORMAT ?? ''
+        format: process.env.TARGET_FORMAT ?? '',
+        elevation: (process.env.TARGET_ELEVATION || undefined) as Target['elevation']
       },
       version,
       sha,
@@ -258,7 +281,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
         : undefined,
       process.env.TARGET_OS === 'windows-latest' &&
         process.env.TARGET_ARCH === 'x64' &&
-        process.env.TARGET_FORMAT === 'nsis'
+        process.env.TARGET_ELEVATION === 'auto-elevate'
         ? 'extra/files/process-router/process-router-sbom.cdx.json'
         : undefined
     )

@@ -6,7 +6,7 @@ import { getAppConfig, getControledMihomoConfig } from '../config'
 import { dataDir, exeDir, exePath, isPortable, resourcesFilesDir } from '../utils/dirs'
 import { copyFile, rm, writeFile, readFile, statfs } from 'fs/promises'
 import path from 'path'
-import { existsSync } from 'fs'
+import { existsSync, readFileSync } from 'fs'
 import { exec, spawn } from 'child_process'
 import { promisify } from 'util'
 import { createHash } from 'crypto'
@@ -37,6 +37,18 @@ function resolveReleaseTag(version: string, tag?: string): string {
   if (tag) return tag
   if (version.includes('-rolling-')) return 'rolling'
   return version
+}
+
+function windowsElevationVariant(): 'auto-elevate' | 'manual-elevation' {
+  try {
+    const metadata = JSON.parse(
+      readFileSync(path.join(app.getAppPath(), 'package.json'), 'utf8')
+    ) as { kokoroboxWindowsElevation?: string }
+    if (metadata.kokoroboxWindowsElevation === 'manual-elevation') return 'manual-elevation'
+  } catch {
+    // Older installations update to the default automatic-UAC package.
+  }
+  return 'auto-elevate'
 }
 
 async function ensureFreeSpace(dir: string, requiredBytes: number, message: string): Promise<void> {
@@ -120,16 +132,15 @@ export async function downloadAndInstallUpdate(version: string, tag?: string): P
   const { githubToken } = await getAppConfig()
   const releaseTag = resolveReleaseTag(version, tag)
   const baseUrl = `https://github.com/amamiyakokoro/KokoroBox-Desktop/releases/download/${releaseTag}/`
+  const elevation = windowsElevationVariant()
   const fileMap: Record<string, string> = {
-    'win32-x64': `kokorobox-desktop-windows-${version}-x64-setup.exe`,
-    'win32-arm64': `kokorobox-desktop-windows-${version}-arm64-setup.exe`,
+    'win32-x64': `kokorobox-desktop-windows-${version}-x64-${elevation}-setup.exe`,
+    'win32-arm64': `kokorobox-desktop-windows-${version}-arm64-${elevation}-setup.exe`,
     'darwin-x64': `kokorobox-desktop-macos-${version}-x64.pkg`,
     'darwin-arm64': `kokorobox-desktop-macos-${version}-arm64.pkg`
   }
-  let file = fileMap[`${process.platform}-${process.arch}`]
-  if (isPortable()) {
-    file = file.replace('-setup.exe', '-portable.7z')
-  }
+  const file = fileMap[`${process.platform}-${process.arch}`]
+  if (isPortable()) throw new Error(tr('不支持自动更新，请手动下载更新'))
   if (!file) {
     throw new Error(tr('不支持自动更新，请手动下载更新'))
   }

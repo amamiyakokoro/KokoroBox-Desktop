@@ -40,10 +40,8 @@ win:
   requestedExecutionLevel: requireAdministrator
   target:
     - nsis
-    - 7z
-  artifactName: ${name}-windows-${version}-${arch}-portable.${ext}
 nsis:
-  artifactName: ${name}-windows-${version}-${arch}-setup.${ext}
+  artifactName: ${name}-windows-${version}-${arch}-auto-elevate-setup.${ext}
   shortcutName: KokoroBox
   uninstallDisplayName: ${productName}
   allowToChangeInstallationDirectory: true

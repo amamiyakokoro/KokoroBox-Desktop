@@ -4,13 +4,13 @@ The workflows retain the upstream Sparkle build matrix and native-dependency pre
 
 ## Outputs
 
-| Platform | Architectures                  | Packages                       |
-| -------- | ------------------------------ | ------------------------------ |
-| Windows  | x64, ARM64                     | NSIS `.exe`, portable `.7z`    |
-| macOS    | Intel x64, Apple Silicon ARM64 | `.pkg`                         |
-| Linux    | x64, ARM64                     | `.deb`, `.rpm`, `.pkg.tar.zst` |
+| Platform | Architectures                  | Packages                                                  |
+| -------- | ------------------------------ | --------------------------------------------------------- |
+| Windows  | x64, ARM64                     | Automatic-UAC and manual-elevation NSIS `.exe` installers |
+| macOS    | Intel x64, Apple Silicon ARM64 | `.pkg`                                                    |
+| Linux    | x64, ARM64                     | `.deb`, `.rpm`, `.pkg.tar.zst`                            |
 
-Each release must contain all 12 packages, `latest.yml`, and `SHA256SUMS`. The updater metadata preserves the exact release tag, including a leading `v` when present. Build artifacts remain available in the workflow run for 14 days.
+Each release must contain all 12 build-matrix packages, two byte-identical Windows compatibility aliases, `latest.yml`, and `SHA256SUMS`. Windows users can choose an automatic-UAC build whose executable requests administrator rights at launch, or a manual-elevation build that starts with ordinary user rights and must be launched with **Run as administrator** when privileged features are needed. Neither build restores the legacy scheduled-task or runner elevation mechanism. The updater preserves the installed elevation variant. The unsuffixed Windows setup aliases let older installations migrate to the automatic-UAC variant through their existing updater. The updater metadata preserves the exact release tag, including a leading `v` when present. Build artifacts remain available in the workflow run for 14 days.
 
 All targets use GitHub-hosted runners and the locked project dependencies. The native module for each target architecture is checked before packaging.
 

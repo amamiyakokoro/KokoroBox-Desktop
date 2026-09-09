@@ -30,7 +30,7 @@ function isUserCancelledError(error: unknown): boolean {
 
 export async function manualGrantCorePermition(cores?: CoreName[]): Promise<void> {
   if (process.platform === 'win32') {
-    if (!isRunningAsAdmin()) throw new Error(tr('首次启动请以管理员权限运行'))
+    if (!isRunningAsAdmin()) throw new Error(tr('请以管理员身份重新启动 KokoroBox'))
     return
   }
 
