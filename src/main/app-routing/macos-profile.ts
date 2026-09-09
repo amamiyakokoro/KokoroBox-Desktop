@@ -1,5 +1,9 @@
 import os from 'os'
-import { appRoutingIdentifierKind, validateAppRoutingConfig } from '../../shared/app-routing'
+import {
+  appRoutingIdentifierKind,
+  isAppRoutingRuleEffectivelyEnabled,
+  validateAppRoutingConfig
+} from '../../shared/app-routing'
 import { appRoutingDnsHost, appRoutingDnsPort, appRoutingSocksPort } from './profile'
 
 export interface MacBridgeConfiguration {
@@ -36,7 +40,9 @@ export function buildMacAppRoutingConfiguration(
 ): MacBridgeConfiguration {
   validateAppRoutingConfig(config)
   const invalidRule = config.rules.find(
-    (rule) => rule.enabled && appRoutingIdentifierKind(rule) !== 'macos-signing-identifier'
+    (rule) =>
+      isAppRoutingRuleEffectivelyEnabled(config, rule) &&
+      appRoutingIdentifierKind(rule) !== 'macos-signing-identifier'
   )
   if (invalidRule) {
     throw new Error('macOS application routing requires signing-identifier rules')
@@ -60,7 +66,7 @@ export function buildMacAppRoutingConfiguration(
         action: (rule.action === 'proxy' && !proxyAvailable
           ? 'BLOCK'
           : rule.action.toUpperCase()) as 'PROXY' | 'DIRECT' | 'BLOCK',
-        enabled: rule.enabled,
+        enabled: isAppRoutingRuleEffectivelyEnabled(config, rule),
         priority: rule.priority
       }))
   }

@@ -160,10 +160,18 @@ interface AppRoutingRule {
   enabled: boolean
   priority: number
   processPattern: string
+  groupId?: string
   identifierKind?: AppRoutingIdentifierKind
   sourcePath?: string
   protocol: AppRoutingProtocol
   action: AppRoutingAction
+}
+
+interface AppRoutingRuleGroup {
+  id: string
+  name: string
+  sourceDirectory: string
+  enabled: boolean
 }
 
 interface AppRoutingApplicationSelection {
@@ -174,6 +182,14 @@ interface AppRoutingApplicationSelection {
   iconDataUrl?: string
 }
 
+interface AppRoutingDirectorySelection {
+  directoryPath: string
+  name: string
+  applications: AppRoutingApplicationSelection[]
+  truncated: boolean
+  unreadableDirectoryCount: number
+}
+
 interface AppRoutingConfig {
   version: 1
   enabled: boolean
@@ -182,6 +198,7 @@ interface AppRoutingConfig {
   defaultAction: AppRoutingAction
   defaultProtocol: AppRoutingProtocol
   diagnosticLogging: boolean
+  groups?: AppRoutingRuleGroup[]
   rules: AppRoutingRule[]
 }
 

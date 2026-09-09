@@ -1,4 +1,7 @@
-import { validateAppRoutingConfig } from '../../shared/app-routing'
+import {
+  isAppRoutingRuleEffectivelyEnabled,
+  validateAppRoutingConfig
+} from '../../shared/app-routing'
 
 export const appRoutingListenerName = 'kokorobox-app-routing'
 export const appRoutingSocksPort = 7891
@@ -51,7 +54,7 @@ export function buildProcessRouterCommand(
         processPattern: rule.processPattern,
         protocol: toRouterProtocol(rule.protocol),
         action: toRouterAction(rule.action === 'proxy' && !proxyAvailable ? 'block' : rule.action),
-        enabled: rule.enabled,
+        enabled: isAppRoutingRuleEffectivelyEnabled(config, rule),
         priority: rule.priority
       }))
   })

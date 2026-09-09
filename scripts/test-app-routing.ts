@@ -1,11 +1,13 @@
 import assert from 'node:assert/strict'
-import { readFileSync } from 'node:fs'
-import { resolve } from 'node:path'
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join, resolve } from 'node:path'
 import { test } from 'node:test'
 import {
   appRoutingSupported,
   appRoutingIdentifierKind,
   executableName,
+  isAppRoutingRuleEffectivelyEnabled,
   isProtectedAppRoutingPattern,
   isProtectedAppRoutingProcess,
   normalizeAppRoutingConfig,
@@ -42,6 +44,7 @@ import {
   buildMacAppRoutingConfiguration,
   macAppRoutingOperatingSystemSupported
 } from '../src/main/app-routing/macos-profile'
+import { scanWindowsExecutableDirectory } from '../src/main/app-routing/directory'
 import { macOSBundleVersion } from './macos-bundle-version'
 
 function rule(overrides: Partial<AppRoutingRule> = {}): AppRoutingRule {
@@ -435,6 +438,98 @@ test('normalizes persisted order into unique priorities', () => {
   assert.equal(normalized.diagnosticLogging, true)
 })
 
+test('rule groups preserve child state while controlling effective routing', () => {
+  const groupedRule = rule({ groupId: 'games' })
+  const config: AppRoutingConfig = {
+    version: 1,
+    enabled: true,
+    failClosed: true,
+    proxyUdpDns: true,
+    defaultAction: 'proxy',
+    defaultProtocol: 'both',
+    diagnosticLogging: false,
+    groups: [
+      {
+        id: 'games',
+        name: 'Games',
+        sourceDirectory: 'C:\\Games',
+        enabled: false
+      }
+    ],
+    rules: [groupedRule]
+  }
+
+  validateAppRoutingConfig(config)
+  assert.equal(groupedRule.enabled, true)
+  assert.equal(isAppRoutingRuleEffectivelyEnabled(config, groupedRule), false)
+  assert.equal(JSON.parse(buildProcessRouterCommand(config, true)).rules[0].enabled, false)
+  assert.equal(buildServiceProcessRouterRules(config, 7891).rules[0].enabled, false)
+
+  const enabled = { ...config, groups: [{ ...config.groups![0], enabled: true }] }
+  assert.equal(isAppRoutingRuleEffectivelyEnabled(enabled, groupedRule), true)
+  assert.equal(normalizeAppRoutingConfig(enabled).rules[0].groupId, 'games')
+  assert.throws(() => validateAppRoutingConfig({ ...config, groups: [] }))
+  assert.throws(() =>
+    validateAppRoutingConfig({
+      ...config,
+      groups: [...config.groups!, { ...config.groups![0], id: 'duplicate' }]
+    })
+  )
+})
+
+test('grouped rules retain the same priority order shown by the UI', () => {
+  const normalized = normalizeAppRoutingConfig({
+    version: 1,
+    enabled: true,
+    failClosed: true,
+    proxyUdpDns: true,
+    defaultAction: 'proxy',
+    defaultProtocol: 'both',
+    diagnosticLogging: false,
+    groups: [
+      { id: 'tools', name: 'Tools', sourceDirectory: 'C:\\Tools', enabled: true },
+      { id: 'games', name: 'Games', sourceDirectory: 'C:\\Games', enabled: true }
+    ],
+    rules: [
+      rule({ id: 'game', processPattern: 'game.exe', groupId: 'games', priority: 1 }),
+      rule({ id: 'solo', processPattern: 'solo.exe', priority: 2 }),
+      rule({ id: 'tool', processPattern: 'tool.exe', groupId: 'tools', priority: 3 })
+    ]
+  })
+  assert.deepEqual(
+    normalized.rules.map((item) => [item.id, item.priority]),
+    [
+      ['solo', 1],
+      ['tool', 2],
+      ['game', 3]
+    ]
+  )
+})
+
+test('Windows folder scans recurse safely and skip protected executables', async () => {
+  const root = mkdtempSync(join(tmpdir(), 'kokorobox-routing-scan-'))
+  try {
+    const nested = join(root, 'nested')
+    mkdirSync(nested)
+    writeFileSync(join(root, 'Alpha.exe'), '')
+    writeFileSync(join(root, 'note.txt'), '')
+    writeFileSync(join(nested, 'Beta.EXE'), '')
+    writeFileSync(join(nested, 'KokoroBox.exe'), '')
+    symlinkSync(nested, join(root, 'linked'))
+
+    const result = await scanWindowsExecutableDirectory(root)
+    assert.deepEqual(result.executablePaths.map(executableName).sort(), ['Alpha.exe', 'Beta.EXE'])
+    assert.equal(result.truncated, false)
+    assert.equal(result.unreadableDirectoryCount, 0)
+
+    const limited = await scanWindowsExecutableDirectory(root, 1)
+    assert.equal(limited.executablePaths.length, 1)
+    assert.equal(limited.truncated, true)
+  } finally {
+    rmSync(root, { recursive: true, force: true })
+  }
+})
+
 test('parses only the canonical process-pattern schema', () => {
   const parsed = parseAppRoutingConfig({
     version: 1,
@@ -720,8 +815,8 @@ test('new application rules use the configured defaults', () => {
     resolve(process.cwd(), 'src/renderer/src/hooks/use-app-routing.ts'),
     'utf8'
   )
-  assert.equal((hook.match(/action: config\.defaultAction/g) || []).length, 2)
-  assert.equal((hook.match(/protocol: config\.defaultProtocol/g) || []).length, 2)
+  assert.equal((hook.match(/action: config\.defaultAction/g) || []).length, 3)
+  assert.equal((hook.match(/protocol: config\.defaultProtocol/g) || []).length, 3)
 })
 
 test('application routing rules use a two-line identity-first card layout', () => {
@@ -733,6 +828,9 @@ test('application routing rules use a two-line identity-first card layout', () =
   assert.match(row, /app-routing-default-icon\.svg\?url/)
   assert.match(row, /src=\{icon \|\| defaultApplicationIcon\}/)
   assert.doesNotMatch(page, /grid-cols-\[1fr_9rem_9rem_9rem\]/)
+  assert.match(page, /scanDirectory\(\)/)
+  assert.match(page, /updateGroup\(group\.id, \{ enabled \}\)/)
+  assert.match(page, /group\.sourceDirectory/)
 })
 
 test('Windows packaging rebuilds the architecture-matched process router payload', () => {

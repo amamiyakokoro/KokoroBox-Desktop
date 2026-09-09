@@ -5,7 +5,8 @@ import {
   getAppRoutingIcon,
   getAppRoutingStatus,
   refreshAppRoutingStatus,
-  replaceAppRoutingConfig
+  replaceAppRoutingConfig,
+  scanAppRoutingDirectory
 } from '@renderer/utils/ipc'
 import { notify } from '@renderer/utils/notification'
 import { normalizeAppRoutingIdentifier, validateAppRoutingRule } from '../../../shared/app-routing'
@@ -21,9 +22,11 @@ export function useAppRouting(): {
   refresh: () => Promise<void>
   save: (config: AppRoutingConfig) => Promise<boolean>
   addApplications: () => Promise<void>
+  scanDirectory: (groupId?: string) => Promise<void>
   addPattern: (processPattern: string) => Promise<boolean>
-  updateRule: (index: number, patch: Partial<AppRoutingRule>) => void
-  moveRule: (index: number, offset: number) => void
+  updateRule: (id: string, patch: Partial<AppRoutingRule>) => void
+  updateGroup: (id: string, patch: Partial<AppRoutingRuleGroup>) => void
+  moveRule: (id: string, offset: number) => void
   deleteRule: (id: string) => void
 } {
   const [config, setConfig] = useState<AppRoutingConfig>()
@@ -55,16 +58,24 @@ export function useAppRouting(): {
 
   useEffect(() => {
     if (!config) return
-    for (const rule of config.rules) {
+    const pending = config.rules.filter((rule) => {
       const requestKey = `${rule.id}:${rule.sourcePath}`
-      if (!rule.sourcePath || icons[rule.id] || requestedIcons.current.has(requestKey)) continue
+      if (!rule.sourcePath || icons[rule.id] || requestedIcons.current.has(requestKey)) return false
       requestedIcons.current.add(requestKey)
-      void getAppRoutingIcon(rule.sourcePath)
-        .then((icon) => {
+      return true
+    })
+    // A scanned folder can contain hundreds of applications. Resolve their
+    // icons sequentially so Electron's shell integration is never flooded.
+    void (async () => {
+      for (const rule of pending) {
+        try {
+          const icon = await getAppRoutingIcon(rule.sourcePath!)
           if (icon) setIcons((current) => ({ ...current, [rule.id]: icon }))
-        })
-        .catch(() => {})
-    }
+        } catch {
+          // The default icon remains available when an executable disappears.
+        }
+      }
+    })()
   }, [config, icons])
 
   const save = async (next: AppRoutingConfig): Promise<boolean> => {
@@ -124,6 +135,95 @@ export function useAppRouting(): {
     await save({ ...config, rules: [...config.rules, ...additions] })
   }
 
+  const scanDirectory = async (requestedGroupId?: string): Promise<void> => {
+    if (!config || window.api.platform !== 'win32') return
+    try {
+      const requestedGroup = config.groups?.find((group) => group.id === requestedGroupId)
+      const selection = await scanAppRoutingDirectory(requestedGroup?.sourceDirectory)
+      if (!selection) return
+
+      const matchingGroup = config.groups?.find(
+        (group) => group.sourceDirectory.toLowerCase() === selection.directoryPath.toLowerCase()
+      )
+      const group = requestedGroup ??
+        matchingGroup ?? {
+          id: nanoid(),
+          name: selection.name,
+          sourceDirectory: selection.directoryPath,
+          enabled: true
+        }
+      if (!matchingGroup && !requestedGroup && (config.groups?.length ?? 0) >= 64) {
+        notify(tr('应用程序规则组最多支持 64 个'), { variant: 'danger' })
+        return
+      }
+
+      const existingPatterns = new Set(
+        config.rules.map((rule) => rule.processPattern.toLowerCase())
+      )
+      const existingPaths = new Set(
+        config.rules.flatMap((rule) => (rule.sourcePath ? [rule.sourcePath.toLowerCase()] : []))
+      )
+      const availableSlots = Math.max(0, 256 - config.rules.length)
+      let patternBytes = config.rules.reduce(
+        (total, rule) => total + new TextEncoder().encode(rule.processPattern).length + 1,
+        0
+      )
+      const additions: AppRoutingRule[] = []
+      for (const application of selection.applications) {
+        const processPattern = normalizeAppRoutingIdentifier(
+          application.identifier,
+          application.identifierKind
+        )
+        const nextPatternBytes = new TextEncoder().encode(processPattern).length + 1
+        if (
+          additions.length >= availableSlots ||
+          patternBytes + nextPatternBytes > 30000 ||
+          existingPatterns.has(processPattern.toLowerCase()) ||
+          existingPaths.has(application.executablePath.toLowerCase())
+        ) {
+          continue
+        }
+        existingPatterns.add(processPattern.toLowerCase())
+        existingPaths.add(application.executablePath.toLowerCase())
+        patternBytes += nextPatternBytes
+        additions.push({
+          id: nanoid(),
+          groupId: group.id,
+          processPattern,
+          identifierKind: 'windows-executable',
+          sourcePath: application.executablePath,
+          action: config.defaultAction,
+          protocol: config.defaultProtocol,
+          enabled: true,
+          priority: config.rules.length + additions.length + 1
+        })
+      }
+
+      if (additions.length === 0) {
+        const message =
+          selection.applications.length === 0
+            ? tr('所选文件夹中没有可添加的 .exe')
+            : tr('所选文件夹中没有新的可添加 .exe')
+        notify(message, { variant: 'warning' })
+        return
+      }
+      const groups =
+        matchingGroup || requestedGroup ? config.groups : [...(config.groups ?? []), group]
+      if (await save({ ...config, groups, rules: [...config.rules, ...additions] })) {
+        const partial =
+          selection.truncated ||
+          selection.unreadableDirectoryCount > 0 ||
+          additions.length < selection.applications.length
+        notify(tr('已从 {0} 添加 {1} 个应用程序', [selection.name, additions.length]), {
+          body: partial ? tr('部分项目因重复、权限或规则数量限制未添加。') : undefined,
+          variant: partial ? 'warning' : 'success'
+        })
+      }
+    } catch (error) {
+      notify(error, { variant: 'danger' })
+    }
+  }
+
   const addPattern = async (value: string): Promise<boolean> => {
     if (!config) return false
     const identifierKind: AppRoutingIdentifierKind =
@@ -155,23 +255,35 @@ export function useAppRouting(): {
     return save({ ...config, rules: [...config.rules, nextRule] })
   }
 
-  const updateRule = (index: number, patch: Partial<AppRoutingRule>): void => {
+  const updateRule = (id: string, patch: Partial<AppRoutingRule>): void => {
     if (!config) return
     void save({
       ...config,
-      rules: config.rules.map((rule, ruleIndex) =>
-        ruleIndex === index ? { ...rule, ...patch } : rule
-      )
+      rules: config.rules.map((rule) => (rule.id === id ? { ...rule, ...patch } : rule))
     })
   }
 
-  const moveRule = (index: number, offset: number): void => {
+  const updateGroup = (id: string, patch: Partial<AppRoutingRuleGroup>): void => {
+    if (!config?.groups) return
+    void save({
+      ...config,
+      groups: config.groups.map((group) => (group.id === id ? { ...group, ...patch } : group))
+    })
+  }
+
+  const moveRule = (id: string, offset: number): void => {
     if (!config) return
-    const target = index + offset
-    if (target < 0 || target >= config.rules.length) return
+    const index = config.rules.findIndex((rule) => rule.id === id)
+    if (index < 0) return
+    const groupId = config.rules[index].groupId
+    const peerIndices = config.rules.flatMap((rule, ruleIndex) =>
+      rule.groupId === groupId ? [ruleIndex] : []
+    )
+    const peerIndex = peerIndices.indexOf(index)
+    const target = peerIndices[peerIndex + offset]
+    if (target === undefined) return
     const rules = [...config.rules]
-    const [rule] = rules.splice(index, 1)
-    rules.splice(target, 0, rule)
+    ;[rules[index], rules[target]] = [rules[target], rules[index]]
     void save({
       ...config,
       rules: rules.map((item, ruleIndex) => ({ ...item, priority: ruleIndex + 1 }))
@@ -180,7 +292,14 @@ export function useAppRouting(): {
 
   const deleteRule = (id: string): void => {
     if (!config) return
-    void save({ ...config, rules: config.rules.filter((rule) => rule.id !== id) })
+    const deleted = config.rules.find((rule) => rule.id === id)
+    const rules = config.rules.filter((rule) => rule.id !== id)
+    const groups = deleted?.groupId
+      ? config.groups?.filter(
+          (group) => group.id !== deleted.groupId || rules.some((rule) => rule.groupId === group.id)
+        )
+      : config.groups
+    void save({ ...config, groups, rules })
   }
 
   return {
@@ -195,8 +314,10 @@ export function useAppRouting(): {
     refresh,
     save,
     addApplications,
+    scanDirectory,
     addPattern,
     updateRule,
+    updateGroup,
     moveRule,
     deleteRule
   }

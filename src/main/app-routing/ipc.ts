@@ -1,6 +1,6 @@
 import { ipcMain } from 'electron'
 import { restartCore } from '../core/manager'
-import { getApplicationPaths, getAppRoutingIcon } from '../sys/misc'
+import { getApplicationPaths, getAppRoutingIcon, scanAppRoutingDirectory } from '../sys/misc'
 import { getAppRoutingConfig } from './config'
 import { getAppRoutingStatus, refreshAppRoutingStatus, replaceAppRoutingConfig } from './manager'
 import { openMacAppRoutingSystemSettings } from './macos'
@@ -37,6 +37,9 @@ export function registerAppRoutingIpcHandlers(): void {
     })
   )
   ipcMain.handle('getApplicationPaths', () => invokeSafely(getApplicationPaths))
+  ipcMain.handle('scanAppRoutingDirectory', (_event, directoryPath?: string) =>
+    invokeSafely(() => scanAppRoutingDirectory(directoryPath))
+  )
   ipcMain.handle('getAppRoutingIcon', (_event, executablePath: string) =>
     invokeSafely(() => getAppRoutingIcon(executablePath))
   )

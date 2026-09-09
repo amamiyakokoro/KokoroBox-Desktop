@@ -1,6 +1,10 @@
 import { BrowserWindow } from 'electron'
 import { spawn, type ChildProcess } from 'child_process'
-import { appRoutingSupported, validateAppRoutingConfig } from '../../shared/app-routing'
+import {
+  appRoutingSupported,
+  isAppRoutingRuleEffectivelyEnabled,
+  validateAppRoutingConfig
+} from '../../shared/app-routing'
 import { getAppConfig } from '../config/app'
 import { appendAppLog } from '../utils/log'
 import { processRouterDir, processRouterPath } from '../utils/dirs'
@@ -252,7 +256,9 @@ async function startChild(
     mihomoAvailable,
     firewallReady: directFirewallReady,
     protectedApplicationCount: requiresMihomo
-      ? config.rules.filter((rule) => rule.enabled && rule.action === 'proxy').length
+      ? config.rules.filter(
+          (rule) => isAppRoutingRuleEffectivelyEnabled(config, rule) && rule.action === 'proxy'
+        ).length
       : 0
   })
   const executable = processRouterPath()
@@ -359,7 +365,9 @@ async function reconcile(): Promise<void> {
   }
   const [config, appConfig] = await Promise.all([getAppRoutingConfig(), getAppConfig()])
   validateAppRoutingConfig(config)
-  const enabledRules = config.rules.filter((rule) => rule.enabled)
+  const enabledRules = config.rules.filter((rule) =>
+    isAppRoutingRuleEffectivelyEnabled(config, rule)
+  )
   if (process.platform === 'darwin') {
     if (!config.enabled || enabledRules.length === 0) {
       await stopMacAppRouting()
@@ -431,7 +439,7 @@ async function reconcile(): Promise<void> {
         message: 'Windows 封包拦截组件缺失或已损坏',
         mihomoAvailable,
         protectedApplicationCount: config.rules.filter(
-          (rule) => rule.enabled && rule.action === 'proxy'
+          (rule) => isAppRoutingRuleEffectivelyEnabled(config, rule) && rule.action === 'proxy'
         ).length
       })
       return
@@ -454,13 +462,13 @@ async function reconcile(): Promise<void> {
       proxyPort: requiresMihomo ? proxyPort : undefined,
       mihomoAvailable,
       protectedApplicationCount: config.rules.filter(
-        (rule) => rule.enabled && rule.action === 'proxy'
+        (rule) => isAppRoutingRuleEffectivelyEnabled(config, rule) && rule.action === 'proxy'
       ).length
     })
     sendRouterCommand(child, buildProcessRouterCommand(config, mihomoAvailable))
   }
   const protectedApplicationCount = config.rules.filter(
-    (rule) => rule.enabled && rule.action === 'proxy'
+    (rule) => isAppRoutingRuleEffectivelyEnabled(config, rule) && rule.action === 'proxy'
   ).length
   publishStatus({
     supported: true,

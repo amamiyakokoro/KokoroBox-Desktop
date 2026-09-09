@@ -1,4 +1,5 @@
 import { existsSync } from 'fs'
+import { isAppRoutingRuleEffectivelyEnabled } from '../../shared/app-routing'
 import { macAppRoutingExtensionPath, macAppRoutingModulePath } from '../utils/dirs'
 import { appRoutingSocksPort } from './profile'
 import { buildMacAppRoutingConfiguration, type MacBridgeConfiguration } from './macos-profile'
@@ -97,7 +98,7 @@ export async function reconcileMacAppRouting(
     activePolicyKey = response.state === 'running' ? policyKey : ''
   }
   const protectedApplicationCount = config.rules.filter(
-    (rule) => rule.enabled && rule.action === 'proxy'
+    (rule) => isAppRoutingRuleEffectivelyEnabled(config, rule) && rule.action === 'proxy'
   ).length
   const degraded = response.state === 'running' && !proxyAvailable && protectedApplicationCount > 0
   return {

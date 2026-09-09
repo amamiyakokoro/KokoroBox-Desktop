@@ -1,5 +1,6 @@
 const validActions = new Set<AppRoutingAction>(['proxy', 'direct', 'block'])
 const validProtocols = new Set<AppRoutingProtocol>(['tcp', 'udp', 'both'])
+const maximumAppRoutingGroups = 64
 const reservedProcessNames = new Set([
   'kokorobox.exe',
   'mihomo.exe',
@@ -152,9 +153,26 @@ export function validateAppRoutingRule(rule: AppRoutingRule): void {
   if (!validActions.has(rule.action)) throw new Error('Invalid application routing action')
   if (!validProtocols.has(rule.protocol)) throw new Error('Invalid application routing protocol')
   if (typeof rule.enabled !== 'boolean') throw new Error('Invalid application rule state')
+  if (rule.groupId !== undefined && (!rule.groupId || rule.groupId.length > 128)) {
+    throw new Error('Invalid application rule group ID')
+  }
   if (!Number.isInteger(rule.priority) || rule.priority < 1 || rule.priority > 256) {
     throw new Error('Invalid application rule priority')
   }
+}
+
+function validateAppRoutingGroup(group: AppRoutingRuleGroup): void {
+  if (!group.id || group.id.length > 128) throw new Error('Invalid application rule group ID')
+  const name = group.name.trim()
+  if (!name || name.length > 80 || /[\0\r\n]/.test(name)) {
+    throw new Error('Invalid application rule group name')
+  }
+  const isDrivePath = /^[a-zA-Z]:\\[^\0]*$/.test(group.sourceDirectory)
+  const isUncPath = /^\\\\[^\\\0]+\\[^\\\0]+(?:\\[^\0]*)?$/.test(group.sourceDirectory)
+  if (!isDrivePath && !isUncPath) {
+    throw new Error('Application rule group requires an absolute Windows directory')
+  }
+  if (typeof group.enabled !== 'boolean') throw new Error('Invalid application rule group state')
 }
 
 export function validateAppRoutingConfig(config: AppRoutingConfig): void {
@@ -173,12 +191,36 @@ export function validateAppRoutingConfig(config: AppRoutingConfig): void {
   if (!Array.isArray(config.rules) || config.rules.length > 256) {
     throw new Error('Application routing supports at most 256 rules')
   }
+  if (
+    config.groups !== undefined &&
+    (!Array.isArray(config.groups) || config.groups.length > maximumAppRoutingGroups)
+  ) {
+    throw new Error(`Application routing supports at most ${maximumAppRoutingGroups} groups`)
+  }
+  const groupIds = new Set<string>()
+  const groupDirectories = new Set<string>()
+  for (const group of config.groups ?? []) {
+    validateAppRoutingGroup(group)
+    const directory = normalizeWindowsExecutablePath(group.sourceDirectory).toLowerCase()
+    if (groupIds.has(group.id)) throw new Error('Application rule group IDs must be unique')
+    if (groupDirectories.has(directory)) {
+      throw new Error('Only one application rule group can target a directory')
+    }
+    groupIds.add(group.id)
+    groupDirectories.add(directory)
+  }
   const ids = new Set<string>()
   const processPatterns = new Set<string>()
   const priorities = new Set<number>()
   let totalPatternBytes = 0
   for (const rule of config.rules) {
     validateAppRoutingRule(rule)
+    if (rule.groupId !== undefined && !groupIds.has(rule.groupId)) {
+      throw new Error('Application rule references an unknown group')
+    }
+    if (rule.groupId !== undefined && appRoutingIdentifierKind(rule) !== 'windows-executable') {
+      throw new Error('Application rule groups are supported on Windows only')
+    }
     const identifier = normalizeAppRoutingIdentifier(
       rule.processPattern,
       appRoutingIdentifierKind(rule)
@@ -197,6 +239,24 @@ export function validateAppRoutingConfig(config: AppRoutingConfig): void {
 }
 
 export function normalizeAppRoutingConfig(config: AppRoutingConfig): AppRoutingConfig {
+  const groups = (config.groups ?? []).map((group) => ({
+    id: group.id,
+    name: group.name.trim(),
+    sourceDirectory: normalizeWindowsExecutablePath(group.sourceDirectory),
+    enabled: group.enabled
+  }))
+  const sortedRules = [...config.rules].sort(
+    (a, b) => (a.priority ?? Number.MAX_SAFE_INTEGER) - (b.priority ?? Number.MAX_SAFE_INTEGER)
+  )
+  // The renderer presents individual rules first, followed by groups in their
+  // stored order. Keep runtime priority identical to that visible order.
+  const orderedRules =
+    groups.length === 0
+      ? sortedRules
+      : [
+          ...sortedRules.filter((rule) => !rule.groupId),
+          ...groups.flatMap((group) => sortedRules.filter((rule) => rule.groupId === group.id))
+        ]
   return {
     version: 1,
     enabled: config.enabled,
@@ -205,31 +265,38 @@ export function normalizeAppRoutingConfig(config: AppRoutingConfig): AppRoutingC
     defaultAction: config.defaultAction,
     defaultProtocol: config.defaultProtocol,
     diagnosticLogging: config.diagnosticLogging,
-    rules: [...config.rules]
-      .sort(
-        (a, b) => (a.priority ?? Number.MAX_SAFE_INTEGER) - (b.priority ?? Number.MAX_SAFE_INTEGER)
-      )
-      .map((rule, index) => ({
-        id: rule.id,
-        enabled: rule.enabled,
-        priority: index + 1,
-        processPattern: normalizeAppRoutingIdentifier(
-          rule.processPattern,
-          appRoutingIdentifierKind(rule)
-        ),
-        ...(rule.identifierKind ? { identifierKind: rule.identifierKind } : {}),
-        ...(rule.sourcePath
-          ? {
-              sourcePath:
-                appRoutingIdentifierKind(rule) === 'windows-executable'
-                  ? normalizeWindowsExecutablePath(rule.sourcePath)
-                  : rule.sourcePath
-            }
-          : {}),
-        protocol: rule.protocol,
-        action: rule.action
-      }))
+    ...(groups.length > 0 ? { groups } : {}),
+    rules: orderedRules.map((rule, index) => ({
+      id: rule.id,
+      enabled: rule.enabled,
+      priority: index + 1,
+      processPattern: normalizeAppRoutingIdentifier(
+        rule.processPattern,
+        appRoutingIdentifierKind(rule)
+      ),
+      ...(rule.groupId ? { groupId: rule.groupId } : {}),
+      ...(rule.identifierKind ? { identifierKind: rule.identifierKind } : {}),
+      ...(rule.sourcePath
+        ? {
+            sourcePath:
+              appRoutingIdentifierKind(rule) === 'windows-executable'
+                ? normalizeWindowsExecutablePath(rule.sourcePath)
+                : rule.sourcePath
+          }
+        : {}),
+      protocol: rule.protocol,
+      action: rule.action
+    }))
   }
+}
+
+export function isAppRoutingRuleEffectivelyEnabled(
+  config: AppRoutingConfig,
+  rule: AppRoutingRule
+): boolean {
+  if (!rule.enabled) return false
+  if (!rule.groupId) return true
+  return config.groups?.find((group) => group.id === rule.groupId)?.enabled === true
 }
 
 export function parseAppRoutingConfig(value: unknown): AppRoutingConfig {
