@@ -93,7 +93,9 @@ jobs:
             Select-Object -First 1
           if (-not $dumpbin) { throw "Visual Studio dumpbin was not found" }
           $exports = & $dumpbin /exports $plugin
-          if ($exports -notmatch "TMPluginGetInstance") { throw "Missing TMPluginGetInstance export" }
+          if (-not ($exports -match "TMPluginGetInstance")) {
+            throw "Missing TMPluginGetInstance export"
+          }
 
   build:
     needs: [validate, validate-traffic-monitor-plugin]
