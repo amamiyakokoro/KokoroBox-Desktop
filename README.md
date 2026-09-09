@@ -84,6 +84,23 @@ pnpm build:win # or build:mac / build:linux
 
 Use `--x64` or `--arm64` to select an architecture. See the [release guide](docs/releases.md) for packaging, signing, and publishing.
 
+### Linux system-core packages
+
+Linux distributions can build KokoroBox without bundled cores or lifecycle scripts. Set
+`KOKOROBOX_SYSTEM_CORE` to `1` for `/usr/bin/mihomo`, or to an absolute core path. The service
+defaults to `/usr/bin/kokorobox-service` and can be overridden with an absolute
+`KOKOROBOX_SYSTEM_SERVICE` path:
+
+```bash
+KOKOROBOX_SYSTEM_CORE=1 \
+KOKOROBOX_SYSTEM_SERVICE=/usr/bin/kokorobox-service \
+pnpm build:linux deb --x64
+```
+
+In this mode, distribution packages must provide the core and service independently. Legacy
+`SPARKLE_SYSTEM_CORE` and `SPARKLE_SYSTEM_SERVICE` variables remain accepted only for existing
+downstream package recipes.
+
 ## License
 
 KokoroBox-Desktop is derived from [Sparkle](https://github.com/xishang0128/sparkle) and retains
