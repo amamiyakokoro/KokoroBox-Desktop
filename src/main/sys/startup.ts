@@ -2,7 +2,6 @@ import { tr } from '../../shared/i18n'
 import { is } from '@electron-toolkit/utils'
 import { app } from 'electron'
 import { execFileSync, spawn } from 'child_process'
-import { writeFileSync } from 'fs'
 import iconv from 'iconv-lite'
 import path from 'path'
 import { exePath, taskDir } from '../utils/dirs'
@@ -10,16 +9,11 @@ import {
   checkElevateTaskSync,
   createElevateTaskSync,
   createElevateTaskWithPromptSync,
-  WINDOWS_ELEVATE_TASK_NAME,
-  WINDOWS_RUNNER_PARAMS_FILENAME
+  WINDOWS_ELEVATE_TASK_NAME
 } from './misc'
 import { showNotification } from '../utils/notification'
 import { isRunningAsAdmin } from '@uruhalushia/sparkle-native'
-import { isConfigUri } from '../../shared/product-identity'
-
-function safeRunnerArguments(argv: string[]): string[] {
-  return argv.filter((value) => value.length <= 8192 && isConfigUri(value))
-}
+import { stageElevatedDeepLinks, WINDOWS_ELEVATED_DEEP_LINKS_FILENAME } from './elevatedStartupArgs'
 
 export function ensureWindowsElevatedStartup(
   corePermissionMode: string | undefined,
@@ -62,11 +56,14 @@ export function ensureWindowsElevatedStartup(
   }
 
   try {
-    writeFileSync(
-      path.join(taskDir(), WINDOWS_RUNNER_PARAMS_FILENAME),
-      JSON.stringify(safeRunnerArguments(process.argv.slice(1)))
+    stageElevatedDeepLinks(
+      path.join(taskDir(), WINDOWS_ELEVATED_DEEP_LINKS_FILENAME),
+      process.argv.slice(1)
     )
     if (!checkElevateTaskSync()) createElevateTaskWithPromptSync()
+    // The task starts KokoroBox directly. Release this temporary unelevated instance's
+    // lock first so the elevated instance can become the primary process reliably.
+    app.releaseSingleInstanceLock()
     execFileSync('schtasks.exe', ['/run', '/tn', WINDOWS_ELEVATE_TASK_NAME])
   } catch (error) {
     let errorStr = `${error}`

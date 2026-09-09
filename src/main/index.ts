@@ -40,6 +40,11 @@ import { isKokoroURI } from './kokoro/oauth'
 import { initializeAppRouting } from './app-routing/manager'
 import { installEarlyTlsDisconnectRecovery } from './utils/earlyTlsDisconnect'
 import { migrateUserDataDirectory } from './utils/userDataMigration'
+import {
+  takeElevatedDeepLinks,
+  WINDOWS_ELEVATED_DEEP_LINKS_FILENAME
+} from './sys/elevatedStartupArgs'
+import { taskDir } from './utils/dirs'
 
 export { setNotQuitDialog } from './resolve/appLifecycle'
 
@@ -209,14 +214,18 @@ if (windowsKokoroCallback) {
 }
 
 function requestPrimaryInstance(): void {
-  const gotTheLock = app.requestSingleInstanceLock()
+  const initialDeepLinks = [
+    ...takeInitialDeepLinks(process.argv),
+    ...(process.platform === 'win32'
+      ? takeElevatedDeepLinks(join(taskDir(), WINDOWS_ELEVATED_DEEP_LINKS_FILENAME), process.argv)
+      : [])
+  ]
+  const gotTheLock = app.requestSingleInstanceLock({ deepLinks: initialDeepLinks })
   if (!gotTheLock) {
     app.quit()
     return
   }
-  // Keep callback URLs in argv until after the lock request so Electron can still deliver them
-  // through second-instance when both processes run at the same integrity level.
-  startPrimaryInstance(takeInitialDeepLinks(process.argv))
+  startPrimaryInstance(initialDeepLinks)
 }
 
 function startPrimaryInstance(initialDeepLinks: string[]): void {
@@ -232,8 +241,14 @@ function startPrimaryInstance(initialDeepLinks: string[]): void {
     event.preventDefault()
     inbox.receive(url)
   })
-  app.on('second-instance', (_event, commandline) => {
+  app.on('second-instance', (_event, commandline, _workingDirectory, additionalData) => {
     for (const url of takeInitialDeepLinks(commandline)) inbox.receive(url)
+    const transferredLinks = (additionalData as { deepLinks?: unknown } | undefined)?.deepLinks
+    if (Array.isArray(transferredLinks)) {
+      for (const url of transferredLinks) {
+        if (typeof url === 'string') inbox.receive(url)
+      }
+    }
     if (initialized) void showMainWindow()
   })
   for (const url of initialDeepLinks) inbox.receive(url)

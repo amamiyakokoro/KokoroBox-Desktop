@@ -15,12 +15,12 @@ import {
   overridePath,
   profilePath,
   resourcesDir,
-  resourcesFilesDir,
   taskDir,
   appRoutingIconDir
 } from '../utils/dirs'
 import { existsSync, readFileSync, rmSync, writeFileSync } from 'fs'
 import { execWithElevation } from '../utils/elevation'
+import { WINDOWS_ELEVATED_TASK_ARGUMENT } from './elevatedStartupArgs'
 
 export function getFilePath(
   ext: string[],
@@ -230,8 +230,6 @@ export function setNativeTheme(theme: 'system' | 'light' | 'dark'): void {
 
 export const WINDOWS_ELEVATE_TASK_NAME = 'KokoroBox Elevated'
 export const LEGACY_WINDOWS_ELEVATE_TASK_NAME = 'sparkle-run'
-export const WINDOWS_RUNNER_FILENAME = 'kokorobox-run.exe'
-export const WINDOWS_RUNNER_PARAMS_FILENAME = 'kokorobox-runner-params.json'
 
 function escapeXml(value: string): string {
   return value
@@ -239,14 +237,6 @@ function escapeXml(value: string): string {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
-}
-
-function runnerPath(): string {
-  return path.join(resourcesFilesDir(), WINDOWS_RUNNER_FILENAME)
-}
-
-function runnerParamsPath(): string {
-  return path.join(taskDir(), WINDOWS_RUNNER_PARAMS_FILENAME)
 }
 
 function elevateTaskXml(): string {
@@ -280,8 +270,9 @@ function elevateTaskXml(): string {
   </Settings>
   <Actions Context="Author">
     <Exec>
-      <Command>"${escapeXml(runnerPath())}"</Command>
-      <Arguments>"${escapeXml(exePath())}" "${escapeXml(runnerParamsPath())}"</Arguments>
+      <Command>"${escapeXml(exePath())}"</Command>
+      <Arguments>${WINDOWS_ELEVATED_TASK_ARGUMENT}</Arguments>
+      <WorkingDirectory>${escapeXml(path.dirname(exePath()))}</WorkingDirectory>
     </Exec>
   </Actions>
 </Task>
@@ -296,9 +287,10 @@ function writeTaskReceipt(): void {
   writeFileSync(
     taskReceiptPath(),
     JSON.stringify({
+      version: 2,
       taskName: WINDOWS_ELEVATE_TASK_NAME,
       executable: exePath(),
-      runner: runnerPath()
+      arguments: WINDOWS_ELEVATED_TASK_ARGUMENT
     })
   )
 }
@@ -308,7 +300,6 @@ function createTaskArgs(taskFilePath: string): string[] {
 }
 
 function prepareElevateTaskFile(): string {
-  if (!existsSync(runnerPath())) throw new Error(`${WINDOWS_RUNNER_FILENAME} not found`)
   const taskFilePath = path.join(taskDir(), 'kokorobox-elevated.xml')
   writeFileSync(taskFilePath, Buffer.from(`\ufeff${elevateTaskXml()}`, 'utf-16le'))
   return taskFilePath
@@ -354,9 +345,10 @@ export function checkElevateTaskSync(): boolean {
     if (!existsSync(taskReceiptPath())) return false
     const receipt = JSON.parse(readFileSync(taskReceiptPath(), 'utf8')) as Record<string, unknown>
     return (
+      receipt.version === 2 &&
       receipt.taskName === WINDOWS_ELEVATE_TASK_NAME &&
       receipt.executable === exePath() &&
-      receipt.runner === runnerPath()
+      receipt.arguments === WINDOWS_ELEVATED_TASK_ARGUMENT
     )
   } catch {
     return false

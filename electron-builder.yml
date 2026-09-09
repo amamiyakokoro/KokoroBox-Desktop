@@ -23,6 +23,7 @@ extraResources:
     to: ''
     filter:
       - '**/*'
+      - '!files/kokorobox-run.exe'
       - '!macos-app-routing-system-extension{,/**/*}'
   - from: './THIRD_PARTY_NOTICES.md'
     to: 'THIRD_PARTY_NOTICES.md'
