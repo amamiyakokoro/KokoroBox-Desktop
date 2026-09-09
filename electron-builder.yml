@@ -23,6 +23,7 @@ extraResources:
     to: ''
     filter:
       - '**/*'
+      - '!files/kokorobox-run.exe'
       - '!macos-app-routing-system-extension{,/**/*}'
   - from: './THIRD_PARTY_NOTICES.md'
     to: 'THIRD_PARTY_NOTICES.md'
@@ -36,10 +37,9 @@ protocols:
     - 'kokoro'
 win:
   executableName: KokoroBox
+  requestedExecutionLevel: requireAdministrator
   target:
     - nsis
-    - 7z
-  artifactName: ${name}-windows-${version}-${arch}-portable.${ext}
 nsis:
   artifactName: ${name}-windows-${version}-${arch}-setup.${ext}
   shortcutName: KokoroBox

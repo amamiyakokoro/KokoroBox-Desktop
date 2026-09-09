@@ -1,0 +1,7 @@
+extends: ./electron-builder.yml
+extraMetadata:
+  kokoroboxWindowsElevation: manual-elevation
+win:
+  requestedExecutionLevel: asInvoker
+nsis:
+  artifactName: ${name}-windows-${version}-${arch}-manual-elevation-setup.${ext}

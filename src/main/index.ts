@@ -18,11 +18,7 @@ import { showFloatingWindow } from './resolve/floatingWindow'
 import { getAppConfigSync } from './config/app'
 import { createMainWindowStateManager } from './resolve/windowState'
 import { isHttpUrl } from './utils/url'
-import {
-  applyWindowsGpuWorkaround,
-  ensureWindowsElevatedStartup,
-  useLinuxCustomRelaunch
-} from './sys/startup'
+import { applyWindowsGpuWorkaround, useLinuxCustomRelaunch } from './sys/startup'
 import { handleDeepLink } from './resolve/deepLink'
 import { createDeepLinkInbox, takeInitialDeepLinks } from './resolve/deepLinkInbox'
 import { initAppQuitLifecycle } from './resolve/appLifecycle'
@@ -218,14 +214,13 @@ if (windowsKokoroCallback) {
 }
 
 function requestPrimaryInstance(): void {
-  const gotTheLock = app.requestSingleInstanceLock()
+  const initialDeepLinks = takeInitialDeepLinks(process.argv)
+  const gotTheLock = app.requestSingleInstanceLock({ deepLinks: initialDeepLinks })
   if (!gotTheLock) {
     app.quit()
     return
   }
-  // Keep callback URLs in argv until after the lock request so Electron can still deliver them
-  // through second-instance when both processes run at the same integrity level.
-  startPrimaryInstance(takeInitialDeepLinks(process.argv))
+  startPrimaryInstance(initialDeepLinks)
 }
 
 function startPrimaryInstance(initialDeepLinks: string[]): void {
@@ -241,8 +236,14 @@ function startPrimaryInstance(initialDeepLinks: string[]): void {
     event.preventDefault()
     inbox.receive(url)
   })
-  app.on('second-instance', (_event, commandline) => {
+  app.on('second-instance', (_event, commandline, _workingDirectory, additionalData) => {
     for (const url of takeInitialDeepLinks(commandline)) inbox.receive(url)
+    const transferredLinks = (additionalData as { deepLinks?: unknown } | undefined)?.deepLinks
+    if (Array.isArray(transferredLinks)) {
+      for (const url of transferredLinks) {
+        if (typeof url === 'string') inbox.receive(url)
+      }
+    }
     if (initialized) void showMainWindow()
   })
   for (const url of initialDeepLinks) inbox.receive(url)
@@ -256,7 +257,6 @@ function startPrimaryInstance(initialDeepLinks: string[]): void {
     })
   }
 
-  ensureWindowsElevatedStartup(syncConfig.corePermissionMode, exitApp)
   useLinuxCustomRelaunch()
   const initPromise = init()
 

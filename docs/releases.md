@@ -4,13 +4,13 @@ The workflows retain the upstream Sparkle build matrix and native-dependency pre
 
 ## Outputs
 
-| Platform | Architectures                  | Packages                       |
-| -------- | ------------------------------ | ------------------------------ |
-| Windows  | x64, ARM64                     | NSIS `.exe`, portable `.7z`    |
-| macOS    | Intel x64, Apple Silicon ARM64 | `.pkg`                         |
-| Linux    | x64, ARM64                     | `.deb`, `.rpm`, `.pkg.tar.zst` |
+| Platform | Architectures                  | Packages                                                  |
+| -------- | ------------------------------ | --------------------------------------------------------- |
+| Windows  | x64, ARM64                     | Automatic-UAC and manual-elevation NSIS `.exe` installers |
+| macOS    | Intel x64, Apple Silicon ARM64 | `.pkg`                                                    |
+| Linux    | x64, ARM64                     | `.deb`, `.rpm`, `.pkg.tar.zst`                            |
 
-Each release must contain all 12 packages, `latest.yml`, and `SHA256SUMS`. The updater metadata preserves the exact release tag, including a leading `v` when present. Build artifacts remain available in the workflow run for 14 days.
+Each release must contain all 12 build-matrix packages, two byte-identical Windows compatibility aliases, `latest.yml`, and `SHA256SUMS`. Windows users can choose an automatic-UAC build whose executable requests administrator rights at launch, or a manual-elevation build that starts with ordinary user rights and must be launched with **Run as administrator** when privileged features are needed. Neither build restores the legacy scheduled-task or runner elevation mechanism. The updater preserves the installed elevation variant. The unsuffixed Windows setup aliases let older installations migrate to the automatic-UAC variant through their existing updater. The updater metadata preserves the exact release tag, including a leading `v` when present. Build artifacts remain available in the workflow run for 14 days.
 
 All targets use GitHub-hosted runners and the locked project dependencies. The native module for each target architecture is checked before packaging.
 
@@ -107,7 +107,7 @@ node --import tsx --test scripts/test-release.ts scripts/test-macos-signing.ts s
 
 Windows CI packages are currently **not Authenticode-signed**. SignPath signing must be configured after project approval; this workflow does not claim Foundation sponsorship or signed Windows releases.
 
-Windows packages build the small elevation runner from the reviewed Go source in `build/windows/runner`; release builds never download the legacy Sparkle-branded runner. The installed executable, shortcuts, auto-start task, elevation task, service, data and IPC names use KokoroBox names. On the first upgraded launch, the app migrates an enabled legacy `sparkle` auto-start task to `KokoroBox` and removes obsolete scheduled tasks and runner files. Legacy URI identifiers and the authenticated service wire-format remain supported for compatibility.
+Windows packages declare `requireAdministrator` in the signed KokoroBox executable manifest. Windows performs elevation before the application starts; KokoroBox does not create a launcher process, stage startup arguments, or run an elevation scheduled task. Installation and upgrades remove obsolete elevation tasks and runner files. The installed executable, shortcuts, auto-start task, service, data and IPC names use KokoroBox names. Legacy URI identifiers and the authenticated service wire-format remain supported for compatibility.
 
 Both Intel and Apple Silicon macOS releases require **Developer ID-signed, Apple-notarized PKGs with stapled tickets**. There is no unsigned fallback in either Stable or Rolling releases. The upstream PKG installation scripts remain enabled for proxy/service operation.
 

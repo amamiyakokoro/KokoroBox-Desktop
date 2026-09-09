@@ -14,7 +14,8 @@ const latest = {
 
 if (process.env.SKIP_CHANGELOG !== '1') {
   changelog += '\n### 下载地址：\n\n#### Windows10/11：\n\n'
-  changelog += `- 安装版：[64 位](${downloadUrl}/kokorobox-desktop-windows-${version}-x64-setup.exe) | [ARM64](${downloadUrl}/kokorobox-desktop-windows-${version}-arm64-setup.exe)\n\n`
+  changelog += `- 自动 UAC 版：[64 位](${downloadUrl}/kokorobox-desktop-windows-${version}-x64-setup.exe) | [ARM64](${downloadUrl}/kokorobox-desktop-windows-${version}-arm64-setup.exe)\n\n`
+  changelog += `- 手动提权版：[64 位](${downloadUrl}/kokorobox-desktop-windows-${version}-x64-manual-elevation-setup.exe) | [ARM64](${downloadUrl}/kokorobox-desktop-windows-${version}-arm64-manual-elevation-setup.exe)\n\n`
   changelog += '\n#### macOS 11+:\n\n'
   changelog += `- PKG：[Intel](${downloadUrl}/kokorobox-desktop-macos-${version}-x64.pkg) | [Apple Silicon](${downloadUrl}/kokorobox-desktop-macos-${version}-arm64.pkg)\n\n`
   changelog += '\n#### Linux:\n\n'

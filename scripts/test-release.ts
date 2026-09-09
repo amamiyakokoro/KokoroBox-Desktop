@@ -96,10 +96,21 @@ test('build matrix exactly matches the 12 required release artifacts', () => {
   const build = workflow('build')
   assert.deepEqual(
     build.jobs.build.strategy.matrix.include.map(
-      ({ os, arch, format }: { os: string; arch: string; format: string }) => ({
+      ({
         os,
         arch,
-        format
+        format,
+        elevation
+      }: {
+        os: string
+        arch: string
+        format: string
+        elevation?: string
+      }) => ({
+        os,
+        arch,
+        format,
+        ...(elevation ? { elevation } : {})
       })
     ),
     releaseTargets
@@ -116,10 +127,39 @@ test('build matrix exactly matches the 12 required release artifacts', () => {
     artifactName({ os: 'macos-latest', arch: 'arm64', format: 'pkg' }, '2.26.8'),
     'kokorobox-desktop-macos-2.26.8-arm64.pkg'
   )
+  assert.equal(
+    artifactName(
+      {
+        os: 'windows-latest',
+        arch: 'x64',
+        format: 'nsis',
+        elevation: 'auto-elevate'
+      },
+      '2.26.8'
+    ),
+    'kokorobox-desktop-windows-2.26.8-x64-setup.exe'
+  )
   assert.throws(() =>
     artifactName({ os: 'windows-latest', arch: 'ia32', format: 'nsis' }, '2.26.8')
   )
   assert.throws(() => artifactName(releaseTargets[0], '../../bad'))
+
+  const packageJson = JSON.parse(readFileSync('package.json', 'utf8'))
+  assert.match(packageJson.scripts['build:win'], /build:win:auto-elevate/)
+  assert.match(packageJson.scripts['build:win'], /build:win:manual-elevation/)
+  const autoElevation = parse(readFileSync('electron-builder.windows-auto-elevate.yml', 'utf8'))
+  const manualElevation = parse(
+    readFileSync('electron-builder.windows-manual-elevation.yml', 'utf8')
+  )
+  assert.equal(autoElevation.win.requestedExecutionLevel, 'requireAdministrator')
+  assert.equal(autoElevation.extraMetadata.kokoroboxWindowsElevation, 'auto-elevate')
+  assert.equal(
+    autoElevation.nsis.artifactName,
+    '${name}-windows-${version}-${arch}-setup.${ext}'
+  )
+  assert.equal(manualElevation.win.requestedExecutionLevel, 'asInvoker')
+  assert.equal(manualElevation.extraMetadata.kokoroboxWindowsElevation, 'manual-elevation')
+  assert.notEqual(autoElevation.nsis.artifactName, manualElevation.nsis.artifactName)
 
   const uploadSteps = build.jobs.build.steps.filter(
     (step: { uses?: string }) => step.uses === 'actions/upload-artifact@v7'
@@ -214,7 +254,9 @@ function fixtures(fn: (source: string, output: string) => void, version = '2.26.
         packages,
         source,
         signing,
-        target.os === 'windows-latest' && target.arch === 'x64' && target.format === 'nsis'
+        target.os === 'windows-latest' &&
+          target.arch === 'x64' &&
+          target.elevation === 'auto-elevate'
           ? processRouterSbom
           : undefined
       )
@@ -246,6 +288,11 @@ test('collects complete builds, generates hashes and concise updater-compatible 
           .digest('hex')
       )
     }
+    for (const arch of ['x64', 'arm64'])
+      assert.equal(
+        existsSync(path.join(output, `kokorobox-desktop-windows-2.26.8-${arch}-setup.exe`)),
+        true
+      )
   })
 })
 
@@ -260,7 +307,7 @@ for (const problem of ['missing', 'tampered', 'wrong-revision']) {
         const sbom = JSON.parse(readFileSync(sbomFile, 'utf8'))
         sbom.metadata.properties[0].value = 'a'.repeat(40)
         writeFileSync(sbomFile, JSON.stringify(sbom))
-        const manifestFile = path.join(source, 'manifest-windows-latest-x64-nsis.json')
+        const manifestFile = path.join(source, 'manifest-windows-latest-x64-nsis-auto-elevate.json')
         const manifest = JSON.parse(readFileSync(manifestFile, 'utf8'))
         manifest.sbom.checksum = createHash('sha256').update(readFileSync(sbomFile)).digest('hex')
         writeFileSync(manifestFile, JSON.stringify(manifest))
@@ -354,7 +401,10 @@ test('workflows gate publication on all builds and do not invoke upstream-only s
   const ciMac = parse(readFileSync('electron-builder.ci.yml', 'utf8'))
   assert.equal(ciMac.mac.identity, null)
   assert.equal(ciMac.mac.notarize, false)
-  assert.equal(parse(readFileSync('electron-builder.yml', 'utf8')).linux.executableName, 'kokorobox')
+  assert.equal(
+    parse(readFileSync('electron-builder.yml', 'utf8')).linux.executableName,
+    'kokorobox'
+  )
   const buildEnvironment = readFileSync('scripts/build-env.ts', 'utf8')
   assert.match(buildEnvironment, /KOKOROBOX_SYSTEM_CORE/)
   assert.match(buildEnvironment, /KOKOROBOX_SYSTEM_SERVICE/)
@@ -369,11 +419,7 @@ test('workflows gate publication on all builds and do not invoke upstream-only s
 test('AUR publication uses KokoroBox package names and layouts', () => {
   const aurWorkflow = workflow('aur')
   const packages = aurWorkflow.jobs.publish.strategy.matrix.package
-  assert.deepEqual(packages, [
-    'kokorobox-rolling-bin',
-    'kokorobox-git',
-    'kokorobox-electron-git'
-  ])
+  assert.deepEqual(packages, ['kokorobox-rolling-bin', 'kokorobox-git', 'kokorobox-electron-git'])
 
   for (const packageName of packages) {
     const pkgbuild = readFileSync(`aur/${packageName}/PKGBUILD`, 'utf8')
@@ -384,11 +430,11 @@ test('AUR publication uses KokoroBox package names and layouts', () => {
 
 test('service release download tolerates GitHub asset publication delay', () => {
   const prepare = readFileSync('scripts/prepare.ts', 'utf8')
+  assert.match(prepare, /name: 'kokorobox-service',[\s\S]*retry: 24,[\s\S]*retryDelayMs: 5000/)
   assert.match(
     prepare,
-    /name: 'kokorobox-service',[\s\S]*retry: 24,[\s\S]*retryDelayMs: 5000/
+    /await new Promise<void>\(\(resolve\) => \{[\s\S]*?setTimeout\(resolve, task\.retryDelayMs\)[\s\S]*?\}\)/
   )
-  assert.match(prepare, /await new Promise\(\(resolve\) => setTimeout\(resolve, task\.retryDelayMs\)\)/)
 })
 
 test('Fedora validation gates the reusable build for x64 RPMs', () => {

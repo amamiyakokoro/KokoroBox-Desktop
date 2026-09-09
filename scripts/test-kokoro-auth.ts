@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs'
+import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { test } from 'node:test'
@@ -640,9 +640,7 @@ test('Kokoro subscription resolve and config download send the same platform Use
 
   assert.equal(h.requests.length, 2)
   const expectedUserAgent = h.client.kokoroSubscriptionUserAgent(process.platform, '2.26.9-7')
-  assert.ok(
-    h.requests.every((request) => request.headers['User-Agent'] === expectedUserAgent)
-  )
+  assert.ok(h.requests.every((request) => request.headers['User-Agent'] === expectedUserAgent))
   assert.ok(h.requests.every((request) => request.headers.Authorization === 'Bearer rules-access'))
 })
 
@@ -866,18 +864,15 @@ test('packaging registers the shared scheme and Windows callback relay precedes 
   assert.match(init, /['"]kokoro['"]/) // Runtime Windows/dev registration.
   const main = readFileSync('src/main/index.ts', 'utf8')
   const callbackRelay = main.indexOf('void forwardKokoroCallback(')
-  const singleInstanceLock = main.indexOf('app.requestSingleInstanceLock()')
+  const initialDeepLinks = main.indexOf('takeInitialDeepLinks(process.argv)')
+  const singleInstanceLock = main.indexOf('app.requestSingleInstanceLock({ deepLinks:')
   assert.ok(callbackRelay >= 0 && callbackRelay < singleInstanceLock)
-  assert.ok(singleInstanceLock < main.indexOf('ensureWindowsElevatedStartup(syncConfig'))
-  assert.ok(
-    singleInstanceLock < main.indexOf('takeInitialDeepLinks(process.argv)') &&
-      main.indexOf('takeInitialDeepLinks(process.argv)') <
-        main.indexOf('ensureWindowsElevatedStartup(syncConfig')
-  )
+  assert.ok(initialDeepLinks >= 0 && initialDeepLinks < singleInstanceLock)
+  assert.doesNotMatch(main, /ensureWindowsElevatedStartup|elevatedStartupArgs/)
   assert.match(main, /event\.preventDefault\(\)/)
 })
 
-test('Windows packaging uses KokoroBox names and migrates legacy Sparkle tasks', () => {
+test('Windows packaging uses the signed app manifest and never self-elevates at runtime', () => {
   const metadata = JSON.parse(readFileSync('package.json', 'utf8'))
   const config = parseYaml(readFileSync('electron-builder.yml', 'utf8'))
   assert.equal(metadata.author.name, 'KokoroBox contributors')
@@ -888,24 +883,27 @@ test('Windows packaging uses KokoroBox names and migrates legacy Sparkle tasks',
   )
   assert.equal(config.productName, 'KokoroBox')
   assert.equal(config.win.executableName, 'KokoroBox')
+  assert.equal(config.win.requestedExecutionLevel, 'requireAdministrator')
   assert.equal(config.nsis.shortcutName, 'KokoroBox')
+  assert.ok(config.extraResources[0].filter.includes('!files/kokorobox-run.exe'))
+
+  const installer = readFileSync('build/installer.nsh', 'utf8')
+  assert.match(installer, /RemoveLegacyElevationArtifacts/)
+  assert.match(installer, /resources\\files\\kokorobox-run\.exe/)
+  assert.match(installer, /kokorobox-runner-params\.json/)
+  assert.match(installer, /kokorobox-elevated-deep-links\.json/)
+  assert.match(installer, /kokorobox-elevated-task\.json/)
 
   const prepare = readFileSync('scripts/prepare.ts', 'utf8')
-  assert.match(prepare, /file[sS]?,?\s*['"]kokorobox-run\.exe|kokorobox-run\.exe/)
-  assert.match(prepare, /go['"],\s*\[?['"]build|execFileSync\(\s*['"]go['"]/)
+  assert.match(prepare, /removeLegacyRunner/)
+  assert.doesNotMatch(prepare, /execFileSync\(\s*['"]go['"]/)
   assert.doesNotMatch(prepare, /sparkle-run\/releases\/download\/\$\{arch\}\/sparkle-run\.exe/)
-
-  const runner = readFileSync('build/windows/runner/main.go', 'utf8')
-  assert.match(runner, /KokoroBox Runner/)
-  assert.doesNotMatch(runner, /Sparkle Runner/)
-  assert.match(runner, /clash:\/\//)
-  assert.match(runner, /kokorobox:\/\//)
-  assert.doesNotMatch(runner, /kokoro:\/\//)
+  assert.equal(existsSync('build/windows/runner/main.go'), false)
 
   const misc = readFileSync('src/main/sys/misc.ts', 'utf8')
   assert.match(misc, /WINDOWS_ELEVATE_TASK_NAME = 'KokoroBox Elevated'/)
-  assert.match(misc, /resourcesFilesDir\(\), WINDOWS_RUNNER_FILENAME/)
-  assert.match(misc, /function elevateTaskXml\(\)/)
+  assert.match(misc, /return isRunningAsAdmin\(\)/)
+  assert.doesNotMatch(misc, /WINDOWS_RUNNER_FILENAME|runnerPath|elevateTaskXml|\/create/)
   assert.doesNotMatch(misc, /copyFileSync/)
 
   const autoRun = readFileSync('src/main/sys/autoRun.ts', 'utf8')
@@ -916,10 +914,10 @@ test('Windows packaging uses KokoroBox names and migrates legacy Sparkle tasks',
   assert.doesNotMatch(autoRun, /<Command>.*sparkle-run\.exe/)
 
   const startup = readFileSync('src/main/sys/startup.ts', 'utf8')
-  assert.doesNotMatch(startup, /\/run['"], ['"]\/tn['"], ['"]sparkle-run/)
+  assert.doesNotMatch(startup, /schtasks|stageElevatedDeepLinks|releaseSingleInstanceLock/)
 
   const workflow = readFileSync('.github/workflows/build.yml', 'utf8')
-  assert.match(workflow, /Setup Go for KokoroBox Runner/)
+  assert.doesNotMatch(workflow, /Setup Go for KokoroBox Runner/)
 })
 
 test('secure storage writes one encrypted record and never deletes the old record before rename', async () => {

@@ -81,16 +81,20 @@ jobs:
         include:
           - os: windows-latest
             arch: x64
-            format: 7z
+            format: nsis
+            elevation: auto-elevate
           - os: windows-latest
             arch: x64
             format: nsis
-          - os: windows-latest
-            arch: arm64
-            format: 7z
+            elevation: manual-elevation
           - os: windows-latest
             arch: arm64
             format: nsis
+            elevation: auto-elevate
+          - os: windows-latest
+            arch: arm64
+            format: nsis
+            elevation: manual-elevation
 
           - os: ubuntu-latest
             arch: x64
@@ -120,7 +124,7 @@ jobs:
             arch: arm64
             format: pkg
 
-    name: Build ${{ matrix.os }}-${{ matrix.arch }}${{ matrix.format && '-' || '' }}${{ matrix.format || '' }}
+    name: Build ${{ matrix.os }}-${{ matrix.arch }}${{ matrix.format && '-' || '' }}${{ matrix.format || '' }}${{ matrix.elevation && '-' || '' }}${{ matrix.elevation || '' }}
 
     steps:
       - name: Checkout
@@ -133,13 +137,6 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: 24
-
-      - name: Setup Go for KokoroBox Runner
-        if: matrix.os == 'windows-latest'
-        uses: actions/setup-go@v6
-        with:
-          go-version-file: build/windows/runner/go.mod
-          cache: false
 
       - name: Setup pnpm
         run: npm install -g pnpm@11.1.1
@@ -227,7 +224,7 @@ jobs:
         shell: bash
         run: |
           if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
-            pnpm build:win ${{ matrix.format }} --${{ matrix.arch }}
+            pnpm build:win:${{ matrix.elevation }} --${{ matrix.arch }}
           elif [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
             pnpm build:linux ${{ matrix.format }} --${{ matrix.arch }}
           else
@@ -276,21 +273,12 @@ jobs:
         if: always() && matrix.os == 'macos-latest' && env.MACOS_SIGNING_DIR != ''
         run: node scripts/macos-signing.ts cleanup
 
-      - name: Add Portable Flag
-        if: matrix.os == 'windows-latest' && matrix.format == '7z'
-        shell: pwsh
-        run: |
-          New-Item -Path "PORTABLE" -ItemType File
-          Get-ChildItem dist/*portable.7z | ForEach-Object {
-            7z a $_.FullName PORTABLE
-            if ($LASTEXITCODE -ne 0) { throw "Failed to add portable flag" }
-          }
-
       - name: Stage and Check Artifact
         env:
           TARGET_OS: ${{ matrix.os }}
           TARGET_ARCH: ${{ matrix.arch }}
           TARGET_FORMAT: ${{ matrix.format }}
+          TARGET_ELEVATION: ${{ matrix.elevation }}
         run: node scripts/release-artifacts.ts stage
 
       - name: Upload Artifacts
@@ -298,7 +286,7 @@ jobs:
         continue-on-error: true
         uses: actions/upload-artifact@v7
         with:
-          name: packages-${{ matrix.os }}-${{ matrix.arch }}-${{ matrix.format }}
+          name: packages-${{ matrix.os }}-${{ matrix.arch }}-${{ matrix.format }}${{ matrix.elevation && '-' || '' }}${{ matrix.elevation || '' }}
           path: dist/release-artifacts/*
           if-no-files-found: error
           compression-level: 0
@@ -311,7 +299,7 @@ jobs:
         if: steps.upload_artifacts.outcome == 'failure'
         uses: actions/upload-artifact@v7
         with:
-          name: packages-${{ matrix.os }}-${{ matrix.arch }}-${{ matrix.format }}
+          name: packages-${{ matrix.os }}-${{ matrix.arch }}-${{ matrix.format }}${{ matrix.elevation && '-' || '' }}${{ matrix.elevation || '' }}
           path: dist/release-artifacts/*
           if-no-files-found: error
           compression-level: 0

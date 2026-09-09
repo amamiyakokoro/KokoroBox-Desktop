@@ -1,0 +1,7 @@
+extends: ./electron-builder.yml
+extraMetadata:
+  kokoroboxWindowsElevation: auto-elevate
+win:
+  requestedExecutionLevel: requireAdministrator
+nsis:
+  artifactName: ${name}-windows-${version}-${arch}-setup.${ext}

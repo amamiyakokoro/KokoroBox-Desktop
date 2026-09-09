@@ -650,6 +650,13 @@ export const messages: Readonly<Record<string, string>> = {
   提权配置已取消: 'Elevation configuration removed',
   提权配置成功: 'Elevation configured',
   提权配置状态: 'Elevation configuration status',
+  管理员权限状态: 'Administrator status',
+  'Windows 会在启动 KokoroBox 前显示标准 UAC 提示':
+    'Windows shows its standard UAC prompt before KokoroBox starts',
+  '自动 UAC 版会在启动时请求权限；手动提权版需要使用“以管理员身份运行”':
+    'The automatic-UAC build requests permission at startup; launch the manual-elevation build with “Run as administrator”',
+  应用程序不再使用计划任务或额外启动程序提升权限:
+    'The app no longer elevates through a scheduled task or a launcher process',
   搜索: 'Search',
   撤销: 'Undo',
   撤销授权: 'Revoke authorization',
@@ -1102,6 +1109,7 @@ export const messages: Readonly<Record<string, string>> = {
   面板更新成功: 'Dashboard updated',
   首次启动请以管理员权限运行: 'Run as administrator on first launch',
   '首次启动请以管理员权限运行\n{0}\n{1}': 'Run as administrator on first launch\n{0}\n{1}',
+  '请以管理员身份重新启动 KokoroBox': 'Restart KokoroBox with “Run as administrator”',
   验证订阅格式: 'Validate subscription format',
   高: 'High',
   高于正常: 'Above normal',

@@ -1,13 +1,13 @@
 import { tr } from '../../shared/i18n'
 import { normalizeWindowsExecutablePath } from '../../shared/app-routing'
-import { execFile, execFileSync, spawn } from 'child_process'
+import { execFile, spawn } from 'child_process'
 import { app, dialog, nativeImage, nativeTheme, shell } from 'electron'
 import { mkdir, mkdtemp, readFile, realpath, rm, stat, writeFile } from 'fs/promises'
 import { tmpdir } from 'os'
 import path from 'path'
 import crypto from 'crypto'
 import { promisify } from 'util'
-import { fileToDataUrl, runElevated, setupFirewallRules } from '@uruhalushia/sparkle-native'
+import { fileToDataUrl, isRunningAsAdmin, setupFirewallRules } from '@uruhalushia/sparkle-native'
 import {
   dataDir,
   exePath,
@@ -15,11 +15,10 @@ import {
   overridePath,
   profilePath,
   resourcesDir,
-  resourcesFilesDir,
   taskDir,
   appRoutingIconDir
 } from '../utils/dirs'
-import { existsSync, readFileSync, rmSync, writeFileSync } from 'fs'
+import { rmSync } from 'fs'
 import { execWithElevation } from '../utils/elevation'
 import { scanWindowsExecutableDirectory } from '../app-routing/directory'
 
@@ -265,107 +264,9 @@ export function setNativeTheme(theme: 'system' | 'light' | 'dark'): void {
 
 export const WINDOWS_ELEVATE_TASK_NAME = 'KokoroBox Elevated'
 export const LEGACY_WINDOWS_ELEVATE_TASK_NAME = 'sparkle-run'
-export const WINDOWS_RUNNER_FILENAME = 'kokorobox-run.exe'
-export const WINDOWS_RUNNER_PARAMS_FILENAME = 'kokorobox-runner-params.json'
-
-function escapeXml(value: string): string {
-  return value
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-}
-
-function runnerPath(): string {
-  return path.join(resourcesFilesDir(), WINDOWS_RUNNER_FILENAME)
-}
-
-function runnerParamsPath(): string {
-  return path.join(taskDir(), WINDOWS_RUNNER_PARAMS_FILENAME)
-}
-
-function elevateTaskXml(): string {
-  return `<?xml version="1.0" encoding="UTF-16"?>
-<Task version="1.2" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
-  <Triggers />
-  <Principals>
-    <Principal id="Author">
-      <LogonType>InteractiveToken</LogonType>
-      <RunLevel>HighestAvailable</RunLevel>
-    </Principal>
-  </Principals>
-  <Settings>
-    <MultipleInstancesPolicy>Parallel</MultipleInstancesPolicy>
-    <DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries>
-    <StopIfGoingOnBatteries>false</StopIfGoingOnBatteries>
-    <AllowHardTerminate>false</AllowHardTerminate>
-    <StartWhenAvailable>false</StartWhenAvailable>
-    <RunOnlyIfNetworkAvailable>false</RunOnlyIfNetworkAvailable>
-    <IdleSettings>
-      <StopOnIdleEnd>false</StopOnIdleEnd>
-      <RestartOnIdle>false</RestartOnIdle>
-    </IdleSettings>
-    <AllowStartOnDemand>true</AllowStartOnDemand>
-    <Enabled>true</Enabled>
-    <Hidden>false</Hidden>
-    <RunOnlyIfIdle>false</RunOnlyIfIdle>
-    <WakeToRun>false</WakeToRun>
-    <ExecutionTimeLimit>PT0S</ExecutionTimeLimit>
-    <Priority>3</Priority>
-  </Settings>
-  <Actions Context="Author">
-    <Exec>
-      <Command>"${escapeXml(runnerPath())}"</Command>
-      <Arguments>"${escapeXml(exePath())}" "${escapeXml(runnerParamsPath())}"</Arguments>
-    </Exec>
-  </Actions>
-</Task>
-`
-}
 
 function taskReceiptPath(): string {
   return path.join(taskDir(), 'kokorobox-elevated-task.json')
-}
-
-function writeTaskReceipt(): void {
-  writeFileSync(
-    taskReceiptPath(),
-    JSON.stringify({
-      taskName: WINDOWS_ELEVATE_TASK_NAME,
-      executable: exePath(),
-      runner: runnerPath()
-    })
-  )
-}
-
-function createTaskArgs(taskFilePath: string): string[] {
-  return ['/create', '/tn', WINDOWS_ELEVATE_TASK_NAME, '/xml', taskFilePath, '/f']
-}
-
-function prepareElevateTaskFile(): string {
-  if (!existsSync(runnerPath())) throw new Error(`${WINDOWS_RUNNER_FILENAME} not found`)
-  const taskFilePath = path.join(taskDir(), 'kokorobox-elevated.xml')
-  writeFileSync(taskFilePath, Buffer.from(`\ufeff${elevateTaskXml()}`, 'utf-16le'))
-  return taskFilePath
-}
-
-export function createElevateTaskSync(): void {
-  const taskFilePath = prepareElevateTaskFile()
-  execFileSync('schtasks.exe', createTaskArgs(taskFilePath))
-  writeTaskReceipt()
-}
-
-export function createElevateTaskWithPromptSync(): void {
-  const taskFilePath = prepareElevateTaskFile()
-  const exitCode = runElevated('schtasks.exe', createTaskArgs(taskFilePath))
-  if (exitCode !== 0) throw new Error(`Failed to create elevated task: exit code ${exitCode}`)
-  writeTaskReceipt()
-}
-
-export async function createElevateTask(): Promise<void> {
-  const taskFilePath = prepareElevateTaskFile()
-  await execWithElevation('schtasks.exe', createTaskArgs(taskFilePath))
-  writeTaskReceipt()
 }
 
 export async function deleteElevateTask(): Promise<void> {
@@ -380,19 +281,9 @@ export async function deleteElevateTask(): Promise<void> {
 }
 
 export async function checkElevateTask(): Promise<boolean> {
-  return checkElevateTaskSync()
-}
-
-export function checkElevateTaskSync(): boolean {
+  if (process.platform !== 'win32') return false
   try {
-    execFileSync('schtasks.exe', ['/query', '/tn', WINDOWS_ELEVATE_TASK_NAME], { stdio: 'pipe' })
-    if (!existsSync(taskReceiptPath())) return false
-    const receipt = JSON.parse(readFileSync(taskReceiptPath(), 'utf8')) as Record<string, unknown>
-    return (
-      receipt.taskName === WINDOWS_ELEVATE_TASK_NAME &&
-      receipt.executable === exePath() &&
-      receipt.runner === runnerPath()
-    )
+    return isRunningAsAdmin()
   } catch {
     return false
   }

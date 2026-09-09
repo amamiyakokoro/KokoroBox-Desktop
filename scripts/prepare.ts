@@ -3,7 +3,7 @@ import AdmZip from 'adm-zip'
 import path from 'path'
 import zlib from 'zlib'
 import { extract } from 'tar'
-import { execFileSync, execSync } from 'child_process'
+import { execSync } from 'child_process'
 import { systemCoreOnlyBuild } from './build-env.ts'
 
 const cwd = process.cwd()
@@ -330,24 +330,9 @@ const resolveKokoroBoxService = () => {
     needExecutable: true
   })
 }
-const resolveRunner = async () => {
-  const goArch = { x64: 'amd64', ia32: '386', arm64: 'arm64' }[arch]
-  if (!goArch) throw new Error(`unsupported KokoroBox runner architecture "${arch}"`)
-  const outputDir = path.join(cwd, 'extra', 'files')
-  const output = path.join(outputDir, 'kokorobox-run.exe')
-  fs.mkdirSync(outputDir, { recursive: true })
-  if (fs.existsSync(output)) fs.rmSync(output)
-  execFileSync('go', ['build', '-trimpath', '-ldflags', '-s -w -H windowsgui', '-o', output, '.'], {
-    cwd: path.join(cwd, 'build', 'windows', 'runner'),
-    env: {
-      ...process.env,
-      GOOS: 'windows',
-      GOARCH: goArch,
-      ...(goArch === 'amd64' ? { GOAMD64: 'v1' } : {})
-    },
-    stdio: 'inherit'
-  })
-  console.log(`[INFO]: KokoroBox runner built for ${arch}`)
+const removeLegacyRunner = async () => {
+  const legacyRunner = path.join(cwd, 'extra', 'files', 'kokorobox-run.exe')
+  if (fs.existsSync(legacyRunner)) fs.rmSync(legacyRunner)
 }
 
 const resolveMonitor = async () => {
@@ -439,9 +424,9 @@ const tasks: Task[] = [
     retryDelayMs: 5000
   },
   {
-    name: 'runner',
-    func: resolveRunner,
-    retry: 5,
+    name: 'remove-legacy-runner',
+    func: removeLegacyRunner,
+    retry: 1,
     winOnly: true
   },
   {
@@ -473,7 +458,9 @@ async function runTask() {
       console.error(`[ERROR]: task::${task.name} try ${i} ==`, getErrorMessage(err))
       if (i === task.retry - 1) throw err
       if (task.retryDelayMs) {
-        await new Promise((resolve) => setTimeout(resolve, task.retryDelayMs))
+        await new Promise<void>((resolve) => {
+          setTimeout(resolve, task.retryDelayMs)
+        })
       }
     }
   }
