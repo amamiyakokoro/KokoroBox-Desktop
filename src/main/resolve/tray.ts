@@ -9,7 +9,6 @@ import {
 } from '../config'
 import macTrayIcon from '../../../resources/tray-icon-macos.png?asset'
 import notoTrayIcon from '../../../resources/tray-icon-noto.png?asset'
-import notoTrayIcoIcon from '../../../resources/tray-icon-noto.ico?asset'
 import {
   mihomoChangeProxy,
   mihomoCloseConnections,
@@ -50,6 +49,49 @@ type TrayImage = Electron.NativeImage | string
 const customTrayIconSize = 16
 const customTrayIconScaleFactors = [1, 1.25, 1.5, 2, 2.5, 3]
 const defaultTrayIconSize = 18
+const windowsTrayIconSize = 16
+
+function recolorWindowsTrayImage(
+  sourceIcon: Electron.NativeImage,
+  color: number
+): Electron.NativeImage {
+  const { width, height } = sourceIcon.getSize()
+  const bitmap = Buffer.from(sourceIcon.toBitmap())
+
+  // Windows returns tray bitmaps as BGRA. Preserve alpha so the shell receives
+  // a transparent glyph instead of the opaque square from the old emoji icon.
+  for (let offset = 0; offset < bitmap.length; offset += 4) {
+    if (bitmap[offset + 3] === 0) continue
+    bitmap[offset] = color
+    bitmap[offset + 1] = color
+    bitmap[offset + 2] = color
+  }
+
+  return nativeImage.createFromBitmap(bitmap, { width, height, scaleFactor: 1 })
+}
+
+function createWindowsTrayIcon(): Electron.NativeImage {
+  const sourceIcon = nativeImage.createFromPath(macTrayIcon)
+  if (sourceIcon.isEmpty()) return sourceIcon
+
+  const icon = nativeImage.createEmpty()
+  const color = nativeTheme.shouldUseDarkColors ? 0xff : 0x1f
+
+  for (const scaleFactor of customTrayIconScaleFactors) {
+    const resizedIcon = sourceIcon.resize({
+      height: Math.round(windowsTrayIconSize * scaleFactor),
+      quality: 'best'
+    })
+    const recoloredIcon = recolorWindowsTrayImage(resizedIcon, color)
+    if (recoloredIcon.isEmpty()) continue
+
+    icon.addRepresentation({ scaleFactor, buffer: recoloredIcon.toPNG() })
+  }
+
+  return icon.isEmpty()
+    ? recolorWindowsTrayImage(sourceIcon.resize({ height: windowsTrayIconSize }), color)
+    : icon
+}
 
 function formatDelayText(delay: number): string {
   if (delay === 0) {
@@ -63,13 +105,9 @@ function formatDelayText(delay: number): string {
 function createDefaultTrayIcon(): Electron.NativeImage {
   if (defaultTrayIcon) return defaultTrayIcon
 
-  const iconPath =
-    process.platform === 'win32'
-      ? notoTrayIcoIcon
-      : process.platform === 'darwin'
-        ? macTrayIcon
-        : notoTrayIcon
-  const sourceIcon = nativeImage.createFromPath(iconPath)
+  const iconPath = process.platform === 'darwin' ? macTrayIcon : notoTrayIcon
+  const sourceIcon =
+    process.platform === 'win32' ? createWindowsTrayIcon() : nativeImage.createFromPath(iconPath)
   const icon =
     process.platform === 'win32'
       ? sourceIcon
