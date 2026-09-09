@@ -340,6 +340,7 @@ export const messages: Readonly<Record<string, string>> = {
   内核: '核心',
   内核启动出错: '核心啟動出錯',
   '内核启动失败，code: {0}, signal: {1}': '核心啟動失敗，code: {0}, signal: {1}',
+  '内核启动失败：{0}': '核心啟動失敗：{0}',
   '内核启动失败，post-up 未触发，code: {0}, signal: {1}':
     '核心啟動失敗，post-up 未觸發，code: {0}, signal: {1}',
   内核授权成功: '核心授權成功',

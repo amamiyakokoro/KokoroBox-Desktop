@@ -59,6 +59,11 @@ export async function generateProfile(): Promise<void> {
 
   const profile = deepMerge(JSON.parse(JSON.stringify(currentProfile)), configToMerge)
 
+  if (controlDns && profile.dns) {
+    profile.dns['proxy-server-nameserver-policy'] =
+      configToMerge.dns?.['proxy-server-nameserver-policy'] ?? {}
+  }
+
   applyAppRoutingListener(
     profile,
     appRoutingConfig.enabled && appRoutingSupported(process.platform, process.arch),

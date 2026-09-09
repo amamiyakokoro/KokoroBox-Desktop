@@ -357,6 +357,7 @@ export const messages: Readonly<Record<string, string>> = {
   内核: 'Core',
   内核启动出错: 'Failed to start core',
   '内核启动失败，code: {0}, signal: {1}': 'Core startup failed, code: {0}, signal: {1}',
+  '内核启动失败：{0}': 'Core startup failed: {0}',
   '内核启动失败，post-up 未触发，code: {0}, signal: {1}':
     'Core startup failed: post-up was not triggered, code: {0}, signal: {1}',
   内核授权成功: 'Core permissions granted',

@@ -1,5 +1,6 @@
 import { tr } from '../../shared/i18n'
 import { ChildProcess, spawn } from 'child_process'
+import { createInterface } from 'readline'
 import { dataDir, coreLogPath, mihomoCorePath } from '../utils/dirs'
 import { systemCoreOnlyBuild } from '../../shared/build-flags'
 import { generateProfile, getRuntimeConfig } from './factory'
@@ -360,7 +361,9 @@ export async function startCore(detached = false): Promise<Promise<void>[]> {
   }
 
   await generateProfile()
-  await checkProfile()
+  if (useServiceCore || detached) {
+    await checkProfile()
+  }
   let serviceCoreRunning = false
   if (useServiceCore) {
     try {
@@ -472,12 +475,33 @@ export async function startCore(detached = false): Promise<Promise<void>[]> {
     env: env
   })
   directCoreState.child = child
+  let startupOutput = ''
+  let configurationRejected = false
+  let spawnError: Error | undefined
+  const captureStartupOutput = (data: Buffer): void => {
+    if (initialized) return
+    startupOutput += data.toString()
+    configurationRejected ||= startupOutput.includes('Parse config error:')
+    startupOutput = startupOutput.slice(-16384)
+  }
+  child.stdout?.on('data', captureStartupOutput)
+  child.stderr?.on('data', captureStartupOutput)
+  child.once('error', (error) => {
+    spawnError = error
+  })
+  const startupFailure = (reason: unknown): Error => {
+    const details = startupOutput.trim()
+    const message = `${spawnError?.message || String(reason)}${details ? `\n${details}` : ''}`
+    return new Error(tr('内核启动失败：{0}', [message]))
+  }
   hookWaiter?.attachProcess(child)
   if (child.pid) {
     try {
       os.setPriority(child.pid, os.constants.priority[mihomoCpuPriority])
     } catch (error) {
-      await appendAppLog(`[Manager]: set core priority failed, ${error}\n`)
+      const log = appendAppLog(`[Manager]: set core priority failed, ${error}\n`)
+      if (detached) await log
+      else void log.catch(() => {})
     }
   }
   if (detached) {
@@ -489,7 +513,7 @@ export async function startCore(detached = false): Promise<Promise<void>[]> {
   child.on('close', async (code, signal) => {
     flushDirectCoreLogNotifications()
     await appendAppLog(`[Manager]: Core closed, code: ${code}, signal: ${signal}\n`)
-    if (directCoreState.retry) {
+    if (!configurationRejected && directCoreState.retry) {
       await appendAppLog(`[Manager]: Try Restart Core\n`)
       directCoreState.retry--
       await restartCore()
@@ -523,54 +547,46 @@ export async function startCore(detached = false): Promise<Promise<void>[]> {
 
   const waitForCoreReadyByLog = (): Promise<Promise<void>[]> => {
     let controllerReady = false
+    let providersReady = false
+    let completing = false
 
     return new Promise((resolve, reject) => {
+      if (!child.stdout) {
+        reject(startupFailure('Core stdout is unavailable'))
+        return
+      }
+      const lines = createInterface({ input: child.stdout })
       child.once('close', (code, signal) => {
-        reject(new Error(tr('内核启动失败，code: {0}, signal: {1}', [code, signal])))
+        lines.close()
+        reject(startupFailure(`code: ${code}, signal: ${signal}`))
       })
 
-      child.stdout?.on('data', async (data) => {
-        const str = data.toString()
-        await handleCoreOutput(str, reject)
+      lines.on('line', (line) => {
+        const handleLine = async (): Promise<void> => {
+          await handleCoreOutput(line, reject)
+          if (initialized) return
 
-        if (!controllerReady && isControllerReadyLog(str)) {
-          controllerReady = true
-          resolve([
-            new Promise((resolve, reject) => {
-              const handleProviderInitialization = async (logLine: string): Promise<void> => {
-                providerTracker.track(logLine)
+          providerTracker.track(line)
+          providersReady ||= providerTracker.isReady(line)
+          controllerReady ||= isControllerReadyLog(line)
 
-                if (isTunPermissionError(logLine)) {
-                  patchControledMihomoConfig({ tun: { enable: false } })
-                  mainWindow?.webContents.send('controledMihomoConfigUpdated')
-                  ipcMain.emit('updateTrayMenu')
-                  reject(tr('虚拟网卡启动失败，前往内核设置页尝试手动授予内核权限'))
-                }
+          if (isTunPermissionError(line)) {
+            completing = true
+            patchControledMihomoConfig({ tun: { enable: false } })
+            mainWindow?.webContents.send('controledMihomoConfigUpdated')
+            ipcMain.emit('updateTrayMenu')
+            reject(tr('虚拟网卡启动失败，前往内核设置页尝试手动授予内核权限'))
+            return
+          }
 
-                if (providerTracker.isReady(logLine)) {
-                  await waitForMihomoReady()
-                  initialized = true
-                  completeCoreInitialization(logLevel)
-                    .then(() => resolve())
-                    .catch(reject)
-                }
-              }
-
-              child.stdout?.on('data', (data) => {
-                if (!initialized) {
-                  handleProviderInitialization(data.toString()).catch(reject)
-                }
-              })
-
-              child.once('close', (code, signal) => {
-                if (!initialized) {
-                  reject(new Error(tr('内核启动失败，code: {0}, signal: {1}', [code, signal])))
-                }
-              })
-            })
-          ])
+          if (!controllerReady || !providersReady || completing) return
+          completing = true
           await startMihomoApiStreams()
+          await waitForMihomoReady()
+          initialized = true
+          resolve([completeCoreInitialization(logLevel)])
         }
+        handleLine().catch(reject)
       })
     })
   }
@@ -589,7 +605,7 @@ export async function startCore(detached = false): Promise<Promise<void>[]> {
           await startMihomoApiStreams()
           resolve([completeCoreInitialization(logLevel)])
         })
-        .catch(reject)
+        .catch((error) => reject(startupFailure(error)))
     })
   }
 
