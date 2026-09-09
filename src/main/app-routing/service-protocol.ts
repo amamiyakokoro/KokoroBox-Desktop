@@ -1,14 +1,20 @@
 import type { ServiceProcessRouterRules, ServiceProcessRouterStatus } from '../service/api'
-import { isAppRoutingRuleEffectivelyEnabled } from '../../shared/app-routing'
+import {
+  appRoutingExecutableName,
+  appRoutingIdentifierKind,
+  isAppRoutingRuleEffectivelyEnabled
+} from '../../shared/app-routing'
 
 const serviceStates = new Set(['stopped', 'starting', 'running', 'blocked', 'error'])
 
 export function buildServiceProcessRouterRules(
   config: AppRoutingConfig,
-  proxyPort: number
+  proxyPort: number,
+  platform: 'windows' | 'linux' = 'windows'
 ): ServiceProcessRouterRules {
   return {
     version: 1,
+    platform,
     proxy_port: proxyPort,
     fail_closed: true,
     proxy_udp_dns: config.proxyUdpDns,
@@ -16,7 +22,10 @@ export function buildServiceProcessRouterRules(
     rules: config.rules.map((rule) => ({
       id: rule.id,
       executable_path: rule.processPattern,
-      executable_name: rule.processPattern,
+      executable_name: appRoutingExecutableName(
+        rule.processPattern,
+        appRoutingIdentifierKind(rule)
+      ),
       protocol: rule.protocol,
       action: rule.action,
       enabled: isAppRoutingRuleEffectivelyEnabled(config, rule),
@@ -26,7 +35,8 @@ export function buildServiceProcessRouterRules(
 }
 
 export function validateServiceProcessRouterStatus(
-  value: ServiceProcessRouterStatus
+  value: ServiceProcessRouterStatus,
+  platform: NodeJS.Platform = process.platform
 ): ServiceProcessRouterStatus {
   if (
     !value ||
@@ -42,8 +52,13 @@ export function validateServiceProcessRouterStatus(
   ) {
     throw new Error('Unsupported KokoroBox Service process-router protocol')
   }
-  if (value.proxy_port !== undefined && value.proxy_port !== 7891) {
+  const expectedPort = platform === 'linux' ? 7894 : 7891
+  if (value.proxy_port !== undefined && value.proxy_port !== expectedPort) {
     throw new Error('KokoroBox Service returned an unexpected proxy port')
+  }
+
+  if (value.backend !== undefined && typeof value.backend !== 'string') {
+    throw new Error('KokoroBox Service returned an invalid application-routing backend')
   }
   if (['running', 'blocked'].includes(value.state) && !value.firewall_ready) {
     throw new Error('KokoroBox Service reported application routing without firewall protection')

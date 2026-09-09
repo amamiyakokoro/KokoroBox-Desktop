@@ -227,7 +227,11 @@ export function useAppRouting(): {
   const addPattern = async (value: string): Promise<boolean> => {
     if (!config) return false
     const identifierKind: AppRoutingIdentifierKind =
-      window.api.platform === 'darwin' ? 'macos-signing-identifier' : 'windows-executable'
+      window.api.platform === 'darwin'
+        ? 'macos-signing-identifier'
+        : window.api.platform === 'linux'
+          ? 'linux-executable'
+          : 'windows-executable'
     const processPattern = normalizeAppRoutingIdentifier(value, identifierKind)
     if (
       config.rules.some(
@@ -241,6 +245,7 @@ export function useAppRouting(): {
       id: nanoid(),
       processPattern,
       identifierKind,
+      ...(identifierKind === 'linux-executable' ? { sourcePath: processPattern } : {}),
       action: config.defaultAction,
       protocol: config.defaultProtocol,
       enabled: true,

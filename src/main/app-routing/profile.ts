@@ -5,6 +5,7 @@ import {
 
 export const appRoutingListenerName = 'kokorobox-app-routing'
 export const appRoutingSocksPort = 7891
+export const appRoutingTProxyPort = 7894
 export const appRoutingDnsHost = '127.0.0.1' as const
 export const appRoutingDnsPort = 7892 as const
 export const protectedProcessNames = Object.freeze([
@@ -27,6 +28,10 @@ export const protectedNetworkTargets = Object.freeze([
   'fe80::/10',
   'ff00::/8'
 ])
+
+export function appRoutingProxyPort(platform: NodeJS.Platform): number {
+  return platform === 'linux' ? appRoutingTProxyPort : appRoutingSocksPort
+}
 
 function toRouterProtocol(protocol: AppRoutingProtocol): 'TCP' | 'UDP' | 'BOTH' {
   return protocol.toUpperCase() as 'TCP' | 'UDP' | 'BOTH'
@@ -63,20 +68,33 @@ export function buildProcessRouterCommand(
 export function applyAppRoutingListener(
   profile: MihomoConfig,
   enabled: boolean,
-  proxyUdpDns = false
+  proxyUdpDns = false,
+  platform: NodeJS.Platform = process.platform
 ): void {
   const existing = (profile.listeners || []).filter(
     (listener) => listener.name !== appRoutingListenerName
   )
 
   if (enabled) {
-    existing.push({
-      name: appRoutingListenerName,
-      type: 'socks',
-      port: appRoutingSocksPort,
-      listen: '127.0.0.1',
-      udp: true
-    })
+    existing.push(
+      platform === 'linux'
+        ? {
+            name: appRoutingListenerName,
+            type: 'tproxy',
+            port: appRoutingTProxyPort,
+            // TPROXY needs a wildcard transparent socket. The privileged
+            // service rejects direct non-loopback access to this port.
+            listen: '0.0.0.0',
+            udp: true
+          }
+        : {
+            name: appRoutingListenerName,
+            type: 'socks',
+            port: appRoutingSocksPort,
+            listen: '127.0.0.1',
+            udp: true
+          }
+    )
 
     // A SOCKS listener treats UDP/53 as an ordinary connection and therefore
     // never enters Mihomo's DNS engine. Expose a dedicated loopback DNS

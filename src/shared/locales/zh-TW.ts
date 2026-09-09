@@ -43,6 +43,9 @@ export const messages: Readonly<Record<string, string>> = {
   程序匹配: '程式比對',
   '规则按从上到下的顺序匹配；支持文件名或含 * 的完整路径。':
     '規則按從上到下的順序比對；支援檔名或包含 * 的完整路徑。',
+  '每条规则使用一个绝对可执行文件路径；更改后需重新启动目标程序。':
+    '每條規則使用一個絕對執行檔路徑；變更後需重新啟動目標程式。',
+  可执行文件路径: '執行檔路徑',
   '例如：ChatGPT.exe、ChatGPT*.exe 或 C:\\Program Files\\*\\ChatGPT.exe':
     '例如：ChatGPT.exe、ChatGPT*.exe 或 C:\\Program Files\\*\\ChatGPT.exe',
   新增匹配规则: '新增比對規則',
@@ -56,15 +59,21 @@ export const messages: Readonly<Record<string, string>> = {
   '此 MVP 仅支持 Windows 10/11 x64。': '此 MVP 僅支援 Windows 10/11 x64。',
   '应用分流支持 Windows 10/11 x64 与 macOS 13 或更新版本。':
     '應用程式分流支援 Windows 10/11 x64 與 macOS 13 或更新版本。',
+  '应用分流支持 Windows 10/11 x64、macOS 13 或更新版本及 Linux x64/arm64。':
+    '程式分流支援 Windows 10/11 x64、macOS 13 或更新版本及 Linux x64/arm64。',
   签名标识: '簽署識別碼',
   '规则按从上到下的顺序匹配；使用应用签名标识，可在末尾加入 *。':
     '規則按從上到下的順序比對；使用應用程式簽署識別碼，可在結尾加入 *。',
   '例如：com.openai.chat 或 com.openai.chat*': '例如：com.openai.chat 或 com.openai.chat*',
+  '例如：/usr/bin/firefox 或 /opt/example/example':
+    '例如：/usr/bin/firefox 或 /opt/example/example',
   '输入签名标识，或选择一个或多个 .app，然后设定 Proxy、Direct 或 Block。':
     '輸入簽署識別碼，或選擇一個或多個 .app，然後設定 Proxy、Direct 或 Block。',
   尚未添加应用程序: '尚未新增應用程式',
   '选择一个或多个 .exe，然后设定 Proxy、Direct 或 Block。':
     '選擇一個或多個 .exe，然後設定 Proxy、Direct 或 Block。',
+  '输入绝对可执行文件路径，或选择一个或多个程序，然后设定 Proxy、Direct 或 Block。':
+    '輸入絕對執行檔路徑，或選擇一個或多個程式，然後設定 Proxy、Direct 或 Block。',
   动作: '動作',
   启用规则: '啟用規則',
   代理失效保护: '代理失效保護',
@@ -84,6 +93,10 @@ export const messages: Readonly<Record<string, string>> = {
     '目前的 KokoroBox Service 不支援應用程式分流，請更新或重新安裝服務',
   'KokoroBox Service 认证已失效，请在内核设置中重置认证':
     'KokoroBox Service 認證已失效，請在核心設定中重設認證',
+  'Linux 应用分流需要已安装并运行 KokoroBox Service':
+    'Linux 程式分流需要已安裝並執行 KokoroBox Service',
+  '系统不支持可用的 cgroup v2 或 cgroup v1 net_cls 应用分流后端':
+    '系統不支援可用的 cgroup v2 或 cgroup v1 net_cls 程式分流後端',
   封包拦截组件启动失败: '封包攔截元件啟動失敗',
   '封包拦截组件意外停止，正在重试': '封包攔截元件意外停止，正在重試',
   '请在系统设置中允许 KokoroBox 网络扩展': '請在「系統設定」中允許 KokoroBox 網路延伸功能。',

@@ -9,7 +9,7 @@ import { getAppConfig } from '../config/app'
 import { appendAppLog } from '../utils/log'
 import { processRouterDir, processRouterPath } from '../utils/dirs'
 import { getAppRoutingConfig, saveAppRoutingConfig } from './config'
-import { appRoutingSocksPort, buildProcessRouterCommand } from './profile'
+import { appRoutingProxyPort, appRoutingSocksPort, buildProcessRouterCommand } from './profile'
 import { prepareAppRoutingConfig } from './rules'
 import { canConnectToAppRoutingListener } from './health'
 import { verifyProcessRouterIntegrity } from './integrity'
@@ -72,7 +72,8 @@ function appRoutingStatusEquals(left: AppRoutingStatus, right: AppRoutingStatus)
     left.proxyPort === right.proxyPort &&
     left.mihomoAvailable === right.mihomoAvailable &&
     left.firewallReady === right.firewallReady &&
-    left.protectedApplicationCount === right.protectedApplicationCount
+    left.protectedApplicationCount === right.protectedApplicationCount &&
+    left.backend === right.backend
   )
 }
 
@@ -101,7 +102,8 @@ function publishServiceStatus(serviceStatus: ServiceProcessRouterStatus): void {
     proxyPort: serviceStatus.proxy_port,
     mihomoAvailable: serviceStatus.mihomo_available,
     firewallReady: serviceStatus.firewall_ready,
-    protectedApplicationCount: serviceStatus.protected_application_count
+    protectedApplicationCount: serviceStatus.protected_application_count,
+    backend: serviceStatus.backend
   })
 }
 
@@ -112,6 +114,16 @@ function serviceModeError(error: unknown): Error {
   if (error instanceof ServiceAPIError && [401, 403, 409].includes(error.status || 0)) {
     return new Error('KokoroBox Service 认证已失效，请在内核设置中重置认证')
   }
+  if (process.platform === 'linux' && isServiceConnectionError(error)) {
+    return new Error('Linux 应用分流需要已安装并运行 KokoroBox Service')
+  }
+  const message = error instanceof Error ? error.message : String(error)
+  if (
+    process.platform === 'linux' &&
+    (message.includes('cgroup v2 unavailable') || message.includes('cgroup v1 net_cls'))
+  ) {
+    return new Error('系统不支持可用的 cgroup v2 或 cgroup v1 net_cls 应用分流后端')
+  }
   return error instanceof Error ? error : new Error(String(error))
 }
 
@@ -119,18 +131,29 @@ async function reconcileService(config: AppRoutingConfig): Promise<void> {
   if (activeBackend === 'direct') await stopDirectRouter()
   else await stopChild()
   const policyKey = String(configGeneration)
+  const platform = process.platform === 'linux' ? 'linux' : 'windows'
+  const proxyPort = appRoutingProxyPort(process.platform)
   let serviceStatus: ServiceProcessRouterStatus
   try {
     if (servicePolicyKey !== policyKey || serviceStopped) {
-      await replaceProcessRouterRules(buildServiceProcessRouterRules(config, appRoutingSocksPort))
-      serviceStatus = validateServiceProcessRouterStatus(await startProcessRouter())
+      await replaceProcessRouterRules(buildServiceProcessRouterRules(config, proxyPort, platform))
+      serviceStatus = validateServiceProcessRouterStatus(
+        await startProcessRouter(),
+        process.platform
+      )
       servicePolicyKey = policyKey
       serviceStopped = false
     } else {
-      serviceStatus = validateServiceProcessRouterStatus(await getProcessRouterStatus())
+      serviceStatus = validateServiceProcessRouterStatus(
+        await getProcessRouterStatus(),
+        process.platform
+      )
       if (serviceStatus.state === 'stopped') {
-        await replaceProcessRouterRules(buildServiceProcessRouterRules(config, appRoutingSocksPort))
-        serviceStatus = validateServiceProcessRouterStatus(await startProcessRouter())
+        await replaceProcessRouterRules(buildServiceProcessRouterRules(config, proxyPort, platform))
+        serviceStatus = validateServiceProcessRouterStatus(
+          await startProcessRouter(),
+          process.platform
+        )
       }
     }
   } catch (error) {
@@ -389,7 +412,11 @@ async function reconcile(): Promise<void> {
   if (!config.enabled || enabledRules.length === 0) {
     if (activeBackend === 'direct') await stopDirectRouter()
     else await stopChild()
-    if (appConfig.corePermissionMode === 'service' || activeBackend === 'service') {
+    if (
+      process.platform === 'linux' ||
+      appConfig.corePermissionMode === 'service' ||
+      activeBackend === 'service'
+    ) {
       await disableServiceRouter().catch((error) =>
         appendAppLog(`[App routing]: failed to stop service router, ${error}\n`)
       )
@@ -404,7 +431,7 @@ async function reconcile(): Promise<void> {
     return
   }
   const { corePermissionMode = 'elevated' } = appConfig
-  if (corePermissionMode === 'service') {
+  if (process.platform === 'linux' || corePermissionMode === 'service') {
     await reconcileService(config)
     activeBackend = 'service'
     return

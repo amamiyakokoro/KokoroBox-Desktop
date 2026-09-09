@@ -76,6 +76,12 @@ function statusMessage(message?: string, protectedApplicationCount = 0): string 
   if (message === 'KokoroBox Service 认证已失效，请在内核设置中重置认证') {
     return tr('KokoroBox Service 认证已失效，请在内核设置中重置认证')
   }
+  if (message === 'Linux 应用分流需要已安装并运行 KokoroBox Service') {
+    return tr('Linux 应用分流需要已安装并运行 KokoroBox Service')
+  }
+  if (message === '系统不支持可用的 cgroup v2 或 cgroup v1 net_cls 应用分流后端') {
+    return tr('系统不支持可用的 cgroup v2 或 cgroup v1 net_cls 应用分流后端')
+  }
   if (message === '封包拦截组件启动失败') {
     return tr('封包拦截组件启动失败')
   }
@@ -105,6 +111,8 @@ function statusMessage(message?: string, protectedApplicationCount = 0): string 
 
 const AppRouting: React.FC = () => {
   const isMac = window.api.platform === 'darwin'
+  const isLinux = window.api.platform === 'linux'
+  const isWindows = window.api.platform === 'win32'
   const {
     config,
     status,
@@ -140,6 +148,14 @@ const AppRouting: React.FC = () => {
   const [settingDrawerReopenSignal, setSettingDrawerReopenSignal] = useState(0)
   const currentStatusMessage = statusMessage(status?.message, status?.protectedApplicationCount)
   const needsMacApproval = isMac && config?.enabled && status?.needsUserApproval === true
+  const displayedProxyPort = status?.proxyPort ?? (isLinux ? 7894 : 7891)
+  const displayedProxyProtocol = isLinux ? 'TPROXY' : 'SOCKS5'
+  const backendLabel =
+    status?.backend === 'linux-cgroup-v2'
+      ? 'cgroup v2'
+      : status?.backend === 'linux-cgroup-v1-net-cls'
+        ? 'cgroup v1 net_cls'
+        : undefined
   const submitPattern = async (): Promise<void> => {
     if (await addPattern(processPattern)) setProcessPattern('')
   }
@@ -219,7 +235,8 @@ const AppRouting: React.FC = () => {
               )}
             {config?.enabled && (
               <p className="mt-2 text-sm text-foreground-500">
-                {tr('上游')}：KokoroBox / 127.0.0.1:7891
+                {tr('上游')}：KokoroBox / 127.0.0.1:{displayedProxyPort} ({displayedProxyProtocol})
+                {backendLabel ? ` · ${backendLabel}` : ''}
               </p>
             )}
           </div>
@@ -280,7 +297,9 @@ const AppRouting: React.FC = () => {
           <p className="text-sm text-foreground-500">
             {isMac
               ? tr('规则按从上到下的顺序匹配；使用应用签名标识，可在末尾加入 *。')
-              : tr('规则按从上到下的顺序匹配；支持文件名或含 * 的完整路径。')}
+              : isLinux
+                ? tr('每条规则使用一个绝对可执行文件路径；更改后需重新启动目标程序。')
+                : tr('规则按从上到下的顺序匹配；支持文件名或含 * 的完整路径。')}
           </p>
         </div>
 
@@ -288,8 +307,8 @@ const AppRouting: React.FC = () => {
           <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
             <Input
               size="sm"
-              label={isMac ? tr('签名标识') : tr('程序匹配')}
-              placeholder={isMac ? 'com.example.app' : 'example.exe'}
+              label={isMac ? tr('签名标识') : isLinux ? tr('可执行文件路径') : tr('程序匹配')}
+              placeholder={isMac ? 'com.example.app' : isLinux ? '/usr/bin/example' : 'example.exe'}
               value={processPattern}
               isDisabled={!supported || !config || saving}
               onValueChange={setProcessPattern}
@@ -317,7 +336,7 @@ const AppRouting: React.FC = () => {
               >
                 {tr('选择应用程序')}
               </Button>
-              {!isMac && (
+              {isWindows && (
                 <Button
                   className="shrink-0"
                   variant="flat"
@@ -333,14 +352,16 @@ const AppRouting: React.FC = () => {
           <p className="px-1 text-xs text-foreground-500">
             {isMac
               ? tr('例如：com.openai.chat 或 com.openai.chat*')
-              : tr('例如：ChatGPT.exe、ChatGPT*.exe 或 C:\\Program Files\\*\\ChatGPT.exe')}
+              : isLinux
+                ? tr('例如：/usr/bin/firefox 或 /opt/example/example')
+                : tr('例如：ChatGPT.exe、ChatGPT*.exe 或 C:\\Program Files\\*\\ChatGPT.exe')}
           </p>
         </div>
 
         {!supported ? (
           <Card shadow="sm">
             <CardBody className="p-5 text-sm text-foreground-500">
-              {tr('应用分流支持 Windows 10/11 x64 与 macOS 13 或更新版本。')}
+              {tr('应用分流支持 Windows 10/11 x64、macOS 13 或更新版本及 Linux x64/arm64。')}
             </CardBody>
           </Card>
         ) : config?.rules.length === 0 ? (
@@ -350,7 +371,11 @@ const AppRouting: React.FC = () => {
               <p className="text-sm text-foreground-500">
                 {isMac
                   ? tr('输入签名标识，或选择一个或多个 .app，然后设定 Proxy、Direct 或 Block。')
-                  : tr('输入程序匹配，或选择一个或多个 .exe，然后设定 Proxy、Direct 或 Block。')}
+                  : isLinux
+                    ? tr(
+                        '输入绝对可执行文件路径，或选择一个或多个程序，然后设定 Proxy、Direct 或 Block。'
+                      )
+                    : tr('输入程序匹配，或选择一个或多个 .exe，然后设定 Proxy、Direct 或 Block。')}
               </p>
             </CardBody>
           </Card>
@@ -454,7 +479,10 @@ const AppRouting: React.FC = () => {
             )}
           </p>
           {status?.proxyPort && (
-            <p className="mt-1 font-mono text-xs">127.0.0.1:{status.proxyPort} (SOCKS5)</p>
+            <p className="mt-1 font-mono text-xs">
+              127.0.0.1:{status.proxyPort} ({displayedProxyProtocol})
+              {backendLabel ? ` · ${backendLabel}` : ''}
+            </p>
           )}
         </div>
       </div>

@@ -92,6 +92,9 @@ deb:
     - --before-install=build/linux/preinst
   afterInstall: 'build/linux/postinst'
   depends:
+    - iproute2
+    - iptables
+    - mount
     - libasound2
     - libgtk-3-0
     - libnotify4
@@ -112,6 +115,9 @@ rpm:
   # SONAME capabilities avoid Fedora/Rocky versus openSUSE package-name differences.
   # Both supported RPM architectures (x64 and arm64) use the (64bit) suffix.
   depends:
+    - iproute
+    - iptables
+    - util-linux
     - 'libasound.so.2()(64bit)'
     - 'libgtk-3.so.0()(64bit)'
     - 'libgbm.so.1()(64bit)'
@@ -132,6 +138,9 @@ pacman:
     - zstd
     - build/linux/kokorobox.sh=/usr/bin/kokorobox
   depends:
+    - iproute2
+    - iptables
+    - util-linux
     - alsa-lib
     - gtk3
     - libnotify

@@ -40,17 +40,20 @@ system proxy or TUN. Add an executable or application, choose TCP, UDP, or both,
   KokoroBox privileged service. Windows ARM64 is not supported.
 - **macOS 13+:** an experimental ProxyBridge transparent-proxy System Extension supports Apple
   Silicon and Intel. macOS asks the user to approve the extension before first use.
-- **Linux:** application routing is not yet supported.
+- **Linux x64/arm64:** an experimental root-service backend prefers cgroup v2 and falls back to
+  cgroup v1 `net_cls`. It uses policy routing and TPROXY without creating a TUN interface.
 
-Proxy traffic uses a dedicated loopback-only Mihomo SOCKS5 listener. If Mihomo becomes
-unavailable, matching Proxy rules fail closed as Block instead of leaking through Direct.
-KokoroBox, Mihomo, routing components, loopback, link-local, multicast, and broadcast traffic
-are always excluded to prevent proxy loops.
+Windows and macOS Proxy traffic uses a dedicated loopback-only Mihomo SOCKS5 listener. Linux
+uses a guarded Mihomo TPROXY listener on port 7894. If Mihomo becomes unavailable, matching
+Proxy rules fail closed as Block instead of leaking through Direct. KokoroBox, Mihomo, routing
+components, loopback, link-local, multicast, and broadcast traffic are always excluded to
+prevent proxy loops.
 
 KokoroBox builds a pinned ProxyBridge revision from source and packages only the controlled
 routing components—not the upstream GUI, updater, or external proxy configuration. See the
-[Windows MVP](docs/windows-app-routing.md), [macOS integration](docs/macos-app-routing.md), and
-[third-party notices](THIRD_PARTY_NOTICES.md) for architecture, verification status, and licenses.
+[Windows MVP](docs/windows-app-routing.md), [macOS integration](docs/macos-app-routing.md),
+[Linux cgroup routing](docs/linux-app-routing.md), and [third-party notices](THIRD_PARTY_NOTICES.md)
+for architecture, verification status, and licenses.
 
 ## Install
 
