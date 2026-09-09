@@ -25,6 +25,12 @@ import {
 } from './service-protocol'
 import { reconcileMacAppRouting, stopMacAppRouting } from './macos'
 import { macAppRoutingOperatingSystemSupported } from './macos-profile'
+import {
+  appRoutingFirewallProbeIntervalMs,
+  checkAppRoutingFirewall,
+  ensureAppRoutingFirewall,
+  removeAppRoutingFirewall
+} from './firewall'
 
 const probeIntervalMs = 3000
 const restartDelayMs = 1500
@@ -45,6 +51,8 @@ let configGeneration = 0
 let activeBackend: 'direct' | 'service' | undefined
 let servicePolicyKey = ''
 let serviceStopped = false
+let directFirewallReady = false
+let lastDirectFirewallCheck = 0
 let status: AppRoutingStatus = {
   supported: appRoutingSupported(process.platform, process.arch),
   state: appRoutingSupported(process.platform, process.arch) ? 'disabled' : 'unsupported',
@@ -59,6 +67,7 @@ function appRoutingStatusEquals(left: AppRoutingStatus, right: AppRoutingStatus)
     left.needsUserApproval === right.needsUserApproval &&
     left.proxyPort === right.proxyPort &&
     left.mihomoAvailable === right.mihomoAvailable &&
+    left.firewallReady === right.firewallReady &&
     left.protectedApplicationCount === right.protectedApplicationCount
   )
 }
@@ -87,6 +96,7 @@ function publishServiceStatus(serviceStatus: ServiceProcessRouterStatus): void {
         : serviceStatus.last_error,
     proxyPort: serviceStatus.proxy_port,
     mihomoAvailable: serviceStatus.mihomo_available,
+    firewallReady: serviceStatus.firewall_ready,
     protectedApplicationCount: serviceStatus.protected_application_count
   })
 }
@@ -102,7 +112,8 @@ function serviceModeError(error: unknown): Error {
 }
 
 async function reconcileService(config: AppRoutingConfig): Promise<void> {
-  await stopChild()
+  if (activeBackend === 'direct') await stopDirectRouter()
+  else await stopChild()
   const policyKey = String(configGeneration)
   let serviceStatus: ServiceProcessRouterStatus
   try {
@@ -187,6 +198,46 @@ async function stopChild(): Promise<void> {
   pendingPolicyStartedAt = 0
 }
 
+async function ensureDirectFirewall(force = false): Promise<void> {
+  if (
+    !force &&
+    directFirewallReady &&
+    Date.now() - lastDirectFirewallCheck < appRoutingFirewallProbeIntervalMs
+  ) {
+    return
+  }
+  lastDirectFirewallCheck = Date.now()
+  if (directFirewallReady) {
+    try {
+      await checkAppRoutingFirewall()
+      return
+    } catch {
+      directFirewallReady = false
+    }
+  }
+  await ensureAppRoutingFirewall()
+  directFirewallReady = true
+}
+
+async function stopDirectRouter(): Promise<void> {
+  const stopError = await stopChild().then(
+    () => undefined,
+    (error: unknown) => error
+  )
+  directFirewallReady = false
+  lastDirectFirewallCheck = 0
+  const firewallError = await removeAppRoutingFirewall().then(
+    () => undefined,
+    (error: unknown) => error
+  )
+  if (stopError || firewallError) {
+    throw new AggregateError(
+      [stopError, firewallError].filter((error) => error !== undefined),
+      '停止 Windows 应用分流失败'
+    )
+  }
+}
+
 async function startChild(
   config: AppRoutingConfig,
   port: number,
@@ -199,6 +250,7 @@ async function startChild(
     state: 'starting',
     proxyPort: requiresMihomo ? port : undefined,
     mihomoAvailable,
+    firewallReady: directFirewallReady,
     protectedApplicationCount: requiresMihomo
       ? config.rules.filter((rule) => rule.enabled && rule.action === 'proxy').length
       : 0
@@ -327,7 +379,8 @@ async function reconcile(): Promise<void> {
     return
   }
   if (!config.enabled || enabledRules.length === 0) {
-    await stopChild()
+    if (activeBackend === 'direct') await stopDirectRouter()
+    else await stopChild()
     if (appConfig.corePermissionMode === 'service' || activeBackend === 'service') {
       await disableServiceRouter().catch((error) =>
         appendAppLog(`[App routing]: failed to stop service router, ${error}\n`)
@@ -344,8 +397,8 @@ async function reconcile(): Promise<void> {
   }
   const { corePermissionMode = 'elevated' } = appConfig
   if (corePermissionMode === 'service') {
-    activeBackend = 'service'
     await reconcileService(config)
+    activeBackend = 'service'
     return
   }
   if (activeBackend === 'service' || !serviceStopped) {
@@ -383,8 +436,15 @@ async function reconcile(): Promise<void> {
       })
       return
     }
+    await ensureDirectFirewall(true)
     await startChild(config, proxyPort, requiresMihomo, mihomoAvailable, policyKey)
-  } else if (activePolicyKey !== policyKey && pendingPolicyKey !== policyKey) {
+  } else {
+    await ensureDirectFirewall()
+  }
+  if (activePolicyKey !== policyKey && pendingPolicyKey !== policyKey) {
+    if (!child || child.exitCode !== null) {
+      throw new Error('封包拦截组件在规则更新前已停止')
+    }
     rulesApplied = false
     pendingPolicyKey = policyKey
     pendingPolicyStartedAt = Date.now()
@@ -411,6 +471,7 @@ async function reconcile(): Promise<void> {
         : '代理核心不可用，受保护应用的网络连接已封锁',
     proxyPort: requiresMihomo ? proxyPort : undefined,
     mihomoAvailable,
+    firewallReady: directFirewallReady,
     protectedApplicationCount
   })
 }
@@ -425,12 +486,18 @@ export function reconcileAppRouting(): Promise<void> {
       try {
         await reconcile()
       } catch (error) {
+        if (activeBackend === 'direct') {
+          await stopDirectRouter().catch((cleanupError) =>
+            appendAppLog(`[App routing]: failed to clean up direct router, ${cleanupError}\n`)
+          )
+        }
         publishStatus({
           supported: appRoutingSupported(process.platform, process.arch),
           state: 'error',
           message: error instanceof Error ? error.message : String(error),
           proxyPort: activePort,
-          mihomoAvailable: false
+          mihomoAvailable: false,
+          firewallReady: false
         })
       }
     }
@@ -479,5 +546,5 @@ export async function stopAppRouting(): Promise<void> {
   monitor = undefined
   if (process.platform === 'darwin') await stopMacAppRouting()
   else if (activeBackend === 'service') await disableServiceRouter(true)
-  else await stopChild()
+  else await stopDirectRouter()
 }

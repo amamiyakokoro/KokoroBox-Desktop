@@ -64,6 +64,8 @@ export const messages: Readonly<Record<string, string>> = {
   'Windows 封包拦截组件未安装': 'The Windows packet interception sidecar is not installed',
   'Windows 封包拦截组件缺失或已损坏':
     'The Windows packet interception component is missing or corrupted',
+  'Windows 应用分流防火墙规则缺失或无法生效，router 未启动':
+    'The Windows application-routing firewall rules are missing or ineffective, so the router was not started',
   '请先启用本机 Mihomo SOCKS 或 mixed 监听端口':
     'Enable a local Mihomo SOCKS or mixed listener first',
   'Mihomo 不可用；匹配 Proxy 的流量已阻断（不会直连）':
