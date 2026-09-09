@@ -393,6 +393,7 @@ static BOOL replace_rules(const char *command) {
 
     ProxyBridge_SetLocalhostViaProxy(FALSE);
     ProxyBridge_SetProxyUdpDnsEnabled(proxy_udp_dns);
+    ProxyBridge_SetFailClosedOnUnknownOwner(fail_closed);
     if (diagnostic_logging) {
         ProxyBridge_SetLogCallback(diagnostic_log);
         ProxyBridge_SetTrafficLoggingEnabled(TRUE);
