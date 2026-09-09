@@ -1,11 +1,47 @@
 import { ChildProcess, spawn } from 'child_process'
 import { getAppConfig } from '../config'
-import { dataDir, resourcesFilesDir } from '../utils/dirs'
+import { dataDir, mihomoIpcPath, resourcesFilesDir } from '../utils/dirs'
 import path from 'path'
 import { existsSync } from 'fs'
-import { readFile, rm, writeFile } from 'fs/promises'
+import { cp, mkdir, readFile, rm, writeFile } from 'fs/promises'
 
-let child: ChildProcess
+let child: ChildProcess | undefined
+
+const TRAFFIC_MONITOR_INITIAL_CONFIG =
+  '\uFEFF' +
+  [
+    '[general]',
+    'check_update_when_start=false',
+    '',
+    '[config]',
+    'show_task_bar_wnd=true',
+    'hide_main_window=true',
+    'show_notify_icon=false',
+    '',
+    '[task_bar]',
+    'tbar_display_item=0',
+    'plugin_display_item=KokoroBoxUploadSpeed,KokoroBoxDownloadSpeed',
+    ''
+  ].join('\r\n')
+
+async function prepareMonitorRuntime(): Promise<string> {
+  const packagedDir = path.join(resourcesFilesDir(), 'TrafficMonitor')
+  const runtimeDir = path.join(dataDir(), 'traffic-monitor')
+  await mkdir(runtimeDir, { recursive: true })
+  await cp(packagedDir, runtimeDir, { recursive: true, force: true })
+
+  // Never carry the old binary-only plugin into the isolated KokoroBox runtime.
+  await rm(path.join(runtimeDir, 'plugins', 'Sparkle.dll'), { force: true })
+  if (!existsSync(path.join(runtimeDir, 'plugins', 'KokoroBoxTrafficPlugin.dll'))) {
+    throw new Error('KokoroBox TrafficMonitor plugin is missing from the application bundle')
+  }
+
+  const configPath = path.join(runtimeDir, 'config.ini')
+  if (!existsSync(configPath)) {
+    await writeFile(configPath, TRAFFIC_MONITOR_INITIAL_CONFIG, 'utf8')
+  }
+  return runtimeDir
+}
 
 export async function startMonitor(detached = false): Promise<void> {
   if (process.platform !== 'win32') return
@@ -22,10 +58,15 @@ export async function startMonitor(detached = false): Promise<void> {
   await stopMonitor()
   const { showTraffic = false } = await getAppConfig()
   if (!showTraffic) return
-  child = spawn(path.join(resourcesFilesDir(), 'TrafficMonitor/TrafficMonitor.exe'), [], {
-    cwd: path.join(resourcesFilesDir(), 'TrafficMonitor'),
+  const runtimeDir = await prepareMonitorRuntime()
+  child = spawn(path.join(runtimeDir, 'TrafficMonitor.exe'), [], {
+    cwd: runtimeDir,
     detached: detached,
-    stdio: detached ? 'ignore' : undefined
+    stdio: detached ? 'ignore' : undefined,
+    env: {
+      ...process.env,
+      KOKOROBOX_MIHOMO_PIPE: mihomoIpcPath()
+    }
   })
   if (detached) {
     if (child && child.pid) {
@@ -37,6 +78,10 @@ export async function startMonitor(detached = false): Promise<void> {
 
 async function stopMonitor(): Promise<void> {
   if (child) {
-    child.kill('SIGINT')
+    try {
+      child.kill('SIGINT')
+    } finally {
+      child = undefined
+    }
   }
 }

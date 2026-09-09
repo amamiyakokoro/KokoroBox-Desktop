@@ -59,6 +59,7 @@ jobs:
 
   publish:
     needs: [prepare, build]
+    if: github.ref == 'refs/heads/master'
     permissions:
       contents: write
     uses: ./.github/workflows/publish.yml

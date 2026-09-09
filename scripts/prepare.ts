@@ -4,7 +4,9 @@ import path from 'path'
 import zlib from 'zlib'
 import { extract } from 'tar'
 import { execSync } from 'child_process'
+import { createHash } from 'crypto'
 import { systemCoreOnlyBuild } from './build-env.ts'
+import { trafficMonitorAsset, trafficMonitorDownloadUrl } from './traffic-monitor.ts'
 
 const cwd = process.cwd()
 const TEMP_DIR = path.join(cwd, 'node_modules/.temp')
@@ -336,24 +338,53 @@ const removeLegacyRunner = async () => {
 }
 
 const resolveMonitor = async () => {
+  const asset = trafficMonitorAsset(arch)
   const tempDir = path.join(TEMP_DIR, 'TrafficMonitor')
-  const tempZip = path.join(tempDir, `${arch}.zip`)
+  const tempZip = path.join(tempDir, asset.filename)
+  const extractedDir = path.join(tempDir, 'extracted')
   if (!fs.existsSync(tempDir)) {
     fs.mkdirSync(tempDir, { recursive: true })
   }
-  await downloadFile(
-    `https://github.com/xishang0128/sparkle-run/releases/download/monitor/${arch}.zip`,
-    tempZip
-  )
+  await downloadFile(trafficMonitorDownloadUrl(asset), tempZip)
+  const actualSha256 = createHash('sha256').update(fs.readFileSync(tempZip)).digest('hex')
+  if (actualSha256 !== asset.sha256) {
+    throw new Error(
+      `TrafficMonitor SHA-256 mismatch: expected ${asset.sha256}, received ${actualSha256}`
+    )
+  }
+
   const zip = new AdmZip(tempZip)
   const resDir = path.join(cwd, 'extra', 'files')
   const targetPath = path.join(resDir, 'TrafficMonitor')
+  fs.mkdirSync(resDir, { recursive: true })
   if (fs.existsSync(targetPath)) {
     fs.rmSync(targetPath, { recursive: true })
   }
-  zip.extractAllTo(targetPath, true)
+  if (fs.existsSync(extractedDir)) {
+    fs.rmSync(extractedDir, { recursive: true })
+  }
+  zip.extractAllTo(extractedDir, true)
 
-  console.log(`[INFO]: TrafficMonitor finished`)
+  const officialPackagePath = path.join(extractedDir, 'TrafficMonitor')
+  if (!fs.existsSync(path.join(officialPackagePath, 'TrafficMonitor.exe'))) {
+    throw new Error('Official TrafficMonitor archive has an unexpected layout')
+  }
+  fs.cpSync(officialPackagePath, targetPath, { recursive: true })
+  fs.mkdirSync(path.join(targetPath, 'plugins'), { recursive: true })
+  fs.writeFileSync(
+    path.join(targetPath, 'global_cfg.ini'),
+    '\uFEFF\r\n[config]\r\nportable_mode = true\r\n'
+  )
+  fs.copyFileSync(
+    path.join(cwd, 'native', 'windows', 'traffic-monitor', 'LICENSE.TrafficMonitor'),
+    path.join(targetPath, 'LICENSE.TrafficMonitor')
+  )
+  fs.copyFileSync(
+    path.join(cwd, 'native', 'windows', 'traffic-monitor', 'LICENSE.PluginSDK'),
+    path.join(targetPath, 'LICENSE.TrafficMonitorPluginSDK')
+  )
+
+  console.log(`[INFO]: TrafficMonitor ${asset.filename} verified and prepared`)
 }
 
 const resolve7zip = () =>
