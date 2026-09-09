@@ -14,8 +14,8 @@ export const messages: Readonly<Record<string, string>> = {
   应用程序: 'Application',
   上游: 'Upstream',
   操作: 'Controls',
-  '代理核心不可用，已封锁 {0} 个受保护应用的网络连接。':
-    'The proxy core is unavailable. Network access is blocked for {0} protected applications.',
+  '应用分流代理入口不可用，已安全阻断 {0} 个受保护应用程序的代理连接，避免回退为直连。':
+    'The application-routing proxy endpoint is unavailable. Proxy connections from {0} protected applications are blocked to prevent direct fallback.',
   'Windows 应用程序': 'Windows applications',
   'macOS 应用程序': 'macOS applications',
   选择应用程序: 'Select applications',
@@ -39,7 +39,7 @@ export const messages: Readonly<Record<string, string>> = {
   已停用: 'Disabled',
   正在启动: 'Starting',
   重试: 'Retry',
-  阻断保护: 'Fail-closed',
+  安全阻断中: 'Safely blocked',
   应用程序规则: 'Application rules',
   程序匹配: 'Process pattern',
   '规则按从上到下的顺序匹配；支持文件名或含 * 的完整路径。':
@@ -68,9 +68,9 @@ export const messages: Readonly<Record<string, string>> = {
     'Select one or more .exe files, then choose Proxy, Direct, or Block.',
   动作: 'Action',
   启用规则: 'Enable rule',
-  'Fail-closed 保护': 'Fail-closed protection',
-  'Mihomo 不可用时，Proxy 规则的连接会被阻断，不会自动改为直连。Direct 规则仍保持直连。':
-    'If Mihomo is unavailable, Proxy connections are blocked instead of falling back to direct. Direct rules remain direct.',
+  代理失效保护: 'Proxy failure protection',
+  '应用分流代理入口不可用时，Proxy 规则的连接会被阻断，避免意外回退为直连；Direct 规则仍保持直连。':
+    'If the application-routing proxy endpoint is unavailable, Proxy connections are blocked to prevent accidental direct fallback. Direct rules remain direct.',
   所选应用程序已存在: 'The selected applications already exist',
   添加或启用规则以启动应用分流: 'Add or enable a rule to start application routing',
   'Windows 封包拦截组件未安装': 'The Windows packet interception sidecar is not installed',

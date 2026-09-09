@@ -33,7 +33,7 @@ function statusLabel(status?: AppRoutingStatus): string {
     disabled: tr('已停用'),
     starting: tr('正在启动'),
     running: tr('运行中'),
-    degraded: tr('阻断保护'),
+    degraded: tr('安全阻断中'),
     error: tr('错误')
   }
   return labels[status.state]
@@ -62,7 +62,10 @@ function statusMessage(message?: string, protectedApplicationCount = 0): string 
     return tr('Mihomo 不可用；匹配 Proxy 的流量已阻断（不会直连）')
   }
   if (message === '代理核心不可用，受保护应用的网络连接已封锁') {
-    return tr('代理核心不可用，已封锁 {0} 个受保护应用的网络连接。', [protectedApplicationCount])
+    return tr(
+      '应用分流代理入口不可用，已安全阻断 {0} 个受保护应用程序的代理连接，避免回退为直连。',
+      [protectedApplicationCount]
+    )
   }
   if (message === '应用分流 MVP 需要以管理员模式运行 KokoroBox') {
     return tr('应用分流 MVP 需要以管理员模式运行 KokoroBox')
@@ -444,10 +447,10 @@ const AppRouting: React.FC = () => {
         )}
 
         <div className="rounded-xl bg-warning-50 p-4 text-sm text-warning-800 dark:bg-warning-900/20 dark:text-warning-300">
-          <div className="font-semibold">{tr('Fail-closed 保护')}</div>
+          <div className="font-semibold">{tr('代理失效保护')}</div>
           <p className="mt-1">
             {tr(
-              'Mihomo 不可用时，Proxy 规则的连接会被阻断，不会自动改为直连。Direct 规则仍保持直连。'
+              '应用分流代理入口不可用时，Proxy 规则的连接会被阻断，避免意外回退为直连；Direct 规则仍保持直连。'
             )}
           </p>
           {status?.proxyPort && (
