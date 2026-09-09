@@ -97,6 +97,10 @@ export const messages: Readonly<Record<string, string>> = {
     'The installed KokoroBox Service does not support application routing. Update or reinstall the service.',
   'KokoroBox Service 认证已失效，请在内核设置中重置认证':
     'KokoroBox Service authentication is no longer valid. Reset authentication in Core Settings.',
+  'Linux 应用分流需要已安装并运行 KokoroBox Service':
+    'Linux application routing requires KokoroBox Service to be installed and running.',
+  '系统不支持可用的 cgroup v2 或 cgroup v1 net_cls 应用分流后端':
+    'This system has neither a usable cgroup v2 nor cgroup v1 net_cls application-routing backend.',
   封包拦截组件启动失败: 'The packet interception sidecar failed to start',
   '封包拦截组件意外停止，正在重试':
     'The packet interception sidecar stopped unexpectedly; retrying',

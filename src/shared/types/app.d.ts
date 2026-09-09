@@ -212,6 +212,7 @@ interface AppRoutingStatus {
   mihomoAvailable: boolean
   firewallReady?: boolean
   protectedApplicationCount?: number
+  backend?: string
 }
 
 interface ProfileConfig {

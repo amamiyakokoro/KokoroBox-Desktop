@@ -419,6 +419,7 @@ export const getCoreStatus = async (): Promise<Record<string, unknown>> => {
 
 export interface ServiceProcessRouterRules {
   version: 1
+  platform: 'windows' | 'linux'
   proxy_port: number
   fail_closed: true
   proxy_udp_dns: boolean
@@ -442,6 +443,7 @@ export interface ServiceProcessRouterStatus {
   mihomo_available: boolean
   firewall_ready: boolean
   protected_application_count: number
+  backend?: string
   proxy_port?: number
   router_pid?: number
   last_error?: string

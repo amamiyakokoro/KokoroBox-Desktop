@@ -9,10 +9,12 @@ const serviceStates = new Set(['stopped', 'starting', 'running', 'blocked', 'err
 
 export function buildServiceProcessRouterRules(
   config: AppRoutingConfig,
-  proxyPort: number
+  proxyPort: number,
+  platform: 'windows' | 'linux' = 'windows'
 ): ServiceProcessRouterRules {
   return {
     version: 1,
+    platform,
     proxy_port: proxyPort,
     fail_closed: true,
     proxy_udp_dns: config.proxyUdpDns,
@@ -33,7 +35,8 @@ export function buildServiceProcessRouterRules(
 }
 
 export function validateServiceProcessRouterStatus(
-  value: ServiceProcessRouterStatus
+  value: ServiceProcessRouterStatus,
+  platform: NodeJS.Platform = process.platform
 ): ServiceProcessRouterStatus {
   if (
     !value ||
@@ -49,8 +52,13 @@ export function validateServiceProcessRouterStatus(
   ) {
     throw new Error('Unsupported KokoroBox Service process-router protocol')
   }
-  if (value.proxy_port !== undefined && value.proxy_port !== 7891) {
+  const expectedPort = platform === 'linux' ? 7894 : 7891
+  if (value.proxy_port !== undefined && value.proxy_port !== expectedPort) {
     throw new Error('KokoroBox Service returned an unexpected proxy port')
+  }
+
+  if (value.backend !== undefined && typeof value.backend !== 'string') {
+    throw new Error('KokoroBox Service returned an invalid application-routing backend')
   }
   if (['running', 'blocked'].includes(value.state) && !value.firewall_ready) {
     throw new Error('KokoroBox Service reported application routing without firewall protection')

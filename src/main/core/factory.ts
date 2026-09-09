@@ -67,7 +67,8 @@ export async function generateProfile(): Promise<void> {
   applyAppRoutingListener(
     profile,
     appRoutingConfig.enabled && appRoutingSupported(process.platform, process.arch),
-    appRoutingConfig.proxyUdpDns
+    appRoutingConfig.proxyUdpDns,
+    process.platform
   )
 
   await cleanProfile(profile, controlDns, controlSniff)

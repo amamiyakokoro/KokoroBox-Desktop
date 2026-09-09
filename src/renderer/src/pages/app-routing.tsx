@@ -76,6 +76,12 @@ function statusMessage(message?: string, protectedApplicationCount = 0): string 
   if (message === 'KokoroBox Service 认证已失效，请在内核设置中重置认证') {
     return tr('KokoroBox Service 认证已失效，请在内核设置中重置认证')
   }
+  if (message === 'Linux 应用分流需要已安装并运行 KokoroBox Service') {
+    return tr('Linux 应用分流需要已安装并运行 KokoroBox Service')
+  }
+  if (message === '系统不支持可用的 cgroup v2 或 cgroup v1 net_cls 应用分流后端') {
+    return tr('系统不支持可用的 cgroup v2 或 cgroup v1 net_cls 应用分流后端')
+  }
   if (message === '封包拦截组件启动失败') {
     return tr('封包拦截组件启动失败')
   }
@@ -142,6 +148,14 @@ const AppRouting: React.FC = () => {
   const [settingDrawerReopenSignal, setSettingDrawerReopenSignal] = useState(0)
   const currentStatusMessage = statusMessage(status?.message, status?.protectedApplicationCount)
   const needsMacApproval = isMac && config?.enabled && status?.needsUserApproval === true
+  const displayedProxyPort = status?.proxyPort ?? (isLinux ? 7894 : 7891)
+  const displayedProxyProtocol = isLinux ? 'TPROXY' : 'SOCKS5'
+  const backendLabel =
+    status?.backend === 'linux-cgroup-v2'
+      ? 'cgroup v2'
+      : status?.backend === 'linux-cgroup-v1-net-cls'
+        ? 'cgroup v1 net_cls'
+        : undefined
   const submitPattern = async (): Promise<void> => {
     if (await addPattern(processPattern)) setProcessPattern('')
   }
@@ -221,7 +235,8 @@ const AppRouting: React.FC = () => {
               )}
             {config?.enabled && (
               <p className="mt-2 text-sm text-foreground-500">
-                {tr('上游')}：KokoroBox / 127.0.0.1:7891
+                {tr('上游')}：KokoroBox / 127.0.0.1:{displayedProxyPort} ({displayedProxyProtocol})
+                {backendLabel ? ` · ${backendLabel}` : ''}
               </p>
             )}
           </div>
@@ -464,7 +479,10 @@ const AppRouting: React.FC = () => {
             )}
           </p>
           {status?.proxyPort && (
-            <p className="mt-1 font-mono text-xs">127.0.0.1:{status.proxyPort} (SOCKS5)</p>
+            <p className="mt-1 font-mono text-xs">
+              127.0.0.1:{status.proxyPort} ({displayedProxyProtocol})
+              {backendLabel ? ` · ${backendLabel}` : ''}
+            </p>
           )}
         </div>
       </div>

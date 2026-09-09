@@ -93,6 +93,10 @@ export const messages: Readonly<Record<string, string>> = {
     '目前的 KokoroBox Service 不支援應用程式分流，請更新或重新安裝服務',
   'KokoroBox Service 认证已失效，请在内核设置中重置认证':
     'KokoroBox Service 認證已失效，請在核心設定中重設認證',
+  'Linux 应用分流需要已安装并运行 KokoroBox Service':
+    'Linux 程式分流需要已安裝並執行 KokoroBox Service',
+  '系统不支持可用的 cgroup v2 或 cgroup v1 net_cls 应用分流后端':
+    '系統不支援可用的 cgroup v2 或 cgroup v1 net_cls 程式分流後端',
   封包拦截组件启动失败: '封包攔截元件啟動失敗',
   '封包拦截组件意外停止，正在重试': '封包攔截元件意外停止，正在重試',
   '请在系统设置中允许 KokoroBox 网络扩展': '請在「系統設定」中允許 KokoroBox 網路延伸功能。',
