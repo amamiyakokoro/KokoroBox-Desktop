@@ -64,8 +64,34 @@ jobs:
       - run: pnpm test:service-auth
       - run: pnpm typecheck
 
+  validate-traffic-monitor-plugin:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [x64, arm64]
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Build KokoroBox TrafficMonitor plugin
+        shell: pwsh
+        run: >-
+          ./native/windows/traffic-monitor/build.ps1
+          -TargetArch ${{ matrix.arch }}
+          -OutputDir "$env:RUNNER_TEMP/traffic-monitor-plugin"
+      - name: Verify plugin export
+        shell: pwsh
+        run: |
+          $plugin = "$env:RUNNER_TEMP/traffic-monitor-plugin/KokoroBoxTrafficPlugin.dll"
+          if (-not (Test-Path $plugin)) { throw "TrafficMonitor plugin was not built" }
+          $exports = dumpbin /exports $plugin
+          if ($exports -notmatch "TMPluginGetInstance") { throw "Missing TMPluginGetInstance export" }
+
   build:
-    needs: validate
+    needs: [validate, validate-traffic-monitor-plugin]
     if: >-
       github.repository == 'amamiyakokoro/KokoroBox-Desktop' &&
       (github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/')) &&
@@ -215,6 +241,14 @@ jobs:
           verify_native_package "@uruhalushia/sparkle-native" "$SPARKLE_NATIVE_PACKAGE" \
             || (echo "Missing $SPARKLE_NATIVE_PACKAGE. pnpm must install cross-platform optional native dependencies." && exit 1)
           SKIP_PREPARE=0 pnpm prepare --${{ matrix.arch }}
+
+      - name: Build KokoroBox TrafficMonitor plugin
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+        run: >-
+          ./native/windows/traffic-monitor/build.ps1
+          -TargetArch ${{ matrix.arch }}
+          -OutputDir "extra/files/TrafficMonitor/plugins"
 
       - name: Build
         env:
