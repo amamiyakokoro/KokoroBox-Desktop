@@ -622,6 +622,7 @@ test('native build is pinned to the controlled KokoroBox ProxyBridge fork', () =
   assert.match(router, /read_bool\(command, "diagnosticLogging"/)
   assert.match(router, /ProxyBridge_SetLogCallback\(diagnostic_log\)/)
   assert.match(router, /ProxyBridge_SetConnectionCallback\(diagnostic_connection\)/)
+  assert.match(router, /ProxyBridge_SetFailClosedOnUnknownOwner\(fail_closed\)/)
   assert.match(router, /if \(!replace_rules\(command\)\) \{\s*exit_code = 6;\s*break;/)
   assert.doesNotMatch(router, /read_string\(object, "executablePath"/)
   assert.match(

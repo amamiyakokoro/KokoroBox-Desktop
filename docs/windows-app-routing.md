@@ -49,11 +49,14 @@ Applications that delegate name resolution to Windows therefore continue to use 
 resolver; Mihomo's existing DNS and fake-IP configuration remains authoritative wherever it is
 already in the traffic path.
 
-On Windows, owner lookup for a fresh TCP/UDP flow is retried briefly because the first packet can
-arrive before the matching owner row is visible in the operating-system connection table. A fresh
-TCP SYN always invalidates an earlier decision for the reused source port, and an unresolved owner
-is never cached as Direct. Diagnostic logging includes native engine messages so unresolved owner
-lookups and relay startup failures can be distinguished from ordinary non-matching traffic.
+On Windows, read-only WinDivert SOCKET and FLOW observers start before the NETWORK data path and
+cache process IDs by local/remote endpoint. Packet classification uses that event cache first and
+the operating-system connection table as a fallback. A fresh TCP SYN always invalidates an earlier
+decision for the reused source port. With KokoroBox's mandatory fail-closed policy, a packet whose
+owner or process image still cannot be resolved after the bounded wait is blocked instead of being
+released as Direct. TCP can retry with a later SYN; an unresolved UDP datagram is never leaked.
+Diagnostic logging includes native engine messages so unresolved owner lookups and relay startup
+failures can be distinguished from ordinary non-matching traffic.
 
 The packaged native process is `kokorobox-process-router.exe`. It accepts newline-delimited,
 versioned JSON commands over inherited standard input and emits JSON lifecycle events. It does
