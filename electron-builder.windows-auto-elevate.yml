@@ -4,4 +4,4 @@ extraMetadata:
 win:
   requestedExecutionLevel: requireAdministrator
 nsis:
-  artifactName: ${name}-windows-${version}-${arch}-auto-elevate-setup.${ext}
+  artifactName: ${name}-windows-${version}-${arch}-setup.${ext}

@@ -133,9 +133,10 @@ export async function downloadAndInstallUpdate(version: string, tag?: string): P
   const releaseTag = resolveReleaseTag(version, tag)
   const baseUrl = `https://github.com/amamiyakokoro/KokoroBox-Desktop/releases/download/${releaseTag}/`
   const elevation = windowsElevationVariant()
+  const windowsElevationSuffix = elevation === 'manual-elevation' ? '-manual-elevation' : ''
   const fileMap: Record<string, string> = {
-    'win32-x64': `kokorobox-desktop-windows-${version}-x64-${elevation}-setup.exe`,
-    'win32-arm64': `kokorobox-desktop-windows-${version}-arm64-${elevation}-setup.exe`,
+    'win32-x64': `kokorobox-desktop-windows-${version}-x64${windowsElevationSuffix}-setup.exe`,
+    'win32-arm64': `kokorobox-desktop-windows-${version}-arm64${windowsElevationSuffix}-setup.exe`,
     'darwin-x64': `kokorobox-desktop-macos-${version}-x64.pkg`,
     'darwin-arm64': `kokorobox-desktop-macos-${version}-arm64.pkg`
   }

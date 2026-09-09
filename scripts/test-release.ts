@@ -137,7 +137,7 @@ test('build matrix exactly matches the 12 required release artifacts', () => {
       },
       '2.26.8'
     ),
-    'kokorobox-desktop-windows-2.26.8-x64-auto-elevate-setup.exe'
+    'kokorobox-desktop-windows-2.26.8-x64-setup.exe'
   )
   assert.throws(() =>
     artifactName({ os: 'windows-latest', arch: 'ia32', format: 'nsis' }, '2.26.8')
@@ -153,6 +153,10 @@ test('build matrix exactly matches the 12 required release artifacts', () => {
   )
   assert.equal(autoElevation.win.requestedExecutionLevel, 'requireAdministrator')
   assert.equal(autoElevation.extraMetadata.kokoroboxWindowsElevation, 'auto-elevate')
+  assert.equal(
+    autoElevation.nsis.artifactName,
+    '${name}-windows-${version}-${arch}-setup.${ext}'
+  )
   assert.equal(manualElevation.win.requestedExecutionLevel, 'asInvoker')
   assert.equal(manualElevation.extraMetadata.kokoroboxWindowsElevation, 'manual-elevation')
   assert.notEqual(autoElevation.nsis.artifactName, manualElevation.nsis.artifactName)
@@ -272,9 +276,9 @@ test('collects complete builds, generates hashes and concise updater-compatible 
     assert.doesNotMatch(latest.changelog, /## Downloads|releases\/download\//)
     assert.match(latest.changelog, /- A change/)
     assert.match(latest.changelog, /Developer ID-signed, notarized by Apple/)
-    assert.equal(readdirSync(output).length, 17)
+    assert.equal(readdirSync(output).length, 15)
     const lines = readFileSync(path.join(output, 'SHA256SUMS'), 'utf8').trim().split('\n')
-    assert.equal(lines.length, 14)
+    assert.equal(lines.length, 12)
     for (const line of lines) {
       const [digest, name] = line.split('  ')
       assert.equal(
@@ -284,15 +288,11 @@ test('collects complete builds, generates hashes and concise updater-compatible 
           .digest('hex')
       )
     }
-    for (const arch of ['x64', 'arm64']) {
-      const automatic = readFileSync(
-        path.join(output, `kokorobox-desktop-windows-2.26.8-${arch}-auto-elevate-setup.exe`)
+    for (const arch of ['x64', 'arm64'])
+      assert.equal(
+        existsSync(path.join(output, `kokorobox-desktop-windows-2.26.8-${arch}-setup.exe`)),
+        true
       )
-      const legacy = readFileSync(
-        path.join(output, `kokorobox-desktop-windows-2.26.8-${arch}-setup.exe`)
-      )
-      assert.deepEqual(legacy, automatic)
-    }
   })
 })
 

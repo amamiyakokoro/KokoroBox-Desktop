@@ -41,7 +41,7 @@ win:
   target:
     - nsis
 nsis:
-  artifactName: ${name}-windows-${version}-${arch}-auto-elevate-setup.${ext}
+  artifactName: ${name}-windows-${version}-${arch}-setup.${ext}
   shortcutName: KokoroBox
   uninstallDisplayName: ${productName}
   allowToChangeInstallationDirectory: true

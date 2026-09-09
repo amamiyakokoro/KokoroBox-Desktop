@@ -122,8 +122,10 @@ export function artifactName(target: Target, version: string): string {
   if (!/^\d+\.\d+\.\d+(?:-\d+|-rolling-[0-9a-f]{7})?$/.test(version))
     throw new Error('Invalid artifact version')
   const prefix = `kokorobox-desktop-${target.os.split('-')[0]}-${version}`
-  if (target.os === 'windows-latest')
-    return `${prefix}-${target.arch}-${target.elevation}-setup.exe`
+  if (target.os === 'windows-latest') {
+    const elevationSuffix = target.elevation === 'manual-elevation' ? '-manual-elevation' : ''
+    return `${prefix}-${target.arch}${elevationSuffix}-setup.exe`
+  }
   if (target.os === 'macos-latest') return `${prefix}-${target.arch}.pkg`
   const arch =
     target.format === 'deb'
@@ -239,24 +241,13 @@ export function collectArtifacts(
   // makes the release page noisy without helping installation or updates.
   for (const filename of filenames)
     copyFileSync(path.join(source, filename), path.join(output, filename))
-  // Builds released before the elevation split request the legacy setup name.
-  // Keep a byte-identical alias for one-step migration to the automatic-UAC build.
-  for (const arch of ['x64', 'arm64']) {
-    const sourceName = artifactName(
-      { os: 'windows-latest', arch, format: 'nsis', elevation: 'auto-elevate' },
-      version
-    )
-    const legacyName = `kokorobox-desktop-windows-${version}-${arch}-setup.exe`
-    copyFileSync(path.join(source, sourceName), path.join(output, legacyName))
-    filenames.push(legacyName)
-  }
   const checksums =
     [...filenames]
       .sort()
       .map((filename) => `${digest(path.join(output, filename))}  ${filename}`)
       .join('\n') + '\n'
   writeFileSync(path.join(output, 'SHA256SUMS'), checksums)
-  const notes = `${changelog.trim()}\n\n## Windows elevation variants\n\nThe automatic-UAC installer runs KokoroBox with the standard Windows administrator prompt on launch. The manual-elevation installer starts normally and requires **Run as administrator** when privileged features are needed. Neither variant uses the legacy elevation runner or scheduled task. The unsuffixed Windows setup files are byte-identical automatic-UAC aliases retained so older installations can update once to the new naming scheme.\n\n## Signing status\n\nmacOS PKG installers are Developer ID-signed, notarized by Apple, and include a stapled notarization ticket. Windows packages are not Authenticode-signed. SHA256SUMS provides integrity checks, not publisher authentication.\n`
+  const notes = `${changelog.trim()}\n\n## Windows elevation variants\n\nThe standard Windows setup file is the automatic-UAC build and runs KokoroBox with the standard Windows administrator prompt on launch. The manual-elevation installer has a dedicated filename, starts normally, and requires **Run as administrator** when privileged features are needed. Neither variant uses the legacy elevation runner or scheduled task.\n\n## Signing status\n\nmacOS PKG installers are Developer ID-signed, notarized by Apple, and include a stapled notarization ticket. Windows packages are not Authenticode-signed. SHA256SUMS provides integrity checks, not publisher authentication.\n`
   writeFileSync(path.join(output, 'changelog.md'), notes)
   writeFileSync(path.join(output, 'latest.yml'), stringify({ version, tag, changelog: notes }))
 }
