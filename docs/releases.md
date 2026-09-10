@@ -12,6 +12,12 @@ The workflows build KokoroBox's supported package matrix, prepare the target nat
 
 Each release must contain all 12 build-matrix packages, two byte-identical Windows compatibility aliases, `latest.yml`, and `SHA256SUMS`. Windows users can choose an automatic-UAC build whose executable requests administrator rights at launch, or a manual-elevation build that starts with ordinary user rights and must be launched with **Run as administrator** when privileged features are needed. Neither build restores the legacy scheduled-task or runner elevation mechanism. The updater preserves the installed elevation variant. The unsuffixed Windows setup aliases let older installations migrate to the automatic-UAC variant through their existing updater. The updater metadata preserves the exact release tag, including a leading `v` when present. Build artifacts remain available in the workflow run for 14 days.
 
+Both NSIS installers are per-machine installers and therefore request UAC while
+installing or updating files under `Program Files`. The elevation variant
+controls the installed KokoroBox executable after setup: the unsuffixed setup
+is the automatic-UAC variant, while `manual-elevation-setup` launches the app as
+the current user. It does not make the installer itself per-user or UAC-free.
+
 All targets use GitHub-hosted runners and the locked project dependencies. The native module for each target architecture is checked before packaging.
 
 Linux installs the application at `/opt/kokorobox/kokorobox` and uses the `KokoroBoxService` service identity. The shared `pnpm build:linux` packaging entry point uses this layout for both local and CI builds. Legacy launchers and service registrations are stopped or retained only where needed for safe upgrades.
