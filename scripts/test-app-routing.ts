@@ -798,7 +798,24 @@ test('Windows application routing requires the privileged firewall lifecycle', (
   const installer = readFileSync('build/installer.nsh', 'utf8')
 
   assert.match(firewall, /\['process-router', 'firewall', command\]/)
+  assert.match(manager, /ordinaryWindowsProcess = process\.platform === 'win32'/)
+  assert.match(
+    manager,
+    /corePermissionMode === 'service' \|\| ordinaryWindowsProcess\)[\s\S]*await reconcileService\(config\)/
+  )
+  assert.match(
+    manager,
+    /if \(activeBackend === 'service'\) await disableServiceRouter\(true\)[\s\S]*else if \(activeBackend === 'direct'\) await stopDirectRouter\(\)[\s\S]*else await stopChild\(\)/
+  )
   assert.match(manager, /await ensureDirectFirewall\(true\)[\s\S]*await startChild\(/)
+  const firewallProbe = manager.slice(
+    manager.indexOf('async function ensureDirectFirewall'),
+    manager.indexOf('async function stopDirectRouter')
+  )
+  assert.ok(
+    firewallProbe.indexOf('await checkAppRoutingFirewall()') <
+      firewallProbe.indexOf('await ensureAppRoutingFirewall()')
+  )
   assert.match(manager, /await stopDirectRouter\(\)/)
   assert.match(manager, /firewallReady: serviceStatus\.firewall_ready/)
   assert.match(serviceProtocol, /typeof value\.firewall_ready !== 'boolean'/)

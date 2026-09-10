@@ -8,7 +8,7 @@ const execFilePromise = promisify(execFile)
 
 let isAdminCached: boolean | null = null
 
-async function isRunningAsAdmin(): Promise<boolean> {
+export async function isRunningAsAdmin(): Promise<boolean> {
   if (isAdminCached !== null) {
     return isAdminCached
   }

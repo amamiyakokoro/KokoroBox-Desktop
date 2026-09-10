@@ -7,6 +7,7 @@ import {
 } from '../../shared/app-routing'
 import { getAppConfig } from '../config/app'
 import { appendAppLog } from '../utils/log'
+import { isRunningAsAdmin } from '../utils/elevation'
 import { processRouterDir, processRouterPath } from '../utils/dirs'
 import { getAppRoutingConfig, saveAppRoutingConfig } from './config'
 import { appRoutingProxyPort, appRoutingSocksPort, buildProcessRouterCommand } from './profile'
@@ -116,6 +117,9 @@ function serviceModeError(error: unknown): Error {
   }
   if (process.platform === 'linux' && isServiceConnectionError(error)) {
     return new Error('Linux 应用分流需要已安装并运行 KokoroBox Service')
+  }
+  if (process.platform === 'win32' && isServiceConnectionError(error)) {
+    return new Error('Windows 应用分流需要已安装、初始化并运行 KokoroBox Service')
   }
   const message = error instanceof Error ? error.message : String(error)
   if (
@@ -234,13 +238,12 @@ async function ensureDirectFirewall(force = false): Promise<void> {
     return
   }
   lastDirectFirewallCheck = Date.now()
-  if (directFirewallReady) {
-    try {
-      await checkAppRoutingFirewall()
-      return
-    } catch {
-      directFirewallReady = false
-    }
+  try {
+    await checkAppRoutingFirewall()
+    directFirewallReady = true
+    return
+  } catch {
+    directFirewallReady = false
   }
   await ensureAppRoutingFirewall()
   directFirewallReady = true
@@ -431,7 +434,8 @@ async function reconcile(): Promise<void> {
     return
   }
   const { corePermissionMode = 'elevated' } = appConfig
-  if (process.platform === 'linux' || corePermissionMode === 'service') {
+  const ordinaryWindowsProcess = process.platform === 'win32' && !(await isRunningAsAdmin())
+  if (process.platform === 'linux' || corePermissionMode === 'service' || ordinaryWindowsProcess) {
     await reconcileService(config)
     activeBackend = 'service'
     return
@@ -581,5 +585,6 @@ export async function stopAppRouting(): Promise<void> {
   monitor = undefined
   if (process.platform === 'darwin') await stopMacAppRouting()
   else if (activeBackend === 'service') await disableServiceRouter(true)
-  else await stopDirectRouter()
+  else if (activeBackend === 'direct') await stopDirectRouter()
+  else await stopChild()
 }
