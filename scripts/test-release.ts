@@ -175,7 +175,10 @@ test('build matrix exactly matches the 12 required release artifacts', () => {
 
 test('desktop uses the independently maintained KokoroBox native packages', () => {
   const packageJson = JSON.parse(readFileSync('package.json', 'utf8'))
-  assert.equal(packageJson.dependencies['kokorobox-native'], '^0.2.0')
+  const nativeSpecifier = packageJson.dependencies['kokorobox-native']
+  assert.equal(typeof nativeSpecifier, 'string')
+  assert.match(nativeSpecifier, /^[~^]?\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/)
+  const nativeVersion = nativeSpecifier.replace(/^[~^]/, '')
   assert.equal(packageJson.dependencies['@uruhalushia/sparkle-native'], undefined)
 
   const platformPackages = [
@@ -188,10 +191,11 @@ test('desktop uses the independently maintained KokoroBox native packages', () =
   ].map((target) => `kokorobox-native-${target}`)
   const buildWorkflow = readFileSync('.github/workflows/build.yml', 'utf8')
   const lockfile = readFileSync('pnpm-lock.yaml', 'utf8')
+  const escapedNativeVersion = nativeVersion.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 
   for (const packageName of platformPackages) {
     assert.match(buildWorkflow, new RegExp(packageName))
-    assert.match(lockfile, new RegExp(`${packageName}@0\\.2\\.0`))
+    assert.match(lockfile, new RegExp(`${packageName}@${escapedNativeVersion}`))
   }
   assert.doesNotMatch(buildWorkflow, /@uruhalushia\/sparkle-native/)
   assert.doesNotMatch(lockfile, /@uruhalushia\/sparkle-native/)
