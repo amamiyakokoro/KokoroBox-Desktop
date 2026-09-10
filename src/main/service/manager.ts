@@ -345,7 +345,9 @@ export async function serviceStatus(): Promise<
   const execPath = servicePath()
 
   try {
-    const { stdout, stderr } = await execFilePromise(execPath, ['service', 'status'])
+    const { stdout, stderr } = await execFilePromise(execPath, ['service', 'status'], {
+      windowsHide: true
+    })
     if (parseServiceLog(`${stdout}\n${stderr}`)?.status?.state === 'not-installed') {
       return 'not-installed'
     }

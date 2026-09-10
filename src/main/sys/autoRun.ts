@@ -33,7 +33,7 @@ function launchAtLoginOptions() {
 async function windowsTaskExists(name: string): Promise<boolean> {
   const execFilePromise = promisify(execFile)
   try {
-    await execFilePromise('schtasks.exe', ['/query', '/tn', name])
+    await execFilePromise('schtasks.exe', ['/query', '/tn', name], { windowsHide: true })
     return true
   } catch {
     return false

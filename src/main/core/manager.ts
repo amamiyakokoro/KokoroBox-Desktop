@@ -475,7 +475,8 @@ export async function startCore(detached = false): Promise<Promise<void>[]> {
   const child = spawn(corePath, spawnArgs, {
     detached: detached,
     stdio: detached ? 'ignore' : undefined,
-    env: env
+    env: env,
+    windowsHide: process.platform === 'win32'
   })
   directCoreState.child = child
   let startupOutput = ''

@@ -826,9 +826,10 @@ test('Windows application routing requires the privileged firewall lifecycle', (
     installer,
     /customInstall[\s\S]*\$installMode == "all"[\s\S]*EnsureAppRoutingFirewall/
   )
-  assert.match(installer, /Migrating and starting KokoroBox service/)
+  assert.match(installer, /Installing and starting KokoroBox service/)
   assert.match(installer, /'"\$R1" service install'/)
   assert.doesNotMatch(installer, /'"\$R1" service start'/)
+  assert.doesNotMatch(installer, /kokoroboxServiceWasRunning/)
   assert.match(
     installer,
     /customUnInstall[\s\S]*\$installMode == "all"[\s\S]*RemoveAppRoutingFirewall/

@@ -8,10 +8,6 @@
 !define KOKOROBOX_ELEVATED_TASK_NAME "KokoroBox Elevated"
 !define LEGACY_ELEVATED_TASK_NAME "sparkle-run"
 
-!macro customHeader
-  Var kokoroboxServiceWasRunning
-!macroend
-
 !macro EnsureTempSpace
   ${DriveSpace} "$TEMP" "/D=F /S=M" $R0
   ${If} $R0 < ${KOKOROBOX_MIN_TEMP_SPACE_MB}
@@ -101,7 +97,6 @@
 
   ${If} $R1 != "stopped"
   ${AndIf} $R1 != "not-installed"
-    StrCpy $kokoroboxServiceWasRunning "true"
     DetailPrint "Stopping KokoroBox service"
     nsExec::ExecToStack '"$SYSDIR\sc.exe" stop "${NAME}"'
     Pop $R2
@@ -160,7 +155,6 @@
 
 !macro customInit
   !insertmacro EnsureTempSpace
-  StrCpy $kokoroboxServiceWasRunning "false"
   ${If} $installMode == "all"
     ${If} ${UAC_IsAdmin}
       !insertmacro StopServiceIfRunning "${LEGACY_SERVICE_NAME}"
@@ -179,16 +173,17 @@
   ${If} $installMode == "all"
     !insertmacro EnsureAppRoutingFirewall
 
-    ${If} $kokoroboxServiceWasRunning == "true"
-      StrCpy $R1 "$INSTDIR\resources\files\kokorobox-service.exe"
-      ${If} ${FileExists} "$R1"
-        DetailPrint "Migrating and starting KokoroBox service: $R1"
-        nsExec::ExecToLog '"$R1" service install'
-        Pop $R2
-        ${If} $R2 != 0
-          DetailPrint "KokoroBox service install exited with code $R2"
-        ${EndIf}
+    StrCpy $R1 "$INSTDIR\resources\files\kokorobox-service.exe"
+    ${If} ${FileExists} "$R1"
+      DetailPrint "Installing and starting KokoroBox service: $R1"
+      nsExec::ExecToLog '"$R1" service install'
+      Pop $R2
+      ${If} $R2 != 0
+        DetailPrint "KokoroBox service install exited with code $R2"
+        MessageBox MB_ICONEXCLAMATION "KokoroBox was installed, but its background service could not be installed (error $R2). You can retry from KokoroBox Core Settings."
       ${EndIf}
+    ${Else}
+      MessageBox MB_ICONEXCLAMATION "KokoroBox was installed, but the background service payload is missing. Please reinstall this package."
     ${EndIf}
   ${EndIf}
 !macroend

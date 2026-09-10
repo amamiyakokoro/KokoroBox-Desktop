@@ -37,7 +37,7 @@ export async function execWithElevation(command: string, args: string[]): Promis
   if (process.platform === 'win32') {
     try {
       if (await isRunningAsAdmin()) {
-        await execFilePromise(command, args, { timeout: 30000 })
+        await execFilePromise(command, args, { timeout: 30000, windowsHide: true })
       } else {
         const exitCode = runElevated(command, args)
         if (exitCode !== 0) {

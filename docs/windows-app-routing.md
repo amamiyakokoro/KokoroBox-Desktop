@@ -105,6 +105,11 @@ with its verified Process Router bundle into a content-addressed directory below
 `%ProgramFiles%\KokoroBox Service`. SCM therefore never executes the service from a user-writable
 application directory.
 
+The all-users installation registers and starts the service as part of package installation. A
+current-user installation defers that UAC-protected operation until the user explicitly enables a
+feature that needs it. Service authentication is initialized separately for the signed-in user so
+the installer never embeds or reuses an application API credential.
+
 An all-users update re-installs a previously running service so older SCM registrations are migrated
 to this protected runtime. Service-managed Mihomo executables are likewise copied into a verified,
 content-addressed directory below `%ProgramData%\KokoroBox\core-runtime`; access hardening is applied

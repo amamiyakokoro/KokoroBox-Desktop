@@ -92,6 +92,21 @@ test('startup persists a replacement pair when stored authentication is unavaila
   assert.match(routingSource, /重置认证/)
 })
 
+test('Windows service probes and elevated commands never open a console window', () => {
+  const managerSource = readFileSync(resolve('src/main/service/manager.ts'), 'utf8')
+  const elevationSource = readFileSync(resolve('src/main/utils/elevation.ts'), 'utf8')
+  const autoRunSource = readFileSync(resolve('src/main/sys/autoRun.ts'), 'utf8')
+  const sysproxySource = readFileSync(resolve('src/main/sys/sysproxy.ts'), 'utf8')
+
+  assert.match(managerSource, /\['service', 'status'\],[\s\S]*windowsHide: true/)
+  assert.match(elevationSource, /timeout: 30000, windowsHide: true/)
+  assert.match(autoRunSource, /schtasks\.exe[\s\S]*windowsHide: true/)
+  assert.equal(
+    (sysproxySource.match(/windowsHide: process\.platform === 'win32'/g) || []).length,
+    3
+  )
+})
+
 test('Desktop signs service requests with Auth V3 and retries a legacy service once with V2', () => {
   const apiSource = readFileSync(resolve('src/main/service/api.ts'), 'utf8')
 

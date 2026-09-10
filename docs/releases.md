@@ -23,6 +23,11 @@ service, its helper requests UAC and deploys the service executable plus the ver
 Router runtime into a content-addressed directory below `%ProgramFiles%\KokoroBox Service`; the
 Service Control Manager never points at the user-writable application directory.
 
+An all-users installation registers and starts this background service during installation. The
+application still asks the signed-in user to initialize service authentication before first use;
+this binds the service API to that user's generated credentials instead of shipping a shared
+installer credential.
+
 When an all-users package updates an active older service, the installer re-installs the service
 instead of merely starting its existing registration. This migrates registrations that still point
 at an application resource directory to the protected content-addressed runtime. Mihomo executables

@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
+import { readFileSync } from 'node:fs'
 import {
   resolveCoreHookDirectory,
   resolveCoreHookTouchCommand,
@@ -35,4 +36,12 @@ test('Windows uses log readiness instead of a fatal shell post-up hook', () => {
   assert.equal(resolveCoreStartupMode('win32', 'log'), 'log')
   assert.equal(resolveCoreStartupMode('darwin', 'post-up'), 'post-up')
   assert.equal(resolveCoreStartupMode('linux', 'log'), 'log')
+})
+
+test('direct Mihomo processes cannot create a visible Windows console', () => {
+  const managerSource = readFileSync('src/main/core/manager.ts', 'utf8')
+  assert.match(
+    managerSource,
+    /spawn\(corePath, spawnArgs,[\s\S]*windowsHide: process\.platform === 'win32'/
+  )
 })

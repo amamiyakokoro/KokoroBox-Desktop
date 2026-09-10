@@ -139,13 +139,17 @@ async function setSysProxy(onlyActiveDevice: boolean, useRegistry = false): Prom
         }
       } else {
         updateSysproxyGuardEventStream(false)
-        await execFilePromise(servicePath(), [
-          'sysproxy',
-          'pac',
-          '--url',
-          `http://${host || '127.0.0.1'}:${pacPort}/pac`,
-          ...registryArgs(useRegistry)
-        ])
+        await execFilePromise(
+          servicePath(),
+          [
+            'sysproxy',
+            'pac',
+            '--url',
+            `http://${host || '127.0.0.1'}:${pacPort}/pac`,
+            ...registryArgs(useRegistry)
+          ],
+          { windowsHide: process.platform === 'win32' }
+        )
       }
       break
     }
@@ -168,15 +172,19 @@ async function setSysProxy(onlyActiveDevice: boolean, useRegistry = false): Prom
           }
         } else {
           updateSysproxyGuardEventStream(false)
-          await execFilePromise(servicePath(), [
-            'sysproxy',
-            'proxy',
-            '--server',
-            `${host || '127.0.0.1'}:${port}`,
-            '--bypass',
-            process.platform === 'win32' ? bypass.join(';') : bypass.join(','),
-            ...registryArgs(useRegistry)
-          ])
+          await execFilePromise(
+            servicePath(),
+            [
+              'sysproxy',
+              'proxy',
+              '--server',
+              `${host || '127.0.0.1'}:${port}`,
+              '--bypass',
+              process.platform === 'win32' ? bypass.join(';') : bypass.join(','),
+              ...registryArgs(useRegistry)
+            ],
+            { windowsHide: process.platform === 'win32' }
+          )
         }
       } else {
         updateSysproxyGuardEventStream(false)
@@ -193,7 +201,9 @@ async function disableSysProxy(onlyActiveDevice: boolean, useRegistry = false): 
   const { settingMode = 'exec' } = sysProxy
   const execFilePromise = promisify(execFile)
   const disableWithExec = (): Promise<unknown> =>
-    execFilePromise(servicePath(), ['sysproxy', 'disable', ...registryArgs(useRegistry)])
+    execFilePromise(servicePath(), ['sysproxy', 'disable', ...registryArgs(useRegistry)], {
+      windowsHide: process.platform === 'win32'
+    })
 
   if (settingMode === 'service') {
     try {
