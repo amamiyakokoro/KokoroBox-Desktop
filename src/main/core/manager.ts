@@ -46,6 +46,7 @@ import {
   type AppNotificationVariant
 } from '../utils/notification'
 import { createCoreHookWaiter, createCoreStartupHook } from './startupHook'
+import { resolveCoreStartupMode } from './coreHookPath'
 import { stopChildProcess } from './process-control'
 import { recoverDNS, setPublicDNS, startNetworkDetectionController } from './network'
 import { checkProfile } from './profile-check'
@@ -346,6 +347,7 @@ export async function startCore(detached = false): Promise<Promise<void>[]> {
     disableNftables = false,
     safePaths = []
   } = appConfig
+  const effectiveCoreStartupMode = resolveCoreStartupMode(process.platform, coreStartupMode)
   const { 'log-level': logLevel, tun } = controlledMihomoConfig
   const { current } = profileConfig
   const useServiceCore = corePermissionMode === 'service' && !detached
@@ -401,7 +403,7 @@ export async function startCore(detached = false): Promise<Promise<void>[]> {
 
   let initialized = false
   const coreHook =
-    !useServiceCore && !detached && coreStartupMode === 'post-up'
+    !useServiceCore && !detached && effectiveCoreStartupMode === 'post-up'
       ? await createCoreStartupHook()
       : undefined
   const hookWaiter = coreHook ? createCoreHookWaiter(coreHook) : undefined
@@ -610,7 +612,7 @@ export async function startCore(detached = false): Promise<Promise<void>[]> {
     })
   }
 
-  return coreStartupMode === 'post-up' ? waitForCoreReadyByHook() : waitForCoreReadyByLog()
+  return effectiveCoreStartupMode === 'post-up' ? waitForCoreReadyByHook() : waitForCoreReadyByLog()
 }
 
 export async function stopCore(force = false): Promise<void> {

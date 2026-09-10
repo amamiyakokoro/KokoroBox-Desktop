@@ -294,7 +294,7 @@ const Mihomo: React.FC = () => {
             </Tabs>
           </SettingItem>
         )}
-        {corePermissionMode !== 'service' && (
+        {corePermissionMode !== 'service' && platform !== 'win32' && (
           <SettingItem compatKey="legacy" title={tr('启动检测方式')} divider>
             <Tabs
               size="sm"

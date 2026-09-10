@@ -65,7 +65,7 @@ export const defaultConfig: AppConfig = {
   groupDisplayLayout: 'double',
   showGroupSelectedProxy: false,
   autoLightweightMode: 'core',
-  coreStartupMode: 'post-up',
+  coreStartupMode: process.platform === 'win32' ? 'log' : 'post-up',
   serviceRunMode: 'auto',
   delayTestConcurrency: 50,
   delayTestUseGroupApi: false,

@@ -2,7 +2,8 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import {
   resolveCoreHookDirectory,
-  resolveCoreHookTouchCommand
+  resolveCoreHookTouchCommand,
+  resolveCoreStartupMode
 } from '../src/main/core/coreHookPath'
 
 test('Windows core startup hooks stay in the writable user-data directory', () => {
@@ -27,4 +28,11 @@ test('Windows post-up command quotes paths containing spaces', () => {
     ),
     'type nul > "C:\\Users\\Example User\\AppData\\Roaming\\KokoroBox\\core-hooks\\startup.up"'
   )
+})
+
+test('Windows uses log readiness instead of a fatal shell post-up hook', () => {
+  assert.equal(resolveCoreStartupMode('win32', 'post-up'), 'log')
+  assert.equal(resolveCoreStartupMode('win32', 'log'), 'log')
+  assert.equal(resolveCoreStartupMode('darwin', 'post-up'), 'post-up')
+  assert.equal(resolveCoreStartupMode('linux', 'log'), 'log')
 })
