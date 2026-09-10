@@ -161,8 +161,12 @@
 !macro customInit
   !insertmacro EnsureTempSpace
   StrCpy $kokoroboxServiceWasRunning "false"
-  !insertmacro StopServiceIfRunning "${LEGACY_SERVICE_NAME}"
-  !insertmacro StopServiceIfRunning "${KOKOROBOX_SERVICE_NAME}"
+  ${If} $installMode == "all"
+    ${If} ${UAC_IsAdmin}
+      !insertmacro StopServiceIfRunning "${LEGACY_SERVICE_NAME}"
+      !insertmacro StopServiceIfRunning "${KOKOROBOX_SERVICE_NAME}"
+    ${EndIf}
+  ${EndIf}
 !macroend
 
 !macro customInstall
@@ -172,16 +176,18 @@
     CreateShortcut "$DESKTOP\${PRODUCT_FILENAME}.lnk" "$INSTDIR\${PRODUCT_FILENAME}.exe"
   ${endIf}
 
-  !insertmacro EnsureAppRoutingFirewall
+  ${If} $installMode == "all"
+    !insertmacro EnsureAppRoutingFirewall
 
-  ${If} $kokoroboxServiceWasRunning == "true"
-    StrCpy $R1 "$INSTDIR\resources\files\kokorobox-service.exe"
-    ${If} ${FileExists} "$R1"
-      DetailPrint "Starting KokoroBox service: $R1"
-      nsExec::ExecToLog '"$R1" service start'
-      Pop $R2
-      ${If} $R2 != 0
-        DetailPrint "KokoroBox service start exited with code $R2"
+    ${If} $kokoroboxServiceWasRunning == "true"
+      StrCpy $R1 "$INSTDIR\resources\files\kokorobox-service.exe"
+      ${If} ${FileExists} "$R1"
+        DetailPrint "Starting KokoroBox service: $R1"
+        nsExec::ExecToLog '"$R1" service start'
+        Pop $R2
+        ${If} $R2 != 0
+          DetailPrint "KokoroBox service start exited with code $R2"
+        ${EndIf}
       ${EndIf}
     ${EndIf}
   ${EndIf}
@@ -189,7 +195,9 @@
 
 !macro customUnInstall
   !insertmacro RemoveLegacyElevationArtifacts
-  !insertmacro RemoveAppRoutingFirewall
+  ${If} $installMode == "all"
+    !insertmacro RemoveAppRoutingFirewall
+  ${EndIf}
 !macroend
 
 !endif

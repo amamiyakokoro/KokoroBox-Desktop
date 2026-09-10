@@ -822,6 +822,14 @@ test('Windows application routing requires the privileged firewall lifecycle', (
   assert.match(serviceProtocol, /application routing without firewall protection/)
   assert.match(installer, /process-router firewall ensure/)
   assert.match(installer, /process-router firewall remove/)
+  assert.match(
+    installer,
+    /customInstall[\s\S]*\$installMode == "all"[\s\S]*EnsureAppRoutingFirewall/
+  )
+  assert.match(
+    installer,
+    /customUnInstall[\s\S]*\$installMode == "all"[\s\S]*RemoveAppRoutingFirewall/
+  )
   assert.match(installer, /!macro customUnInstall/)
 })
 

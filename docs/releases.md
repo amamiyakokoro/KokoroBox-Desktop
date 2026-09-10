@@ -12,11 +12,16 @@ The workflows build KokoroBox's supported package matrix, prepare the target nat
 
 The build matrix contains 10 platform packages. Publication adds two byte-identical Windows `manual-elevation-setup` compatibility aliases, plus `latest.yml` and `SHA256SUMS`. The aliases let installations made from the former manual-elevation package cross the migration boundary; they are not separate builds. New installations and the current updater use the unsuffixed setup filename. The updater metadata preserves the exact release tag, including a leading `v` when present. Build artifacts remain available in the workflow run for 14 days.
 
-The NSIS package is a per-machine installer and therefore requests UAC while
-installing or updating files under `Program Files`. The installed KokoroBox
-executable declares `asInvoker`, starts as the current user, and requests
-administrator permission only for individual privileged operations. It does
-not request UAC on every application launch.
+The assisted NSIS package asks whether KokoroBox should be installed only for the current user or
+for every user of the computer. A current-user installation is stored below `%LOCALAPPDATA%` and
+does not request UAC during installation. An all-users installation is stored below `Program
+Files` and requests UAC when installing or updating. In both modes the installed KokoroBox
+executable declares `asInvoker`, so normal launches and login startup do not request UAC.
+
+Privileged features remain opt-in. When a current-user installation first enables the Windows
+service, its helper requests UAC and deploys the service executable plus the verified Process
+Router runtime into a content-addressed directory below `%ProgramFiles%\KokoroBox Service`; the
+Service Control Manager never points at the user-writable application directory.
 
 All targets use GitHub-hosted runners and the locked project dependencies. The native module for each target architecture is checked before packaging.
 

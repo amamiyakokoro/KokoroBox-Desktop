@@ -94,9 +94,16 @@ The service uses a short client lease. Authenticated status polling renews it wh
 running. A normal exit stops the router immediately; if the UI crashes, lease expiry stops the
 router, removes the firewall rule group, and releases WinDivert while retaining the canonical
 rules for the next application start. Disabling or cleaning up application routing also removes
-the rules. The NSIS installer creates them during install and upgrade and removes them on
-uninstall. A portable installation invokes the same service helper with elevation when application
-routing is first enabled.
+the rules. An all-users NSIS installation prepares and removes these rules during package
+lifecycle operations. A current-user or portable installation invokes the service helper with
+elevation when application routing is first enabled; the service then verifies or repairs its
+rules before starting interception.
+
+The same installer supports current-user and all-users scopes. Current-user application files
+remain below `%LOCALAPPDATA%`, but an explicitly installed privileged service is copied together
+with its verified Process Router bundle into a content-addressed directory below
+`%ProgramFiles%\KokoroBox Service`. SCM therefore never executes the service from a user-writable
+application directory.
 
 ## Failure behavior
 

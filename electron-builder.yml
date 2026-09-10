@@ -45,8 +45,9 @@ nsis:
   shortcutName: KokoroBox
   uninstallDisplayName: ${productName}
   allowToChangeInstallationDirectory: true
+  allowElevation: true
   oneClick: false
-  perMachine: true
+  perMachine: false
   createDesktopShortcut: false
   include: build/installer.nsh
 mac:
