@@ -908,7 +908,9 @@ test('Windows packaging uses the signed app manifest and never self-elevates at 
 
   const autoRun = readFileSync('src/main/sys/autoRun.ts', 'utf8')
   assert.match(autoRun, /WINDOWS_AUTO_RUN_TASK_NAME = 'KokoroBox'/)
-  assert.match(autoRun, /function taskXml\(\)/)
+  assert.match(autoRun, /getLaunchAtLogin/)
+  assert.match(autoRun, /setLaunchAtLogin/)
+  assert.doesNotMatch(autoRun, /function taskXml\(\)/)
   assert.match(autoRun, /migrateLegacyWindowsTasks/)
   assert.match(autoRun, /LEGACY_WINDOWS_AUTO_RUN_TASK_NAME/)
   assert.doesNotMatch(autoRun, /<Command>.*sparkle-run\.exe/)
