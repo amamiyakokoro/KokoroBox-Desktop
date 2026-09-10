@@ -1,13 +1,15 @@
 import path from 'path'
-import { productIdentity } from '../../shared/product-identity'
 
-export function resolveCoreHookDirectory(
-  platform: NodeJS.Platform,
-  programData: string | undefined,
-  userDataPath: string
-): string {
-  if (platform === 'win32' && programData) {
-    return path.win32.join(programData, productIdentity.systemStateDirectory, 'core-hooks')
-  }
-  return path.join(userDataPath, 'core-hooks')
+function shellQuote(value: string): string {
+  return `'${value.replace(/'/g, "'\\''")}'`
+}
+
+export function resolveCoreHookDirectory(platform: NodeJS.Platform, userDataPath: string): string {
+  return platform === 'win32'
+    ? path.win32.join(userDataPath, 'core-hooks')
+    : path.join(userDataPath, 'core-hooks')
+}
+
+export function resolveCoreHookTouchCommand(platform: NodeJS.Platform, file: string): string {
+  return platform === 'win32' ? `type nul > "${file}"` : `: > ${shellQuote(file)}`
 }

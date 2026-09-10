@@ -6,7 +6,7 @@ import { mkdir, rm } from 'fs/promises'
 import path from 'path'
 import { randomUUID } from 'crypto'
 import { dataDir } from '../utils/dirs'
-import { resolveCoreHookDirectory } from './coreHookPath'
+import { resolveCoreHookDirectory, resolveCoreHookTouchCommand } from './coreHookPath'
 
 const coreHookTimeout = 30000
 
@@ -23,16 +23,12 @@ export interface CoreHookWaiter {
   attachProcess: (process: ChildProcess) => void
 }
 
-function shellQuote(value: string): string {
-  return `'${value.replace(/'/g, "'\\''")}'`
-}
-
 function hookTouchCommand(file: string): string {
-  return process.platform === 'win32' ? `type nul > ${file}` : `: > ${shellQuote(file)}`
+  return resolveCoreHookTouchCommand(process.platform, file)
 }
 
 function coreHookDir(): string {
-  return resolveCoreHookDirectory(process.platform, process.env.ProgramData, dataDir())
+  return resolveCoreHookDirectory(process.platform, dataDir())
 }
 
 export async function createCoreStartupHook(): Promise<CoreStartupHook> {
