@@ -11,4 +11,17 @@ patchedDependencies:
 publicHoistPattern:
   - '*@heroui/*'
 shamefullyHoist: true
+supportedArchitectures:
+  os:
+    - current
+    - win32
+    - darwin
+    - linux
+  cpu:
+    - current
+    - x64
+    - arm64
+  libc:
+    - current
+    - glibc
 virtualStoreDirMaxLength: 80
