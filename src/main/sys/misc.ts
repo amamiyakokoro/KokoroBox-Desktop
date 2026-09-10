@@ -31,6 +31,8 @@ import {
 } from '../utils/dirs'
 import { rmSync } from 'fs'
 import { execWithElevation } from '../utils/elevation'
+import { prepareAppForRelaunch } from '../resolve/appLifecycle'
+import { windowsRelaunchWaitArgument } from '../../shared/windows-relaunch'
 
 export function getFilePath(
   ext: string[],
@@ -232,7 +234,7 @@ export async function checkElevateTask(): Promise<boolean> {
   }
 }
 
-function relaunchWindowsWithPrivilege(elevated: boolean): void {
+async function relaunchWindowsWithPrivilege(elevated: boolean): Promise<void> {
   if (process.platform !== 'win32') {
     throw new Error(tr('此功能仅支持 Windows'))
   }
@@ -240,27 +242,24 @@ function relaunchWindowsWithPrivilege(elevated: boolean): void {
   const currentlyElevated = isRunningAsAdmin()
   if (currentlyElevated === elevated) return
 
-  // Release the lock before creating the replacement process. If UAC is
-  // cancelled or creation fails, reacquire it so the current process remains
-  // a correctly managed single instance.
-  app.releaseSingleInstanceLock()
-  try {
-    if (elevated) launchElevated(exePath())
-    else launchUnelevated(exePath())
-  } catch (error) {
-    app.requestSingleInstanceLock()
-    throw error
-  }
+  // The replacement waits for this process to finish cleanup before requesting
+  // the single-instance lock or starting Mihomo. This avoids both pipe races and
+  // stopping the current core when the user cancels the UAC prompt.
+  const relaunchArguments = [windowsRelaunchWaitArgument(process.pid)]
+  if (elevated) launchElevated(exePath(), relaunchArguments)
+  else launchUnelevated(exePath(), relaunchArguments)
 
+  await prepareAppForRelaunch()
+  app.releaseSingleInstanceLock()
   app.quit()
 }
 
-export function relaunchWindowsElevated(): void {
-  relaunchWindowsWithPrivilege(true)
+export async function relaunchWindowsElevated(): Promise<void> {
+  await relaunchWindowsWithPrivilege(true)
 }
 
-export function relaunchWindowsUnelevated(): void {
-  relaunchWindowsWithPrivilege(false)
+export async function relaunchWindowsUnelevated(): Promise<void> {
+  await relaunchWindowsWithPrivilege(false)
 }
 
 export function resetAppConfig(): void {

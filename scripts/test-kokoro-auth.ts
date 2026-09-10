@@ -14,6 +14,10 @@ import {
   startKokoroCallbackRelay
 } from '../src/main/resolve/kokoroCallbackRelay.ts'
 import type { KokoroCredentials } from '../src/main/kokoro/auth-store.ts'
+import {
+  getWindowsRelaunchWaitPid,
+  windowsRelaunchWaitArgument
+} from '../src/shared/windows-relaunch.ts'
 
 // Exercise the real client module with isolated OS, clock, storage and HTTP boundaries.
 // No browser, Keychain, live account or production endpoint is touched by these tests.
@@ -925,13 +929,32 @@ test('Windows packaging runs as the current user and never self-elevates at star
 test('Windows privilege changes use explicit non-persistent native relaunches', () => {
   const misc = readFileSync('src/main/sys/misc.ts', 'utf8')
   const modal = readFileSync('src/renderer/src/components/mihomo/permission-modal.tsx', 'utf8')
+  const lifecycle = readFileSync('src/main/resolve/appLifecycle.ts', 'utf8')
+  const startup = readFileSync('src/main/index.ts', 'utf8')
 
-  assert.match(misc, /if \(elevated\) launchElevated\(exePath\(\)\)/)
-  assert.match(misc, /else launchUnelevated\(exePath\(\)\)/)
+  assert.match(misc, /if \(elevated\) launchElevated\(exePath\(\), relaunchArguments\)/)
+  assert.match(misc, /else launchUnelevated\(exePath\(\), relaunchArguments\)/)
   assert.match(misc, /app\.releaseSingleInstanceLock\(\)/)
   assert.doesNotMatch(misc, /launch(?:Un)?elevated\([^\n]*process\.argv/)
+  assert.match(misc, /await prepareAppForRelaunch\(\)/)
+  assert.match(lifecycle, /isQuitting = true\s+await cleanupBeforeExit\(false\)/)
+  assert.match(
+    startup,
+    /waitForRelaunchParent\(windowsRelaunchWaitPid\)\.then\(requestPrimaryInstance\)/
+  )
   assert.match(modal, /手动提权并重启/)
   assert.match(modal, /取消提权并重启/)
+})
+
+test('Windows privilege relaunch only accepts a valid parent process id', () => {
+  assert.equal(windowsRelaunchWaitArgument(1234), '--kokorobox-relaunch-wait-pid=1234')
+  assert.equal(
+    getWindowsRelaunchWaitPid(['KokoroBox.exe', '--kokorobox-relaunch-wait-pid=1234']),
+    1234
+  )
+  assert.equal(getWindowsRelaunchWaitPid(['KokoroBox.exe']), undefined)
+  assert.equal(getWindowsRelaunchWaitPid(['--kokorobox-relaunch-wait-pid=0']), undefined)
+  assert.equal(getWindowsRelaunchWaitPid(['--kokorobox-relaunch-wait-pid=invalid']), undefined)
 })
 
 test('secure storage writes one encrypted record and never deletes the old record before rename', async () => {

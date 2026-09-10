@@ -39,6 +39,7 @@ import {
   isExpectedNetworkTransition
 } from './utils/earlyTlsDisconnect'
 import { migrateUserDataDirectory } from './utils/userDataMigration'
+import { getWindowsRelaunchWaitPid } from '../shared/windows-relaunch'
 
 export { setNotQuitDialog } from './resolve/appLifecycle'
 
@@ -199,6 +200,26 @@ if (syncConfig.disableGPU) app.disableHardwareAcceleration()
 
 const windowsKokoroCallback =
   process.platform === 'win32' ? process.argv.find(isKokoroURI) : undefined
+const windowsRelaunchWaitPid =
+  process.platform === 'win32' ? getWindowsRelaunchWaitPid(process.argv) : undefined
+
+function isProcessRunning(pid: number): boolean {
+  try {
+    process.kill(pid, 0)
+    return true
+  } catch (error) {
+    // Windows can deny querying a process at another integrity level. In that
+    // case it is still alive; ESRCH means the previous instance has exited.
+    return (error as NodeJS.ErrnoException).code === 'EPERM'
+  }
+}
+
+async function waitForRelaunchParent(pid: number): Promise<void> {
+  while (isProcessRunning(pid)) {
+    await new Promise((resolve) => setTimeout(resolve, 100))
+  }
+}
+
 if (windowsKokoroCallback) {
   // A browser starts protocol handlers without elevation. Try the authenticated relay before
   // Electron's single-instance handoff, which Windows can block across integrity levels.
@@ -209,6 +230,10 @@ if (windowsKokoroCallback) {
     if (forwarded) app.quit()
     else requestPrimaryInstance()
   })
+} else if (windowsRelaunchWaitPid && windowsRelaunchWaitPid !== process.pid) {
+  // Do not initialize the replacement while the previous integrity-level
+  // instance still owns Mihomo's controller pipe and other shared resources.
+  void waitForRelaunchParent(windowsRelaunchWaitPid).then(requestPrimaryInstance)
 } else {
   requestPrimaryInstance()
 }

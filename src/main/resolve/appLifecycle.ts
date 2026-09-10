@@ -20,6 +20,14 @@ export function setNotQuitDialog(): void {
   notQuitDialog = true
 }
 
+export async function prepareAppForRelaunch(): Promise<void> {
+  // A privilege transition is an intentional quit. Complete all cleanup before
+  // the replacement process is allowed to acquire shared resources such as the
+  // Mihomo controller named pipe, and skip the interactive quit confirmation.
+  isQuitting = true
+  await cleanupBeforeExit(false)
+}
+
 export function initAppQuitLifecycle(context: AppQuitLifecycleContext): void {
   app.on('window-all-closed', () => {
     // Don't quit app when all windows are closed
