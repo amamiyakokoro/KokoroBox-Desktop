@@ -13,7 +13,7 @@ output or constructing privileged shell commands in Electron.
 | Login startup             | `getLaunchAtLogin`, `setLaunchAtLogin`          | Kokoro settings                             |
 | Network state             | `getNetworkContext`                             | SSID switching and macOS DNS recovery       |
 | Unix core permissions     | `getCorePrivilegeStatus`, `setCorePrivileges`   | Mihomo permission checks, grant, and revoke |
-| Windows system operations | SID, elevation, and Firewall APIs               | Routing and privileged setup                |
+| Windows system operations | SID, explicit privilege relaunch, Firewall APIs | Routing and privileged setup                |
 
 The P0 migration consolidates active interface, macOS network-service, DNS, and
 SSID discovery in Rust. Windows SSID lookup uses the Native Wi-Fi API rather
@@ -24,6 +24,12 @@ Core privilege changes are also constrained at the native boundary. Only
 existing executable files whose canonical filename is `mihomo` or
 `mihomo-alpha` are accepted. Linux no longer invokes `pkexec bash -c`; the
 validated paths are passed directly to `chown` and `chmod`.
+
+Windows privilege state remains process-scoped. Desktop checks the current
+token with `isRunningAsAdmin`, uses `launchElevated` for an explicit UAC-backed
+restart, and uses `launchUnelevated` to return to the interactive desktop user's
+token. These operations do not recreate the removed elevation task or make an
+administrator launch persistent.
 
 ## Adding another native function
 

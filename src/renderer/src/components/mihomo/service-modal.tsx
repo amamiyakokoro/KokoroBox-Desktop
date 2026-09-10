@@ -33,7 +33,7 @@ async function readServiceStatus(): Promise<ServiceStatusType> {
   try {
     return await serviceStatus()
   } catch {
-    return 'not-installed'
+    return 'unknown'
   }
 }
 
@@ -72,7 +72,7 @@ const ServiceModal: React.FC<Props> = (props) => {
 
       if (isStartAction) {
         let retries = 5
-        while (retries > 0 && result === 'stopped') {
+        while (retries > 0 && (result === 'stopped' || result === 'unknown')) {
           await delay(1000)
           result = await readServiceStatus()
           retries--
@@ -91,6 +91,15 @@ const ServiceModal: React.FC<Props> = (props) => {
   useEffect(() => {
     void refreshServiceStatus()
   }, [refreshServiceStatus])
+
+  const handleRefresh = async (): Promise<void> => {
+    setLoading(true)
+    try {
+      await refreshServiceStatus()
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const getStatusText = (): string => {
     if (status === null) return tr('检查中')
@@ -229,7 +238,7 @@ const ServiceModal: React.FC<Props> = (props) => {
                 </div>
               </div>
             </Modal.Body>
-            <Modal.Footer className="flex-col gap-2 sm:flex-row">
+            <Modal.Footer className="flex-col gap-2 sm:flex-row sm:flex-wrap">
               <Button
                 size="sm"
                 variant="light"
@@ -252,12 +261,22 @@ const ServiceModal: React.FC<Props> = (props) => {
                     {status === 'need-init' ? tr('初始化') : tr('重置认证')}
                   </Button>
                 )
-              ) : status === 'unknown' ? null : status === 'not-installed' ? (
+              ) : status === 'unknown' ? (
+                <Button
+                  size="sm"
+                  color="primary"
+                  variant="flat"
+                  onPress={handleRefresh}
+                  isLoading={loading}
+                >
+                  {tr('重新检查')}
+                </Button>
+              ) : status === 'not-installed' ? (
                 <Button
                   size="sm"
                   color="primary"
                   variant="shadow"
-                  onPress={() => handleAction(onInstall!)}
+                  onPress={() => handleAction(onInstall!, true)}
                   isLoading={loading}
                 >
                   {tr('安装服务')}
@@ -271,13 +290,13 @@ const ServiceModal: React.FC<Props> = (props) => {
                     onPress={() => handleAction(onInit)}
                     isLoading={loading}
                   >
-                    {status === 'need-init' ? tr('初始化') : tr('重置认证')}
+                    {status === 'need-init' ? tr('初始化') : tr('重新初始化')}
                   </Button>
                   <Button
                     size="sm"
                     color="primary"
                     variant="flat"
-                    onPress={() => handleAction(onRestart!)}
+                    onPress={() => handleAction(onRestart!, true)}
                     isLoading={loading}
                   >
                     {tr('重启')}

@@ -7,6 +7,8 @@ import {
   checkCorePermission,
   checkElevateTask,
   manualGrantCorePermition,
+  relaunchWindowsElevated,
+  relaunchWindowsUnelevated,
   revokeCorePermission
 } from '@renderer/utils/ipc'
 import { platform } from '@renderer/utils/init'
@@ -20,6 +22,7 @@ const PermissionModal: React.FC<Props> = (props) => {
   const { onChange } = props
   useAppConfig()
   const [loading, setLoading] = useState<{ mihomo?: boolean; 'mihomo-alpha'?: boolean }>({})
+  const [windowsLoading, setWindowsLoading] = useState(false)
   const [hasPermission, setHasPermission] = useState<
     { mihomo: boolean; 'mihomo-alpha': boolean } | boolean | null
   >(null)
@@ -64,6 +67,19 @@ const PermissionModal: React.FC<Props> = (props) => {
       notify(e, { variant: 'danger' })
     } finally {
       setLoading((prev) => ({ ...prev, [coreName]: false }))
+    }
+  }
+
+  const handleWindowsAction = async (elevated: boolean): Promise<void> => {
+    setWindowsLoading(true)
+    try {
+      if (elevated) await relaunchWindowsElevated()
+      else await relaunchWindowsUnelevated()
+    } catch (e) {
+      const errorMsg = String(e)
+      if (!errorMsg.includes('User canceled')) notify(e, { variant: 'danger' })
+      await checkPermissions()
+      setWindowsLoading(false)
     }
   }
 
@@ -122,8 +138,8 @@ const PermissionModal: React.FC<Props> = (props) => {
                               ? tr('检查中...')
                               : typeof hasPermission === 'boolean'
                                 ? hasPermission
-                                  ? tr('已授权')
-                                  : tr('未授权')
+                                  ? tr('管理员权限')
+                                  : tr('普通用户权限')
                                 : tr('未知')}
                           </Chip>
                         </div>
@@ -135,15 +151,11 @@ const PermissionModal: React.FC<Props> = (props) => {
                     <div className="text-xs text-default-500 space-y-2">
                       <div className="flex items-start gap-2">
                         <span className="mt-0.5">•</span>
-                        <span>
-                          {tr(
-                            'KokoroBox 默认以普通用户权限启动；需要特权功能时会单独请求管理员权限'
-                          )}
-                        </span>
+                        <span>{tr('手动提权只影响本次运行，不会建立计划任务或永久提权')}</span>
                       </div>
                       <div className="flex items-start gap-2">
                         <span className="mt-0.5">•</span>
-                        <span>{tr('应用程序不再使用计划任务或额外启动程序提升权限')}</span>
+                        <span>{tr('取消提权会重新以当前桌面用户权限启动 KokoroBox')}</span>
                       </div>
                     </div>
                   </>
@@ -254,11 +266,22 @@ const PermissionModal: React.FC<Props> = (props) => {
               </div>
             </Modal.Body>
             <Modal.Footer className="space-x-2">
+              {isWindows && typeof hasPermission === 'boolean' ? (
+                <Button
+                  size="sm"
+                  color={hasPermission ? 'warning' : 'primary'}
+                  variant={hasPermission ? 'flat' : 'shadow'}
+                  onPress={() => handleWindowsAction(!hasPermission)}
+                  isLoading={windowsLoading}
+                >
+                  {hasPermission ? tr('取消提权并重启') : tr('手动提权并重启')}
+                </Button>
+              ) : null}
               <Button
                 size="sm"
                 variant="light"
                 onPress={() => onChange(false)}
-                isDisabled={Object.values(loading).some((v) => v)}
+                isDisabled={windowsLoading || Object.values(loading).some((v) => v)}
               >
                 {tr('关闭')}
               </Button>

@@ -10,6 +10,7 @@ import {
   signData,
   validateKeyPair
 } from '../src/main/service/key'
+import { parseServiceLog } from '../src/main/service/log-parser'
 
 function publicKeyObject(publicKey: string): crypto.KeyObject {
   return crypto.createPublicKey({
@@ -104,6 +105,30 @@ test('Windows service probes and elevated commands never open a console window',
   assert.equal(
     (sysproxySource.match(/windowsHide: process\.platform === 'win32'/g) || []).length,
     3
+  )
+})
+
+test('service status parser handles nested pretty and single-line JSON logs', () => {
+  const pretty = `wrapper output
+{
+  "level": "info",
+  "msg": "Service status: running",
+  "status": {
+    "action": "status",
+    "state": "running",
+    "success": true
+  }
+}
+trailing output`
+  const singleLine =
+    '{"level":"error","msg":"Failed to query service status","status":{"state":"not-installed","success":false}}'
+
+  assert.equal(parseServiceLog(pretty)?.status?.state, 'running')
+  assert.equal(parseServiceLog(singleLine)?.status?.state, 'not-installed')
+  assert.equal(
+    parseServiceLog('{"msg":"brace } inside a string","status":{"state":"stopped"}}')?.status
+      ?.state,
+    'stopped'
   )
 })
 

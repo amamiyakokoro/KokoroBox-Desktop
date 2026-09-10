@@ -14,6 +14,8 @@ import {
   fileToDataUrl,
   inspectApplication,
   isRunningAsAdmin,
+  launchElevated,
+  launchUnelevated,
   scanWindowsApplications,
   setupFirewallRules
 } from 'kokorobox-native'
@@ -228,6 +230,37 @@ export async function checkElevateTask(): Promise<boolean> {
   } catch {
     return false
   }
+}
+
+function relaunchWindowsWithPrivilege(elevated: boolean): void {
+  if (process.platform !== 'win32') {
+    throw new Error(tr('此功能仅支持 Windows'))
+  }
+
+  const currentlyElevated = isRunningAsAdmin()
+  if (currentlyElevated === elevated) return
+
+  // Release the lock before creating the replacement process. If UAC is
+  // cancelled or creation fails, reacquire it so the current process remains
+  // a correctly managed single instance.
+  app.releaseSingleInstanceLock()
+  try {
+    if (elevated) launchElevated(exePath())
+    else launchUnelevated(exePath())
+  } catch (error) {
+    app.requestSingleInstanceLock()
+    throw error
+  }
+
+  app.quit()
+}
+
+export function relaunchWindowsElevated(): void {
+  relaunchWindowsWithPrivilege(true)
+}
+
+export function relaunchWindowsUnelevated(): void {
+  relaunchWindowsWithPrivilege(false)
 }
 
 export function resetAppConfig(): void {

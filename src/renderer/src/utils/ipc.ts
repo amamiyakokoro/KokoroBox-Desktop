@@ -364,6 +364,14 @@ export async function deleteElevateTask(): Promise<void> {
   return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('deleteElevateTask'))
 }
 
+export async function relaunchWindowsElevated(): Promise<void> {
+  return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('relaunchWindowsElevated'))
+}
+
+export async function relaunchWindowsUnelevated(): Promise<void> {
+  return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('relaunchWindowsUnelevated'))
+}
+
 export async function revokeCorePermission(cores?: ('mihomo' | 'mihomo-alpha')[]): Promise<void> {
   return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('revokeCorePermission', cores))
 }

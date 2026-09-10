@@ -8,6 +8,7 @@ import { execFile } from 'child_process'
 import { promisify } from 'util'
 import { loadServiceAuthSecret, saveServiceAuthSecret, type ServiceAuthSecret } from './auth-store'
 import { getCurrentUserSid } from 'kokorobox-native'
+import { parseServiceLog } from './log-parser'
 
 let keyManager: KeyManager | null = null
 const execFilePromise = promisify(execFile)
@@ -144,41 +145,6 @@ function isUserCancelledError(error: unknown): boolean {
     errorMsg.includes('user cancelled') ||
     errorMsg.includes('dismissed')
   )
-}
-
-interface ServiceLogEntry {
-  msg?: string
-  message?: string
-  error?: string
-  status?: {
-    state?: string
-    error?: string
-  }
-}
-
-function parseServiceLog(output: string): ServiceLogEntry | null {
-  let last: ServiceLogEntry | null = null
-  let lines: string[] = []
-
-  for (const line of output.split(/\r?\n/)) {
-    if (line.trim() === '{') {
-      lines = [line]
-      continue
-    }
-    if (lines.length === 0) continue
-
-    lines.push(line)
-    if (line.trim() !== '}') continue
-
-    try {
-      last = JSON.parse(lines.join('\n')) as ServiceLogEntry
-    } catch {
-      // ignore non-service JSON fragments from command wrappers
-    }
-    lines = []
-  }
-
-  return last
 }
 
 function serviceCommandOutput(value: unknown): string {
@@ -348,9 +314,11 @@ export async function serviceStatus(): Promise<
     const { stdout, stderr } = await execFilePromise(execPath, ['service', 'status'], {
       windowsHide: true
     })
-    if (parseServiceLog(`${stdout}\n${stderr}`)?.status?.state === 'not-installed') {
-      return 'not-installed'
-    }
+    const commandState = parseServiceLog(`${stdout}\n${stderr}`)?.status?.state
+    if (commandState === 'not-installed') return 'not-installed'
+    if (commandState === 'stopped') return 'stopped'
+    if (commandState === 'paused') return 'paused'
+
     try {
       await ping()
       try {
@@ -364,7 +332,7 @@ export async function serviceStatus(): Promise<
         ) {
           return 'need-init'
         }
-        return 'unknown'
+        return commandState === 'running' ? 'running' : 'unknown'
       }
     } catch (e) {
       const errorMsg = e instanceof Error ? e.message : String(e)
@@ -375,7 +343,7 @@ export async function serviceStatus(): Promise<
       ) {
         return 'need-init'
       }
-      return 'stopped'
+      return commandState === 'running' ? 'running' : 'unknown'
     }
   } catch (error) {
     if (parseServiceLog(serviceCommandOutput(error))?.status?.state === 'not-installed') {

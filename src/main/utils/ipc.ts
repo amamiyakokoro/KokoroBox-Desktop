@@ -72,6 +72,8 @@ import {
   openUWPTool,
   readImageFileDataURL,
   readTextFile,
+  relaunchWindowsElevated,
+  relaunchWindowsUnelevated,
   resetAppConfig,
   setNativeTheme,
   setupFirewall
@@ -328,6 +330,8 @@ export function registerIpcMainHandlers(): void {
     )
     ipcMain.handle('checkElevateTask', () => ipcErrorWrapper(checkElevateTask)())
     ipcMain.handle('deleteElevateTask', () => ipcErrorWrapper(deleteElevateTask)())
+    ipcMain.handle('relaunchWindowsElevated', () => ipcErrorWrapper(relaunchWindowsElevated)())
+    ipcMain.handle('relaunchWindowsUnelevated', () => ipcErrorWrapper(relaunchWindowsUnelevated)())
   }
   ipcMain.handle('serviceStatus', () => ipcErrorWrapper(serviceStatus)())
   ipcMain.handle('testServiceConnection', () => ipcErrorWrapper(testServiceConnection)())

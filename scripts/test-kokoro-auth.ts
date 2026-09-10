@@ -922,6 +922,18 @@ test('Windows packaging runs as the current user and never self-elevates at star
   assert.doesNotMatch(workflow, /Setup Go for KokoroBox Runner/)
 })
 
+test('Windows privilege changes use explicit non-persistent native relaunches', () => {
+  const misc = readFileSync('src/main/sys/misc.ts', 'utf8')
+  const modal = readFileSync('src/renderer/src/components/mihomo/permission-modal.tsx', 'utf8')
+
+  assert.match(misc, /if \(elevated\) launchElevated\(exePath\(\)\)/)
+  assert.match(misc, /else launchUnelevated\(exePath\(\)\)/)
+  assert.match(misc, /app\.releaseSingleInstanceLock\(\)/)
+  assert.doesNotMatch(misc, /launch(?:Un)?elevated\([^\n]*process\.argv/)
+  assert.match(modal, /手动提权并重启/)
+  assert.match(modal, /取消提权并重启/)
+})
+
 test('secure storage writes one encrypted record and never deletes the old record before rename', async () => {
   const storeSource = ts.transpileModule(readFileSync('src/main/kokoro/auth-store.ts', 'utf8'), {
     compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 }

@@ -668,11 +668,15 @@ export const messages: Readonly<Record<string, string>> = {
   提权配置已取消: 'Elevation configuration removed',
   提权配置成功: 'Elevation configured',
   提权配置状态: 'Elevation configuration status',
+  手动提权并重启: 'Restart as administrator',
+  取消提权并重启: 'Restart as standard user',
   管理员权限状态: 'Administrator status',
-  'KokoroBox 默认以普通用户权限启动；需要特权功能时会单独请求管理员权限':
-    'KokoroBox starts with standard user privileges and requests administrator permission only for privileged features',
-  应用程序不再使用计划任务或额外启动程序提升权限:
-    'The app no longer elevates through a scheduled task or a launcher process',
+  管理员权限: 'Administrator',
+  普通用户权限: 'Standard user',
+  '手动提权只影响本次运行，不会建立计划任务或永久提权':
+    'Manual elevation affects only this run and does not create a scheduled task or persistent elevation',
+  '取消提权会重新以当前桌面用户权限启动 KokoroBox':
+    'Cancelling elevation restarts KokoroBox with the current desktop user privileges',
   搜索: 'Search',
   撤销: 'Undo',
   撤销授权: 'Revoke authorization',
@@ -917,6 +921,7 @@ export const messages: Readonly<Record<string, string>> = {
   类型: 'Type',
   粘贴: 'Paste',
   系统: 'System',
+  '此功能仅支持 Windows': 'This feature is available only on Windows',
   '系统中未找到可用的 mihomo 或 clash 内核，已自动切换回内置内核':
     'No usable mihomo or clash core found on the system. Switched back to the built-in core',
   系统代理: 'System proxy',
@@ -1103,6 +1108,8 @@ export const messages: Readonly<Record<string, string>> = {
   重启应用: 'Restart app',
   重启应用生效: 'Restart the app to apply',
   重新加载: 'Reload',
+  重新初始化: 'Initialize again',
+  重新检查: 'Check again',
   重新测试: 'Test again',
   重置认证: 'Reset authentication',
   重置软件: 'Reset app',
