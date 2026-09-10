@@ -1,7 +1,7 @@
-# Windows application routing MVP
+# Windows application routing
 
 KokoroBox can route selected Windows applications without enabling system proxy or TUN. This
-MVP is available on Windows 10/11 x64 only.
+feature is available on Windows 10/11 x64 only.
 
 ## User model
 
@@ -110,7 +110,7 @@ An unexpected sidecar, WinDivert, or firewall-health failure is reported as an e
 is not left running when its required firewall rules cannot be verified. There can still be a
 brief interception gap while a crashed sidecar or service restarts; preventing leakage across a
 service crash requires a separate persistent WFP or Windows Firewall kill switch and is outside
-this MVP.
+the current routing architecture.
 
 ## Reproducible native build
 
