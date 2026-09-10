@@ -182,11 +182,11 @@
     ${If} $kokoroboxServiceWasRunning == "true"
       StrCpy $R1 "$INSTDIR\resources\files\kokorobox-service.exe"
       ${If} ${FileExists} "$R1"
-        DetailPrint "Starting KokoroBox service: $R1"
-        nsExec::ExecToLog '"$R1" service start'
+        DetailPrint "Migrating and starting KokoroBox service: $R1"
+        nsExec::ExecToLog '"$R1" service install'
         Pop $R2
         ${If} $R2 != 0
-          DetailPrint "KokoroBox service start exited with code $R2"
+          DetailPrint "KokoroBox service install exited with code $R2"
         ${EndIf}
       ${EndIf}
     ${EndIf}

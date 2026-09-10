@@ -23,6 +23,13 @@ service, its helper requests UAC and deploys the service executable plus the ver
 Router runtime into a content-addressed directory below `%ProgramFiles%\KokoroBox Service`; the
 Service Control Manager never points at the user-writable application directory.
 
+When an all-users package updates an active older service, the installer re-installs the service
+instead of merely starting its existing registration. This migrates registrations that still point
+at an application resource directory to the protected content-addressed runtime. Mihomo executables
+launched by the service are independently staged and verified below
+`%ProgramData%\KokoroBox\core-runtime`, leaving the installed application files writable by the
+normal updater for their selected installation scope.
+
 All targets use GitHub-hosted runners and the locked project dependencies. The native module for each target architecture is checked before packaging.
 
 Linux installs the application at `/opt/kokorobox/kokorobox` and uses the `KokoroBoxService` service identity. The shared `pnpm build:linux` packaging entry point uses this layout for both local and CI builds. Legacy launchers and service registrations are stopped or retained only where needed for safe upgrades.

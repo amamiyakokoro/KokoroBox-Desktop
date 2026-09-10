@@ -105,6 +105,11 @@ with its verified Process Router bundle into a content-addressed directory below
 `%ProgramFiles%\KokoroBox Service`. SCM therefore never executes the service from a user-writable
 application directory.
 
+An all-users update re-installs a previously running service so older SCM registrations are migrated
+to this protected runtime. Service-managed Mihomo executables are likewise copied into a verified,
+content-addressed directory below `%ProgramData%\KokoroBox\core-runtime`; access hardening is applied
+to that staged copy rather than to the application's updateable resource directory.
+
 ## Failure behavior
 
 The privileged service probes the dedicated Mihomo listener before installing Proxy actions.
