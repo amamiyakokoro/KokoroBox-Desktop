@@ -20,9 +20,6 @@ importers:
       '@electron-toolkit/utils':
         specifier: ^4.0.0
         version: 4.0.0(electron@44.2.0(supports-color@7.2.0))
-      '@uruhalushia/sparkle-native':
-        specifier: ^0.1.2
-        version: 0.1.2
       adm-zip:
         specifier: ^0.6.0
         version: 0.6.0
@@ -38,6 +35,9 @@ importers:
       iconv-lite:
         specifier: ^0.7.3
         version: 0.7.3
+      kokorobox-native:
+        specifier: ^0.1.0
+        version: 0.1.0
       webdav:
         specifier: ^5.10.0
         version: 5.10.0
@@ -2737,59 +2737,59 @@ packages:
     resolution: {integrity: sha512-WmoN8qaIAo7WTYWbAZuG8PYEhn5fkz7dZrqTBZ7dtt//lL2Gwms1IcnQ5yHqjDfX8Ft5j4YzDM23f87zBfDe9g==}
     deprecated: Potential CWE-502 - Update to 1.3.1 or higher
 
-  '@uruhalushia/sparkle-native-darwin-arm64@0.1.2':
-    resolution: {integrity: sha512-aLcMxs9jNl2QqYN03C5ULER0MW/FAT5pJEhKhG2SkEQOLpPvpfgq0d3D3nesxZb3PsnVb+vZv3dFG/YmmGn/KQ==}
+  kokorobox-native-darwin-arm64@0.1.0:
+    resolution: {integrity: sha512-VrQFaOias3pDnDaTSU50tDqPrbxvTpZ+LAeCWN1fRrntAFAuag/NMfN6/OZqODbNzkgUp3cG7JU9Oy7UCXpMKA==}
     engines: {node: '>=16'}
     cpu: [arm64]
     os: [darwin]
 
-  '@uruhalushia/sparkle-native-darwin-x64@0.1.2':
-    resolution: {integrity: sha512-q8y/ioXe5vbC8dt3SL1fTeTWiCa+GbwsAh0L13N17iq27IeEbL4ux455ucpCpjbpL1x/WgTMqRmNYJEFYZCDiQ==}
+  kokorobox-native-darwin-x64@0.1.0:
+    resolution: {integrity: sha512-50lWa3lwhIOEnE/iwYpAQ6Z7uiO5LqkcKBdFfJjvxjaBBgDceoncLW+ix3+l2eVkOgNlyAFp7hX3Ykb2+i4Pzw==}
     engines: {node: '>=16'}
     cpu: [x64]
     os: [darwin]
 
-  '@uruhalushia/sparkle-native-linux-arm64-gnu@0.1.2':
-    resolution: {integrity: sha512-lnmmzfiD5MkRFd4AKZUDGpuR8hRdaTILQbLsT6wXSqAOsHNaVqbrW3fD7JLpry3egxsMCxZzLSCgsueTdlprXQ==}
+  kokorobox-native-linux-arm64-gnu@0.1.0:
+    resolution: {integrity: sha512-Ck5dQeeMwFbAT7gV6VTpDRUzyUwxFr12R04BHGzTfV8LlEksD+0kFGwO/4GYqk2riwvJDy2y6ewtFxQREaRHVw==}
     engines: {node: '>=16'}
     cpu: [arm64]
     os: [linux]
     libc: [glibc]
 
-  '@uruhalushia/sparkle-native-linux-loong64-gnu@0.1.2':
-    resolution: {integrity: sha512-HJa12Dq8g4v2UjeetTCMiXKQoEST4+XNJ06hYVXQs31Qt06n9hihY4xz4XkHM0apX03QiHXs9cV90FuAeH1ybw==}
+  kokorobox-native-linux-loong64-gnu@0.1.0:
+    resolution: {integrity: sha512-jJyh9UgTxfA9YskNZvGvyk8E4PjH+Y48tfE4hU7pXDZzlgu6shGfC7U7LThbqb7jgXq5UURCJblQSh+XeRn8Pg==}
     engines: {node: '>=16'}
     cpu: [loong64]
     os: [linux]
     libc: [glibc]
 
-  '@uruhalushia/sparkle-native-linux-x64-gnu@0.1.2':
-    resolution: {integrity: sha512-CgvD9KxQTOdfKUS9SC2+swR9H/DOvG4vOUbr35Qx+CqmAGaPmrkKk5dOHXX/mJvvU685WbQzBFgye5cxxZ2RYA==}
+  kokorobox-native-linux-x64-gnu@0.1.0:
+    resolution: {integrity: sha512-Xq3bGTQp3hoVHE/Ew+XDOl8cfW+IhdZBSE8PqwwQT1QZTRyTOIRkequQIWBI3AEUji7h79n9Ma7xLUcAsZCXuw==}
     engines: {node: '>=16'}
     cpu: [x64]
     os: [linux]
     libc: [glibc]
 
-  '@uruhalushia/sparkle-native-win32-arm64-msvc@0.1.2':
-    resolution: {integrity: sha512-Xml41tsKDAmxdumWMX6XKrbAMbspJUj9GmLOnSkex06uDXPA6eDeyB9AKqyWjT32JgqQWcdTdGa0F6SvrM6Jzw==}
+  kokorobox-native-win32-arm64-msvc@0.1.0:
+    resolution: {integrity: sha512-ROtNbJ0BIBLydb0yBgboHf2bFAxf8KCdnkJiI0j59/nN1ouHtfAo2pj5TzcMXH/HUp8QOT3U5BAl3IRqfswZDg==}
     engines: {node: '>=16'}
     cpu: [arm64]
     os: [win32]
 
-  '@uruhalushia/sparkle-native-win32-ia32-msvc@0.1.2':
-    resolution: {integrity: sha512-CVoIF9nGF/YDYnlFQ9EJj/u9Wpu9apJYvxhZOkJ0gSLRi8u5fhARlEqaAXcU6vnPfqJiV1HZJS97kGrm1wLkKw==}
+  kokorobox-native-win32-ia32-msvc@0.1.0:
+    resolution: {integrity: sha512-3MxE5Z/1gyp4hhzmp9KGjEycIcfM5DyXQXE14hmYcz7T695gqQVPVAP2yIB+3N/M/umGSVLlkFBPofDAKihREQ==}
     engines: {node: '>=16'}
     cpu: [ia32]
     os: [win32]
 
-  '@uruhalushia/sparkle-native-win32-x64-msvc@0.1.2':
-    resolution: {integrity: sha512-e9yeTYwngVhqQb4KgRPGK5kYah00QMX65jlTWfvfxemMTNqlmMULrJb0RSe3HAC13nprrKq2HNo+fQ4gxlBVhw==}
+  kokorobox-native-win32-x64-msvc@0.1.0:
+    resolution: {integrity: sha512-ywUbWGy3Hl+/5b/osMgvuLGnWzAebU9iHlBpv1FabNvZTjKP0yAbFZzB06J1mHDeebfKZsyuBqaUla22laPrHQ==}
     engines: {node: '>=16'}
     cpu: [x64]
     os: [win32]
 
-  '@uruhalushia/sparkle-native@0.1.2':
-    resolution: {integrity: sha512-UVwreYTCvmpnUL0IiPRn9wlS3V3BzGvCNrj3MnHMoYzEk18qr8f25y1KREBrXckppOjIKeMA2eG2l/amr+9Pyw==}
+  kokorobox-native@0.1.0:
+    resolution: {integrity: sha512-LK7C/XasRZWbiEfgqzgyinoX3vjTFGiOeaMpqhdbcndFXpnsnWoaxmH0PxvaWLcOCEgPEqDd1QLAiPF3oElMDg==}
     engines: {node: '>=16'}
 
   '@vitejs/plugin-react@6.1.1':
@@ -8833,40 +8833,40 @@ snapshots:
 
   '@ungap/structured-clone@1.3.0': {}
 
-  '@uruhalushia/sparkle-native-darwin-arm64@0.1.2':
+  kokorobox-native-darwin-arm64@0.1.0:
     optional: true
 
-  '@uruhalushia/sparkle-native-darwin-x64@0.1.2':
+  kokorobox-native-darwin-x64@0.1.0:
     optional: true
 
-  '@uruhalushia/sparkle-native-linux-arm64-gnu@0.1.2':
+  kokorobox-native-linux-arm64-gnu@0.1.0:
     optional: true
 
-  '@uruhalushia/sparkle-native-linux-loong64-gnu@0.1.2':
+  kokorobox-native-linux-loong64-gnu@0.1.0:
     optional: true
 
-  '@uruhalushia/sparkle-native-linux-x64-gnu@0.1.2':
+  kokorobox-native-linux-x64-gnu@0.1.0:
     optional: true
 
-  '@uruhalushia/sparkle-native-win32-arm64-msvc@0.1.2':
+  kokorobox-native-win32-arm64-msvc@0.1.0:
     optional: true
 
-  '@uruhalushia/sparkle-native-win32-ia32-msvc@0.1.2':
+  kokorobox-native-win32-ia32-msvc@0.1.0:
     optional: true
 
-  '@uruhalushia/sparkle-native-win32-x64-msvc@0.1.2':
+  kokorobox-native-win32-x64-msvc@0.1.0:
     optional: true
 
-  '@uruhalushia/sparkle-native@0.1.2':
+  kokorobox-native@0.1.0:
     optionalDependencies:
-      '@uruhalushia/sparkle-native-darwin-arm64': 0.1.2
-      '@uruhalushia/sparkle-native-darwin-x64': 0.1.2
-      '@uruhalushia/sparkle-native-linux-arm64-gnu': 0.1.2
-      '@uruhalushia/sparkle-native-linux-loong64-gnu': 0.1.2
-      '@uruhalushia/sparkle-native-linux-x64-gnu': 0.1.2
-      '@uruhalushia/sparkle-native-win32-arm64-msvc': 0.1.2
-      '@uruhalushia/sparkle-native-win32-ia32-msvc': 0.1.2
-      '@uruhalushia/sparkle-native-win32-x64-msvc': 0.1.2
+      kokorobox-native-darwin-arm64: 0.1.0
+      kokorobox-native-darwin-x64: 0.1.0
+      kokorobox-native-linux-arm64-gnu: 0.1.0
+      kokorobox-native-linux-loong64-gnu: 0.1.0
+      kokorobox-native-linux-x64-gnu: 0.1.0
+      kokorobox-native-win32-arm64-msvc: 0.1.0
+      kokorobox-native-win32-ia32-msvc: 0.1.0
+      kokorobox-native-win32-x64-msvc: 0.1.0
 
   '@vitejs/plugin-react@6.1.1(vite@8.2.2(@types/node@26.4.1)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.0))':
     dependencies:

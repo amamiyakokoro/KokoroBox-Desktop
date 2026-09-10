@@ -1,5 +1,16 @@
 # Third-party notices
 
+## KokoroBox Native
+
+KokoroBox uses the independently maintained
+[`kokorobox-native`](https://github.com/amamiyakokoro/kokorobox-native) package for privileged
+execution, Windows user and firewall integration, application metadata, icons, and rule-file
+conversion. Its repository retains the Git history and attribution of
+[`UruhaLushia/sparkle-native`](https://github.com/UruhaLushia/sparkle-native), from which it was
+derived, while using KokoroBox-owned package and binary names for future development.
+
+KokoroBox Native is distributed under the GNU General Public License v3.0.
+
 ## ProxyBridge
 
 KokoroBox uses a modified subset of the

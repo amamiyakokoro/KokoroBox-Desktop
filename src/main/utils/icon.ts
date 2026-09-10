@@ -1,6 +1,6 @@
 import axios from 'axios'
 import { app } from 'electron'
-import { fileToDataUrl } from '@uruhalushia/sparkle-native'
+import { fileToDataUrl } from 'kokorobox-native'
 import { getControledMihomoConfig } from '../config'
 import { darwinDefaultIcon, otherDevicesIcon, windowsDefaultIcon } from './defaultIcon'
 

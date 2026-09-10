@@ -3,7 +3,7 @@ import { execFile } from 'child_process'
 import { promisify } from 'util'
 import { mihomoCorePath } from '../utils/dirs'
 import { checkCorePermissionPathSync, hasSetuidPermission } from './permission-check'
-import { isRunningAsAdmin } from '@uruhalushia/sparkle-native'
+import { isRunningAsAdmin } from 'kokorobox-native'
 
 type CoreName = 'mihomo' | 'mihomo-alpha'
 

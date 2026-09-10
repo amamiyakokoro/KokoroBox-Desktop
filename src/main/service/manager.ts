@@ -7,7 +7,7 @@ import { getAppConfig, patchAppConfig } from '../config/app'
 import { execFile } from 'child_process'
 import { promisify } from 'util'
 import { loadServiceAuthSecret, saveServiceAuthSecret, type ServiceAuthSecret } from './auth-store'
-import { getCurrentUserSid } from '@uruhalushia/sparkle-native'
+import { getCurrentUserSid } from 'kokorobox-native'
 
 let keyManager: KeyManager | null = null
 const execFilePromise = promisify(execFile)
