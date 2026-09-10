@@ -480,10 +480,16 @@ test('generates and validates the authenticated service protocol', () => {
     proxy_port: 7891,
     backend: 'windows-proxybridge'
   }
-  assert.equal(validateServiceProcessRouterStatus(status), status)
-  assert.throws(() => validateServiceProcessRouterStatus({ ...status, version: 2 as 1 }))
-  assert.throws(() => validateServiceProcessRouterStatus({ ...status, proxy_port: 1080 }))
-  assert.throws(() => validateServiceProcessRouterStatus({ ...status, firewall_ready: false }))
+  assert.equal(validateServiceProcessRouterStatus(status, 'win32'), status)
+  assert.throws(() =>
+    validateServiceProcessRouterStatus({ ...status, version: 2 as 1 }, 'win32')
+  )
+  assert.throws(() =>
+    validateServiceProcessRouterStatus({ ...status, proxy_port: 1080 }, 'win32')
+  )
+  assert.throws(() =>
+    validateServiceProcessRouterStatus({ ...status, firewall_ready: false }, 'win32')
+  )
   assert.equal(
     validateServiceProcessRouterStatus(
       { ...status, proxy_port: 7894, backend: 'linux-cgroup-v2' },
