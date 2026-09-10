@@ -158,7 +158,10 @@ test('build matrix exactly matches the 12 required release artifacts', () => {
   )
   assert.equal(autoElevation.win.requestedExecutionLevel, 'requireAdministrator')
   assert.equal(autoElevation.extraMetadata.kokoroboxWindowsElevation, 'auto-elevate')
-  assert.equal(autoElevation.nsis.artifactName, '${name}-windows-${version}-${arch}-setup.${ext}')
+  assert.equal(
+    autoElevation.nsis.artifactName,
+    `\${name}-windows-\${version}-\${arch}-setup.\${ext}`
+  )
   assert.equal(manualElevation.win.requestedExecutionLevel, 'asInvoker')
   assert.equal(manualElevation.extraMetadata.kokoroboxWindowsElevation, 'manual-elevation')
   assert.notEqual(autoElevation.nsis.artifactName, manualElevation.nsis.artifactName)
@@ -215,6 +218,20 @@ test('desktop uses the independently maintained KokoroBox native packages', () =
   }
 })
 
+test('platform discovery and core permissions use constrained native APIs', () => {
+  const permission = readFileSync('src/main/core/permission.ts', 'utf8')
+  const permissionCheck = readFileSync('src/main/core/permission-check.ts', 'utf8')
+  const network = readFileSync('src/main/core/network.ts', 'utf8')
+  const ssid = readFileSync('src/main/sys/ssid.ts', 'utf8')
+
+  assert.match(permission, /setCorePrivileges/)
+  assert.match(permissionCheck, /getCorePrivilegeStatus/)
+  assert.doesNotMatch(permission, /(?:pkexec|osascript|bash\s+-c|chmod|chown)/)
+  assert.match(network, /getNetworkContext/)
+  assert.match(ssid, /getNetworkContext/)
+  assert.doesNotMatch(ssid, /(?:netsh|iwconfig|airport\s+-I)/)
+})
+
 test('Linux artifact architecture names agree with electron-builder, including ARM64 Pacman', () => {
   const { Arch, getArtifactArchName } = createRequire(import.meta.url)('builder-util/out/arch.js')
   for (const target of releaseTargets.filter((target) => target.os === 'ubuntu-latest')) {
@@ -233,11 +250,7 @@ test('removed LoongArch64 targets and build/download configuration cannot return
       /Unsupported release target/
     )
   }
-  for (const file of [
-    '.github/workflows/build.yml',
-    'scripts/prepare.ts',
-    'pnpm-workspace.yaml'
-  ]) {
+  for (const file of ['.github/workflows/build.yml', 'scripts/prepare.ts', 'pnpm-workspace.yaml']) {
     assert.doesNotMatch(readFileSync(file, 'utf8'), /loong/i, file)
   }
 })

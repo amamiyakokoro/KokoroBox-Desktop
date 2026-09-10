@@ -1,15 +1,9 @@
-import { statSync } from 'fs'
-
-const S_ISUID = 0o4000
-
-export function hasSetuidPermission(permissions: string): boolean {
-  return permissions.includes('s') || permissions.includes('S')
-}
+import { getCorePrivilegeStatus } from 'kokorobox-native'
 
 export function checkCorePermissionPathSync(corePath: string): boolean {
   if (process.platform === 'win32') return true
   try {
-    return (statSync(corePath).mode & S_ISUID) !== 0
+    return getCorePrivilegeStatus([corePath])[0]?.granted === true
   } catch {
     return false
   }

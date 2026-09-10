@@ -2,6 +2,7 @@ import { execFile } from 'child_process'
 import { net } from 'electron'
 import os from 'os'
 import { promisify } from 'util'
+import { getNetworkContext } from 'kokorobox-native'
 import { getAppConfig, getControledMihomoConfig, patchAppConfig } from '../config'
 import { setSysDns } from '../service/api'
 import { triggerSysProxy } from '../sys/sysproxy'
@@ -19,38 +20,15 @@ let networkDetectionTimer: NodeJS.Timeout | null = null
 let networkDetectionGeneration = 0
 let networkDownHandled = false
 
-export async function getDefaultDevice(): Promise<string> {
-  const execFilePromise = promisify(execFile)
-  const { stdout: deviceOut } = await execFilePromise('route', ['-n', 'get', 'default'])
-  let device = deviceOut.split('\n').find((s) => s.includes('interface:'))
-  device = device?.trim().split(' ').slice(1).join(' ')
-  if (!device) throw new Error('Get device failed')
-  return device
-}
-
 async function getDefaultService(): Promise<string> {
-  const execFilePromise = promisify(execFile)
-  const device = await getDefaultDevice()
-  const { stdout: order } = await execFilePromise('networksetup', ['-listnetworkserviceorder'])
-  const block = order.split('\n\n').find((s) => s.includes(`Device: ${device}`))
-  if (!block) throw new Error('Get networkservice failed')
-  for (const line of block.split('\n')) {
-    if (line.match(/^\(\d+\).*/)) {
-      return line.trim().split(' ').slice(1).join(' ')
-    }
-  }
-  throw new Error('Get service failed')
+  const { defaultService } = await getNetworkContext()
+  if (!defaultService) throw new Error('Get network service failed')
+  return defaultService
 }
 
 async function getOriginDNS(): Promise<void> {
-  const execFilePromise = promisify(execFile)
-  const service = await getDefaultService()
-  const { stdout: dns } = await execFilePromise('networksetup', ['-getdnsservers', service])
-  if (dns.startsWith("There aren't any DNS Servers set on")) {
-    await patchAppConfig({ originDNS: 'Empty' })
-  } else {
-    await patchAppConfig({ originDNS: dns.trim().replace(/\n/g, ' ') })
-  }
+  const { dnsServers } = await getNetworkContext()
+  await patchAppConfig({ originDNS: dnsServers.length > 0 ? dnsServers.join(' ') : 'Empty' })
 }
 
 async function setDNS(dns: string, mode: 'none' | 'exec' | 'service'): Promise<void> {

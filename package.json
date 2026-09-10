@@ -48,7 +48,7 @@
     "axios": "^1.20.0",
     "dayjs": "^1.11.23",
     "iconv-lite": "^0.7.3",
-    "kokorobox-native": "^0.4.0",
+    "kokorobox-native": "^0.5.0",
     "webdav": "^5.10.0",
     "ws": "^8.21.3",
     "yaml": "^2.9.0"
