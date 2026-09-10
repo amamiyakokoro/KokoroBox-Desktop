@@ -6,8 +6,7 @@ import {
 } from '../../shared/app-routing'
 import { execFile, spawn } from 'child_process'
 import { app, dialog, nativeImage, nativeTheme, shell } from 'electron'
-import { mkdir, mkdtemp, readFile, realpath, rm, writeFile } from 'fs/promises'
-import { tmpdir } from 'os'
+import { mkdir, readFile, realpath, writeFile } from 'fs/promises'
 import path from 'path'
 import crypto from 'crypto'
 import { promisify } from 'util'
@@ -136,9 +135,7 @@ async function loadApplicationIcon(
     try {
       icon = nativeIconDataUrl
         ? nativeImage.createFromDataURL(nativeIconDataUrl)
-        : process.platform === 'darwin' && executablePath.endsWith('.app')
-          ? await loadMacBundleIcon(executablePath)
-          : nativeImage.createFromDataURL(fileToDataUrl(executablePath))
+        : nativeImage.createFromDataURL(fileToDataUrl(executablePath))
     } catch {
       icon = nativeImage.createEmpty()
     }
@@ -156,43 +153,6 @@ async function loadApplicationIcon(
     return cached.isEmpty() ? undefined : cached.toDataURL()
   } catch {
     return undefined
-  }
-}
-
-async function loadMacBundleIcon(bundlePath: string): Promise<Electron.NativeImage> {
-  const run = promisify(execFile)
-  const { stdout } = await run(
-    '/usr/bin/plutil',
-    [
-      '-extract',
-      'CFBundleIconFile',
-      'raw',
-      '-o',
-      '-',
-      path.join(bundlePath, 'Contents', 'Info.plist')
-    ],
-    { timeout: 5000, maxBuffer: 64 * 1024 }
-  )
-  const name = stdout.trim()
-  if (!name || path.basename(name) !== name || name === '.' || name === '..') {
-    return nativeImage.createEmpty()
-  }
-  const resource = path.join(
-    bundlePath,
-    'Contents',
-    'Resources',
-    path.extname(name) ? name : `${name}.icns`
-  )
-  const temporary = await mkdtemp(path.join(tmpdir(), 'kokorobox-app-icon-'))
-  try {
-    const png = path.join(temporary, 'icon.png')
-    await run('/usr/bin/sips', ['-s', 'format', 'png', resource, '--out', png], {
-      timeout: 5000,
-      maxBuffer: 64 * 1024
-    })
-    return nativeImage.createFromBuffer(await readFile(png)).resize({ width: 128, height: 128 })
-  } finally {
-    await rm(temporary, { recursive: true, force: true })
   }
 }
 
