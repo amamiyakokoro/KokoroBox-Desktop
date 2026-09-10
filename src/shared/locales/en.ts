@@ -97,6 +97,11 @@ export const messages: Readonly<Record<string, string>> = {
     'The installed KokoroBox Service does not support application routing. Update or reinstall the service.',
   'KokoroBox Service 认证已失效，请在内核设置中重置认证':
     'KokoroBox Service authentication is no longer valid. Reset authentication in Core Settings.',
+  'KokoroBox Service 尚未初始化，请初始化服务后重试':
+    'KokoroBox Service is not initialized. Initialize the service and try again.',
+  初始化服务并重试: 'Initialize service and retry',
+  'Windows 应用分流需要已安装、初始化并运行 KokoroBox Service':
+    'Windows application routing requires KokoroBox Service to be installed, initialized, and running.',
   'Linux 应用分流需要已安装并运行 KokoroBox Service':
     'Linux application routing requires KokoroBox Service to be installed and running.',
   '系统不支持可用的 cgroup v2 或 cgroup v1 net_cls 应用分流后端':

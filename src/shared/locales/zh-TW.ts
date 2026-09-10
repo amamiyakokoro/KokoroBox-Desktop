@@ -93,6 +93,11 @@ export const messages: Readonly<Record<string, string>> = {
     '目前的 KokoroBox Service 不支援應用程式分流，請更新或重新安裝服務',
   'KokoroBox Service 认证已失效，请在内核设置中重置认证':
     'KokoroBox Service 認證已失效，請在核心設定中重設認證',
+  'KokoroBox Service 尚未初始化，请初始化服务后重试':
+    'KokoroBox Service 尚未初始化，請初始化服務後再試一次',
+  初始化服务并重试: '初始化服務並重試',
+  'Windows 应用分流需要已安装、初始化并运行 KokoroBox Service':
+    'Windows 程式分流需要已安裝、初始化並執行 KokoroBox Service',
   'Linux 应用分流需要已安装并运行 KokoroBox Service':
     'Linux 程式分流需要已安裝並執行 KokoroBox Service',
   '系统不支持可用的 cgroup v2 或 cgroup v1 net_cls 应用分流后端':

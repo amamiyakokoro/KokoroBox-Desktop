@@ -3,7 +3,13 @@ import BasePage from '@renderer/components/base/base-page'
 import { AppRoutingRuleRow } from '@renderer/components/app-routing/rule-row'
 import AppRoutingSettingDrawer from '@renderer/components/app-routing/app-routing-setting-drawer'
 import { useAppRouting } from '@renderer/hooks/use-app-routing'
-import { openAppRoutingSystemSettings } from '@renderer/utils/ipc'
+import {
+  initService,
+  installService,
+  openAppRoutingSystemSettings,
+  serviceStatus,
+  startService
+} from '@renderer/utils/ipc'
 import { notify } from '@renderer/utils/notification'
 import { Button, Card, CardBody, Chip, Divider, Input, Switch } from '@heroui/react'
 import {
@@ -76,6 +82,15 @@ function statusMessage(message?: string, protectedApplicationCount = 0): string 
   if (message === 'KokoroBox Service 认证已失效，请在内核设置中重置认证') {
     return tr('KokoroBox Service 认证已失效，请在内核设置中重置认证')
   }
+  if (
+    message === 'KokoroBox Service 尚未初始化，请初始化服务后重试' ||
+    message?.toLowerCase().includes('service is not initialized')
+  ) {
+    return tr('KokoroBox Service 尚未初始化，请初始化服务后重试')
+  }
+  if (message === 'Windows 应用分流需要已安装、初始化并运行 KokoroBox Service') {
+    return tr('Windows 应用分流需要已安装、初始化并运行 KokoroBox Service')
+  }
   if (message === 'Linux 应用分流需要已安装并运行 KokoroBox Service') {
     return tr('Linux 应用分流需要已安装并运行 KokoroBox Service')
   }
@@ -132,6 +147,7 @@ const AppRouting: React.FC = () => {
   const [processPattern, setProcessPattern] = useState('')
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(() => new Set())
   const [openingSettings, setOpeningSettings] = useState(false)
+  const [preparingService, setPreparingService] = useState(false)
   const openApprovalSettings = async (): Promise<void> => {
     if (openingSettings) return
     setOpeningSettings(true)
@@ -148,6 +164,13 @@ const AppRouting: React.FC = () => {
   const [settingDrawerReopenSignal, setSettingDrawerReopenSignal] = useState(0)
   const currentStatusMessage = statusMessage(status?.message, status?.protectedApplicationCount)
   const needsMacApproval = isMac && config?.enabled && status?.needsUserApproval === true
+  const needsWindowsServicePreparation =
+    isWindows &&
+    config?.enabled &&
+    status?.state === 'error' &&
+    (status.message === 'KokoroBox Service 尚未初始化，请初始化服务后重试' ||
+      status.message === 'Windows 应用分流需要已安装、初始化并运行 KokoroBox Service' ||
+      status.message?.toLowerCase().includes('service is not initialized'))
   const displayedProxyPort = status?.proxyPort ?? (isLinux ? 7894 : 7891)
   const displayedProxyProtocol = isLinux ? 'TPROXY' : 'SOCKS5'
   const backendLabel =
@@ -158,6 +181,34 @@ const AppRouting: React.FC = () => {
         : undefined
   const submitPattern = async (): Promise<void> => {
     if (await addPattern(processPattern)) setProcessPattern('')
+  }
+  const prepareWindowsService = async (): Promise<boolean> => {
+    if (!isWindows || preparingService) return false
+    setPreparingService(true)
+    try {
+      let nextStatus = await serviceStatus()
+      if (nextStatus === 'not-installed') {
+        await installService()
+        nextStatus = await serviceStatus()
+      }
+      if (nextStatus === 'stopped' || nextStatus === 'paused') {
+        await startService()
+        nextStatus = await serviceStatus()
+      }
+      if (nextStatus !== 'running') await initService()
+      await refresh()
+      return true
+    } catch (error) {
+      notify(error, { variant: 'danger' })
+      return false
+    } finally {
+      setPreparingService(false)
+    }
+  }
+  const setRoutingEnabled = async (enabled: boolean): Promise<void> => {
+    if (!config) return
+    if (enabled && isWindows && !(await prepareWindowsService())) return
+    await save({ ...config, enabled })
   }
   const toggleGroup = (groupId: string): void => {
     setCollapsedGroups((current) => {
@@ -233,6 +284,20 @@ const AppRouting: React.FC = () => {
                   {tr('重试')}
                 </Button>
               )}
+            {needsWindowsServicePreparation && (
+              <Button
+                className="mt-2"
+                size="sm"
+                color="primary"
+                variant="flat"
+                startContent={<MdRefresh className="text-base" />}
+                isLoading={preparingService}
+                isDisabled={saving}
+                onPress={() => void prepareWindowsService()}
+              >
+                {tr('初始化服务并重试')}
+              </Button>
+            )}
             {config?.enabled && (
               <p className="mt-2 text-sm text-foreground-500">
                 {tr('上游')}：KokoroBox / 127.0.0.1:{displayedProxyPort} ({displayedProxyProtocol})
@@ -243,8 +308,8 @@ const AppRouting: React.FC = () => {
           <Switch
             aria-label={tr('应用分流')}
             isSelected={config?.enabled ?? false}
-            isDisabled={!supported || !config || saving}
-            onValueChange={(enabled) => config && void save({ ...config, enabled })}
+            isDisabled={!supported || !config || saving || preparingService}
+            onValueChange={(enabled) => void setRoutingEnabled(enabled)}
           />
         </div>
 

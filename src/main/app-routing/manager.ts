@@ -109,8 +109,16 @@ function publishServiceStatus(serviceStatus: ServiceProcessRouterStatus): void {
 }
 
 function serviceModeError(error: unknown): Error {
+  const message = error instanceof Error ? error.message : String(error)
   if (error instanceof ServiceAPIError && [404, 501].includes(error.status || 0)) {
     return new Error('当前 KokoroBox Service 不支持应用分流，请更新或重新安装服务')
+  }
+  if (
+    process.platform === 'win32' &&
+    ((error instanceof ServiceAPIError && error.status === 503) ||
+      message.toLowerCase().includes('service is not initialized'))
+  ) {
+    return new Error('KokoroBox Service 尚未初始化，请初始化服务后重试')
   }
   if (error instanceof ServiceAPIError && [401, 403, 409].includes(error.status || 0)) {
     return new Error('KokoroBox Service 认证已失效，请在内核设置中重置认证')
@@ -121,7 +129,6 @@ function serviceModeError(error: unknown): Error {
   if (process.platform === 'win32' && isServiceConnectionError(error)) {
     return new Error('Windows 应用分流需要已安装、初始化并运行 KokoroBox Service')
   }
-  const message = error instanceof Error ? error.message : String(error)
   if (
     process.platform === 'linux' &&
     (message.includes('cgroup v2 unavailable') || message.includes('cgroup v1 net_cls'))
