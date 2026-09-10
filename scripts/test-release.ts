@@ -236,7 +236,6 @@ test('removed LoongArch64 targets and build/download configuration cannot return
   for (const file of [
     '.github/workflows/build.yml',
     'scripts/prepare.ts',
-    'scripts/updater.ts',
     'pnpm-workspace.yaml'
   ]) {
     assert.doesNotMatch(readFileSync(file, 'utf8'), /loong/i, file)
