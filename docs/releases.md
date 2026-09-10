@@ -4,19 +4,19 @@ The workflows build KokoroBox's supported package matrix, prepare the target nat
 
 ## Outputs
 
-| Platform | Architectures                  | Packages                                                  |
-| -------- | ------------------------------ | --------------------------------------------------------- |
-| Windows  | x64, ARM64                     | Automatic-UAC and manual-elevation NSIS `.exe` installers |
-| macOS    | Intel x64, Apple Silicon ARM64 | `.pkg`                                                    |
-| Linux    | x64, ARM64                     | `.deb`, `.rpm`, `.pkg.tar.zst`                            |
+| Platform | Architectures                  | Packages                       |
+| -------- | ------------------------------ | ------------------------------ |
+| Windows  | x64, ARM64                     | Standard NSIS `.exe` installer |
+| macOS    | Intel x64, Apple Silicon ARM64 | `.pkg`                         |
+| Linux    | x64, ARM64                     | `.deb`, `.rpm`, `.pkg.tar.zst` |
 
-Each release must contain all 12 build-matrix packages, two byte-identical Windows compatibility aliases, `latest.yml`, and `SHA256SUMS`. Windows users can choose an automatic-UAC build whose executable requests administrator rights at launch, or a manual-elevation build that starts with ordinary user rights and must be launched with **Run as administrator** when privileged features are needed. Neither build restores the legacy scheduled-task or runner elevation mechanism. The updater preserves the installed elevation variant. The unsuffixed Windows setup aliases let older installations migrate to the automatic-UAC variant through their existing updater. The updater metadata preserves the exact release tag, including a leading `v` when present. Build artifacts remain available in the workflow run for 14 days.
+The build matrix contains 10 platform packages. Publication adds two byte-identical Windows `manual-elevation-setup` compatibility aliases, plus `latest.yml` and `SHA256SUMS`. The aliases let installations made from the former manual-elevation package cross the migration boundary; they are not separate builds. New installations and the current updater use the unsuffixed setup filename. The updater metadata preserves the exact release tag, including a leading `v` when present. Build artifacts remain available in the workflow run for 14 days.
 
-Both NSIS installers are per-machine installers and therefore request UAC while
-installing or updating files under `Program Files`. The elevation variant
-controls the installed KokoroBox executable after setup: the unsuffixed setup
-is the automatic-UAC variant, while `manual-elevation-setup` launches the app as
-the current user. It does not make the installer itself per-user or UAC-free.
+The NSIS package is a per-machine installer and therefore requests UAC while
+installing or updating files under `Program Files`. The installed KokoroBox
+executable declares `asInvoker`, starts as the current user, and requests
+administrator permission only for individual privileged operations. It does
+not request UAC on every application launch.
 
 All targets use GitHub-hosted runners and the locked project dependencies. The native module for each target architecture is checked before packaging.
 
@@ -113,7 +113,7 @@ node --import tsx --test scripts/test-release.ts scripts/test-macos-signing.ts s
 
 Windows CI packages are currently **not Authenticode-signed**. SignPath signing must be configured after project approval; this workflow does not claim Foundation sponsorship or signed Windows releases.
 
-Windows packages declare `requireAdministrator` in the signed KokoroBox executable manifest. Windows performs elevation before the application starts; KokoroBox does not create a launcher process, stage startup arguments, or run an elevation scheduled task. Installation and upgrades remove obsolete elevation tasks and runner files. The installed executable, shortcuts, auto-start task, service, data and IPC names use KokoroBox names. Legacy URI identifiers and the authenticated service wire-format remain supported for compatibility.
+Windows packages declare `asInvoker` in the KokoroBox executable manifest. KokoroBox starts with the current user's privileges and elevates only explicit privileged operations; it does not create a launcher process, stage startup arguments, or run an elevation scheduled task. Installation and upgrades remove obsolete elevation tasks and runner files. The installed executable, shortcuts, auto-start task, service, data and IPC names use KokoroBox names. Legacy URI identifiers and the authenticated service wire-format remain supported for compatibility.
 
 Both Intel and Apple Silicon macOS releases require **Developer ID-signed, Apple-notarized PKGs with stapled tickets**. There is no unsigned fallback in either Stable or Rolling releases. The upstream PKG installation scripts remain enabled for proxy/service operation.
 

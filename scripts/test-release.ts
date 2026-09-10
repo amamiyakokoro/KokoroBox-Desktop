@@ -97,31 +97,20 @@ test('monthly releases bootstrap without a stable tag, skip unchanged/non-month-
   )
 })
 
-test('build matrix exactly matches the 12 required release artifacts', () => {
+test('build matrix exactly matches the 10 required platform artifacts', () => {
   const build = workflow('build')
   assert.deepEqual(
     build.jobs.build.strategy.matrix.include.map(
-      ({
+      ({ os, arch, format }: { os: string; arch: string; format: string }) => ({
         os,
         arch,
-        format,
-        elevation
-      }: {
-        os: string
-        arch: string
-        format: string
-        elevation?: string
-      }) => ({
-        os,
-        arch,
-        format,
-        ...(elevation ? { elevation } : {})
+        format
       })
     ),
     releaseTargets
   )
-  assert.equal(new Set(releaseTargets.map(targetId)).size, 12)
-  assert.equal(new Set(releaseTargets.map((target) => artifactName(target, '2.26.8'))).size, 12)
+  assert.equal(new Set(releaseTargets.map(targetId)).size, 10)
+  assert.equal(new Set(releaseTargets.map((target) => artifactName(target, '2.26.8'))).size, 10)
   assert.match(artifactName(releaseTargets[0], '2.26.9-1'), /2\.26\.9-1/)
   assert.deepEqual([...new Set(releaseTargets.map((target) => target.arch))], ['x64', 'arm64'])
   assert.equal(
@@ -137,8 +126,7 @@ test('build matrix exactly matches the 12 required release artifacts', () => {
       {
         os: 'windows-latest',
         arch: 'x64',
-        format: 'nsis',
-        elevation: 'auto-elevate'
+        format: 'nsis'
       },
       '2.26.8'
     ),
@@ -150,21 +138,17 @@ test('build matrix exactly matches the 12 required release artifacts', () => {
   assert.throws(() => artifactName(releaseTargets[0], '../../bad'))
 
   const packageJson = JSON.parse(readFileSync('package.json', 'utf8'))
-  assert.match(packageJson.scripts['build:win'], /build:win:auto-elevate/)
-  assert.match(packageJson.scripts['build:win'], /build:win:manual-elevation/)
-  const autoElevation = parse(readFileSync('electron-builder.windows-auto-elevate.yml', 'utf8'))
-  const manualElevation = parse(
-    readFileSync('electron-builder.windows-manual-elevation.yml', 'utf8')
-  )
-  assert.equal(autoElevation.win.requestedExecutionLevel, 'requireAdministrator')
-  assert.equal(autoElevation.extraMetadata.kokoroboxWindowsElevation, 'auto-elevate')
-  assert.equal(
-    autoElevation.nsis.artifactName,
-    `\${name}-windows-\${version}-\${arch}-setup.\${ext}`
-  )
-  assert.equal(manualElevation.win.requestedExecutionLevel, 'asInvoker')
-  assert.equal(manualElevation.extraMetadata.kokoroboxWindowsElevation, 'manual-elevation')
-  assert.notEqual(autoElevation.nsis.artifactName, manualElevation.nsis.artifactName)
+  const builder = parse(readFileSync('electron-builder.yml', 'utf8'))
+  assert.match(packageJson.scripts['build:win'], /^pnpm run prepare:windows-routing &&/)
+  assert.doesNotMatch(packageJson.scripts['build:win'], /auto-elevate|manual-elevation/)
+  assert.equal(packageJson.scripts['build:win:auto-elevate'], undefined)
+  assert.equal(packageJson.scripts['build:win:manual-elevation'], undefined)
+  assert.equal(builder.win.requestedExecutionLevel, 'asInvoker')
+  assert.equal(builder.nsis.artifactName, `\${name}-windows-\${version}-\${arch}-setup.\${ext}`)
+  assert.equal(existsSync('electron-builder.windows-auto-elevate.yml'), false)
+  assert.equal(existsSync('electron-builder.windows-manual-elevation.yml'), false)
+  const updater = readFileSync('src/main/resolve/autoUpdater.ts', 'utf8')
+  assert.doesNotMatch(updater, /windowsElevationVariant|auto-elevate|manual-elevation/)
 
   const uploadSteps = build.jobs.build.steps.filter(
     (step: { uses?: string }) => step.uses === 'actions/upload-artifact@v7'
@@ -310,11 +294,7 @@ function fixtures(fn: (source: string, output: string) => void, version = '2.26.
         packages,
         source,
         signing,
-        target.os === 'windows-latest' &&
-          target.arch === 'x64' &&
-          target.elevation === 'auto-elevate'
-          ? processRouterSbom
-          : undefined
+        target.os === 'windows-latest' && target.arch === 'x64' ? processRouterSbom : undefined
       )
     }
     fn(source, output)
@@ -344,11 +324,15 @@ test('collects complete builds, generates hashes and concise updater-compatible 
           .digest('hex')
       )
     }
-    for (const arch of ['x64', 'arm64'])
-      assert.equal(
-        existsSync(path.join(output, `kokorobox-desktop-windows-2.26.8-${arch}-setup.exe`)),
-        true
+    for (const arch of ['x64', 'arm64']) {
+      const standard = path.join(output, `kokorobox-desktop-windows-2.26.8-${arch}-setup.exe`)
+      const legacy = path.join(
+        output,
+        `kokorobox-desktop-windows-2.26.8-${arch}-manual-elevation-setup.exe`
       )
+      assert.equal(existsSync(standard), true)
+      assert.deepEqual(readFileSync(legacy), readFileSync(standard))
+    }
   })
 })
 
@@ -363,7 +347,7 @@ for (const problem of ['missing', 'tampered', 'wrong-revision']) {
         const sbom = JSON.parse(readFileSync(sbomFile, 'utf8'))
         sbom.metadata.properties[0].value = 'a'.repeat(40)
         writeFileSync(sbomFile, JSON.stringify(sbom))
-        const manifestFile = path.join(source, 'manifest-windows-latest-x64-nsis-auto-elevate.json')
+        const manifestFile = path.join(source, 'manifest-windows-latest-x64-nsis.json')
         const manifest = JSON.parse(readFileSync(manifestFile, 'utf8'))
         manifest.sbom.checksum = createHash('sha256').update(readFileSync(sbomFile)).digest('hex')
         writeFileSync(manifestFile, JSON.stringify(manifest))

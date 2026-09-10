@@ -34,9 +34,7 @@
     "checksum": "node scripts/checksum.ts",
     "dev": "pnpm run ensure:electron && electron-vite dev",
     "postinstall": "pnpm run ensure:electron && electron-builder install-app-deps",
-    "build:win": "pnpm run build:win:auto-elevate && pnpm run build:win:manual-elevation",
-    "build:win:auto-elevate": "pnpm run prepare:windows-routing && electron-vite build && electron-builder --publish never --config electron-builder.windows-auto-elevate.yml --win nsis",
-    "build:win:manual-elevation": "pnpm run prepare:windows-routing && electron-vite build && electron-builder --publish never --config electron-builder.windows-manual-elevation.yml --win nsis",
+    "build:win": "pnpm run prepare:windows-routing && electron-vite build && electron-builder --publish never --win nsis",
     "build:mac": "pnpm run prepare:macos-routing && electron-vite build && electron-builder --publish never --mac",
     "build:linux": "electron-vite build && node scripts/package-linux.ts"
   },

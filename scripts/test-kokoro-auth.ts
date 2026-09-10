@@ -872,7 +872,7 @@ test('packaging registers the shared scheme and Windows callback relay precedes 
   assert.match(main, /event\.preventDefault\(\)/)
 })
 
-test('Windows packaging uses the signed app manifest and never self-elevates at runtime', () => {
+test('Windows packaging runs as the current user and never self-elevates at startup', () => {
   const metadata = JSON.parse(readFileSync('package.json', 'utf8'))
   const config = parseYaml(readFileSync('electron-builder.yml', 'utf8'))
   assert.equal(metadata.author.name, 'KokoroBox contributors')
@@ -883,7 +883,7 @@ test('Windows packaging uses the signed app manifest and never self-elevates at 
   )
   assert.equal(config.productName, 'KokoroBox')
   assert.equal(config.win.executableName, 'KokoroBox')
-  assert.equal(config.win.requestedExecutionLevel, 'requireAdministrator')
+  assert.equal(config.win.requestedExecutionLevel, 'asInvoker')
   assert.equal(config.nsis.shortcutName, 'KokoroBox')
   assert.ok(config.extraResources[0].filter.includes('!files/kokorobox-run.exe'))
 

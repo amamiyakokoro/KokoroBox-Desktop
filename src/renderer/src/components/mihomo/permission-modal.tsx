@@ -137,7 +137,7 @@ const PermissionModal: React.FC<Props> = (props) => {
                         <span className="mt-0.5">•</span>
                         <span>
                           {tr(
-                            '自动 UAC 版会在启动时请求权限；手动提权版需要使用“以管理员身份运行”'
+                            'KokoroBox 默认以普通用户权限启动；需要特权功能时会单独请求管理员权限'
                           )}
                         </span>
                       </div>

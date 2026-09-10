@@ -481,12 +481,8 @@ test('generates and validates the authenticated service protocol', () => {
     backend: 'windows-proxybridge'
   }
   assert.equal(validateServiceProcessRouterStatus(status, 'win32'), status)
-  assert.throws(() =>
-    validateServiceProcessRouterStatus({ ...status, version: 2 as 1 }, 'win32')
-  )
-  assert.throws(() =>
-    validateServiceProcessRouterStatus({ ...status, proxy_port: 1080 }, 'win32')
-  )
+  assert.throws(() => validateServiceProcessRouterStatus({ ...status, version: 2 as 1 }, 'win32'))
+  assert.throws(() => validateServiceProcessRouterStatus({ ...status, proxy_port: 1080 }, 'win32'))
   assert.throws(() =>
     validateServiceProcessRouterStatus({ ...status, firewall_ready: false }, 'win32')
   )
@@ -904,16 +900,8 @@ test('Windows packaging rebuilds the architecture-matched process router payload
   const prepare = readFileSync('scripts/prepare-windows-routing.ts', 'utf8')
   const workflow = readFileSync('.github/workflows/build.yml', 'utf8')
 
-  assert.match(packageJson.scripts['build:win'], /build:win:auto-elevate/)
-  assert.match(packageJson.scripts['build:win'], /build:win:manual-elevation/)
-  assert.match(
-    packageJson.scripts['build:win:auto-elevate'],
-    /^pnpm run prepare:windows-routing &&/
-  )
-  assert.match(
-    packageJson.scripts['build:win:manual-elevation'],
-    /^pnpm run prepare:windows-routing &&/
-  )
+  assert.match(packageJson.scripts['build:win'], /^pnpm run prepare:windows-routing &&/)
+  assert.doesNotMatch(packageJson.scripts['build:win'], /auto-elevate|manual-elevation/)
   assert.match(packageJson.scripts['prepare:windows-routing'], /prepare-windows-routing\.ts/)
   assert.match(prepare, /npm_config_target_arch \|\| process\.arch/)
   assert.match(prepare, /targetArch !== 'x64'/)

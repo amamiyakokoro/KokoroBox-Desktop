@@ -664,10 +664,8 @@ export const messages: Readonly<Record<string, string>> = {
   提权配置成功: 'Elevation configured',
   提权配置状态: 'Elevation configuration status',
   管理员权限状态: 'Administrator status',
-  'Windows 会在启动 KokoroBox 前显示标准 UAC 提示':
-    'Windows shows its standard UAC prompt before KokoroBox starts',
-  '自动 UAC 版会在启动时请求权限；手动提权版需要使用“以管理员身份运行”':
-    'The automatic-UAC build requests permission at startup; launch the manual-elevation build with “Run as administrator”',
+  'KokoroBox 默认以普通用户权限启动；需要特权功能时会单独请求管理员权限':
+    'KokoroBox starts with standard user privileges and requests administrator permission only for privileged features',
   应用程序不再使用计划任务或额外启动程序提升权限:
     'The app no longer elevates through a scheduled task or a launcher process',
   搜索: 'Search',
