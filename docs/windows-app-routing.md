@@ -121,9 +121,9 @@ packages only the KokoroBox router, core DLL, WinDivert runtime, and license fil
 
 The packaged files live under `extra/files/process-router/`; the upstream `.sys` payload is
 copied byte-for-byte from the pinned, SHA-256-verified WinDivert archive. The runtime verifies a
-build manifest before launching the sidecar. Release collection publishes the CycloneDX SBOM as
-a standalone artifact and includes it in `SHA256SUMS`; the SBOM records the pinned ProxyBridge
-source revision.
+build manifest before launching the sidecar. Release collection validates the CycloneDX SBOM in
+the private CI artifact but does not publish it as a release download; the SBOM records the
+pinned ProxyBridge source revision.
 
 ## Signing and Windows verification
 

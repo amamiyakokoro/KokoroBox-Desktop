@@ -1,6 +1,6 @@
 # Building and publishing releases
 
-The workflows retain the upstream Sparkle build matrix and native-dependency preparation, with KokoroBox-specific artifact validation and publication.
+The workflows build KokoroBox's supported package matrix, prepare the target native dependency, and validate artifacts before publication.
 
 ## Outputs
 
@@ -84,7 +84,7 @@ The schedule runs at 12:00 Taipei time on potential month-end dates and filters 
 - macOS packages additionally require a matching verification receipt written only after signing, notarization, stapling, and Gatekeeper checks succeed. A missing or stale receipt blocks staging/publication.
 - `Publish Packages` rejects missing, empty, modified, stale, wrong-version, or wrong-commit artifacts before uploading anything.
 - Platform jobs use `fail-fast: false` so a failed target does not cancel other builds, but any failed target blocks publication of the entire release.
-- Release notes are generated from Git commit subjects without an external translation service. Template headings and download/signing information are English; commit subjects retain their original language.
+- Release notes are generated in CI from Git commit subjects; there is no repository-maintained changelog source file. Template headings and download/signing information are English; commit subjects retain their original language.
 - `SHA256SUMS` is calculated from the final package bytes. It detects corruption but does not authenticate the publisher.
 
 Run the local checks with:
