@@ -1,16 +1,23 @@
 import { tr } from '../../shared/i18n'
 import {
-  normalizeLinuxExecutablePath,
-  normalizeWindowsExecutablePath
+  isProtectedAppRoutingProcess,
+  normalizeWindowsExecutablePath,
+  protectedAppRoutingProcessNames
 } from '../../shared/app-routing'
 import { execFile, spawn } from 'child_process'
 import { app, dialog, nativeImage, nativeTheme, shell } from 'electron'
-import { mkdir, mkdtemp, readFile, realpath, rm, stat, writeFile } from 'fs/promises'
+import { mkdir, mkdtemp, readFile, realpath, rm, writeFile } from 'fs/promises'
 import { tmpdir } from 'os'
 import path from 'path'
 import crypto from 'crypto'
 import { promisify } from 'util'
-import { fileToDataUrl, isRunningAsAdmin, setupFirewallRules } from 'kokorobox-native'
+import {
+  fileToDataUrl,
+  inspectApplication,
+  isRunningAsAdmin,
+  scanWindowsApplications,
+  setupFirewallRules
+} from 'kokorobox-native'
 import {
   dataDir,
   exePath,
@@ -23,7 +30,6 @@ import {
 } from '../utils/dirs'
 import { rmSync } from 'fs'
 import { execWithElevation } from '../utils/elevation'
-import { scanWindowsExecutableDirectory } from '../app-routing/directory'
 
 export function getFilePath(
   ext: string[],
@@ -59,56 +65,9 @@ export async function getApplicationPaths(): Promise<AppRoutingApplicationSelect
   await mkdir(appRoutingIconDir(), { recursive: true })
   const applications: AppRoutingApplicationSelection[] = []
   for (const selectedPath of selected) {
-    const canonicalPath = await realpath(selectedPath)
-    const executablePath = isMac
-      ? canonicalPath
-      : isLinux
-        ? normalizeLinuxExecutablePath(canonicalPath)
-        : normalizeWindowsExecutablePath(canonicalPath)
-    const fileStat = await stat(executablePath)
-    const isMacBundle =
-      fileStat.isDirectory() && path.extname(executablePath).toLowerCase() === '.app'
-    const isUnixExecutable = fileStat.isFile() && (fileStat.mode & 0o111) !== 0
-    if (
-      isMac
-        ? !isMacBundle && !isUnixExecutable
-        : isLinux
-          ? !isUnixExecutable
-          : path.extname(executablePath).toLowerCase() !== '.exe' || !fileStat.isFile()
-    ) {
-      throw new Error(
-        isMac
-          ? 'Select a signed macOS application or executable'
-          : isLinux
-            ? 'Application routing requires an executable Linux file'
-            : 'Application routing requires an existing .exe file'
-      )
-    }
-    const executableName = isMac
-      ? path.basename(executablePath, path.extname(executablePath))
-      : isLinux
-        ? path.basename(executablePath)
-        : path.win32.basename(executablePath)
-    let identifier = executableName
-    let identifierKind: AppRoutingIdentifierKind = isLinux
-      ? 'linux-executable'
-      : 'windows-executable'
-    if (isLinux) identifier = executablePath
-    if (isMac) {
-      const execFilePromise = promisify(execFile)
-      const { stderr } = await execFilePromise(
-        '/usr/bin/codesign',
-        ['--display', '--verbose=2', executablePath],
-        { encoding: 'utf8', timeout: 5000, maxBuffer: 64 * 1024 }
-      )
-      const match = stderr.match(/^Identifier=(.+)$/m)
-      if (!match?.[1] || /[\r\n]/.test(match[1])) {
-        throw new Error('The selected macOS application has no usable signing identifier')
-      }
-      identifier = match[1]
-      identifierKind = 'macos-signing-identifier'
-    }
-    const iconDataUrl = await loadApplicationIcon(executablePath)
+    const application = await inspectApplication(selectedPath)
+    const { executablePath, executableName, identifier, identifierKind } = application
+    const iconDataUrl = await loadApplicationIcon(executablePath, application.iconDataUrl)
     applications.push({
       executablePath,
       executableName,
@@ -132,23 +91,22 @@ export async function scanAppRoutingDirectory(
     })?.[0]
   if (!selectedDirectory) return undefined
 
+  const {
+    applications: scannedApplications,
+    truncated,
+    unreadableDirectoryCount
+  } = await scanWindowsApplications(selectedDirectory, 512, protectedAppRoutingProcessNames())
+  // Keep the dynamic installer-name guard in Desktop as well. The native
+  // scanner receives the static list above, while this protects new installer
+  // version names without lowering its bounded scan limit.
+  const applications = scannedApplications.filter(
+    (application) => !isProtectedAppRoutingProcess(path.win32.basename(application.executablePath))
+  )
   const directoryPath = normalizeWindowsExecutablePath(await realpath(selectedDirectory))
-  if (!(await stat(directoryPath)).isDirectory()) {
-    throw new Error('Application routing scan requires an existing directory')
-  }
-  const { executablePaths, truncated, unreadableDirectoryCount } =
-    await scanWindowsExecutableDirectory(directoryPath)
   return {
     directoryPath,
     name: path.win32.basename(directoryPath) || directoryPath,
-    applications: executablePaths.map((executablePath) => ({
-      executablePath,
-      executableName: path.win32.basename(executablePath),
-      // Folder scans deliberately use the absolute path so identically named
-      // executables in different subfolders remain independently editable.
-      identifier: executablePath,
-      identifierKind: 'windows-executable'
-    })),
+    applications,
     truncated,
     unreadableDirectoryCount
   }
@@ -164,7 +122,10 @@ export async function getAppRoutingIcon(executablePath: string): Promise<string 
   return loadApplicationIcon(executablePath)
 }
 
-async function loadApplicationIcon(executablePath: string): Promise<string | undefined> {
+async function loadApplicationIcon(
+  executablePath: string,
+  nativeIconDataUrl?: string
+): Promise<string | undefined> {
   const iconCacheKey = crypto
     .createHash('sha256')
     .update(`native-v2:${executablePath}`, 'utf8')
@@ -173,8 +134,9 @@ async function loadApplicationIcon(executablePath: string): Promise<string | und
   try {
     let icon: Electron.NativeImage
     try {
-      icon =
-        process.platform === 'darwin' && executablePath.endsWith('.app')
+      icon = nativeIconDataUrl
+        ? nativeImage.createFromDataURL(nativeIconDataUrl)
+        : process.platform === 'darwin' && executablePath.endsWith('.app')
           ? await loadMacBundleIcon(executablePath)
           : nativeImage.createFromDataURL(fileToDataUrl(executablePath))
     } catch {

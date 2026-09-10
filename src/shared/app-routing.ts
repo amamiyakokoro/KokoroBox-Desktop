@@ -39,6 +39,15 @@ export function isProtectedAppRoutingProcess(executableName: string): boolean {
   )
 }
 
+/**
+ * Names that the native Windows directory scanner must skip before applying
+ * its result limit. This keeps KokoroBox's own executable and sidecars out
+ * of a broad folder scan without relying on renderer-side filtering.
+ */
+export function protectedAppRoutingProcessNames(): string[] {
+  return [...reservedProcessNames]
+}
+
 export const defaultAppRoutingConfig: AppRoutingConfig = {
   version: 1,
   enabled: false,

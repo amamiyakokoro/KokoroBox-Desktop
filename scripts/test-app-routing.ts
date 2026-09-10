@@ -1,7 +1,6 @@
 import assert from 'node:assert/strict'
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
-import { join, resolve } from 'node:path'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { test } from 'node:test'
 import {
   appRoutingSupported,
@@ -48,7 +47,6 @@ import {
   buildMacAppRoutingConfiguration,
   macAppRoutingOperatingSystemSupported
 } from '../src/main/app-routing/macos-profile'
-import { scanWindowsExecutableDirectory } from '../src/main/app-routing/directory'
 import { macOSBundleVersion } from './macos-bundle-version'
 
 function rule(overrides: Partial<AppRoutingRule> = {}): AppRoutingRule {
@@ -127,6 +125,16 @@ test('renderer exposes application routing everywhere the shared capability supp
     assert.match(source, /appRoutingSupported\(window\.api\.platform, window\.api\.arch\)/)
     assert.doesNotMatch(source, /window\.api\.platform === 'win32' && window\.api\.arch === 'x64'/)
   }
+})
+
+test('application inspection and folder scans use the native bridge', () => {
+  const source = readFileSync(resolve('src/main/sys/misc.ts'), 'utf8')
+  assert.match(source, /inspectApplication\(selectedPath\)/)
+  assert.match(
+    source,
+    /scanWindowsApplications\(selectedDirectory, 512, protectedAppRoutingProcessNames\(\)\)/
+  )
+  assert.doesNotMatch(source, /scanWindowsExecutableDirectory/)
 })
 
 test('validates macOS signing identifiers and translates rules atomically', () => {
@@ -578,30 +586,6 @@ test('grouped rules retain the same priority order shown by the UI', () => {
       ['game', 3]
     ]
   )
-})
-
-test('Windows folder scans recurse safely and skip protected executables', async () => {
-  const root = mkdtempSync(join(tmpdir(), 'kokorobox-routing-scan-'))
-  try {
-    const nested = join(root, 'nested')
-    mkdirSync(nested)
-    writeFileSync(join(root, 'Alpha.exe'), '')
-    writeFileSync(join(root, 'note.txt'), '')
-    writeFileSync(join(nested, 'Beta.EXE'), '')
-    writeFileSync(join(nested, 'KokoroBox.exe'), '')
-    symlinkSync(nested, join(root, 'linked'))
-
-    const result = await scanWindowsExecutableDirectory(root)
-    assert.deepEqual(result.executablePaths.map(executableName).sort(), ['Alpha.exe', 'Beta.EXE'])
-    assert.equal(result.truncated, false)
-    assert.equal(result.unreadableDirectoryCount, 0)
-
-    const limited = await scanWindowsExecutableDirectory(root, 1)
-    assert.equal(limited.executablePaths.length, 1)
-    assert.equal(limited.truncated, true)
-  } finally {
-    rmSync(root, { recursive: true, force: true })
-  }
 })
 
 test('parses only the canonical process-pattern schema', () => {
