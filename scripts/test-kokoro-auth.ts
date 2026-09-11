@@ -935,6 +935,10 @@ test('Windows privilege changes use explicit non-persistent native relaunches', 
   assert.match(misc, /if \(elevated\) launchElevated\(exePath\(\), relaunchArguments\)/)
   assert.match(misc, /else launchUnelevated\(exePath\(\), relaunchArguments\)/)
   assert.match(misc, /app\.releaseSingleInstanceLock\(\)/)
+  assert.match(
+    misc,
+    /await prepareAppForRelaunch\(\)[\s\S]*app\.releaseSingleInstanceLock\(\)[\s\S]*app\.exit\(\)/
+  )
   assert.doesNotMatch(misc, /launch(?:Un)?elevated\([^\n]*process\.argv/)
   assert.match(misc, /await prepareAppForRelaunch\(\)/)
   assert.match(lifecycle, /isQuitting = true\s+await cleanupBeforeExit\(false\)/)
