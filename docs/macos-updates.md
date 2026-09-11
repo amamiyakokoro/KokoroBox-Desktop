@@ -66,6 +66,10 @@ an enabled service restarts it from the current application bundle. Unregisterin
 `SMAppService` job; authentication material remains in the user's protected application data unless
 the user removes that data separately.
 
+First-time authentication uses the service's atomic `service init --ensure-running` operation. It
+writes the per-user authorization data and starts or restarts the registered daemon inside one
+privileged process, so KokoroBox requests administrator authorization only once during bootstrap.
+
 The application recognizes and removes the former `/Library/LaunchDaemons/KokoroBoxService.plist`
 and `/Library/PrivilegedHelperTools/com.amamiyakokoro.kokorobox-service` only while performing an
 explicit migration or uninstall. The recovery PKG stops a running bundled daemon before replacing
