@@ -226,23 +226,13 @@ export function collectArtifacts(
   // makes the release page noisy without helping installation or updates.
   for (const filename of filenames)
     copyFileSync(path.join(source, filename), path.join(output, filename))
-  // Builds released before the single standard asInvoker package used this
-  // suffix when updating their non-auto-elevating installation. Keep a
-  // byte-identical alias so those clients can cross the migration boundary.
-  const publishedFilenames = [...filenames]
-  for (const target of releaseTargets.filter((item) => item.os === 'windows-latest')) {
-    const filename = artifactName(target, version)
-    const legacyFilename = filename.replace(/-setup\.exe$/, '-manual-elevation-setup.exe')
-    copyFileSync(path.join(output, filename), path.join(output, legacyFilename))
-    publishedFilenames.push(legacyFilename)
-  }
   const checksums =
-    publishedFilenames
+    filenames
       .sort()
       .map((filename) => `${digest(path.join(output, filename))}  ${filename}`)
       .join('\n') + '\n'
   writeFileSync(path.join(output, 'SHA256SUMS'), checksums)
-  const notes = `${changelog.trim()}\n\n## Windows privileges\n\nKokoroBox starts with the current user's privileges and requests administrator permission only for operations that require it. The installer itself requests UAC because it installs per-machine under Program Files. The legacy manual-elevation filename is a byte-identical compatibility alias, not a separate build.\n\n## Signing status\n\nmacOS PKG installers are Developer ID-signed, notarized by Apple, and include a stapled notarization ticket. Windows packages are not Authenticode-signed. SHA256SUMS provides integrity checks, not publisher authentication.\n`
+  const notes = `${changelog.trim()}\n\n## Windows privileges\n\nKokoroBox starts with the current user's privileges and requests administrator permission only for operations that require it. Current-user installation does not require UAC; all-users installation requests UAC when writing to Program Files.\n\n## Signing status\n\nmacOS PKG installers are Developer ID-signed, notarized by Apple, and include a stapled notarization ticket. Windows packages are not Authenticode-signed. SHA256SUMS provides integrity checks, not publisher authentication.\n`
   writeFileSync(path.join(output, 'changelog.md'), notes)
   writeFileSync(path.join(output, 'latest.yml'), stringify({ version, tag, changelog: notes }))
 }

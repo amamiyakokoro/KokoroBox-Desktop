@@ -315,9 +315,9 @@ test('collects complete builds, generates hashes and concise updater-compatible 
     assert.doesNotMatch(latest.changelog, /## Downloads|releases\/download\//)
     assert.match(latest.changelog, /- A change/)
     assert.match(latest.changelog, /Developer ID-signed, notarized by Apple/)
-    assert.equal(readdirSync(output).length, 15)
+    assert.equal(readdirSync(output).length, 13)
     const lines = readFileSync(path.join(output, 'SHA256SUMS'), 'utf8').trim().split('\n')
-    assert.equal(lines.length, 12)
+    assert.equal(lines.length, 10)
     for (const line of lines) {
       const [digest, name] = line.split('  ')
       assert.equal(
@@ -329,12 +329,12 @@ test('collects complete builds, generates hashes and concise updater-compatible 
     }
     for (const arch of ['x64', 'arm64']) {
       const standard = path.join(output, `kokorobox-desktop-windows-2.26.8-${arch}-setup.exe`)
-      const legacy = path.join(
+      const removedLegacyAlias = path.join(
         output,
         `kokorobox-desktop-windows-2.26.8-${arch}-manual-elevation-setup.exe`
       )
       assert.equal(existsSync(standard), true)
-      assert.deepEqual(readFileSync(legacy), readFileSync(standard))
+      assert.equal(existsSync(removedLegacyAlias), false)
     }
   })
 })

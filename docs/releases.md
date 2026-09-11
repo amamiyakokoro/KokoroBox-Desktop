@@ -10,7 +10,7 @@ The workflows build KokoroBox's supported package matrix, prepare the target nat
 | macOS    | Intel x64, Apple Silicon ARM64 | `.pkg`                         |
 | Linux    | x64, ARM64                     | `.deb`, `.rpm`, `.pkg.tar.zst` |
 
-The build matrix contains 10 platform packages. Publication adds two byte-identical Windows `manual-elevation-setup` compatibility aliases, plus `latest.yml` and `SHA256SUMS`. The aliases let installations made from the former manual-elevation package cross the migration boundary; they are not separate builds. New installations and the current updater use the unsuffixed setup filename. The updater metadata preserves the exact release tag, including a leading `v` when present. Build artifacts remain available in the workflow run for 14 days.
+The build matrix contains 10 platform packages. Publication adds `latest.yml` and `SHA256SUMS`. Windows publishes one standard `setup.exe` for each supported architecture; the former `manual-elevation-setup` compatibility aliases are no longer generated. The updater metadata preserves the exact release tag, including a leading `v` when present. Build artifacts remain available in the workflow run for 14 days.
 
 The assisted NSIS package asks whether KokoroBox should be installed only for the current user or
 for every user of the computer. A current-user installation is stored below `%LOCALAPPDATA%` and
