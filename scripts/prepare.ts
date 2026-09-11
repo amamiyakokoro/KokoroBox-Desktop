@@ -6,6 +6,7 @@ import { extract } from 'tar'
 import { execSync } from 'child_process'
 import { createHash } from 'crypto'
 import { systemCoreOnlyBuild } from './build-env.ts'
+import { kokoroboxServiceAsset, verifyKokoroBoxServiceChecksum } from './kokorobox-service.ts'
 import { trafficMonitorAsset, trafficMonitorDownloadUrl } from './traffic-monitor.ts'
 
 const cwd = process.cwd()
@@ -154,6 +155,7 @@ interface ResourceInfo {
   file: string
   downloadURL: string
   needExecutable?: boolean
+  sha256URL?: string
 }
 
 /**
@@ -240,7 +242,7 @@ async function resolveSidecar(binInfo: SidecarInfo) {
  * download the file to the extra dir
  */
 async function resolveResource(binInfo: ResourceInfo) {
-  const { file, downloadURL, needExecutable = false } = binInfo
+  const { file, downloadURL, needExecutable = false, sha256URL } = binInfo
 
   const resDir = path.join(cwd, 'extra', 'files')
   const targetPath = path.join(resDir, file)
@@ -250,7 +252,20 @@ async function resolveResource(binInfo: ResourceInfo) {
   }
 
   fs.mkdirSync(resDir, { recursive: true })
-  await downloadFile(downloadURL, targetPath)
+  try {
+    await downloadFile(downloadURL, targetPath)
+
+    if (sha256URL) {
+      const response = await fetch(sha256URL)
+      if (!response.ok) throw new Error(`Checksum download failed: HTTP ${response.status}`)
+      const checksum = (await response.text()).trim()
+      const expectedFilename = path.basename(new URL(downloadURL).pathname)
+      verifyKokoroBoxServiceChecksum(expectedFilename, fs.readFileSync(targetPath), checksum)
+    }
+  } catch (error) {
+    fs.rmSync(targetPath, { force: true })
+    throw error
+  }
 
   if (needExecutable && platform !== 'win32') {
     execSync(`chmod 755 ${targetPath}`)
@@ -311,24 +326,13 @@ const resolveEnableLoopback = () =>
     downloadURL: `https://github.com/Kuingsmile/uwp-tool/releases/download/latest/enableLoopback.exe`
   })
 const resolveKokoroBoxService = () => {
-  const map = {
-    'win32-x64': 'kokorobox-service-windows-amd64-v3',
-    'win32-ia32': 'kokorobox-service-windows-386',
-    'win32-arm64': 'kokorobox-service-windows-arm64',
-    'darwin-x64': 'kokorobox-service-darwin-amd64-v3',
-    'darwin-arm64': 'kokorobox-service-darwin-arm64',
-    'linux-x64': 'kokorobox-service-linux-amd64-v3',
-    'linux-arm64': 'kokorobox-service-linux-arm64'
-  }
-  if (!map[`${platform}-${arch}`]) {
-    throw new Error(`unsupported platform "${platform}-${arch}"`)
-  }
-  const base = map[`${platform}-${arch}`]
-  const ext = platform == 'win32' ? '.exe' : ''
+  const asset = kokoroboxServiceAsset(platform, arch, process.env.RELEASE_CHANNEL)
+  const ext = platform === 'win32' ? '.exe' : ''
 
   return resolveResource({
     file: `kokorobox-service${ext}`,
-    downloadURL: `https://github.com/amamiyakokoro/kokorobox-service/releases/download/pre-release/${base}${ext}`,
+    downloadURL: asset.downloadURL,
+    sha256URL: asset.sha256URL,
     needExecutable: true
   })
 }

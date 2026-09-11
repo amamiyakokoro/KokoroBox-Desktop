@@ -112,6 +112,7 @@ jobs:
     timeout-minutes: 150
     env:
       SKIP_PREPARE: '1'
+      RELEASE_CHANNEL: ${{ inputs.channel }}
       RELEASE_VERSION: ${{ inputs.version }}
     strategy:
       fail-fast: false
