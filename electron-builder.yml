@@ -48,6 +48,7 @@ nsis:
   allowElevation: true
   oneClick: false
   perMachine: false
+  selectPerMachineByDefault: true
   createDesktopShortcut: false
   include: build/installer.nsh
 mac:

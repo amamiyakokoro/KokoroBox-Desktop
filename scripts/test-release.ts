@@ -147,6 +147,7 @@ test('build matrix exactly matches the 10 required platform artifacts', () => {
   assert.equal(builder.nsis.artifactName, `\${name}-windows-\${version}-\${arch}-setup.\${ext}`)
   assert.equal(builder.nsis.oneClick, false)
   assert.equal(builder.nsis.perMachine, false)
+  assert.equal(builder.nsis.selectPerMachineByDefault, true)
   assert.equal(builder.nsis.allowElevation, true)
   assert.equal(existsSync('electron-builder.windows-auto-elevate.yml'), false)
   assert.equal(existsSync('electron-builder.windows-manual-elevation.yml'), false)
