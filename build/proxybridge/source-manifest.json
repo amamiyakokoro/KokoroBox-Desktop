@@ -1,6 +1,6 @@
 {
   "proxyBridgeRepository": "https://github.com/amamiyakokoro/ProxyBridge.git",
-  "proxyBridgeRevision": "651d23e0f73410434b9e1b1e055e848c09baf4ee",
+  "proxyBridgeRevision": "bf7f7d089a82ef83609f2412b174178cc63cad23",
   "winDivertVersion": "2.2.2",
   "winDivertUrl": "https://github.com/basil00/WinDivert/releases/download/v2.2.2/WinDivert-2.2.2-A.zip",
   "winDivertArchiveSha256": "63cb41763bb4b20f600b6de04e991a9c2be73279e317d4d82f237b150c5f3f15"
