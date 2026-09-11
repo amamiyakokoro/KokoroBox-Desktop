@@ -63,6 +63,7 @@ export async function startMonitor(detached = false): Promise<void> {
     cwd: runtimeDir,
     detached: detached,
     stdio: detached ? 'ignore' : undefined,
+    windowsHide: true,
     env: {
       ...process.env,
       KOKOROBOX_MIHOMO_PIPE: mihomoIpcPath()

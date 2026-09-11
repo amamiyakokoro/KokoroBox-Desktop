@@ -24,7 +24,7 @@ export async function checkProfile(): Promise<void> {
         '-d',
         mihomoTestDir()
       ],
-      { env }
+      { env, windowsHide: process.platform === 'win32' }
     )
   } catch (error) {
     if (!(error instanceof Error)) {

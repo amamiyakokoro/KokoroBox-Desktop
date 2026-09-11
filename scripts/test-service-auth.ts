@@ -98,6 +98,12 @@ test('Windows service probes and elevated commands never open a console window',
   const elevationSource = readFileSync(resolve('src/main/utils/elevation.ts'), 'utf8')
   const autoRunSource = readFileSync(resolve('src/main/sys/autoRun.ts'), 'utf8')
   const sysproxySource = readFileSync(resolve('src/main/sys/sysproxy.ts'), 'utf8')
+  const dirsSource = readFileSync(resolve('src/main/utils/dirs.ts'), 'utf8')
+  const coreProfileSource = readFileSync(resolve('src/main/core/profile-check.ts'), 'utf8')
+  const kokoroProfileSource = readFileSync(resolve('src/main/kokoro/profile-check.ts'), 'utf8')
+  const trafficMonitorSource = readFileSync(resolve('src/main/resolve/trafficMonitor.ts'), 'utf8')
+  const miscSource = readFileSync(resolve('src/main/sys/misc.ts'), 'utf8')
+  const updaterSource = readFileSync(resolve('src/main/resolve/autoUpdater.ts'), 'utf8')
 
   assert.match(managerSource, /\['service', 'status'\],[\s\S]*windowsHide: true/)
   assert.match(elevationSource, /timeout: 30000, windowsHide: true/)
@@ -106,6 +112,13 @@ test('Windows service probes and elevated commands never open a console window',
     (sysproxySource.match(/windowsHide: process\.platform === 'win32'/g) || []).length,
     3
   )
+  assert.match(dirsSource, /execFileSync\('where\.exe',[\s\S]*windowsHide: true/)
+  assert.doesNotMatch(dirsSource, /execSync\(`\$\{whichCmd\}/)
+  assert.match(coreProfileSource, /windowsHide: process\.platform === 'win32'/)
+  assert.match(kokoroProfileSource, /windowsHide: process\.platform === 'win32'/)
+  assert.match(trafficMonitorSource, /TrafficMonitor\.exe'[\s\S]*windowsHide: true/)
+  assert.match(miscSource, /execFilePromise\(uwpToolPath, \[\], \{ windowsHide:/)
+  assert.equal((updaterSource.match(/windowsHide: true/g) || []).length, 2)
 })
 
 test('service status parser handles nested pretty and single-line JSON logs', () => {

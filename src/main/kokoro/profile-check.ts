@@ -19,7 +19,8 @@ export async function validateMihomoProfileContent(content: string): Promise<voi
   try {
     await writeFile(configPath, content, { encoding: 'utf-8', mode: 0o600 })
     await execFilePromise(mihomoCorePath(core), ['-t', '-f', configPath, '-d', testDir], {
-      env: { ...process.env, SAFE_PATHS: safePaths.join(path.delimiter) }
+      env: { ...process.env, SAFE_PATHS: safePaths.join(path.delimiter) },
+      windowsHide: process.platform === 'win32'
     })
   } catch (error) {
     if (!(error instanceof Error)) throw error

@@ -190,7 +190,7 @@ export function openFile(type: 'profile' | 'override', id: string, ext?: 'yaml' 
 export async function openUWPTool(): Promise<void> {
   const execFilePromise = promisify(execFile)
   const uwpToolPath = path.join(resourcesDir(), 'files', 'enableLoopback.exe')
-  await execFilePromise(uwpToolPath)
+  await execFilePromise(uwpToolPath, [], { windowsHide: process.platform === 'win32' })
 }
 
 export async function setupFirewall(): Promise<void> {
@@ -272,7 +272,9 @@ export function resetAppConfig(): void {
       ],
       {
         shell: true,
-        detached: true
+        detached: true,
+        stdio: 'ignore',
+        windowsHide: true
       }
     ).unref()
   } else {

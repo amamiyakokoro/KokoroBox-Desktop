@@ -217,7 +217,8 @@ export async function downloadAndInstallUpdate(version: string, tag?: string): P
       await pauseServiceFallbackForAppUpdate()
       spawn(path.join(dataDir(), file), ['/S', '--updated', '--force-run'], {
         detached: true,
-        stdio: 'ignore'
+        stdio: 'ignore',
+        windowsHide: true
       }).unref()
       appUpdateInstalling = true
     }
@@ -234,7 +235,9 @@ export async function downloadAndInstallUpdate(version: string, tag?: string): P
         ],
         {
           shell: true,
-          detached: true
+          detached: true,
+          stdio: 'ignore',
+          windowsHide: true
         }
       ).unref()
       appUpdateInstalling = true

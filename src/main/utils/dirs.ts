@@ -3,7 +3,7 @@ import { is } from '@electron-toolkit/utils'
 import { existsSync, mkdirSync, readdirSync } from 'fs'
 import { app } from 'electron'
 import path from 'path'
-import { execSync } from 'child_process'
+import { execFileSync, execSync } from 'child_process'
 import { getAppConfigSync } from '../config/app'
 import { checkCorePermissionPathSync } from '../core/permission-check'
 import {
@@ -240,8 +240,15 @@ export function coreLogPath(): string {
 function hasCommand(command: string): boolean {
   try {
     const isWin = process.platform === 'win32'
-    const whichCmd = isWin ? 'where' : 'which'
-    execSync(`${whichCmd} ${command}`, { encoding: 'utf8', stdio: 'pipe' })
+    if (isWin) {
+      execFileSync('where.exe', [command], {
+        encoding: 'utf8',
+        stdio: 'pipe',
+        windowsHide: true
+      })
+    } else {
+      execSync(`which ${command}`, { encoding: 'utf8', stdio: 'pipe' })
+    }
     return true
   } catch (error) {
     return false
@@ -261,11 +268,15 @@ export function findSystemMihomo(): string[] {
 
   for (const name of searchNames) {
     try {
-      const command = isWin ? 'where' : 'which'
-      const result = execSync(`${command} ${name}`, {
-        encoding: 'utf8',
-        stdio: 'pipe'
-      }).trim()
+      const result = (
+        isWin
+          ? execFileSync('where.exe', [name], {
+              encoding: 'utf8',
+              stdio: 'pipe',
+              windowsHide: true
+            })
+          : execSync(`which ${name}`, { encoding: 'utf8', stdio: 'pipe' })
+      ).trim()
       if (result) {
         const paths = result.split('\n').filter((p) => p && existsSync(p))
         for (const p of paths) {
@@ -402,7 +413,10 @@ export function findSystemMihomo(): string[] {
     if (hasCommand('scoop')) {
       for (const name of searchNames) {
         try {
-          const result = execSync(`scoop which ${name} 2>nul`, { encoding: 'utf8' }).trim()
+          const result = execSync(`scoop which ${name} 2>nul`, {
+            encoding: 'utf8',
+            windowsHide: true
+          }).trim()
           if (result && existsSync(result) && !foundPaths.includes(result)) {
             foundPaths.push(result)
           }
