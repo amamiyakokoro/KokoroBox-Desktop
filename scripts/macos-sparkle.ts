@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process'
-import { createHash } from 'node:crypto'
+import { createHash, createPrivateKey, createPublicKey } from 'node:crypto'
 import {
   copyFileSync,
   cpSync,
@@ -23,6 +23,97 @@ export const sparkleRelease = Object.freeze({
 
 const repositoryRoot = path.resolve(import.meta.dirname, '..')
 export const sparkleStagingRoot = path.join(repositoryRoot, 'extra', 'macos-updater')
+const releaseVersionPattern = /^\d+\.\d+\.\d+(?:-\d+|-rolling-[0-9a-f]{7})?$/
+
+export function sparkleUpdateArchiveName(version: string, arch: string): string {
+  if (!releaseVersionPattern.test(version)) throw new Error('Invalid Sparkle update version')
+  if (!['x64', 'arm64'].includes(arch)) throw new Error('Invalid Sparkle update architecture')
+  return `kokorobox-desktop-macos-${version}-${arch}.zip`
+}
+
+export function sparkleAppcastName(arch: string): string {
+  if (!['x64', 'arm64'].includes(arch)) throw new Error('Invalid Sparkle update architecture')
+  return `appcast-macos-${arch}.xml`
+}
+
+export function sparkleFeedURL(channel: string, arch: string): string {
+  const appcast = sparkleAppcastName(arch)
+  if (channel === 'stable') {
+    return `https://github.com/amamiyakokoro/KokoroBox-Desktop/releases/latest/download/${appcast}`
+  }
+  if (channel === 'rolling') {
+    return `https://github.com/amamiyakokoro/KokoroBox-Desktop/releases/download/rolling/${appcast}`
+  }
+  throw new Error('Invalid Sparkle update channel')
+}
+
+export function sparkleDownloadURLPrefix(tag: string): string {
+  if (tag !== 'rolling' && !/^v?\d+\.\d+\.\d+(?:-\d+)?$/.test(tag)) {
+    throw new Error('Invalid Sparkle release tag')
+  }
+  return `https://github.com/amamiyakokoro/KokoroBox-Desktop/releases/download/${tag}/`
+}
+
+export function sparkleToolPath(
+  tool: 'generate_appcast' | 'sign_update',
+  runnerTemp: string
+): string {
+  if (!path.isAbsolute(runnerTemp)) throw new Error('Sparkle tool root must be absolute')
+  const toolPath = path.join(
+    runnerTemp,
+    `kokorobox-sparkle-${sparkleRelease.version}`,
+    'extracted',
+    'bin',
+    tool
+  )
+  if (!existsSync(toolPath)) throw new Error(`Pinned Sparkle tool is missing: ${tool}`)
+  return toolPath
+}
+
+export function validateSparkleSigningKeys(privateKey: string, publicKey: string): void {
+  const decode = (value: string, name: string): Buffer => {
+    const normalized = value.trim()
+    if (!/^[A-Za-z0-9+/]+={0,2}$/.test(normalized)) {
+      throw new Error(`Invalid ${name} Base64 encoding`)
+    }
+    const decoded = Buffer.from(normalized, 'base64')
+    if (decoded.length !== 32 || decoded.toString('base64') !== normalized) {
+      throw new Error(`${name} must encode exactly 32 bytes`)
+    }
+    return decoded
+  }
+
+  const seed = decode(privateKey, 'Sparkle private key')
+  const expectedPublicKey = decode(publicKey, 'Sparkle public key')
+  const privateDer = Buffer.concat([Buffer.from('302e020100300506032b657004220420', 'hex'), seed])
+  const derivedPublicDer = createPublicKey(
+    createPrivateKey({ key: privateDer, format: 'der', type: 'pkcs8' })
+  ).export({ format: 'der', type: 'spki' })
+  const derivedPublicKey = derivedPublicDer.subarray(-32)
+  if (!derivedPublicKey.equals(expectedPublicKey)) {
+    throw new Error('Sparkle public and private keys do not match')
+  }
+}
+
+export function validateSignedSparkleAppcast(
+  appcast: string,
+  archiveName: string,
+  downloadPrefix: string
+): string {
+  const enclosure = appcast
+    .match(/<enclosure\b[^>]*>/g)
+    ?.find((tag) => tag.includes(`url="${downloadPrefix}${archiveName}"`))
+  const archiveSignature = enclosure?.match(/\bsparkle:edSignature="([A-Za-z0-9+/=]+)"/)?.[1]
+  if (
+    !archiveSignature ||
+    !/<!-- sparkle-signatures:[\s\S]*edSignature: [A-Za-z0-9+/=]+[\s\S]*length: \d+[\s\S]*-->/m.test(
+      appcast
+    )
+  ) {
+    throw new Error('Generated Sparkle appcast is missing its signed archive or feed metadata')
+  }
+  return archiveSignature
+}
 
 export function sha256File(file: string): string {
   return createHash('sha256').update(readFileSync(file)).digest('hex')

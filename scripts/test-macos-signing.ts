@@ -30,14 +30,18 @@ import {
   signMacRelease,
   signingConfig,
   kokoroBoxAppleTeamId,
+  sparkleSecrets,
   validateSigningEnvironment
 } from './macos-signing.ts'
 import type { CommandRunner } from './macos-signing.ts'
 import { artifactName, stageArtifact, validateMacReceipt } from './release-artifacts.ts'
+import { sparkleAppcastName, sparkleUpdateArchiveName } from './macos-sparkle.ts'
 
 const teamId = kokoroBoxAppleTeamId
 const sha = '1234567890abcdef1234567890abcdef12345678'
 const submissionId = '12345678-1234-1234-1234-123456789abc'
+const sparklePrivateKey = 'AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE='
+const sparklePublicKey = 'iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w='
 const details = `Authority=Developer ID Application: Test (${teamId})\nTeamIdentifier=${teamId}\nCodeDirectory flags=0x10000(runtime)\nTimestamp=Sep 5, 2026\n`
 const safeHostEntitlements = `
 <key>com.apple.application-identifier</key>
@@ -53,6 +57,10 @@ const safeHostEntitlements = `
 function fixture(callback: (env: NodeJS.ProcessEnv, directory: string) => void) {
   const directory = realpathSync(mkdtempSync(path.join(os.tmpdir(), 'kokorobox-signing-test-')))
   mkdirSync(path.join(directory, 'dist'))
+  const sparkleBin = path.join(directory, 'kokorobox-sparkle-2.9.6', 'extracted', 'bin')
+  mkdirSync(sparkleBin, { recursive: true })
+  writeFileSync(path.join(sparkleBin, 'generate_appcast'), 'fixture')
+  writeFileSync(path.join(sparkleBin, 'sign_update'), 'fixture')
   const env = {
     CSC_LINK: Buffer.from('fake application certificate').toString('base64'),
     CSC_INSTALLER_LINK: Buffer.from('fake installer certificate').toString('base64'),
@@ -63,8 +71,12 @@ function fixture(callback: (env: NodeJS.ProcessEnv, directory: string) => void) 
     APPLE_TEAM_ID: teamId,
     MACOS_APP_PROVISIONING_PROFILE: Buffer.from('fake app profile').toString('base64'),
     MACOS_EXTENSION_PROVISIONING_PROFILE: Buffer.from('fake extension profile').toString('base64'),
+    SPARKLE_PRIVATE_ED_KEY: sparklePrivateKey,
+    SPARKLE_PUBLIC_ED_KEY: sparklePublicKey,
     TARGET_ARCH: 'arm64',
     RELEASE_VERSION: '2.26.8',
+    RELEASE_CHANNEL: 'stable',
+    RELEASE_TAG: 'v2.26.8',
     GITHUB_SHA: sha,
     RUNNER_TEMP: directory,
     GITHUB_ENV: path.join(directory, 'github-env'),
@@ -84,7 +96,7 @@ function mockRunner(env: NodeJS.ProcessEnv, projectDir: string, failure?: string
   const calls: string[] = []
   const run: CommandRunner = (label, command, args, childEnv) => {
     calls.push(label)
-    for (const secret of appleSecrets)
+    for (const secret of [...appleSecrets, ...sparkleSecrets])
       assert.equal(
         childEnv[secret],
         undefined,
@@ -106,6 +118,8 @@ function mockRunner(env: NodeJS.ProcessEnv, projectDir: string, failure?: string
       assert.equal(config.forceCodeSigning, true)
       assert.equal(config.mac.identity, teamId)
       assert.equal(config.pkg.identity, teamId)
+      assert.equal(config.mac.extendInfo.SUPublicEDKey, sparklePublicKey)
+      assert.match(config.mac.extendInfo.SUFeedURL, /appcast-macos-/)
       assert.equal(statSync(config.mac.provisioningProfile).mode & 0o777, 0o644)
       assert.equal(
         statSync(childEnv.KOKOROBOX_EXTENSION_PROVISIONING_PROFILE_PATH!).mode & 0o777,
@@ -151,6 +165,20 @@ function mockRunner(env: NodeJS.ProcessEnv, projectDir: string, failure?: string
         id: submissionId,
         status: failure === 'Rejected' ? 'Invalid' : 'Accepted'
       })
+    }
+    if (label === 'Create App notarization archive') writeFileSync(args.at(-1)!, 'signed app')
+    if (label === 'Submit App for notarization') {
+      return JSON.stringify({ id: submissionId, status: 'Accepted' })
+    }
+    if (label === 'Create Sparkle update archive') writeFileSync(args.at(-1)!, 'signed update')
+    if (label === 'Generate signed Sparkle appcast') {
+      const output = args[args.indexOf('-o') + 1]
+      const prefix = args[args.indexOf('--download-url-prefix') + 1]
+      const archive = sparkleUpdateArchiveName(env.RELEASE_VERSION!, env.TARGET_ARCH!)
+      writeFileSync(
+        output,
+        `<rss xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle"><channel><item><enclosure url="${prefix}${archive}" sparkle:edSignature="YWJjZA==" length="13" /></item></channel></rss><!-- sparkle-signatures:\nedSignature: YWJjZA==\nlength: 200\n-->`
+      )
     }
     if (label === 'Staple PKG ticket')
       writeFileSync(args.at(-1)!, 'signed package with stapled ticket')
@@ -201,7 +229,8 @@ test('certificate input accepts Base64, not local paths or download URLs', () =>
 test('child process environment omits credentials and process failures do not expose argv or output', () => {
   fixture((env) => {
     const cleaned = sanitizedChildEnvironment({ ...env, GH_TOKEN: 'fake-token', DEBUG: '*' })
-    for (const key of [...appleSecrets, 'GH_TOKEN', 'DEBUG']) assert.equal(cleaned[key], undefined)
+    for (const key of [...appleSecrets, ...sparkleSecrets, 'GH_TOKEN', 'DEBUG'])
+      assert.equal(cleaned[key], undefined)
     assert.throws(
       () =>
         runCommand(
@@ -317,6 +346,9 @@ for (const arch of ['x64', 'arm64']) {
       )
       assert.equal(receipt.status, 'apple-notarized')
       assert.equal(receipt.notarizationId, submissionId)
+      assert.equal(receipt.sparkle.appNotarizationId, submissionId)
+      assert.equal(receipt.sparkle.archiveFilename, sparkleUpdateArchiveName('2.26.8', arch))
+      assert.equal(receipt.sparkle.appcastFilename, sparkleAppcastName(arch))
       assert.equal(
         receipt.checksum,
         createHash('sha256').update('signed package with stapled ticket').digest('hex')
@@ -337,7 +369,9 @@ for (const arch of ['x64', 'arm64']) {
         false
       )
       const recorded = readFileSync(env.GITHUB_ENV!, 'utf8')
-      for (const key of appleSecrets) assert.ok(!recorded.includes(env[key]!))
+      for (const key of [...appleSecrets, ...sparkleSecrets]) {
+        assert.ok(!recorded.includes(env[key]!))
+      }
       const target = { os: 'macos-latest', arch, format: 'pkg' }
       stageArtifact(
         target,
@@ -361,7 +395,17 @@ for (const failure of [
   'Rejected',
   'Staple PKG ticket',
   'Validate PKG ticket',
-  'Assess PKG with Gatekeeper'
+  'Assess PKG with Gatekeeper',
+  'Create App notarization archive',
+  'Submit App for notarization',
+  'Staple App ticket',
+  'Validate App ticket',
+  'Assess App with Gatekeeper',
+  'Create Sparkle update archive',
+  'Generate signed Sparkle appcast',
+  'Sign Sparkle appcast feed',
+  'Verify Sparkle update archive signature',
+  'Verify Sparkle appcast signature'
 ]) {
   test(`${failure}: fails closed, cleans private material, and never produces a verification receipt`, () => {
     fixture((env, directory) => {
@@ -404,7 +448,17 @@ test('unsigned or modified macOS artifacts cannot be staged with a stale receipt
     version: '2.26.8',
     sha,
     filename: 'config.pkg',
-    checksum: 'abc'
+    checksum: 'abc',
+    sparkle: {
+      appNotarizationId: submissionId,
+      releaseTag: 'v2.26.8',
+      archiveFilename: 'config.zip',
+      archiveChecksum: 'def',
+      appcastFilename: 'appcast.xml',
+      appcastChecksum: 'ghi',
+      feedURL: 'https://example.invalid/appcast.xml',
+      publicKey: sparklePublicKey
+    }
   }
   validateMacReceipt(receipt, '2.26.8', sha, 'config.pkg', 'abc')
   assert.throws(() => validateMacReceipt(receipt, '2.26.8', sha, 'config.pkg', 'changed'))
@@ -451,7 +505,10 @@ test('generated signing config passes electron-builder validation with required 
 test('both callers forward only the required signing secrets and non-macOS steps do not receive them', () => {
   for (const file of ['release', 'rolling']) {
     const config = parse(readFileSync(`.github/workflows/${file}.yml`, 'utf8'))
-    assert.deepEqual(Object.keys(config.jobs.build.secrets).sort(), [...appleSecrets].sort())
+    assert.deepEqual(
+      Object.keys(config.jobs.build.secrets).sort(),
+      [...appleSecrets, ...sparkleSecrets].sort()
+    )
     assert.equal(config.jobs.publish.secrets, undefined)
   }
   const config = parse(readFileSync('.github/workflows/build.yml', 'utf8'))

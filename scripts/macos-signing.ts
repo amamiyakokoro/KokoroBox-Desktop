@@ -2,8 +2,10 @@ import { spawnSync } from 'node:child_process'
 import { randomBytes, createHash } from 'node:crypto'
 import {
   appendFileSync,
+  copyFileSync,
   existsSync,
   lstatSync,
+  mkdirSync,
   mkdtempSync,
   readFileSync,
   realpathSync,
@@ -13,6 +15,15 @@ import {
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { artifactName } from './release-artifacts.ts'
+import {
+  sparkleAppcastName,
+  sparkleDownloadURLPrefix,
+  sparkleFeedURL,
+  sparkleToolPath,
+  sparkleUpdateArchiveName,
+  validateSignedSparkleAppcast,
+  validateSparkleSigningKeys
+} from './macos-sparkle.ts'
 
 export const appleSecrets = [
   'CSC_LINK',
@@ -25,6 +36,7 @@ export const appleSecrets = [
   'MACOS_APP_PROVISIONING_PROFILE',
   'MACOS_EXTENSION_PROVISIONING_PROFILE'
 ] as const
+export const sparkleSecrets = ['SPARKLE_PRIVATE_ED_KEY', 'SPARKLE_PUBLIC_ED_KEY'] as const
 export const kokoroBoxAppleTeamId = '755TNLRN92'
 
 export type CommandRunner = (
@@ -52,7 +64,7 @@ export const runCommand: CommandRunner = (label, command, args, env, timeout = 1
 }
 
 export function validateSigningEnvironment(env: NodeJS.ProcessEnv) {
-  for (const name of appleSecrets)
+  for (const name of [...appleSecrets, ...sparkleSecrets])
     if (!env[name]?.trim()) throw new Error(`Missing GitHub Secret: ${name}`)
   if (env.APPLE_TEAM_ID !== kokoroBoxAppleTeamId)
     throw new Error(`APPLE_TEAM_ID must be ${kokoroBoxAppleTeamId}`)
@@ -62,6 +74,11 @@ export function validateSigningEnvironment(env: NodeJS.ProcessEnv) {
   if (!env.RUNNER_TEMP || !path.isAbsolute(env.RUNNER_TEMP))
     throw new Error('RUNNER_TEMP must be an absolute path')
   if (!env.GITHUB_ENV) throw new Error('GITHUB_ENV is required for cancellation cleanup')
+  if (!['stable', 'rolling'].includes(env.RELEASE_CHANNEL ?? '')) {
+    throw new Error('Invalid macOS release channel')
+  }
+  sparkleDownloadURLPrefix(env.RELEASE_TAG ?? '')
+  validateSparkleSigningKeys(env.SPARKLE_PRIVATE_ED_KEY!, env.SPARKLE_PUBLIC_ED_KEY!)
   const ref = env.GITHUB_REF ?? ''
   const trustedRef =
     ref === 'refs/heads/master' ||
@@ -89,7 +106,12 @@ export function decodeCertificate(value: string): Buffer {
   return decoded
 }
 
-export function signingConfig(projectDir: string, teamId: string, appProvisioningProfile?: string) {
+export function signingConfig(
+  projectDir: string,
+  teamId: string,
+  appProvisioningProfile?: string,
+  sparkle?: { feedURL: string; publicKey: string }
+) {
   return {
     extends: path.join(projectDir, 'electron-builder.yml'),
     afterPack: path.join(projectDir, 'scripts', 'macos-after-pack.cjs'),
@@ -104,6 +126,15 @@ export function signingConfig(projectDir: string, teamId: string, appProvisionin
       ],
       // The final PKG is explicitly notarized below; never rely on optional auto-notarization.
       notarize: false,
+      ...(sparkle
+        ? {
+            extendInfo: {
+              SUFeedURL: sparkle.feedURL,
+              SUPublicEDKey: sparkle.publicKey,
+              SUEnableAutomaticChecks: false
+            }
+          }
+        : {}),
       binaries: [
         'Contents/Resources/sidecar/mihomo',
         'Contents/Resources/sidecar/mihomo-alpha',
@@ -121,7 +152,7 @@ export function sanitizedChildEnvironment(env: NodeJS.ProcessEnv): NodeJS.Proces
   return Object.fromEntries(
     Object.entries(env).filter(
       ([key]) =>
-        !/^(CSC_|WIN_CSC_|APPLE_|MACOS_.*PROVISIONING_PROFILE$|GH_TOKEN$|GITHUB_TOKEN$|DEBUG$)/.test(
+        !/^(CSC_|WIN_CSC_|APPLE_|SPARKLE_|MACOS_.*PROVISIONING_PROFILE$|GH_TOKEN$|GITHUB_TOKEN$|DEBUG$)/.test(
           key
         )
     )
@@ -272,7 +303,13 @@ export function signMacRelease(
   validateSigningEnvironment(env)
   const arch = env.TARGET_ARCH!
   const version = env.RELEASE_VERSION ?? ''
+  const channel = env.RELEASE_CHANNEL!
+  const releaseTag = env.RELEASE_TAG!
   const filename = artifactName({ os: 'macos-latest', arch, format: 'pkg' }, version)
+  const updateArchiveName = sparkleUpdateArchiveName(version, arch)
+  const appcastName = sparkleAppcastName(arch)
+  const feedURL = sparkleFeedURL(channel, arch)
+  const downloadURLPrefix = sparkleDownloadURLPrefix(releaseTag)
   const appCertificate = decodeCertificate(env.CSC_LINK!)
   const installerCertificate = decodeCertificate(env.CSC_INSTALLER_LINK!)
   const appProvisioningProfile = decodeCertificate(env.MACOS_APP_PROVISIONING_PROFILE!)
@@ -390,9 +427,16 @@ export function signMacRelease(
       ?.match(/[0-9A-F]{40}/)?.[0]
     if (!identity) throw new Error('Developer ID Application identity was not imported')
     const configFile = path.join(directory, 'electron-builder.json')
-    writeFileSync(configFile, JSON.stringify(signingConfig(projectDir, teamId, appProfilePath)), {
-      mode: 0o600
-    })
+    writeFileSync(
+      configFile,
+      JSON.stringify(
+        signingConfig(projectDir, teamId, appProfilePath, {
+          feedURL,
+          publicKey: env.SPARKLE_PUBLIC_ED_KEY!.trim()
+        })
+      ),
+      { mode: 0o600 }
+    )
     console.log(`Signing macOS ${arch} application, helpers and PKG`)
     run(
       'Sign App and PKG',
@@ -506,6 +550,118 @@ export function signMacRelease(
       childEnv
     )
     run('Verify final PKG signature', '/usr/sbin/pkgutil', ['--check-signature', pkgPath], childEnv)
+
+    const appNotarizationArchive = path.join(directory, 'KokoroBox-notarization.zip')
+    run(
+      'Create App notarization archive',
+      '/usr/bin/ditto',
+      ['-c', '-k', '--keepParent', appPath, appNotarizationArchive],
+      childEnv,
+      10 * 60_000
+    )
+    console.log('Submitting the signed App to Apple (waiting up to 45 minutes)')
+    const appResult = run(
+      'Submit App for notarization',
+      '/usr/bin/xcrun',
+      [
+        'notarytool',
+        'submit',
+        appNotarizationArchive,
+        '--keychain-profile',
+        profile,
+        '--keychain',
+        keychain,
+        '--wait',
+        '--timeout',
+        '45m',
+        '--output-format',
+        'json'
+      ],
+      childEnv,
+      47 * 60_000
+    )
+    const appNotarizationId = assertAccepted(appResult)
+    run('Staple App ticket', '/usr/bin/xcrun', ['stapler', 'staple', appPath], childEnv, 5 * 60_000)
+    run('Validate App ticket', '/usr/bin/xcrun', ['stapler', 'validate', appPath], childEnv)
+    run(
+      'Assess App with Gatekeeper',
+      '/usr/sbin/spctl',
+      ['--assess', '--type', 'execute', '--verbose=2', appPath],
+      childEnv
+    )
+    run(
+      'Verify final App signature',
+      '/usr/bin/codesign',
+      ['--verify', '--deep', '--strict', appPath],
+      childEnv
+    )
+
+    const sparkleDirectory = path.join(directory, 'sparkle')
+    mkdirSync(sparkleDirectory)
+    const updateArchivePath = path.join(sparkleDirectory, updateArchiveName)
+    const appcastPath = path.join(sparkleDirectory, appcastName)
+    run(
+      'Create Sparkle update archive',
+      '/usr/bin/ditto',
+      ['-c', '-k', '--keepParent', appPath, updateArchivePath],
+      childEnv,
+      10 * 60_000
+    )
+    const sparklePrivateKeyFile = path.join(directory, 'sparkle-private-key')
+    writeFileSync(sparklePrivateKeyFile, `${env.SPARKLE_PRIVATE_ED_KEY!.trim()}\n`, {
+      mode: 0o600
+    })
+    run(
+      'Generate signed Sparkle appcast',
+      sparkleToolPath('generate_appcast', env.RUNNER_TEMP!),
+      [
+        '--ed-key-file',
+        sparklePrivateKeyFile,
+        '--download-url-prefix',
+        downloadURLPrefix,
+        '--full-release-notes-url',
+        `https://github.com/amamiyakokoro/KokoroBox-Desktop/releases/tag/${releaseTag}`,
+        '--link',
+        'https://github.com/amamiyakokoro/KokoroBox-Desktop',
+        '--maximum-versions',
+        '1',
+        '--maximum-deltas',
+        '0',
+        '-o',
+        appcastPath,
+        sparkleDirectory
+      ],
+      childEnv,
+      10 * 60_000
+    )
+    run(
+      'Sign Sparkle appcast feed',
+      sparkleToolPath('sign_update', env.RUNNER_TEMP!),
+      ['--ed-key-file', sparklePrivateKeyFile, appcastPath],
+      childEnv
+    )
+    const archiveSignature = validateSignedSparkleAppcast(
+      readFileSync(appcastPath, 'utf8'),
+      updateArchiveName,
+      downloadURLPrefix
+    )
+    run(
+      'Verify Sparkle update archive signature',
+      sparkleToolPath('sign_update', env.RUNNER_TEMP!),
+      ['--verify', '--ed-key-file', sparklePrivateKeyFile, updateArchivePath, archiveSignature],
+      childEnv
+    )
+    run(
+      'Verify Sparkle appcast signature',
+      sparkleToolPath('sign_update', env.RUNNER_TEMP!),
+      ['--verify', '--ed-key-file', sparklePrivateKeyFile, appcastPath],
+      childEnv
+    )
+    rmSync(sparklePrivateKeyFile)
+    const publishedUpdateArchive = path.join(projectDir, 'dist', updateArchiveName)
+    const publishedAppcast = path.join(projectDir, 'dist', appcastName)
+    copyFileSync(updateArchivePath, publishedUpdateArchive)
+    copyFileSync(appcastPath, publishedAppcast)
     writeFileSync(
       receiptFile,
       JSON.stringify({
@@ -515,7 +671,21 @@ export function signMacRelease(
         version,
         sha: env.GITHUB_SHA,
         filename,
-        checksum: createHash('sha256').update(readFileSync(pkgPath)).digest('hex')
+        checksum: createHash('sha256').update(readFileSync(pkgPath)).digest('hex'),
+        sparkle: {
+          appNotarizationId,
+          releaseTag,
+          archiveFilename: updateArchiveName,
+          archiveChecksum: createHash('sha256')
+            .update(readFileSync(publishedUpdateArchive))
+            .digest('hex'),
+          appcastFilename: appcastName,
+          appcastChecksum: createHash('sha256')
+            .update(readFileSync(publishedAppcast))
+            .digest('hex'),
+          feedURL,
+          publicKey: env.SPARKLE_PUBLIC_ED_KEY!.trim()
+        }
       })
     )
   } finally {

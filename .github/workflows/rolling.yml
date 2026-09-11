@@ -52,6 +52,8 @@ jobs:
       APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
       MACOS_APP_PROVISIONING_PROFILE: ${{ secrets.MACOS_APP_PROVISIONING_PROFILE }}
       MACOS_EXTENSION_PROVISIONING_PROFILE: ${{ secrets.MACOS_EXTENSION_PROVISIONING_PROFILE }}
+      SPARKLE_PRIVATE_ED_KEY: ${{ secrets.SPARKLE_PRIVATE_ED_KEY }}
+      SPARKLE_PUBLIC_ED_KEY: ${{ secrets.SPARKLE_PUBLIC_ED_KEY }}
     with:
       channel: rolling
       version: ${{ needs.prepare.outputs.version }}
