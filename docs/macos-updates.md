@@ -47,25 +47,30 @@ responsibilities must therefore be removed before Sparkle becomes the only macOS
 
 1. Bundled Mihomo executables must no longer depend on installer-applied setuid bits. Privileged
    core and TUN operations move behind the authenticated KokoroBox Service boundary.
-2. A registered service must execute from a stable, root-owned runtime outside the replaceable app
-   bundle. The application installs or repairs that runtime only after an explicit authorization.
+2. The privileged daemon and its launchd property list must live inside the signed application
+   bundle and be registered through `SMAppService`. They must not depend on an installer-maintained
+   copy in `/Library/PrivilegedHelperTools`.
 
 Until both conditions are satisfied, macOS continues using the PKG updater by default. Sparkle is
 built and validated in parallel but is not enabled for existing users.
 
-The privileged-runtime migration is implemented. Installing or repairing KokoroBox Service now
-requests administrator authorization and copies the signed helper to
-`/Library/PrivilegedHelperTools/com.amamiyakokoro.kokorobox-service` as `root:wheel` with mode
-`0755`. Launchd is then registered from that stable path instead of the application bundle. Normal
-application launches and service IPC do not request elevation. Uninstalling the service also
-removes the stable runtime; authentication material remains in the user's protected application
-data unless the user removes that data separately.
+The `SMAppService` migration is implemented for macOS 13 and later. The signed application embeds
+`KokoroBoxService.plist` in `Contents/Library/LaunchDaemons` and the daemon in
+`Contents/Resources/files`. The plist uses `BundleProgram`, so launchd resolves the executable from
+the current application bundle rather than a copied privileged runtime. Installing the service is
+an explicit in-app action. If macOS requires approval, KokoroBox reports an awaiting-approval state
+and opens the Login Items settings pane instead of treating the daemon as installed.
 
-The application verifies both the helper SHA-256 and the executable path recorded by launchd. A
-missing or stale runtime is repaired from the signed application bundle after macOS authorization.
-The transition PKG also stages this helper and migrates an existing service registration while
-preserving whether the service was running. It does not register a service for users who had not
-installed one.
+Service start, stop and restart operations target the registered system launchd domain. Repairing
+an enabled service restarts it from the current application bundle. Unregistering removes the
+`SMAppService` job; authentication material remains in the user's protected application data unless
+the user removes that data separately.
+
+The application recognizes and removes the former `/Library/LaunchDaemons/KokoroBoxService.plist`
+and `/Library/PrivilegedHelperTools/com.amamiyakokoro.kokorobox-service` only while performing an
+explicit migration or uninstall. The recovery PKG stops a running bundled daemon before replacing
+the application and restarts an already-approved `SMAppService` job afterward. A legacy service is
+left unregistered so the new application can obtain current macOS user approval on first use.
 
 Bundled Mihomo executables are ordinary mode `0755` files; the PKG no longer grants them setuid
 permission. Direct mode remains available for an unprivileged non-TUN core. Enabling TUN on macOS
@@ -121,6 +126,10 @@ install it through the existing notarized PKG path, while all subsequent updates
 App bundle through Sparkle. Keep validating that transition from the last PKG-only Intel and Apple
 Silicon releases before removing the legacy PKG update implementation.
 
+After the `SMAppService` transition is validated on clean and legacy installations, a notarized DMG
+can become the normal first-install experience. The PKG remains useful for explicit recovery and
+managed deployment; the Sparkle ZIP remains an update payload rather than a user-facing installer.
+
 ## Rollback
 
 The PKG remains a recovery path throughout the migration. If a feed or native bridge fails,
@@ -134,6 +143,9 @@ overwritten.
 - Stable and rolling channel separation and downgrade rejection.
 - Interrupted download, invalid EdDSA signature and mismatched Developer ID rejection.
 - App replacement while the service, Mihomo and Network Extension are active.
+- Fresh `SMAppService` registration, approval denial/retry, and uninstall on macOS 13 and current
+  macOS.
+- Migration from the legacy external LaunchDaemon without leaving a second privileged executable.
 - System Extension replacement, approval-required and reboot-required paths.
 - Update from a standard user account with KokoroBox installed in `/Applications`.
 - Relaunch, login startup, proxy restoration and fail-closed application routing after update.
@@ -143,3 +155,5 @@ References:
 - [Sparkle documentation](https://sparkle-project.org/documentation/)
 - [Sparkle package update tradeoffs](https://sparkle-project.org/documentation/package-updates/)
 - [Apple System Extension replacement delegate](<https://developer.apple.com/documentation/systemextensions/ossystemextensionrequestdelegate/request(_:actionforreplacingextension:withextension:)>)
+- [Apple `SMAppService`](https://developer.apple.com/documentation/servicemanagement/smappservice)
+- [Updating helper executables from earlier macOS versions](https://developer.apple.com/documentation/servicemanagement/updating-helper-executables-from-earlier-versions-of-macos)

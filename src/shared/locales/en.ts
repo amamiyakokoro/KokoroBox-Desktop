@@ -127,6 +127,7 @@ export const messages: Readonly<Record<string, string>> = {
   '返回 KokoroBox；应用分流会自动继续启动。':
     'Return to KokoroBox; application routing will continue starting automatically.',
   打开系统设置并请求批准: 'Open System Settings and Request Approval',
+  打开系统设置: 'Open System Settings',
   '我已启用，立即检查': 'I enabled it — check now',
   'macOS 应用分流组件未安装': 'The macOS application-routing bridge is not installed',
   'macOS 系统扩展未安装': 'The macOS system extension is not installed',

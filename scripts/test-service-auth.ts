@@ -132,6 +132,8 @@ test('macOS registers the bundled daemon through SMAppService', () => {
   const builderSource = readFileSync(resolve('electron-builder.yml'), 'utf8')
   const packageSource = readFileSync(resolve('package.json'), 'utf8')
   const dirsSource = readFileSync(resolve('src/main/utils/dirs.ts'), 'utf8')
+  const preinstallSource = readFileSync(resolve('build/pkg-scripts/preinstall'), 'utf8')
+  const postinstallSource = readFileSync(resolve('build/pkg-scripts/postinstall'), 'utf8')
 
   assert.match(adapterSource, /process\.dlopen\(nativeModule, target\)/)
   assert.match(adapterSource, /registerMacOSService/)
@@ -164,6 +166,10 @@ test('macOS registers the bundled daemon through SMAppService', () => {
   assert.match(managerSource, /'kill',[\s\S]*'SIGTERM',[\s\S]*'system\/KokoroBoxService'/)
   assert.doesNotMatch(managerSource, /(?:sh|bash)', \['-c'/)
   assert.doesNotMatch(managerSource, /execWithElevation\('\/usr\/bin\/install'/)
+  assert.match(preinstallSource, /launchctl kill SIGTERM "system\/\$service_name"/)
+  assert.match(preinstallSource, /rm -f "\$KOKOROBOX_SERVICE_RUNTIME_BIN"/)
+  assert.match(postinstallSource, /launchctl kickstart -k system\/KokoroBoxService/)
+  assert.doesNotMatch(postinstallSource, /\/usr\/bin\/install|service install/)
 })
 
 test('macOS privileged core features fail closed through the service boundary', () => {

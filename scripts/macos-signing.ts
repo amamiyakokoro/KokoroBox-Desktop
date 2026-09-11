@@ -279,6 +279,45 @@ export function assertProvisioningProfilePermissions(appPath: string) {
   }
 }
 
+export function assertSMAppServiceBundle(appPath: string): string {
+  const plistPath = path.join(
+    appPath,
+    'Contents',
+    'Library',
+    'LaunchDaemons',
+    'KokoroBoxService.plist'
+  )
+  const daemonPath = path.join(appPath, 'Contents', 'Resources', 'files', 'kokorobox-service')
+  if (!existsSync(plistPath) || !lstatSync(plistPath).isFile()) {
+    throw new Error('The signed application is missing its SMAppService LaunchDaemon plist')
+  }
+  if (!existsSync(daemonPath) || !lstatSync(daemonPath).isFile()) {
+    throw new Error('The signed application is missing its bundled service daemon')
+  }
+  if ((lstatSync(daemonPath).mode & 0o111) === 0) {
+    throw new Error('The bundled service daemon is not executable')
+  }
+
+  const plist = readFileSync(plistPath, 'utf8')
+  if (
+    /<key>(?:BundleProgram|Program)<\/key>\s*<string>\//.test(plist) ||
+    /<key>ProgramArguments<\/key>\s*<array>[\s\S]*?<string>\//.test(plist)
+  ) {
+    throw new Error('SMAppService must not execute an installer-managed absolute path')
+  }
+  for (const expected of [
+    '<string>KokoroBoxService</string>',
+    '<string>com.amamiyakokoro.app</string>',
+    '<string>Contents/Resources/files/kokorobox-service</string>',
+    '<string>service</string>',
+    '<string>run</string>',
+    '<string>root</string>'
+  ]) {
+    if (!plist.includes(expected)) throw new Error('Invalid SMAppService LaunchDaemon plist')
+  }
+  return plistPath
+}
+
 export function assertAccepted(response: string): string {
   let result: { status?: string; id?: string }
   try {
@@ -470,6 +509,13 @@ export function signMacRelease(
     )
     const pkgPath = path.join(projectDir, 'dist', filename)
     assertProvisioningProfilePermissions(appPath)
+    const servicePlistPath = assertSMAppServiceBundle(appPath)
+    run(
+      'Validate SMAppService launchd plist',
+      '/usr/bin/plutil',
+      ['-lint', servicePlistPath],
+      childEnv
+    )
     for (const file of [
       appPath,
       ...signingConfig(projectDir, teamId).mac.binaries.map((file) => path.join(appPath, file)),

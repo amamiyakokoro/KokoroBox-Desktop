@@ -241,7 +241,9 @@ const ServiceModal: React.FC<Props> = (props) => {
                     <span>
                       {systemCoreOnlyBuild
                         ? tr('服务生命周期由发行版 init 系统负责管理')
-                        : tr('未安装状态下部分高级功能将无法使用')}
+                        : status === 'requires-approval' && platform === 'darwin'
+                          ? tr('请在系统设置中允许 KokoroBox 后台服务')
+                          : tr('未安装状态下部分高级功能将无法使用')}
                     </span>
                   </div>
                 </div>

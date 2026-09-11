@@ -4,7 +4,8 @@ OLD_SYSPROXY="/Library/PrivilegedHelperTools/sparkle.helper"
 KOKOROBOX_SERVICE_NAME="KokoroBoxService"
 LEGACY_SERVICE_NAME="SparkleService"
 SERVICE_STATE_FILE="/tmp/kokorobox-service-was-running"
-SERVICE_INSTALLED_FILE="/tmp/kokorobox-service-was-installed"
+SMAPP_SERVICE_FILE="/tmp/kokorobox-service-was-smappservice"
+LEGACY_INSTALLED_FILE="/tmp/kokorobox-service-was-installed"
 APP_PATH="/Applications/KokoroBox.app"
 SERVICE_DIR="$APP_PATH/Contents/Resources/files"
 KOKOROBOX_SERVICE_BUNDLED_BIN="$SERVICE_DIR/kokorobox-service"
@@ -13,7 +14,7 @@ KOKOROBOX_SERVICE_PLIST="/Library/LaunchDaemons/KokoroBoxService.plist"
 KOKOROBOX_SERVICE_BIN="$KOKOROBOX_SERVICE_RUNTIME_BIN"
 LEGACY_SERVICE_BIN="$SERVICE_DIR/sparkle-service"
 
-rm -f "$SERVICE_STATE_FILE" "$SERVICE_INSTALLED_FILE" 2>/dev/null || true
+rm -f "$SERVICE_STATE_FILE" "$SMAPP_SERVICE_FILE" "$LEGACY_INSTALLED_FILE" 2>/dev/null || true
 
 if [ ! -x "$KOKOROBOX_SERVICE_BIN" ]; then
     KOKOROBOX_SERVICE_BIN="$KOKOROBOX_SERVICE_BUNDLED_BIN"
@@ -42,6 +43,9 @@ service_is_running() {
 stop_service() {
     service_name="$1"
     service_bin="$2"
+    if launchctl kill SIGTERM "system/$service_name" >/dev/null 2>&1; then
+        return
+    fi
     if [ -x "$service_bin" ]; then
         "$service_bin" service stop >/dev/null 2>&1 || true
     else
@@ -66,11 +70,12 @@ wait_service_stopped() {
 stop_service_if_running() {
     service_name="$1"
     service_bin="$2"
+    record_state="$3"
     if ! service_is_running "$service_name" "$service_bin"; then
         return
     fi
 
-    if ! touch "$SERVICE_STATE_FILE"; then
+    if [ "$record_state" = true ] && ! touch "$SERVICE_STATE_FILE"; then
         echo "Failed to record running KokoroBox service state" >&2
         exit 1
     fi
@@ -84,15 +89,23 @@ stop_service_if_running() {
     exit 1
 }
 
-if [ -f "$KOKOROBOX_SERVICE_PLIST" ]; then
-    if ! touch "$SERVICE_INSTALLED_FILE"; then
-        echo "Failed to record installed KokoroBox service state" >&2
+if [ ! -f "$KOKOROBOX_SERVICE_PLIST" ] && launchctl print system/KokoroBoxService >/dev/null 2>&1; then
+    if ! touch "$SMAPP_SERVICE_FILE"; then
+        echo "Failed to record SMAppService registration state" >&2
         exit 1
     fi
 fi
 
-stop_service_if_running "$KOKOROBOX_SERVICE_NAME" "$KOKOROBOX_SERVICE_BIN"
-stop_service_if_running "$LEGACY_SERVICE_NAME" "$LEGACY_SERVICE_BIN"
+stop_service_if_running "$KOKOROBOX_SERVICE_NAME" "$KOKOROBOX_SERVICE_BIN" true
+stop_service_if_running "$LEGACY_SERVICE_NAME" "$LEGACY_SERVICE_BIN" false
+
+# A legacy installation copied the daemon and plist outside the application.
+# SMAppService installations keep both inside the signed application bundle.
+if [ -f "$KOKOROBOX_SERVICE_PLIST" ]; then
+    launchctl bootout system/KokoroBoxService >/dev/null 2>&1 || true
+    rm -f "$KOKOROBOX_SERVICE_PLIST"
+fi
+rm -f "$KOKOROBOX_SERVICE_RUNTIME_BIN"
 
 if [ ! -f "$OLD_SYSPROXY" ]; then
     UNINSTALL=true

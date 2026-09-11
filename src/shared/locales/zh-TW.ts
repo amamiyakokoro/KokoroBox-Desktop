@@ -118,6 +118,7 @@ export const messages: Readonly<Record<string, string>> = {
   '启用 KokoroBox，然后完成 macOS 的确认提示。': '啟用 KokoroBox，然後完成 macOS 的確認提示。',
   '返回 KokoroBox；应用分流会自动继续启动。': '返回 KokoroBox；程式分流會自動繼續啟動。',
   打开系统设置并请求批准: '開啟系統設定並要求批准',
+  打开系统设置: '開啟系統設定',
   '我已启用，立即检查': '我已啟用，立即檢查',
   'macOS 应用分流组件未安装': 'macOS 應用程式分流橋接元件未安裝',
   'macOS 系统扩展未安装': 'macOS 系統延伸功能未安裝',

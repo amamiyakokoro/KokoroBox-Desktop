@@ -239,10 +239,13 @@ async function removeLegacyMacOSService(): Promise<void> {
 }
 
 async function installMacOSService(): Promise<void> {
+  const previousStatus = macOSServiceRegistrationStatus()
   await removeLegacyMacOSService()
   const status = registerMacOSService()
   if (status === 'requires-approval') {
     openMacOSServiceSystemSettings()
+  } else if (previousStatus === 'enabled') {
+    await restartService()
   }
 }
 

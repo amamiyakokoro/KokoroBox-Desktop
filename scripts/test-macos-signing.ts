@@ -23,6 +23,7 @@ import {
   assertDeveloperId,
   assertSystemExtensionHostEntitlements,
   assertProvisioningProfilePermissions,
+  assertSMAppServiceBundle,
   cleanupSigning,
   decodeCertificate,
   runCommand,
@@ -140,6 +141,17 @@ function mockRunner(env: NodeJS.ProcessEnv, projectDir: string, failure?: string
         'Contents/Library/SystemExtensions/com.amamiyakokoro.app.proxy-extension.systemextension/Contents'
       )
       mkdirSync(extensionContents, { recursive: true })
+      const serviceDirectory = path.join(appPath, 'Contents/Resources/files')
+      const launchDaemonDirectory = path.join(appPath, 'Contents/Library/LaunchDaemons')
+      mkdirSync(serviceDirectory, { recursive: true })
+      mkdirSync(launchDaemonDirectory, { recursive: true })
+      writeFileSync(path.join(serviceDirectory, 'kokorobox-service'), 'service fixture', {
+        mode: 0o755
+      })
+      writeFileSync(
+        path.join(launchDaemonDirectory, 'KokoroBoxService.plist'),
+        readFileSync(path.join(process.cwd(), 'build/macos-service/KokoroBoxService.plist'))
+      )
       writeFileSync(path.join(appPath, 'Contents/embedded.provisionprofile'), 'app profile', {
         mode: 0o644
       })
@@ -310,6 +322,33 @@ test('embedded provisioning profiles remain readable after a root-owned PKG inst
     assert.doesNotThrow(() => assertProvisioningProfilePermissions(appPath))
     chmodSync(extensionProfile, 0o600)
     assert.throws(() => assertProvisioningProfilePermissions(appPath), /mode 0644/)
+  })
+})
+
+test('SMAppService bundle validation rejects missing, non-executable and absolute-path daemons', () => {
+  fixture((_env, directory) => {
+    const appPath = path.join(directory, 'KokoroBox.app')
+    const serviceDirectory = path.join(appPath, 'Contents/Resources/files')
+    const launchDaemonDirectory = path.join(appPath, 'Contents/Library/LaunchDaemons')
+    const daemonPath = path.join(serviceDirectory, 'kokorobox-service')
+    const plistPath = path.join(launchDaemonDirectory, 'KokoroBoxService.plist')
+    mkdirSync(serviceDirectory, { recursive: true })
+    mkdirSync(launchDaemonDirectory, { recursive: true })
+    writeFileSync(daemonPath, 'service fixture', { mode: 0o755 })
+    writeFileSync(plistPath, readFileSync('build/macos-service/KokoroBoxService.plist'))
+    assert.equal(assertSMAppServiceBundle(appPath), plistPath)
+
+    chmodSync(daemonPath, 0o644)
+    assert.throws(() => assertSMAppServiceBundle(appPath), /not executable/)
+    chmodSync(daemonPath, 0o755)
+    writeFileSync(
+      plistPath,
+      readFileSync('build/macos-service/KokoroBoxService.plist', 'utf8').replace(
+        'Contents/Resources/files/kokorobox-service',
+        '/Library/PrivilegedHelperTools/kokorobox-service'
+      )
+    )
+    assert.throws(() => assertSMAppServiceBundle(appPath), /absolute path/)
   })
 })
 
