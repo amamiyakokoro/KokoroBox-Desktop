@@ -61,10 +61,11 @@ the current application bundle rather than a copied privileged runtime. Installi
 an explicit in-app action. If macOS requires approval, KokoroBox reports an awaiting-approval state
 and opens the Login Items settings pane instead of treating the daemon as installed.
 
-Service start, stop and restart operations target the registered system launchd domain. Repairing
-an enabled service restarts it from the current application bundle. Unregistering removes the
-`SMAppService` job; authentication material remains in the user's protected application data unless
-the user removes that data separately.
+Service start, restart and repair operations reload the registered daemon through `SMAppService`.
+This refreshes the job from the current application bundle without invoking `osascript`; macOS
+retains the user's existing background-service approval across the unregister/register cycle.
+Unregistering removes the `SMAppService` job; authentication material remains in the user's
+protected application data unless the user removes that data separately.
 
 After macOS approves the LaunchDaemon, first-time authentication uses its one-time local bootstrap
 endpoint and does not launch `osascript`. The daemon obtains the caller UID and audit token from
@@ -74,10 +75,12 @@ socket to that user. Bootstrap cannot replace existing authentication. The exist
 `service init` CLI remains an explicit recovery path, not part of normal first launch.
 
 The application recognizes and removes the former `/Library/LaunchDaemons/KokoroBoxService.plist`
-and `/Library/PrivilegedHelperTools/com.amamiyakokoro.kokorobox-service` only while performing an
-explicit migration or uninstall. The recovery PKG stops a running bundled daemon before replacing
-the application and restarts an already-approved `SMAppService` job afterward. A legacy service is
-left unregistered so the new application can obtain current macOS user approval on first use.
+and `/Library/PrivilegedHelperTools/com.amamiyakokoro.kokorobox-service` only during uninstall; the
+recovery PKG performs migration while it already has installer authorization. Automatic startup and
+application-routing recovery never invoke `osascript`. The recovery PKG stops a running bundled
+daemon before replacing the application and restarts an already-approved `SMAppService` job
+afterward. A legacy service is left unregistered so the new application can obtain current macOS
+user approval on first use.
 
 Bundled Mihomo executables are ordinary mode `0755` files; the PKG no longer grants them setuid
 permission. Direct mode remains available for an unprivileged non-TUN core. Enabling TUN on macOS

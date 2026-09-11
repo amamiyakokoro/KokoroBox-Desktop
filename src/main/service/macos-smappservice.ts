@@ -9,6 +9,7 @@ interface MacOSServiceManagementBridge {
   status(): MacOSServiceRegistrationStatus
   register(): MacOSServiceRegistrationStatus
   unregister(): MacOSServiceRegistrationStatus
+  reload(): MacOSServiceRegistrationStatus
   openSystemSettings(): void
 }
 
@@ -37,6 +38,7 @@ function loadNativeBridge(): MacOSServiceManagementBridge {
     typeof candidate.status !== 'function' ||
     typeof candidate.register !== 'function' ||
     typeof candidate.unregister !== 'function' ||
+    typeof candidate.reload !== 'function' ||
     typeof candidate.openSystemSettings !== 'function'
   ) {
     throw new Error('The macOS service-management module has an unsupported interface')
@@ -76,6 +78,10 @@ export function unregisterMacOSService(): MacOSServiceRegistrationStatus {
   const current = checkedStatus(bridge.status())
   if (current === 'not-registered' || current === 'not-found') return current
   return checkedStatus(bridge.unregister())
+}
+
+export function reloadMacOSService(): MacOSServiceRegistrationStatus {
+  return checkedStatus(loadNativeBridge().reload())
 }
 
 export function openMacOSServiceSystemSettings(): void {

@@ -19,14 +19,17 @@ import { getCurrentUserSid } from 'kokorobox-native'
 import { systemCoreOnlyBuild } from '../../shared/build-flags'
 import { parseServiceLog } from './log-parser'
 import { existsSync } from 'fs'
+import { appendAppLog } from '../utils/log'
 import {
   macOSServiceRegistrationStatus,
   openMacOSServiceSystemSettings,
+  reloadMacOSService,
   registerMacOSService,
   unregisterMacOSService
 } from './macos-smappservice'
 
 let keyManager: KeyManager | null = null
+let macOSServiceRecoveryPromise: Promise<void> | undefined
 const execFilePromise = promisify(execFile)
 
 function delay(ms: number): Promise<void> {
@@ -246,15 +249,24 @@ async function removeLegacyMacOSService(): Promise<void> {
   }
 }
 
-async function installMacOSService(): Promise<void> {
+async function performMacOSServiceInstall(): Promise<void> {
   const previousStatus = macOSServiceRegistrationStatus()
-  await removeLegacyMacOSService()
-  const status = registerMacOSService()
+  const status = previousStatus === 'enabled' ? reloadMacOSService() : registerMacOSService()
+  await appendAppLog(
+    `[Service]: macOS SMAppService ${previousStatus === 'enabled' ? 'reload' : 'register'}, ${previousStatus} -> ${status}\n`
+  )
   if (status === 'requires-approval') {
     openMacOSServiceSystemSettings()
-  } else if (previousStatus === 'enabled') {
-    await restartService()
   }
+}
+
+async function installMacOSService(): Promise<void> {
+  if (!macOSServiceRecoveryPromise) {
+    macOSServiceRecoveryPromise = performMacOSServiceInstall().finally(() => {
+      macOSServiceRecoveryPromise = undefined
+    })
+  }
+  return macOSServiceRecoveryPromise
 }
 
 export async function initService(): Promise<void> {
@@ -332,6 +344,11 @@ export async function ensureMacOSServiceReady(): Promise<void> {
     throw new Error(tr('请在系统设置中允许 KokoroBox 后台服务'))
   }
 
+  if (status === 'stopped' || status === 'paused') {
+    await startService()
+    status = await serviceStatus()
+  }
+
   if (status !== 'running' || !(await testServiceConnection())) {
     await initService()
   }
@@ -360,7 +377,7 @@ export async function startService(): Promise<void> {
 
   try {
     if (process.platform === 'darwin') {
-      await execWithElevation('/bin/launchctl', ['kickstart', 'system/KokoroBoxService'])
+      await installMacOSService()
     } else {
       await execWithElevation(execPath, ['service', 'start'])
     }
@@ -394,7 +411,7 @@ export async function restartService(): Promise<void> {
 
   try {
     if (process.platform === 'darwin') {
-      await execWithElevation('/bin/launchctl', ['kickstart', '-k', 'system/KokoroBoxService'])
+      await installMacOSService()
     } else {
       await execWithElevation(execPath, ['service', 'restart'])
     }
