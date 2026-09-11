@@ -523,6 +523,10 @@ export const messages: Readonly<Record<string, string>> = {
   安装服务: 'Install service',
   修复服务: 'Repair service',
   服务安装或修复成功: 'Service installed or repaired',
+  'macOS 特权功能需要 KokoroBox 服务，请安装或修复服务':
+    'macOS privileged features require KokoroBox Service. Install or repair the service.',
+  'macOS TUN 需要由 KokoroBox 服务运行内核':
+    'macOS TUN requires the core to run through KokoroBox Service.',
   '完全退出软件，只保留内核进程': 'Quit the app completely, leaving only the core process running',
   完成: 'Done',
   '定时同步订阅/文件': 'Scheduled subscription/file sync',

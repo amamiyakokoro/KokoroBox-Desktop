@@ -9,6 +9,9 @@ import { promisify } from 'util'
 import { loadServiceAuthSecret, saveServiceAuthSecret, type ServiceAuthSecret } from './auth-store'
 import { getCurrentUserSid } from 'kokorobox-native'
 import { parseServiceLog } from './log-parser'
+import { createHash } from 'crypto'
+import { createReadStream, existsSync } from 'fs'
+import { readFile } from 'fs/promises'
 
 let keyManager: KeyManager | null = null
 const execFilePromise = promisify(execFile)
@@ -242,6 +245,33 @@ async function installMacOSServiceRuntime(execPath: string): Promise<void> {
   await execWithElevation(runtimePath, ['service', 'install'])
 }
 
+async function fileSHA256(filePath: string): Promise<string> {
+  return await new Promise((resolve, reject) => {
+    const hash = createHash('sha256')
+    const input = createReadStream(filePath)
+    input.on('error', reject)
+    input.on('data', (chunk) => hash.update(chunk))
+    input.on('end', () => resolve(hash.digest('hex')))
+  })
+}
+
+async function macOSServiceRuntimeNeedsRepair(execPath: string): Promise<boolean> {
+  const runtimePath = macOSServiceRuntimePath()
+  const plistPath = macOSServicePlistPath()
+  if (!existsSync(runtimePath) || !existsSync(plistPath)) return true
+
+  try {
+    const [bundledHash, runtimeHash, plist] = await Promise.all([
+      fileSHA256(execPath),
+      fileSHA256(runtimePath),
+      readFile(plistPath, 'utf8')
+    ])
+    return bundledHash !== runtimeHash || !plist.includes(`<string>${runtimePath}</string>`)
+  } catch {
+    return true
+  }
+}
+
 export async function initService(): Promise<void> {
   const currentKeyManager = await initKeyManager()
   const secret = await ensurePersistedServiceAuth(currentKeyManager)
@@ -280,6 +310,30 @@ export async function installService(): Promise<void> {
       throw new UserCancelledError()
     }
     throw new Error(tr('服务安装失败：{0}', [serviceCommandErrorMessage(error)]))
+  }
+}
+
+export async function ensureMacOSServiceReady(): Promise<void> {
+  if (process.platform !== 'darwin') return
+
+  const execPath = servicePath()
+  let status = await serviceStatus()
+  if (
+    status === 'not-installed' ||
+    status === 'unknown' ||
+    (await macOSServiceRuntimeNeedsRepair(execPath))
+  ) {
+    await installService()
+    status = await serviceStatus()
+  }
+
+  if (status === 'stopped' || status === 'paused') {
+    await startService()
+    status = await serviceStatus()
+  }
+
+  if (status !== 'running' || !(await testServiceConnection())) {
+    await initService()
   }
 }
 

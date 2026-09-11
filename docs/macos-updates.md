@@ -53,13 +53,26 @@ responsibilities must therefore be removed before Sparkle becomes the only macOS
 Until both conditions are satisfied, macOS continues using the PKG updater by default. Sparkle is
 built and validated in parallel but is not enabled for existing users.
 
-The service-runtime part of this migration is implemented. Installing or repairing KokoroBox
-Service now requests administrator authorization and copies the signed helper to
+The privileged-runtime migration is implemented. Installing or repairing KokoroBox Service now
+requests administrator authorization and copies the signed helper to
 `/Library/PrivilegedHelperTools/com.amamiyakokoro.kokorobox-service` as `root:wheel` with mode
 `0755`. Launchd is then registered from that stable path instead of the application bundle. Normal
 application launches and service IPC do not request elevation. Uninstalling the service also
 removes the stable runtime; authentication material remains in the user's protected application
 data unless the user removes that data separately.
+
+The application verifies both the helper SHA-256 and the executable path recorded by launchd. A
+missing or stale runtime is repaired from the signed application bundle after macOS authorization.
+The transition PKG also stages this helper and migrates an existing service registration while
+preserving whether the service was running. It does not register a service for users who had not
+installed one.
+
+Bundled Mihomo executables are ordinary mode `0755` files; the PKG no longer grants them setuid
+permission. Direct mode remains available for an unprivileged non-TUN core. Enabling TUN on macOS
+selects the authenticated service mode, installs or repairs the service if required, initializes
+its per-user authentication, and then launches Mihomo through that boundary. If authorization is
+cancelled or the service remains unavailable, KokoroBox preserves service mode and reports the
+failure instead of silently running a privileged configuration without its required boundary.
 
 ## Release pipeline
 
@@ -87,12 +100,10 @@ credentials compile the bridge but cannot produce a publishable update archive o
 5. **Bundle updates:** switch macOS update actions to Sparkle after privileged runtime migration.
 6. **Cleanup:** remove the macOS PKG auto-install code; retain PKG only for first install and repair.
 
-The foundation, native-integration and stable service-runtime stages are implemented. Release
-builds now compile and sign the updater bridge and embedded Sparkle framework, but the application
-deliberately does not start Sparkle yet. The remaining privileged migration moves Mihomo execution
-behind the authenticated service and removes the installer-applied setuid bits. `SUFeedURL` and
-`SUPublicEDKey` will only be injected once parallel appcast publication and that upgrade path are
-verified.
+The foundation, native-integration and privileged-runtime stages are implemented. Release builds
+now compile and sign the updater bridge and embedded Sparkle framework, but the application
+deliberately does not start Sparkle yet. `SUFeedURL` and `SUPublicEDKey` will only be injected once
+parallel appcast publication and the transition upgrade path are verified.
 
 ## Rollback
 

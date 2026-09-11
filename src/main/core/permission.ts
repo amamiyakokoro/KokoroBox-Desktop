@@ -31,6 +31,9 @@ export async function manualGrantCorePermition(cores?: CoreName[]): Promise<void
     if (!isRunningAsAdmin()) throw new Error(tr('请以管理员身份重新启动 KokoroBox'))
     return
   }
+  if (process.platform === 'darwin') {
+    throw new Error(tr('macOS 特权功能需要 KokoroBox 服务，请安装或修复服务'))
+  }
 
   const targetCores = cores || ['mihomo', 'mihomo-alpha']
   try {
@@ -67,6 +70,9 @@ export async function checkCorePermission(): Promise<{ mihomo: boolean; 'mihomo-
 
 export async function revokeCorePermission(cores?: CoreName[]): Promise<void> {
   if (process.platform === 'win32') return
+  if (process.platform === 'darwin') {
+    throw new Error(tr('macOS 特权功能需要 KokoroBox 服务，请安装或修复服务'))
+  }
 
   const targetCores = cores || ['mihomo', 'mihomo-alpha']
   try {

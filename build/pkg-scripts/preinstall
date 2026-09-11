@@ -4,10 +4,20 @@ OLD_SYSPROXY="/Library/PrivilegedHelperTools/sparkle.helper"
 KOKOROBOX_SERVICE_NAME="KokoroBoxService"
 LEGACY_SERVICE_NAME="SparkleService"
 SERVICE_STATE_FILE="/tmp/kokorobox-service-was-running"
+SERVICE_INSTALLED_FILE="/tmp/kokorobox-service-was-installed"
 APP_PATH="/Applications/KokoroBox.app"
 SERVICE_DIR="$APP_PATH/Contents/Resources/files"
-KOKOROBOX_SERVICE_BIN="$SERVICE_DIR/kokorobox-service"
+KOKOROBOX_SERVICE_BUNDLED_BIN="$SERVICE_DIR/kokorobox-service"
+KOKOROBOX_SERVICE_RUNTIME_BIN="/Library/PrivilegedHelperTools/com.amamiyakokoro.kokorobox-service"
+KOKOROBOX_SERVICE_PLIST="/Library/LaunchDaemons/KokoroBoxService.plist"
+KOKOROBOX_SERVICE_BIN="$KOKOROBOX_SERVICE_RUNTIME_BIN"
 LEGACY_SERVICE_BIN="$SERVICE_DIR/sparkle-service"
+
+rm -f "$SERVICE_STATE_FILE" "$SERVICE_INSTALLED_FILE" 2>/dev/null || true
+
+if [ ! -x "$KOKOROBOX_SERVICE_BIN" ]; then
+    KOKOROBOX_SERVICE_BIN="$KOKOROBOX_SERVICE_BUNDLED_BIN"
+fi
 
 UNINSTALL=false
 
@@ -73,6 +83,13 @@ stop_service_if_running() {
     echo "KokoroBox service is still running; aborting install to avoid replacing active files" >&2
     exit 1
 }
+
+if [ -f "$KOKOROBOX_SERVICE_PLIST" ]; then
+    if ! touch "$SERVICE_INSTALLED_FILE"; then
+        echo "Failed to record installed KokoroBox service state" >&2
+        exit 1
+    fi
+fi
 
 stop_service_if_running "$KOKOROBOX_SERVICE_NAME" "$KOKOROBOX_SERVICE_BIN"
 stop_service_if_running "$LEGACY_SERVICE_NAME" "$LEGACY_SERVICE_BIN"

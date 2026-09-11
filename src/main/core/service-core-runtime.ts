@@ -131,6 +131,12 @@ export function createServiceCoreRuntime(options: ServiceCoreRuntimeOptions) {
     detached: boolean,
     reason: unknown
   ): Promise<Promise<void>[]> {
+    if (process.platform === 'darwin') {
+      await appendAppLog(`[Manager]: macOS service core unavailable, ${reason}\n`)
+      stopEventHandlers()
+      throw new Error(tr('macOS 特权功能需要 KokoroBox 服务，请安装或修复服务'))
+    }
+
     await appendAppLog(`[Manager]: Service unavailable, fallback to elevated core, ${reason}\n`)
     stopEventHandlers()
     await patchAppConfig({ corePermissionMode: 'elevated' })
@@ -163,8 +169,12 @@ export function createServiceCoreRuntime(options: ServiceCoreRuntimeOptions) {
       stopServiceSysproxyEventStream()
     }
 
+    const preserveMacOSServiceCore = process.platform === 'darwin' && useServiceCore
+
     await patchAppConfig({
-      ...(useServiceCore ? { corePermissionMode: 'elevated' as const } : {}),
+      ...(useServiceCore && !preserveMacOSServiceCore
+        ? { corePermissionMode: 'elevated' as const }
+        : {}),
       ...(useServiceSysProxy && sysProxy
         ? {
             sysProxy: {
@@ -182,12 +192,16 @@ export function createServiceCoreRuntime(options: ServiceCoreRuntimeOptions) {
     floatingWindow?.webContents.send('appConfigUpdated')
 
     try {
-      if (useServiceCore) {
+      if (useServiceCore && !preserveMacOSServiceCore) {
         const promises = await options.startCore()
         await Promise.all(promises)
         mainWindow?.webContents.send('core-started')
       }
-      void showNotification({ title: tr('服务不可用，已切换到非服务模式') })
+      void showNotification({
+        title: preserveMacOSServiceCore
+          ? tr('macOS 特权功能需要 KokoroBox 服务，请安装或修复服务')
+          : tr('服务不可用，已切换到非服务模式')
+      })
     } finally {
       mainWindow?.webContents.reload()
       floatingWindow?.webContents.reload()

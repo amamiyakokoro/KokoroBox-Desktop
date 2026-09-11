@@ -124,6 +124,8 @@ test('Windows service probes and elevated commands never open a console window',
 test('macOS installs the service into a stable root-owned runtime', () => {
   const managerSource = readFileSync(resolve('src/main/service/manager.ts'), 'utf8')
   const dirsSource = readFileSync(resolve('src/main/utils/dirs.ts'), 'utf8')
+  const preinstallSource = readFileSync(resolve('build/pkg-scripts/preinstall'), 'utf8')
+  const postinstallSource = readFileSync(resolve('build/pkg-scripts/postinstall'), 'utf8')
 
   assert.match(
     dirsSource,
@@ -133,6 +135,10 @@ test('macOS installs the service into a stable root-owned runtime', () => {
   assert.match(managerSource, /execWithElevation\('\/usr\/bin\/install', \[/)
   assert.match(managerSource, /'root',[\s\S]*'wheel',[\s\S]*'0755'/)
   assert.match(managerSource, /execWithElevation\(runtimePath, \['service', 'install'\]\)/)
+  assert.match(managerSource, /createHash\('sha256'\)/)
+  assert.match(managerSource, /bundledHash !== runtimeHash/)
+  assert.match(managerSource, /plist\.includes\(`<string>\$\{runtimePath\}<\/string>`\)/)
+  assert.match(managerSource, /export async function ensureMacOSServiceReady/)
   assert.match(
     managerSource,
     /execWithElevation\('\/bin\/launchctl', \['bootout', 'system\/KokoroBoxService'\]\)/
@@ -142,6 +148,33 @@ test('macOS installs the service into a stable root-owned runtime', () => {
     /execWithElevation\('\/bin\/rm', \['-f', macOSServiceRuntimePath\(\)\]\)/
   )
   assert.doesNotMatch(managerSource, /(?:sh|bash)', \['-c'/)
+  assert.match(preinstallSource, /kokorobox-service-was-installed/)
+  assert.match(postinstallSource, /\/usr\/bin\/install -o root -g wheel -m 0755/)
+  assert.match(postinstallSource, /SERVICE_RUNTIME_BIN.*service install/)
+  assert.doesNotMatch(postinstallSource, /chmod \+s|chmod [ugoa]*\+s/)
+})
+
+test('macOS privileged core features fail closed through the service boundary', () => {
+  const coreManagerSource = readFileSync(resolve('src/main/core/manager.ts'), 'utf8')
+  const runtimeSource = readFileSync(resolve('src/main/core/service-core-runtime.ts'), 'utf8')
+  const permissionSource = readFileSync(resolve('src/main/core/permission.ts'), 'utf8')
+  const settingsSource = readFileSync(resolve('src/renderer/src/pages/mihomo.tsx'), 'utf8')
+
+  assert.match(
+    coreManagerSource,
+    /process\.platform === 'darwin' && tun\?\.enable && corePermissionMode !== 'service'/
+  )
+  assert.match(coreManagerSource, /await ensureMacOSServiceReady\(\)/)
+  assert.match(
+    runtimeSource,
+    /process\.platform === 'darwin'[\s\S]*macOS service core unavailable[\s\S]*throw new Error/
+  )
+  assert.match(runtimeSource, /preserveMacOSServiceCore/)
+  assert.match(
+    permissionSource,
+    /process\.platform === 'darwin'[\s\S]*macOS 特权功能需要 KokoroBox 服务/
+  )
+  assert.match(settingsSource, /platform !== 'darwin'/)
 })
 
 test('service status parser handles nested pretty and single-line JSON logs', () => {

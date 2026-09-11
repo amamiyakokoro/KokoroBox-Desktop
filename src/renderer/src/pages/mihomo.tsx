@@ -62,7 +62,7 @@ const Mihomo: React.FC = () => {
     mihomoCpuPriority = 'PRIORITY_NORMAL'
   } = appConfig || {}
   const { controledMihomoConfig, patchControledMihomoConfig } = useControledMihomoConfig()
-  const { ipv6 } = controledMihomoConfig || {}
+  const { ipv6, tun } = controledMihomoConfig || {}
 
   const [upgrading, setUpgrading] = useState(false)
   const [showPermissionModal, setShowPermissionModal] = useState(false)
@@ -130,6 +130,10 @@ const Mihomo: React.FC = () => {
 
   const handlePermissionModeChange = async (key: string): Promise<void> => {
     if (key === corePermissionMode) return
+    if (platform === 'darwin' && key === 'elevated' && tun?.enable) {
+      notify(tr('macOS TUN 需要由 KokoroBox 服务运行内核'), { variant: 'warning' })
+      return
+    }
 
     try {
       await patchAppConfig({ corePermissionMode: key as 'elevated' | 'service' })
@@ -307,7 +311,7 @@ const Mihomo: React.FC = () => {
             </Tabs>
           </SettingItem>
         )}
-        {!systemCoreOnlyBuild && (
+        {!systemCoreOnlyBuild && platform !== 'darwin' && (
           <SettingItem compatKey="legacy" title={tr('提权状态')} divider>
             <Button size="sm" color="primary" onPress={() => setShowPermissionModal(true)}>
               {tr('管理')}

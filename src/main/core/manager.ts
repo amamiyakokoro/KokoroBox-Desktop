@@ -36,7 +36,7 @@ import {
   isServiceUnavailableError,
   type ServiceCoreLaunchProfile
 } from '../service/api'
-import { serviceStatus } from '../service/manager'
+import { ensureMacOSServiceReady, serviceStatus } from '../service/manager'
 import { clearAppUpdateServiceFallbackPause, getServiceFallbackPolicy } from '../service/fallback'
 import { appendAppLog, createLogWritable, setMihomoLogSource } from '../utils/log'
 import {
@@ -333,7 +333,7 @@ export async function startCore(detached = false): Promise<Promise<void>[]> {
   ])
   const {
     core = 'mihomo',
-    corePermissionMode = 'elevated',
+    corePermissionMode: configuredCorePermissionMode = 'elevated',
     serviceRunMode = 'auto',
     coreStartupMode = 'post-up',
     autoSetDNSMode = 'none',
@@ -350,6 +350,12 @@ export async function startCore(detached = false): Promise<Promise<void>[]> {
   const effectiveCoreStartupMode = resolveCoreStartupMode(process.platform, coreStartupMode)
   const { 'log-level': logLevel, tun } = controlledMihomoConfig
   const { current } = profileConfig
+  let corePermissionMode = configuredCorePermissionMode
+  if (process.platform === 'darwin' && tun?.enable && corePermissionMode !== 'service') {
+    corePermissionMode = 'service'
+    await patchAppConfig({ corePermissionMode })
+    mainWindow?.webContents.send('appConfigUpdated')
+  }
   const useServiceCore = corePermissionMode === 'service' && !detached
 
   let corePath: string
@@ -369,6 +375,9 @@ export async function startCore(detached = false): Promise<Promise<void>[]> {
   }
   let serviceCoreRunning = false
   if (useServiceCore) {
+    if (process.platform === 'darwin') {
+      await ensureMacOSServiceReady()
+    }
     try {
       await getCoreStatus()
       serviceCoreRunning = true
