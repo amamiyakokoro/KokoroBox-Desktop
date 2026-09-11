@@ -309,47 +309,48 @@ export async function serviceStatus(): Promise<
   'running' | 'stopped' | 'not-installed' | 'paused' | 'unknown' | 'need-init'
 > {
   const execPath = servicePath()
+  let commandState: string | undefined
 
   try {
     const { stdout, stderr } = await execFilePromise(execPath, ['service', 'status'], {
       windowsHide: true
     })
-    const commandState = parseServiceLog(`${stdout}\n${stderr}`)?.status?.state
-    if (commandState === 'not-installed') return 'not-installed'
-    if (commandState === 'stopped') return 'stopped'
-    if (commandState === 'paused') return 'paused'
+    commandState = parseServiceLog(`${stdout}\n${stderr}`)?.status?.state
+  } catch (error) {
+    commandState = parseServiceLog(serviceCommandOutput(error))?.status?.state
+  }
 
+  if (commandState === 'not-installed') return 'not-installed'
+  if (commandState === 'stopped') return 'stopped'
+  if (commandState === 'paused') return 'paused'
+
+  // A running service is still observable through its authenticated IPC even
+  // when an older helper cannot read the Windows SCM status as a standard user.
+  try {
+    await ping()
     try {
-      await ping()
-      try {
-        await test()
-        return 'running'
-      } catch (error) {
-        if (
-          error instanceof ServiceAPIError &&
-          error.status !== undefined &&
-          [401, 403, 409, 503].includes(error.status)
-        ) {
-          return 'need-init'
-        }
-        return commandState === 'running' ? 'running' : 'unknown'
-      }
-    } catch (e) {
-      const errorMsg = e instanceof Error ? e.message : String(e)
+      await test()
+      return 'running'
+    } catch (error) {
       if (
-        errorMsg.includes('EACCES') ||
-        errorMsg.includes('permission denied') ||
-        errorMsg.includes('access is denied')
+        error instanceof ServiceAPIError &&
+        error.status !== undefined &&
+        [401, 403, 409, 503].includes(error.status)
       ) {
         return 'need-init'
       }
       return commandState === 'running' ? 'running' : 'unknown'
     }
   } catch (error) {
-    if (parseServiceLog(serviceCommandOutput(error))?.status?.state === 'not-installed') {
-      return 'not-installed'
+    const errorMsg = error instanceof Error ? error.message : String(error)
+    if (
+      errorMsg.includes('EACCES') ||
+      errorMsg.includes('permission denied') ||
+      errorMsg.includes('access is denied')
+    ) {
+      return 'need-init'
     }
-    return 'unknown'
+    return commandState === 'running' ? 'running' : 'unknown'
   }
 }
 
