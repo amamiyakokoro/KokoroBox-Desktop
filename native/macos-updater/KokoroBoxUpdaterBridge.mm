@@ -23,11 +23,23 @@ static BOOL KBValidateConfiguration(napi_env env) {
   NSString *feed = [bundle objectForInfoDictionaryKey:@"SUFeedURL"];
   NSString *publicKey = [bundle objectForInfoDictionaryKey:@"SUPublicEDKey"];
   NSURL *feedURL = [feed isKindOfClass:[NSString class]] ? [NSURL URLWithString:feed] : nil;
-  if (!feedURL || ![feedURL.scheme.lowercaseString isEqualToString:@"https"]) {
-    KBThrow(env, @"The signed application does not contain a valid HTTPS Sparkle feed");
+#if defined(__arm64__)
+  NSString *expectedAppcast = @"appcast-macos-arm64.xml";
+#else
+  NSString *expectedAppcast = @"appcast-macos-x64.xml";
+#endif
+  BOOL trustedFeed = feedURL && [feedURL.scheme.lowercaseString isEqualToString:@"https"] &&
+                     [feedURL.host.lowercaseString isEqualToString:@"github.com"] &&
+                     [feedURL.path hasPrefix:@"/amamiyakokoro/KokoroBox-Desktop/releases/"] &&
+                     [feedURL.lastPathComponent isEqualToString:expectedAppcast];
+  if (!trustedFeed) {
+    KBThrow(env, @"The signed application does not contain a trusted Sparkle feed");
     return NO;
   }
-  if (![publicKey isKindOfClass:[NSString class]] || publicKey.length == 0) {
+  NSData *decodedPublicKey = [publicKey isKindOfClass:[NSString class]]
+                                 ? [[NSData alloc] initWithBase64EncodedString:publicKey options:0]
+                                 : nil;
+  if (decodedPublicKey.length != 32) {
     KBThrow(env, @"The signed application does not contain a Sparkle public key");
     return NO;
   }

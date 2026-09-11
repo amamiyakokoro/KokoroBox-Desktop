@@ -1,22 +1,11 @@
 import { is } from '@electron-toolkit/utils'
 import { existsSync } from 'node:fs'
 import path from 'node:path'
+import { MacOSUpdaterBridge, runNativeMacOSUpdater } from './macosNativeUpdaterState'
 
-// Keep the native updater dormant until appcast publication and privileged-component
-// migration have both passed the upgrade matrix documented in docs/macos-updates.md.
-export const macOSNativeUpdaterEnabled = false
-
-interface MacOSUpdaterState {
-  available: boolean
-  initialized: boolean
-  canCheckForUpdates: boolean
-}
-
-interface MacOSUpdaterBridge {
-  state(): MacOSUpdaterState
-  initialize(): MacOSUpdaterState
-  checkForUpdates(): MacOSUpdaterState
-}
+// Older builds reach this transition release through the notarized PKG updater. Once this
+// code is installed, the stable privileged runtime and signed appcast can update the App bundle.
+export const macOSNativeUpdaterEnabled = true
 
 let nativeBridge: MacOSUpdaterBridge | undefined
 
@@ -24,17 +13,6 @@ function updaterModulePath(): string {
   return is.dev
     ? path.join(process.cwd(), 'extra', 'macos-updater', 'kokorobox-updater.node')
     : path.join(process.resourcesPath, '..', 'Frameworks', 'kokorobox-updater.node')
-}
-
-function validateState(value: MacOSUpdaterState): MacOSUpdaterState {
-  if (
-    typeof value?.available !== 'boolean' ||
-    typeof value.initialized !== 'boolean' ||
-    typeof value.canCheckForUpdates !== 'boolean'
-  ) {
-    throw new Error('The macOS updater module returned an unsupported state')
-  }
-  return value
 }
 
 function loadNativeBridge(): MacOSUpdaterBridge {
@@ -56,14 +34,14 @@ function loadNativeBridge(): MacOSUpdaterBridge {
   return nativeBridge
 }
 
-/** Opens Sparkle's standard update UI when the signed build has enabled it. */
-export function showNativeMacOSUpdate(): boolean {
-  if (process.platform !== 'darwin' || !macOSNativeUpdaterEnabled) return false
+/** Opens Sparkle's standard update UI in packaged macOS builds. */
+export function showNativeMacOSUpdate(
+  platform: NodeJS.Platform = process.platform,
+  bridgeOverride?: MacOSUpdaterBridge
+): boolean {
+  if (platform !== 'darwin' || !macOSNativeUpdaterEnabled) return false
 
-  const bridge = loadNativeBridge()
-  let state = validateState(bridge.state())
-  if (!state.available) throw new Error('The native macOS updater is unavailable')
-  if (!state.initialized) state = validateState(bridge.initialize())
-  validateState(bridge.checkForUpdates())
+  const bridge = bridgeOverride ?? loadNativeBridge()
+  runNativeMacOSUpdater(bridge)
   return true
 }

@@ -456,7 +456,10 @@ export async function checkUpdate(): Promise<AppVersion | undefined> {
   return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('checkUpdate'))
 }
 
-export async function downloadAndInstallUpdate(version: string, tag?: string): Promise<void> {
+export async function downloadAndInstallUpdate(
+  version: string,
+  tag?: string
+): Promise<AppUpdateLaunchResult | void> {
   return ipcErrorWrapper(
     await window.electron.ipcRenderer.invoke('downloadAndInstallUpdate', version, tag)
   )

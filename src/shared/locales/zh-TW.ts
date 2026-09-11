@@ -1151,5 +1151,7 @@ export const messages: Readonly<Record<string, string>> = {
   '优先使用 HTTP/3': '優先使用 HTTP/3',
   'DNS 缓存算法': 'DNS 快取演算法',
   '例：https://dns.alidns.com/dns-query': '例：https://dns.alidns.com/dns-query',
-  '例：tls://1.1.1.1': '例：tls://1.1.1.1'
+  '例：tls://1.1.1.1': '例：tls://1.1.1.1',
+  更新版本格式无效: '更新版本格式無效',
+  更新版本与发布标签不匹配: '更新版本與發布標籤不相符'
 }

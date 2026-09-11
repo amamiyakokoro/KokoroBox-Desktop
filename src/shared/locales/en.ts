@@ -1182,5 +1182,7 @@ export const messages: Readonly<Record<string, string>> = {
   '优先使用 HTTP/3': 'Prefer HTTP/3',
   'DNS 缓存算法': 'DNS cache algorithm',
   '例：https://dns.alidns.com/dns-query': 'Example: https://dns.alidns.com/dns-query',
-  '例：tls://1.1.1.1': 'Example: tls://1.1.1.1'
+  '例：tls://1.1.1.1': 'Example: tls://1.1.1.1',
+  更新版本格式无效: 'Invalid update version format',
+  更新版本与发布标签不匹配: 'The update version does not match its release tag'
 }

@@ -47,7 +47,11 @@ const UpdaterDrawer: React.FC<Props> = (props) => {
   const onUpdate = async (): Promise<void> => {
     try {
       setDownloading(true)
-      await downloadAndInstallUpdate(version, tag)
+      const launchResult = await downloadAndInstallUpdate(version, tag)
+      if (launchResult === 'native' || launchResult === 'external') {
+        setDownloading(false)
+        closeWithAnimation()
+      }
     } catch (e) {
       notify(e, { variant: 'danger' })
       setDownloading(false)

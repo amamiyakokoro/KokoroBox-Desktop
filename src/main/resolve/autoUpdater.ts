@@ -20,7 +20,7 @@ import {
 } from '../service/fallback'
 import { appendAppLog } from '../utils/log'
 import { systemCoreOnlyBuild } from '../../shared/build-flags'
-import { showNativeMacOSUpdate } from './macosNativeUpdater'
+import { macOSNativeUpdaterEnabled, showNativeMacOSUpdate } from './macosNativeUpdater'
 
 let downloadCancelToken: CancelTokenSource | null = null
 const WINDOWS_INSTALLER_MIN_TEMP_SPACE_BYTES = 1024 * 1024 * 1024
@@ -35,9 +35,17 @@ function getGitHubAuthHeaders(token?: string): Record<string, string> {
 }
 
 function resolveReleaseTag(version: string, tag?: string): string {
-  if (tag) return tag
-  if (version.includes('-rolling-')) return 'rolling'
-  return version
+  if (/^\d+\.\d+\.\d+-rolling-[0-9a-f]{7}$/.test(version)) {
+    if (tag && tag !== 'rolling') throw new Error(tr('更新版本与发布标签不匹配'))
+    return 'rolling'
+  }
+  if (!/^\d+\.\d+\.\d+(?:-\d+)?$/.test(version)) {
+    throw new Error(tr('更新版本格式无效'))
+  }
+  if (tag && ![version, `v${version}`].includes(tag)) {
+    throw new Error(tr('更新版本与发布标签不匹配'))
+  }
+  return tag ?? version
 }
 
 async function ensureFreeSpace(dir: string, requiredBytes: number, message: string): Promise<void> {
@@ -100,10 +108,26 @@ async function ensureWindowsInstallerTempSpace(): Promise<void> {
   await ensureFreeSpace(tempDir, WINDOWS_INSTALLER_MIN_TEMP_SPACE_BYTES, tr('临时目录空间不足'))
 }
 
-export async function downloadAndInstallUpdate(version: string, tag?: string): Promise<void> {
-  // Sparkle owns download, verification, installation and relaunch after the migration flag flips.
-  // Until then this returns false and the existing PKG updater remains unchanged.
-  if (showNativeMacOSUpdate()) return
+export async function downloadAndInstallUpdate(
+  version: string,
+  tag?: string
+): Promise<AppUpdateLaunchResult | void> {
+  const releaseTag = resolveReleaseTag(version, tag)
+  if (process.platform === 'darwin' && macOSNativeUpdaterEnabled) {
+    try {
+      if (!showNativeMacOSUpdate()) throw new Error('Native macOS updater did not start')
+      return 'native'
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : String(error)
+      await appendAppLog(`[Updater]: native macOS updater unavailable, ${detail}\n`).catch(() => {})
+      // Never fall back to executing a downloaded PKG from an already migrated build. The
+      // release page keeps recovery explicit if the signed native bridge cannot initialize.
+      await shell.openExternal(
+        `https://github.com/amamiyakokoro/KokoroBox-Desktop/releases/tag/${encodeURIComponent(releaseTag)}`
+      )
+      return 'external'
+    }
+  }
 
   let appUpdateInstalling = false
   let sysProxyPaused = false
@@ -123,7 +147,6 @@ export async function downloadAndInstallUpdate(version: string, tag?: string): P
   }
   const { 'mixed-port': mixedPort = 7890 } = await getControledMihomoConfig()
   const { githubToken } = await getAppConfig()
-  const releaseTag = resolveReleaseTag(version, tag)
   const baseUrl = `https://github.com/amamiyakokoro/KokoroBox-Desktop/releases/download/${releaseTag}/`
   const fileMap: Record<string, string> = {
     'win32-x64': `kokorobox-desktop-windows-${version}-x64-setup.exe`,

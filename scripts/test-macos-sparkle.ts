@@ -16,6 +16,7 @@ import {
   validateSignedSparkleAppcast,
   validateSparkleSigningKeys
 } from './macos-sparkle.ts'
+import { runNativeMacOSUpdater } from '../src/main/resolve/macosNativeUpdaterState.ts'
 
 const privateKey = 'AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE='
 const publicKey = 'iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w='
@@ -107,12 +108,50 @@ test('macOS package stages the updater without exposing dynamic trust inputs', (
   assert.ok(binding.targets[0].xcode_settings.LD_RUNPATH_SEARCH_PATHS.includes('@loader_path'))
 })
 
-test('main process adapter is present but cannot activate before migration', () => {
+test('main process adapter activates Sparkle and validates its state transitions', () => {
   const adapter = readFileSync('src/main/resolve/macosNativeUpdater.ts', 'utf8')
   const updater = readFileSync('src/main/resolve/autoUpdater.ts', 'utf8')
 
-  assert.match(adapter, /export const macOSNativeUpdaterEnabled = false/)
+  assert.match(adapter, /export const macOSNativeUpdaterEnabled = true/)
   assert.match(adapter, /process\.dlopen\(nativeModule, modulePath\)/)
   assert.doesNotMatch(adapter, /process\.env|napi_get_value_string/)
-  assert.match(updater, /if \(showNativeMacOSUpdate\(\)\) return/)
+  assert.match(updater, /return 'native'/)
+  assert.match(updater, /shell\.openExternal/)
+  assert.match(updater, /native macOS updater unavailable[\s\S]*return 'external'/)
+
+  const calls: string[] = []
+  const bridge = {
+    state: () => ({ available: true, initialized: false, canCheckForUpdates: false }),
+    initialize: () => {
+      calls.push('initialize')
+      return { available: true, initialized: true, canCheckForUpdates: true }
+    },
+    checkForUpdates: () => {
+      calls.push('check')
+      return { available: true, initialized: true, canCheckForUpdates: true }
+    }
+  }
+  runNativeMacOSUpdater(bridge)
+  assert.deepEqual(calls, ['initialize', 'check'])
+  assert.throws(() =>
+    runNativeMacOSUpdater({
+      ...bridge,
+      state: () => ({ available: false, initialized: false, canCheckForUpdates: false })
+    })
+  )
+  assert.throws(() =>
+    runNativeMacOSUpdater({
+      ...bridge,
+      initialize: () => ({ available: true, initialized: true, canCheckForUpdates: false })
+    })
+  )
+})
+
+test('native bridge restricts the feed and validates the 32-byte public key', () => {
+  const source = readFileSync('native/macos-updater/KokoroBoxUpdaterBridge.mm', 'utf8')
+  assert.match(source, /isEqualToString:@"github\.com"/)
+  assert.match(source, /\/amamiyakokoro\/KokoroBox-Desktop\/releases\//)
+  assert.match(source, /appcast-macos-arm64\.xml/)
+  assert.match(source, /appcast-macos-x64\.xml/)
+  assert.match(source, /decodedPublicKey\.length != 32/)
 })

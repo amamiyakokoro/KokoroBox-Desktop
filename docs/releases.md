@@ -144,9 +144,11 @@ Windows packages declare `asInvoker` in the KokoroBox executable manifest. Kokor
 Both Intel and Apple Silicon macOS releases require **Developer ID-signed, Apple-notarized PKGs with stapled tickets**. There is no unsigned fallback in either Stable or Rolling releases. The upstream PKG installation scripts remain enabled for proxy/service operation.
 
 The staged migration to native Sparkle application updates is documented in
-[`macos-updates.md`](macos-updates.md). The privileged runtime is migrated and signed Sparkle
-archives/appcasts are now published in parallel, but PKG remains the active updater until a
-transition release has been exercised on supported Intel and Apple Silicon upgrade paths.
+[`macos-updates.md`](macos-updates.md). The privileged runtime is migrated, signed Sparkle
+archives/appcasts are published, and builds containing the bundle-update stage use Sparkle for
+subsequent updates. Older versions install the first transition build through their existing PKG
+updater. The PKG remains available for first installation and explicit recovery while that
+transition is validated on supported Intel and Apple Silicon upgrade paths.
 
 `electron-builder.ci.yml` is retained only for unsigned local smoke tests; release workflows no longer use it. The normal `electron-builder.yml` remains available for local production signing.
 
