@@ -254,12 +254,12 @@ export async function initService(): Promise<void> {
   const secret = await ensurePersistedServiceAuth(currentKeyManager)
   const execPath = servicePath()
 
-  let commandError: unknown
   try {
     const principalArgs = await getAuthorizedPrincipalArgs()
     await execWithElevation(execPath, [
       'service',
       'init',
+      ...(process.platform === 'darwin' ? ['--ensure-running'] : []),
       '--public-key',
       secret.publicKey,
       ...principalArgs
@@ -268,25 +268,7 @@ export async function initService(): Promise<void> {
     if (isUserCancelledError(error)) {
       throw new UserCancelledError()
     }
-    commandError = error
-  }
-
-  if (process.platform === 'darwin' && commandError) {
-    // Older service binaries try to restart through a legacy plist after
-    // writing authentication state. Restart the SMAppService job explicitly.
-    try {
-      await restartService()
-      await waitForServiceReady()
-      return
-    } catch (error) {
-      throw new Error(
-        tr('服务初始化失败：{0}', [serviceCommandErrorMessage(commandError ?? error)])
-      )
-    }
-  }
-
-  if (commandError) {
-    throw new Error(tr('服务初始化失败：{0}', [serviceCommandErrorMessage(commandError)]))
+    throw new Error(tr('服务初始化失败：{0}', [serviceCommandErrorMessage(error)]))
   }
 
   await waitForServiceReady()
@@ -320,11 +302,6 @@ export async function ensureMacOSServiceReady(): Promise<void> {
 
   if (status === 'requires-approval') {
     throw new Error(tr('请在系统设置中允许 KokoroBox 后台服务'))
-  }
-
-  if (status === 'stopped' || status === 'paused') {
-    await startService()
-    status = await serviceStatus()
   }
 
   if (status !== 'running' || !(await testServiceConnection())) {
