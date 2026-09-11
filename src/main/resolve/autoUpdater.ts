@@ -20,6 +20,7 @@ import {
 } from '../service/fallback'
 import { appendAppLog } from '../utils/log'
 import { systemCoreOnlyBuild } from '../../shared/build-flags'
+import { showNativeMacOSUpdate } from './macosNativeUpdater'
 
 let downloadCancelToken: CancelTokenSource | null = null
 const WINDOWS_INSTALLER_MIN_TEMP_SPACE_BYTES = 1024 * 1024 * 1024
@@ -100,6 +101,10 @@ async function ensureWindowsInstallerTempSpace(): Promise<void> {
 }
 
 export async function downloadAndInstallUpdate(version: string, tag?: string): Promise<void> {
+  // Sparkle owns download, verification, installation and relaunch after the migration flag flips.
+  // Until then this returns false and the existing PKG updater remains unchanged.
+  if (showNativeMacOSUpdate()) return
+
   let appUpdateInstalling = false
   let sysProxyPaused = false
   const pauseSysProxy = async (): Promise<void> => {

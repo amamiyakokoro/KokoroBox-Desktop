@@ -53,3 +53,13 @@ test('macOS package stages the updater without exposing dynamic trust inputs', (
   const binding = JSON.parse(readFileSync('native/macos-updater/binding.gyp', 'utf8'))
   assert.ok(binding.targets[0].xcode_settings.LD_RUNPATH_SEARCH_PATHS.includes('@loader_path'))
 })
+
+test('main process adapter is present but cannot activate before migration', () => {
+  const adapter = readFileSync('src/main/resolve/macosNativeUpdater.ts', 'utf8')
+  const updater = readFileSync('src/main/resolve/autoUpdater.ts', 'utf8')
+
+  assert.match(adapter, /export const macOSNativeUpdaterEnabled = false/)
+  assert.match(adapter, /process\.dlopen\(nativeModule, modulePath\)/)
+  assert.doesNotMatch(adapter, /process\.env|napi_get_value_string/)
+  assert.match(updater, /if \(showNativeMacOSUpdate\(\)\) return/)
+})
