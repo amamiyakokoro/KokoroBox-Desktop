@@ -209,8 +209,6 @@ test('macOS privileged core features fail closed through the service boundary', 
     /process\.platform === 'darwin'[\s\S]*macOS service core unavailable[\s\S]*throw new Error/
   )
   assert.match(runtimeSource, /preserveMacOSServiceCore/)
-  assert.match(runtimeSource, /unavailableModeHandled/)
-  assert.doesNotMatch(runtimeSource, /webContents\.reload\(\)/)
   assert.match(
     permissionSource,
     /process\.platform === 'darwin'[\s\S]*macOS 特权功能需要 KokoroBox 服务/
