@@ -437,8 +437,43 @@ export async function createWindow(appConfig?: AppConfig): Promise<void> {
     })
     windowStateManager.attach(mainWindow)
     const initialContentPromise = waitForInitialContent(mainWindow)
-    mainWindow.webContents.on('did-fail-load', () => {
-      mainWindow?.webContents.reload()
+    let mainFrameLoadFailureCount = 0
+    let mainFrameLoadRetryTimer: NodeJS.Timeout | null = null
+    mainWindow.webContents.on(
+      'did-fail-load',
+      (_event, errorCode, errorDescription, validatedURL, isMainFrame) => {
+        if (!isMainFrame) return
+
+        mainFrameLoadFailureCount += 1
+        void appendAppLog(
+          `[Window]: main frame load failed (${errorCode}, attempt ${mainFrameLoadFailureCount}): ${errorDescription}; ${validatedURL}\n`
+        )
+
+        // A permanently broken local renderer must not turn into an unbounded
+        // visible reload loop. Retry two times with a short backoff, then keep
+        // the window stable so its diagnostics remain inspectable.
+        if (mainFrameLoadFailureCount > 2 || mainFrameLoadRetryTimer) return
+        mainFrameLoadRetryTimer = setTimeout(() => {
+          mainFrameLoadRetryTimer = null
+          if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.reload()
+        }, mainFrameLoadFailureCount * 500)
+      }
+    )
+    const resetMainFrameLoadFailures = (): void => {
+      mainFrameLoadFailureCount = 0
+      if (mainFrameLoadRetryTimer) {
+        clearTimeout(mainFrameLoadRetryTimer)
+        mainFrameLoadRetryTimer = null
+      }
+    }
+    const onRendererIpcMessage = (_event: IpcMainEvent, channel: string): void => {
+      if (channel === 'renderer-content-ready') resetMainFrameLoadFailures()
+    }
+    mainWindow.webContents.on('ipc-message', onRendererIpcMessage)
+    mainWindow.webContents.on('render-process-gone', (_event, details) => {
+      void appendAppLog(
+        `[Window]: renderer process exited (${details.reason}, code ${details.exitCode})\n`
+      )
     })
 
     mainWindow.on('close', async (event) => {
@@ -453,6 +488,8 @@ export async function createWindow(appConfig?: AppConfig): Promise<void> {
     })
 
     mainWindow.on('closed', () => {
+      if (mainFrameLoadRetryTimer) clearTimeout(mainFrameLoadRetryTimer)
+      mainWindow?.webContents.off('ipc-message', onRendererIpcMessage)
       mainWindow = null
     })
 
