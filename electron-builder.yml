@@ -25,6 +25,7 @@ extraResources:
       - '**/*'
       - '!files/kokorobox-run.exe'
       - '!macos-app-routing-system-extension{,/**/*}'
+      - '!macos-updater{,/**/*}'
   - from: './THIRD_PARTY_NOTICES.md'
     to: 'THIRD_PARTY_NOTICES.md'
 protocols:
@@ -60,6 +61,14 @@ mac:
   extraFiles:
     - from: './extra/macos-app-routing-system-extension/com.amamiyakokoro.app.proxy-extension.systemextension'
       to: 'Library/SystemExtensions/com.amamiyakokoro.app.proxy-extension.systemextension'
+    - from: './extra/macos-updater/Sparkle.framework'
+      to: 'Frameworks/Sparkle.framework'
+    - from: './extra/macos-updater/kokorobox-updater.node'
+      to: 'Frameworks/kokorobox-updater.node'
+    - from: './extra/macos-updater/LICENSE.Sparkle'
+      to: 'Resources/licenses/LICENSE.Sparkle'
+    - from: './extra/macos-updater/manifest.json'
+      to: 'Resources/macos-updater/manifest.json'
   extendInfo:
     NSSystemExtensionUsageDescription: KokoroBox uses a system extension to route only the applications you select.
     NSCameraUsageDescription: Application requests access to the device's camera.

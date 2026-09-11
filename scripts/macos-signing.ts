@@ -108,7 +108,8 @@ export function signingConfig(projectDir: string, teamId: string, appProvisionin
         'Contents/Resources/sidecar/mihomo',
         'Contents/Resources/sidecar/mihomo-alpha',
         'Contents/Resources/files/kokorobox-service',
-        'Contents/Resources/files/macos-app-routing/kokorobox-app-routing.node'
+        'Contents/Resources/files/macos-app-routing/kokorobox-app-routing.node',
+        'Contents/Frameworks/kokorobox-updater.node'
       ]
     },
     pkg: { identity: teamId }
@@ -427,6 +428,7 @@ export function signMacRelease(
     for (const file of [
       appPath,
       ...signingConfig(projectDir, teamId).mac.binaries.map((file) => path.join(appPath, file)),
+      path.join(appPath, 'Contents/Frameworks/Sparkle.framework'),
       path.join(
         appPath,
         'Contents/Library/SystemExtensions/com.amamiyakokoro.app.proxy-extension.systemextension'

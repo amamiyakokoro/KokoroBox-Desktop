@@ -104,6 +104,33 @@ export async function prepareMacOSSparkle(): Promise<void> {
     path.join(sparkleStagingRoot, 'manifest.json'),
     `${JSON.stringify({ schemaVersion: 1, ...sparkleRelease }, null, 2)}\n`
   )
+
+  const nativeModuleRoot = path.join(repositoryRoot, 'native', 'macos-updater')
+  const electronVersion = JSON.parse(
+    readFileSync(path.join(repositoryRoot, 'node_modules', 'electron', 'package.json'), 'utf8')
+  ).version as string
+  const targetArch = process.env.npm_config_target_arch || process.arch
+  if (!['arm64', 'x64'].includes(targetArch)) {
+    throw new Error(`Unsupported macOS updater architecture: ${targetArch}`)
+  }
+  const nodeGyp = path.join(repositoryRoot, 'node_modules', 'node-gyp', 'bin', 'node-gyp.js')
+  const moduleBuild = spawnSync(
+    process.execPath,
+    [
+      nodeGyp,
+      'rebuild',
+      `--target=${electronVersion}`,
+      `--arch=${targetArch}`,
+      '--dist-url=https://electronjs.org/headers',
+      `--devdir=${path.join(buildRoot, 'node-gyp')}`
+    ],
+    { cwd: nativeModuleRoot, stdio: 'inherit' }
+  )
+  const moduleOutput = path.join(nativeModuleRoot, 'build', 'Release', 'kokorobox_updater.node')
+  if (moduleBuild.status !== 0 || !existsSync(moduleOutput)) {
+    throw new Error('KokoroBox macOS updater N-API module build failed')
+  }
+  copyFileSync(moduleOutput, path.join(sparkleStagingRoot, 'kokorobox-updater.node'))
 }
 
 const invokedScript = process.argv[1] && path.resolve(process.argv[1])

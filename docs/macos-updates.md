@@ -79,6 +79,11 @@ credentials compile the bridge but cannot produce a publishable update archive o
 5. **Bundle updates:** switch macOS update actions to Sparkle after privileged runtime migration.
 6. **Cleanup:** remove the macOS PKG auto-install code; retain PKG only for first install and repair.
 
+The foundation and native-integration stages are implemented. Release builds now compile and sign
+the updater bridge and embedded Sparkle framework, but the application deliberately does not start
+Sparkle yet. `SUFeedURL` and `SUPublicEDKey` will only be injected once parallel appcast publication
+is fail-closed and the privileged-component migration has a verified upgrade path.
+
 ## Rollback
 
 The PKG remains a recovery path throughout the migration. If a feed or native bridge fails,

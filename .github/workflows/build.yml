@@ -263,6 +263,7 @@ jobs:
             # The preparation script clones and verifies the revision declared by
             # integrity-manifest.ts so CI cannot drift to a second hard-coded pin.
             pnpm prepare:macos-routing
+            pnpm prepare:macos-updater
             pnpm exec electron-vite build
           fi
 
