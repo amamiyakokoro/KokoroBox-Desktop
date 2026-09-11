@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict'
 import { EventEmitter } from 'node:events'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { test } from 'node:test'
 import {
   EARLY_TLS_DISCONNECT_MESSAGE,
@@ -73,4 +75,13 @@ test('tracks nested expected network transitions and keeps a completion grace pe
   finishSecond()
   assert.equal(isExpectedNetworkTransition(7_001), false)
   resetExpectedNetworkTransitionForTest()
+})
+
+test('main renderer load failures use bounded retries and retain diagnostics', () => {
+  const source = readFileSync(resolve('src/main/index.ts'), 'utf8')
+  assert.match(source, /mainFrameLoadFailureCount > 2/)
+  assert.match(source, /renderer-content-ready.+resetMainFrameLoadFailures/)
+  assert.match(source, /\[Window\]: main frame load failed/)
+  assert.match(source, /render-process-gone/)
+  assert.match(source, /\[Window\]: renderer process exited/)
 })
