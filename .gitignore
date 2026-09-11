@@ -21,4 +21,5 @@ out
 # Generated Node-API build output
 native/macos-app-routing/build/
 native/macos-updater/build/
+native/macos-service/build/
 native/windows/traffic-monitor/build-*/

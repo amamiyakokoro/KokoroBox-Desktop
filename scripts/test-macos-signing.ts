@@ -353,7 +353,7 @@ for (const arch of ['x64', 'arm64']) {
         receipt.checksum,
         createHash('sha256').update('signed package with stapled ticket').digest('hex')
       )
-      assert.equal(mock.calls.filter((label) => label === 'Verify App/helper signature').length, 8)
+      assert.equal(mock.calls.filter((label) => label === 'Verify App/helper signature').length, 9)
       assert.ok(
         mock.calls.indexOf('Submit PKG for notarization') < mock.calls.indexOf('Staple PKG ticket')
       )
@@ -480,13 +480,18 @@ test('generated signing config passes electron-builder validation with required 
   const config = await getConfig(process.cwd(), undefined, signingConfig(process.cwd(), teamId))
   await validateConfiguration(config)
   assert.equal(config.forceCodeSigning, true)
-  assert.equal(config.mac.binaries.length, 5)
+  assert.equal(config.mac.binaries.length, 6)
   assert.ok(
     config.mac.binaries.includes(
       'Contents/Resources/files/macos-app-routing/kokorobox-app-routing.node'
     )
   )
   assert.ok(config.mac.binaries.includes('Contents/Frameworks/kokorobox-updater.node'))
+  assert.ok(
+    config.mac.binaries.includes(
+      'Contents/Resources/files/macos-service/kokorobox-service-management.node'
+    )
+  )
   assert.match(config.afterPack, /macos-after-pack\.cjs$/)
   assert.equal(config.mac.entitlementsInherit, 'build/entitlements.mac.helper.plist')
   assert.deepEqual(config.mac.signIgnore, [
@@ -518,6 +523,7 @@ test('both callers forward only the required signing secrets and non-macOS steps
   )
   const buildStep = config.jobs.build.steps.find((step: { name?: string }) => step.name === 'Build')
   assert.match(buildStep.run, /pnpm prepare:macos-updater/)
+  assert.match(buildStep.run, /pnpm prepare:macos-service/)
   assert.deepEqual(
     macTargets.map((target: { arch: string; runner: string }) => [target.arch, target.runner]),
     [

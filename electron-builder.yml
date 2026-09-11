@@ -59,6 +59,8 @@ mac:
   entitlements: build/entitlements.mac.plist
   entitlementsInherit: build/entitlements.mac.helper.plist
   extraFiles:
+    - from: './build/macos-service/KokoroBoxService.plist'
+      to: 'Library/LaunchDaemons/KokoroBoxService.plist'
     - from: './extra/macos-app-routing-system-extension/com.amamiyakokoro.app.proxy-extension.systemextension'
       to: 'Library/SystemExtensions/com.amamiyakokoro.app.proxy-extension.systemextension'
     - from: './extra/macos-updater/Sparkle.framework'
