@@ -54,6 +54,7 @@ jobs:
       - run: pnpm install --frozen-lockfile --ignore-scripts
       - run: pnpm test:release
       - run: pnpm test:macos-signing
+      - run: pnpm test:macos-sparkle
       - run: pnpm test:kokoro
       - run: pnpm test:localization
       - run: pnpm test:override-user-agent
