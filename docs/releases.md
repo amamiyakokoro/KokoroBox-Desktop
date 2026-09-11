@@ -134,6 +134,10 @@ Windows packages declare `asInvoker` in the KokoroBox executable manifest. Kokor
 
 Both Intel and Apple Silicon macOS releases require **Developer ID-signed, Apple-notarized PKGs with stapled tickets**. There is no unsigned fallback in either Stable or Rolling releases. The upstream PKG installation scripts remain enabled for proxy/service operation.
 
+The staged migration to native Sparkle application updates is documented in
+[`macos-updates.md`](macos-updates.md). PKG remains the active updater until the macOS privileged
+runtime no longer depends on installer scripts; Sparkle artifacts must not be enabled early.
+
 `electron-builder.ci.yml` is retained only for unsigned local smoke tests; release workflows no longer use it. The normal `electron-builder.yml` remains available for local production signing.
 
 ### Apple repository secrets
