@@ -82,6 +82,46 @@ static napi_value KBUnregister(napi_env env, napi_callback_info info) {
   }
 }
 
+static napi_value KBReload(napi_env env, napi_callback_info info) {
+  @autoreleasepool {
+    if (@available(macOS 13.0, *)) {
+      SMAppService *service = KBService();
+      SMAppServiceStatus status = service.status;
+      if (status == SMAppServiceStatusRequiresApproval) {
+        return KBString(env, KBStatusName(status));
+      }
+
+      NSError *error = nil;
+      if (status == SMAppServiceStatusEnabled &&
+          ![service unregisterAndReturnError:&error]) {
+        NSString *message = [NSString
+            stringWithFormat:@"SMAppService reload unregister failed (%@/%ld): %@",
+                             error.domain ?: @"unknown", (long)error.code,
+                             error.localizedDescription ?: @"unknown error"];
+        KBThrow(env, message);
+        return nullptr;
+      }
+
+      error = nil;
+      if (![service registerAndReturnError:&error]) {
+        status = service.status;
+        if (status == SMAppServiceStatusRequiresApproval) {
+          return KBString(env, KBStatusName(status));
+        }
+        NSString *message = [NSString
+            stringWithFormat:@"SMAppService reload register failed (%@/%ld): %@",
+                             error.domain ?: @"unknown", (long)error.code,
+                             error.localizedDescription ?: @"unknown error"];
+        KBThrow(env, message);
+        return nullptr;
+      }
+      return KBString(env, KBStatusName(service.status));
+    }
+    KBThrow(env, @"SMAppService requires macOS 13 or later");
+    return nullptr;
+  }
+}
+
 static napi_value KBOpenSystemSettings(napi_env env, napi_callback_info info) {
   @autoreleasepool {
     if (@available(macOS 13.0, *)) {
@@ -100,6 +140,7 @@ static napi_value KBInitialize(napi_env env, napi_value exports) {
       {"status", nullptr, KBStatus, nullptr, nullptr, nullptr, napi_default, nullptr},
       {"register", nullptr, KBRegister, nullptr, nullptr, nullptr, napi_default, nullptr},
       {"unregister", nullptr, KBUnregister, nullptr, nullptr, nullptr, napi_default, nullptr},
+      {"reload", nullptr, KBReload, nullptr, nullptr, nullptr, napi_default, nullptr},
       {"openSystemSettings", nullptr, KBOpenSystemSettings, nullptr, nullptr, nullptr, napi_default,
        nullptr},
   };

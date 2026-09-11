@@ -139,10 +139,12 @@ test('macOS registers the bundled daemon through SMAppService', () => {
   assert.match(adapterSource, /process\.dlopen\(nativeModule, target\)/)
   assert.match(adapterSource, /registerMacOSService/)
   assert.match(adapterSource, /unregisterMacOSService/)
+  assert.match(adapterSource, /reloadMacOSService/)
   assert.match(adapterSource, /requires-approval/)
   assert.match(bridgeSource, /daemonServiceWithPlistName:KBServicePlistName/)
   assert.match(bridgeSource, /registerAndReturnError/)
   assert.match(bridgeSource, /unregisterAndReturnError/)
+  assert.match(bridgeSource, /KBReload/)
   assert.match(bridgeSource, /openSystemSettingsLoginItems/)
   assert.match(launchDaemon, /<key>BundleProgram<\/key>/)
   assert.match(launchDaemon, /<string>Contents\/Resources\/files\/kokorobox-service<\/string>/)
@@ -174,7 +176,25 @@ test('macOS registers the bundled daemon through SMAppService', () => {
     managerSource.indexOf('export async function ensureMacOSServiceReady'),
     managerSource.indexOf('export async function uninstallService')
   )
-  assert.doesNotMatch(ensureReadySource, /await startService\(\)/)
+  assert.match(ensureReadySource, /status === 'stopped'[\s\S]*await startService\(\)/)
+  const automaticInstallSource = managerSource.slice(
+    managerSource.indexOf('async function performMacOSServiceInstall'),
+    managerSource.indexOf('export async function initService')
+  )
+  assert.match(automaticInstallSource, /reloadMacOSService\(\)/)
+  assert.doesNotMatch(automaticInstallSource, /removeLegacyMacOSService\(\)/)
+  assert.match(automaticInstallSource, /macOSServiceRecoveryPromise/)
+  const automaticRecoverySource =
+    managerSource.slice(
+      managerSource.indexOf('export async function startService'),
+      managerSource.indexOf('export async function stopService')
+    ) +
+    managerSource.slice(
+      managerSource.indexOf('export async function restartService'),
+      managerSource.indexOf('export async function serviceStatus')
+    )
+  assert.match(automaticRecoverySource, /installMacOSService\(\)/)
+  assert.doesNotMatch(automaticRecoverySource, /execWithElevation\('\/bin\/launchctl'/)
   assert.match(
     managerSource,
     /execWithElevation\('\/bin\/launchctl', \['bootout', 'system\/KokoroBoxService'\]\)/
@@ -183,7 +203,6 @@ test('macOS registers the bundled daemon through SMAppService', () => {
     managerSource,
     /execWithElevation\('\/bin\/rm', \['-f', macOSServiceRuntimePath\(\)\]\)/
   )
-  assert.match(managerSource, /'kickstart',[\s\S]*'-k',[\s\S]*'system\/KokoroBoxService'/)
   assert.match(managerSource, /'kill',[\s\S]*'SIGTERM',[\s\S]*'system\/KokoroBoxService'/)
   assert.doesNotMatch(managerSource, /(?:sh|bash)', \['-c'/)
   assert.doesNotMatch(managerSource, /execWithElevation\('\/usr\/bin\/install'/)
