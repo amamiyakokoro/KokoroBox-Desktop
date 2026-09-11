@@ -776,6 +776,9 @@ export const messages: Readonly<Record<string, string>> = {
   服务核心运行方式: 'Service core execution mode',
   服务模式: 'Service mode',
   服务状态: 'Service status',
+  等待系统批准: 'Awaiting system approval',
+  '请在系统设置中允许 KokoroBox 后台服务':
+    'Allow the KokoroBox background service in System Settings',
   '服务生命周期由发行版 init 系统负责管理':
     'The service lifecycle is managed by the distribution init system',
   '服务重启失败：{0}': 'Failed to restart service: {0}',

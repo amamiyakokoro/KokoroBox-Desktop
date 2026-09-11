@@ -121,23 +121,36 @@ test('Windows service probes and elevated commands never open a console window',
   assert.equal((updaterSource.match(/windowsHide: true/g) || []).length, 2)
 })
 
-test('macOS installs the service into a stable root-owned runtime', () => {
+test('macOS registers the bundled daemon through SMAppService', () => {
   const managerSource = readFileSync(resolve('src/main/service/manager.ts'), 'utf8')
-  const dirsSource = readFileSync(resolve('src/main/utils/dirs.ts'), 'utf8')
-  const preinstallSource = readFileSync(resolve('build/pkg-scripts/preinstall'), 'utf8')
-  const postinstallSource = readFileSync(resolve('build/pkg-scripts/postinstall'), 'utf8')
-
-  assert.match(
-    dirsSource,
-    /\/Library\/PrivilegedHelperTools\/com\.amamiyakokoro\.kokorobox-service/
+  const adapterSource = readFileSync(resolve('src/main/service/macos-smappservice.ts'), 'utf8')
+  const bridgeSource = readFileSync(
+    resolve('native/macos-service/KokoroBoxServiceManagementBridge.mm'),
+    'utf8'
   )
+  const launchDaemon = readFileSync(resolve('build/macos-service/KokoroBoxService.plist'), 'utf8')
+  const builderSource = readFileSync(resolve('electron-builder.yml'), 'utf8')
+  const packageSource = readFileSync(resolve('package.json'), 'utf8')
+  const dirsSource = readFileSync(resolve('src/main/utils/dirs.ts'), 'utf8')
+
+  assert.match(adapterSource, /process\.dlopen\(nativeModule, target\)/)
+  assert.match(adapterSource, /registerMacOSService/)
+  assert.match(adapterSource, /unregisterMacOSService/)
+  assert.match(adapterSource, /requires-approval/)
+  assert.match(bridgeSource, /daemonServiceWithPlistName:KBServicePlistName/)
+  assert.match(bridgeSource, /registerAndReturnError/)
+  assert.match(bridgeSource, /unregisterAndReturnError/)
+  assert.match(bridgeSource, /openSystemSettingsLoginItems/)
+  assert.match(launchDaemon, /<key>BundleProgram<\/key>/)
+  assert.match(launchDaemon, /<string>Contents\/Resources\/files\/kokorobox-service<\/string>/)
+  assert.match(launchDaemon, /<string>service<\/string>[\s\S]*<string>run<\/string>/)
+  assert.match(launchDaemon, /<key>UserName<\/key>\s*<string>root<\/string>/)
+  assert.match(builderSource, /Library\/LaunchDaemons\/KokoroBoxService\.plist/)
+  assert.match(packageSource, /prepare:macos-service/)
   assert.match(dirsSource, /\/Library\/LaunchDaemons\/KokoroBoxService\.plist/)
-  assert.match(managerSource, /execWithElevation\('\/usr\/bin\/install', \[/)
-  assert.match(managerSource, /'root',[\s\S]*'wheel',[\s\S]*'0755'/)
-  assert.match(managerSource, /execWithElevation\(runtimePath, \['service', 'install'\]\)/)
-  assert.match(managerSource, /createHash\('sha256'\)/)
-  assert.match(managerSource, /bundledHash !== runtimeHash/)
-  assert.match(managerSource, /plist\.includes\(`<string>\$\{runtimePath\}<\/string>`\)/)
+  assert.match(managerSource, /registerMacOSService\(\)/)
+  assert.match(managerSource, /unregisterMacOSService\(\)/)
+  assert.match(managerSource, /status === 'requires-approval'/)
   assert.match(managerSource, /export async function ensureMacOSServiceReady/)
   assert.match(
     managerSource,
@@ -147,11 +160,10 @@ test('macOS installs the service into a stable root-owned runtime', () => {
     managerSource,
     /execWithElevation\('\/bin\/rm', \['-f', macOSServiceRuntimePath\(\)\]\)/
   )
+  assert.match(managerSource, /'kickstart',[\s\S]*'-k',[\s\S]*'system\/KokoroBoxService'/)
+  assert.match(managerSource, /'kill',[\s\S]*'SIGTERM',[\s\S]*'system\/KokoroBoxService'/)
   assert.doesNotMatch(managerSource, /(?:sh|bash)', \['-c'/)
-  assert.match(preinstallSource, /kokorobox-service-was-installed/)
-  assert.match(postinstallSource, /\/usr\/bin\/install -o root -g wheel -m 0755/)
-  assert.match(postinstallSource, /SERVICE_RUNTIME_BIN.*service install/)
-  assert.doesNotMatch(postinstallSource, /chmod \+s|chmod [ugoa]*\+s/)
+  assert.doesNotMatch(managerSource, /execWithElevation\('\/usr\/bin\/install'/)
 })
 
 test('macOS privileged core features fail closed through the service boundary', () => {
