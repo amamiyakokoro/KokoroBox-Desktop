@@ -795,6 +795,11 @@ test('Windows application routing requires the privileged firewall lifecycle', (
   const manager = readFileSync('src/main/app-routing/manager.ts', 'utf8')
   const firewall = readFileSync('src/main/app-routing/firewall.ts', 'utf8')
   const serviceProtocol = readFileSync('src/main/app-routing/service-protocol.ts', 'utf8')
+  const serviceApi = readFileSync('src/main/service/api.ts', 'utf8')
+  const settingsDrawer = readFileSync(
+    'src/renderer/src/components/app-routing/app-routing-setting-drawer.tsx',
+    'utf8'
+  )
   const installer = readFileSync('build/installer.nsh', 'utf8')
 
   assert.match(firewall, /\['process-router', 'firewall', command\]/)
@@ -818,6 +823,10 @@ test('Windows application routing requires the privileged firewall lifecycle', (
   )
   assert.match(manager, /await stopDirectRouter\(\)/)
   assert.match(manager, /firewallReady: serviceStatus\.firewall_ready/)
+  assert.match(manager, /repairProcessRouterFirewall\(\)/)
+  assert.match(serviceApi, /post\('\/process-router\/firewall\/repair'\)/)
+  assert.match(settingsDrawer, /34010\/TCP 和 34011\/UDP/)
+  assert.doesNotMatch(settingsDrawer, /7891/)
   assert.match(manager, /message\.toLowerCase\(\)\.includes\('service is not initialized'\)/)
   assert.match(manager, /KokoroBox Service 尚未初始化，请初始化服务后重试/)
   const page = readFileSync('src/renderer/src/pages/app-routing.tsx', 'utf8')

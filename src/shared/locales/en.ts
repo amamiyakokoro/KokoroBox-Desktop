@@ -11,6 +11,11 @@ export const messages: Readonly<Record<string, string>> = {
   诊断记录: 'Diagnostic logging',
   '记录应用程序分流的匹配目标与处理结果；仅在排查问题时启用。':
     'Log application routing destinations and decisions. Enable only while troubleshooting.',
+  应用分流防火墙: 'Application routing firewall',
+  '检查并修复 ProxyBridge relay 的 34010/TCP 和 34011/UDP 规则。':
+    'Check and repair the ProxyBridge relay rules for 34010/TCP and 34011/UDP.',
+  检查并修复: 'Check and repair',
+  应用分流防火墙修复成功: 'Application routing firewall repaired',
   应用程序: 'Application',
   上游: 'Upstream',
   操作: 'Controls',

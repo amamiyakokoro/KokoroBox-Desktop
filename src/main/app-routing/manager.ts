@@ -17,6 +17,7 @@ import { verifyProcessRouterIntegrity } from './integrity'
 import { parseProcessRouterEvent } from './protocol'
 import {
   getProcessRouterStatus,
+  repairProcessRouterFirewall,
   replaceProcessRouterRules,
   startProcessRouter,
   stopProcessRouter,
@@ -578,6 +579,42 @@ export async function replaceAppRoutingConfig(config: AppRoutingConfig): Promise
 
 export function getAppRoutingStatus(): AppRoutingStatus {
   return { ...status }
+}
+
+export async function repairAppRoutingFirewall(): Promise<AppRoutingStatus> {
+  if (process.platform !== 'win32') {
+    throw new Error('应用分流防火墙修复仅支持 Windows')
+  }
+
+  // Avoid racing a repair against a scheduled reconciliation pass.
+  if (operation) await operation
+
+  const [config, appConfig] = await Promise.all([getAppRoutingConfig(), getAppConfig()])
+  const ordinaryWindowsProcess = !(await isRunningAsAdmin())
+  const useService =
+    activeBackend === 'service' ||
+    appConfig.corePermissionMode === 'service' ||
+    ordinaryWindowsProcess
+  const hasActiveRules =
+    config.enabled && config.rules.some((rule) => isAppRoutingRuleEffectivelyEnabled(config, rule))
+
+  if (useService) {
+    try {
+      const repaired = validateServiceProcessRouterStatus(await repairProcessRouterFirewall())
+      publishServiceStatus(repaired)
+      if (hasActiveRules) activeBackend = 'service'
+    } catch (error) {
+      throw serviceModeError(error)
+    }
+  } else {
+    await verifyProcessRouterIntegrity()
+    await ensureDirectFirewall(true)
+    publishStatus({ ...status, firewallReady: true })
+    if (hasActiveRules) activeBackend = 'direct'
+  }
+
+  if (hasActiveRules) await reconcileAppRouting()
+  return getAppRoutingStatus()
 }
 
 export async function refreshAppRoutingStatus(): Promise<AppRoutingStatus> {

@@ -2,7 +2,12 @@ import { ipcMain } from 'electron'
 import { restartCore } from '../core/manager'
 import { getApplicationPaths, getAppRoutingIcon, scanAppRoutingDirectory } from '../sys/misc'
 import { getAppRoutingConfig } from './config'
-import { getAppRoutingStatus, refreshAppRoutingStatus, replaceAppRoutingConfig } from './manager'
+import {
+  getAppRoutingStatus,
+  refreshAppRoutingStatus,
+  repairAppRoutingFirewall,
+  replaceAppRoutingConfig
+} from './manager'
 import { openMacAppRoutingSystemSettings } from './macos'
 
 async function invokeSafely<T>(
@@ -28,6 +33,7 @@ export function registerAppRoutingIpcHandlers(): void {
   )
   ipcMain.handle('getAppRoutingStatus', () => getAppRoutingStatus())
   ipcMain.handle('refreshAppRoutingStatus', () => invokeSafely(refreshAppRoutingStatus))
+  ipcMain.handle('repairAppRoutingFirewall', () => invokeSafely(repairAppRoutingFirewall))
   ipcMain.handle('replaceAppRoutingConfig', (_event, config: AppRoutingConfig) =>
     invokeSafely(async () => {
       const previous = await getAppRoutingConfig()

@@ -8,6 +8,8 @@ import { IoIosHelpCircle } from 'react-icons/io'
 
 interface Props {
   isDisabled: boolean
+  isWindows: boolean
+  isRepairingFirewall: boolean
   isProxyUdpDnsEnabled: boolean
   defaultAction: AppRoutingAction
   defaultProtocol: AppRoutingProtocol
@@ -16,6 +18,7 @@ interface Props {
   onDefaultActionChange: (action: AppRoutingAction) => void
   onDefaultProtocolChange: (protocol: AppRoutingProtocol) => void
   onDiagnosticLoggingChange: (enabled: boolean) => void
+  onRepairFirewall: () => void
   onClose: () => void
   reopenSignal?: number
 }
@@ -36,6 +39,8 @@ function SettingHelp({ label, content }: { label: string; content: string }): Re
 const AppRoutingSettingDrawer: React.FC<Props> = (props) => {
   const {
     isDisabled,
+    isWindows,
+    isRepairingFirewall,
     isProxyUdpDnsEnabled,
     defaultAction,
     defaultProtocol,
@@ -44,6 +49,7 @@ const AppRoutingSettingDrawer: React.FC<Props> = (props) => {
     onDefaultActionChange,
     onDefaultProtocolChange,
     onDiagnosticLoggingChange,
+    onRepairFirewall,
     onClose,
     reopenSignal
   } = props
@@ -194,6 +200,7 @@ const AppRoutingSettingDrawer: React.FC<Props> = (props) => {
                 />
               }
               {...settingItemProps}
+              divider={isWindows}
             >
               <Switch
                 aria-label={tr('诊断记录')}
@@ -208,6 +215,28 @@ const AppRoutingSettingDrawer: React.FC<Props> = (props) => {
                 </Switch.Content>
               </Switch>
             </SettingItem>
+            {isWindows && (
+              <SettingItem
+                title={tr('应用分流防火墙')}
+                actions={
+                  <SettingHelp
+                    label={tr('应用分流防火墙')}
+                    content={tr('检查并修复 ProxyBridge relay 的 34010/TCP 和 34011/UDP 规则。')}
+                  />
+                }
+                {...settingItemProps}
+              >
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  isPending={isRepairingFirewall}
+                  isDisabled={isDisabled}
+                  onPress={onRepairFirewall}
+                >
+                  {tr('检查并修复')}
+                </Button>
+              </SettingItem>
+            )}
           </Drawer.Body>
           <Drawer.CloseTrigger className="app-nodrag" />
         </Drawer.Dialog>

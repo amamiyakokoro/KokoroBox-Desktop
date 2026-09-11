@@ -7,6 +7,7 @@ import {
   initService,
   installService,
   openAppRoutingSystemSettings,
+  repairAppRoutingFirewall,
   serviceStatus,
   startService
 } from '@renderer/utils/ipc'
@@ -148,6 +149,7 @@ const AppRouting: React.FC = () => {
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(() => new Set())
   const [openingSettings, setOpeningSettings] = useState(false)
   const [preparingService, setPreparingService] = useState(false)
+  const [repairingFirewall, setRepairingFirewall] = useState(false)
   const openApprovalSettings = async (): Promise<void> => {
     if (openingSettings) return
     setOpeningSettings(true)
@@ -210,6 +212,19 @@ const AppRouting: React.FC = () => {
     if (enabled && isWindows && !(await prepareWindowsService())) return
     await save({ ...config, enabled })
   }
+  const repairWindowsFirewall = async (): Promise<void> => {
+    if (!isWindows || repairingFirewall) return
+    setRepairingFirewall(true)
+    try {
+      await repairAppRoutingFirewall()
+      await refresh()
+      notify(tr('应用分流防火墙修复成功'))
+    } catch (error) {
+      notify(error, { variant: 'danger' })
+    } finally {
+      setRepairingFirewall(false)
+    }
+  }
   const toggleGroup = (groupId: string): void => {
     setCollapsedGroups((current) => {
       const next = new Set(current)
@@ -244,6 +259,8 @@ const AppRouting: React.FC = () => {
         <AppRoutingSettingDrawer
           reopenSignal={settingDrawerReopenSignal}
           isDisabled={!supported || saving}
+          isWindows={isWindows}
+          isRepairingFirewall={repairingFirewall}
           isProxyUdpDnsEnabled={config.proxyUdpDns}
           defaultAction={config.defaultAction}
           defaultProtocol={config.defaultProtocol}
@@ -254,6 +271,7 @@ const AppRouting: React.FC = () => {
           onDiagnosticLoggingChange={(diagnosticLogging) =>
             void save({ ...config, diagnosticLogging })
           }
+          onRepairFirewall={() => void repairWindowsFirewall()}
           onClose={() => setIsSettingDrawerOpen(false)}
         />
       )}

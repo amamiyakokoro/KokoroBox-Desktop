@@ -469,6 +469,10 @@ export const getProcessRouterStatus = async (): Promise<ServiceProcessRouterStat
   return await getServiceAxios().get('/process-router/status')
 }
 
+export const repairProcessRouterFirewall = async (): Promise<ServiceProcessRouterStatus> => {
+  return await getServiceAxios().post('/process-router/firewall/repair')
+}
+
 export const cleanupProcessRouter = async (): Promise<void> => {
   await getServiceAxios().post('/process-router/cleanup')
 }

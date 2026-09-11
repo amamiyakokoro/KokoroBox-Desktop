@@ -482,6 +482,10 @@ export async function setupFirewall(): Promise<void> {
   return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('setupFirewall'))
 }
 
+export async function repairAppRoutingFirewall(): Promise<AppRoutingStatus> {
+  return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('repairAppRoutingFirewall'))
+}
+
 export async function getInterfaces(): Promise<Record<string, NetworkInterfaceInfo[]>> {
   return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('getInterfaces'))
 }
