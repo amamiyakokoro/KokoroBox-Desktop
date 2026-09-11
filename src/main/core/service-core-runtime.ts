@@ -50,7 +50,8 @@ export function createServiceCoreRuntime(options: ServiceCoreRuntimeOptions) {
   }
 
   const serviceFallbackState = {
-    unavailableModePromise: null as Promise<void> | null
+    unavailableModePromise: null as Promise<void> | null,
+    unavailableModeHandled: false
   }
 
   setServiceUnavailableFallbackHandler(async (reason) => {
@@ -61,12 +62,19 @@ export function createServiceCoreRuntime(options: ServiceCoreRuntimeOptions) {
       return
     }
 
+    // A missing service socket can reject many concurrent API requests. Handle
+    // one outage once; otherwise each rejection schedules another notification
+    // and used to reload the renderer indefinitely on macOS.
+    if (serviceFallbackState.unavailableModeHandled) return
+
     if (!serviceFallbackState.unavailableModePromise) {
-      serviceFallbackState.unavailableModePromise = fallbackUnavailableServiceModes(reason).finally(
-        () => {
+      serviceFallbackState.unavailableModePromise = fallbackUnavailableServiceModes(reason)
+        .then(() => {
+          serviceFallbackState.unavailableModeHandled = true
+        })
+        .finally(() => {
           serviceFallbackState.unavailableModePromise = null
-        }
-      )
+        })
     }
 
     return serviceFallbackState.unavailableModePromise
@@ -191,21 +199,16 @@ export function createServiceCoreRuntime(options: ServiceCoreRuntimeOptions) {
     mainWindow?.webContents.send('appConfigUpdated')
     floatingWindow?.webContents.send('appConfigUpdated')
 
-    try {
-      if (useServiceCore && !preserveMacOSServiceCore) {
-        const promises = await options.startCore()
-        await Promise.all(promises)
-        mainWindow?.webContents.send('core-started')
-      }
-      void showNotification({
-        title: preserveMacOSServiceCore
-          ? tr('macOS 特权功能需要 KokoroBox 服务，请安装或修复服务')
-          : tr('服务不可用，已切换到非服务模式')
-      })
-    } finally {
-      mainWindow?.webContents.reload()
-      floatingWindow?.webContents.reload()
+    if (useServiceCore && !preserveMacOSServiceCore) {
+      const promises = await options.startCore()
+      await Promise.all(promises)
+      mainWindow?.webContents.send('core-started')
     }
+    void showNotification({
+      title: preserveMacOSServiceCore
+        ? tr('macOS 特权功能需要 KokoroBox 服务，请安装或修复服务')
+        : tr('服务不可用，已切换到非服务模式')
+    })
   }
 
   return {
@@ -283,9 +286,6 @@ export function createServiceCoreRuntime(options: ServiceCoreRuntimeOptions) {
         if (event.type === 'failed' || event.type === 'restart_failed') {
           serviceCoreState.managed = false
         }
-        if (event.type === 'restart_failed') {
-          mainWindow?.webContents.reload()
-        }
         break
       case 'stopped':
         serviceCoreState.autoResumePaused = true
@@ -303,6 +303,7 @@ export function createServiceCoreRuntime(options: ServiceCoreRuntimeOptions) {
     if (state !== 'connected') {
       return
     }
+    serviceFallbackState.unavailableModeHandled = false
     if (
       serviceCoreState.startupActive ||
       serviceCoreState.autoResumePaused ||
