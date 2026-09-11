@@ -42,6 +42,13 @@ normal updater for their selected installation scope.
 
 All targets use GitHub-hosted runners and the locked project dependencies. The native module for each target architecture is checked before packaging.
 
+KokoroBox Service is versioned independently from Desktop. Stable builds download the service tag
+declared by `KOKOROBOX_SERVICE_STABLE_TAG` in `scripts/kokorobox-service.ts`; rolling and local
+development builds use the service repository's moving `pre-release`. Every downloaded service
+binary must match its release `.sha256` file before it can be packaged. To upgrade the stable
+service, update that constant in a reviewed Desktop commit only after all six assets and checksum
+files have been published under the new immutable service tag.
+
 Linux installs the application at `/opt/kokorobox/kokorobox` and uses the `KokoroBoxService` service identity. The shared `pnpm build:linux` packaging entry point uses this layout for both local and CI builds. Legacy launchers and service registrations are stopped or retained only where needed for safe upgrades.
 
 ### RPM compatibility

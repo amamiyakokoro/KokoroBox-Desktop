@@ -37,6 +37,11 @@ import {
   trafficMonitorAsset,
   trafficMonitorDownloadUrl
 } from './traffic-monitor.ts'
+import {
+  KOKOROBOX_SERVICE_STABLE_TAG,
+  kokoroboxServiceAsset,
+  verifyKokoroBoxServiceChecksum
+} from './kokorobox-service.ts'
 
 const sha = '1234567890abcdef1234567890abcdef12345678'
 const base = { packageVersion: '2.26.8', sha }
@@ -210,6 +215,41 @@ test('desktop uses the independently maintained KokoroBox native packages', () =
     assert.match(source, /from 'kokorobox-native'/, file)
     assert.doesNotMatch(source, /sparkle-native/, file)
   }
+})
+
+test('stable builds pin verified service releases while rolling builds follow pre-release', () => {
+  assert.equal(KOKOROBOX_SERVICE_STABLE_TAG, 'v0.1.0')
+  assert.deepEqual(kokoroboxServiceAsset('win32', 'x64', 'stable'), {
+    downloadURL:
+      'https://github.com/amamiyakokoro/kokorobox-service/releases/download/v0.1.0/kokorobox-service-windows-amd64-v3.exe',
+    filename: 'kokorobox-service-windows-amd64-v3.exe',
+    sha256URL:
+      'https://github.com/amamiyakokoro/kokorobox-service/releases/download/v0.1.0/kokorobox-service-windows-amd64-v3.exe.sha256',
+    tag: 'v0.1.0'
+  })
+  assert.equal(kokoroboxServiceAsset('linux', 'arm64', 'rolling').tag, 'pre-release')
+  assert.equal(kokoroboxServiceAsset('darwin', 'arm64').tag, 'pre-release')
+  assert.throws(() => kokoroboxServiceAsset('win32', 'ia32', 'stable'))
+  assert.throws(() => kokoroboxServiceAsset('linux', 'x64', 'nightly'))
+
+  const contents = Buffer.from('service fixture')
+  const filename = 'kokorobox-service-linux-arm64'
+  const checksum = `${createHash('sha256').update(contents).digest('hex')}  ${filename}`
+  assert.doesNotThrow(() => verifyKokoroBoxServiceChecksum(filename, contents, checksum))
+  assert.throws(
+    () => verifyKokoroBoxServiceChecksum(filename, Buffer.from('tampered'), checksum),
+    /SHA-256 mismatch/
+  )
+  assert.throws(
+    () => verifyKokoroBoxServiceChecksum(filename, contents, `${checksum}.unexpected`),
+    /Invalid SHA-256 checksum/
+  )
+
+  const build = workflow('build')
+  assert.equal(build.jobs.build.env.RELEASE_CHANNEL, '${{ inputs.channel }}')
+  const prepare = readFileSync('scripts/prepare.ts', 'utf8')
+  assert.match(prepare, /sha256URL: asset\.sha256URL/)
+  assert.match(prepare, /verifyKokoroBoxServiceChecksum/)
 })
 
 test('platform discovery and core permissions use constrained native APIs', () => {
