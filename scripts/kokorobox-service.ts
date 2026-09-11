@@ -1,11 +1,11 @@
 import { createHash } from 'node:crypto'
 
-export const KOKOROBOX_SERVICE_STABLE_TAG = 'v0.2.0'
+export const KOKOROBOX_SERVICE_STABLE_TAG = 'v0.2.1'
 
 const targets: Record<string, string> = {
   'win32-x64': 'kokorobox-service-windows-amd64-v3',
   'win32-arm64': 'kokorobox-service-windows-arm64',
-  'darwin-x64': 'kokorobox-service-darwin-amd64-v3',
+  'darwin-x64': 'kokorobox-service-darwin-amd64',
   'darwin-arm64': 'kokorobox-service-darwin-arm64',
   'linux-x64': 'kokorobox-service-linux-amd64-v3',
   'linux-arm64': 'kokorobox-service-linux-arm64'
