@@ -121,6 +121,29 @@ test('Windows service probes and elevated commands never open a console window',
   assert.equal((updaterSource.match(/windowsHide: true/g) || []).length, 2)
 })
 
+test('macOS installs the service into a stable root-owned runtime', () => {
+  const managerSource = readFileSync(resolve('src/main/service/manager.ts'), 'utf8')
+  const dirsSource = readFileSync(resolve('src/main/utils/dirs.ts'), 'utf8')
+
+  assert.match(
+    dirsSource,
+    /\/Library\/PrivilegedHelperTools\/com\.amamiyakokoro\.kokorobox-service/
+  )
+  assert.match(dirsSource, /\/Library\/LaunchDaemons\/KokoroBoxService\.plist/)
+  assert.match(managerSource, /execWithElevation\('\/usr\/bin\/install', \[/)
+  assert.match(managerSource, /'root',[\s\S]*'wheel',[\s\S]*'0755'/)
+  assert.match(managerSource, /execWithElevation\(runtimePath, \['service', 'install'\]\)/)
+  assert.match(
+    managerSource,
+    /execWithElevation\('\/bin\/launchctl', \['bootout', 'system\/KokoroBoxService'\]\)/
+  )
+  assert.match(
+    managerSource,
+    /execWithElevation\('\/bin\/rm', \['-f', macOSServiceRuntimePath\(\)\]\)/
+  )
+  assert.doesNotMatch(managerSource, /(?:sh|bash)', \['-c'/)
+})
+
 test('service status parser handles nested pretty and single-line JSON logs', () => {
   const pretty = `wrapper output
 {

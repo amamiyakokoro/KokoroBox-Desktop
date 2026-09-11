@@ -119,6 +119,14 @@ export function servicePath(): string {
   return path.join(resourcesFilesDir(), `kokorobox-service${isWin ? '.exe' : ''}`)
 }
 
+export function macOSServiceRuntimePath(): string {
+  return '/Library/PrivilegedHelperTools/com.amamiyakokoro.kokorobox-service'
+}
+
+export function macOSServicePlistPath(): string {
+  return '/Library/LaunchDaemons/KokoroBoxService.plist'
+}
+
 export function serviceAuthStorePath(): string {
   return path.join(dataDir(), 'service-auth.json')
 }

@@ -1,5 +1,5 @@
 import { tr } from '../../shared/i18n'
-import { servicePath } from '../utils/dirs'
+import { macOSServicePlistPath, macOSServiceRuntimePath, servicePath } from '../utils/dirs'
 import { execWithElevation } from '../utils/elevation'
 import { KeyManager, type KeyPair, validateKeyPair } from './key'
 import { initServiceAPI, getServiceAxios, ping, test, ServiceAPIError } from './api'
@@ -216,6 +216,32 @@ async function waitForServiceReady(timeoutMs = 15000): Promise<void> {
   )
 }
 
+async function installMacOSServiceRuntime(execPath: string): Promise<void> {
+  const status = await serviceStatus()
+
+  if (status !== 'not-installed') {
+    try {
+      await execWithElevation('/bin/launchctl', ['bootout', 'system/KokoroBoxService'])
+    } catch {
+      // The job may already be stopped while its launchd registration remains.
+    }
+    await execWithElevation('/bin/rm', ['-f', macOSServicePlistPath()])
+  }
+
+  const runtimePath = macOSServiceRuntimePath()
+  await execWithElevation('/usr/bin/install', [
+    '-o',
+    'root',
+    '-g',
+    'wheel',
+    '-m',
+    '0755',
+    execPath,
+    runtimePath
+  ])
+  await execWithElevation(runtimePath, ['service', 'install'])
+}
+
 export async function initService(): Promise<void> {
   const currentKeyManager = await initKeyManager()
   const secret = await ensurePersistedServiceAuth(currentKeyManager)
@@ -244,7 +270,11 @@ export async function installService(): Promise<void> {
   const execPath = servicePath()
 
   try {
-    await execWithElevation(execPath, ['service', 'install'])
+    if (process.platform === 'darwin') {
+      await installMacOSServiceRuntime(execPath)
+    } else {
+      await execWithElevation(execPath, ['service', 'install'])
+    }
   } catch (error) {
     if (isUserCancelledError(error)) {
       throw new UserCancelledError()
@@ -257,7 +287,17 @@ export async function uninstallService(): Promise<void> {
   const execPath = servicePath()
 
   try {
-    await execWithElevation(execPath, ['service', 'uninstall'])
+    if (process.platform === 'darwin') {
+      try {
+        await execWithElevation('/bin/launchctl', ['bootout', 'system/KokoroBoxService'])
+      } catch {
+        // A stopped service still needs its launchd registration removed.
+      }
+      await execWithElevation('/bin/rm', ['-f', macOSServicePlistPath()])
+      await execWithElevation('/bin/rm', ['-f', macOSServiceRuntimePath()])
+    } else {
+      await execWithElevation(execPath, ['service', 'uninstall'])
+    }
   } catch (error) {
     if (isUserCancelledError(error)) {
       throw new UserCancelledError()

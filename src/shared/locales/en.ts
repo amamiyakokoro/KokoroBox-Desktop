@@ -521,6 +521,8 @@ export const messages: Readonly<Record<string, string>> = {
   '存在无法识别的字符 "{0}"': 'Unrecognized character "{0}"',
   守护通知: 'Watchdog notifications',
   安装服务: 'Install service',
+  修复服务: 'Repair service',
+  服务安装或修复成功: 'Service installed or repaired',
   '完全退出软件，只保留内核进程': 'Quit the app completely, leaving only the core process running',
   完成: 'Done',
   '定时同步订阅/文件': 'Scheduled subscription/file sync',

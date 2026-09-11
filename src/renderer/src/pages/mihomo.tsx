@@ -155,7 +155,7 @@ const Mihomo: React.FC = () => {
             ? {
                 onInstall: async () => {
                   await installService()
-                  notify(tr('服务安装成功'))
+                  notify(tr('服务安装或修复成功'))
                 },
                 onUninstall: async () => {
                   await uninstallService()
