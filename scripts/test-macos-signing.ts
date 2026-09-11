@@ -23,6 +23,7 @@ import {
   assertDeveloperId,
   assertSystemExtensionHostEntitlements,
   assertProvisioningProfilePermissions,
+  assertSMAppServiceBundle,
   cleanupSigning,
   decodeCertificate,
   runCommand,
@@ -140,6 +141,17 @@ function mockRunner(env: NodeJS.ProcessEnv, projectDir: string, failure?: string
         'Contents/Library/SystemExtensions/com.amamiyakokoro.app.proxy-extension.systemextension/Contents'
       )
       mkdirSync(extensionContents, { recursive: true })
+      const serviceDirectory = path.join(appPath, 'Contents/Resources/files')
+      const launchDaemonDirectory = path.join(appPath, 'Contents/Library/LaunchDaemons')
+      mkdirSync(serviceDirectory, { recursive: true })
+      mkdirSync(launchDaemonDirectory, { recursive: true })
+      writeFileSync(path.join(serviceDirectory, 'kokorobox-service'), 'service fixture', {
+        mode: 0o755
+      })
+      writeFileSync(
+        path.join(launchDaemonDirectory, 'KokoroBoxService.plist'),
+        readFileSync(path.join(process.cwd(), 'build/macos-service/KokoroBoxService.plist'))
+      )
       writeFileSync(path.join(appPath, 'Contents/embedded.provisionprofile'), 'app profile', {
         mode: 0o644
       })
@@ -313,6 +325,33 @@ test('embedded provisioning profiles remain readable after a root-owned PKG inst
   })
 })
 
+test('SMAppService bundle validation rejects missing, non-executable and absolute-path daemons', () => {
+  fixture((_env, directory) => {
+    const appPath = path.join(directory, 'KokoroBox.app')
+    const serviceDirectory = path.join(appPath, 'Contents/Resources/files')
+    const launchDaemonDirectory = path.join(appPath, 'Contents/Library/LaunchDaemons')
+    const daemonPath = path.join(serviceDirectory, 'kokorobox-service')
+    const plistPath = path.join(launchDaemonDirectory, 'KokoroBoxService.plist')
+    mkdirSync(serviceDirectory, { recursive: true })
+    mkdirSync(launchDaemonDirectory, { recursive: true })
+    writeFileSync(daemonPath, 'service fixture', { mode: 0o755 })
+    writeFileSync(plistPath, readFileSync('build/macos-service/KokoroBoxService.plist'))
+    assert.equal(assertSMAppServiceBundle(appPath), plistPath)
+
+    chmodSync(daemonPath, 0o644)
+    assert.throws(() => assertSMAppServiceBundle(appPath), /not executable/)
+    chmodSync(daemonPath, 0o755)
+    writeFileSync(
+      plistPath,
+      readFileSync('build/macos-service/KokoroBoxService.plist', 'utf8').replace(
+        'Contents/Resources/files/kokorobox-service',
+        '/Library/PrivilegedHelperTools/kokorobox-service'
+      )
+    )
+    assert.throws(() => assertSMAppServiceBundle(appPath), /absolute path/)
+  })
+})
+
 test('notarization must return Accepted with a valid submission ID', () => {
   assert.throws(
     () => assertAccepted('not-json-fake-secret'),
@@ -353,7 +392,7 @@ for (const arch of ['x64', 'arm64']) {
         receipt.checksum,
         createHash('sha256').update('signed package with stapled ticket').digest('hex')
       )
-      assert.equal(mock.calls.filter((label) => label === 'Verify App/helper signature').length, 8)
+      assert.equal(mock.calls.filter((label) => label === 'Verify App/helper signature').length, 9)
       assert.ok(
         mock.calls.indexOf('Submit PKG for notarization') < mock.calls.indexOf('Staple PKG ticket')
       )
@@ -480,13 +519,18 @@ test('generated signing config passes electron-builder validation with required 
   const config = await getConfig(process.cwd(), undefined, signingConfig(process.cwd(), teamId))
   await validateConfiguration(config)
   assert.equal(config.forceCodeSigning, true)
-  assert.equal(config.mac.binaries.length, 5)
+  assert.equal(config.mac.binaries.length, 6)
   assert.ok(
     config.mac.binaries.includes(
       'Contents/Resources/files/macos-app-routing/kokorobox-app-routing.node'
     )
   )
   assert.ok(config.mac.binaries.includes('Contents/Frameworks/kokorobox-updater.node'))
+  assert.ok(
+    config.mac.binaries.includes(
+      'Contents/Resources/files/macos-service/kokorobox-service-management.node'
+    )
+  )
   assert.match(config.afterPack, /macos-after-pack\.cjs$/)
   assert.equal(config.mac.entitlementsInherit, 'build/entitlements.mac.helper.plist')
   assert.deepEqual(config.mac.signIgnore, [
@@ -518,6 +562,7 @@ test('both callers forward only the required signing secrets and non-macOS steps
   )
   const buildStep = config.jobs.build.steps.find((step: { name?: string }) => step.name === 'Build')
   assert.match(buildStep.run, /pnpm prepare:macos-updater/)
+  assert.match(buildStep.run, /pnpm prepare:macos-service/)
   assert.deepEqual(
     macTargets.map((target: { arch: string; runner: string }) => [target.arch, target.runner]),
     [

@@ -141,10 +141,11 @@ Windows CI packages are currently **not Authenticode-signed**. SignPath signing 
 
 Windows packages declare `asInvoker` in the KokoroBox executable manifest. KokoroBox starts with the current user's privileges and elevates only explicit privileged operations; it does not create a launcher process, stage startup arguments, or run an elevation scheduled task. The permission panel can explicitly restart the current session as administrator and return it to the interactive user's normal token. Neither action persists elevation. Installation and upgrades remove obsolete elevation tasks and runner files. The installed executable, shortcuts, auto-start entry, service, data and IPC names use KokoroBox names. Legacy URI identifiers and the authenticated service wire-format remain supported for compatibility.
 
-Both Intel and Apple Silicon macOS releases require **Developer ID-signed, Apple-notarized PKGs with stapled tickets**. There is no unsigned fallback in either Stable or Rolling releases. The upstream PKG installation scripts remain enabled for proxy/service operation.
+Both Intel and Apple Silicon macOS releases require **Developer ID-signed, Apple-notarized PKGs with stapled tickets**. There is no unsigned fallback in either Stable or Rolling releases. The recovery PKG removes the former external LaunchDaemon/runtime during migration and preserves the running state of an already-approved bundled service.
 
 The staged migration to native Sparkle application updates is documented in
-[`macos-updates.md`](macos-updates.md). The privileged runtime is migrated, signed Sparkle
+[`macos-updates.md`](macos-updates.md). The privileged daemon is embedded and registered through
+`SMAppService`, signed Sparkle
 archives/appcasts are published, and builds containing the bundle-update stage use Sparkle for
 subsequent updates. Older versions install the first transition build through their existing PKG
 updater. The PKG remains available for first installation and explicit recovery while that

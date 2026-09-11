@@ -127,6 +127,7 @@ export const messages: Readonly<Record<string, string>> = {
   '返回 KokoroBox；应用分流会自动继续启动。':
     'Return to KokoroBox; application routing will continue starting automatically.',
   打开系统设置并请求批准: 'Open System Settings and Request Approval',
+  打开系统设置: 'Open System Settings',
   '我已启用，立即检查': 'I enabled it — check now',
   'macOS 应用分流组件未安装': 'The macOS application-routing bridge is not installed',
   'macOS 系统扩展未安装': 'The macOS system extension is not installed',
@@ -776,6 +777,9 @@ export const messages: Readonly<Record<string, string>> = {
   服务核心运行方式: 'Service core execution mode',
   服务模式: 'Service mode',
   服务状态: 'Service status',
+  等待系统批准: 'Awaiting system approval',
+  '请在系统设置中允许 KokoroBox 后台服务':
+    'Allow the KokoroBox background service in System Settings',
   '服务生命周期由发行版 init 系统负责管理':
     'The service lifecycle is managed by the distribution init system',
   '服务重启失败：{0}': 'Failed to restart service: {0}',

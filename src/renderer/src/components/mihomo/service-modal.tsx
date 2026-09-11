@@ -2,9 +2,14 @@ import { tr } from '../../../../shared/i18n'
 import React, { useEffect, useState, useCallback } from 'react'
 import { Button, Spinner, Card, CardBody, Chip, Divider } from '@heroui/react'
 import { Modal } from '@heroui-v3/react'
-import { serviceStatus, testServiceConnection } from '@renderer/utils/ipc'
+import {
+  openServiceSystemSettings,
+  serviceStatus,
+  testServiceConnection
+} from '@renderer/utils/ipc'
 import { notify } from '@renderer/utils/notification'
 import { systemCoreOnlyBuild, systemServicePath } from '../../../../shared/build-flags'
+import { platform } from '@renderer/utils/init'
 
 interface Props {
   onChange: (open: boolean) => void
@@ -110,6 +115,8 @@ const ServiceModal: React.FC<Props> = (props) => {
         return tr('已停止')
       case 'not-installed':
         return tr('未安装')
+      case 'requires-approval':
+        return tr('等待系统批准')
       case 'need-init':
         return tr('需要初始化')
       case 'paused':
@@ -174,9 +181,11 @@ const ServiceModal: React.FC<Props> = (props) => {
                                 ? 'warning'
                                 : status === 'not-installed'
                                   ? 'danger'
-                                  : status === 'need-init'
+                                  : status === 'requires-approval'
                                     ? 'warning'
-                                    : 'default'
+                                    : status === 'need-init'
+                                      ? 'warning'
+                                      : 'default'
                           }
                           variant="flat"
                           size="sm"
@@ -232,7 +241,9 @@ const ServiceModal: React.FC<Props> = (props) => {
                     <span>
                       {systemCoreOnlyBuild
                         ? tr('服务生命周期由发行版 init 系统负责管理')
-                        : tr('未安装状态下部分高级功能将无法使用')}
+                        : status === 'requires-approval' && platform === 'darwin'
+                          ? tr('请在系统设置中允许 KokoroBox 后台服务')
+                          : tr('未安装状态下部分高级功能将无法使用')}
                     </span>
                   </div>
                 </div>
@@ -280,6 +291,16 @@ const ServiceModal: React.FC<Props> = (props) => {
                   isLoading={loading}
                 >
                   {tr('安装服务')}
+                </Button>
+              ) : status === 'requires-approval' && platform === 'darwin' ? (
+                <Button
+                  size="sm"
+                  color="warning"
+                  variant="flat"
+                  onPress={() => handleAction(openServiceSystemSettings)}
+                  isLoading={loading}
+                >
+                  {tr('打开系统设置')}
                 </Button>
               ) : (
                 <>

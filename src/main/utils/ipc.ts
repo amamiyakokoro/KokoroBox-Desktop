@@ -86,7 +86,8 @@ import {
   stopService,
   initService,
   testServiceConnection,
-  restartService
+  restartService,
+  openServiceSystemSettings
 } from '../service/manager'
 import { patchCoreProfile } from '../service/api'
 import { coreLogPath, findSystemMihomo, logDir } from './dirs'
@@ -335,6 +336,7 @@ export function registerIpcMainHandlers(): void {
   }
   ipcMain.handle('serviceStatus', () => ipcErrorWrapper(serviceStatus)())
   ipcMain.handle('testServiceConnection', () => ipcErrorWrapper(testServiceConnection)())
+  ipcMain.handle('openServiceSystemSettings', () => ipcErrorWrapper(openServiceSystemSettings)())
   ipcMain.handle('initService', () => ipcErrorWrapper(initService)())
   if (!systemCoreOnlyBuild) {
     ipcMain.handle('installService', () => ipcErrorWrapper(installService)())

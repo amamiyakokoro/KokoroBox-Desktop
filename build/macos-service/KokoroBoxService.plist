@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+  <dict>
+    <key>Label</key>
+    <string>KokoroBoxService</string>
+    <key>AssociatedBundleIdentifiers</key>
+    <array>
+      <string>com.amamiyakokoro.app</string>
+    </array>
+    <key>BundleProgram</key>
+    <string>Contents/Resources/files/kokorobox-service</string>
+    <key>ProgramArguments</key>
+    <array>
+      <string>kokorobox-service</string>
+      <string>service</string>
+      <string>run</string>
+    </array>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>UserName</key>
+    <string>root</string>
+  </dict>
+</plist>
