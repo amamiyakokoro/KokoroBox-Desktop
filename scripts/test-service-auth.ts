@@ -154,6 +154,7 @@ test('macOS registers the bundled daemon through SMAppService', () => {
   assert.match(managerSource, /unregisterMacOSService\(\)/)
   assert.match(managerSource, /status === 'requires-approval'/)
   assert.match(managerSource, /export async function ensureMacOSServiceReady/)
+  assert.match(managerSource, /process\.platform === 'darwin' && commandError/)
   assert.match(
     managerSource,
     /execWithElevation\('\/bin\/launchctl', \['bootout', 'system\/KokoroBoxService'\]\)/

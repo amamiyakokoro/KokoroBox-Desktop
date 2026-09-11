@@ -271,7 +271,7 @@ export async function initService(): Promise<void> {
     commandError = error
   }
 
-  if (process.platform === 'darwin') {
+  if (process.platform === 'darwin' && commandError) {
     // Older service binaries try to restart through a legacy plist after
     // writing authentication state. Restart the SMAppService job explicitly.
     try {
