@@ -5,6 +5,7 @@
 #import <NetworkExtension/NetworkExtension.h>
 #import <SystemExtensions/SystemExtensions.h>
 
+#include <atomic>
 #include <memory>
 #include <string>
 
@@ -19,6 +20,7 @@ static NSString *const KBPolicyAcknowledgementFilename =
     @"application-routing-policy-ack.json";
 static NSString *const KBUserApprovalPendingDefaultsKey =
     @"KokoroBoxApplicationRoutingUserApprovalPending";
+static std::atomic_bool KBApprovalSettingsOpenedThisProcess(false);
 
 static NSError *KBError(NSString *message) {
   return [NSError errorWithDomain:KBErrorDomain
@@ -39,6 +41,31 @@ static BOOL KBWait(dispatch_semaphore_t semaphore, NSTimeInterval seconds) {
   return dispatch_semaphore_wait(
              semaphore,
              dispatch_time(DISPATCH_TIME_NOW, (int64_t)(seconds * NSEC_PER_SEC))) == 0;
+}
+
+static NSURL *KBSystemSettingsURL(void) {
+  // Network Extensions moved to Login Items & Extensions in macOS 15. The
+  // inner network-extension sheet has no stable public deep link.
+  NSString *destination = @"x-apple.systempreferences:com.apple.preference.security?General";
+  if (@available(macOS 15.0, *)) {
+    destination = @"x-apple.systempreferences:com.apple.LoginItems-Settings.extension?ExtensionItems";
+  }
+  return [NSURL URLWithString:destination];
+}
+
+static void KBOpenSystemSettingsAsync(void (^completion)(NSError *)) {
+  dispatch_async(dispatch_get_main_queue(), ^{
+    NSURL *applicationURL =
+        [NSURL fileURLWithPath:@"/System/Applications/System Settings.app" isDirectory:YES];
+    NSWorkspaceOpenConfiguration *configuration = [[NSWorkspaceOpenConfiguration alloc] init];
+    configuration.activates = YES;
+    [[NSWorkspace sharedWorkspace] openURLs:@[KBSystemSettingsURL()]
+                      withApplicationAtURL:applicationURL
+                             configuration:configuration
+                         completionHandler:^(NSRunningApplication *application, NSError *failure) {
+      if (completion) completion(failure);
+    }];
+  });
 }
 
 @interface KBExtensionActivationDelegate : NSObject <OSSystemExtensionRequestDelegate>
@@ -64,6 +91,14 @@ static BOOL KBWait(dispatch_semaphore_t semaphore, NSTimeInterval seconds) {
 - (void)requestNeedsUserApproval:(OSSystemExtensionRequest *)request {
   self.needsUserApproval = YES;
   KBSetUserApprovalPending(YES);
+  // This callback is the authoritative first-install signal. Bring the
+  // relevant settings pane forward automatically, but only once per process
+  // so periodic reconciliation cannot repeatedly open it.
+  if (!KBApprovalSettingsOpenedThisProcess.exchange(true)) {
+    KBOpenSystemSettingsAsync(^(NSError *failure) {
+      if (failure) KBApprovalSettingsOpenedThisProcess.store(false);
+    });
+  }
   [self signalOnce];
 }
 
@@ -133,26 +168,9 @@ static BOOL KBActivateExtension(BOOL *needsUserApproval, NSError **error) {
 static BOOL KBOpenSystemSettings(NSError **error) {
   dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
   __block NSError *openError = nil;
-  dispatch_async(dispatch_get_main_queue(), ^{
-    NSURL *applicationURL =
-        [NSURL fileURLWithPath:@"/System/Applications/System Settings.app" isDirectory:YES];
-    // Network Extensions moved to Login Items & Extensions in macOS 15.
-    // Target its parent pane: the inner network-extension sheet has no stable
-    // public deep link. Never send Help Viewer's x-help-action URLs to Finder.
-    NSString *destination = @"x-apple.systempreferences:com.apple.preference.security?General";
-    if (@available(macOS 15.0, *)) {
-      destination = @"x-apple.systempreferences:com.apple.LoginItems-Settings.extension?ExtensionItems";
-    }
-    NSURL *settingsURL = [NSURL URLWithString:destination];
-    NSWorkspaceOpenConfiguration *configuration = [[NSWorkspaceOpenConfiguration alloc] init];
-    configuration.activates = YES;
-    [[NSWorkspace sharedWorkspace] openURLs:@[settingsURL]
-                      withApplicationAtURL:applicationURL
-                             configuration:configuration
-                         completionHandler:^(NSRunningApplication *application, NSError *failure) {
-      openError = failure;
-      dispatch_semaphore_signal(semaphore);
-    }];
+  KBOpenSystemSettingsAsync(^(NSError *failure) {
+    openError = failure;
+    dispatch_semaphore_signal(semaphore);
   });
   if (!KBWait(semaphore, 10)) {
     if (error) *error = KBError(@"Opening System Settings timed out");

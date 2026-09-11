@@ -123,6 +123,7 @@ test('Windows service probes and elevated commands never open a console window',
 
 test('macOS registers the bundled daemon through SMAppService', () => {
   const managerSource = readFileSync(resolve('src/main/service/manager.ts'), 'utf8')
+  const ipcSource = readFileSync(resolve('src/main/utils/ipc.ts'), 'utf8')
   const apiSource = readFileSync(resolve('src/main/service/api.ts'), 'utf8')
   const adapterSource = readFileSync(resolve('src/main/service/macos-smappservice.ts'), 'utf8')
   const bridgeSource = readFileSync(
@@ -157,6 +158,12 @@ test('macOS registers the bundled daemon through SMAppService', () => {
   assert.match(managerSource, /unregisterMacOSService\(\)/)
   assert.match(managerSource, /status === 'requires-approval'/)
   assert.match(managerSource, /export async function ensureMacOSServiceReady/)
+  assert.match(managerSource, /function isServiceAuthenticationStateError/)
+  assert.match(managerSource, /message\.includes\('key id is not registered'\)/)
+  assert.match(
+    managerSource,
+    /Never report it as usable after the authenticated[\s\S]*?return 'unknown'/
+  )
   const initSource = managerSource.slice(
     managerSource.indexOf('export async function initService'),
     managerSource.indexOf('export async function installService')
@@ -165,6 +172,12 @@ test('macOS registers the bundled daemon through SMAppService', () => {
     initSource,
     /process\.platform === 'darwin'[\s\S]*bootstrapMacOSServiceAuth\(secret\.publicKey\)[\s\S]*await waitForServiceReady\(\)[\s\S]*return/
   )
+  assert.match(initSource, /initService\(allowInteractiveRecovery = false\)/)
+  assert.match(
+    initSource,
+    /status === 409[\s\S]*?!allowInteractiveRecovery[\s\S]*?execWithElevation\(execPath, \[[\s\S]*?'service',[\s\S]*?'init'/
+  )
+  assert.match(ipcSource, /ipcErrorWrapper\(initService\)\(true\)/)
   assert.doesNotMatch(initSource, /'--ensure-running'/)
   const bootstrapApiSource = apiSource.slice(
     apiSource.indexOf('export const bootstrapMacOSServiceAuth'),

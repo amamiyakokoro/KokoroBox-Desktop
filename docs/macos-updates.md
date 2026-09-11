@@ -72,7 +72,10 @@ endpoint and does not launch `osascript`. The daemon obtains the caller UID and 
 the Unix socket, verifies that the live process is the hardened Developer ID-signed
 `com.amamiyakokoro.app` from team `755TNLRN92`, then stores the public key and UID and restricts the
 socket to that user. Bootstrap cannot replace existing authentication. The existing elevated
-`service init` CLI remains an explicit recovery path, not part of normal first launch.
+`service init` CLI remains an explicit recovery path, not part of normal first launch. If the
+Desktop data is reset while the root service still has an older key, the service manager reports
+that initialization is required. Only the user's explicit **Reinitialize** action runs the elevated
+recovery and restarts the service; background startup and health checks never request elevation.
 
 The application recognizes and removes the former `/Library/LaunchDaemons/KokoroBoxService.plist`
 and `/Library/PrivilegedHelperTools/com.amamiyakokoro.kokorobox-service` only during uninstall; the
@@ -81,6 +84,11 @@ application-routing recovery never invoke `osascript`. The recovery PKG stops a 
 daemon before replacing the application and restarts an already-approved `SMAppService` job
 afterward. A legacy service is left unregistered so the new application can obtain current macOS
 user approval on first use.
+
+When application routing first activates an unapproved Network Extension, KokoroBox opens the
+relevant System Settings pane as soon as macOS reports that approval is required. It opens at most
+once during each application process; an already-approved and running extension does not display
+another approval prompt.
 
 Bundled Mihomo executables are ordinary mode `0755` files; the PKG no longer grants them setuid
 permission. Direct mode remains available for an unprivileged non-TUN core. Enabling TUN on macOS

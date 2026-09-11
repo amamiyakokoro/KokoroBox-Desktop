@@ -337,7 +337,10 @@ export function registerIpcMainHandlers(): void {
   ipcMain.handle('serviceStatus', () => ipcErrorWrapper(serviceStatus)())
   ipcMain.handle('testServiceConnection', () => ipcErrorWrapper(testServiceConnection)())
   ipcMain.handle('openServiceSystemSettings', () => ipcErrorWrapper(openServiceSystemSettings)())
-  ipcMain.handle('initService', () => ipcErrorWrapper(initService)())
+  // Only an explicit renderer action may authorize replacement of stale
+  // service credentials. Automatic startup recovery calls initService()
+  // directly and therefore never opens an administrator prompt.
+  ipcMain.handle('initService', () => ipcErrorWrapper(initService)(true))
   if (!systemCoreOnlyBuild) {
     ipcMain.handle('installService', () => ipcErrorWrapper(installService)())
     ipcMain.handle('uninstallService', () => ipcErrorWrapper(uninstallService)())
