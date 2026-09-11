@@ -15,6 +15,13 @@ import {
   proxyBridgeSourceRevision,
   winDivertArchiveSha256
 } from '../src/main/app-routing/integrity-manifest.ts'
+import {
+  sparkleAppcastName,
+  sparkleDownloadURLPrefix,
+  sparkleFeedURL,
+  sparkleUpdateArchiveName,
+  validateSignedSparkleAppcast
+} from './macos-sparkle.ts'
 
 export interface Target {
   os: string
@@ -30,6 +37,16 @@ export interface MacSigningReceipt {
   sha: string
   filename: string
   checksum: string
+  sparkle: {
+    appNotarizationId: string
+    releaseTag: string
+    archiveFilename: string
+    archiveChecksum: string
+    appcastFilename: string
+    appcastChecksum: string
+    feedURL: string
+    publicKey: string
+  }
 }
 
 interface ProcessRouterSbomReceipt {
@@ -81,10 +98,47 @@ export function validateMacReceipt(
     receipt.version !== version ||
     receipt.sha !== sha ||
     receipt.filename !== filename ||
-    receipt.checksum !== checksum
+    receipt.checksum !== checksum ||
+    !receipt.sparkle ||
+    !/^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i.test(receipt.sparkle.appNotarizationId) ||
+    !/^[A-Za-z0-9+/]{43}=$/.test(receipt.sparkle.publicKey)
   ) {
     throw new Error('Missing or mismatched macOS signing/notarization verification receipt')
   }
+}
+
+function validateMacSparkleArtifacts(
+  target: Target,
+  version: string,
+  source: string,
+  receipt: MacSigningReceipt
+): string[] {
+  const archiveFilename = sparkleUpdateArchiveName(version, target.arch)
+  const appcastFilename = sparkleAppcastName(target.arch)
+  const { sparkle } = receipt
+  const channel = version.includes('-rolling-') ? 'rolling' : 'stable'
+  if (
+    (channel === 'rolling' && sparkle.releaseTag !== 'rolling') ||
+    (channel === 'stable' && ![version, `v${version}`].includes(sparkle.releaseTag))
+  ) {
+    throw new Error('Sparkle release tag does not match version')
+  }
+  const downloadURLPrefix = sparkleDownloadURLPrefix(sparkle.releaseTag)
+  if (
+    sparkle.archiveFilename !== archiveFilename ||
+    sparkle.appcastFilename !== appcastFilename ||
+    sparkle.archiveChecksum !== digest(path.join(source, archiveFilename)) ||
+    sparkle.appcastChecksum !== digest(path.join(source, appcastFilename)) ||
+    sparkle.feedURL !== sparkleFeedURL(channel, target.arch)
+  ) {
+    throw new Error('Missing or mismatched Sparkle release receipt')
+  }
+  validateSignedSparkleAppcast(
+    readFileSync(path.join(source, appcastFilename), 'utf8'),
+    archiveFilename,
+    downloadURLPrefix
+  )
+  return [archiveFilename, appcastFilename]
 }
 export const releaseTargets: Target[] = [
   ...['x64', 'arm64'].map((arch) => ({ os: 'windows-latest', arch, format: 'nsis' })),
@@ -143,7 +197,11 @@ export function stageArtifact(
 ) {
   const filename = artifactName(target, version)
   const checksum = digest(path.join(source, filename))
-  if (target.os === 'macos-latest') validateMacReceipt(signing, version, sha, filename, checksum)
+  let sparkleFiles: string[] = []
+  if (target.os === 'macos-latest') {
+    validateMacReceipt(signing, version, sha, filename, checksum)
+    sparkleFiles = validateMacSparkleArtifacts(target, version, source, signing!)
+  }
   const includesProcessRouterSbom = target.os === 'windows-latest' && target.arch === 'x64'
   let sbom: ProcessRouterSbomReceipt | undefined
   if (includesProcessRouterSbom) {
@@ -159,10 +217,13 @@ export function stageArtifact(
   }
   mkdirSync(output, { recursive: true })
   copyFileSync(path.join(source, filename), path.join(output, filename))
+  for (const sparkleFile of sparkleFiles) {
+    copyFileSync(path.join(source, sparkleFile), path.join(output, sparkleFile))
+  }
   if (sbom) copyFileSync(processRouterSbom!, path.join(output, sbom.filename))
   writeFileSync(
     path.join(output, `manifest-${targetId(target)}.json`),
-    JSON.stringify({ target, version, sha, filename, checksum, signing, sbom })
+    JSON.stringify({ target, version, sha, filename, checksum, signing, sparkleFiles, sbom })
   )
 }
 
@@ -198,6 +259,18 @@ export function collectArtifacts(
       throw new Error(`Checksum mismatch: ${filename}`)
     if (target.os === 'macos-latest')
       validateMacReceipt(manifest.signing, version, sha, filename, manifest.checksum)
+    if (target.os === 'macos-latest') {
+      const sparkleFiles = validateMacSparkleArtifacts(target, version, source, manifest.signing)
+      if (JSON.stringify(manifest.sparkleFiles) !== JSON.stringify(sparkleFiles)) {
+        throw new Error(`Sparkle artifact provenance mismatch: ${manifestName}`)
+      }
+      for (const sparkleFile of sparkleFiles) {
+        filenames.push(sparkleFile)
+        expectedFiles.add(sparkleFile)
+      }
+    } else if (manifest.sparkleFiles?.length) {
+      throw new Error(`Unexpected Sparkle artifacts: ${manifestName}`)
+    }
     const includesProcessRouterSbom = target.os === 'windows-latest' && target.arch === 'x64'
     if (includesProcessRouterSbom) {
       const sbomName = processRouterSbomName(version)

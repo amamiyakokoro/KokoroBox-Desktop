@@ -91,6 +91,13 @@ The Sparkle private key is a release secret and is never written to the reposito
 The public key is injected into the application before code signing. Build jobs without release
 credentials compile the bridge but cannot produce a publishable update archive or appcast.
 
+Release signing requires a matching Ed25519 key pair in the Actions secrets
+`SPARKLE_PRIVATE_ED_KEY` and `SPARKLE_PUBLIC_ED_KEY`. Each value is the canonical Base64 encoding
+of exactly 32 bytes: the private value is the Ed25519 seed and the public value is its derived
+public key. The build rejects malformed or mismatched keys before importing Apple credentials.
+The private seed is written only to the signing job's mode-`0600` temporary directory, passed to
+the pinned Sparkle 2.9.6 tools, and removed with the other temporary signing material.
+
 ## Migration stages
 
 1. **Foundation:** document invariants, pin Sparkle source and verify its checksum.
@@ -100,10 +107,12 @@ credentials compile the bridge but cannot produce a publishable update archive o
 5. **Bundle updates:** switch macOS update actions to Sparkle after privileged runtime migration.
 6. **Cleanup:** remove the macOS PKG auto-install code; retain PKG only for first install and repair.
 
-The foundation, native-integration and privileged-runtime stages are implemented. Release builds
-now compile and sign the updater bridge and embedded Sparkle framework, but the application
-deliberately does not start Sparkle yet. `SUFeedURL` and `SUPublicEDKey` will only be injected once
-parallel appcast publication and the transition upgrade path are verified.
+The foundation, native-integration, privileged-runtime and parallel-publication stages are
+implemented. Release builds compile and sign the updater bridge and embedded Sparkle framework,
+inject the architecture-specific `SUFeedURL` and `SUPublicEDKey` before code signing, notarize the
+application independently of the PKG, and publish the signed application archive and appcast only
+after their receipt and checksums are verified. The application deliberately does not start
+Sparkle yet; activation waits for a successful transition release and upgrade validation.
 
 ## Rollback
 

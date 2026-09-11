@@ -7,10 +7,15 @@ The workflows build KokoroBox's supported package matrix, prepare the target nat
 | Platform | Architectures                  | Packages                       |
 | -------- | ------------------------------ | ------------------------------ |
 | Windows  | x64, ARM64                     | Standard NSIS `.exe` installer |
-| macOS    | Intel x64, Apple Silicon ARM64 | `.pkg`                         |
+| macOS    | Intel x64, Apple Silicon ARM64 | `.pkg`, Sparkle `.zip`         |
 | Linux    | x64, ARM64                     | `.deb`, `.rpm`, `.pkg.tar.zst` |
 
-The build matrix contains 10 platform packages. Publication adds `latest.yml` and `SHA256SUMS`. Windows publishes one standard `setup.exe` for each supported architecture; the former `manual-elevation-setup` compatibility aliases are no longer generated. The updater metadata preserves the exact release tag, including a leading `v` when present. Build artifacts remain available in the workflow run for 14 days.
+The build matrix contains 10 platform packages. Publication adds two architecture-specific signed
+Sparkle application archives and appcasts on macOS, plus `latest.yml` and `SHA256SUMS`. Windows
+publishes one standard `setup.exe` for each supported architecture; the former
+`manual-elevation-setup` compatibility aliases are no longer generated. The updater metadata
+preserves the exact release tag, including a leading `v` when present. Build artifacts remain
+available in the workflow run for 14 days.
 
 The assisted NSIS package asks whether KokoroBox should be installed only for the current user or
 for every user of the computer. A current-user installation is stored below `%LOCALAPPDATA%` and
@@ -67,7 +72,9 @@ Rocky Linux retains compatible dependency declarations but is not yet covered by
 1. Push the workflow changes to the repository's `master` branch.
 2. Open **Actions** on GitHub and enable workflows if GitHub has disabled them for the fork.
 3. Ensure repository/organization Actions policies permit the referenced actions and GitHub-hosted runners. Publication needs `contents: write`; the workflows grant this only to publishing jobs.
-4. Configure the seven Apple signing/notarization secrets listed below. They are required for the macOS portion of every release. GitHub supplies `GITHUB_TOKEN` automatically.
+4. Configure the seven Apple signing/notarization secrets and two Sparkle signing secrets listed
+   below. They are required for the macOS portion of every release. GitHub supplies `GITHUB_TOKEN`
+   automatically.
 
 The local Apple Keychain is not available on hosted runners. Do not upload certificates or private keys to Git. No AUR key, translation API key, or SignPath token is required by this pipeline.
 
@@ -104,7 +111,9 @@ The schedule runs at 12:00 Taipei time on potential month-end dates and filters 
 
 - `Build` runs release tests, OAuth tests, localization tests, and TypeScript checks before packaging.
 - Each package is staged with its target, version, source commit, and SHA-256 checksum.
-- macOS packages additionally require a matching verification receipt written only after signing, notarization, stapling, and Gatekeeper checks succeed. A missing or stale receipt blocks staging/publication.
+- macOS packages additionally require a matching verification receipt written only after PKG and
+  application signing, notarization, stapling, Gatekeeper checks, and Sparkle archive/appcast
+  signing succeed. A missing, stale, modified, or unsigned artifact blocks staging/publication.
 - `Publish Packages` rejects missing, empty, modified, stale, wrong-version, or wrong-commit artifacts before uploading anything.
 - Platform jobs use `fail-fast: false` so a failed target does not cancel other builds, but any failed target blocks publication of the entire release.
 - Release notes are generated in CI from Git commit subjects; there is no repository-maintained changelog source file. Template headings and download/signing information are English; commit subjects retain their original language.
@@ -135,8 +144,9 @@ Windows packages declare `asInvoker` in the KokoroBox executable manifest. Kokor
 Both Intel and Apple Silicon macOS releases require **Developer ID-signed, Apple-notarized PKGs with stapled tickets**. There is no unsigned fallback in either Stable or Rolling releases. The upstream PKG installation scripts remain enabled for proxy/service operation.
 
 The staged migration to native Sparkle application updates is documented in
-[`macos-updates.md`](macos-updates.md). PKG remains the active updater until the macOS privileged
-runtime no longer depends on installer scripts; Sparkle artifacts must not be enabled early.
+[`macos-updates.md`](macos-updates.md). The privileged runtime is migrated and signed Sparkle
+archives/appcasts are now published in parallel, but PKG remains the active updater until a
+transition release has been exercised on supported Intel and Apple Silicon upgrade paths.
 
 `electron-builder.ci.yml` is retained only for unsigned local smoke tests; release workflows no longer use it. The normal `electron-builder.yml` remains available for local production signing.
 
@@ -153,12 +163,20 @@ In **Settings → Secrets and variables → Actions**, configure:
 | `APPLE_ID`                    | Apple ID with access to the developer team                                |
 | `APPLE_APP_SPECIFIC_PASSWORD` | Apple app-specific password, not the account's normal password            |
 | `APPLE_TEAM_ID`               | Ten-character developer Team ID matching both certificates                |
+| `SPARKLE_PRIVATE_ED_KEY`      | Base64-encoded 32-byte Ed25519 private seed                               |
+| `SPARKLE_PUBLIC_ED_KEY`       | Base64-encoded 32-byte Ed25519 public key matching the private seed       |
 
-Certificate secrets must contain Base64 data, not URLs or local file paths. Both export passwords must be non-empty. An existing local `notarytool` Keychain profile is not copied to GitHub; the workflow creates its own temporary profile.
+Certificate and Sparkle key secrets must contain canonical Base64 data, not URLs or local file
+paths. Both certificate export passwords must be non-empty. The Sparkle key pair is validated
+before signing. An existing local `notarytool` Keychain profile is not copied to GitHub; the
+workflow creates its own temporary profile.
 
 ### Credential isolation and signing sequence
 
-The release callers explicitly forward only these seven secrets to the reusable Build workflow. Only the macOS signing step receives their values. Compilation, dependency installation, Windows/Linux builds, and publication do not receive the Apple credentials in their environments.
+The release callers explicitly forward only these nine macOS publication secrets to the reusable
+Build workflow. Only the macOS signing step receives their values. Compilation, dependency
+installation, Windows/Linux builds, and publication do not receive the Apple or Sparkle private
+credentials in their environments.
 
 Signing is restricted to this repository's `master` branch or stable SemVer tags (including numeric revision suffixes such as `2.26.9-1`), via push, manual dispatch, or schedule on GitHub-hosted runners. External PRs, rolling tags and arbitrary branch refs are not accepted. Protect `master`, release tags, and workflow changes with appropriate review rules. Repository secrets still require trusting users who can change workflows; consider a protected GitHub environment with required reviewers for stronger release approval controls.
 
@@ -170,8 +188,18 @@ Signing is restricted to this repository's `master` branch or stable SemVer tags
 4. Verifies the app/helpers' Developer ID identity, team, hardened runtime, timestamp, and signatures, plus the Installer signature on the PKG.
 5. Submits the **final signed PKG** using `notarytool`, waiting up to 45 minutes for `Accepted`. Automatic electron-builder notarization is disabled in this generated configuration to avoid duplicate or silently skipped submissions.
 6. Staples the PKG ticket, runs `stapler validate`, assesses the installer with Gatekeeper, and rechecks its package signature.
-7. Writes a verification receipt containing the final post-stapling checksum and submission ID. Artifact staging and collection verify that it matches the version, commit, filename, and bytes.
-8. Restores the original Keychain search list and removes the temporary Keychain, certificate files, and temporary configuration. An additional `always()` step handles cancellation/failure cleanup when possible; hosted runner disposal is the final isolation boundary.
+7. Archives the signed App, submits and staples its independent notarization ticket, then verifies
+   it with Gatekeeper and `codesign`.
+8. Creates the final application archive from the stapled App, signs the archive and appcast with
+   the pinned Sparkle tools, validates the feed URL, and verifies both signatures again before
+   publishing.
+9. Writes a verification receipt containing the PKG, application archive, appcast checksums and
+   Apple submission IDs. Artifact staging and collection verify that they match the channel,
+   version, commit, filenames, and bytes.
+10. Restores the original Keychain search list and removes the temporary Keychain, Sparkle private
+    seed, certificate files, and temporary configuration. An additional `always()` step handles
+    cancellation/failure cleanup when possible; hosted runner disposal is the final isolation
+    boundary.
 
 Child packaging processes do not inherit certificate blobs or Apple authentication passwords. Raw signing command errors are not printed because process errors can include secret-bearing arguments. Logs identify the failed step without dumping credentials.
 
@@ -183,6 +211,8 @@ Child packaging processes do not inherit certificate blobs or Apple authenticati
 - **Sign App and PKG failed**: check that the certificates are valid Developer ID Application/Installer certificates for the same team, not development or App Store certificates.
 - **Notarization or Gatekeeper failure**: publication stops. Fix the signing/notarization issue before retrying; never bypass the check to ship an unsigned artifact.
 - **Notarization timeout**: Apple may continue processing after the runner stops waiting. No release artifact is staged without a completed verification receipt. Investigate the submission before retrying to avoid unnecessary duplicate submissions.
+- **Invalid Sparkle signing key**: ensure both key secrets are canonical Base64 encodings of a
+  matching 32-byte Ed25519 seed/public-key pair; do not paste a keychain account name or file path.
 
 The signing tests use fake credentials and mocked Apple commands. Passing them verifies orchestration and failure handling, not the validity of repository secrets or Apple's acceptance of a real package.
 
