@@ -1,4 +1,4 @@
-import { spawnSync } from 'node:child_process'
+import { execFileSync, spawnSync } from 'node:child_process'
 import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
@@ -107,6 +107,28 @@ const xcodeArgs = [
 const extensionBuild = spawnSync('xcodebuild', xcodeArgs, { cwd: sourceRoot, stdio: 'inherit' })
 if (extensionBuild.status !== 0 || !existsSync(extensionOutput)) {
   throw new Error('KokoroBox ProxyBridge system extension build failed')
+}
+
+const extensionInfo = path.join(extensionOutput, 'Contents', 'Info.plist')
+const requiredExtensionMetadata: Record<string, string> = {
+  CFBundleIdentifier: extensionBundleIdentifier,
+  CFBundleExecutable: 'KokoroBoxProxyExtension',
+  CFBundlePackageType: 'SYSX',
+  CFBundleShortVersionString: marketingVersion,
+  CFBundleVersion: bundleVersion
+}
+for (const [key, expected] of Object.entries(requiredExtensionMetadata)) {
+  let actual: string
+  try {
+    actual = execFileSync('/usr/bin/plutil', ['-extract', key, 'raw', extensionInfo], {
+      encoding: 'utf8'
+    }).trim()
+  } catch {
+    throw new Error(`KokoroBox ProxyBridge extension is missing ${key}`)
+  }
+  if (actual !== expected) {
+    throw new Error(`KokoroBox ProxyBridge extension has invalid ${key}: ${actual}`)
+  }
 }
 
 rmSync(stagingRoot, { recursive: true, force: true })
