@@ -23,6 +23,12 @@ import {
 } from './release-artifacts.ts'
 import { compareVersions, normalizeVersion, planRelease } from './release-plan.ts'
 import {
+  sparkleAppcastName,
+  sparkleDownloadURLPrefix,
+  sparkleFeedURL,
+  sparkleUpdateArchiveName
+} from './macos-sparkle.ts'
+import {
   proxyBridgeSourceRevision,
   winDivertArchiveSha256
 } from '../src/main/app-routing/integrity-manifest.ts'
@@ -277,6 +283,17 @@ function fixtures(fn: (source: string, output: string) => void, version = '2.26.
         `fixture: ${targetId(target)}`
       )
       const filename = artifactName(target, version)
+      const sparkleReleaseTag = version.includes('-rolling-') ? 'rolling' : `v${version}`
+      if (target.os === 'macos-latest') {
+        const archiveFilename = sparkleUpdateArchiveName(version, target.arch)
+        const appcastFilename = sparkleAppcastName(target.arch)
+        const prefix = sparkleDownloadURLPrefix(sparkleReleaseTag)
+        writeFileSync(path.join(packages, archiveFilename), `update: ${target.arch}`)
+        writeFileSync(
+          path.join(packages, appcastFilename),
+          `<rss xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle"><channel><item><enclosure url="${prefix}${archiveFilename}" sparkle:edSignature="YWJjZA==" length="13" /></item></channel></rss><!-- sparkle-signatures:\nedSignature: YWJjZA==\nlength: 200\n-->`
+        )
+      }
       const signing =
         target.os === 'macos-latest'
           ? {
@@ -288,7 +305,28 @@ function fixtures(fn: (source: string, output: string) => void, version = '2.26.
               filename,
               checksum: createHash('sha256')
                 .update(readFileSync(path.join(packages, filename)))
-                .digest('hex')
+                .digest('hex'),
+              sparkle: {
+                appNotarizationId: '87654321-4321-4321-4321-cba987654321',
+                releaseTag: sparkleReleaseTag,
+                archiveFilename: sparkleUpdateArchiveName(version, target.arch),
+                archiveChecksum: createHash('sha256')
+                  .update(
+                    readFileSync(
+                      path.join(packages, sparkleUpdateArchiveName(version, target.arch))
+                    )
+                  )
+                  .digest('hex'),
+                appcastFilename: sparkleAppcastName(target.arch),
+                appcastChecksum: createHash('sha256')
+                  .update(readFileSync(path.join(packages, sparkleAppcastName(target.arch))))
+                  .digest('hex'),
+                feedURL: sparkleFeedURL(
+                  version.includes('-rolling-') ? 'rolling' : 'stable',
+                  target.arch
+                ),
+                publicKey: 'iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w='
+              }
             }
           : undefined
       stageArtifact(
@@ -316,9 +354,9 @@ test('collects complete builds, generates hashes and concise updater-compatible 
     assert.doesNotMatch(latest.changelog, /## Downloads|releases\/download\//)
     assert.match(latest.changelog, /- A change/)
     assert.match(latest.changelog, /Developer ID-signed, notarized by Apple/)
-    assert.equal(readdirSync(output).length, 13)
+    assert.equal(readdirSync(output).length, 17)
     const lines = readFileSync(path.join(output, 'SHA256SUMS'), 'utf8').trim().split('\n')
-    assert.equal(lines.length, 10)
+    assert.equal(lines.length, 14)
     for (const line of lines) {
       const [digest, name] = line.split('  ')
       assert.equal(
@@ -428,6 +466,27 @@ test('collection rejects macOS packages without their matching notarization rece
   })
 })
 
+test('collection rejects an unsigned Sparkle appcast even if its receipt checksum is refreshed', () => {
+  fixtures((source, output) => {
+    const appcastFile = path.join(source, sparkleAppcastName('x64'))
+    writeFileSync(
+      appcastFile,
+      readFileSync(appcastFile, 'utf8').replace(' sparkle:edSignature="YWJjZA=="', '')
+    )
+    const manifestFile = path.join(source, 'manifest-macos-latest-x64-pkg.json')
+    const manifest = JSON.parse(readFileSync(manifestFile, 'utf8'))
+    manifest.signing.sparkle.appcastChecksum = createHash('sha256')
+      .update(readFileSync(appcastFile))
+      .digest('hex')
+    writeFileSync(manifestFile, JSON.stringify(manifest))
+    assert.throws(
+      () => collectArtifacts('2.26.8', 'v2.26.8', sha, source, output, 'notes'),
+      /signed archive or feed metadata/
+    )
+    assert.equal(existsSync(output), false)
+  })
+})
+
 test('workflows gate publication on all builds and do not invoke upstream-only services', () => {
   for (const name of ['release', 'rolling']) {
     const config = workflow(name)
@@ -457,6 +516,7 @@ test('workflows gate publication on all builds and do not invoke upstream-only s
   const publish = readFileSync('.github/workflows/publish.yml', 'utf8')
   assert.doesNotMatch(publish, /dist\/release\/kokorobox-process-router-\*\.cdx\.json/)
   assert.match(publish, /asset\.name\.startsWith\('kokorobox-process-router-'/)
+  assert.match(publish, /dist\/release\/appcast-macos-\*\.xml/)
   assert.doesNotMatch(publish, /API_KEY|API_URL|AUR_SSH|delete-release-assets/)
 })
 
@@ -745,12 +805,12 @@ test('rolling tags move and old assets are deleted only after complete uploads',
 test('updater metadata is uploaded only after verifying all replacement packages', async () => {
   const steps = workflow('publish').jobs.publish.steps
   const names = steps.map((step: { name: string }) => step.name)
+  const releaseFiles = steps.find((step: { name: string }) => step.name === 'Upload Release Assets')
+    .with.files
   assert.ok(names.indexOf('Verify Uploaded Packages') < names.indexOf('Upload Update Metadata'))
   assert.ok(names.indexOf('Upload Update Metadata') < names.indexOf('Finalize Release'))
-  assert.doesNotMatch(
-    steps.find((step: { name: string }) => step.name === 'Upload Release Assets').with.files,
-    /latest.yml/
-  )
+  assert.match(releaseFiles, /appcast-macos-\*\.xml/)
+  assert.doesNotMatch(releaseFiles, /latest.yml/)
   const missing = publicationMock({ missingAsset: true })
   await assert.rejects(missing.run('Verify Uploaded Packages'))
 })

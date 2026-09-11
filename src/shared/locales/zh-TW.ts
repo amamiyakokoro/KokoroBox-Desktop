@@ -500,6 +500,11 @@ export const messages: Readonly<Record<string, string>> = {
   '存在无法识别的字符 "{0}"': '存在無法識別的字元 "{0}"',
   守护通知: '守護通知',
   安装服务: '安裝服務',
+  修复服务: '修復服務',
+  服务安装或修复成功: '服務安裝或修復成功',
+  'macOS 特权功能需要 KokoroBox 服务，请安装或修复服务':
+    'macOS 特權功能需要 KokoroBox 服務，請安裝或修復服務',
+  'macOS TUN 需要由 KokoroBox 服务运行内核': 'macOS TUN 需要由 KokoroBox 服務執行核心',
   '完全退出软件，只保留内核进程': '完全退出軟體，只保留核心程序',
   完成: '完成',
   '定时同步订阅/文件': '定時同步訂閱/檔案',
@@ -1146,5 +1151,7 @@ export const messages: Readonly<Record<string, string>> = {
   '优先使用 HTTP/3': '優先使用 HTTP/3',
   'DNS 缓存算法': 'DNS 快取演算法',
   '例：https://dns.alidns.com/dns-query': '例：https://dns.alidns.com/dns-query',
-  '例：tls://1.1.1.1': '例：tls://1.1.1.1'
+  '例：tls://1.1.1.1': '例：tls://1.1.1.1',
+  更新版本格式无效: '更新版本格式無效',
+  更新版本与发布标签不匹配: '更新版本與發布標籤不相符'
 }

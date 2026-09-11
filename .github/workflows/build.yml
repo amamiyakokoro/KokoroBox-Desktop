@@ -34,6 +34,10 @@ on:
         required: true
       MACOS_EXTENSION_PROVISIONING_PROFILE:
         required: true
+      SPARKLE_PRIVATE_ED_KEY:
+        required: true
+      SPARKLE_PUBLIC_ED_KEY:
+        required: true
 
 permissions:
   contents: read
@@ -54,6 +58,7 @@ jobs:
       - run: pnpm install --frozen-lockfile --ignore-scripts
       - run: pnpm test:release
       - run: pnpm test:macos-signing
+      - run: pnpm test:macos-sparkle
       - run: pnpm test:kokoro
       - run: pnpm test:localization
       - run: pnpm test:override-user-agent
@@ -104,7 +109,7 @@ jobs:
       (github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/')) &&
       (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule')
     runs-on: ${{ matrix.runner || matrix.os }}
-    timeout-minutes: 90
+    timeout-minutes: 150
     env:
       SKIP_PREPARE: '1'
       RELEASE_VERSION: ${{ inputs.version }}
@@ -263,6 +268,7 @@ jobs:
             # The preparation script clones and verifies the revision declared by
             # integrity-manifest.ts so CI cannot drift to a second hard-coded pin.
             pnpm prepare:macos-routing
+            pnpm prepare:macos-updater
             pnpm exec electron-vite build
           fi
 
@@ -298,6 +304,10 @@ jobs:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           MACOS_APP_PROVISIONING_PROFILE: ${{ secrets.MACOS_APP_PROVISIONING_PROFILE }}
           MACOS_EXTENSION_PROVISIONING_PROFILE: ${{ secrets.MACOS_EXTENSION_PROVISIONING_PROFILE }}
+          SPARKLE_PRIVATE_ED_KEY: ${{ secrets.SPARKLE_PRIVATE_ED_KEY }}
+          SPARKLE_PUBLIC_ED_KEY: ${{ secrets.SPARKLE_PUBLIC_ED_KEY }}
+          RELEASE_CHANNEL: ${{ inputs.channel }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
         run: node scripts/macos-signing.ts release
 
       - name: Clean Up macOS Signing Credentials

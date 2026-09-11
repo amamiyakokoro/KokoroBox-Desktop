@@ -1,26 +1,38 @@
 #!/bin/sh
 
 APP_PATH="/Applications/KokoroBox.app"
+SERVICE_BIN="$APP_PATH/Contents/Resources/files/kokorobox-service"
+SERVICE_RUNTIME_BIN="/Library/PrivilegedHelperTools/com.amamiyakokoro.kokorobox-service"
+SERVICE_PLIST="/Library/LaunchDaemons/KokoroBoxService.plist"
+SERVICE_STATE_FILE="/tmp/kokorobox-service-was-running"
+SERVICE_INSTALLED_FILE="/tmp/kokorobox-service-was-installed"
 
-chown root:admin "$APP_PATH/Contents/Resources/sidecar/mihomo"
-chown root:admin "$APP_PATH/Contents/Resources/sidecar/mihomo-alpha"
-chmod +s "$APP_PATH/Contents/Resources/sidecar/mihomo"
-chmod +s "$APP_PATH/Contents/Resources/sidecar/mihomo-alpha"
+/bin/chmod 0755 "$APP_PATH/Contents/Resources/sidecar/mihomo"
+/bin/chmod 0755 "$APP_PATH/Contents/Resources/sidecar/mihomo-alpha"
 
-restore_kokorobox_service_if_was_running() {
-  SERVICE_BIN="$APP_PATH/Contents/Resources/files/kokorobox-service"
-  SERVICE_STATE_FILE="/tmp/kokorobox-service-was-running"
+/usr/bin/install -o root -g wheel -m 0755 "$SERVICE_BIN" "$SERVICE_RUNTIME_BIN"
 
-  if [ ! -f "$SERVICE_STATE_FILE" ]; then
+restore_kokorobox_service_registration() {
+  if [ ! -f "$SERVICE_INSTALLED_FILE" ]; then
+    /bin/rm -f "$SERVICE_STATE_FILE" 2>/dev/null || true
     return
   fi
-  rm -f "$SERVICE_STATE_FILE" 2>/dev/null || true
 
-  if [ -x "$SERVICE_BIN" ]; then
-    "$SERVICE_BIN" service start >/dev/null 2>&1 || true
+  /bin/launchctl bootout system/KokoroBoxService >/dev/null 2>&1 || true
+  /bin/rm -f "$SERVICE_PLIST"
+
+  if ! "$SERVICE_RUNTIME_BIN" service install >/dev/null 2>&1; then
+    echo "Failed to register the stable KokoroBox service runtime" >&2
+    exit 1
   fi
+
+  if [ ! -f "$SERVICE_STATE_FILE" ]; then
+    "$SERVICE_RUNTIME_BIN" service stop >/dev/null 2>&1 || true
+  fi
+
+  /bin/rm -f "$SERVICE_STATE_FILE" "$SERVICE_INSTALLED_FILE" 2>/dev/null || true
 }
 
-restore_kokorobox_service_if_was_running
+restore_kokorobox_service_registration
 
 exit 0

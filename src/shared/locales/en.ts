@@ -521,6 +521,12 @@ export const messages: Readonly<Record<string, string>> = {
   '存在无法识别的字符 "{0}"': 'Unrecognized character "{0}"',
   守护通知: 'Watchdog notifications',
   安装服务: 'Install service',
+  修复服务: 'Repair service',
+  服务安装或修复成功: 'Service installed or repaired',
+  'macOS 特权功能需要 KokoroBox 服务，请安装或修复服务':
+    'macOS privileged features require KokoroBox Service. Install or repair the service.',
+  'macOS TUN 需要由 KokoroBox 服务运行内核':
+    'macOS TUN requires the core to run through KokoroBox Service.',
   '完全退出软件，只保留内核进程': 'Quit the app completely, leaving only the core process running',
   完成: 'Done',
   '定时同步订阅/文件': 'Scheduled subscription/file sync',
@@ -1176,5 +1182,7 @@ export const messages: Readonly<Record<string, string>> = {
   '优先使用 HTTP/3': 'Prefer HTTP/3',
   'DNS 缓存算法': 'DNS cache algorithm',
   '例：https://dns.alidns.com/dns-query': 'Example: https://dns.alidns.com/dns-query',
-  '例：tls://1.1.1.1': 'Example: tls://1.1.1.1'
+  '例：tls://1.1.1.1': 'Example: tls://1.1.1.1',
+  更新版本格式无效: 'Invalid update version format',
+  更新版本与发布标签不匹配: 'The update version does not match its release tag'
 }

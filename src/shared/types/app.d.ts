@@ -5,6 +5,7 @@ interface AppVersion {
 }
 
 type AppUpdateChannel = 'stable' | 'rolling'
+type AppUpdateLaunchResult = 'native' | 'external'
 type AppNotificationMode = 'system' | 'toast'
 type AppLanguage = 'system' | 'zh-CN' | 'zh-TW' | 'en'
 type AppNotificationVariant = 'default' | 'accent' | 'success' | 'warning' | 'danger'

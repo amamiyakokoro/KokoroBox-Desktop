@@ -301,6 +301,15 @@ const ServiceModal: React.FC<Props> = (props) => {
                   >
                     {tr('重启')}
                   </Button>
+                  <Button
+                    size="sm"
+                    color="primary"
+                    variant="flat"
+                    onPress={() => handleAction(onInstall!, true)}
+                    isLoading={loading}
+                  >
+                    {tr('修复服务')}
+                  </Button>
                   {status !== 'running' && status !== 'need-init' ? (
                     <Button
                       size="sm"
