@@ -123,6 +123,7 @@ test('Windows service probes and elevated commands never open a console window',
 
 test('macOS registers the bundled daemon through SMAppService', () => {
   const managerSource = readFileSync(resolve('src/main/service/manager.ts'), 'utf8')
+  const apiSource = readFileSync(resolve('src/main/service/api.ts'), 'utf8')
   const adapterSource = readFileSync(resolve('src/main/service/macos-smappservice.ts'), 'utf8')
   const bridgeSource = readFileSync(
     resolve('native/macos-service/KokoroBoxServiceManagementBridge.mm'),
@@ -154,8 +155,21 @@ test('macOS registers the bundled daemon through SMAppService', () => {
   assert.match(managerSource, /unregisterMacOSService\(\)/)
   assert.match(managerSource, /status === 'requires-approval'/)
   assert.match(managerSource, /export async function ensureMacOSServiceReady/)
-  assert.match(managerSource, /process\.platform === 'darwin' \? \['--ensure-running'\] : \[\]/)
-  assert.doesNotMatch(managerSource, /process\.platform === 'darwin' && commandError/)
+  const initSource = managerSource.slice(
+    managerSource.indexOf('export async function initService'),
+    managerSource.indexOf('export async function installService')
+  )
+  assert.match(
+    initSource,
+    /process\.platform === 'darwin'[\s\S]*bootstrapMacOSServiceAuth\(secret\.publicKey\)[\s\S]*await waitForServiceReady\(\)[\s\S]*return/
+  )
+  assert.doesNotMatch(initSource, /'--ensure-running'/)
+  const bootstrapApiSource = apiSource.slice(
+    apiSource.indexOf('export const bootstrapMacOSServiceAuth'),
+    apiSource.indexOf('export const getCoreStatus')
+  )
+  assert.match(bootstrapApiSource, /axios\.post\([\s\S]*'\/bootstrap'/)
+  assert.doesNotMatch(bootstrapApiSource, /getServiceAxios\(\)/)
   const ensureReadySource = managerSource.slice(
     managerSource.indexOf('export async function ensureMacOSServiceReady'),
     managerSource.indexOf('export async function uninstallService')
