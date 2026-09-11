@@ -2,7 +2,15 @@ import { tr } from '../../shared/i18n'
 import { macOSServicePlistPath, macOSServiceRuntimePath, servicePath } from '../utils/dirs'
 import { execWithElevation } from '../utils/elevation'
 import { KeyManager, type KeyPair, validateKeyPair } from './key'
-import { initServiceAPI, getServiceAxios, ping, test, ServiceAPIError } from './api'
+import {
+  bootstrapMacOSServiceAuth,
+  initServiceAPI,
+  getServiceAxios,
+  ping,
+  test,
+  ServiceAPIError,
+  isServiceConnectionError
+} from './api'
 import { getAppConfig, patchAppConfig } from '../config/app'
 import { execFile } from 'child_process'
 import { promisify } from 'util'
@@ -255,11 +263,31 @@ export async function initService(): Promise<void> {
   const execPath = servicePath()
 
   try {
+    if (process.platform === 'darwin') {
+      const startedAt = Date.now()
+      while (true) {
+        try {
+          await bootstrapMacOSServiceAuth(secret.publicKey)
+          break
+        } catch (error) {
+          if (error instanceof ServiceAPIError && error.status === 409) {
+            if (await testServiceConnection()) break
+            throw new Error('The service is initialized for a different client key')
+          }
+          if (!isServiceConnectionError(error) || Date.now() - startedAt >= 15000) {
+            throw error
+          }
+          await delay(500)
+        }
+      }
+      await waitForServiceReady()
+      return
+    }
+
     const principalArgs = await getAuthorizedPrincipalArgs()
     await execWithElevation(execPath, [
       'service',
       'init',
-      ...(process.platform === 'darwin' ? ['--ensure-running'] : []),
       '--public-key',
       secret.publicKey,
       ...principalArgs

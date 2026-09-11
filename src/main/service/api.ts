@@ -412,6 +412,23 @@ export const test = async (): Promise<Record<string, unknown>> => {
   return await instance.get('/test')
 }
 
+export const bootstrapMacOSServiceAuth = async (publicKey: string): Promise<void> => {
+  try {
+    await axios.post(
+      '/bootstrap',
+      { public_key: publicKey },
+      {
+        baseURL: 'http://localhost',
+        socketPath: serviceIpcPath(),
+        timeout: 15000,
+        headers: { 'Content-Type': 'application/json' }
+      }
+    )
+  } catch (error) {
+    throw createServiceAPIError(error)
+  }
+}
+
 export const getCoreStatus = async (): Promise<Record<string, unknown>> => {
   const instance = getServiceAxios()
   return await instance.get('/core')

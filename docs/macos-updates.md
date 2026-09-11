@@ -66,9 +66,12 @@ an enabled service restarts it from the current application bundle. Unregisterin
 `SMAppService` job; authentication material remains in the user's protected application data unless
 the user removes that data separately.
 
-First-time authentication uses the service's atomic `service init --ensure-running` operation. It
-writes the per-user authorization data and starts or restarts the registered daemon inside one
-privileged process, so KokoroBox requests administrator authorization only once during bootstrap.
+After macOS approves the LaunchDaemon, first-time authentication uses its one-time local bootstrap
+endpoint and does not launch `osascript`. The daemon obtains the caller UID and audit token from
+the Unix socket, verifies that the live process is the hardened Developer ID-signed
+`com.amamiyakokoro.app` from team `755TNLRN92`, then stores the public key and UID and restricts the
+socket to that user. Bootstrap cannot replace existing authentication. The existing elevated
+`service init` CLI remains an explicit recovery path, not part of normal first launch.
 
 The application recognizes and removes the former `/Library/LaunchDaemons/KokoroBoxService.plist`
 and `/Library/PrivilegedHelperTools/com.amamiyakokoro.kokorobox-service` only while performing an
