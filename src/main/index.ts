@@ -21,7 +21,7 @@ import { isHttpUrl } from './utils/url'
 import { applyWindowsGpuWorkaround, useLinuxCustomRelaunch } from './sys/startup'
 import { handleDeepLink } from './resolve/deepLink'
 import { createDeepLinkInbox, takeInitialDeepLinks } from './resolve/deepLinkInbox'
-import { initAppQuitLifecycle } from './resolve/appLifecycle'
+import { initAppQuitLifecycle, isAppQuitting } from './resolve/appLifecycle'
 import { showNotification } from './utils/notification'
 import { appendAppLog } from './utils/log'
 import { migrateLegacyWindowsTasks } from './sys/autoRun'
@@ -442,6 +442,9 @@ export async function createWindow(appConfig?: AppConfig): Promise<void> {
     })
 
     mainWindow.on('close', async (event) => {
+      // Normal window closes hide KokoroBox in the tray. An intentional app
+      // quit must be allowed through so Electron can shut down cleanly.
+      if (isAppQuitting()) return
       event.preventDefault()
       mainWindow?.hide()
       if (windowShown) {

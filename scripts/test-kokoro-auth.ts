@@ -937,11 +937,12 @@ test('Windows privilege changes use explicit non-persistent native relaunches', 
   assert.match(misc, /app\.releaseSingleInstanceLock\(\)/)
   assert.match(
     misc,
-    /await prepareAppForRelaunch\(\)[\s\S]*app\.releaseSingleInstanceLock\(\)[\s\S]*app\.exit\(\)/
+    /await prepareAppForRelaunch\(\)[\s\S]*app\.releaseSingleInstanceLock\(\)[\s\S]*app\.quit\(\)/
   )
   assert.doesNotMatch(misc, /launch(?:Un)?elevated\([^\n]*process\.argv/)
   assert.match(misc, /await prepareAppForRelaunch\(\)/)
   assert.match(lifecycle, /isQuitting = true\s+await cleanupBeforeExit\(false\)/)
+  assert.match(startup, /if \(isAppQuitting\(\)\) return\s+event\.preventDefault\(\)/)
   assert.match(
     startup,
     /waitForRelaunchParent\(windowsRelaunchWaitPid\)\.then\(requestPrimaryInstance\)/

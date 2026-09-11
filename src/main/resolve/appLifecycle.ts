@@ -20,6 +20,10 @@ export function setNotQuitDialog(): void {
   notQuitDialog = true
 }
 
+export function isAppQuitting(): boolean {
+  return isQuitting
+}
+
 export async function prepareAppForRelaunch(): Promise<void> {
   // A privilege transition is an intentional quit. Complete all cleanup before
   // the replacement process is allowed to acquire shared resources such as the

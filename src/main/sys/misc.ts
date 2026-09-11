@@ -251,10 +251,7 @@ async function relaunchWindowsWithPrivilege(elevated: boolean): Promise<void> {
 
   await prepareAppForRelaunch()
   app.releaseSingleInstanceLock()
-  // Cleanup has already completed. app.quit() would emit BrowserWindow's close
-  // event, whose normal tray behaviour prevents the old process from exiting
-  // and leaves the replacement waiting forever for this PID.
-  app.exit()
+  app.quit()
 }
 
 export async function relaunchWindowsElevated(): Promise<void> {
