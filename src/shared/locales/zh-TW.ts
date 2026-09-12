@@ -91,6 +91,12 @@ export const messages: Readonly<Record<string, string>> = {
   '应用分流支持 Windows 10/11 x64、macOS 13 或更新版本及 Linux x64/arm64。':
     '程式分流支援 Windows 10/11 x64、macOS 13 或更新版本及 Linux x64/arm64。',
   签名标识: '簽署識別碼',
+  匹配方式: '比對方式',
+  '规则按从上到下的顺序匹配；可使用进程名称或应用签名标识。':
+    '規則按從上到下的順序比對；可使用程序名稱或應用程式簽署識別碼。',
+  '例如：codex 或 Codex Helper*': '例如：codex 或 Codex Helper*',
+  '输入进程名称或签名标识，或选择一个或多个 .app，然后设定 Proxy、Direct 或 Block。':
+    '輸入程序名稱或簽署識別碼，或選擇一個或多個 .app，然後設定 Proxy、Direct 或 Block。',
   '规则按从上到下的顺序匹配；使用应用签名标识，可在末尾加入 *。':
     '規則按從上到下的順序比對；使用應用程式簽署識別碼，可在結尾加入 *。',
   '例如：com.openai.chat 或 com.openai.chat*': '例如：com.openai.chat 或 com.openai.chat*',

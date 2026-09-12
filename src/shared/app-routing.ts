@@ -22,6 +22,13 @@ const reservedMacSigningIdentifiers = Object.freeze([
   'mihomo',
   'mihomo-alpha'
 ])
+const reservedMacProcessNames = Object.freeze([
+  'KokoroBox',
+  'KokoroBoxProxyExtension',
+  'kokorobox-app-routing-bridge',
+  'mihomo',
+  'mihomo-alpha'
+])
 const reservedLinuxExecutableNames = new Set([
   'kokorobox',
   'mihomo',
@@ -98,7 +105,9 @@ export function normalizeAppRoutingIdentifier(
   identifier: string,
   kind: AppRoutingIdentifierKind
 ): string {
-  if (kind === 'macos-signing-identifier') return normalizeMacSigningIdentifier(identifier)
+  if (kind === 'macos-signing-identifier' || kind === 'macos-process-name') {
+    return normalizeMacSigningIdentifier(identifier)
+  }
   if (kind === 'linux-executable') return normalizeLinuxExecutablePath(identifier)
   return normalizeProcessPattern(identifier)
 }
@@ -132,6 +141,11 @@ export function isProtectedMacSigningIdentifier(identifier: string): boolean {
       wildcardPatternMatches(normalized, reserved.replace('*', 'helper')) ||
       wildcardPatternMatches(reserved, normalized)
   )
+}
+
+export function isProtectedMacProcessName(processName: string): boolean {
+  const normalized = normalizeMacSigningIdentifier(processName)
+  return reservedMacProcessNames.some((reserved) => wildcardPatternMatches(normalized, reserved))
 }
 
 export function isProtectedLinuxExecutablePath(executablePath: string): boolean {
@@ -186,18 +200,32 @@ export function validateAppRoutingRule(rule: AppRoutingRule): void {
     ) {
       throw new Error('Application routing icon source must be an absolute Windows .exe path')
     }
-  } else if (kind === 'macos-signing-identifier') {
-    if (
-      !/^[A-Za-z0-9][A-Za-z0-9._-]*(?:\*[A-Za-z0-9._-]*)?$/.test(processPattern) ||
-      processPattern === '*' ||
-      new TextEncoder().encode(processPattern).length > 512
-    ) {
-      throw new Error('Application routing requires one valid macOS signing identifier')
+  } else if (kind === 'macos-signing-identifier' || kind === 'macos-process-name') {
+    const validIdentity =
+      kind === 'macos-process-name'
+        ? processPattern !== '*' &&
+          /^[^*]+(?:\*)?$/.test(processPattern) &&
+          !/[\0-\x1f\x7f?;,"\\/]/.test(processPattern)
+        : /^[A-Za-z0-9][A-Za-z0-9._-]*(?:\*[A-Za-z0-9._-]*)?$/.test(processPattern) &&
+          processPattern !== '*'
+    if (!validIdentity || new TextEncoder().encode(processPattern).length > 512) {
+      throw new Error(
+        kind === 'macos-process-name'
+          ? 'Application routing requires one valid macOS process name'
+          : 'Application routing requires one valid macOS signing identifier'
+      )
     }
-    if (isProtectedMacSigningIdentifier(processPattern)) {
+    const protectedIdentifier =
+      kind === 'macos-process-name'
+        ? isProtectedMacProcessName(processPattern)
+        : isProtectedMacSigningIdentifier(processPattern)
+    if (protectedIdentifier) {
       throw new Error(`${processPattern} cannot be intercepted`)
     }
-    if (rule.sourcePath !== undefined && !/^\/[^\0]+\.app$/i.test(rule.sourcePath)) {
+    if (
+      rule.sourcePath !== undefined &&
+      (kind !== 'macos-signing-identifier' || !/^\/[^\0]+\.app$/i.test(rule.sourcePath))
+    ) {
       throw new Error('Application routing icon source must be an absolute macOS .app path')
     }
   } else {
@@ -243,6 +271,7 @@ export function validateAppRoutingConfig(config: AppRoutingConfig): void {
   if (
     !config ||
     config.version !== 1 ||
+    (config.macosIdentityKindsVersion !== undefined && config.macosIdentityKindsVersion !== 1) ||
     typeof config.enabled !== 'boolean' ||
     config.failClosed !== true ||
     typeof config.proxyUdpDns !== 'boolean' ||
@@ -285,11 +314,12 @@ export function validateAppRoutingConfig(config: AppRoutingConfig): void {
     if (rule.groupId !== undefined && appRoutingIdentifierKind(rule) !== 'windows-executable') {
       throw new Error('Application rule groups are supported on Windows only')
     }
-    const identifier = normalizeAppRoutingIdentifier(
+    const normalizedIdentifier = normalizeAppRoutingIdentifier(
       rule.processPattern,
       appRoutingIdentifierKind(rule)
     ).toLowerCase()
-    totalPatternBytes += new TextEncoder().encode(identifier).length + 1
+    const identifier = `${appRoutingIdentifierKind(rule)}:${normalizedIdentifier}`
+    totalPatternBytes += new TextEncoder().encode(normalizedIdentifier).length + 1
     if (ids.has(rule.id)) throw new Error('Application rule IDs must be unique')
     if (processPatterns.has(identifier)) {
       throw new Error(`Only one rule can target ${rule.processPattern}`)
@@ -323,6 +353,9 @@ export function normalizeAppRoutingConfig(config: AppRoutingConfig): AppRoutingC
         ]
   return {
     version: 1,
+    ...(config.macosIdentityKindsVersion
+      ? { macosIdentityKindsVersion: config.macosIdentityKindsVersion }
+      : {}),
     enabled: config.enabled,
     failClosed: config.failClosed,
     proxyUdpDns: config.proxyUdpDns,
@@ -353,6 +386,21 @@ export function normalizeAppRoutingConfig(config: AppRoutingConfig): AppRoutingC
       protocol: rule.protocol,
       action: rule.action
     }))
+  }
+}
+
+export function migrateMacAppRoutingIdentityKinds(config: AppRoutingConfig): AppRoutingConfig {
+  if (config.macosIdentityKindsVersion === 1) return config
+  return {
+    ...config,
+    macosIdentityKindsVersion: 1,
+    rules: config.rules.map((rule) =>
+      rule.identifierKind === 'macos-signing-identifier' &&
+      !rule.sourcePath &&
+      !rule.processPattern.includes('.')
+        ? { ...rule, identifierKind: 'macos-process-name' as const }
+        : rule
+    )
   }
 }
 
