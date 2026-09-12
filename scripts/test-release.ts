@@ -231,14 +231,14 @@ test('desktop uses the independently maintained KokoroBox native packages', () =
 })
 
 test('stable builds pin verified service releases while rolling builds follow pre-release', () => {
-  assert.equal(KOKOROBOX_SERVICE_STABLE_TAG, 'v0.2.0')
+  assert.equal(KOKOROBOX_SERVICE_STABLE_TAG, 'v0.2.1')
   assert.deepEqual(kokoroboxServiceAsset('win32', 'x64', 'stable'), {
     downloadURL:
-      'https://github.com/amamiyakokoro/kokorobox-service/releases/download/v0.2.0/kokorobox-service-windows-amd64-v3.exe',
+      'https://github.com/amamiyakokoro/kokorobox-service/releases/download/v0.2.1/kokorobox-service-windows-amd64-v3.exe',
     filename: 'kokorobox-service-windows-amd64-v3.exe',
     sha256URL:
-      'https://github.com/amamiyakokoro/kokorobox-service/releases/download/v0.2.0/kokorobox-service-windows-amd64-v3.exe.sha256',
-    tag: 'v0.2.0'
+      'https://github.com/amamiyakokoro/kokorobox-service/releases/download/v0.2.1/kokorobox-service-windows-amd64-v3.exe.sha256',
+    tag: 'v0.2.1'
   })
   assert.equal(kokoroboxServiceAsset('linux', 'arm64', 'rolling').tag, 'pre-release')
   assert.equal(kokoroboxServiceAsset('darwin', 'arm64').tag, 'pre-release')
