@@ -81,7 +81,7 @@ export async function resolveThemes(): Promise<{ key: string; label: string }[]>
   if (themes.find((theme) => theme.key === 'default.css')) {
     return themes
   } else {
-    return [{ key: 'default.css', label: tr('默认') }, ...themes]
+    return [{ key: 'default.css', label: tr('Default') }, ...themes]
   }
 }
 

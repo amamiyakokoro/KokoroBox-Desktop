@@ -33,7 +33,7 @@ const ExecLogModal: React.FC<Props> = (props) => {
         <Modal.Container scroll="inside">
           <Modal.Dialog>
             <Modal.Header className="app-drag">
-              <Modal.Heading>{tr('执行日志')}</Modal.Heading>
+              <Modal.Heading>{tr('Execution log')}</Modal.Heading>
             </Modal.Header>
             <Modal.Body>
               {logs.map((log, index) => {

@@ -37,10 +37,10 @@ interface Props {
 const ConfirmModal: React.FC<Props> = (props) => {
   const {
     onChange,
-    title = tr('请确认'),
+    title = tr('Please confirm'),
     description,
-    confirmText = tr('确认'),
-    cancelText = tr('取消'),
+    confirmText = tr('Confirm'),
+    cancelText = tr('Cancel'),
     onConfirm,
     buttons,
     className

@@ -80,9 +80,9 @@ export async function createOverride(item: Partial<OverrideItem>): Promise<Overr
       try {
         const httpsAgent = item.fingerprint
           ? createPinnedHttpsAgent(item.url, item.fingerprint, mixedPort || undefined, {
-              fingerprintMismatch: () => new Error(tr('证书指纹不匹配')),
+              fingerprintMismatch: () => new Error(tr('Certificate fingerprint mismatch')),
               proxyConnectFailed: (statusCode) =>
-                new Error(tr('代理连接失败，状态码：{0}', [statusCode]))
+                new Error(tr('Proxy connection failed with status code {0}', [statusCode]))
             })
           : new https.Agent({ rejectUnauthorized: true })
 
@@ -98,15 +98,15 @@ export async function createOverride(item: Partial<OverrideItem>): Promise<Overr
       } catch (error) {
         if (axios.isAxiosError(error)) {
           if (error.code === 'ECONNRESET' || error.code === 'ECONNABORTED') {
-            throw new Error(tr('网络连接被重置或超时：{0}', [item.url]))
+            throw new Error(tr('Network connection reset or timed out: {0}', [item.url]))
           } else if (error.code === 'CERT_HAS_EXPIRED') {
-            throw new Error(tr('服务器证书已过期：{0}', [item.url]))
+            throw new Error(tr('Server certificate has expired: {0}', [item.url]))
           } else if (error.code === 'UNABLE_TO_VERIFY_LEAF_SIGNATURE') {
-            throw new Error(tr('无法验证服务器证书：{0}', [item.url]))
+            throw new Error(tr('Unable to verify server certificate: {0}', [item.url]))
           } else if (error.message.includes('Certificate verification failed')) {
-            throw new Error(tr('证书验证失败：{0}', [item.url]))
+            throw new Error(tr('Certificate verification failed: {0}', [item.url]))
           } else {
-            throw new Error(tr('请求失败：{0}', [error.message]))
+            throw new Error(tr('Request failed: {0}', [error.message]))
           }
         }
         throw error

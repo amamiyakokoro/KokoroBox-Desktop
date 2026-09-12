@@ -148,10 +148,12 @@ async function ensureMacOSApplicationsLocation(): Promise<boolean> {
 
   const { response } = await dialog.showMessageBox({
     type: 'info',
-    title: tr('将 KokoroBox 移到“应用程序”文件夹？'),
-    message: tr('将 KokoroBox 移到“应用程序”文件夹？'),
-    detail: tr('系统服务和网络扩展需要从“应用程序”文件夹运行。'),
-    buttons: [tr('移到“应用程序”'), tr('退出')],
+    title: tr('Move KokoroBox to Applications?'),
+    message: tr('Move KokoroBox to Applications?'),
+    detail: tr(
+      'The system service and Network Extension require KokoroBox to run from Applications.'
+    ),
+    buttons: [tr('Move to Applications'), tr('Quit')],
     defaultId: 0,
     cancelId: 1,
     noLink: true
@@ -167,10 +169,10 @@ async function ensureMacOSApplicationsLocation(): Promise<boolean> {
   } catch (error) {
     await dialog.showMessageBox({
       type: 'error',
-      title: tr('无法移动 KokoroBox'),
-      message: tr('无法移动 KokoroBox'),
+      title: tr('Unable to move KokoroBox'),
+      message: tr('Unable to move KokoroBox'),
       detail: error instanceof Error ? error.message : String(error),
-      buttons: [tr('退出')],
+      buttons: [tr('Quit')],
       noLink: true
     })
   }
@@ -202,7 +204,7 @@ installEarlyTlsDisconnectRecovery((error, origin) => {
     runStartupTask(
       'early TLS disconnect notification',
       showNotification({
-        title: tr('请求失败'),
+        title: tr('Request failed'),
         body: error.message,
         variant: 'warning'
       })
@@ -289,7 +291,7 @@ function startPrimaryInstance(initialDeepLinks: string[]): void {
   const inbox = createDeepLinkInbox(
     (url) => handleDeepLink(url, { getMainWindow: () => mainWindow, createWindow, showWindow }),
     () => {
-      void showNotification({ title: tr('Kokoro 登录失败'), variant: 'danger' })
+      void showNotification({ title: tr('Kokoro sign-in failed'), variant: 'danger' })
     }
   )
   // Register before readiness; macOS can deliver open-url during cold startup.
@@ -359,7 +361,11 @@ function startPrimaryInstance(initialDeepLinks: string[]): void {
       try {
         appConfig = await (initPromise ?? init())
       } catch (e) {
-        void showNotification({ title: tr('应用初始化失败'), body: `${e}`, variant: 'danger' })
+        void showNotification({
+          title: tr('App initialization failed'),
+          body: `${e}`,
+          variant: 'danger'
+        })
         app.quit()
         return
       }
@@ -388,7 +394,11 @@ function startPrimaryInstance(initialDeepLinks: string[]): void {
           runStartupTask('profile updater', startPromise.then(initProfileUpdater))
           coreStarted = true
         } catch (e) {
-          void showNotification({ title: tr('内核启动出错'), body: `${e}`, variant: 'danger' })
+          void showNotification({
+            title: tr('Failed to start core'),
+            body: `${e}`,
+            variant: 'danger'
+          })
         }
       })()
 

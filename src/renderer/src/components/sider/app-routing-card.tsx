@@ -32,7 +32,7 @@ const AppRoutingCard: React.FC<Props> = ({ iconOnly = false }) => {
   if (iconOnly) {
     return (
       <div className={`${appRoutingCardStatus} app-routing-card flex justify-center`}>
-        <Tooltip content={tr('应用分流')} placement="right">
+        <Tooltip content={tr('Application routing')} placement="right">
           <Button
             size="sm"
             isIconOnly
@@ -75,7 +75,7 @@ const AppRoutingCard: React.FC<Props> = ({ iconOnly = false }) => {
           <h3
             className={`text-md font-bold ${match ? 'text-primary-foreground' : 'text-foreground'}`}
           >
-            {tr('应用分流')}
+            {tr('Application routing')}
           </h3>
         </CardFooter>
       </Card>

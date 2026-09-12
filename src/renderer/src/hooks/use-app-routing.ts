@@ -153,7 +153,7 @@ export function useAppRouting(): {
       }
     }
     if (additions.length === 0) {
-      notify(tr('所选应用程序已存在'), { variant: 'warning' })
+      notify(tr('The selected applications already exist'), { variant: 'warning' })
       return
     }
     await save({ ...config, rules: [...config.rules, ...additions] })
@@ -177,7 +177,7 @@ export function useAppRouting(): {
           enabled: true
         }
       if (!matchingGroup && !requestedGroup && (config.groups?.length ?? 0) >= 64) {
-        notify(tr('应用程序规则组最多支持 64 个'), { variant: 'danger' })
+        notify(tr('Application routing supports at most 64 groups'), { variant: 'danger' })
         return
       }
 
@@ -226,8 +226,8 @@ export function useAppRouting(): {
       if (additions.length === 0) {
         const message =
           selection.applications.length === 0
-            ? tr('所选文件夹中没有可添加的 .exe')
-            : tr('所选文件夹中没有新的可添加 .exe')
+            ? tr('The selected folder contains no .exe files to add')
+            : tr('The selected folder contains no new .exe files to add')
         notify(message, { variant: 'warning' })
         return
       }
@@ -238,8 +238,10 @@ export function useAppRouting(): {
           selection.truncated ||
           selection.unreadableDirectoryCount > 0 ||
           additions.length < selection.applications.length
-        notify(tr('已从 {0} 添加 {1} 个应用程序', [selection.name, additions.length]), {
-          body: partial ? tr('部分项目因重复、权限或规则数量限制未添加。') : undefined,
+        notify(tr('Added {1} applications from {0}', [selection.name, additions.length]), {
+          body: partial
+            ? tr('Some items were not added because of duplicates, permissions, or rule limits.')
+            : undefined,
           variant: partial ? 'warning' : 'success'
         })
       }
@@ -268,7 +270,7 @@ export function useAppRouting(): {
           rule.processPattern.toLowerCase() === processPattern.toLowerCase()
       )
     ) {
-      notify(tr('应用程序匹配规则已存在'), { variant: 'warning' })
+      notify(tr('The process pattern already exists'), { variant: 'warning' })
       return false
     }
     const nextRule: AppRoutingRule = {
@@ -293,12 +295,14 @@ export function useAppRouting(): {
   const createGroup = async (value: string): Promise<boolean> => {
     if (!config || window.api.platform !== 'win32') return false
     if ((config.groups?.length ?? 0) >= 64) {
-      notify(tr('应用程序规则组最多支持 64 个'), { variant: 'danger' })
+      notify(tr('Application routing supports at most 64 groups'), { variant: 'danger' })
       return false
     }
     const name = value.trim()
     if (!name || name.length > 80 || /[\0\r\n]/.test(name)) {
-      notify(tr('规则组名称不能为空且不能超过 80 个字符'), { variant: 'danger' })
+      notify(tr('The rule group name is required and must not exceed 80 characters'), {
+        variant: 'danger'
+      })
       return false
     }
     return save({
@@ -327,7 +331,9 @@ export function useAppRouting(): {
     if (!config?.groups?.some((group) => group.id === id)) return false
     const name = value.trim()
     if (!name || name.length > 80 || /[\0\r\n]/.test(name)) {
-      notify(tr('规则组名称不能为空且不能超过 80 个字符'), { variant: 'danger' })
+      notify(tr('The rule group name is required and must not exceed 80 characters'), {
+        variant: 'danger'
+      })
       return false
     }
     return save({

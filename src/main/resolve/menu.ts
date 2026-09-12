@@ -18,34 +18,34 @@ export async function createApplicationMenu(): Promise<void> {
       label: app.getName(),
       submenu: [
         {
-          label: tr('关于 ') + app.getName(),
+          label: tr('About ') + app.getName(),
           role: 'about'
         },
         { type: 'separator' },
         {
-          label: tr('隐藏') + app.getName(),
+          label: tr('Hide') + app.getName(),
           accelerator: 'Command+H',
           role: 'hide'
         },
         {
-          label: tr('隐藏其他'),
+          label: tr('Hide others'),
           accelerator: 'Command+Alt+H',
           role: 'hideOthers'
         },
         {
-          label: tr('显示全部'),
+          label: tr('Show all'),
           role: 'unhide'
         },
         { type: 'separator' },
         {
-          label: tr('保留内核退出'),
+          label: tr('Quit and keep core running'),
           accelerator: quitWithoutCoreShortcut,
           click: () => {
             quitWithoutCore()
           }
         },
         {
-          label: tr('重启应用'),
+          label: tr('Restart app'),
           accelerator: restartAppShortcut,
           click: () => {
             app.relaunch()
@@ -53,7 +53,7 @@ export async function createApplicationMenu(): Promise<void> {
           }
         },
         {
-          label: tr('退出应用'),
+          label: tr('Quit app'),
           accelerator: 'Command+Q',
           click: () => {
             app.quit()
@@ -62,73 +62,73 @@ export async function createApplicationMenu(): Promise<void> {
       ]
     },
     {
-      label: tr('编辑'),
+      label: tr('Edit'),
       submenu: [
         {
-          label: tr('撤销'),
+          label: tr('Undo'),
           accelerator: 'CmdOrCtrl+Z',
           role: 'undo'
         },
         {
-          label: tr('重做'),
+          label: tr('Redo'),
           accelerator: 'Shift+CmdOrCtrl+Z',
           role: 'redo'
         },
         { type: 'separator' },
         {
-          label: tr('剪切'),
+          label: tr('Cut'),
           accelerator: 'CmdOrCtrl+X',
           role: 'cut'
         },
         {
-          label: tr('复制'),
+          label: tr('Copy'),
           accelerator: 'CmdOrCtrl+C',
           role: 'copy'
         },
         {
-          label: tr('粘贴'),
+          label: tr('Paste'),
           accelerator: 'CmdOrCtrl+V',
           role: 'paste'
         },
         {
-          label: tr('删除'),
+          label: tr('Delete'),
           accelerator: 'CmdOrCtrl+Backspace',
           role: 'delete'
         },
         {
-          label: tr('全选'),
+          label: tr('Select all'),
           accelerator: 'CmdOrCtrl+A',
           role: 'selectAll'
         }
       ]
     },
     {
-      label: tr('工具'),
+      label: tr('Tools'),
       submenu: [
         {
-          label: tr('打开目录'),
+          label: tr('Open directory'),
           submenu: [
             {
-              label: tr('应用目录'),
+              label: tr('App directory'),
               click: () => shell.openPath(dataDir())
             },
             {
-              label: tr('工作目录'),
+              label: tr('Working directory'),
               click: () => shell.openPath(mihomoWorkDir())
             },
             {
-              label: tr('内核目录'),
+              label: tr('Core directory'),
               click: () => shell.openPath(mihomoCoreDir())
             },
             {
-              label: tr('日志目录'),
+              label: tr('Log directory'),
               click: () => shell.openPath(logDir())
             }
           ]
         },
         { type: 'separator' },
         {
-          label: tr('重新加载'),
+          label: tr('Reload'),
           accelerator: 'CmdOrCtrl+R',
           click: () => {
             if (mainWindow) {
@@ -137,7 +137,7 @@ export async function createApplicationMenu(): Promise<void> {
           }
         },
         {
-          label: tr('开发者工具'),
+          label: tr('Developer tools'),
           click: () => {
             if (mainWindow) {
               mainWindow.webContents.toggleDevTools()
@@ -147,50 +147,50 @@ export async function createApplicationMenu(): Promise<void> {
       ]
     },
     {
-      label: tr('窗口'),
+      label: tr('Window'),
       submenu: [
         {
-          label: tr('最小化'),
+          label: tr('Minimize'),
           accelerator: 'CmdOrCtrl+M',
           role: 'minimize'
         },
         {
-          label: tr('关闭'),
+          label: tr('Close'),
           accelerator: 'CmdOrCtrl+W',
           role: 'close'
         },
         { type: 'separator' },
         {
-          label: tr('前置所有窗口'),
+          label: tr('Bring all to front'),
           role: 'front'
         }
       ]
     },
     {
-      label: tr('帮助'),
+      label: tr('Help'),
       submenu: [
         {
-          label: tr('了解更多'),
+          label: tr('Learn more'),
           click: () => {
             shell.openExternal('https://github.com/amamiyakokoro/KokoroBox-Desktop')
           }
         },
         {
-          label: tr('报告问题'),
+          label: tr('Report an issue'),
           click: () => {
             shell.openExternal('https://github.com/amamiyakokoro/KokoroBox-Desktop/issues')
           }
         },
         { type: 'separator' },
         {
-          label: tr('关于'),
+          label: tr('About'),
           click: () => {
             dialog.showMessageBox(mainWindow!, {
               type: 'info',
-              title: tr('关于 KokoroBox'),
+              title: tr('About KokoroBox'),
               message: 'KokoroBox',
-              detail: tr('版本：{0}\n一个基于 Electron 的代理工具', [app.getVersion()]),
-              buttons: [tr('确定')]
+              detail: tr('Version: {0}\nAn Electron-based proxy client', [app.getVersion()]),
+              buttons: [tr('OK')]
             })
           }
         }

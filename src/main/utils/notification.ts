@@ -56,7 +56,7 @@ export async function showNotification(payload: AppNotificationPayload): Promise
     title: notification.title,
     body: notification.body,
     timeoutType: notification.persistent ? 'never' : 'default',
-    actions: hasErrorDetail ? [{ type: 'button', text: tr('查看详情') }] : undefined
+    actions: hasErrorDetail ? [{ type: 'button', text: tr('View details') }] : undefined
   })
   if (hasErrorDetail) {
     const showDetail = (): void => {
@@ -131,10 +131,10 @@ function showNotificationDetail(title: string, body: string): void {
   void dialog
     .showMessageBox({
       type: 'error',
-      title: tr('错误详情'),
+      title: tr('Error details'),
       message: title,
       detail: body,
-      buttons: [tr('关闭'), tr('复制')],
+      buttons: [tr('Close'), tr('Copy')],
       noLink: true
     })
     .then(({ response }) => {

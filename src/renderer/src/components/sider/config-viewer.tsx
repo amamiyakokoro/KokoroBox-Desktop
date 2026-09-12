@@ -47,29 +47,29 @@ const ConfigViewer: React.FC<Props> = ({ onClose }) => {
     if (runtimeResult.status === 'fulfilled') {
       setRuntimeConfig(runtimeResult.value)
     } else {
-      failedTargets.push(tr('运行时配置'))
+      failedTargets.push(tr('Runtime configuration'))
     }
 
     if (rawResult.status === 'fulfilled') {
       setRawProfile(rawResult.value)
     } else {
-      failedTargets.push(tr('原始配置'))
+      failedTargets.push(tr('Original configuration'))
     }
 
     if (profileResult.status === 'fulfilled') {
       setProfileConfig(profileResult.value)
     } else {
-      failedTargets.push(tr('当前配置'))
+      failedTargets.push(tr('Current configuration'))
     }
 
     if (overrideResult.status === 'fulfilled') {
       setOverrideConfig(overrideResult.value)
     } else {
-      failedTargets.push(tr('覆写后配置'))
+      failedTargets.push(tr('Configuration after overrides'))
     }
 
     if (failedTargets.length > 0) {
-      setErrorMessage(tr('部分内容读取失败：{0}', [failedTargets.join('、')]))
+      setErrorMessage(tr('Failed to read some content: {0}', [failedTargets.join('、')]))
     }
 
     setIsLoading(false)
@@ -107,13 +107,13 @@ const ConfigViewer: React.FC<Props> = ({ onClose }) => {
         <Modal.Container>
           <Modal.Dialog className="mt-4 h-[calc(100%-32px)] max-w-none">
             <Modal.Header className="app-drag pb-0">
-              <Modal.Heading>{tr('当前运行时配置')}</Modal.Heading>
+              <Modal.Heading>{tr('Current runtime configuration')}</Modal.Heading>
             </Modal.Header>
             <Modal.Body className="h-full">
               {errorMessage && <div className="px-1 pb-2 text-sm text-warning">{errorMessage}</div>}
               {isLoading ? (
                 <div className="flex h-full items-center justify-center text-sm text-muted">
-                  {tr('正在读取配置...')}
+                  {tr('Reading configuration...')}
                 </div>
               ) : (
                 <BaseEditor
@@ -132,7 +132,7 @@ const ConfigViewer: React.FC<Props> = ({ onClose }) => {
                     <Switch.Control>
                       <Switch.Thumb />
                     </Switch.Control>
-                    <Label>{tr('对比当前配置')}</Label>
+                    <Label>{tr('Compare with current configuration')}</Label>
                   </Switch.Content>
                 </Switch>
                 <Separator orientation="vertical" />
@@ -146,7 +146,7 @@ const ConfigViewer: React.FC<Props> = ({ onClose }) => {
                     <Switch.Control>
                       <Switch.Thumb />
                     </Switch.Control>
-                    <Label>{tr('侧边显示')}</Label>
+                    <Label>{tr('Side panel')}</Label>
                   </Switch.Content>
                 </Switch>
                 <Separator orientation="vertical" />
@@ -162,7 +162,7 @@ const ConfigViewer: React.FC<Props> = ({ onClose }) => {
                     <Switch.Control>
                       <Switch.Thumb />
                     </Switch.Control>
-                    <Label>{tr('显示原始文本')}</Label>
+                    <Label>{tr('Show original text')}</Label>
                   </Switch.Content>
                 </Switch>
                 <Separator orientation="vertical" />
@@ -178,7 +178,7 @@ const ConfigViewer: React.FC<Props> = ({ onClose }) => {
                     <Switch.Control>
                       <Switch.Thumb />
                     </Switch.Control>
-                    <Label>{tr('显示覆写后文本')}</Label>
+                    <Label>{tr('Show text after overrides')}</Label>
                   </Switch.Content>
                 </Switch>
               </div>

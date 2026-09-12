@@ -4,12 +4,13 @@ import path from 'node:path'
 import { afterEach, test } from 'node:test'
 import ts from 'typescript'
 import { getLocale, resolveLocale, setLocale, tr } from '../src/shared/i18n.ts'
-import { messages } from '../src/shared/locales/zh-TW.ts'
 import { messages as english } from '../src/shared/locales/en.ts'
+import { messages as simplifiedChinese } from '../src/shared/locales/zh-CN.ts'
+import { messages as traditionalChinese } from '../src/shared/locales/zh-TW.ts'
 
-const catalogs = { 'zh-TW': messages, en: english }
+const catalogs = { en: english, 'zh-CN': simplifiedChinese, 'zh-TW': traditionalChinese }
 
-afterEach(() => setLocale('zh-CN'))
+afterEach(() => setLocale('en'))
 
 test('resolves system language variants and respects an explicit preference', () => {
   for (const system of ['zh-TW', 'zh_HK', 'zh-MO', 'zh-Hant', 'zh-Hant-US']) {
@@ -32,29 +33,29 @@ test('resolves system language variants and respects an explicit preference', ()
   assert.equal(resolveLocale('system', ['en-US', 'zh-Hant-TW']), 'en')
   assert.equal(resolveLocale('system', ['zh-Hant-TW', 'en-US']), 'zh-TW')
   assert.equal(resolveLocale('system', ['fr-FR', 'en-GB']), 'en')
-  assert.equal(resolveLocale('system', ['fr-FR']), 'zh-CN')
+  assert.equal(resolveLocale('system', ['fr-FR']), 'en')
   assert.equal(resolveLocale('invalid', ['zh-HK']), 'zh-TW')
-  assert.equal(resolveLocale(null), 'zh-CN')
+  assert.equal(resolveLocale(null), 'en')
 })
 
 test('translates application messages without rewriting interpolation data', () => {
   setLocale('zh-TW')
   assert.equal(getLocale(), 'zh-TW')
-  assert.equal(tr('应用设置'), '應用程式設定')
-  assert.equal(tr('连接'), '連線')
-  assert.equal(tr('全局'), '全域')
-  assert.equal(tr('Kokoro 订阅'), 'Kokoro 訂閱')
+  assert.equal(tr('Application settings'), '應用程式設定')
+  assert.equal(tr('Connections'), '連線')
+  assert.equal(tr('Global'), '全域')
+  assert.equal(tr('Kokoro subscription'), 'Kokoro 訂閱')
   const nodeName = '香港节点 {1} $& <proxy> 🎐'
   const url = 'https://example.invalid/订阅?token=测试'
-  assert.equal(tr('{0} 更新失败\n{1}', [nodeName, url]), `${nodeName} 更新失敗\n${url}`)
-  assert.equal(tr('本月已用 {0} / {1}', [0, '500 GB']), '本月已用 0 / 500 GB')
+  assert.equal(tr('Failed to update {0}\n{1}', [nodeName, url]), `${nodeName} 更新失敗\n${url}`)
+  assert.equal(tr('Used this month: {0} / {1}', [0, '500 GB']), '本月已用 0 / 500 GB')
   assert.equal(tr('unknown {0}', ['原始配置']), 'unknown 原始配置')
   assert.equal(tr('missing {0}'), 'missing {0}')
   assert.equal(tr('toString'), 'toString')
   assert.equal(tr('__proto__'), '__proto__')
   setLocale('zh-CN')
-  assert.equal(tr('应用设置'), '应用设置')
-  assert.equal(tr('{0} 更新失败\n{1}', [nodeName, url]), `${nodeName} 更新失败\n${url}`)
+  assert.equal(tr('Application settings'), '应用设置')
+  assert.equal(tr('Failed to update {0}\n{1}', [nodeName, url]), `${nodeName} 更新失败\n${url}`)
 })
 
 test('all catalog translations preserve placeholders and intentional whitespace', () => {
@@ -69,9 +70,11 @@ test('all catalog translations preserve placeholders and intentional whitespace'
   }
 })
 
-test('English covers the complete catalog without untranslated Chinese or altered HTML', () => {
-  assert.deepEqual(Object.keys(english).sort(), Object.keys(messages).sort())
+test('localized catalogs completely cover the canonical English source catalog', () => {
+  assert.deepEqual(Object.keys(english).sort(), Object.keys(simplifiedChinese).sort())
+  assert.deepEqual(Object.keys(english).sort(), Object.keys(traditionalChinese).sort())
   for (const [source, translation] of Object.entries(english)) {
+    assert.equal(translation, source)
     assert.doesNotMatch(translation, /\p{Script=Han}/u, source)
     assert.deepEqual(translation.match(/<[^>]+>/g), source.match(/<[^>]+>/g), source)
   }
@@ -80,25 +83,25 @@ test('English covers the complete catalog without untranslated Chinese or altere
 test('English UI, native menu, OAuth and interpolated messages retain user data', () => {
   setLocale('en')
   assert.equal(getLocale(), 'en')
-  assert.equal(tr('应用设置'), 'Application settings')
-  assert.equal(tr('界面语言'), 'Interface language')
-  assert.equal(tr('重启以应用语言'), 'Restart to apply language')
-  assert.equal(tr('关于 KokoroBox'), 'About KokoroBox')
-  assert.equal(tr('连接'), 'Connections')
-  assert.equal(tr('关闭'), 'Close')
-  assert.equal(tr('已关闭'), 'Disabled')
-  assert.equal(tr('系统代理已关闭'), 'System proxy disabled')
-  assert.equal(tr('虚拟网卡已开启'), 'TUN mode enabled')
-  assert.equal(tr('登录 Kokoro'), 'Sign in to Kokoro')
+  assert.equal(tr('Application settings'), 'Application settings')
+  assert.equal(tr('Interface language'), 'Interface language')
+  assert.equal(tr('Restart to apply language'), 'Restart to apply language')
+  assert.equal(tr('About KokoroBox'), 'About KokoroBox')
+  assert.equal(tr('Connections'), 'Connections')
+  assert.equal(tr('Close'), 'Close')
+  assert.equal(tr('Off'), 'Off')
+  assert.equal(tr('System proxy disabled'), 'System proxy disabled')
+  assert.equal(tr('TUN mode enabled'), 'TUN mode enabled')
+  assert.equal(tr('Sign in to Kokoro'), 'Sign in to Kokoro')
   assert.equal(
-    tr('Kokoro 授权失败，请重新登录'),
+    tr('Kokoro authorization failed. Please sign in again'),
     'Kokoro authorization failed. Please sign in again'
   )
   const name = '香港节点 {1} $& <proxy> 🎐'
   const url = 'https://example.invalid/订阅?token=测试'
-  assert.equal(tr('{0} 更新失败\n{1}', [name, url]), `Failed to update ${name}\n${url}`)
-  assert.equal(tr('本月已用 {0} / {1}', [0, '500 GB']), 'Used this month: 0 / 500 GB')
-  assert.equal(tr(' · {0} 到期', ['2026-12-31']), ' · Expires 2026-12-31')
+  assert.equal(tr('Failed to update {0}\n{1}', [name, url]), `Failed to update ${name}\n${url}`)
+  assert.equal(tr('Used this month: {0} / {1}', [0, '500 GB']), 'Used this month: 0 / 500 GB')
+  assert.equal(tr(' · Expires {0}', ['2026-12-31']), ' · Expires 2026-12-31')
   assert.equal(tr('unknown {0}', ['原始配置']), 'unknown 原始配置')
   assert.equal(tr('missing {0}'), 'missing {0}')
   assert.equal(tr('toString'), 'toString')
@@ -141,16 +144,21 @@ test('preload carries English into isolated and non-isolated renderer startup', 
   const exports: { tr?: (key: string) => string } = {}
   new Function('require', 'exports', 'globalThis', i18n)(
     (name: string) => {
-      assert.ok(['./locales/zh-TW', './locales/en'].includes(name))
-      return { messages: name.endsWith('/en') ? english : messages }
+      const dependencies: Record<string, Readonly<Record<string, string>>> = {
+        './locales/en': english,
+        './locales/zh-CN': simplifiedChinese,
+        './locales/zh-TW': traditionalChinese
+      }
+      assert.ok(name in dependencies)
+      return { messages: dependencies[name] }
     },
     exports,
     { api: { locale: 'en' } }
   )
-  assert.equal(exports.tr?.('应用设置'), 'Application settings')
+  assert.equal(exports.tr?.('Application settings'), 'Application settings')
 })
 
-test('application translation calls have catalog entries and complete arguments', () => {
+test('application translation calls use canonical English keys with complete arguments', () => {
   const sourceRoot = path.resolve('src')
   const files = readdirSync(sourceRoot, { recursive: true, encoding: 'utf8' }).filter(
     (file) => /^(main|renderer)[/\\].*\.(ts|tsx)$/.test(file) && !file.endsWith('.d.ts')
@@ -171,6 +179,7 @@ test('application translation calls have catalog entries and complete arguments'
       ) {
         const key = node.arguments[0]
         assert.ok(key && ts.isStringLiteral(key), `Use a static message key in ${file}`)
+        assert.doesNotMatch(key.text, /\p{Script=Han}/u, `Use English source text in ${file}`)
         for (const [locale, messages] of Object.entries(catalogs)) {
           assert.ok(
             Object.hasOwn(messages, key.text),

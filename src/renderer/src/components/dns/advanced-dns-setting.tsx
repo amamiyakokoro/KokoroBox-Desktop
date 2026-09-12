@@ -99,8 +99,8 @@ const AdvancedDnsSetting: React.FC<AdvancedDnsSettingProps> = ({
   ])
 
   return (
-    <SettingCard header={tr('更多设置')}>
-      <SettingItem compatKey="legacy" title={tr('连接遵守规则')} divider>
+    <SettingCard header={tr('More settings')}>
+      <SettingItem compatKey="legacy" title={tr('Follow routing rules for connections')} divider>
         <Switch
           size="sm"
           isSelected={respectRules}
@@ -109,19 +109,26 @@ const AdvancedDnsSetting: React.FC<AdvancedDnsSettingProps> = ({
         />
       </SettingItem>
       <DnsServerList
-        title={tr('直连解析服务器')}
+        title={tr('Direct-connection DNS servers')}
         items={directNameserver}
         onChange={onDirectNameserverChange}
         onErrorChange={setDirectNameserverError}
-        placeholder={tr('例：tls://dns.alidns.com')}
+        placeholder={tr('Example: tls://dns.alidns.com')}
         followRoutingRules={respectRules}
       />
       <SettingItem
         compatKey="legacy"
-        title={tr('直连 DNS 套用网域策略')}
+        title={tr('Apply domain DNS policy to direct DNS')}
         actions={
-          <Tooltip content={tr('启用后，直连流量使用直连 DNS 时，仍会优先套用网域解析策略；关闭则一律使用直连 DNS。')}>
-            <span className="ml-1 inline-flex cursor-help text-foreground-400" aria-label={tr('说明')}>
+          <Tooltip
+            content={tr(
+              'When enabled, direct traffic still checks the domain DNS policy before using Direct DNS. When disabled, it always uses Direct DNS.'
+            )}
+          >
+            <span
+              className="ml-1 inline-flex cursor-help text-foreground-400"
+              aria-label={tr('Description')}
+            >
               <MdHelpOutline />
             </span>
           </Tooltip>
@@ -136,16 +143,16 @@ const AdvancedDnsSetting: React.FC<AdvancedDnsSettingProps> = ({
         />
       </SettingItem>
       <DnsServerList
-        title={tr('代理节点解析服务器')}
+        title={tr('Proxy DNS servers')}
         items={proxyServerNameserver}
         onChange={onProxyNameserverChange}
         onErrorChange={setProxyNameserverError}
-        placeholder={tr('例：tls://dns.alidns.com')}
+        placeholder={tr('Example: tls://dns.alidns.com')}
         followRoutingRules={respectRules}
       />
       {proxyServerNameserver.length > 0 && (
         <EditableList
-          title={tr('代理节点解析策略')}
+          title={tr('Proxy DNS policy')}
           items={proxyServerNameserverPolicy}
           validate={(part1) => isValidDomainWildcard(part1)}
           validatePart2={(part2) => {
@@ -168,7 +175,7 @@ const AdvancedDnsSetting: React.FC<AdvancedDnsSettingProps> = ({
               for (const domain of Object.keys(rec)) {
                 if (!isValidDomainWildcard(domain).ok) {
                   setProxyNameserverPolicyError(
-                    isValidDomainWildcard(domain).error ?? tr('域名格式错误')
+                    isValidDomainWildcard(domain).error ?? tr('Invalid domain format')
                   )
                   return
                 }
@@ -177,7 +184,9 @@ const AdvancedDnsSetting: React.FC<AdvancedDnsSettingProps> = ({
                 if (Array.isArray(v)) {
                   for (const vv of v) {
                     if (!isValidDnsServer(vv).ok) {
-                      setProxyNameserverPolicyError(isValidDnsServer(vv).error ?? tr('格式错误'))
+                      setProxyNameserverPolicyError(
+                        isValidDnsServer(vv).error ?? tr('Invalid format')
+                      )
                       return
                     }
                   }
@@ -188,7 +197,9 @@ const AdvancedDnsSetting: React.FC<AdvancedDnsSettingProps> = ({
                     .filter(Boolean)
                   for (const p of parts) {
                     if (!isValidDnsServer(p).ok) {
-                      setProxyNameserverPolicyError(isValidDnsServer(p).error ?? tr('格式错误'))
+                      setProxyNameserverPolicyError(
+                        isValidDnsServer(p).error ?? tr('Invalid format')
+                      )
                       return
                     }
                   }
@@ -196,16 +207,16 @@ const AdvancedDnsSetting: React.FC<AdvancedDnsSettingProps> = ({
               }
               setProxyNameserverPolicyError(null)
             } catch (e) {
-              setProxyNameserverPolicyError(tr('策略格式错误'))
+              setProxyNameserverPolicyError(tr('Invalid policy format'))
             }
           }}
-          placeholder={tr('域名')}
-          part2Placeholder={tr('DNS 服务器，用逗号分隔')}
+          placeholder={tr('Domain')}
+          part2Placeholder={tr('DNS servers, separated by commas')}
           objectMode="record"
         />
       )}
       <EditableList
-        title={tr('域名解析策略')}
+        title={tr('Domain resolution policy')}
         items={nameserverPolicy}
         validatePart1={(part1) => isValidDomainWildcard(part1)}
         validatePart2={(part2) => {
@@ -227,7 +238,9 @@ const AdvancedDnsSetting: React.FC<AdvancedDnsSettingProps> = ({
             const rec = newValue as Record<string, string | string[]>
             for (const domain of Object.keys(rec)) {
               if (!isValidDomainWildcard(domain).ok) {
-                setNameserverPolicyError(isValidDomainWildcard(domain).error ?? tr('域名格式错误'))
+                setNameserverPolicyError(
+                  isValidDomainWildcard(domain).error ?? tr('Invalid domain format')
+                )
                 return
               }
             }
@@ -235,7 +248,7 @@ const AdvancedDnsSetting: React.FC<AdvancedDnsSettingProps> = ({
               if (Array.isArray(v)) {
                 for (const vv of v) {
                   if (!isValidDnsServer(vv).ok) {
-                    setNameserverPolicyError(isValidDnsServer(vv).error ?? tr('格式错误'))
+                    setNameserverPolicyError(isValidDnsServer(vv).error ?? tr('Invalid format'))
                     return
                   }
                 }
@@ -246,7 +259,7 @@ const AdvancedDnsSetting: React.FC<AdvancedDnsSettingProps> = ({
                   .filter(Boolean)
                 for (const p of parts) {
                   if (!isValidDnsServer(p).ok) {
-                    setNameserverPolicyError(isValidDnsServer(p).error ?? tr('格式错误'))
+                    setNameserverPolicyError(isValidDnsServer(p).error ?? tr('Invalid format'))
                     return
                   }
                 }
@@ -254,33 +267,33 @@ const AdvancedDnsSetting: React.FC<AdvancedDnsSettingProps> = ({
             }
             setNameserverPolicyError(null)
           } catch (e) {
-            setNameserverPolicyError(tr('策略格式错误'))
+            setNameserverPolicyError(tr('Invalid policy format'))
           }
         }}
-        placeholder={tr('域名')}
-        part2Placeholder={tr('DNS 服务器，用逗号分隔')}
+        placeholder={tr('Domain')}
+        part2Placeholder={tr('DNS servers, separated by commas')}
         objectMode="record"
       />
       <DnsServerList
-        title={tr('备用解析服务器')}
+        title={tr('Fallback DNS servers')}
         items={fallback}
         onChange={onFallbackChange}
         onErrorChange={setFallbackError}
-        placeholder={tr('例：tls://1.1.1.1')}
+        placeholder={tr('Example: tls://1.1.1.1')}
         followRoutingRules={respectRules}
       />
       {fallback.length > 0 && (
         <>
-          <SettingItem compatKey="legacy" title={tr('Fallback GeoIP 过滤')} divider>
+          <SettingItem compatKey="legacy" title={tr('Fallback GeoIP filter')} divider>
             <Switch
               size="sm"
               isSelected={fallbackFilter.geoip !== false}
               onValueChange={(geoip) => onFallbackFilterChange({ ...fallbackFilter, geoip })}
             />
           </SettingItem>
-          <SettingItem compatKey="legacy" title={tr('Fallback GeoIP 国家')} divider>
+          <SettingItem compatKey="legacy" title={tr('Fallback GeoIP country')} divider>
             <Input
-              aria-label={tr('Fallback GeoIP 国家')}
+              aria-label={tr('Fallback GeoIP country')}
               size="sm"
               className="w-32"
               value={String(fallbackFilter['geoip-code'] || 'CN')}
@@ -289,7 +302,7 @@ const AdvancedDnsSetting: React.FC<AdvancedDnsSettingProps> = ({
               }
             />
           </SettingItem>
-          <SettingItem compatKey="legacy" title={tr('延迟查询备用 DNS')} divider>
+          <SettingItem compatKey="legacy" title={tr('Query fallback DNS lazily')} divider>
             <Switch
               size="sm"
               isSelected={fallbackLazyQuery}
@@ -298,12 +311,12 @@ const AdvancedDnsSetting: React.FC<AdvancedDnsSettingProps> = ({
           </SettingItem>
         </>
       )}
-      <SettingItem compatKey="legacy" title={tr('优先使用 HTTP/3')} divider>
+      <SettingItem compatKey="legacy" title={tr('Prefer HTTP/3')} divider>
         <Switch size="sm" isSelected={preferH3} onValueChange={onPreferH3Change} />
       </SettingItem>
-      <SettingItem compatKey="legacy" title={tr('DNS 缓存算法')} divider>
+      <SettingItem compatKey="legacy" title={tr('DNS cache algorithm')} divider>
         <Select
-          aria-label={tr('DNS 缓存算法')}
+          aria-label={tr('DNS cache algorithm')}
           className="w-28"
           size="sm"
           selectedKeys={new Set([cacheAlgorithm])}
@@ -314,10 +327,10 @@ const AdvancedDnsSetting: React.FC<AdvancedDnsSettingProps> = ({
           <SelectItem key="arc">ARC</SelectItem>
         </Select>
       </SettingItem>
-      <SettingItem compatKey="legacy" title={tr('使用系统 Hosts')} divider>
+      <SettingItem compatKey="legacy" title={tr('Use system hosts')} divider>
         <Switch size="sm" isSelected={useSystemHosts} onValueChange={onUseSystemHostsChange} />
       </SettingItem>
-      <SettingItem compatKey="legacy" title={tr('自定义 Hosts')}>
+      <SettingItem compatKey="legacy" title={tr('Custom hosts')}>
         <Switch size="sm" isSelected={useHosts} onValueChange={onUseHostsChange} />
       </SettingItem>
       {useHosts && (
@@ -334,14 +347,14 @@ const AdvancedDnsSetting: React.FC<AdvancedDnsSettingProps> = ({
             onHostsChange(hostArr)
             for (const domain of Object.keys(rec as Record<string, string | string[]>)) {
               if (!isValidDomainWildcard(domain).ok) {
-                setHostsError(isValidDomainWildcard(domain).error ?? tr('域名格式错误'))
+                setHostsError(isValidDomainWildcard(domain).error ?? tr('Invalid domain format'))
                 return
               }
             }
             setHostsError(null)
           }}
-          placeholder={tr('域名')}
-          part2Placeholder={tr('域名或 IP，用逗号分隔多个值')}
+          placeholder={tr('Domain')}
+          part2Placeholder={tr('Domains or IP addresses, separated by commas')}
           objectMode="record"
           divider={false}
         />

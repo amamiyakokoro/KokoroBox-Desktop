@@ -215,7 +215,7 @@ async function normalizeServiceModePatch(patch: Partial<AppConfig>): Promise<Par
     return patch
   }
 
-  void showNotification({ title: tr('服务不可用，已切换到执行命令模式') })
+  void showNotification({ title: tr('Service unavailable. Switched to command execution mode') })
   return {
     ...patch,
     sysProxy: {

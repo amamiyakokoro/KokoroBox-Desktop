@@ -133,8 +133,8 @@ const coreLogNotificationRules: CoreLogNotificationRule[] = [
         key: `${tailscaleAuthNotificationKeyPrefix}${url}`,
         name,
         id: `${tailscaleAuthNotificationKeyPrefix}${url}`,
-        title: tr('{0} 需要 Tailscale 认证', [name]),
-        body: tr('点击打开认证链接'),
+        title: tr('{0} requires Tailscale authentication', [name]),
+        body: tr('Click to open authentication link'),
         persistent: true,
         url,
         variant: 'warning'
@@ -229,7 +229,7 @@ async function completeCoreInitialization(logLevel?: LogLevel): Promise<void> {
       } catch (error) {
         await appendAppLog(`[Manager]: upload runtime config failed, ${error}\n`)
         void showNotification({
-          title: tr('同步 Gist 配置失败'),
+          title: tr('Failed to sync Gist configuration'),
           body: `${error}`,
           variant: 'danger'
         })
@@ -505,7 +505,7 @@ export async function startCore(detached = false): Promise<Promise<void>[]> {
   const startupFailure = (reason: unknown): Error => {
     const details = startupOutput.trim()
     const message = `${spawnError?.message || String(reason)}${details ? `\n${details}` : ''}`
-    return new Error(tr('内核启动失败：{0}', [message]))
+    return new Error(tr('Core startup failed: {0}', [message]))
   }
   hookWaiter?.attachProcess(child)
   if (child.pid) {
@@ -544,7 +544,7 @@ export async function startCore(detached = false): Promise<Promise<void>[]> {
     reject: (reason?: unknown) => void
   ): Promise<void> => {
     if (isControllerListenError(str)) {
-      reject(tr('控制器监听错误:\n{0}', [str]))
+      reject(tr('Controller listener error:\n{0}', [str]))
     }
 
     if (isUpdaterFinishedLog(str)) {
@@ -553,7 +553,11 @@ export async function startCore(detached = false): Promise<Promise<void>[]> {
         const promises = await startCore()
         await Promise.all(promises)
       } catch (e) {
-        void showNotification({ title: tr('内核启动出错'), body: `${e}`, variant: 'danger' })
+        void showNotification({
+          title: tr('Failed to start core'),
+          body: `${e}`,
+          variant: 'danger'
+        })
       }
     }
   }
@@ -588,7 +592,9 @@ export async function startCore(detached = false): Promise<Promise<void>[]> {
             patchControledMihomoConfig({ tun: { enable: false } })
             mainWindow?.webContents.send('controledMihomoConfigUpdated')
             ipcMain.emit('updateTrayMenu')
-            reject(tr('虚拟网卡启动失败，前往内核设置页尝试手动授予内核权限'))
+            reject(
+              tr('TUN startup failed. Try granting core permissions manually in Core settings')
+            )
             return
           }
 
@@ -761,7 +767,7 @@ export async function restartCore(): Promise<void> {
     const promises = await startCore()
     await Promise.all(promises)
   } catch (e) {
-    void showNotification({ title: tr('内核启动出错'), body: `${e}`, variant: 'danger' })
+    void showNotification({ title: tr('Failed to start core'), body: `${e}`, variant: 'danger' })
   } finally {
     finishNetworkTransition()
   }
@@ -779,7 +785,7 @@ export async function keepCoreAlive(): Promise<void> {
       await writeFile(path.join(dataDir(), 'core.pid'), directCoreState.child.pid.toString())
     }
   } catch (e) {
-    void showNotification({ title: tr('内核启动出错'), body: `${e}`, variant: 'danger' })
+    void showNotification({ title: tr('Failed to start core'), body: `${e}`, variant: 'danger' })
   }
 }
 

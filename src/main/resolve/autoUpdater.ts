@@ -36,14 +36,15 @@ function getGitHubAuthHeaders(token?: string): Record<string, string> {
 
 function resolveReleaseTag(version: string, tag?: string): string {
   if (/^\d+\.\d+\.\d+-rolling-[0-9a-f]{7}$/.test(version)) {
-    if (tag && tag !== 'rolling') throw new Error(tr('更新版本与发布标签不匹配'))
+    if (tag && tag !== 'rolling')
+      throw new Error(tr('The update version does not match its release tag'))
     return 'rolling'
   }
   if (!/^\d+\.\d+\.\d+(?:-\d+)?$/.test(version)) {
-    throw new Error(tr('更新版本格式无效'))
+    throw new Error(tr('Invalid update version format'))
   }
   if (tag && ![version, `v${version}`].includes(tag)) {
-    throw new Error(tr('更新版本与发布标签不匹配'))
+    throw new Error(tr('The update version does not match its release tag'))
   }
   return tag ?? version
 }
@@ -54,7 +55,7 @@ async function ensureFreeSpace(dir: string, requiredBytes: number, message: stri
   if (freeBytes < requiredBytes) {
     const freeMb = Math.floor(freeBytes / 1024 / 1024)
     const requiredMb = Math.ceil(requiredBytes / 1024 / 1024)
-    throw new Error(tr('{0}。需要：{1} MB，当前可用：{2} MB', [message, requiredMb, freeMb]))
+    throw new Error(tr('{0}. Required: {1} MB; available: {2} MB', [message, requiredMb, freeMb]))
   }
 }
 
@@ -105,7 +106,11 @@ async function ensureWindowsInstallerTempSpace(): Promise<void> {
   }
 
   const tempDir = os.tmpdir()
-  await ensureFreeSpace(tempDir, WINDOWS_INSTALLER_MIN_TEMP_SPACE_BYTES, tr('临时目录空间不足'))
+  await ensureFreeSpace(
+    tempDir,
+    WINDOWS_INSTALLER_MIN_TEMP_SPACE_BYTES,
+    tr('Not enough space in the temporary directory')
+  )
 }
 
 export async function downloadAndInstallUpdate(
@@ -155,9 +160,10 @@ export async function downloadAndInstallUpdate(
     'darwin-arm64': `kokorobox-desktop-macos-${version}-arm64.pkg`
   }
   const file = fileMap[`${process.platform}-${process.arch}`]
-  if (isPortable()) throw new Error(tr('不支持自动更新，请手动下载更新'))
+  if (isPortable())
+    throw new Error(tr('Automatic updates are not supported. Please download the update manually'))
   if (!file) {
-    throw new Error(tr('不支持自动更新，请手动下载更新'))
+    throw new Error(tr('Automatic updates are not supported. Please download the update manually'))
   }
   downloadCancelToken = axios.CancelToken.source()
 
@@ -188,13 +194,17 @@ export async function downloadAndInstallUpdate(
       releaseRes.data.assets || []
     const matchedAsset = assets.find((a) => a.name === file)
     if (!matchedAsset || !matchedAsset.digest) {
-      throw new Error(tr('无法从 GitHub Release 中找到 "{0}" 对应的 SHA-256 信息', [file]))
+      throw new Error(tr('No SHA-256 information found for "{0}" in the GitHub release', [file]))
     }
     const expectedHash = matchedAsset.digest.split(':')[1].toLowerCase()
 
     if (!existsSync(path.join(dataDir(), file))) {
       if (matchedAsset.size) {
-        await ensureFreeSpace(dataDir(), matchedAsset.size, tr('更新包保存目录空间不足'))
+        await ensureFreeSpace(
+          dataDir(),
+          matchedAsset.size,
+          tr('Not enough space in the update download directory')
+        )
       }
       const res = await axios.get(`${baseUrl}${file}`, {
         responseType: 'arraybuffer',
@@ -230,7 +240,10 @@ export async function downloadAndInstallUpdate(
     if (localHash !== expectedHash) {
       await rm(path.join(dataDir(), file), { force: true })
       throw new Error(
-        tr('SHA-256 校验失败：本地哈希 {0} 与预期 {1} 不符', [localHash, expectedHash])
+        tr('SHA-256 verification failed: local hash {0} does not match expected hash {1}', [
+          localHash,
+          expectedHash
+        ])
       )
     }
 
@@ -300,14 +313,14 @@ export async function downloadAndInstallUpdate(
       mainWindow?.webContents.send('update-status', {
         downloading: false,
         progress: 0,
-        error: tr('下载已取消')
+        error: tr('Download cancelled')
       })
       return
     } else {
       mainWindow?.webContents.send('update-status', {
         downloading: false,
         progress: 0,
-        error: e instanceof Error ? e.message : tr('下载失败')
+        error: e instanceof Error ? e.message : tr('Download failed')
       })
     }
     throw e
@@ -318,7 +331,7 @@ export async function downloadAndInstallUpdate(
 
 export async function cancelUpdate(): Promise<void> {
   if (downloadCancelToken) {
-    downloadCancelToken.cancel(tr('用户取消下载'))
+    downloadCancelToken.cancel(tr('Download cancelled by user'))
     downloadCancelToken = null
   }
 }

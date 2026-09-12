@@ -27,7 +27,7 @@ function validateRules(
 ): string | null {
   const maxRules = optionLimit(options, ['max_rules_per_set', 'rules_per_set'], 200)
   const maxPayload = optionLimit(options, ['max_payload_length', 'payload_length'], 1024)
-  if (rules.length > maxRules) return tr('规则数量超过当前限制')
+  if (rules.length > maxRules) return tr('The current rule limit has been exceeded')
 
   const availableTypes = new Set(options.rule_types)
   const availableTargets = new Set(options.targets)
@@ -41,7 +41,7 @@ function validateRules(
 
   for (const [index, rule] of rules.entries()) {
     if (!availableTypes.has(rule.type) || !availableTargets.has(rule.target)) {
-      return tr('请选择可用的规则类型与目标')
+      return tr('Select an available rule type and target')
     }
     if (
       !rule.target ||
@@ -49,12 +49,12 @@ function validateRules(
       rule.target.length > 128 ||
       invalidText.test(rule.target)
     ) {
-      return tr('请选择可用的规则类型与目标')
+      return tr('Select an available rule type and target')
     }
     if (rule.type === 'MATCH') {
       matchCount += 1
       if (matchCount > 1 || index !== rules.length - 1 || rule.target === 'REJECT') {
-        return tr('MATCH 规则只能有一条、必须位于最后，且不能使用 REJECT')
+        return tr('Only one MATCH rule is allowed; it must be last and cannot use REJECT')
       }
       continue
     }
@@ -65,10 +65,12 @@ function validateRules(
       rule.payload.length > maxPayload ||
       invalidText.test(rule.payload)
     ) {
-      return tr('规则内容不能为空，且不能包含逗号、首尾空格或控制字符')
+      return tr(
+        'Rule content is required and cannot contain commas, surrounding spaces, or control characters'
+      )
     }
     if (rule.type === 'RULE-SET' && !domainProviders.has(rule.payload)) {
-      return tr('请选择可用的 RULE-SET provider')
+      return tr('Select an available RULE-SET provider')
     }
   }
   return null
@@ -189,7 +191,7 @@ const KokoroDefaultRules: React.FC = () => {
       setRuleSet(nextRuleSet)
       setRules(nextRules)
       setSavedRules(nextRules)
-      notify(tr('Kokoro 默认规则集已保存'), { variant: 'success' })
+      notify(tr('Kokoro default rule set saved'), { variant: 'success' })
     } catch (saveError) {
       setError(errorMessage(saveError))
     } finally {
@@ -202,7 +204,7 @@ const KokoroDefaultRules: React.FC = () => {
       <div className="flex items-start justify-between gap-3 border-b border-default-100 pb-3">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="font-semibold">{tr('默认规则集')}</h3>
+            <h3 className="font-semibold">{tr('Default rule set')}</h3>
             {ruleSet && (
               <Chip size="sm" variant="flat">
                 rev. {ruleSet.revision}
@@ -210,10 +212,10 @@ const KokoroDefaultRules: React.FC = () => {
             )}
           </div>
           <p className="mt-1 text-xs leading-5 text-foreground-500">
-            {tr('仅编辑应用于 Kokoro 配置的 default 规则集，规则将按此顺序执行。')}
+            {tr('Edit only the default rule set used by Kokoro profiles. Rules run in this order.')}
           </p>
         </div>
-        <Tooltip content={tr('重新加载')}>
+        <Tooltip content={tr('Reload')}>
           <Button
             size="sm"
             isIconOnly
@@ -235,7 +237,7 @@ const KokoroDefaultRules: React.FC = () => {
           <div className="mt-3 flex max-h-[48vh] min-h-36 flex-col gap-2 overflow-y-auto pr-1 no-scrollbar">
             {rules.length === 0 && (
               <div className="flex min-h-28 items-center justify-center rounded-lg border border-dashed border-default-200 text-sm text-foreground-400">
-                {tr('default 规则集目前为空')}
+                {tr('The default rule set is empty')}
               </div>
             )}
             {rules.map((rule, index) => {
@@ -246,7 +248,7 @@ const KokoroDefaultRules: React.FC = () => {
                 <div key={index} className="rounded-lg bg-content1 p-2 shadow-sm">
                   <div className="grid grid-cols-2 gap-2">
                     <Select
-                      aria-label={tr('规则类型')}
+                      aria-label={tr('Rule type')}
                       size="sm"
                       selectedKeys={new Set([rule.type])}
                       disallowEmptySelection
@@ -264,7 +266,7 @@ const KokoroDefaultRules: React.FC = () => {
                       ))}
                     </Select>
                     <Select
-                      aria-label={tr('规则目标')}
+                      aria-label={tr('Rule target')}
                       size="sm"
                       selectedKeys={new Set([rule.target])}
                       disallowEmptySelection
@@ -280,10 +282,10 @@ const KokoroDefaultRules: React.FC = () => {
                   <div className="mt-2 flex items-center gap-1">
                     {rule.type === 'RULE-SET' ? (
                       <Select
-                        aria-label={tr('规则内容')}
+                        aria-label={tr('Rule content')}
                         className="min-w-0 flex-1"
                         size="sm"
-                        placeholder={tr('选择 RULE-SET provider')}
+                        placeholder={tr('Select a RULE-SET provider')}
                         selectedKeys={rule.payload ? new Set([rule.payload]) : new Set()}
                         onSelectionChange={(value) =>
                           updateRule(index, { payload: String(value.currentKey) })
@@ -295,18 +297,20 @@ const KokoroDefaultRules: React.FC = () => {
                       </Select>
                     ) : (
                       <Input
-                        aria-label={tr('规则内容')}
+                        aria-label={tr('Rule content')}
                         className="min-w-0 flex-1"
                         size="sm"
                         isDisabled={rule.type === 'MATCH'}
                         placeholder={
-                          rule.type === 'MATCH' ? tr('MATCH 不需要规则内容') : tr('规则内容')
+                          rule.type === 'MATCH'
+                            ? tr('MATCH does not require rule content')
+                            : tr('Rule content')
                         }
                         value={rule.payload || ''}
                         onValueChange={(value) => updateRule(index, { payload: value })}
                       />
                     )}
-                    <Tooltip content={tr('上移')}>
+                    <Tooltip content={tr('Move up')}>
                       <Button
                         size="sm"
                         isIconOnly
@@ -317,7 +321,7 @@ const KokoroDefaultRules: React.FC = () => {
                         <LuArrowUp />
                       </Button>
                     </Tooltip>
-                    <Tooltip content={tr('下移')}>
+                    <Tooltip content={tr('Move down')}>
                       <Button
                         size="sm"
                         isIconOnly
@@ -330,7 +334,7 @@ const KokoroDefaultRules: React.FC = () => {
                         <LuArrowDown />
                       </Button>
                     </Tooltip>
-                    <Tooltip content={tr('删除')}>
+                    <Tooltip content={tr('Delete')}>
                       <Button
                         size="sm"
                         isIconOnly
@@ -367,7 +371,7 @@ const KokoroDefaultRules: React.FC = () => {
                   onPress={addRule}
                   startContent={<LuPlus />}
                 >
-                  {tr('新增规则')}
+                  {tr('Add rule')}
                 </Button>
                 <Button
                   size="sm"
@@ -377,7 +381,7 @@ const KokoroDefaultRules: React.FC = () => {
                   onPress={() => void save()}
                   startContent={!saving ? <LuSave /> : undefined}
                 >
-                  {tr('保存规则')}
+                  {tr('Save rules')}
                 </Button>
               </div>
             </div>
@@ -385,9 +389,9 @@ const KokoroDefaultRules: React.FC = () => {
         </>
       ) : (
         <div className="flex min-h-52 flex-col items-center justify-center gap-3 text-center">
-          <p className="text-sm text-danger">{error || tr('Kokoro 规则集加载失败')}</p>
+          <p className="text-sm text-danger">{error || tr('Failed to load the Kokoro rule set')}</p>
           <Button size="sm" variant="flat" onPress={() => void load()}>
-            {tr('重新加载')}
+            {tr('Reload')}
           </Button>
         </div>
       )}

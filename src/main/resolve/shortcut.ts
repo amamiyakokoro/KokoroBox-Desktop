@@ -45,7 +45,7 @@ export async function registerShortcut(
           await triggerSysProxy(!enable, onlyActiveDevice)
           await patchAppConfig({ sysProxy: { enable: !enable } })
           void showNotification({
-            title: !enable ? tr('系统代理已开启') : tr('系统代理已关闭')
+            title: !enable ? tr('System proxy enabled') : tr('System proxy disabled')
           })
           mainWindow?.webContents.send('appConfigUpdated')
           floatingWindow?.webContents.send('appConfigUpdated')
@@ -68,7 +68,7 @@ export async function registerShortcut(
           }
           await restartCore()
           void showNotification({
-            title: !enable ? tr('虚拟网卡已开启') : tr('虚拟网卡已关闭')
+            title: !enable ? tr('TUN mode enabled') : tr('TUN mode disabled')
           })
           mainWindow?.webContents.send('controledMihomoConfigUpdated')
           floatingWindow?.webContents.send('appConfigUpdated')
@@ -84,7 +84,7 @@ export async function registerShortcut(
         await patchControledMihomoConfig({ mode: 'rule' })
         await patchMihomoConfig({ mode: 'rule' })
         void showNotification({
-          title: tr('已切换至规则模式')
+          title: tr('Switched to rule mode')
         })
         mainWindow?.webContents.send('controledMihomoConfigUpdated')
         ipcMain.emit('updateTrayMenu')
@@ -95,7 +95,7 @@ export async function registerShortcut(
         await patchControledMihomoConfig({ mode: 'global' })
         await patchMihomoConfig({ mode: 'global' })
         void showNotification({
-          title: tr('已切换至全局模式')
+          title: tr('Switched to global mode')
         })
         mainWindow?.webContents.send('controledMihomoConfigUpdated')
         ipcMain.emit('updateTrayMenu')
@@ -106,7 +106,7 @@ export async function registerShortcut(
         await patchControledMihomoConfig({ mode: 'direct' })
         await patchMihomoConfig({ mode: 'direct' })
         void showNotification({
-          title: tr('已切换至直连模式')
+          title: tr('Switched to direct mode')
         })
         mainWindow?.webContents.send('controledMihomoConfigUpdated')
         ipcMain.emit('updateTrayMenu')

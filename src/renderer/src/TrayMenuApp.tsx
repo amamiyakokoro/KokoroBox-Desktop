@@ -138,7 +138,7 @@ const TrayMenuApp: React.FC = () => {
       <ScrollShadow className="flex-1 overflow-y-auto">
         {!groups || groups.length === 0 ? (
           <div className="flex items-center justify-center h-full text-default-400 text-sm">
-            {tr('暂无数据')}
+            {tr('No data')}
           </div>
         ) : (
           <Accordion

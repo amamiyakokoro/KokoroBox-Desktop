@@ -291,7 +291,7 @@ function createServiceAPIError(error: unknown): unknown {
   if (serviceError.response?.data) {
     const message = getResponseErrorMessage(
       serviceError.response.data,
-      serviceError.message || tr('请求失败')
+      serviceError.message || tr('Request failed')
     )
 
     return new ServiceAPIError(message, {
@@ -358,7 +358,7 @@ export const getServiceAuthHeaders = (
   version: ServiceAuthVersion = currentServiceAuthVersion
 ): Record<string, string> => {
   if (!keyManager?.isInitialized()) {
-    throw new Error(tr('服务 API 未初始化'))
+    throw new Error(tr('Service API is not initialized'))
   }
 
   const bodyHash = crypto.createHash('sha256').update(body).digest('hex')
@@ -390,14 +390,14 @@ export const getServiceAuthHeaders = (
 
 export const getServiceAxios = (): AxiosInstance => {
   if (!serviceAxios) {
-    throw new Error(tr('服务 API 未初始化'))
+    throw new Error(tr('Service API is not initialized'))
   }
   return serviceAxios
 }
 
 export const getKeyManager = (): KeyManager => {
   if (!keyManager) {
-    throw new Error(tr('密钥管理器未初始化'))
+    throw new Error(tr('Key manager is not initialized'))
   }
   return keyManager
 }

@@ -261,7 +261,7 @@ export const buildContextMenu = async (): Promise<Menu> => {
           submenu: [
             {
               id: `${group.name}-test`,
-              label: tr('重新测试'),
+              label: tr('Test again'),
               type: 'normal',
               click: async (): Promise<void> => {
                 try {
@@ -309,7 +309,7 @@ export const buildContextMenu = async (): Promise<Menu> => {
     {
       id: 'show',
       accelerator: showWindowShortcut,
-      label: tr('显示窗口'),
+      label: tr('Show window'),
       type: 'normal',
       click: (): void => {
         showMainWindow()
@@ -318,7 +318,7 @@ export const buildContextMenu = async (): Promise<Menu> => {
     {
       id: 'show-floating',
       accelerator: showFloatingWindowShortcut,
-      label: floatingWindow?.isVisible() ? tr('关闭悬浮窗') : tr('显示悬浮窗'),
+      label: floatingWindow?.isVisible() ? tr('Close floating window') : tr('Show floating window'),
       type: 'normal',
       click: async (): Promise<void> => {
         await triggerFloatingWindow()
@@ -337,7 +337,7 @@ export const buildContextMenu = async (): Promise<Menu> => {
     { type: 'separator' },
     {
       type: 'checkbox',
-      label: tr('系统代理'),
+      label: tr('System proxy'),
       accelerator: triggerSysProxyShortcut,
       checked: sysProxy.enable,
       click: async (item): Promise<void> => {
@@ -356,7 +356,7 @@ export const buildContextMenu = async (): Promise<Menu> => {
     },
     {
       type: 'checkbox',
-      label: tr('虚拟网卡'),
+      label: tr('TUN mode'),
       accelerator: triggerTunShortcut,
       checked: tun?.enable ?? false,
       click: async (item): Promise<void> => {
@@ -380,13 +380,13 @@ export const buildContextMenu = async (): Promise<Menu> => {
     { type: 'separator' },
     {
       type: 'submenu',
-      label: tr('出站模式 ({0})', [
-        mode === 'rule' ? tr('规则') : mode === 'global' ? tr('全局') : tr('直连')
+      label: tr('Outbound mode ({0})', [
+        mode === 'rule' ? tr('Rules') : mode === 'global' ? tr('Global') : tr('Direct')
       ]),
       submenu: [
         {
           id: 'rule',
-          label: tr('规则模式'),
+          label: tr('Rule mode'),
           accelerator: ruleModeShortcut,
           type: 'radio',
           checked: mode === 'rule',
@@ -400,7 +400,7 @@ export const buildContextMenu = async (): Promise<Menu> => {
         },
         {
           id: 'global',
-          label: tr('全局模式'),
+          label: tr('Global mode'),
           accelerator: globalModeShortcut,
           type: 'radio',
           checked: mode === 'global',
@@ -414,7 +414,7 @@ export const buildContextMenu = async (): Promise<Menu> => {
         },
         {
           id: 'direct',
-          label: tr('直连模式'),
+          label: tr('Direct mode'),
           accelerator: directModeShortcut,
           type: 'radio',
           checked: mode === 'direct',
@@ -432,7 +432,7 @@ export const buildContextMenu = async (): Promise<Menu> => {
     { type: 'separator' },
     {
       type: 'submenu',
-      label: tr('订阅配置'),
+      label: tr('Subscription profile'),
       submenu: items.map((item) => {
         return {
           type: 'radio',
@@ -450,26 +450,26 @@ export const buildContextMenu = async (): Promise<Menu> => {
     { type: 'separator' },
     {
       type: 'submenu',
-      label: tr('打开目录'),
+      label: tr('Open directory'),
       submenu: [
         {
           type: 'normal',
-          label: tr('应用目录'),
+          label: tr('App directory'),
           click: (): Promise<string> => shell.openPath(dataDir())
         },
         {
           type: 'normal',
-          label: tr('工作目录'),
+          label: tr('Working directory'),
           click: (): Promise<string> => shell.openPath(mihomoWorkDir())
         },
         {
           type: 'normal',
-          label: tr('内核目录'),
+          label: tr('Core directory'),
           click: (): Promise<string> => shell.openPath(mihomoCoreDir())
         },
         {
           type: 'normal',
-          label: tr('日志目录'),
+          label: tr('Log directory'),
           click: (): Promise<string> => shell.openPath(logDir())
         }
       ]
@@ -477,7 +477,7 @@ export const buildContextMenu = async (): Promise<Menu> => {
     envType.length > 1
       ? {
           type: 'submenu',
-          label: tr('复制环境变量'),
+          label: tr('Copy environment variables'),
           submenu: envType.map((type) => {
             return {
               id: type,
@@ -491,7 +491,7 @@ export const buildContextMenu = async (): Promise<Menu> => {
         }
       : {
           id: 'copyenv',
-          label: tr('复制环境变量'),
+          label: tr('Copy environment variables'),
           type: 'normal',
           click: async (): Promise<void> => {
             await copyEnv(envType[0])
@@ -500,7 +500,7 @@ export const buildContextMenu = async (): Promise<Menu> => {
     { type: 'separator' },
     {
       id: 'quitWithoutCore',
-      label: tr('保留内核退出'),
+      label: tr('Quit and keep core running'),
       type: 'normal',
       accelerator: quitWithoutCoreShortcut,
       click: (): void => {
@@ -510,7 +510,7 @@ export const buildContextMenu = async (): Promise<Menu> => {
     },
     {
       id: 'restart',
-      label: tr('重启应用'),
+      label: tr('Restart app'),
       type: 'normal',
       accelerator: restartAppShortcut,
       click: (): void => {
@@ -521,7 +521,7 @@ export const buildContextMenu = async (): Promise<Menu> => {
     },
     {
       id: 'quit',
-      label: tr('退出应用'),
+      label: tr('Quit app'),
       type: 'normal',
       accelerator: 'CommandOrControl+Q',
       click: (): void => {

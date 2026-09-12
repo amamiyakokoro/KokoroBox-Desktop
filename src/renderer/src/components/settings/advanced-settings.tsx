@@ -48,13 +48,17 @@ const AdvancedSettings: React.FC = () => {
   }, [pauseSSIDArray])
 
   return (
-    <SettingCard header={tr('更多设置')}>
+    <SettingCard header={tr('More settings')}>
       <SettingItem
         compatKey="legacy"
         title="GitHub API Token"
         actions={
-          <Tooltip content={tr('用于 GitHub 更新检查、下载和 Gist 同步；留空时使用匿名请求')}>
-            <Button aria-label={tr('说明')} isIconOnly size="sm" variant="light">
+          <Tooltip
+            content={tr(
+              'Used for GitHub update checks, downloads and Gist sync. Leave empty for anonymous requests'
+            )}
+          >
+            <Button aria-label={tr('Description')} isIconOnly size="sm" variant="light">
               <IoIosHelpCircle className="text-lg" />
             </Button>
           </Tooltip>
@@ -72,7 +76,7 @@ const AdvancedSettings: React.FC = () => {
           }}
           endContent={
             <Button
-              aria-label={githubTokenVisible ? tr('隐藏 GitHub Token') : tr('显示 GitHub Token')}
+              aria-label={githubTokenVisible ? tr('Hide GitHub token') : tr('Show GitHub token')}
               isIconOnly
               size="sm"
               variant="light"
@@ -85,9 +89,13 @@ const AdvancedSettings: React.FC = () => {
       </SettingItem>
       <SettingItem
         compatKey="legacy"
-        title={tr('自动开启轻量模式')}
+        title={tr('Automatic lightweight mode')}
         actions={
-          <Tooltip content={tr('关闭窗口指定时间后自动进入轻量模式')}>
+          <Tooltip
+            content={tr(
+              'Enter lightweight mode after the window has been closed for the specified time'
+            )}
+          >
             <Button isIconOnly size="sm" variant="light">
               <IoIosHelpCircle className="text-lg" />
             </Button>
@@ -105,7 +113,7 @@ const AdvancedSettings: React.FC = () => {
       </SettingItem>
       {autoLightweight && (
         <>
-          <SettingItem compatKey="legacy" title={tr('轻量模式行为')} divider>
+          <SettingItem compatKey="legacy" title={tr('Lightweight mode behavior')} divider>
             <Tabs
               size="sm"
               color="primary"
@@ -117,16 +125,16 @@ const AdvancedSettings: React.FC = () => {
                 }
               }}
             >
-              <Tab key="core" title={tr('仅保留内核')} />
-              <Tab key="tray" title={tr('仅关闭渲染进程')} />
+              <Tab key="core" title={tr('Keep only the core')} />
+              <Tab key="tray" title={tr('Close only the renderer')} />
             </Tabs>
           </SettingItem>
-          <SettingItem compatKey="legacy" title={tr('自动开启轻量模式延时')} divider>
+          <SettingItem compatKey="legacy" title={tr('Lightweight mode delay')} divider>
             <Input
               size="sm"
               className="w-25"
               type="number"
-              endContent={tr('秒')}
+              endContent={tr('seconds')}
               value={autoLightweightDelay.toString()}
               onValueChange={async (v: string) => {
                 let num = parseInt(v)
@@ -141,7 +149,7 @@ const AdvancedSettings: React.FC = () => {
       )}
       <SettingItem
         compatKey="legacy"
-        title={tr('复制环境变量类型')}
+        title={tr('Copy environment variable format')}
         actions={envType.map((type) => (
           <Button
             key={type}
@@ -157,7 +165,7 @@ const AdvancedSettings: React.FC = () => {
         divider
       >
         <Select
-          aria-label={tr('环境变量类型')}
+          aria-label={tr('Environment variable type')}
           classNames={{ trigger: 'data-[hover=true]:bg-default-200' }}
           className="w-37.5"
           size="sm"
@@ -181,7 +189,7 @@ const AdvancedSettings: React.FC = () => {
           <SelectItem key="nushell">NuShell</SelectItem>
         </Select>
       </SettingItem>
-      <SettingItem compatKey="legacy" title={tr('接管 DNS 设置')} divider>
+      <SettingItem compatKey="legacy" title={tr('Override DNS settings')} divider>
         <Switch
           size="sm"
           isSelected={controlDns}
@@ -196,7 +204,7 @@ const AdvancedSettings: React.FC = () => {
           }}
         />
       </SettingItem>
-      <SettingItem compatKey="legacy" title={tr('接管域名嗅探设置')} divider>
+      <SettingItem compatKey="legacy" title={tr('Override domain sniffing settings')} divider>
         <Switch
           size="sm"
           isSelected={controlSniff}
@@ -213,10 +221,12 @@ const AdvancedSettings: React.FC = () => {
       </SettingItem>
       <SettingItem
         compatKey="legacy"
-        title={tr('断网时停止内核')}
+        title={tr('Stop core when offline')}
         actions={
           <Tooltip
-            content={tr('开启后，应用会在检测到网络断开时自动停止内核，并在网络恢复后自动重启内核')}
+            content={tr(
+              'Stop the core when the network disconnects and restart it when connectivity returns'
+            )}
           >
             <Button isIconOnly size="sm" variant="light">
               <IoIosHelpCircle className="text-lg" />
@@ -240,7 +250,7 @@ const AdvancedSettings: React.FC = () => {
       </SettingItem>
       {networkDetection && (
         <>
-          <SettingItem compatKey="legacy" title={tr('断网检测间隔')} divider>
+          <SettingItem compatKey="legacy" title={tr('Connectivity check interval')} divider>
             <div className="flex">
               {interval !== networkDetectionInterval && (
                 <Button
@@ -252,14 +262,14 @@ const AdvancedSettings: React.FC = () => {
                     await startNetworkDetection()
                   }}
                 >
-                  {tr('确认')}
+                  {tr('Confirm')}
                 </Button>
               )}
               <Input
                 size="sm"
                 type="number"
                 className="w-25"
-                endContent={tr('秒')}
+                endContent={tr('seconds')}
                 value={interval.toString()}
                 min={1}
                 onValueChange={(v) => {
@@ -268,7 +278,7 @@ const AdvancedSettings: React.FC = () => {
               />
             </div>
           </SettingItem>
-          <SettingItem compatKey="legacy" title={tr('绕过检测的接口')}>
+          <SettingItem compatKey="legacy" title={tr('Interfaces excluded from detection')}>
             {bypass.length != networkDetectionBypass.length && (
               <Button
                 size="sm"
@@ -278,14 +288,14 @@ const AdvancedSettings: React.FC = () => {
                   await startNetworkDetection()
                 }}
               >
-                {tr('确认')}
+                {tr('Confirm')}
               </Button>
             )}
           </SettingItem>
           <EditableList items={bypass} onChange={(list) => setBypass(list as string[])} />
         </>
       )}
-      <SettingItem compatKey="legacy" title={tr('在特定的 WiFi SSID 下直连')}>
+      <SettingItem compatKey="legacy" title={tr('Use direct connections on specified Wi-Fi SSIDs')}>
         {pauseSSIDInput.join('') !== pauseSSIDArray.join('') && (
           <Button
             size="sm"
@@ -294,7 +304,7 @@ const AdvancedSettings: React.FC = () => {
               patchAppConfig({ pauseSSID: pauseSSIDInput })
             }}
           >
-            {tr('确认')}
+            {tr('Confirm')}
           </Button>
         )}
       </SettingItem>

@@ -26,7 +26,7 @@ function normalizeServiceAuthSecret(secret: {
       secret.keyId
     )
   } catch {
-    throw new Error(tr('服务鉴权密钥无效'))
+    throw new Error(tr('Invalid service authentication key'))
   }
 }
 
@@ -48,7 +48,7 @@ export async function loadServiceAuthSecret(): Promise<ServiceAuthSecret | null>
     return normalizeServiceAuthSecret(envelope)
   }
 
-  throw new Error(tr('服务鉴权存储格式无效'))
+  throw new Error(tr('Invalid service authentication storage format'))
 }
 
 export async function saveServiceAuthSecret(secret: ServiceAuthSecret): Promise<void> {

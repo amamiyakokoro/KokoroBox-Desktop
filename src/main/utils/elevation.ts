@@ -31,7 +31,7 @@ function appleScriptQuote(value: string): string {
 
 export async function execWithElevation(command: string, args: string[]): Promise<void> {
   if (systemCoreOnlyBuild && command !== systemServicePath) {
-    throw new Error(tr('系统内核构建不支持提权操作'))
+    throw new Error(tr('System-core builds do not support elevation'))
   }
 
   if (process.platform === 'win32') {
@@ -46,7 +46,9 @@ export async function execWithElevation(command: string, args: string[]): Promis
       }
     } catch (error) {
       throw new Error(
-        tr('Windows 提权执行失败：{0}', [error instanceof Error ? error.message : String(error)])
+        tr('Elevated execution failed on Windows: {0}', [
+          error instanceof Error ? error.message : String(error)
+        ])
       )
     }
   } else if (process.platform === 'linux') {
@@ -54,7 +56,9 @@ export async function execWithElevation(command: string, args: string[]): Promis
       await execFilePromise('pkexec', [command, ...args])
     } catch (error) {
       throw new Error(
-        tr('Linux 提权执行失败：{0}', [error instanceof Error ? error.message : String(error)])
+        tr('Elevated execution failed on Linux: {0}', [
+          error instanceof Error ? error.message : String(error)
+        ])
       )
     }
   } else if (process.platform === 'darwin') {
@@ -66,7 +70,9 @@ export async function execWithElevation(command: string, args: string[]): Promis
       ])
     } catch (error) {
       throw new Error(
-        tr('macOS 提权执行失败：{0}', [error instanceof Error ? error.message : String(error)])
+        tr('Elevated execution failed on macOS: {0}', [
+          error instanceof Error ? error.message : String(error)
+        ])
       )
     }
   }

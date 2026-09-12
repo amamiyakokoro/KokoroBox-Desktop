@@ -58,7 +58,7 @@ const SysproxySwitcher: React.FC<Props> = (props) => {
   if (iconOnly) {
     return (
       <div className={`${sysproxyCardStatus} flex justify-center`}>
-        <Tooltip content={tr('系统代理')} placement="right">
+        <Tooltip content={tr('System proxy')} placement="right">
           <Button
             size="sm"
             isIconOnly
@@ -116,7 +116,7 @@ const SysproxySwitcher: React.FC<Props> = (props) => {
           <h3
             className={`text-md font-bold ${match ? 'text-primary-foreground' : 'text-foreground'}`}
           >
-            {tr('系统代理')}
+            {tr('System proxy')}
           </h3>
         </CardFooter>
       </Card>

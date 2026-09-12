@@ -92,10 +92,10 @@ let credentialWrite: Promise<unknown> = Promise.resolve()
 function toKokoroError(error: unknown): KokoroAPIError {
   if (error instanceof KokoroAPIError) return error
   if (axios.isAxiosError(error)) {
-    return new KokoroAPIError(tr('Kokoro 请求失败'), error.response?.status)
+    return new KokoroAPIError(tr('Kokoro request failed'), error.response?.status)
   }
   // Do not propagate transport errors or server bodies: they may echo credentials.
-  return new KokoroAPIError(tr('Kokoro 请求失败'))
+  return new KokoroAPIError(tr('Kokoro request failed'))
 }
 
 async function getCredentials(): Promise<KokoroCredentials | null> {
@@ -131,7 +131,7 @@ async function storeTokenResponse(
   isCurrent: () => boolean = () => true
 ): Promise<KokoroCredentials> {
   if (typeof response?.token_type !== 'string' || response.token_type.toLowerCase() !== 'bearer') {
-    throw new KokoroAPIError(tr('Kokoro 返回了不支持的 token 类型'))
+    throw new KokoroAPIError(tr('Kokoro returned an unsupported token type'))
   }
   if (
     !response.access_token ||
@@ -143,17 +143,17 @@ async function storeTokenResponse(
     !Number.isFinite(response.refresh_expires_in) ||
     response.refresh_expires_in <= 0
   ) {
-    throw new KokoroAPIError(tr('Kokoro 登录凭据无效'))
+    throw new KokoroAPIError(tr('Invalid Kokoro credentials'))
   }
   const next = credentialsFromToken(response)
   const write = credentialWrite
     .catch(() => {})
     .then(async () => {
-      if (!isCurrent()) throw new KokoroAPIError(tr('已取消 Kokoro 登录'))
+      if (!isCurrent()) throw new KokoroAPIError(tr('Kokoro sign-in cancelled'))
       await saveKokoroCredentials(next)
       if (!isCurrent()) {
         await deleteKokoroCredentials()
-        throw new KokoroAPIError(tr('已取消 Kokoro 登录'))
+        throw new KokoroAPIError(tr('Kokoro sign-in cancelled'))
       }
       credentials = next
       return next
@@ -178,7 +178,7 @@ async function postToken(body: Record<string, string>): Promise<TokenResponse> {
     return response.data
   } catch (error) {
     const status = axios.isAxiosError(error) ? error.response?.status : undefined
-    throw new KokoroAPIError(tr('Kokoro 授权失败，请重新登录'), status)
+    throw new KokoroAPIError(tr('Kokoro authorization failed. Please sign in again'), status)
   }
 }
 
@@ -186,7 +186,7 @@ async function refreshAccessToken(staleAccessToken?: string): Promise<KokoroCred
   const current = await getCredentials()
   if (!current || current.refreshExpiresAt <= Date.now()) {
     await clearSession()
-    throw new KokoroAPIError(tr('Kokoro 登录已过期，请重新登录'), 401)
+    throw new KokoroAPIError(tr('Your Kokoro session has expired. Please sign in again'), 401)
   }
   if (staleAccessToken && current.accessToken !== staleAccessToken) return current
   if (refreshPromise) return refreshPromise
@@ -244,7 +244,7 @@ async function authorizedRequest<T>(
   retryTransport = true
 ): Promise<AxiosResponse<T>> {
   let current = await getCredentials()
-  if (!current) throw new KokoroAPIError(tr('请先登录 Kokoro'), 401)
+  if (!current) throw new KokoroAPIError(tr('Please sign in to Kokoro first'), 401)
   if (current.accessExpiresAt <= Date.now() + ACCESS_EXPIRY_LEEWAY_MS) {
     current = await refreshAccessToken(current.accessToken)
   }
@@ -271,7 +271,9 @@ async function authorizedRequest<T>(
 export async function startKokoroLogin(): Promise<void> {
   if (pendingLogin && pendingLogin.expiresAt <= Date.now()) clearPendingLogin()
   if (pendingLogin || exchangingCode) {
-    throw new KokoroAPIError(tr('Kokoro 登录正在进行中，请先取消或等待完成'))
+    throw new KokoroAPIError(
+      tr('Kokoro sign-in is in progress. Cancel it or wait for it to finish')
+    )
   }
   const pending = createPendingLogin()
   pendingLogin = pending
@@ -285,7 +287,7 @@ export async function startKokoroLogin(): Promise<void> {
     await shell.openExternal(loginURL(pending))
   } catch {
     if (pendingLogin === pending) clearPendingLogin()
-    throw new KokoroAPIError(tr('Kokoro 授权失败，请重新登录'))
+    throw new KokoroAPIError(tr('Kokoro authorization failed. Please sign in again'))
   }
 }
 
@@ -327,7 +329,7 @@ export async function handleKokoroCallback(value: string): Promise<void> {
   try {
     callback = parseKokoroCallback(value)
   } catch {
-    throw new KokoroAPIError(tr('Kokoro 登录回调地址无效'))
+    throw new KokoroAPIError(tr('Invalid Kokoro sign-in callback URI'))
   }
   const pending = pendingLogin
   const state = callback.searchParams.get('state') || ''
@@ -337,7 +339,7 @@ export async function handleKokoroCallback(value: string): Promise<void> {
   }
   // Unsolicited or forged callbacks must not cancel a legitimate pending login.
   if (!pendingLogin || !pending || !state || !matchesLoginState(state, pending.state)) {
-    throw new KokoroAPIError(tr('Kokoro 登录状态无效或已过期，请重新登录'))
+    throw new KokoroAPIError(tr('Kokoro sign-in state is invalid or expired. Please sign in again'))
   }
   // Consume before the first await: parallel deliveries and replays cannot exchange again.
   clearPendingLogin()
@@ -349,13 +351,14 @@ export async function handleKokoroCallback(value: string): Promise<void> {
     const error = callback.searchParams.get('error')
     if (error !== null) {
       if (code !== null || error !== 'access_denied') {
-        throw new KokoroAPIError(tr('Kokoro 授权失败，请重新登录'))
+        throw new KokoroAPIError(tr('Kokoro authorization failed. Please sign in again'))
       }
-      throw new KokoroAPIError(tr('已取消 Kokoro 登录'))
+      throw new KokoroAPIError(tr('Kokoro sign-in cancelled'))
     }
-    if (!code?.trim()) throw new KokoroAPIError(tr('Kokoro 登录回调缺少授权码'))
+    if (!code?.trim())
+      throw new KokoroAPIError(tr('Kokoro sign-in callback is missing an authorization code'))
     if (pending.redirectUri !== KOKORO_REDIRECT_URI || typeof pending.codeVerifier !== 'string') {
-      throw new KokoroAPIError(tr('Kokoro 授权失败，请重新登录'))
+      throw new KokoroAPIError(tr('Kokoro authorization failed. Please sign in again'))
     }
     createCodeChallenge(pending.codeVerifier) // Validate retained verifier; never downgrade.
     const response = await postToken({
@@ -412,7 +415,7 @@ const customRuleTypes = new Set<KokoroCustomRuleType>([
 
 function defaultRuleSet(state: KokoroCustomRulesState): KokoroRuleSet {
   if (state?.schema_version !== 1 || !Array.isArray(state.sets)) {
-    throw new KokoroAPIError(tr('Kokoro 返回了不兼容的规则集格式'))
+    throw new KokoroAPIError(tr('Kokoro returned an incompatible rule-set format'))
   }
   const ruleSet = state.sets.find((item) => item?.name?.toLowerCase() === 'default')
   if (
@@ -422,7 +425,7 @@ function defaultRuleSet(state: KokoroCustomRulesState): KokoroRuleSet {
     ruleSet.revision < 1 ||
     !Array.isArray(ruleSet.rules)
   ) {
-    throw new KokoroAPIError(tr('Kokoro 默认规则集不存在'))
+    throw new KokoroAPIError(tr('The Kokoro default rule set does not exist'))
   }
   return ruleSet
 }
@@ -441,7 +444,7 @@ function validateCustomRulesOptions(options: KokoroCustomRulesOptions): void {
       (provider) => typeof provider?.name === 'string' && typeof provider?.behavior === 'string'
     )
   ) {
-    throw new KokoroAPIError(tr('Kokoro 返回了不兼容的规则集格式'))
+    throw new KokoroAPIError(tr('Kokoro returned an incompatible rule-set format'))
   }
 }
 
@@ -482,10 +485,10 @@ function validateCustomRuleInputs(
   rules: KokoroCustomRuleInput[],
   options: KokoroCustomRulesOptions
 ): void {
-  if (!Array.isArray(rules)) throw new KokoroAPIError(tr('Kokoro 规则内容无效'))
+  if (!Array.isArray(rules)) throw new KokoroAPIError(tr('Invalid Kokoro rule content'))
   const maxRules = optionLimit(options, ['max_rules_per_set', 'rules_per_set'], 200)
   const maxPayload = optionLimit(options, ['max_payload_length', 'payload_length'], 1024)
-  if (rules.length > maxRules) throw new KokoroAPIError(tr('Kokoro 规则内容无效'))
+  if (rules.length > maxRules) throw new KokoroAPIError(tr('Invalid Kokoro rule content'))
 
   const availableTypes = new Set(options.rule_types.filter((type) => customRuleTypes.has(type)))
   const availableTargets = new Set(options.targets)
@@ -499,7 +502,7 @@ function validateCustomRuleInputs(
 
   for (const [index, rule] of rules.entries()) {
     if (!rule || !availableTypes.has(rule.type) || !availableTargets.has(rule.target)) {
-      throw new KokoroAPIError(tr('Kokoro 规则内容无效'))
+      throw new KokoroAPIError(tr('Invalid Kokoro rule content'))
     }
     if (
       !rule.target ||
@@ -507,7 +510,7 @@ function validateCustomRuleInputs(
       rule.target.length > 128 ||
       invalidText.test(rule.target)
     ) {
-      throw new KokoroAPIError(tr('Kokoro 规则内容无效'))
+      throw new KokoroAPIError(tr('Invalid Kokoro rule content'))
     }
     if (rule.type === 'MATCH') {
       matchCount += 1
@@ -517,7 +520,7 @@ function validateCustomRuleInputs(
         rule.target === 'REJECT' ||
         (rule.payload !== null && rule.payload !== '')
       ) {
-        throw new KokoroAPIError(tr('Kokoro 规则内容无效'))
+        throw new KokoroAPIError(tr('Invalid Kokoro rule content'))
       }
       continue
     }
@@ -529,7 +532,7 @@ function validateCustomRuleInputs(
       invalidText.test(rule.payload) ||
       (rule.type === 'RULE-SET' && !domainProviders.has(rule.payload))
     ) {
-      throw new KokoroAPIError(tr('Kokoro 规则内容无效'))
+      throw new KokoroAPIError(tr('Invalid Kokoro rule content'))
     }
   }
 }
@@ -552,7 +555,7 @@ export async function replaceKokoroDefaultRules(
 ): Promise<KokoroRuleSet> {
   const current = await getKokoroDefaultRules()
   if (current.ruleSet.revision !== expectedRevision) {
-    throw new KokoroAPIError(tr('Kokoro 规则集已更新，请重新加载后再保存'), 409)
+    throw new KokoroAPIError(tr('The Kokoro rule set changed. Reload it before saving again'), 409)
   }
   validateCustomRuleInputs(rules, current.options)
 
@@ -568,19 +571,22 @@ export async function replaceKokoroDefaultRules(
       false
     )
     if (response.data?.name?.toLowerCase() !== 'default') {
-      throw new KokoroAPIError(tr('Kokoro 返回了不兼容的规则集格式'))
+      throw new KokoroAPIError(tr('Kokoro returned an incompatible rule-set format'))
     }
     return response.data
   } catch (error) {
     const apiError = toKokoroError(error)
     if (apiError.status === 409 || apiError.status === 404) {
-      throw new KokoroAPIError(tr('Kokoro 规则集已更新，请重新加载后再保存'), apiError.status)
+      throw new KokoroAPIError(
+        tr('The Kokoro rule set changed. Reload it before saving again'),
+        apiError.status
+      )
     }
     if (apiError.status === 400 || apiError.status === 422) {
-      throw new KokoroAPIError(tr('Kokoro 规则内容无效'), apiError.status)
+      throw new KokoroAPIError(tr('Invalid Kokoro rule content'), apiError.status)
     }
     if (apiError.status === 429) {
-      throw new KokoroAPIError(tr('Kokoro 请求过于频繁，请稍后重试'), 429)
+      throw new KokoroAPIError(tr('Too many Kokoro requests. Please try again later'), 429)
     }
     if (apiError.status === undefined) {
       try {
@@ -607,7 +613,7 @@ function validateAuthenticatedConfigUrl(value: string): string {
     url.origin !== base.origin ||
     url.pathname !== `${base.pathname}/app/subscription/config`
   ) {
-    throw new KokoroAPIError(tr('Kokoro 返回了无效的配置下载地址'))
+    throw new KokoroAPIError(tr('Kokoro returned an invalid configuration download URL'))
   }
   return url.toString()
 }
@@ -627,7 +633,7 @@ export async function downloadKokoroProfile(
   })
   const resolved = resolveResponse.data
   if (resolved.format !== 'mihomo' || !resolved.content_type.toLowerCase().includes('yaml')) {
-    throw new KokoroAPIError(tr('Kokoro 返回了不兼容的 Mihomo 配置格式'))
+    throw new KokoroAPIError(tr('Kokoro returned an incompatible Mihomo configuration format'))
   }
 
   const response = await authorizedRequest<string>({
@@ -639,7 +645,7 @@ export async function downloadKokoroProfile(
   })
   const contentType = String(response.headers['content-type'] || '').toLowerCase()
   if (!contentType.includes('yaml')) {
-    throw new KokoroAPIError(tr('Kokoro 配置响应不是 YAML'))
+    throw new KokoroAPIError(tr('The Kokoro configuration response is not YAML'))
   }
 
   const interval = Number(response.headers['profile-update-interval'])

@@ -84,9 +84,10 @@ const PermissionModal: React.FC<Props> = (props) => {
   }
 
   const getStatusText = (coreName: 'mihomo' | 'mihomo-alpha'): string => {
-    if (hasPermission === null) return tr('检查中')
-    if (typeof hasPermission === 'boolean') return hasPermission ? tr('已授权') : tr('未授权')
-    return hasPermission[coreName] ? tr('已授权') : tr('未授权')
+    if (hasPermission === null) return tr('Checking')
+    if (typeof hasPermission === 'boolean')
+      return hasPermission ? tr('Authorized') : tr('Not authorized')
+    return hasPermission[coreName] ? tr('Authorized') : tr('Not authorized')
   }
 
   const getStatusColor = (coreName: 'mihomo' | 'mihomo-alpha'): string => {
@@ -108,7 +109,7 @@ const PermissionModal: React.FC<Props> = (props) => {
         <Modal.Container scroll="inside">
           <Modal.Dialog className="w-112.5">
             <Modal.Header className="flex-col gap-1">
-              <Modal.Heading>{tr('提权状态管理')}</Modal.Heading>
+              <Modal.Heading>{tr('Manage elevation')}</Modal.Heading>
             </Modal.Header>
             <Modal.Body>
               <div className="space-y-4">
@@ -121,7 +122,9 @@ const PermissionModal: React.FC<Props> = (props) => {
                       <CardBody className="py-4">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            <span className="text-sm font-medium">{tr('管理员权限状态')}</span>
+                            <span className="text-sm font-medium">
+                              {tr('Administrator status')}
+                            </span>
                           </div>
                           <Chip
                             color={
@@ -135,12 +138,12 @@ const PermissionModal: React.FC<Props> = (props) => {
                             size="sm"
                           >
                             {hasPermission === null
-                              ? tr('检查中...')
+                              ? tr('Checking...')
                               : typeof hasPermission === 'boolean'
                                 ? hasPermission
-                                  ? tr('管理员权限')
-                                  : tr('普通用户权限')
-                                : tr('未知')}
+                                  ? tr('Administrator')
+                                  : tr('Standard user')
+                                : tr('Unknown')}
                           </Chip>
                         </div>
                       </CardBody>
@@ -151,11 +154,19 @@ const PermissionModal: React.FC<Props> = (props) => {
                     <div className="text-xs text-default-500 space-y-2">
                       <div className="flex items-start gap-2">
                         <span className="mt-0.5">•</span>
-                        <span>{tr('手动提权只影响本次运行，不会建立计划任务或永久提权')}</span>
+                        <span>
+                          {tr(
+                            'Manual elevation affects only this run and does not create a scheduled task or persistent elevation'
+                          )}
+                        </span>
                       </div>
                       <div className="flex items-start gap-2">
                         <span className="mt-0.5">•</span>
-                        <span>{tr('取消提权会重新以当前桌面用户权限启动 KokoroBox')}</span>
+                        <span>
+                          {tr(
+                            'Cancelling elevation restarts KokoroBox with the current desktop user privileges'
+                          )}
+                        </span>
                       </div>
                     </div>
                   </>
@@ -166,7 +177,9 @@ const PermissionModal: React.FC<Props> = (props) => {
                         <CardHeader className="pb-0 pt-4 px-4 flex-col items-start">
                           <div className="flex items-center justify-between w-full">
                             <div className="flex items-center gap-2">
-                              <h4 className="font-semibold text-medium">{tr('内置正式版')}</h4>
+                              <h4 className="font-semibold text-medium">
+                                {tr('Built-in release')}
+                              </h4>
                             </div>
                             <Chip
                               color={
@@ -189,7 +202,7 @@ const PermissionModal: React.FC<Props> = (props) => {
                               isLoading={loading.mihomo}
                               fullWidth
                             >
-                              {tr('撤销授权')}
+                              {tr('Revoke authorization')}
                             </Button>
                           ) : (
                             <Button
@@ -200,7 +213,7 @@ const PermissionModal: React.FC<Props> = (props) => {
                               isLoading={loading.mihomo}
                               fullWidth
                             >
-                              {tr('授权内核')}
+                              {tr('Authorize core')}
                             </Button>
                           )}
                         </CardBody>
@@ -210,7 +223,9 @@ const PermissionModal: React.FC<Props> = (props) => {
                         <CardHeader className="pb-0 pt-4 px-4 flex-col items-start">
                           <div className="flex items-center justify-between w-full">
                             <div className="flex items-center gap-2">
-                              <h4 className="font-semibold text-medium">{tr('内置预览版')}</h4>
+                              <h4 className="font-semibold text-medium">
+                                {tr('Built-in preview')}
+                              </h4>
                             </div>
                             <Chip
                               color={
@@ -235,7 +250,7 @@ const PermissionModal: React.FC<Props> = (props) => {
                               isLoading={loading['mihomo-alpha']}
                               fullWidth
                             >
-                              {tr('撤销授权')}
+                              {tr('Revoke authorization')}
                             </Button>
                           ) : (
                             <Button
@@ -246,7 +261,7 @@ const PermissionModal: React.FC<Props> = (props) => {
                               isLoading={loading['mihomo-alpha']}
                               fullWidth
                             >
-                              {tr('授权内核')}
+                              {tr('Authorize core')}
                             </Button>
                           )}
                         </CardBody>
@@ -255,10 +270,10 @@ const PermissionModal: React.FC<Props> = (props) => {
 
                     <div className="text-xs text-default-500 space-y-2">
                       <div className="flex items-start gap-2">
-                        <span>{tr('授权后内核将获得必要的系统权限')}</span>
+                        <span>{tr('Grant the core the system permissions it needs')}</span>
                       </div>
                       <div className="flex items-start gap-2">
-                        <span>{tr('可以使用 TUN 等高级网络功能')}</span>
+                        <span>{tr('Enables advanced network features such as TUN')}</span>
                       </div>
                     </div>
                   </>
@@ -274,7 +289,7 @@ const PermissionModal: React.FC<Props> = (props) => {
                   onPress={() => handleWindowsAction(!hasPermission)}
                   isLoading={windowsLoading}
                 >
-                  {hasPermission ? tr('取消提权并重启') : tr('手动提权并重启')}
+                  {hasPermission ? tr('Restart as standard user') : tr('Restart as administrator')}
                 </Button>
               ) : null}
               <Button
@@ -283,7 +298,7 @@ const PermissionModal: React.FC<Props> = (props) => {
                 onPress={() => onChange(false)}
                 isDisabled={windowsLoading || Object.values(loading).some((v) => v)}
               >
-                {tr('关闭')}
+                {tr('Close')}
               </Button>
             </Modal.Footer>
           </Modal.Dialog>

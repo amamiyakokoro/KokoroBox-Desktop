@@ -401,7 +401,7 @@ async function runOverrideScript(
       Buffer
     }
     vm.createContext(ctx)
-    log('info', tr('开始执行脚本'), 'w')
+    log('info', tr('Running script'), 'w')
     vm.runInContext(script, ctx)
     const promise = vm.runInContext(
       `(async () => {
@@ -413,12 +413,12 @@ async function runOverrideScript(
     )
     const newProfile = await promise
     if (typeof newProfile !== 'object') {
-      throw new Error(tr('脚本返回值必须是对象'))
+      throw new Error(tr('Script must return an object'))
     }
-    log('info', tr('脚本执行成功'))
+    log('info', tr('Script executed successfully'))
     return newProfile
   } catch (e) {
-    log('exception', tr('脚本执行失败：{0}', [e]))
+    log('exception', tr('Script execution failed: {0}', [e]))
     return profile
   }
 }

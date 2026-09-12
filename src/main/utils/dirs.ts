@@ -99,13 +99,13 @@ export function mihomoCorePath(core: string): string {
     const sysPath = systemCorePath()
     if (!sysPath || !existsSync(sysPath)) {
       const errorMsg = sysPath
-        ? tr('系统内核路径无效或不存在: {0}', [sysPath])
-        : tr('系统内核路径未设置')
+        ? tr('System core path is invalid or missing: {0}', [sysPath])
+        : tr('System core path is not set')
       throw new Error(errorMsg)
     }
     return sysPath
   }
-  throw new Error(tr('内核路径错误'))
+  throw new Error(tr('Invalid core path'))
 }
 
 function systemCorePath(): string {

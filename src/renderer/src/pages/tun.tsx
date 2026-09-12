@@ -56,7 +56,7 @@ const Tun: React.FC = () => {
   return (
     <>
       <BasePage
-        title={tr('虚拟网卡设置')}
+        title={tr('TUN settings')}
         contentClassName="no-scrollbar"
         header={
           changed && (
@@ -81,14 +81,14 @@ const Tun: React.FC = () => {
                 })
               }
             >
-              {tr('保存')}
+              {tr('Save')}
             </Button>
           )
         }
       >
         <SettingCard className="tun-settings">
           {platform === 'win32' && (
-            <SettingItem compatKey="legacy" title={tr('重设防火墙')} divider>
+            <SettingItem compatKey="legacy" title={tr('Reset firewall')} divider>
               <Button
                 size="sm"
                 color="primary"
@@ -97,7 +97,7 @@ const Tun: React.FC = () => {
                   setLoading(true)
                   try {
                     await setupFirewall()
-                    notify(tr('防火墙重设成功'))
+                    notify(tr('Firewall reset'))
                     await restartCore()
                   } catch (e) {
                     notify(e, { variant: 'danger' })
@@ -106,12 +106,16 @@ const Tun: React.FC = () => {
                   }
                 }}
               >
-                {tr('重设防火墙')}
+                {tr('Reset firewall')}
               </Button>
             </SettingItem>
           )}
           {platform === 'darwin' && (
-            <SettingItem compatKey="legacy" title={tr('自动设置系统 DNS')} divider>
+            <SettingItem
+              compatKey="legacy"
+              title={tr('Configure system DNS automatically')}
+              divider
+            >
               <Tabs
                 size="sm"
                 color="primary"
@@ -120,13 +124,13 @@ const Tun: React.FC = () => {
                   await patchAppConfig({ autoSetDNSMode: key as 'none' | 'exec' | 'service' })
                 }}
               >
-                <Tab key="none" title={tr('不自动设置')} />
-                <Tab key="exec" title={tr('执行命令')} />
-                <Tab key="service" title={tr('服务模式')} />
+                <Tab key="none" title={tr('Do not configure automatically')} />
+                <Tab key="exec" title={tr('Run command')} />
+                <Tab key="service" title={tr('Service mode')} />
               </Tabs>
             </SettingItem>
           )}
-          <SettingItem compatKey="legacy" title={tr('Tun 模式堆栈')} divider>
+          <SettingItem compatKey="legacy" title={tr('TUN network stack')} divider>
             <Tabs
               size="sm"
               color="primary"
@@ -140,7 +144,7 @@ const Tun: React.FC = () => {
           </SettingItem>
           {platform !== 'darwin' && (
             <>
-              <SettingItem compatKey="legacy" title={tr('Tun 网卡名称')} divider>
+              <SettingItem compatKey="legacy" title={tr('TUN interface name')} divider>
                 <Input
                   size="sm"
                   className="w-25"
@@ -150,7 +154,7 @@ const Tun: React.FC = () => {
                   }}
                 />
               </SettingItem>
-              <SettingItem compatKey="legacy" title={tr('严格路由')} divider>
+              <SettingItem compatKey="legacy" title={tr('Strict routing')} divider>
                 <Switch
                   size="sm"
                   isSelected={values.strictRoute}
@@ -161,7 +165,7 @@ const Tun: React.FC = () => {
               </SettingItem>
             </>
           )}
-          <SettingItem compatKey="legacy" title={tr('自动设置路由规则')} divider>
+          <SettingItem compatKey="legacy" title={tr('Configure routes automatically')} divider>
             <Switch
               size="sm"
               isSelected={values.autoRoute}
@@ -171,7 +175,11 @@ const Tun: React.FC = () => {
             />
           </SettingItem>
           {platform === 'linux' && (
-            <SettingItem compatKey="legacy" title={tr('自动设置TCP重定向')} divider>
+            <SettingItem
+              compatKey="legacy"
+              title={tr('Configure TCP redirection automatically')}
+              divider
+            >
               <Switch
                 size="sm"
                 isSelected={values.autoRedirect}
@@ -181,7 +189,11 @@ const Tun: React.FC = () => {
               />
             </SettingItem>
           )}
-          <SettingItem compatKey="legacy" title={tr('自动选择流量出口')} divider>
+          <SettingItem
+            compatKey="legacy"
+            title={tr('Select outbound interface automatically')}
+            divider
+          >
             <Switch
               size="sm"
               isSelected={values.autoDetectInterface}
@@ -190,7 +202,7 @@ const Tun: React.FC = () => {
               }}
             />
           </SettingItem>
-          <SettingItem compatKey="legacy" title={tr('ICMP 转发')} divider>
+          <SettingItem compatKey="legacy" title={tr('ICMP forwarding')} divider>
             <Switch
               size="sm"
               isSelected={!values.disableIcmpForwarding}
@@ -214,7 +226,11 @@ const Tun: React.FC = () => {
               }}
             />
           </SettingItem>
-          <SettingItem compatKey="legacy" title={tr('DNS 劫持，使用逗号分割多个值')} divider>
+          <SettingItem
+            compatKey="legacy"
+            title={tr('DNS hijacking targets, separated by commas')}
+            divider
+          >
             <Input
               size="sm"
               className="w-[50%]"
@@ -226,9 +242,9 @@ const Tun: React.FC = () => {
             />
           </SettingItem>
           <EditableList
-            title={tr('排除自定义网段')}
+            title={tr('Exclude custom IP ranges')}
             items={values.routeExcludeAddress}
-            placeholder={tr('例: 172.20.0.0/16')}
+            placeholder={tr('Example: 172.20.0.0/16')}
             onChange={(list) => setValues({ ...values, routeExcludeAddress: list as string[] })}
             divider={false}
           />

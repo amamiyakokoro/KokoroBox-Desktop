@@ -83,7 +83,10 @@ const Viewer: React.FC<Props> = (props) => {
     } catch (e) {
       if (!elevated && typeof e === 'string' && e.includes(FILE_PERMISSION_ELEVATION_REQUIRED)) {
         if (systemCoreOnlyBuild) {
-          notify(tr('当前文件没有写入权限，系统内核构建不支持提权保存'), { variant: 'danger' })
+          notify(
+            tr('This file is not writable. System-core builds do not support elevated saving'),
+            { variant: 'danger' }
+          )
           return
         }
         setShowPermissionConfirm(true)
@@ -139,20 +142,20 @@ const Viewer: React.FC<Props> = (props) => {
       {!systemCoreOnlyBuild && showPermissionConfirm && (
         <ConfirmModal
           onChange={setShowPermissionConfirm}
-          title={tr('保存需要提权')}
+          title={tr('Saving requires elevated permissions')}
           description={tr(
-            '当前文件或目录没有写入权限。你可以取消本次保存，或者执行提权后修改权限并继续保存。'
+            'You do not have write permission for this file or directory. Cancel saving, or elevate privileges to change permissions and save.'
           )}
           buttons={[
             {
               key: 'cancel',
-              text: tr('取消'),
+              text: tr('Cancel'),
               variant: 'light',
               onPress: () => {}
             },
             {
               key: 'elevate',
-              text: tr('提权保存'),
+              text: tr('Elevate and save'),
               color: 'primary',
               onPress: () => save(true)
             }
@@ -190,10 +193,10 @@ const Viewer: React.FC<Props> = (props) => {
             {type === 'File' && !isLoading && (
               <Modal.Footer className="pt-0 pb-0">
                 <Button size="sm" variant="secondary" isDisabled={isSaving} onPress={onClose}>
-                  {tr('取消')}
+                  {tr('Cancel')}
                 </Button>
                 <Button size="sm" isPending={isSaving} onPress={() => save()}>
-                  {tr('保存')}
+                  {tr('Save')}
                 </Button>
               </Modal.Footer>
             )}

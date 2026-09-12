@@ -50,7 +50,7 @@ const ProfileCard: React.FC<Props> = (props) => {
   const info = items?.find((item) => item.id === current) ?? {
     id: 'default',
     type: 'local',
-    name: tr('空白订阅')
+    name: tr('Blank profile')
   }
 
   const extra = info?.extra
@@ -60,7 +60,7 @@ const ProfileCard: React.FC<Props> = (props) => {
   if (iconOnly) {
     return (
       <div className={`${profileCardStatus} flex justify-center`}>
-        <Tooltip content={tr('订阅管理')} placement="right">
+        <Tooltip content={tr('Subscriptions')} placement="right">
           <Button
             size="sm"
             isIconOnly
@@ -159,7 +159,9 @@ const ProfileCard: React.FC<Props> = (props) => {
                       await patchAppConfig({ profileDisplayDate: 'update' })
                     }}
                   >
-                    {extra.expire ? dayjs.unix(extra.expire).format('YYYY-MM-DD') : tr('长期有效')}
+                    {extra.expire
+                      ? dayjs.unix(extra.expire).format('YYYY-MM-DD')
+                      : tr('No expiration')}
                   </Button>
                 ) : (
                   <Button
@@ -186,7 +188,7 @@ const ProfileCard: React.FC<Props> = (props) => {
                   variant="bordered"
                   className={`${match ? 'text-primary-foreground border-primary-foreground' : 'border-primary text-primary'}`}
                 >
-                  {tr('远程')}
+                  {tr('Remote')}
                 </Chip>
                 <small>{dayjs(info.updated).fromNow()}</small>
               </div>
@@ -200,12 +202,12 @@ const ProfileCard: React.FC<Props> = (props) => {
                   variant="bordered"
                   className={`${match ? 'text-primary-foreground border-primary-foreground' : 'border-primary text-primary'}`}
                 >
-                  {tr('本地')}
+                  {tr('Local')}
                 </Chip>
               </div>
             )}
             {extra && (
-              <Meter aria-label={tr('流量用量')} maxValue={total} value={usage}>
+              <Meter aria-label={tr('Traffic usage')} maxValue={total} value={usage}>
                 <Meter.Track
                   className={
                     match
@@ -265,7 +267,7 @@ const ProfileCard: React.FC<Props> = (props) => {
             <h3
               className={`text-md font-bold ${match ? 'text-primary-foreground' : 'text-foreground'}`}
             >
-              {tr('订阅管理')}
+              {tr('Subscriptions')}
             </h3>
           </CardFooter>
         </Card>

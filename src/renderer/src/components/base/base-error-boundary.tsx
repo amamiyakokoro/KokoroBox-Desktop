@@ -24,7 +24,9 @@ const ErrorFallback = ({ error }: FallbackProps): JSX.Element => {
   return (
     <div className="p-4">
       <h2 className="my-2 text-lg font-bold">
-        {tr('应用崩溃了 :( 请将以下信息提交给开发者以排查错误')}
+        {tr(
+          'The app crashed :( Please send the following details to the developer to help diagnose the issue'
+        )}
       </h2>
 
       {/* <Button
@@ -51,7 +53,7 @@ const ErrorFallback = ({ error }: FallbackProps): JSX.Element => {
         className="ml-2"
         onPress={() => navigator.clipboard.writeText('```\n' + message + '\n' + stack + '\n```')}
       >
-        {tr('复制报错信息')}
+        {tr('Copy error details')}
       </Button>
 
       <p className="my-2">{message}</p>

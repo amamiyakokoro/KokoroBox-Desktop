@@ -41,13 +41,15 @@ const LogSetting: React.FC = () => {
   }
 
   return (
-    <SettingCard header={tr('日志设置')}>
+    <SettingCard header={tr('Log settings')}>
       <SettingItem
         compatKey="legacy"
-        title={tr('保存日志')}
+        title={tr('Save logs')}
         actions={
           <Tooltip
-            content={tr('关闭后将停止写入本地日志文件，实时日志页面仍可继续查看当前会话日志')}
+            content={tr(
+              'When disabled, logs are no longer written to local files. The live log view still shows the current session'
+            )}
           >
             <Button isIconOnly size="sm" variant="light">
               <IoIosHelpCircle className="text-lg" />
@@ -64,7 +66,7 @@ const LogSetting: React.FC = () => {
           }}
         />
       </SettingItem>
-      <SettingItem compatKey="legacy" title={tr('日志保留天数')} divider>
+      <SettingItem compatKey="legacy" title={tr('Log retention days')} divider>
         <div className="flex">
           {saveLogs && maxLogDaysInput !== maxLogDays && (
             <Button
@@ -75,14 +77,14 @@ const LogSetting: React.FC = () => {
                 patchAppConfig({ maxLogDays: maxLogDaysInput })
               }}
             >
-              {tr('确认')}
+              {tr('Confirm')}
             </Button>
           )}
           <Input
             size="sm"
             type="number"
             className="w-25"
-            endContent={tr('天')}
+            endContent={tr('days')}
             value={maxLogDaysInput.toString()}
             min={1}
             isDisabled={!saveLogs}
@@ -94,9 +96,13 @@ const LogSetting: React.FC = () => {
       </SettingItem>
       <SettingItem
         compatKey="legacy"
-        title={tr('单文件日志上限')}
+        title={tr('Log file size limit')}
         actions={
-          <Tooltip content={tr('仅影响本地日志文件，超过大小上限后会自动删除最早的日志行')}>
+          <Tooltip
+            content={tr(
+              'Only affects local log files. The oldest lines are removed when the size limit is exceeded'
+            )}
+          >
             <Button isIconOnly size="sm" variant="light">
               <IoIosHelpCircle className="text-lg" />
             </Button>
@@ -114,7 +120,7 @@ const LogSetting: React.FC = () => {
                 patchAppConfig({ maxLogFileSizeMB: maxLogFileSizeMBInput })
               }}
             >
-              {tr('确认')}
+              {tr('Confirm')}
             </Button>
           )}
           <Input
@@ -133,9 +139,11 @@ const LogSetting: React.FC = () => {
       </SettingItem>
       <SettingItem
         compatKey="legacy"
-        title={tr('实时日志缓存数')}
+        title={tr('Live log entry limit')}
         actions={
-          <Tooltip content={tr('仅影响应用内实时日志页面保留的条数，不影响本地日志文件')}>
+          <Tooltip
+            content={tr('Only affects entries retained in the live log view, not local log files')}
+          >
             <Button isIconOnly size="sm" variant="light">
               <IoIosHelpCircle className="text-lg" />
             </Button>
@@ -153,14 +161,14 @@ const LogSetting: React.FC = () => {
                 patchAppConfig({ maxLogEntries: maxLogEntriesInput })
               }}
             >
-              {tr('确认')}
+              {tr('Confirm')}
             </Button>
           )}
           <Input
             size="sm"
             type="number"
             className="w-25"
-            endContent={tr('条')}
+            endContent={tr('entries')}
             value={maxLogEntriesInput.toString()}
             min={1}
             onValueChange={(value) => {
@@ -169,9 +177,9 @@ const LogSetting: React.FC = () => {
           />
         </div>
       </SettingItem>
-      <SettingItem compatKey="legacy" title={tr('日志等级')}>
+      <SettingItem compatKey="legacy" title={tr('Log level')}>
         <Select
-          aria-label={tr('日志等级')}
+          aria-label={tr('Log level')}
           classNames={{ trigger: 'data-[hover=true]:bg-default-200' }}
           className="w-25"
           size="sm"
