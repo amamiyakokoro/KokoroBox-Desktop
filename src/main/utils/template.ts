@@ -57,7 +57,13 @@ export const defaultConfig: AppConfig = {
     'log'
   ],
   siderWidth: 250,
-  sysProxy: { enable: false, mode: 'manual', guard: false, guardNotify: false },
+  sysProxy: {
+    enable: false,
+    mode: 'manual',
+    terminalProxy: false,
+    guard: false,
+    guardNotify: false
+  },
   disableLoopbackDetector: false,
   disableEmbedCA: false,
   disableSystemCA: false,

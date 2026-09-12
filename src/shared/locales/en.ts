@@ -1006,6 +1006,9 @@ export const messages: Readonly<Record<string, string>> = {
   系统代理恢复失败: 'Failed to restore system proxy',
   系统代理恢复成功或失败时发送通知: 'Notify when system proxy restoration succeeds or fails',
   系统代理设置: 'System proxy settings',
+  终端代理: 'Terminal proxy',
+  '为新启动的终端设置代理环境变量；已经打开的终端需要重新启动，部分桌面环境可能需要重新登录':
+    'Set proxy environment variables for newly launched terminals. Restart open terminals; some desktop environments may require signing in again.',
   系统内核: 'System core',
   系统内核构建不支持提权操作: 'System-core builds do not support elevation',
   系统内核路径: 'System core path',

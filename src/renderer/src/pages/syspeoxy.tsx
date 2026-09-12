@@ -77,6 +77,7 @@ const Sysproxy: React.FC = () => {
     mode: sysProxy.mode ?? 'manual',
     pacScript: sysProxy.pacScript ?? defaultPacScript,
     settingMode: sysProxy.settingMode ?? 'exec',
+    terminalProxy: sysProxy.terminalProxy ?? false,
     guard: sysProxy.guard ?? false,
     guardNotify: sysProxy.guardNotify ?? false
   })
@@ -89,6 +90,7 @@ const Sysproxy: React.FC = () => {
       mode: nextSysProxy.mode ?? 'manual',
       pacScript: nextSysProxy.pacScript ?? defaultPacScript,
       settingMode: nextSysProxy.settingMode ?? 'exec',
+      terminalProxy: nextSysProxy.terminalProxy ?? false,
       guard: nextSysProxy.guard ?? false,
       guardNotify: nextSysProxy.guardNotify ?? false
     }))
@@ -232,6 +234,36 @@ const Sysproxy: React.FC = () => {
             <Tab key="service" title={tr('服务模式')} />
           </Tabs>
         </SettingItem>
+        {platform === 'linux' && (
+          <SettingItem
+            compatKey="legacy"
+            title={tr('终端代理')}
+            actions={
+              <Tooltip
+                content={
+                  <div>
+                    {tr(
+                      '为新启动的终端设置代理环境变量；已经打开的终端需要重新启动，部分桌面环境可能需要重新登录'
+                    )}
+                  </div>
+                }
+              >
+                <Button isIconOnly size="sm" variant="light">
+                  <IoIosHelpCircle className="text-lg" />
+                </Button>
+              </Tooltip>
+            }
+            divider
+          >
+            <Switch
+              size="sm"
+              isSelected={values.terminalProxy}
+              onValueChange={(v) => {
+                setValues({ ...values, terminalProxy: v })
+              }}
+            />
+          </SettingItem>
+        )}
         {platform !== 'linux' && values.settingMode === 'service' && (
           <SettingItem
             compatKey="legacy"

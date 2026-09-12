@@ -16,6 +16,7 @@ import {
 import type { ServiceSysproxyEvent } from '../service/api'
 import { appendAppLog } from '../utils/log'
 import { showNotification } from '../utils/notification'
+import { disableTerminalProxy, enableTerminalProxy } from './terminal-proxy'
 
 let defaultBypass: string[]
 let triggerSysProxyTimer: NodeJS.Timeout | null = null
@@ -116,7 +117,13 @@ async function setSysProxy(onlyActiveDevice: boolean, useRegistry = false): Prom
     ]
   await startPacServer()
   const { sysProxy } = await getAppConfig()
-  const { mode, host, bypass = defaultBypass, settingMode = 'exec' } = sysProxy
+  const {
+    mode,
+    host,
+    bypass = defaultBypass,
+    settingMode = 'exec',
+    terminalProxy = false
+  } = sysProxy
   const guard = settingMode === 'service' && !!sysProxy.guard
   const guardNotify = guard && !!sysProxy.guardNotify
   const { 'mixed-port': port = 7890 } = await getControledMihomoConfig()
@@ -192,6 +199,14 @@ async function setSysProxy(onlyActiveDevice: boolean, useRegistry = false): Prom
       break
     }
   }
+
+  if (process.platform === 'linux') {
+    if (terminalProxy && port !== 0) {
+      await enableTerminalProxy(host || '127.0.0.1', port, bypass)
+    } else {
+      await disableTerminalProxy()
+    }
+  }
 }
 
 async function disableSysProxy(onlyActiveDevice: boolean, useRegistry = false): Promise<void> {
@@ -205,15 +220,19 @@ async function disableSysProxy(onlyActiveDevice: boolean, useRegistry = false): 
       windowsHide: process.platform === 'win32'
     })
 
-  if (settingMode === 'service') {
-    try {
-      await disableProxy('', onlyActiveDevice, useRegistry)
-    } catch (e) {
-      await appendAppLog(`[Sysproxy]: disable via service failed, fallback to exec, ${e}\n`)
+  try {
+    if (settingMode === 'service') {
+      try {
+        await disableProxy('', onlyActiveDevice, useRegistry)
+      } catch (e) {
+        await appendAppLog(`[Sysproxy]: disable via service failed, fallback to exec, ${e}\n`)
+        await disableWithExec()
+      }
+    } else {
       await disableWithExec()
     }
-  } else {
-    await disableWithExec()
+  } finally {
+    await disableTerminalProxy()
   }
 }
 
