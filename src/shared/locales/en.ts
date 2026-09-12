@@ -11,6 +11,9 @@ export const messages: Readonly<Record<string, string>> = {
   诊断记录: 'Diagnostic logging',
   '记录应用程序分流的匹配目标与处理结果；仅在排查问题时启用。':
     'Log application routing destinations and decisions. Enable only while troubleshooting.',
+  'macOS 网络扩展': 'macOS Network Extension',
+  '打开系统设置并重新请求 KokoroBox 网络扩展批准。':
+    'Open System Settings and request approval for the KokoroBox Network Extension again.',
   应用分流防火墙: 'Application routing firewall',
   '检查并修复 ProxyBridge relay 的 34010/TCP 和 34011/UDP 规则。':
     'Check and repair the ProxyBridge relay rules for 34010/TCP and 34011/UDP.',

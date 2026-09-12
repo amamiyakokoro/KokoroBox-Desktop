@@ -864,6 +864,10 @@ test('macOS approval guidance returns promptly and remains visible across app re
   const bridge = readFileSync('native/macos-app-routing/KokoroBoxAppRoutingBridge.mm', 'utf8')
   const coordinator = readFileSync('src/main/app-routing/macos.ts', 'utf8')
   const page = readFileSync('src/renderer/src/pages/app-routing.tsx', 'utf8')
+  const settingsDrawer = readFileSync(
+    'src/renderer/src/components/app-routing/app-routing-setting-drawer.tsx',
+    'utf8'
+  )
   const hook = readFileSync('src/renderer/src/hooks/use-app-routing.ts', 'utf8')
 
   assert.match(bridge, /KBUserApprovalPendingDefaultsKey/)
@@ -888,6 +892,11 @@ test('macOS approval guidance returns promptly and remains visible across app re
   assert.match(page, /needsMacApproval/)
   assert.match(page, /打开系统设置并请求批准/)
   assert.match(page, /我已启用，立即检查/)
+  assert.match(page, /isMac=\{isMac\}/)
+  assert.match(page, /onOpenSystemSettings=\{\(\) => void openApprovalSettings\(\)\}/)
+  assert.match(settingsDrawer, /\{isMac && \(/)
+  assert.match(settingsDrawer, /macOS 网络扩展/)
+  assert.match(settingsDrawer, /onPress=\{onOpenSystemSettings\}/)
   assert.match(page, /网络扩展未确认规则更新/)
 })
 

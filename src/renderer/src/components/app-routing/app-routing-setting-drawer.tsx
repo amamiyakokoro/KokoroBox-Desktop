@@ -8,7 +8,9 @@ import { IoIosHelpCircle } from 'react-icons/io'
 
 interface Props {
   isDisabled: boolean
+  isMac: boolean
   isWindows: boolean
+  isOpeningSystemSettings: boolean
   isRepairingFirewall: boolean
   isProxyUdpDnsEnabled: boolean
   defaultAction: AppRoutingAction
@@ -18,6 +20,7 @@ interface Props {
   onDefaultActionChange: (action: AppRoutingAction) => void
   onDefaultProtocolChange: (protocol: AppRoutingProtocol) => void
   onDiagnosticLoggingChange: (enabled: boolean) => void
+  onOpenSystemSettings: () => void
   onRepairFirewall: () => void
   onClose: () => void
   reopenSignal?: number
@@ -39,7 +42,9 @@ function SettingHelp({ label, content }: { label: string; content: string }): Re
 const AppRoutingSettingDrawer: React.FC<Props> = (props) => {
   const {
     isDisabled,
+    isMac,
     isWindows,
+    isOpeningSystemSettings,
     isRepairingFirewall,
     isProxyUdpDnsEnabled,
     defaultAction,
@@ -49,6 +54,7 @@ const AppRoutingSettingDrawer: React.FC<Props> = (props) => {
     onDefaultActionChange,
     onDefaultProtocolChange,
     onDiagnosticLoggingChange,
+    onOpenSystemSettings,
     onRepairFirewall,
     onClose,
     reopenSignal
@@ -200,7 +206,7 @@ const AppRoutingSettingDrawer: React.FC<Props> = (props) => {
                 />
               }
               {...settingItemProps}
-              divider={isWindows}
+              divider={isMac || isWindows}
             >
               <Switch
                 aria-label={tr('诊断记录')}
@@ -215,6 +221,28 @@ const AppRoutingSettingDrawer: React.FC<Props> = (props) => {
                 </Switch.Content>
               </Switch>
             </SettingItem>
+            {isMac && (
+              <SettingItem
+                title={tr('macOS 网络扩展')}
+                actions={
+                  <SettingHelp
+                    label={tr('macOS 网络扩展')}
+                    content={tr('打开系统设置并重新请求 KokoroBox 网络扩展批准。')}
+                  />
+                }
+                {...settingItemProps}
+              >
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  isPending={isOpeningSystemSettings}
+                  isDisabled={isDisabled}
+                  onPress={onOpenSystemSettings}
+                >
+                  {tr('打开系统设置')}
+                </Button>
+              </SettingItem>
+            )}
             {isWindows && (
               <SettingItem
                 title={tr('应用分流防火墙')}
