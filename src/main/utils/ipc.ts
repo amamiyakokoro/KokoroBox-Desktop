@@ -63,6 +63,7 @@ import {
   revokeCorePermission
 } from '../core/permission'
 import { triggerSysProxy } from '../sys/sysproxy'
+import { disableTerminalProxy } from '../sys/terminal-proxy'
 import { checkUpdate, downloadAndInstallUpdate, cancelUpdate } from '../resolve/autoUpdater'
 import {
   checkElevateTask,
@@ -170,6 +171,15 @@ function ipcErrorWrapper<T>( // eslint-disable-next-line @typescript-eslint/no-e
 
 async function patchAppConfigWithServiceSync(patch: Partial<AppConfig>): Promise<AppConfig> {
   const nextConfig = await patchAppConfig(await normalizeServiceModePatch(patch))
+
+  if (
+    process.platform === 'linux' &&
+    patch.sysProxy &&
+    'terminalProxy' in patch.sysProxy &&
+    nextConfig.sysProxy.terminalProxy === false
+  ) {
+    await disableTerminalProxy()
+  }
 
   if (!('saveLogs' in patch || 'maxLogFileSizeMB' in patch)) {
     return nextConfig

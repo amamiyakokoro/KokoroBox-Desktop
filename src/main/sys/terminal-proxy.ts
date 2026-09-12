@@ -1,5 +1,5 @@
 import { execFile } from 'node:child_process'
-import { mkdir, rename, unlink, writeFile } from 'node:fs/promises'
+import { mkdir, readFile, rename, unlink, writeFile } from 'node:fs/promises'
 import { homedir } from 'node:os'
 import { dirname, isAbsolute, join } from 'node:path'
 import { promisify } from 'node:util'
@@ -50,6 +50,13 @@ async function updateUserManagerEnvironment(values?: Record<string, string>): Pr
   }
 }
 
+function updateCurrentProcessEnvironment(values?: Record<string, string>): void {
+  for (const name of environmentNames) {
+    if (values) process.env[name] = values[name]
+    else delete process.env[name]
+  }
+}
+
 export async function enableTerminalProxy(
   host: string,
   port: number,
@@ -80,16 +87,25 @@ export async function enableTerminalProxy(
   await mkdir(dirname(configPath), { recursive: true })
   await writeFile(temporaryPath, content, { encoding: 'utf8', mode: 0o600 })
   await rename(temporaryPath, configPath)
+  updateCurrentProcessEnvironment(values)
   await updateUserManagerEnvironment(values)
 }
 
 export async function disableTerminalProxy(): Promise<void> {
   if (process.platform !== 'linux') return
 
+  const configPath = terminalProxyConfigPath()
+  let managedConfig = false
   try {
-    await unlink(terminalProxyConfigPath())
+    managedConfig = (await readFile(configPath, 'utf8')).startsWith('# Managed by KokoroBox.')
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error
   }
+  try {
+    await unlink(configPath)
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error
+  }
+  if (managedConfig) updateCurrentProcessEnvironment()
   await updateUserManagerEnvironment()
 }
