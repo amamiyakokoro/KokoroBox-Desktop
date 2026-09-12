@@ -8,13 +8,15 @@ Windows and Linux keep their existing update implementations.
 
 The migration deliberately separates first installation from subsequent updates:
 
-- The signed and notarized PKG remains the supported first-install and recovery package.
+- The signed and notarized DMG is the normal first-install package.
+- The signed and notarized PKG remains available for recovery, legacy migration, and managed
+  deployment.
 - A signed archive containing only `KokoroBox.app` is the Sparkle update payload.
 - An appcast is the authenticated update index. Stable and rolling channels use separate feeds.
 - The existing `latest.yml` remains available during migration and for non-macOS clients.
 
-The application archive must contain the same Developer ID-signed app bundle that was placed in
-the PKG. Both the archive and appcast are signed with Sparkle EdDSA keys. Apple code signing,
+The DMG and application archive contain the same Developer ID-signed app bundle used to build the
+PKG. Both the archive and appcast are signed with Sparkle EdDSA keys. Apple code signing,
 notarization and Sparkle signatures are independent checks; none replaces another.
 
 ## Version ordering
@@ -77,6 +79,10 @@ configurations that never selected a mode receive this default during normal con
 migration. An explicitly saved **Direct** selection is preserved and remains available in Core
 Settings. Windows and Linux retain their existing direct/elevated default.
 
+When a packaged copy is launched outside the system Applications folder, KokoroBox offers to move
+it there and relaunches the installed copy before configuration or service initialization begins.
+This prevents an `SMAppService` registration from referring to the temporary mounted DMG.
+
 If the service is not yet usable, the main window presents a focused setup guide. It distinguishes
 registration, macOS approval, service start and authenticated bootstrap instead of reporting one
 generic core-start error. PKG installation requests administrator authorization once. Normal
@@ -124,13 +130,14 @@ failure instead of silently running a privileged configuration without its requi
 The staged release sequence is:
 
 1. Build and sign the app and embedded System Extension once per architecture.
-2. Build the PKG from that exact app bundle.
-3. Notarize and staple the PKG and application update archive as required.
-4. Sign the update archive with Sparkle EdDSA.
-5. Generate a channel-specific appcast containing the exact version, bundle version, architecture,
+2. Build, notarize, staple, and verify the recovery PKG.
+3. Notarize and staple the app bundle, then build the signed DMG from that exact stapled app.
+4. Notarize, staple, and Gatekeeper-assess the final DMG.
+5. Sign the update archive with Sparkle EdDSA.
+6. Generate a channel-specific appcast containing the exact version, bundle version, architecture,
    size, URL and signature.
-6. Stage the PKG, update archive, appcast and verification receipts together. Publication remains
-   fail-closed if any expected artifact is missing or no longer matches its receipt.
+7. Stage the DMG, PKG, update archive, appcast and verification receipts together. Publication
+   remains fail-closed if any expected artifact is missing or no longer matches its receipt.
 
 The Sparkle private key is a release secret and is never written to the repository or application.
 The public key is injected into the application before code signing. Build jobs without release
@@ -166,9 +173,9 @@ install it through the existing notarized PKG path, while all subsequent updates
 App bundle through Sparkle. Keep validating that transition from the last PKG-only Intel and Apple
 Silicon releases before removing the legacy PKG update implementation.
 
-After the `SMAppService` transition is validated on clean and legacy installations, a notarized DMG
-can become the normal first-install experience. The PKG remains useful for explicit recovery and
-managed deployment; the Sparkle ZIP remains an update payload rather than a user-facing installer.
+The notarized DMG is now the normal first-install experience. The PKG remains useful for explicit
+recovery, legacy migration, and managed deployment; the Sparkle ZIP remains an update payload
+rather than a user-facing installer.
 
 ## Rollback
 

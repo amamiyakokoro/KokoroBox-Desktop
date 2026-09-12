@@ -37,6 +37,11 @@ export interface MacSigningReceipt {
   sha: string
   filename: string
   checksum: string
+  dmg: {
+    notarizationId: string
+    filename: string
+    checksum: string
+  }
   sparkle: {
     appNotarizationId: string
     releaseTag: string
@@ -99,12 +104,23 @@ export function validateMacReceipt(
     receipt.sha !== sha ||
     receipt.filename !== filename ||
     receipt.checksum !== checksum ||
+    !receipt.dmg ||
+    !/^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i.test(receipt.dmg.notarizationId) ||
+    receipt.dmg.filename !== filename.replace(/\.pkg$/, '.dmg') ||
+    !/^[0-9a-f]{64}$/.test(receipt.dmg.checksum) ||
     !receipt.sparkle ||
     !/^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i.test(receipt.sparkle.appNotarizationId) ||
     !/^[A-Za-z0-9+/]{43}=$/.test(receipt.sparkle.publicKey)
   ) {
     throw new Error('Missing or mismatched macOS signing/notarization verification receipt')
   }
+}
+
+export function macDmgArtifactName(version: string, arch: string): string {
+  if (!['x64', 'arm64'].includes(arch)) throw new Error('Unsupported macOS DMG architecture')
+  if (!/^\d+\.\d+\.\d+(?:-\d+|-rolling-[0-9a-f]{7})?$/.test(version))
+    throw new Error('Invalid artifact version')
+  return `kokorobox-desktop-macos-${version}-${arch}.dmg`
 }
 
 function validateMacSparkleArtifacts(
@@ -200,6 +216,9 @@ export function stageArtifact(
   let sparkleFiles: string[] = []
   if (target.os === 'macos-latest') {
     validateMacReceipt(signing, version, sha, filename, checksum)
+    const dmgPath = path.join(source, signing!.dmg.filename)
+    if (digest(dmgPath) !== signing!.dmg.checksum)
+      throw new Error('Missing or mismatched notarized macOS DMG')
     sparkleFiles = validateMacSparkleArtifacts(target, version, source, signing!)
   }
   const includesProcessRouterSbom = target.os === 'windows-latest' && target.arch === 'x64'
@@ -217,6 +236,8 @@ export function stageArtifact(
   }
   mkdirSync(output, { recursive: true })
   copyFileSync(path.join(source, filename), path.join(output, filename))
+  if (signing?.dmg)
+    copyFileSync(path.join(source, signing.dmg.filename), path.join(output, signing.dmg.filename))
   for (const sparkleFile of sparkleFiles) {
     copyFileSync(path.join(source, sparkleFile), path.join(output, sparkleFile))
   }
@@ -260,6 +281,11 @@ export function collectArtifacts(
     if (target.os === 'macos-latest')
       validateMacReceipt(manifest.signing, version, sha, filename, manifest.checksum)
     if (target.os === 'macos-latest') {
+      const dmgFilename = manifest.signing.dmg.filename
+      if (digest(path.join(source, dmgFilename)) !== manifest.signing.dmg.checksum)
+        throw new Error(`Checksum mismatch: ${dmgFilename}`)
+      filenames.push(dmgFilename)
+      expectedFiles.add(dmgFilename)
       const sparkleFiles = validateMacSparkleArtifacts(target, version, source, manifest.signing)
       if (JSON.stringify(manifest.sparkleFiles) !== JSON.stringify(sparkleFiles)) {
         throw new Error(`Sparkle artifact provenance mismatch: ${manifestName}`)
@@ -305,7 +331,7 @@ export function collectArtifacts(
       .map((filename) => `${digest(path.join(output, filename))}  ${filename}`)
       .join('\n') + '\n'
   writeFileSync(path.join(output, 'SHA256SUMS'), checksums)
-  const notes = `${changelog.trim()}\n\n## Windows privileges\n\nKokoroBox starts with the current user's privileges and requests administrator permission only for operations that require it. Current-user installation does not require UAC; all-users installation requests UAC when writing to Program Files.\n\n## Signing status\n\nmacOS PKG installers are Developer ID-signed, notarized by Apple, and include a stapled notarization ticket. Windows packages are not Authenticode-signed. SHA256SUMS provides integrity checks, not publisher authentication.\n`
+  const notes = `${changelog.trim()}\n\n## macOS downloads\n\nUse the DMG for a normal first installation: open it, then drag KokoroBox to Applications. The PKG is retained for recovery, legacy migration, and managed deployment.\n\n## Windows privileges\n\nKokoroBox starts with the current user's privileges and requests administrator permission only for operations that require it. Current-user installation does not require UAC; all-users installation requests UAC when writing to Program Files.\n\n## Signing status\n\nmacOS DMG and PKG installers are Developer ID-signed, notarized by Apple, and include stapled notarization tickets. Windows packages are not Authenticode-signed. SHA256SUMS provides integrity checks, not publisher authentication.\n`
   writeFileSync(path.join(output, 'changelog.md'), notes)
   writeFileSync(path.join(output, 'latest.yml'), stringify({ version, tag, changelog: notes }))
 }

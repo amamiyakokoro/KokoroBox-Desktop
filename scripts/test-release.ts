@@ -17,6 +17,7 @@ import { parse } from 'yaml'
 import {
   artifactName,
   collectArtifacts,
+  macDmgArtifactName,
   releaseTargets,
   stageArtifact,
   targetId
@@ -108,7 +109,7 @@ test('monthly releases bootstrap without a stable tag, skip unchanged/non-month-
   )
 })
 
-test('build matrix exactly matches the 10 required platform artifacts', () => {
+test('build matrix exactly matches the 10 required platform jobs', () => {
   const build = workflow('build')
   assert.deepEqual(
     build.jobs.build.strategy.matrix.include.map(
@@ -132,6 +133,7 @@ test('build matrix exactly matches the 10 required platform artifacts', () => {
     artifactName({ os: 'macos-latest', arch: 'arm64', format: 'pkg' }, '2.26.8'),
     'kokorobox-desktop-macos-2.26.8-arm64.pkg'
   )
+  assert.equal(macDmgArtifactName('2.26.8', 'arm64'), 'kokorobox-desktop-macos-2.26.8-arm64.dmg')
   assert.equal(
     artifactName(
       {
@@ -173,6 +175,17 @@ test('build matrix exactly matches the 10 required platform artifacts', () => {
   assert.equal(uploadSteps[0]['continue-on-error'], true)
   assert.equal(uploadSteps[1].if, "steps.upload_artifacts.outcome == 'failure'")
   assert.equal(uploadSteps[1].with.overwrite, true)
+})
+
+test('packaged macOS copies move to Applications before initialization', () => {
+  const source = readFileSync('src/main/index.ts', 'utf8')
+  assert.match(source, /app\.isPackaged/)
+  assert.match(source, /app\.isInApplicationsFolder\(\)/)
+  assert.match(source, /app\.moveToApplicationsFolder\(\)/)
+  assert.ok(
+    source.indexOf('await ensureMacOSApplicationsLocation()') <
+      source.indexOf('appConfig = await (initPromise ?? init())')
+  )
 })
 
 test('desktop uses the independently maintained KokoroBox native packages', () => {
@@ -325,6 +338,10 @@ function fixtures(fn: (source: string, output: string) => void, version = '2.26.
       const filename = artifactName(target, version)
       const sparkleReleaseTag = version.includes('-rolling-') ? 'rolling' : `v${version}`
       if (target.os === 'macos-latest') {
+        writeFileSync(
+          path.join(packages, macDmgArtifactName(version, target.arch)),
+          `dmg: ${target.arch}`
+        )
         const archiveFilename = sparkleUpdateArchiveName(version, target.arch)
         const appcastFilename = sparkleAppcastName(target.arch)
         const prefix = sparkleDownloadURLPrefix(sparkleReleaseTag)
@@ -346,6 +363,15 @@ function fixtures(fn: (source: string, output: string) => void, version = '2.26.
               checksum: createHash('sha256')
                 .update(readFileSync(path.join(packages, filename)))
                 .digest('hex'),
+              dmg: {
+                notarizationId: 'abcdef12-3456-7890-abcd-ef1234567890',
+                filename: macDmgArtifactName(version, target.arch),
+                checksum: createHash('sha256')
+                  .update(
+                    readFileSync(path.join(packages, macDmgArtifactName(version, target.arch)))
+                  )
+                  .digest('hex')
+              },
               sparkle: {
                 appNotarizationId: '87654321-4321-4321-4321-cba987654321',
                 releaseTag: sparkleReleaseTag,
@@ -393,10 +419,11 @@ test('collects complete builds, generates hashes and concise updater-compatible 
     assert.equal(latest.tag, 'v2.26.8')
     assert.doesNotMatch(latest.changelog, /## Downloads|releases\/download\//)
     assert.match(latest.changelog, /- A change/)
+    assert.match(latest.changelog, /Use the DMG for a normal first installation/)
     assert.match(latest.changelog, /Developer ID-signed, notarized by Apple/)
-    assert.equal(readdirSync(output).length, 17)
+    assert.equal(readdirSync(output).length, 19)
     const lines = readFileSync(path.join(output, 'SHA256SUMS'), 'utf8').trim().split('\n')
-    assert.equal(lines.length, 14)
+    assert.equal(lines.length, 16)
     for (const line of lines) {
       const [digest, name] = line.split('  ')
       assert.equal(
@@ -501,6 +528,17 @@ test('collection rejects macOS packages without their matching notarization rece
     assert.throws(
       () => collectArtifacts('2.26.8', 'v2.26.8', sha, source, output, 'notes'),
       /receipt/
+    )
+    assert.equal(existsSync(output), false)
+  })
+})
+
+test('collection rejects a modified macOS DMG', () => {
+  fixtures((source, output) => {
+    writeFileSync(path.join(source, macDmgArtifactName('2.26.8', 'arm64')), 'tampered')
+    assert.throws(
+      () => collectArtifacts('2.26.8', 'v2.26.8', sha, source, output, 'notes'),
+      /DMG|Checksum/
     )
     assert.equal(existsSync(output), false)
   })
@@ -693,7 +731,7 @@ test('CI macOS config loads through electron-builder and preserves PKG installat
   assert.equal(config.productName, 'KokoroBox')
   assert.equal(config.win.executableName, 'KokoroBox')
   assert.equal(config.nsis.shortcutName, 'KokoroBox')
-  assert.deepEqual(config.mac.target, ['pkg'])
+  assert.deepEqual(config.mac.target, ['dmg', 'pkg'])
   assert.equal(config.mac.identity, null)
   assert.equal(config.mac.notarize, false)
   assert.equal(
@@ -704,6 +742,8 @@ test('CI macOS config loads through electron-builder and preserves PKG installat
   assert.equal(config.pkg.installLocation, '/Applications')
   assert.equal(config.pkg.isRelocatable, false)
   assert.equal(config.pkg.allowCurrentUserHome, false)
+  assert.equal(config.dmg.sign, true)
+  assert.equal(config.dmg.writeUpdateInfo, false)
   assert.notEqual(config.pkg.scripts, null)
   for (const file of ['build/pkg-scripts/preinstall', 'build/pkg-scripts/postinstall'])
     assert.ok(existsSync(file))

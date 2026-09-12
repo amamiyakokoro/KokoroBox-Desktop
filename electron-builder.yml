@@ -54,6 +54,7 @@ nsis:
   include: build/installer.nsh
 mac:
   target:
+    - dmg
     - pkg
   hardenedRuntime: true
   entitlements: build/entitlements.mac.plist
@@ -87,6 +88,10 @@ pkg:
   # background:
   #   alignment: bottomleft
   #   file: build/background.png
+dmg:
+  artifactName: ${name}-macos-${version}-${arch}.${ext}
+  sign: true
+  writeUpdateInfo: false
 linux:
   executableName: kokorobox
   desktop:

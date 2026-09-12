@@ -1,7 +1,7 @@
 import { getLocale, resolveLocale, setLocale, tr } from '../shared/i18n'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { registerIpcMainHandlers } from './utils/ipc'
-import { app, shell, BrowserWindow, Menu, type IpcMainEvent } from 'electron'
+import { app, dialog, shell, BrowserWindow, Menu, type IpcMainEvent } from 'electron'
 import { getAppConfig } from './config'
 import { quitWithoutCore, startCore, stopCore } from './core/manager'
 import { stopNetworkDetection } from './core/network'
@@ -141,6 +141,42 @@ function runStartupTask(name: string, task: Promise<unknown>): void {
   task.catch((error) => {
     appendAppLog(`[App]: startup task ${name} failed, ${error}\n`).catch(() => {})
   })
+}
+
+async function ensureMacOSApplicationsLocation(): Promise<boolean> {
+  if (process.platform !== 'darwin' || !app.isPackaged || app.isInApplicationsFolder()) return true
+
+  const { response } = await dialog.showMessageBox({
+    type: 'info',
+    title: tr('将 KokoroBox 移到“应用程序”文件夹？'),
+    message: tr('将 KokoroBox 移到“应用程序”文件夹？'),
+    detail: tr('系统服务和网络扩展需要从“应用程序”文件夹运行。'),
+    buttons: [tr('移到“应用程序”'), tr('退出')],
+    defaultId: 0,
+    cancelId: 1,
+    noLink: true
+  })
+  if (response !== 0) {
+    app.quit()
+    return false
+  }
+
+  try {
+    // A successful move quits this process and relaunches the installed copy.
+    if (app.moveToApplicationsFolder()) return false
+  } catch (error) {
+    await dialog.showMessageBox({
+      type: 'error',
+      title: tr('无法移动 KokoroBox'),
+      message: tr('无法移动 KokoroBox'),
+      detail: error instanceof Error ? error.message : String(error),
+      buttons: [tr('退出')],
+      noLink: true
+    })
+  }
+
+  app.quit()
+  return false
 }
 
 const reportedEarlyTlsDisconnects = new WeakSet<Error>()
@@ -283,7 +319,9 @@ function startPrimaryInstance(initialDeepLinks: string[]): void {
   }
 
   useLinuxCustomRelaunch()
-  const initPromise = init()
+  // A packaged macOS app must settle in /Applications before configuration or
+  // SMAppService initialization begins. Other platforms retain the parallel startup path.
+  const initPromise = process.platform === 'darwin' && app.isPackaged ? undefined : init()
 
   initAppQuitLifecycle({
     getMainWindow: () => mainWindow,
@@ -298,6 +336,8 @@ function startPrimaryInstance(initialDeepLinks: string[]): void {
   runStartupTask(
     'application initialization',
     app.whenReady().then(async () => {
+      if (!(await ensureMacOSApplicationsLocation())) return
+
       // Set app user model id for windows
       electronApp.setAppUserModelId('com.amamiyakokoro.app')
       if (process.platform === 'win32') {
@@ -317,7 +357,7 @@ function startPrimaryInstance(initialDeepLinks: string[]): void {
       }
       let appConfig: AppConfig
       try {
-        appConfig = await initPromise
+        appConfig = await (initPromise ?? init())
       } catch (e) {
         void showNotification({ title: tr('应用初始化失败'), body: `${e}`, variant: 'danger' })
         app.quit()
