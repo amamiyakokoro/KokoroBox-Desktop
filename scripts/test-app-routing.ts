@@ -757,7 +757,7 @@ test('native build is pinned to the controlled KokoroBox ProxyBridge fork', () =
   assert.match(macBridge, /configuration\[@"dnsPort"\]/)
   assert.match(macBridge, /activationRequestForExtension:KBExtensionIdentifier/)
   assert.match(macBridge, /queue:dispatch_get_main_queue\(\)/)
-  assert.match(macBridge, /openURLs:@\[settingsURL\]/)
+  assert.match(macBridge, /openURLs:@\[KBSystemSettingsURL\(\)\]/)
   assert.match(macBridge, /withApplicationAtURL:applicationURL/)
   assert.match(macBridge, /com\.apple\.LoginItems-Settings\.extension\?ExtensionItems/)
   assert.doesNotMatch(macBridge, /@"x-help-action/)
@@ -868,6 +868,8 @@ test('macOS approval guidance returns promptly and remains visible across app re
 
   assert.match(bridge, /KBUserApprovalPendingDefaultsKey/)
   assert.match(bridge, /- \(void\)requestNeedsUserApproval[\s\S]*?\[self signalOnce\]/)
+  assert.match(bridge, /KBApprovalSettingsOpenedThisProcess\.exchange\(true\)/)
+  assert.match(bridge, /requestNeedsUserApproval[\s\S]*?KBOpenSystemSettingsAsync/)
   assert.match(bridge, /state = needsUserApproval \? @"starting" : KBApply/)
   assert.match(bridge, /queue:dispatch_get_main_queue\(\)/)
   assert.match(bridge, /KBOpenSystemSettings\(error\)/)

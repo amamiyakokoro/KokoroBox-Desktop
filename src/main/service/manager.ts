@@ -186,6 +186,22 @@ function serviceCommandErrorMessage(error: unknown): string {
   return detail || message || (error instanceof Error ? error.message : String(error))
 }
 
+function isServiceAuthenticationStateError(error: unknown): boolean {
+  if (
+    error instanceof ServiceAPIError &&
+    error.status !== undefined &&
+    [401, 403, 409, 503].includes(error.status)
+  ) {
+    return true
+  }
+  const message = serviceCommandErrorMessage(error).toLowerCase()
+  return (
+    message.includes('key id is not registered') ||
+    message.includes('service is not initialized') ||
+    message.includes('authentication is already initialized')
+  )
+}
+
 async function getAuthorizedPrincipalArgs(): Promise<string[]> {
   if (process.platform === 'win32') {
     const sid = getCurrentUserSid()
@@ -269,7 +285,7 @@ async function installMacOSService(): Promise<void> {
   return macOSServiceRecoveryPromise
 }
 
-export async function initService(): Promise<void> {
+export async function initService(allowInteractiveRecovery = false): Promise<void> {
   const currentKeyManager = await initKeyManager()
   const secret = await ensurePersistedServiceAuth(currentKeyManager)
   const execPath = servicePath()
@@ -284,7 +300,19 @@ export async function initService(): Promise<void> {
         } catch (error) {
           if (error instanceof ServiceAPIError && error.status === 409) {
             if (await testServiceConnection()) break
-            throw new Error('The service is initialized for a different client key')
+            if (!allowInteractiveRecovery) {
+              throw new Error('The service is initialized for a different client key')
+            }
+            const principalArgs = await getAuthorizedPrincipalArgs()
+            await execWithElevation(execPath, [
+              'service',
+              'init',
+              '--public-key',
+              secret.publicKey,
+              ...principalArgs
+            ])
+            await waitForServiceReady()
+            return
           }
           if (!isServiceConnectionError(error) || Date.now() - startedAt >= 15000) {
             throw error
@@ -464,14 +492,11 @@ export async function serviceStatus(): Promise<
       await test()
       return 'running'
     } catch (error) {
-      if (
-        error instanceof ServiceAPIError &&
-        error.status !== undefined &&
-        [401, 403, 409, 503].includes(error.status)
-      ) {
-        return 'need-init'
-      }
-      return commandState === 'running' ? 'running' : 'unknown'
+      if (isServiceAuthenticationStateError(error)) return 'need-init'
+      // A process-level status of running only proves that launchd/SCM has a
+      // live service process. Never report it as usable after the authenticated
+      // API probe failed.
+      return 'unknown'
     }
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : String(error)
