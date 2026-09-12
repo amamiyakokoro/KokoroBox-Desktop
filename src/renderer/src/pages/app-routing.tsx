@@ -54,93 +54,107 @@ function statusColor(
 }
 
 function statusLabel(status?: AppRoutingStatus): string {
-  if (!status) return tr('正在加载')
+  if (!status) return tr('Loading')
   const labels: Record<AppRoutingRuntimeState, string> = {
-    unsupported: tr('不受支持'),
-    disabled: tr('已停用'),
-    starting: tr('正在启动'),
-    running: tr('运行中'),
-    degraded: tr('安全阻断中'),
-    error: tr('错误')
+    unsupported: tr('Unsupported'),
+    disabled: tr('Disabled'),
+    starting: tr('Starting'),
+    running: tr('Running'),
+    degraded: tr('Safely blocked'),
+    error: tr('Error')
   }
   return labels[status.state]
 }
 
 function statusMessage(message?: string, protectedApplicationCount = 0): string | undefined {
   if (message === '添加或启用规则以启动应用分流') {
-    return tr('添加或启用规则以启动应用分流')
+    return tr('Add or enable a rule to start application routing')
   }
   if (message === 'Windows 封包拦截组件未安装') {
-    return tr('Windows 封包拦截组件未安装')
+    return tr('The Windows packet interception sidecar is not installed')
   }
   if (message === 'Windows 封包拦截组件缺失或已损坏') {
-    return tr('Windows 封包拦截组件缺失或已损坏')
+    return tr('The Windows packet interception component is missing or corrupted')
   }
   if (
     message?.includes('application-routing firewall') ||
     message?.includes('Windows 应用分流防火墙')
   ) {
-    return tr('Windows 应用分流防火墙规则缺失或无法生效，router 未启动')
+    return tr(
+      'The Windows application-routing firewall rules are missing or ineffective, so the router was not started'
+    )
   }
   if (message === '请先启用本机 Mihomo SOCKS 或 mixed 监听端口') {
-    return tr('请先启用本机 Mihomo SOCKS 或 mixed 监听端口')
+    return tr('Enable a local Mihomo SOCKS or mixed listener first')
   }
   if (message === 'Mihomo 不可用；匹配 Proxy 的流量已阻断（不会直连）') {
-    return tr('Mihomo 不可用；匹配 Proxy 的流量已阻断（不会直连）')
+    return tr('Mihomo is unavailable; matching Proxy traffic is blocked (no direct fallback)')
   }
   if (message === '代理核心不可用，受保护应用的网络连接已封锁') {
     return tr(
-      '应用分流代理入口不可用，已安全阻断 {0} 个受保护应用程序的代理连接，避免回退为直连。',
+      'The application-routing proxy endpoint is unavailable. Proxy connections from {0} protected applications are blocked to prevent direct fallback.',
       [protectedApplicationCount]
     )
   }
   if (message === '应用分流 MVP 需要以管理员模式运行 KokoroBox') {
-    return tr('应用分流 MVP 需要以管理员模式运行 KokoroBox')
+    return tr('The application routing MVP requires KokoroBox to run as administrator')
   }
   if (message === '当前 KokoroBox Service 不支持应用分流，请更新或重新安装服务') {
-    return tr('当前 KokoroBox Service 不支持应用分流，请更新或重新安装服务')
+    return tr(
+      'The installed KokoroBox Service does not support application routing. Update or reinstall the service.'
+    )
   }
   if (message === 'KokoroBox Service 认证已失效，请在内核设置中重置认证') {
-    return tr('KokoroBox Service 认证已失效，请在内核设置中重置认证')
+    return tr(
+      'KokoroBox Service authentication is no longer valid. Reset authentication in Core Settings.'
+    )
   }
   if (
     message === 'KokoroBox Service 尚未初始化，请初始化服务后重试' ||
     message?.toLowerCase().includes('service is not initialized')
   ) {
-    return tr('KokoroBox Service 尚未初始化，请初始化服务后重试')
+    return tr('KokoroBox Service is not initialized. Initialize the service and try again.')
   }
   if (message === 'Windows 应用分流需要已安装、初始化并运行 KokoroBox Service') {
-    return tr('Windows 应用分流需要已安装、初始化并运行 KokoroBox Service')
+    return tr(
+      'Windows application routing requires KokoroBox Service to be installed, initialized, and running.'
+    )
   }
   if (message === 'Linux 应用分流需要已安装并运行 KokoroBox Service') {
-    return tr('Linux 应用分流需要已安装并运行 KokoroBox Service')
+    return tr('Linux application routing requires KokoroBox Service to be installed and running.')
   }
   if (message === '系统不支持可用的 cgroup v2 或 cgroup v1 net_cls 应用分流后端') {
-    return tr('系统不支持可用的 cgroup v2 或 cgroup v1 net_cls 应用分流后端')
+    return tr(
+      'This system has neither a usable cgroup v2 nor cgroup v1 net_cls application-routing backend.'
+    )
   }
   if (message === '封包拦截组件启动失败') {
-    return tr('封包拦截组件启动失败')
+    return tr('The packet interception sidecar failed to start')
   }
   if (message === '封包拦截组件意外停止，正在重试') {
-    return tr('封包拦截组件意外停止，正在重试')
+    return tr('The packet interception sidecar stopped unexpectedly; retrying')
   }
   if (message === '请在系统设置中允许 KokoroBox 网络扩展') {
-    return tr('请在系统设置中允许 KokoroBox 网络扩展')
+    return tr('Allow the KokoroBox network extension in System Settings.')
   }
   if (message === 'macOS application-routing bridge is not installed') {
-    return tr('macOS 应用分流组件未安装')
+    return tr('The macOS application-routing bridge is not installed')
   }
   if (message === 'macOS application-routing system extension is not installed') {
-    return tr('macOS 系统扩展未安装')
+    return tr('The macOS system extension is not installed')
   }
   if (message === 'The network extension rejected the application-routing policy') {
-    return tr('网络扩展拒绝了应用分流规则。请检查规则后重试。')
+    return tr(
+      'The Network Extension rejected the application-routing rules. Check the rules and try again.'
+    )
   }
   if (message === 'The network extension did not acknowledge the application-routing policy') {
-    return tr('网络扩展未确认规则更新，无法确认当前分流规则已生效。请重试。')
+    return tr(
+      'The Network Extension did not acknowledge the update. The current routing rules could not be confirmed. Please retry.'
+    )
   }
   if (message === 'macOS 应用分流需要 macOS 13 或更新版本') {
-    return tr('macOS 应用分流需要 macOS 13 或更新版本')
+    return tr('macOS application routing requires macOS 13 or later')
   }
   return message
 }
@@ -263,7 +277,7 @@ const AppRouting: React.FC = () => {
     try {
       await repairAppRoutingFirewall()
       await refresh()
-      notify(tr('应用分流防火墙修复成功'))
+      notify(tr('Application routing firewall repaired'))
     } catch (error) {
       notify(error, { variant: 'danger' })
     } finally {
@@ -282,7 +296,7 @@ const AppRouting: React.FC = () => {
 
   return (
     <BasePage
-      title={tr('应用分流')}
+      title={tr('Application routing')}
       contentClassName="no-scrollbar"
       header={
         <Button
@@ -290,7 +304,7 @@ const AppRouting: React.FC = () => {
           isIconOnly
           className="app-nodrag"
           variant="light"
-          aria-label={tr('应用分流设置')}
+          aria-label={tr('Application routing settings')}
           onPress={() => {
             setIsSettingDrawerOpen(true)
             setSettingDrawerReopenSignal((signal) => signal + 1)
@@ -334,9 +348,9 @@ const AppRouting: React.FC = () => {
       )}
       {deletingGroupId && (
         <ConfirmModal
-          title={tr('删除规则组')}
-          description={tr('删除规则组会同时删除组内的所有应用程序规则。')}
-          confirmText={tr('删除')}
+          title={tr('Delete rule group')}
+          description={tr('Deleting a rule group also deletes every application rule inside it.')}
+          confirmText={tr('Delete')}
           onConfirm={() => deleteGroup(deletingGroupId)}
           onChange={(open) => !open && setDeletingGroupId(undefined)}
         />
@@ -345,13 +359,13 @@ const AppRouting: React.FC = () => {
         <div className="flex items-start justify-between gap-4">
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="text-xl font-semibold">{tr('应用分流')}</h2>
+              <h2 className="text-xl font-semibold">{tr('Application routing')}</h2>
               <Chip size="sm" color={statusColor(status)} variant="flat">
                 {statusLabel(status)}
               </Chip>
             </div>
             <p className="mt-1 text-sm text-foreground-500">
-              {tr('无需系统代理或 TUN，将指定应用程序交给本机 Mihomo 处理。')}
+              {tr('Route selected applications through local Mihomo without system proxy or TUN.')}
             </p>
             {currentStatusMessage && !needsMacApproval && (
               <p
@@ -365,7 +379,7 @@ const AppRouting: React.FC = () => {
               config?.enabled &&
               ['starting', 'error'].includes(status?.state ?? '') && (
                 <Button className="mt-2" size="sm" variant="flat" onPress={() => void refresh()}>
-                  {tr('重试')}
+                  {tr('Retry')}
                 </Button>
               )}
             {needsWindowsServicePreparation && (
@@ -379,18 +393,18 @@ const AppRouting: React.FC = () => {
                 isDisabled={saving}
                 onPress={() => void prepareWindowsService()}
               >
-                {tr('初始化服务并重试')}
+                {tr('Initialize service and retry')}
               </Button>
             )}
             {config?.enabled && (
               <p className="mt-2 text-sm text-foreground-500">
-                {tr('上游')}：KokoroBox / 127.0.0.1:{displayedProxyPort} ({displayedProxyProtocol})
-                {backendLabel ? ` · ${backendLabel}` : ''}
+                {tr('Upstream')}：KokoroBox / 127.0.0.1:{displayedProxyPort} (
+                {displayedProxyProtocol}){backendLabel ? ` · ${backendLabel}` : ''}
               </p>
             )}
           </div>
           <Switch
-            aria-label={tr('应用分流')}
+            aria-label={tr('Application routing')}
             isSelected={config?.enabled ?? false}
             isDisabled={!supported || !config || saving || preparingService}
             onValueChange={(enabled) => void setRoutingEnabled(enabled)}
@@ -407,16 +421,24 @@ const AppRouting: React.FC = () => {
             <CardBody className="gap-3 p-5">
               <div>
                 <h3 className="font-semibold text-warning-900 dark:text-warning-200">
-                  {tr('需要批准网络扩展')}
+                  {tr('Network Extension approval required')}
                 </h3>
                 <p className="mt-1 text-sm text-warning-800 dark:text-warning-300">
-                  {tr('macOS 需要你的批准才能开始应用分流。')}
+                  {tr('macOS needs your approval before application routing can start.')}
                 </p>
               </div>
               <ol className="list-decimal space-y-1 pl-5 text-sm text-warning-800 dark:text-warning-300">
-                <li>{tr('在系统设置中前往“通用 → 登录项与扩展 → 网络扩展”。')}</li>
-                <li>{tr('启用 KokoroBox，然后完成 macOS 的确认提示。')}</li>
-                <li>{tr('返回 KokoroBox；应用分流会自动继续启动。')}</li>
+                <li>
+                  {tr(
+                    'In System Settings, go to General → Login Items & Extensions → Network Extensions.'
+                  )}
+                </li>
+                <li>{tr('Enable KokoroBox, then complete the macOS confirmation prompt.')}</li>
+                <li>
+                  {tr(
+                    'Return to KokoroBox; application routing will continue starting automatically.'
+                  )}
+                </li>
               </ol>
               <div className="flex flex-wrap gap-2">
                 <Button
@@ -426,7 +448,7 @@ const AppRouting: React.FC = () => {
                   isLoading={openingSettings}
                   onPress={() => void openApprovalSettings()}
                 >
-                  {tr('打开系统设置并请求批准')}
+                  {tr('Open System Settings and Request Approval')}
                 </Button>
                 <Button
                   variant="flat"
@@ -434,7 +456,7 @@ const AppRouting: React.FC = () => {
                   isDisabled={saving}
                   onPress={() => void refresh()}
                 >
-                  {tr('我已启用，立即检查')}
+                  {tr('I enabled it — check now')}
                 </Button>
               </div>
             </CardBody>
@@ -442,13 +464,15 @@ const AppRouting: React.FC = () => {
         )}
 
         <div>
-          <h3 className="font-semibold">{tr('应用程序规则')}</h3>
+          <h3 className="font-semibold">{tr('Application rules')}</h3>
           <p className="text-sm text-foreground-500">
             {isMac
-              ? tr('规则按从上到下的顺序匹配；可使用进程名称或应用签名标识。')
+              ? tr(
+                  'Rules match from top to bottom by process name or application signing identifier.'
+                )
               : isLinux
-                ? tr('规则按从上到下的顺序匹配；可使用可执行文件路径或进程名称。')
-                : tr('规则按从上到下的顺序匹配；支持文件名或含 * 的完整路径。')}
+                ? tr('Rules match from top to bottom by executable path or process name.')
+                : tr('Rules match from top to bottom. Use a filename or a full path containing *.')}
           </p>
         </div>
 
@@ -465,7 +489,7 @@ const AppRouting: React.FC = () => {
             {isMac && (
               <Select
                 size="sm"
-                label={tr('匹配方式')}
+                label={tr('Match by')}
                 disallowEmptySelection
                 isDisabled={!supported || !config || saving}
                 selectedKeys={new Set([macIdentifierKind])}
@@ -473,14 +497,14 @@ const AppRouting: React.FC = () => {
                   setMacIdentifierKind(keys.currentKey as AppRoutingIdentifierKind)
                 }
               >
-                <SelectItem key="macos-process-name">{tr('进程名称')}</SelectItem>
-                <SelectItem key="macos-signing-identifier">{tr('签名标识')}</SelectItem>
+                <SelectItem key="macos-process-name">{tr('Process name')}</SelectItem>
+                <SelectItem key="macos-signing-identifier">{tr('Signing identifier')}</SelectItem>
               </Select>
             )}
             {isLinux && (
               <Select
                 size="sm"
-                label={tr('匹配方式')}
+                label={tr('Match by')}
                 disallowEmptySelection
                 isDisabled={!supported || !config || saving}
                 selectedKeys={new Set([linuxIdentifierKind])}
@@ -488,8 +512,8 @@ const AppRouting: React.FC = () => {
                   setLinuxIdentifierKind(keys.currentKey as AppRoutingIdentifierKind)
                 }
               >
-                <SelectItem key="linux-executable">{tr('可执行文件路径')}</SelectItem>
-                <SelectItem key="linux-process-name">{tr('进程名称')}</SelectItem>
+                <SelectItem key="linux-executable">{tr('Executable path')}</SelectItem>
+                <SelectItem key="linux-process-name">{tr('Process name')}</SelectItem>
               </Select>
             )}
             <Input
@@ -497,13 +521,13 @@ const AppRouting: React.FC = () => {
               label={
                 isMac
                   ? macIdentifierKind === 'macos-process-name'
-                    ? tr('进程名称')
-                    : tr('签名标识')
+                    ? tr('Process name')
+                    : tr('Signing identifier')
                   : isLinux
                     ? linuxIdentifierKind === 'linux-process-name'
-                      ? tr('进程名称')
-                      : tr('可执行文件路径')
-                    : tr('程序匹配')
+                      ? tr('Process name')
+                      : tr('Executable path')
+                    : tr('Process pattern')
               }
               placeholder={
                 isMac
@@ -531,9 +555,9 @@ const AppRouting: React.FC = () => {
                 isDisabled={!supported || !config || saving || !processPattern.trim()}
                 onPress={() => void submitPattern()}
               >
-                {tr('新增匹配规则')}
+                {tr('Add pattern rule')}
               </Button>
-              <span className="text-sm text-foreground-500">{tr('或')}</span>
+              <span className="text-sm text-foreground-500">{tr('or')}</span>
               <Button
                 className="min-w-0 flex-1 shrink-0 sm:flex-none"
                 variant="flat"
@@ -543,44 +567,48 @@ const AppRouting: React.FC = () => {
                   void addApplications(undefined, isLinux ? linuxIdentifierKind : undefined)
                 }
               >
-                {tr('选择应用程序')}
+                {tr('Select applications')}
               </Button>
             </div>
           </div>
           <p className="px-1 text-xs text-foreground-500">
             {isMac
               ? macIdentifierKind === 'macos-process-name'
-                ? tr('例如：codex 或 Codex Helper*')
-                : tr('例如：com.openai.chat 或 com.openai.chat*')
+                ? tr('For example: codex or Codex Helper*')
+                : tr('For example: com.openai.chat or com.openai.chat*')
               : isLinux
                 ? linuxIdentifierKind === 'linux-process-name'
-                  ? tr('例如：codex；所有同名可执行程序都会匹配。')
-                  : tr('例如：/usr/bin/firefox 或 /opt/example/example')
-                : tr('例如：ChatGPT.exe、ChatGPT*.exe 或 C:\\Program Files\\*\\ChatGPT.exe')}
+                  ? tr('For example: codex. Every executable with that name will match.')
+                  : tr('For example: /usr/bin/firefox or /opt/example/example')
+                : tr(
+                    'For example: ChatGPT.exe, ChatGPT*.exe, or C:\\Program Files\\*\\ChatGPT.exe'
+                  )}
           </p>
         </div>
 
         {!supported ? (
           <Card shadow="sm">
             <CardBody className="p-5 text-sm text-foreground-500">
-              {tr('应用分流支持 Windows 10/11 x64、macOS 13 或更新版本及 Linux x64/arm64。')}
+              {tr(
+                'Application routing supports Windows 10/11 x64, macOS 13 or later, and Linux x64/arm64.'
+              )}
             </CardBody>
           </Card>
         ) : !isWindows && config?.rules.length === 0 ? (
           <Card shadow="sm">
             <CardBody className="items-center gap-2 p-8 text-center">
-              <p className="font-medium">{tr('尚未添加应用程序')}</p>
+              <p className="font-medium">{tr('No applications added')}</p>
               <p className="text-sm text-foreground-500">
                 {isMac
                   ? tr(
-                      '输入进程名称或签名标识，或选择一个或多个 .app，然后设定 Proxy、Direct 或 Block。'
+                      'Enter a process name or signing identifier, or select one or more .app bundles, then choose Proxy, Direct, or Block.'
                     )
                   : isLinux
                     ? tr(
-                        '输入可执行文件路径或进程名称，或选择一个或多个程序，然后设定 Proxy、Direct 或 Block。'
+                        'Enter an executable path or process name, or select one or more applications, then choose Proxy, Direct, or Block.'
                       )
                     : tr(
-                        '输入绝对可执行文件路径，或选择一个或多个程序，然后设定 Proxy、Direct 或 Block。'
+                        'Enter an absolute executable path or select one or more applications, then choose Proxy, Direct, or Block.'
                       )}
               </p>
             </CardBody>
@@ -592,20 +620,20 @@ const AppRouting: React.FC = () => {
                 <div className="flex items-end justify-between gap-3 px-1">
                   <div>
                     <div className="flex items-center gap-2">
-                      <h4 className="text-sm font-semibold">{tr('单独规则')}</h4>
+                      <h4 className="text-sm font-semibold">{tr('Individual rules')}</h4>
                       <Chip size="sm" variant="flat">
                         {ungroupedRules.length}
                       </Chip>
                     </div>
                     <p className="mt-0.5 text-xs text-foreground-500">
-                      {tr('不属于规则组的应用程序。')}
+                      {tr('Applications that do not belong to a rule group.')}
                     </p>
                   </div>
                 </div>
               )}
               {ungroupedRules.length === 0 && isWindows ? (
                 <div className="rounded-xl border border-dashed border-default-200 px-4 py-5 text-center text-sm text-foreground-500">
-                  {tr('暂无单独规则')}
+                  {tr('No individual rules')}
                 </div>
               ) : (
                 ungroupedRules.map((rule, index) => (
@@ -631,13 +659,13 @@ const AppRouting: React.FC = () => {
                   <div className="flex flex-wrap items-end justify-between gap-3 px-1">
                     <div>
                       <div className="flex items-center gap-2">
-                        <h4 className="text-sm font-semibold">{tr('规则组')}</h4>
+                        <h4 className="text-sm font-semibold">{tr('Rule groups')}</h4>
                         <Chip size="sm" variant="flat">
                           {config?.groups?.length ?? 0}
                         </Chip>
                       </div>
                       <p className="mt-0.5 text-xs text-foreground-500">
-                        {tr('统一管理一组应用程序，规则组默认折叠显示。')}
+                        {tr('Manage applications together. Rule groups are collapsed by default.')}
                       </p>
                     </div>
                     <div className="flex flex-wrap gap-2">
@@ -648,7 +676,7 @@ const AppRouting: React.FC = () => {
                         isDisabled={!config || saving}
                         onPress={() => setGroupEditor({ name: '' })}
                       >
-                        {tr('新建规则组')}
+                        {tr('New rule group')}
                       </Button>
                       <Button
                         size="sm"
@@ -657,16 +685,18 @@ const AppRouting: React.FC = () => {
                         isDisabled={!config || saving}
                         onPress={() => void scanDirectory()}
                       >
-                        {tr('扫描文件夹')}
+                        {tr('Scan folder')}
                       </Button>
                     </div>
                   </div>
 
                   {(config?.groups?.length ?? 0) === 0 ? (
                     <div className="rounded-xl border border-dashed border-default-200 px-4 py-6 text-center">
-                      <p className="text-sm font-medium">{tr('暂无规则组')}</p>
+                      <p className="text-sm font-medium">{tr('No rule groups')}</p>
                       <p className="mt-1 text-xs text-foreground-500">
-                        {tr('手动创建空规则组，或扫描文件夹并自动添加其中的应用程序。')}
+                        {tr(
+                          'Create an empty rule group or scan a folder to add its applications automatically.'
+                        )}
                       </p>
                     </div>
                   ) : (
@@ -694,11 +724,11 @@ const AppRouting: React.FC = () => {
                                   className="block truncate text-xs text-foreground-500"
                                   title={group.sourceDirectory}
                                 >
-                                  {group.sourceDirectory ?? tr('手动规则组')}
+                                  {group.sourceDirectory ?? tr('Manual rule group')}
                                 </span>
                               </span>
                               <Chip size="sm" variant="flat" className="shrink-0">
-                                {tr('{0} 个应用程序', [rules.length])}
+                                {tr('{0} applications', [rules.length])}
                               </Chip>
                             </button>
                             <Dropdown placement="bottom-end">
@@ -707,14 +737,14 @@ const AppRouting: React.FC = () => {
                                   isIconOnly
                                   size="sm"
                                   variant="light"
-                                  aria-label={tr('规则组操作')}
+                                  aria-label={tr('Rule group actions')}
                                   isDisabled={saving}
                                 >
                                   <MdMoreHoriz className="text-lg" />
                                 </Button>
                               </DropdownTrigger>
                               <DropdownMenu
-                                aria-label={tr('规则组操作')}
+                                aria-label={tr('Rule group actions')}
                                 onAction={(key) => {
                                   if (key === 'add') void addApplications(group.id)
                                   if (key === 'scan') void scanDirectory(group.id)
@@ -724,16 +754,16 @@ const AppRouting: React.FC = () => {
                                 }}
                               >
                                 <DropdownItem key="add" startContent={<MdAdd />}>
-                                  {tr('添加应用程序')}
+                                  {tr('Add applications')}
                                 </DropdownItem>
                                 <DropdownItem key="scan" startContent={<MdRefresh />}>
-                                  {group.sourceDirectory ? tr('重新扫描文件夹') : tr('扫描文件夹')}
+                                  {group.sourceDirectory ? tr('Rescan folder') : tr('Scan folder')}
                                 </DropdownItem>
                                 <DropdownItem
                                   key="rename"
                                   startContent={<MdDriveFileRenameOutline />}
                                 >
-                                  {tr('重命名规则组')}
+                                  {tr('Rename rule group')}
                                 </DropdownItem>
                                 <DropdownItem
                                   key="delete"
@@ -741,13 +771,13 @@ const AppRouting: React.FC = () => {
                                   className="text-danger"
                                   startContent={<MdDeleteOutline />}
                                 >
-                                  {tr('删除规则组')}
+                                  {tr('Delete rule group')}
                                 </DropdownItem>
                               </DropdownMenu>
                             </Dropdown>
                             <Switch
                               size="sm"
-                              aria-label={tr('启用规则组')}
+                              aria-label={tr('Enable rule group')}
                               isSelected={group.enabled}
                               isDisabled={saving}
                               onValueChange={(enabled) => updateGroup(group.id, { enabled })}
@@ -759,7 +789,7 @@ const AppRouting: React.FC = () => {
                             >
                               {rules.length === 0 ? (
                                 <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-dashed border-default-200 px-4 py-3 text-sm text-foreground-500">
-                                  <span>{tr('规则组中暂无应用程序')}</span>
+                                  <span>{tr('No applications in this rule group')}</span>
                                   <Button
                                     size="sm"
                                     variant="flat"
@@ -767,7 +797,7 @@ const AppRouting: React.FC = () => {
                                     isDisabled={saving}
                                     onPress={() => void addApplications(group.id)}
                                   >
-                                    {tr('添加应用程序')}
+                                    {tr('Add applications')}
                                   </Button>
                                 </div>
                               ) : (
@@ -798,10 +828,10 @@ const AppRouting: React.FC = () => {
         )}
 
         <div className="rounded-xl bg-warning-50 p-4 text-sm text-warning-800 dark:bg-warning-900/20 dark:text-warning-300">
-          <div className="font-semibold">{tr('代理失效保护')}</div>
+          <div className="font-semibold">{tr('Proxy failure protection')}</div>
           <p className="mt-1">
             {tr(
-              '应用分流代理入口不可用时，Proxy 规则的连接会被阻断，避免意外回退为直连；Direct 规则仍保持直连。'
+              'If the application-routing proxy endpoint is unavailable, Proxy connections are blocked to prevent accidental direct fallback. Direct rules remain direct.'
             )}
           </p>
           {status?.proxyPort && (

@@ -44,7 +44,7 @@ const ConnectionGroupHeaderComponent: React.FC<Props> = ({
   const title = useMemo(() => {
     if (displayName) return displayName
     const name = label.replace(/\.exe$/, '')
-    return name || tr('未知进程')
+    return name || tr('Unknown process')
   }, [displayName, label])
 
   const uploadTraffic = useMemo(() => calcTraffic(upload), [upload])
@@ -94,7 +94,11 @@ const ConnectionGroupHeaderComponent: React.FC<Props> = ({
                   size="sm"
                   isIconOnly
                   color={isClosed ? 'danger' : 'warning'}
-                  aria-label={isClosed ? tr('清空该进程全部记录') : tr('关闭该进程全部连接')}
+                  aria-label={
+                    isClosed
+                      ? tr('Clear all records for this process')
+                      : tr('Close all connections for this process')
+                  }
                   onPress={() => onCloseAll(groupKey)}
                 >
                   {isClosed ? <CgTrash className="text-lg" /> : <CgClose className="text-lg" />}

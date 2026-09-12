@@ -128,10 +128,10 @@ const Profiles: React.FC = () => {
             const content = await readTextFile(path)
             await addProfileItem({ name: file.name, type: 'local', file: content })
           } catch (e) {
-            notify(tr('文件导入失败') + e, { variant: 'danger' })
+            notify(tr('File import failed') + e, { variant: 'danger' })
           }
         } else {
-          notify(tr('不支持的文件类型'), { variant: 'danger' })
+          notify(tr('Unsupported file type'), { variant: 'danger' })
         }
       } else {
         const droppedUrl =
@@ -153,7 +153,7 @@ const Profiles: React.FC = () => {
           })
           setShowEditModal(true)
         } catch {
-          notify(tr('未检测到有效的订阅链接'), { variant: 'danger' })
+          notify(tr('No valid subscription URL found'), { variant: 'danger' })
         }
       }
       setFileOver(false)
@@ -172,7 +172,7 @@ const Profiles: React.FC = () => {
   return (
     <BasePage
       ref={pageRef}
-      title={tr('订阅管理')}
+      title={tr('Subscriptions')}
       contentClassName="no-scrollbar"
       header={
         <>
@@ -260,7 +260,7 @@ const Profiles: React.FC = () => {
                   checked={useProxy}
                   onValueChange={setUseProxy}
                 >
-                  {tr('代理')}
+                  {tr('Proxy')}
                 </Checkbox>
               </>
             }
@@ -274,7 +274,7 @@ const Profiles: React.FC = () => {
             isLoading={importing}
             onPress={() => handleImport(url)}
           >
-            {tr('导入')}
+            {tr('Import')}
           </Button>
           <Dropdown>
             <DropdownTrigger>
@@ -301,7 +301,7 @@ const Profiles: React.FC = () => {
                   case 'new': {
                     {
                       await addProfileItem({
-                        name: tr('新配置'),
+                        name: tr('New configuration'),
                         type: 'local',
                         file: 'proxies: []\nproxy-groups: []\nrules: []'
                       })
@@ -329,11 +329,11 @@ const Profiles: React.FC = () => {
               }}
             >
               <DropdownItem key="kokoro" showDivider>
-                {tr('登录 Kokoro 获取订阅')}
+                {tr('Sign in to Kokoro for subscriptions')}
               </DropdownItem>
-              <DropdownItem key="open">{tr('打开本地配置')}</DropdownItem>
-              <DropdownItem key="new">{tr('新建本地配置')}</DropdownItem>
-              <DropdownItem key="import">{tr('导入远程配置')}</DropdownItem>
+              <DropdownItem key="open">{tr('Open local configuration')}</DropdownItem>
+              <DropdownItem key="new">{tr('New local configuration')}</DropdownItem>
+              <DropdownItem key="import">{tr('Import remote configuration')}</DropdownItem>
             </DropdownMenu>
           </Dropdown>
         </div>

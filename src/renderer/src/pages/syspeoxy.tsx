@@ -116,7 +116,7 @@ const Sysproxy: React.FC = () => {
       return values
     }
 
-    notify(tr('服务不可用，已切换到执行命令模式'))
+    notify(tr('Service unavailable. Switched to command execution mode'))
     const nextValues = {
       ...values,
       settingMode: 'exec' as const,
@@ -147,12 +147,12 @@ const Sysproxy: React.FC = () => {
 
   return (
     <BasePage
-      title={tr('系统代理设置')}
+      title={tr('System proxy settings')}
       contentClassName="no-scrollbar"
       header={
         changed && (
           <Button color="primary" className="app-nodrag" size="sm" onPress={onSave}>
-            {tr('保存')}
+            {tr('Save')}
           </Button>
         )
       }
@@ -181,41 +181,41 @@ const Sysproxy: React.FC = () => {
         />
       )}
       <SettingCard className="sysproxy-settings">
-        <SettingItem compatKey="legacy" title={tr('代理主机')} divider>
+        <SettingItem compatKey="legacy" title={tr('Proxy host')} divider>
           <Input
             size="sm"
             className="w-[50%]"
             value={values.host}
-            placeholder={tr('默认 127.0.0.1 若无特殊需求请勿修改')}
+            placeholder={tr('Default: 127.0.0.1. Change only if needed')}
             onValueChange={(v) => {
               setValues({ ...values, host: v })
             }}
           />
         </SettingItem>
-        <SettingItem compatKey="legacy" title={tr('代理模式')} divider>
+        <SettingItem compatKey="legacy" title={tr('Proxy mode')} divider>
           <Tabs
             size="sm"
             color="primary"
             selectedKey={values.mode}
             onSelectionChange={(key: Key) => setValues({ ...values, mode: key as SysProxyMode })}
           >
-            <Tab key="manual" title={tr('手动')} />
+            <Tab key="manual" title={tr('Manual')} />
             <Tab key="auto" title="PAC" />
           </Tabs>
         </SettingItem>
         {platform === 'win32' && (
-          <SettingItem compatKey="legacy" title={tr('UWP 工具')} divider>
+          <SettingItem compatKey="legacy" title={tr('UWP tool')} divider>
             <Button
               size="sm"
               onPress={async () => {
                 await openUWPTool()
               }}
             >
-              {tr('打开 UWP 工具')}
+              {tr('Open UWP tool')}
             </Button>
           </SettingItem>
         )}
-        <SettingItem compatKey="legacy" title={tr('设置方式')} divider>
+        <SettingItem compatKey="legacy" title={tr('Configuration method')} divider>
           <Tabs
             size="sm"
             color="primary"
@@ -230,20 +230,20 @@ const Sysproxy: React.FC = () => {
               })
             }}
           >
-            <Tab key="exec" title={tr('执行命令')} />
-            <Tab key="service" title={tr('服务模式')} />
+            <Tab key="exec" title={tr('Run command')} />
+            <Tab key="service" title={tr('Service mode')} />
           </Tabs>
         </SettingItem>
         {platform === 'linux' && (
           <SettingItem
             compatKey="legacy"
-            title={tr('终端代理')}
+            title={tr('Terminal proxy')}
             actions={
               <Tooltip
                 content={
                   <div>
                     {tr(
-                      '启用或停用后，已经打开的终端不会自动更新；请完全关闭并重新启动终端，部分桌面环境需要重新登录'
+                      'Existing terminals do not update automatically after enabling or disabling this setting. Fully close and reopen the terminal; some desktop environments may require signing in again.'
                     )}
                   </div>
                 }
@@ -267,13 +267,15 @@ const Sysproxy: React.FC = () => {
         {platform !== 'linux' && values.settingMode === 'service' && (
           <SettingItem
             compatKey="legacy"
-            title={tr('仅为活跃接口设置')}
+            title={tr('Active interfaces only')}
             actions={
               <Tooltip
                 content={
                   <>
                     <div>
-                      {tr('开启后，系统代理仅会为当前活跃的网络接口设置，仅服务模式下生效')}
+                      {tr(
+                        'Apply the system proxy only to active network interfaces. Requires service mode'
+                      )}
                     </div>
                   </>
                 }
@@ -298,10 +300,16 @@ const Sysproxy: React.FC = () => {
         {values.settingMode === 'service' && (
           <SettingItem
             compatKey="legacy"
-            title={tr('系统代理守护')}
+            title={tr('System proxy watchdog')}
             actions={
               <Tooltip
-                content={<div>{tr('检测到系统代理被修改后自动恢复，仅服务模式下生效')}</div>}
+                content={
+                  <div>
+                    {tr(
+                      'Restore the system proxy automatically if it is changed. Requires service mode'
+                    )}
+                  </div>
+                }
               >
                 <Button isIconOnly size="sm" variant="light">
                   <IoIosHelpCircle className="text-lg" />
@@ -322,9 +330,11 @@ const Sysproxy: React.FC = () => {
         {values.settingMode === 'service' && values.guard && (
           <SettingItem
             compatKey="legacy"
-            title={tr('守护通知')}
+            title={tr('Watchdog notifications')}
             actions={
-              <Tooltip content={<div>{tr('系统代理恢复成功或失败时发送通知')}</div>}>
+              <Tooltip
+                content={<div>{tr('Notify when system proxy restoration succeeds or fails')}</div>}
+              >
                 <Button isIconOnly size="sm" variant="light">
                   <IoIosHelpCircle className="text-lg" />
                 </Button>
@@ -343,15 +353,15 @@ const Sysproxy: React.FC = () => {
           </SettingItem>
         )}
         {values.mode === 'auto' && (
-          <SettingItem compatKey="legacy" title={tr('代理模式')}>
+          <SettingItem compatKey="legacy" title={tr('Proxy mode')}>
             <Button size="sm" onPress={() => setOpenPacEditor(true)}>
-              {tr('编辑 PAC 脚本')}
+              {tr('Edit PAC script')}
             </Button>
           </SettingItem>
         )}
         {values.mode === 'manual' && (
           <>
-            <SettingItem compatKey="legacy" title={tr('添加默认代理绕过')} divider>
+            <SettingItem compatKey="legacy" title={tr('Add default proxy bypasses')} divider>
               <Button
                 size="sm"
                 onPress={() => {
@@ -361,23 +371,23 @@ const Sysproxy: React.FC = () => {
                   })
                 }}
               >
-                {tr('添加默认代理绕过')}
+                {tr('Add default proxy bypasses')}
               </Button>
             </SettingItem>
-            <SettingItem compatKey="legacy" title={tr('代理绕过列表')}>
+            <SettingItem compatKey="legacy" title={tr('Proxy bypass list')}>
               <Button
                 size="sm"
                 onPress={async () => {
                   setOpenEditor(true)
                 }}
               >
-                {tr('编辑')}
+                {tr('Edit')}
               </Button>
             </SettingItem>
             <EditableList
               items={values.bypass}
               onChange={(list) => setValues({ ...values, bypass: list as string[] })}
-              placeholder={tr('例：*.baidu.com')}
+              placeholder={tr('Example: *.baidu.com')}
               divider={false}
             />
           </>

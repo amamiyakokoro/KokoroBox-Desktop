@@ -147,8 +147,8 @@ const ProxyItem: React.FC<Props> = (props) => {
   }
 
   function delayText(delay: number): string {
-    if (delay === -1) return tr('测试')
-    if (delay === 0) return tr('超时')
+    if (delay === -1) return tr('Test')
+    if (delay === 0) return tr('Timeout')
     return delay.toString()
   }
 

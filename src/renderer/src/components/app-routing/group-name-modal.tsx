@@ -38,12 +38,12 @@ export function AppRoutingGroupNameModal({
   return (
     <Modal isOpen placement="center" onOpenChange={(open) => !open && onClose()}>
       <ModalContent>
-        <ModalHeader>{isRenaming ? tr('重命名规则组') : tr('新建规则组')}</ModalHeader>
+        <ModalHeader>{isRenaming ? tr('Rename rule group') : tr('New rule group')}</ModalHeader>
         <ModalBody>
           <Input
             autoFocus
-            label={tr('规则组名称')}
-            placeholder={tr('例如：游戏')}
+            label={tr('Rule group name')}
+            placeholder={tr('For example: Games')}
             value={name}
             maxLength={80}
             isDisabled={saving}
@@ -53,12 +53,12 @@ export function AppRoutingGroupNameModal({
             }}
           />
           <p className="text-xs text-foreground-500">
-            {tr('创建后可从规则组菜单添加应用程序或扫描文件夹。')}
+            {tr('After creating the group, use its menu to add applications or scan a folder.')}
           </p>
         </ModalBody>
         <ModalFooter>
           <Button variant="flat" isDisabled={saving} onPress={onClose}>
-            {tr('取消')}
+            {tr('Cancel')}
           </Button>
           <Button
             color="primary"
@@ -66,7 +66,7 @@ export function AppRoutingGroupNameModal({
             isDisabled={!name.trim()}
             onPress={() => void submit()}
           >
-            {isRenaming ? tr('保存') : tr('创建')}
+            {isRenaming ? tr('Save') : tr('Create')}
           </Button>
         </ModalFooter>
       </ModalContent>

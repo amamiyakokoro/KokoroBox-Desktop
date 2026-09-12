@@ -93,7 +93,7 @@ const ProfileSettingDrawer: React.FC<Props> = (props) => {
         gistAgeIdentity: keyPair.identity,
         gistAgeRecipient: keyPair.recipient
       })
-      notify(tr('已生成 age 密钥'), { variant: 'success' })
+      notify(tr('age keys generated'), { variant: 'success' })
     } catch (e) {
       notify(e, { variant: 'danger' })
     }
@@ -103,7 +103,7 @@ const ProfileSettingDrawer: React.FC<Props> = (props) => {
     try {
       const recipient = await ageIdentityToRecipient(gistAgeIdentity)
       await patchAppConfig({ gistAgeRecipient: recipient })
-      notify(tr('已生成 age 公钥'), { variant: 'success' })
+      notify(tr('age public key generated'), { variant: 'success' })
     } catch (e) {
       notify(e, { variant: 'danger' })
     }
@@ -131,17 +131,19 @@ const ProfileSettingDrawer: React.FC<Props> = (props) => {
       <Drawer.Content placement="right" className="top-12 h-[calc(100%-48px)] p-3 pl-0">
         <Drawer.Dialog className="flex h-full w-[min(460px,calc(100vw-32px))] max-w-none flex-col overflow-hidden rounded-2xl! border border-separator/70 bg-overlay p-0 shadow-overlay flag-emoji">
           <Drawer.Header className="border-b border-separator/70 px-5 py-4">
-            <Drawer.Heading className="text-base font-semibold">{tr('订阅设置')}</Drawer.Heading>
+            <Drawer.Heading className="text-base font-semibold">
+              {tr('Subscription settings')}
+            </Drawer.Heading>
           </Drawer.Header>
           <Drawer.Body className="no-scrollbar flex-1 overflow-y-auto px-5 py-3">
             <div className="flex flex-col gap-1">
-              <SettingItem title={tr('显示日期')} {...settingItemProps} divider>
+              <SettingItem title={tr('Show date')} {...settingItemProps} divider>
                 <SettingTabs
-                  ariaLabel={tr('显示日期')}
+                  ariaLabel={tr('Show date')}
                   selectedKey={profileDisplayDate}
                   options={[
-                    { id: 'update', label: tr('更新时间') },
-                    { id: 'expire', label: tr('到期时间') }
+                    { id: 'update', label: tr('Last updated') },
+                    { id: 'expire', label: tr('Expiration') }
                   ]}
                   onChange={async (v) => {
                     await patchAppConfig({
@@ -151,14 +153,16 @@ const ProfileSettingDrawer: React.FC<Props> = (props) => {
                 />
               </SettingItem>
               <SettingItem
-                title={tr('为不同订阅分别指定工作目录')}
+                title={tr('Use a separate working directory for each profile')}
                 actions={
                   <Tooltip>
-                    <Button aria-label={tr('说明')} isIconOnly size="sm" variant="ghost">
+                    <Button aria-label={tr('Description')} isIconOnly size="sm" variant="ghost">
                       <IoIosHelpCircle className="text-lg" />
                     </Button>
                     <Tooltip.Content>
-                      {tr('开启后可以避免不同订阅中存在相同代理组名时无法分别保存选择的节点')}
+                      {tr(
+                        'Save proxy selections separately when different profiles contain groups with the same name'
+                      )}
                     </Tooltip.Content>
                   </Tooltip>
                 }
@@ -166,7 +170,7 @@ const ProfileSettingDrawer: React.FC<Props> = (props) => {
                 divider
               >
                 <Switch
-                  aria-label={tr('为不同订阅分别指定工作目录')}
+                  aria-label={tr('Use a separate working directory for each profile')}
                   isSelected={diffWorkDir}
                   onChange={(v) => {
                     patchAppConfig({ diffWorkDir: v })
@@ -179,12 +183,12 @@ const ProfileSettingDrawer: React.FC<Props> = (props) => {
                   </Switch.Content>
                 </Switch>
               </SettingItem>
-              <SettingItem title={tr('订阅拉取 UA')} {...settingItemProps} divider>
+              <SettingItem title={tr('Subscription user agent')} {...settingItemProps} divider>
                 <Input
-                  aria-label={tr('订阅拉取 UA')}
+                  aria-label={tr('Subscription user agent')}
                   data-setting-input="wide"
                   value={ua}
-                  placeholder={tr('默认 {0}', [defaultUserAgent])}
+                  placeholder={tr('Default: {0}', [defaultUserAgent])}
                   variant="secondary"
                   onChange={(event) => {
                     const v = event.target.value
@@ -194,11 +198,11 @@ const ProfileSettingDrawer: React.FC<Props> = (props) => {
                 />
               </SettingItem>
               <SettingItem
-                title={tr('同步运行时配置到 Gist')}
+                title={tr('Sync runtime configuration to Gist')}
                 actions={
                   gistSyncEnabled && (
                     <Button
-                      aria-label={tr('复制 Gist URL')}
+                      aria-label={tr('Copy Gist URL')}
                       isIconOnly
                       size="sm"
                       variant="ghost"
@@ -207,7 +211,7 @@ const ProfileSettingDrawer: React.FC<Props> = (props) => {
                           const url = await getGistRawUrl()
                           if (url !== '') {
                             await navigator.clipboard.writeText(url)
-                            notify(tr('已复制 Gist URL'), { variant: 'success' })
+                            notify(tr('Gist URL copied'), { variant: 'success' })
                           }
                         } catch (e) {
                           notify(e, { variant: 'danger' })
@@ -221,7 +225,7 @@ const ProfileSettingDrawer: React.FC<Props> = (props) => {
                 {...settingItemProps}
               >
                 <Switch
-                  aria-label={tr('同步运行时配置到 Gist')}
+                  aria-label={tr('Sync runtime configuration to Gist')}
                   isSelected={gistSyncEnabled}
                   onChange={(v) => {
                     patchAppConfig({ gistSyncEnabled: v })
@@ -235,9 +239,9 @@ const ProfileSettingDrawer: React.FC<Props> = (props) => {
                 </Switch>
               </SettingItem>
               {gistSyncEnabled && (
-                <SettingItem title={tr('加密 Gist 配置')} {...settingItemProps} divider>
+                <SettingItem title={tr('Encrypt Gist configuration')} {...settingItemProps} divider>
                   <Switch
-                    aria-label={tr('加密 Gist 配置')}
+                    aria-label={tr('Encrypt Gist configuration')}
                     isSelected={gistEncrypted}
                     onChange={(v) => {
                       patchAppConfig({ gistEncrypted: v })
@@ -252,10 +256,10 @@ const ProfileSettingDrawer: React.FC<Props> = (props) => {
                 </SettingItem>
               )}
               {gistSyncEnabled && gistEncrypted && (
-                <SettingItem title={tr('Gist age 公钥')} {...settingItemProps} divider>
+                <SettingItem title={tr('Gist age public key')} {...settingItemProps} divider>
                   <InputGroup data-setting-input="full" variant="secondary">
                     <InputGroup.Input
-                      aria-label={tr('Gist age 公钥')}
+                      aria-label={tr('Gist age public key')}
                       value={gistAgeRecipient}
                       placeholder="age1..."
                       onChange={(event) => {
@@ -267,7 +271,7 @@ const ProfileSettingDrawer: React.FC<Props> = (props) => {
                     <InputGroup.Suffix>
                       <Tooltip>
                         <Button
-                          aria-label={tr('从 Gist age 私钥生成公钥')}
+                          aria-label={tr('Derive a public key from the Gist age private key')}
                           isIconOnly
                           size="sm"
                           variant="ghost"
@@ -275,14 +279,16 @@ const ProfileSettingDrawer: React.FC<Props> = (props) => {
                         >
                           <LuArrowRight className="text-lg" />
                         </Button>
-                        <Tooltip.Content>{tr('从私钥生成公钥')}</Tooltip.Content>
+                        <Tooltip.Content>
+                          {tr('Derive public key from private key')}
+                        </Tooltip.Content>
                       </Tooltip>
                       <Button
-                        aria-label={tr('复制 Gist age 公钥')}
+                        aria-label={tr('Copy Gist age public key')}
                         isIconOnly
                         size="sm"
                         variant="ghost"
-                        onPress={() => copyValue(gistAgeRecipient, tr('已复制 age 公钥'))}
+                        onPress={() => copyValue(gistAgeRecipient, tr('age public key copied'))}
                       >
                         <BiCopy className="text-lg" />
                       </Button>
@@ -291,10 +297,10 @@ const ProfileSettingDrawer: React.FC<Props> = (props) => {
                 </SettingItem>
               )}
               {gistSyncEnabled && gistEncrypted && (
-                <SettingItem title={tr('Gist age 私钥')} {...settingItemProps}>
+                <SettingItem title={tr('Gist age private key')} {...settingItemProps}>
                   <InputGroup data-setting-input="full" variant="secondary">
                     <InputGroup.Input
-                      aria-label={tr('Gist age 私钥')}
+                      aria-label={tr('Gist age private key')}
                       type={gistAgeIdentityVisible ? 'text' : 'password'}
                       value={gistAgeIdentity}
                       placeholder="AGE-SECRET-KEY-1..."
@@ -306,7 +312,7 @@ const ProfileSettingDrawer: React.FC<Props> = (props) => {
                     />
                     <InputGroup.Suffix>
                       <Button
-                        aria-label={tr('生成 Gist age 私钥')}
+                        aria-label={tr('Generate Gist age private key')}
                         isIconOnly
                         size="sm"
                         variant="ghost"
@@ -315,19 +321,19 @@ const ProfileSettingDrawer: React.FC<Props> = (props) => {
                         <LuRefreshCw className="text-lg" />
                       </Button>
                       <Button
-                        aria-label={tr('复制 Gist age 私钥')}
+                        aria-label={tr('Copy Gist age private key')}
                         isIconOnly
                         size="sm"
                         variant="ghost"
-                        onPress={() => copyValue(gistAgeIdentity, tr('已复制 age 私钥'))}
+                        onPress={() => copyValue(gistAgeIdentity, tr('age private key copied'))}
                       >
                         <BiCopy className="text-lg" />
                       </Button>
                       <Button
                         aria-label={
                           gistAgeIdentityVisible
-                            ? tr('隐藏 Gist age 私钥')
-                            : tr('显示 Gist age 私钥')
+                            ? tr('Hide Gist age private key')
+                            : tr('Show Gist age private key')
                         }
                         isIconOnly
                         size="sm"

@@ -32,8 +32,8 @@ const EnvSetting: React.FC = () => {
   const [safePathsInput, setSafePathsInput] = useState(safePaths)
 
   return (
-    <SettingCard header={tr('环境变量')}>
-      <SettingItem compatKey="legacy" title={tr('禁用系统 CA')} divider>
+    <SettingCard header={tr('Environment variables')}>
+      <SettingItem compatKey="legacy" title={tr('Disable system CAs')} divider>
         <Switch
           size="sm"
           isSelected={disableSystemCA}
@@ -42,7 +42,7 @@ const EnvSetting: React.FC = () => {
           }}
         />
       </SettingItem>
-      <SettingItem compatKey="legacy" title={tr('禁用内置 CA')} divider>
+      <SettingItem compatKey="legacy" title={tr('Disable built-in CAs')} divider>
         <Switch
           size="sm"
           isSelected={disableEmbedCA}
@@ -51,7 +51,7 @@ const EnvSetting: React.FC = () => {
           }}
         />
       </SettingItem>
-      <SettingItem compatKey="legacy" title={tr('禁用回环检测')} divider>
+      <SettingItem compatKey="legacy" title={tr('Disable loopback detection')} divider>
         <Switch
           size="sm"
           isSelected={disableLoopbackDetector}
@@ -61,7 +61,7 @@ const EnvSetting: React.FC = () => {
         />
       </SettingItem>
       {platform == 'linux' && (
-        <SettingItem compatKey="legacy" title={tr('禁用 nftables')} divider>
+        <SettingItem compatKey="legacy" title={tr('Disable nftables')} divider>
           <Switch
             size="sm"
             isSelected={disableNftables}
@@ -71,7 +71,7 @@ const EnvSetting: React.FC = () => {
           />
         </SettingItem>
       )}
-      <SettingItem compatKey="legacy" title={tr('可信路径')}>
+      <SettingItem compatKey="legacy" title={tr('Trusted path')}>
         {safePathsInput.join('') != safePaths.join('') && (
           <Button
             size="sm"
@@ -80,7 +80,7 @@ const EnvSetting: React.FC = () => {
               handleConfigChangeWithRestart('safePaths', safePathsInput)
             }}
           >
-            {tr('确认')}
+            {tr('Confirm')}
           </Button>
         )}
       </SettingItem>

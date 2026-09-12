@@ -31,7 +31,7 @@ const DRAWER_CLOSE_ANIMATION_MS = 700
 function SettingHelp({ label, content }: { label: string; content: string }): React.ReactNode {
   return (
     <Tooltip delay={0}>
-      <Button aria-label={`${label} ${tr('说明')}`} isIconOnly size="sm" variant="ghost">
+      <Button aria-label={`${label} ${tr('Description')}`} isIconOnly size="sm" variant="ghost">
         <IoIosHelpCircle className="text-lg" />
       </Button>
       <Tooltip.Content>{content}</Tooltip.Content>
@@ -98,23 +98,25 @@ const AppRoutingSettingDrawer: React.FC<Props> = (props) => {
         <Drawer.Dialog className="flex h-full w-[min(460px,calc(100vw-32px))] max-w-none flex-col overflow-hidden rounded-2xl! border border-separator/70 bg-overlay p-0 shadow-overlay">
           <Drawer.Header className="border-b border-separator/70 px-5 py-4">
             <Drawer.Heading className="text-base font-semibold">
-              {tr('应用分流设置')}
+              {tr('Application routing settings')}
             </Drawer.Heading>
           </Drawer.Header>
           <Drawer.Body className="no-scrollbar flex-1 overflow-y-auto px-5 py-3">
             <SettingItem
-              title={tr('代理应用程序 UDP DNS')}
+              title={tr('Proxy application UDP DNS')}
               actions={
                 <SettingHelp
-                  label={tr('代理应用程序 UDP DNS')}
-                  content={tr('将 Proxy 规则应用程序自行发出的 UDP/53 查询交给 Mihomo。')}
+                  label={tr('Proxy application UDP DNS')}
+                  content={tr(
+                    'Send UDP/53 queries issued by applications with Proxy rules through Mihomo.'
+                  )}
                 />
               }
               {...settingItemProps}
               divider
             >
               <Switch
-                aria-label={tr('代理应用程序 UDP DNS')}
+                aria-label={tr('Proxy application UDP DNS')}
                 isSelected={isProxyUdpDnsEnabled}
                 isDisabled={isDisabled}
                 onChange={onProxyUdpDnsChange}
@@ -126,9 +128,9 @@ const AppRoutingSettingDrawer: React.FC<Props> = (props) => {
                 </Switch.Content>
               </Switch>
             </SettingItem>
-            <SettingItem title={tr('新规则默认动作')} {...settingItemProps} divider>
+            <SettingItem title={tr('Default action for new rules')} {...settingItemProps} divider>
               <Select
-                aria-label={tr('新规则默认动作')}
+                aria-label={tr('Default action for new rules')}
                 className="w-36"
                 variant="secondary"
                 value={defaultAction}
@@ -160,9 +162,9 @@ const AppRoutingSettingDrawer: React.FC<Props> = (props) => {
                 </Select.Popover>
               </Select>
             </SettingItem>
-            <SettingItem title={tr('新规则默认协议')} {...settingItemProps}>
+            <SettingItem title={tr('Default protocol for new rules')} {...settingItemProps}>
               <Select
-                aria-label={tr('新规则默认协议')}
+                aria-label={tr('Default protocol for new rules')}
                 className="w-36"
                 variant="secondary"
                 value={defaultProtocol}
@@ -196,20 +198,24 @@ const AppRoutingSettingDrawer: React.FC<Props> = (props) => {
             </SettingItem>
 
             <Separator className="my-4" />
-            <h3 className="mb-2 text-sm font-semibold text-foreground-600">{tr('进阶设置')}</h3>
+            <h3 className="mb-2 text-sm font-semibold text-foreground-600">
+              {tr('Advanced options')}
+            </h3>
             <SettingItem
-              title={tr('诊断记录')}
+              title={tr('Diagnostic logging')}
               actions={
                 <SettingHelp
-                  label={tr('诊断记录')}
-                  content={tr('记录应用程序分流的匹配目标与处理结果；仅在排查问题时启用。')}
+                  label={tr('Diagnostic logging')}
+                  content={tr(
+                    'Log application routing destinations and decisions. Enable only while troubleshooting.'
+                  )}
                 />
               }
               {...settingItemProps}
               divider={isMac || isWindows}
             >
               <Switch
-                aria-label={tr('诊断记录')}
+                aria-label={tr('Diagnostic logging')}
                 isSelected={diagnosticLogging}
                 isDisabled={isDisabled}
                 onChange={onDiagnosticLoggingChange}
@@ -223,11 +229,13 @@ const AppRoutingSettingDrawer: React.FC<Props> = (props) => {
             </SettingItem>
             {isMac && (
               <SettingItem
-                title={tr('macOS 网络扩展')}
+                title={tr('macOS Network Extension')}
                 actions={
                   <SettingHelp
-                    label={tr('macOS 网络扩展')}
-                    content={tr('打开系统设置并重新请求 KokoroBox 网络扩展批准。')}
+                    label={tr('macOS Network Extension')}
+                    content={tr(
+                      'Open System Settings and request approval for the KokoroBox Network Extension again.'
+                    )}
                   />
                 }
                 {...settingItemProps}
@@ -239,17 +247,19 @@ const AppRoutingSettingDrawer: React.FC<Props> = (props) => {
                   isDisabled={isDisabled}
                   onPress={onOpenSystemSettings}
                 >
-                  {tr('打开系统设置')}
+                  {tr('Open System Settings')}
                 </Button>
               </SettingItem>
             )}
             {isWindows && (
               <SettingItem
-                title={tr('应用分流防火墙')}
+                title={tr('Application routing firewall')}
                 actions={
                   <SettingHelp
-                    label={tr('应用分流防火墙')}
-                    content={tr('检查并修复 ProxyBridge relay 的 34010/TCP 和 34011/UDP 规则。')}
+                    label={tr('Application routing firewall')}
+                    content={tr(
+                      'Check and repair the ProxyBridge relay rules for 34010/TCP and 34011/UDP.'
+                    )}
                   />
                 }
                 {...settingItemProps}
@@ -261,7 +271,7 @@ const AppRoutingSettingDrawer: React.FC<Props> = (props) => {
                   isDisabled={isDisabled}
                   onPress={onRepairFirewall}
                 >
-                  {tr('检查并修复')}
+                  {tr('Check and repair')}
                 </Button>
               </SettingItem>
             )}

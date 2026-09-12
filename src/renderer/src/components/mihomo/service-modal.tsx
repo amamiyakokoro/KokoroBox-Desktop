@@ -107,35 +107,35 @@ const ServiceModal: React.FC<Props> = (props) => {
   }
 
   const getStatusText = (): string => {
-    if (status === null) return tr('检查中')
+    if (status === null) return tr('Checking')
     switch (status) {
       case 'running':
-        return tr('运行中')
+        return tr('Running')
       case 'stopped':
-        return tr('已停止')
+        return tr('Stopped')
       case 'not-installed':
-        return tr('未安装')
+        return tr('Not installed')
       case 'requires-approval':
-        return tr('等待系统批准')
+        return tr('Awaiting system approval')
       case 'need-init':
-        return tr('需要初始化')
+        return tr('Initialization required')
       case 'paused':
-        return tr('已暂停')
+        return tr('Paused')
       default:
-        return tr('未知状态')
+        return tr('Unknown status')
     }
   }
 
   const getConnectionStatusText = (): string => {
     switch (connectionStatus) {
       case 'connected':
-        return tr('已连接')
+        return tr('Connected')
       case 'disconnected':
-        return tr('未连接')
+        return tr('Not connected')
       case 'checking':
-        return tr('检测中')
+        return tr('Detecting')
       default:
-        return tr('未知')
+        return tr('Unknown')
     }
   }
 
@@ -150,7 +150,7 @@ const ServiceModal: React.FC<Props> = (props) => {
         <Modal.Container scroll="inside">
           <Modal.Dialog className="w-112.5">
             <Modal.Header className="flex-col gap-1">
-              <Modal.Heading>{tr('KokoroBox 服务管理')}</Modal.Heading>
+              <Modal.Heading>{tr('KokoroBox service management')}</Modal.Heading>
             </Modal.Header>
             <Modal.Body>
               <div className="space-y-4">
@@ -161,7 +161,7 @@ const ServiceModal: React.FC<Props> = (props) => {
                   <CardBody className="py-4">
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium">{tr('服务状态')}</span>
+                        <span className="text-sm font-medium">{tr('Service status')}</span>
                       </div>
                       {status === null ? (
                         <Chip
@@ -170,7 +170,7 @@ const ServiceModal: React.FC<Props> = (props) => {
                           size="sm"
                           startContent={<Spinner size="sm" color="current" />}
                         >
-                          {tr('检查中...')}
+                          {tr('Checking...')}
                         </Chip>
                       ) : (
                         <Chip
@@ -197,7 +197,7 @@ const ServiceModal: React.FC<Props> = (props) => {
 
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium">{tr('连接状态')}</span>
+                        <span className="text-sm font-medium">{tr('Connection status')}</span>
                       </div>
                       {connectionStatus === 'checking' ? (
                         <Chip
@@ -206,7 +206,7 @@ const ServiceModal: React.FC<Props> = (props) => {
                           size="sm"
                           startContent={<Spinner size="sm" color="current" />}
                         >
-                          {tr('检测中...')}
+                          {tr('Detecting...')}
                         </Chip>
                       ) : (
                         <Chip
@@ -233,17 +233,19 @@ const ServiceModal: React.FC<Props> = (props) => {
                   <div className="flex items-start gap-2">
                     <span>
                       {systemCoreOnlyBuild
-                        ? tr('使用系统服务：{0}', [systemServicePath])
-                        : tr('提供系统代理设置和核心进程管理的提权功能')}
+                        ? tr('Using system service: {0}', [systemServicePath])
+                        : tr(
+                            'Provides elevated permissions for system proxy settings and core process management'
+                          )}
                     </span>
                   </div>
                   <div className="flex items-start gap-2">
                     <span>
                       {systemCoreOnlyBuild
-                        ? tr('服务生命周期由发行版 init 系统负责管理')
+                        ? tr('The service lifecycle is managed by the distribution init system')
                         : status === 'requires-approval' && platform === 'darwin'
-                          ? tr('请在系统设置中允许 KokoroBox 后台服务')
-                          : tr('未安装状态下部分高级功能将无法使用')}
+                          ? tr('Allow the KokoroBox background service in System Settings')
+                          : tr('Some advanced features are unavailable until installed')}
                     </span>
                   </div>
                 </div>
@@ -257,7 +259,7 @@ const ServiceModal: React.FC<Props> = (props) => {
                 isDisabled={loading}
                 className="sm:mr-auto"
               >
-                {tr('关闭')}
+                {tr('Close')}
               </Button>
 
               {systemCoreOnlyBuild ? (
@@ -269,7 +271,7 @@ const ServiceModal: React.FC<Props> = (props) => {
                     onPress={() => handleAction(onInit)}
                     isLoading={loading}
                   >
-                    {status === 'need-init' ? tr('初始化') : tr('重置认证')}
+                    {status === 'need-init' ? tr('Initialize') : tr('Reset authentication')}
                   </Button>
                 )
               ) : status === 'unknown' ? (
@@ -280,7 +282,7 @@ const ServiceModal: React.FC<Props> = (props) => {
                   onPress={handleRefresh}
                   isLoading={loading}
                 >
-                  {tr('重新检查')}
+                  {tr('Check again')}
                 </Button>
               ) : status === 'not-installed' ? (
                 <Button
@@ -290,7 +292,7 @@ const ServiceModal: React.FC<Props> = (props) => {
                   onPress={() => handleAction(onInstall!, true)}
                   isLoading={loading}
                 >
-                  {tr('安装服务')}
+                  {tr('Install service')}
                 </Button>
               ) : status === 'requires-approval' && platform === 'darwin' ? (
                 <Button
@@ -300,7 +302,7 @@ const ServiceModal: React.FC<Props> = (props) => {
                   onPress={() => handleAction(openServiceSystemSettings)}
                   isLoading={loading}
                 >
-                  {tr('打开系统设置')}
+                  {tr('Open System Settings')}
                 </Button>
               ) : (
                 <>
@@ -311,7 +313,7 @@ const ServiceModal: React.FC<Props> = (props) => {
                     onPress={() => handleAction(onInit)}
                     isLoading={loading}
                   >
-                    {status === 'need-init' ? tr('初始化') : tr('重新初始化')}
+                    {status === 'need-init' ? tr('Initialize') : tr('Initialize again')}
                   </Button>
                   <Button
                     size="sm"
@@ -320,7 +322,7 @@ const ServiceModal: React.FC<Props> = (props) => {
                     onPress={() => handleAction(onRestart!, true)}
                     isLoading={loading}
                   >
-                    {tr('重启')}
+                    {tr('Restart')}
                   </Button>
                   <Button
                     size="sm"
@@ -329,7 +331,7 @@ const ServiceModal: React.FC<Props> = (props) => {
                     onPress={() => handleAction(onInstall!, true)}
                     isLoading={loading}
                   >
-                    {tr('修复服务')}
+                    {tr('Repair service')}
                   </Button>
                   {status !== 'running' && status !== 'need-init' ? (
                     <Button
@@ -339,7 +341,7 @@ const ServiceModal: React.FC<Props> = (props) => {
                       onPress={() => handleAction(onStart!, true)}
                       isLoading={loading}
                     >
-                      {tr('启动')}
+                      {tr('Start')}
                     </Button>
                   ) : null}
                   <Button
@@ -349,7 +351,7 @@ const ServiceModal: React.FC<Props> = (props) => {
                     onPress={() => handleAction(onUninstall!)}
                     isLoading={loading}
                   >
-                    {tr('卸载')}
+                    {tr('Uninstall')}
                   </Button>
                 </>
               )}

@@ -88,7 +88,7 @@ export function AppRoutingRuleRow({
             <div className="min-w-0 flex-1">
               <Input
                 key={rule.processPattern}
-                aria-label={tr('程序匹配')}
+                aria-label={tr('Process pattern')}
                 size="sm"
                 variant="flat"
                 isDisabled={disabled}
@@ -116,7 +116,7 @@ export function AppRoutingRuleRow({
             isIconOnly
             size="sm"
             variant="light"
-            aria-label={tr('上移')}
+            aria-label={tr('Move up')}
             isDisabled={index === 0 || disabled}
             onPress={() => onMove(-1)}
           >
@@ -126,7 +126,7 @@ export function AppRoutingRuleRow({
             isIconOnly
             size="sm"
             variant="light"
-            aria-label={tr('下移')}
+            aria-label={tr('Move down')}
             isDisabled={index === count - 1 || disabled}
             onPress={() => onMove(1)}
           >
@@ -137,7 +137,7 @@ export function AppRoutingRuleRow({
             size="sm"
             color="danger"
             variant="light"
-            aria-label={tr('删除')}
+            aria-label={tr('Delete')}
             isDisabled={disabled}
             onPress={onDelete}
           >
@@ -155,7 +155,7 @@ export function AppRoutingRuleRow({
             <div className="min-w-0">
               {isMacRule ? (
                 <Select
-                  aria-label={tr('匹配方式')}
+                  aria-label={tr('Match by')}
                   size="sm"
                   className="w-full min-w-0"
                   disallowEmptySelection
@@ -165,12 +165,12 @@ export function AppRoutingRuleRow({
                     changeIdentifierKind(keys.currentKey as AppRoutingIdentifierKind)
                   }
                 >
-                  <SelectItem key="macos-process-name">{tr('进程名称')}</SelectItem>
-                  <SelectItem key="macos-signing-identifier">{tr('签名标识')}</SelectItem>
+                  <SelectItem key="macos-process-name">{tr('Process name')}</SelectItem>
+                  <SelectItem key="macos-signing-identifier">{tr('Signing identifier')}</SelectItem>
                 </Select>
               ) : (
                 <Select
-                  aria-label={tr('匹配方式')}
+                  aria-label={tr('Match by')}
                   size="sm"
                   className="w-full min-w-0"
                   disallowEmptySelection
@@ -181,16 +181,16 @@ export function AppRoutingRuleRow({
                   }
                 >
                   <SelectItem key="linux-executable" isDisabled={!rule.sourcePath}>
-                    {tr('可执行文件路径')}
+                    {tr('Executable path')}
                   </SelectItem>
-                  <SelectItem key="linux-process-name">{tr('进程名称')}</SelectItem>
+                  <SelectItem key="linux-process-name">{tr('Process name')}</SelectItem>
                 </Select>
               )}
             </div>
           )}
           <div className="min-w-0">
             <Select
-              aria-label={tr('协议')}
+              aria-label={tr('Protocol')}
               size="sm"
               className="w-full min-w-0"
               disallowEmptySelection
@@ -207,7 +207,7 @@ export function AppRoutingRuleRow({
           </div>
           <div className="min-w-0">
             <Select
-              aria-label={tr('动作')}
+              aria-label={tr('Action')}
               size="sm"
               className="w-full min-w-0"
               disallowEmptySelection
@@ -224,7 +224,7 @@ export function AppRoutingRuleRow({
           </div>
           <Switch
             size="sm"
-            aria-label={tr('启用规则')}
+            aria-label={tr('Enable rule')}
             isSelected={rule.enabled}
             isDisabled={disabled}
             onValueChange={(enabled) => onChange({ enabled })}

@@ -30,10 +30,10 @@ const ByPassEditorModal: React.FC<Props> = (props) => {
       if (parsed && Array.isArray(parsed.bypass)) {
         onConfirm(parsed.bypass)
       } else {
-        notify(tr('YAML 格式错误'), { variant: 'danger' })
+        notify(tr('Invalid YAML format'), { variant: 'danger' })
       }
     } catch (e) {
-      notify(tr('YAML 解析失败：') + e, { variant: 'danger' })
+      notify(tr('Failed to parse YAML:') + e, { variant: 'danger' })
     }
   }
 
@@ -48,7 +48,7 @@ const ByPassEditorModal: React.FC<Props> = (props) => {
         <Modal.Container scroll="inside">
           <Modal.Dialog className="mt-4 h-[calc(100%-32px)] max-w-none w-[calc(100%-100px)]">
             <Modal.Header className="app-drag pb-0">
-              <Modal.Heading>{tr('编辑绕过列表 (YAML)')}</Modal.Heading>
+              <Modal.Heading>{tr('Edit bypass list (YAML)')}</Modal.Heading>
             </Modal.Header>
             <Modal.Body className="h-full">
               <BaseEditor
@@ -59,10 +59,10 @@ const ByPassEditorModal: React.FC<Props> = (props) => {
             </Modal.Body>
             <Modal.Footer className="pt-0 pb-0">
               <Button size="sm" variant="secondary" onPress={onCancel}>
-                {tr('取消')}
+                {tr('Cancel')}
               </Button>
               <Button size="sm" onPress={handleConfirm}>
-                {tr('确认')}
+                {tr('Confirm')}
               </Button>
             </Modal.Footer>
           </Modal.Dialog>

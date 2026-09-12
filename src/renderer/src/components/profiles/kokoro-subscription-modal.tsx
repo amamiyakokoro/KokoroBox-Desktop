@@ -136,7 +136,9 @@ const KokoroSettingsPage: React.FC = () => {
       setSession({ authenticated: false })
       setSettings(undefined)
       refreshProfiles()
-      notify(tr('已退出 Kokoro，并移除本地 Kokoro 配置缓存'), { variant: 'success' })
+      notify(tr('Signed out of Kokoro and removed local Kokoro profile caches'), {
+        variant: 'success'
+      })
     } catch (error) {
       notify(error, { variant: 'danger' })
     } finally {
@@ -154,7 +156,7 @@ const KokoroSettingsPage: React.FC = () => {
         isp: settings.isp || null
       })
       refreshProfiles()
-      notify(tr('Kokoro 订阅已添加'), { variant: 'success' })
+      notify(tr('Kokoro subscription added'), { variant: 'success' })
     } catch (error) {
       notify(error, { variant: 'danger' })
     } finally {
@@ -163,13 +165,13 @@ const KokoroSettingsPage: React.FC = () => {
   }
 
   return (
-    <BasePage title={tr('Kokoro 设置')} contentClassName="no-scrollbar">
+    <BasePage title={tr('Kokoro settings')} contentClassName="no-scrollbar">
       <div className="kokoro-settings-guide mx-auto flex min-h-full w-full max-w-[1120px] flex-col px-4 py-5">
         {!session?.authenticated && (
           <header className="mb-5 border-b border-default-100 pb-4">
-            <h2 className="text-lg font-semibold">{tr('Kokoro 订阅')}</h2>
+            <h2 className="text-lg font-semibold">{tr('Kokoro subscription')}</h2>
             <p className="mt-1 text-xs text-foreground-500">
-              {tr('通过 osu! 登录，并从 Kokoro 安全获取 Mihomo 配置')}
+              {tr('Sign in with osu! to securely fetch a Mihomo profile from Kokoro')}
             </p>
           </header>
         )}
@@ -183,10 +185,10 @@ const KokoroSettingsPage: React.FC = () => {
               <div className="mb-5 flex size-14 items-center justify-center rounded-full bg-primary/10 text-primary">
                 <LuLogIn className="text-2xl" />
               </div>
-              <h3 className="text-base font-semibold">{tr('登录 Kokoro')}</h3>
+              <h3 className="text-base font-semibold">{tr('Sign in to Kokoro')}</h3>
               <p className="mt-2 max-w-sm text-sm leading-6 text-foreground-500">
                 {tr(
-                  '将在系统浏览器中完成 osu! 授权。Kokoro 不会接触 osu! 密码，登录凭据保存在系统安全存储中。'
+                  'Authorize with osu! in your system browser. Kokoro never sees your osu! password. Sign-in credentials are kept in system secure storage.'
                 )}
               </p>
               <Button
@@ -196,7 +198,7 @@ const KokoroSettingsPage: React.FC = () => {
                 onPress={handleLogin}
                 startContent={!loggingIn ? <LuLogIn /> : undefined}
               >
-                {loggingIn ? tr('等待浏览器授权') : tr('使用 osu! 登录')}
+                {loggingIn ? tr('Waiting for authorization') : tr('Sign in with osu!')}
               </Button>
               {loggingIn && (
                 <Button
@@ -206,7 +208,7 @@ const KokoroSettingsPage: React.FC = () => {
                     void cancelKokoroLogin().catch(() => {})
                   }}
                 >
-                  {tr('取消')}
+                  {tr('Cancel')}
                 </Button>
               )}
             </div>
@@ -236,16 +238,16 @@ const KokoroSettingsPage: React.FC = () => {
                   </div>
                   <p className="mt-1 text-xs text-foreground-500">
                     {user.bandwidth_limit === 0
-                      ? tr('本月已用 {0} · 不限流量', [calcTraffic(user.traffic_usage)])
-                      : tr('本月已用 {0} / {1}', [
+                      ? tr('Used this month: {0} · Unlimited', [calcTraffic(user.traffic_usage)])
+                      : tr('Used this month: {0} / {1}', [
                           calcTraffic(user.traffic_usage),
                           calcTraffic(user.bandwidth_limit)
                         ])}
                     {user.subscription_expires_at
-                      ? tr(' · {0} 到期', [
+                      ? tr(' · Expires {0}', [
                           utcDate(user.subscription_expires_at).format('YYYY-MM-DD')
                         ])
-                      : tr(' · 长期有效')}
+                      : tr(' · No expiration')}
                   </p>
                 </div>
                 <Button
@@ -256,7 +258,7 @@ const KokoroSettingsPage: React.FC = () => {
                   onPress={handleLogout}
                   startContent={<LuLogOut />}
                 >
-                  {tr('登出')}
+                  {tr('Sign out')}
                 </Button>
               </section>
 
@@ -264,13 +266,13 @@ const KokoroSettingsPage: React.FC = () => {
                 <div className="flex min-w-0 flex-col gap-5">
                   {!mihomoAvailable && (
                     <p className="rounded-lg bg-danger-50 px-3 py-2 text-sm text-danger">
-                      {tr('当前 Kokoro 帐号没有可用的 Mihomo 格式。')}
+                      {tr('Mihomo format is not available for this Kokoro account.')}
                     </p>
                   )}
 
                   <section className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <Select
-                      label={tr('方案')}
+                      label={tr('Plan')}
                       size="sm"
                       selectedKeys={settings?.plan ? new Set([settings.plan]) : new Set()}
                       isDisabled={options.plans.length === 0}
@@ -286,7 +288,7 @@ const KokoroSettingsPage: React.FC = () => {
                       ))}
                     </Select>
                     <Select
-                      label={tr('网络运营商')}
+                      label={tr('Internet provider')}
                       size="sm"
                       selectedKeys={new Set([settings?.isp || ''])}
                       disallowEmptySelection
@@ -301,7 +303,7 @@ const KokoroSettingsPage: React.FC = () => {
                       ))}
                     </Select>
                     <Select
-                      label={tr('协议')}
+                      label={tr('Protocol')}
                       size="sm"
                       selectedKeys={settings ? new Set([settings.protocol]) : new Set()}
                       disallowEmptySelection
@@ -320,12 +322,12 @@ const KokoroSettingsPage: React.FC = () => {
                     {!supportsDirect ? (
                       <div className="flex min-h-12 items-center rounded-lg bg-default-100 px-3 text-sm text-foreground-500">
                         {settings?.protocol === 'vmess'
-                          ? tr('VMess 固定使用中继模式')
-                          : tr('此协议当前仅支持中继模式')}
+                          ? tr('VMess always uses relay mode')
+                          : tr('This protocol currently supports relay mode only')}
                       </div>
                     ) : (
                       <Select
-                        label={tr('连接模式')}
+                        label={tr('Connection mode')}
                         size="sm"
                         selectedKeys={settings ? new Set([settings.mode]) : new Set()}
                         disallowEmptySelection
@@ -333,12 +335,12 @@ const KokoroSettingsPage: React.FC = () => {
                           updateSettings({ mode: String(value.currentKey) as KokoroMode })
                         }
                       >
-                        <SelectItem key="relay">{tr('中继')}</SelectItem>
-                        <SelectItem key="direct">{tr('直连')}</SelectItem>
+                        <SelectItem key="relay">{tr('Relay')}</SelectItem>
+                        <SelectItem key="direct">{tr('Direct')}</SelectItem>
                       </Select>
                     )}
                     <Select
-                      label={tr('规则来源')}
+                      label={tr('Rule source')}
                       size="sm"
                       selectedKeys={settings ? new Set([settings.rule_source]) : new Set()}
                       disallowEmptySelection
@@ -350,12 +352,12 @@ const KokoroSettingsPage: React.FC = () => {
                     >
                       {options.rule_sources.map((source) => (
                         <SelectItem key={source}>
-                          {source === 'origin' ? tr('原始来源') : tr('镜像')}
+                          {source === 'origin' ? tr('Original source') : tr('Mirror')}
                         </SelectItem>
                       ))}
                     </Select>
                     <Select
-                      label={tr('未匹配流量')}
+                      label={tr('Unmatched traffic')}
                       size="sm"
                       selectedKeys={settings ? new Set([settings.final_route]) : new Set()}
                       disallowEmptySelection
@@ -367,7 +369,7 @@ const KokoroSettingsPage: React.FC = () => {
                     >
                       {options.final_routes.map((route) => (
                         <SelectItem key={route}>
-                          {route === 'proxy' ? tr('代理') : tr('直连')}
+                          {route === 'proxy' ? tr('Proxy') : tr('Direct')}
                         </SelectItem>
                       ))}
                     </Select>
@@ -376,9 +378,11 @@ const KokoroSettingsPage: React.FC = () => {
                   <section className="divide-y divide-default-100 border-y border-default-100">
                     <div className="flex flex-wrap items-center justify-between gap-4 py-3">
                       <div className="min-w-0">
-                        <p className="text-sm font-medium">{tr('规则集自动更新')}</p>
+                        <p className="text-sm font-medium">
+                          {tr('Update rule sets automatically')}
+                        </p>
                         <p className="mt-0.5 text-xs text-foreground-500">
-                          {tr('更新远端 rule-provider')}
+                          {tr('Update remote rule providers')}
                         </p>
                       </div>
                       <Switch
@@ -392,21 +396,23 @@ const KokoroSettingsPage: React.FC = () => {
                     </div>
                     <div className="flex flex-wrap items-center justify-between gap-4 py-3">
                       <div className="min-w-0">
-                        <p className="text-sm font-medium">{tr('订阅自动更新')}</p>
+                        <p className="text-sm font-medium">
+                          {tr('Update subscription automatically')}
+                        </p>
                         <p className="mt-0.5 text-xs text-foreground-500">
-                          {tr('失败时保留上一份可用配置')}
+                          {tr('Keep the last working configuration if an update fails')}
                         </p>
                       </div>
                       <div className="ml-auto flex shrink-0 items-center gap-3">
                         <Input
-                          aria-label={tr('更新间隔')}
+                          aria-label={tr('Update interval')}
                           type="number"
                           size="sm"
                           className="w-32 shrink-0"
                           min={options.profile_update.min_hours}
                           max={options.profile_update.max_hours}
                           endContent={
-                            <span className="shrink-0 whitespace-nowrap">{tr('小时')}</span>
+                            <span className="shrink-0 whitespace-nowrap">{tr('hours')}</span>
                           }
                           value={String(settings?.profile_update_hours || '')}
                           onValueChange={(value) =>
@@ -442,7 +448,7 @@ const KokoroSettingsPage: React.FC = () => {
               onPress={handleImport}
               startContent={!importing ? <LuCloudDownload /> : undefined}
             >
-              {tr('获取并添加')}
+              {tr('Fetch and add')}
             </Button>
           </footer>
         ) : null}

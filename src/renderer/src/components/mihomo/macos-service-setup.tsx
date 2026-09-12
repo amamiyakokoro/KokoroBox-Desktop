@@ -43,7 +43,7 @@ const MacOSServiceSetup: React.FC<Props> = ({ onChange }) => {
     completing.current = true
     try {
       await restartCore()
-      notify(tr('系统服务已准备完成'))
+      notify(tr('System service is ready'))
       onChange(false)
     } catch (error) {
       completing.current = false
@@ -78,38 +78,38 @@ const MacOSServiceSetup: React.FC<Props> = ({ onChange }) => {
 
   const statusText =
     status === null
-      ? tr('检查中')
+      ? tr('Checking')
       : status === 'not-installed'
-        ? tr('尚未注册')
+        ? tr('Not registered')
         : status === 'requires-approval'
-          ? tr('等待系统批准')
+          ? tr('Awaiting system approval')
           : status === 'need-init'
-            ? tr('等待安全初始化')
+            ? tr('Waiting for secure initialization')
             : status === 'running' && connected
-              ? tr('已准备完成')
+              ? tr('Ready')
               : status === 'running'
-                ? tr('等待安全初始化')
+                ? tr('Waiting for secure initialization')
                 : status === 'stopped' || status === 'paused'
-                  ? tr('等待启动')
-                  : tr('需要检查')
+                  ? tr('Waiting to start')
+                  : tr('Needs attention')
 
   const primaryAction =
     status === 'requires-approval'
       ? {
-          label: tr('打开系统设置'),
+          label: tr('Open System Settings'),
           run: openServiceSystemSettings,
           color: 'warning' as const
         }
       : status === 'need-init' || status === 'running'
         ? {
-            label: tr('初始化安全连接'),
+            label: tr('Initialize secure connection'),
             run: initService,
             color: 'primary' as const
           }
         : status === 'stopped' || status === 'paused'
-          ? { label: tr('启动系统服务'), run: startService, color: 'primary' as const }
+          ? { label: tr('Start system service'), run: startService, color: 'primary' as const }
           : {
-              label: tr('设置系统服务'),
+              label: tr('Set up system service'),
               run: installService,
               color: 'primary' as const
             }
@@ -125,15 +125,17 @@ const MacOSServiceSetup: React.FC<Props> = ({ onChange }) => {
         <Modal.Container scroll="inside">
           <Modal.Dialog className="w-120">
             <Modal.Header className="flex-col gap-1">
-              <Modal.Heading>{tr('完成 macOS 系统服务设置')}</Modal.Heading>
+              <Modal.Heading>{tr('Complete macOS System Service Setup')}</Modal.Heading>
               <p className="text-sm font-normal text-default-500">
-                {tr('KokoroBox 默认通过系统服务运行代理核心，完成后日常启动不再要求提权。')}
+                {tr(
+                  'KokoroBox runs the proxy core through a system service by default. Daily launches no longer require elevation after setup.'
+                )}
               </p>
             </Modal.Header>
             <Modal.Body className="gap-4">
               <Card shadow="sm" className="border-none bg-default-50">
                 <CardBody className="flex-row items-center justify-between py-4">
-                  <span className="text-sm font-medium">{tr('当前步骤')}</span>
+                  <span className="text-sm font-medium">{tr('Current step')}</span>
                   <Chip
                     size="sm"
                     variant="flat"
@@ -148,16 +150,22 @@ const MacOSServiceSetup: React.FC<Props> = ({ onChange }) => {
               </Card>
 
               <ol className="list-decimal space-y-2 pl-5 text-sm text-default-600">
-                <li>{tr('注册 KokoroBox 的签名系统服务。')}</li>
-                <li>{tr('若 macOS 打开系统设置，请允许 KokoroBox 后台项目。')}</li>
-                <li>{tr('返回 KokoroBox，初始化安全连接并启动代理核心。')}</li>
+                <li>{tr('Register the signed KokoroBox system service.')}</li>
+                <li>
+                  {tr('If macOS opens System Settings, allow the KokoroBox background item.')}
+                </li>
+                <li>
+                  {tr(
+                    'Return to KokoroBox, initialize the secure connection, and start the proxy core.'
+                  )}
+                </li>
               </ol>
 
               <Divider />
 
               <p className="text-xs leading-5 text-default-500">
                 {tr(
-                  'PKG 安装会要求一次管理员授权。服务注册与批准由 macOS 管理；只有修复旧服务认证时，系统才可能再次要求管理员验证。'
+                  'The PKG requires administrator authorization once. macOS manages service registration and approval; administrator verification may be requested again only when repairing credentials from an older service.'
                 )}
               </p>
             </Modal.Body>
@@ -169,7 +177,7 @@ const MacOSServiceSetup: React.FC<Props> = ({ onChange }) => {
                 isDisabled={loading}
                 onPress={() => onChange(false)}
               >
-                {tr('稍后设置')}
+                {tr('Set up later')}
               </Button>
               <Button
                 size="sm"
@@ -177,7 +185,7 @@ const MacOSServiceSetup: React.FC<Props> = ({ onChange }) => {
                 isDisabled={loading}
                 onPress={() => void runAction(refresh)}
               >
-                {tr('重新检查')}
+                {tr('Check again')}
               </Button>
               <Button
                 size="sm"

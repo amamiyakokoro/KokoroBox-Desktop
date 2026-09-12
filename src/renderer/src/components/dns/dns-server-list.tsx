@@ -21,8 +21,8 @@ interface DnsServerListProps {
 }
 
 const connectionChoices = [
-  { key: 'direct', label: tr('直连') },
-  { key: 'rules', label: tr('遵守规则') }
+  { key: 'direct', label: tr('Direct') },
+  { key: 'rules', label: tr('Follow rules') }
 ] as const
 
 const DnsServerList: React.FC<DnsServerListProps> = ({
@@ -48,7 +48,9 @@ const DnsServerList: React.FC<DnsServerListProps> = ({
     }
     const serialized = updated.map(serializeDnsServerEndpoint)
     const invalid = serialized.find((server) => !isValidDnsServer(server, ipOnly).ok)
-    onErrorChange?.(invalid ? (isValidDnsServer(invalid, ipOnly).error ?? tr('格式错误')) : null)
+    onErrorChange?.(
+      invalid ? (isValidDnsServer(invalid, ipOnly).error ?? tr('Invalid format')) : null
+    )
     onChange(serialized)
   }
 
@@ -59,8 +61,10 @@ const DnsServerList: React.FC<DnsServerListProps> = ({
       <h4 className="mb-2 text-base font-medium">{title}</h4>
       <p className="mb-3 text-xs text-foreground-500">
         {followRoutingRules
-          ? tr('DNS 连接将遵守全局路由规则。')
-          : tr('选择 DNS 的连接方式；代理解析请同时设置代理节点解析服务器。')}
+          ? tr('DNS connections follow the global routing rules.')
+          : tr(
+              'Choose how this DNS server connects. Configure Proxy DNS servers as well when using a proxy.'
+            )}
       </p>
       <div className="space-y-2">
         {displayed.map((endpoint, index) => {
@@ -75,14 +79,14 @@ const DnsServerList: React.FC<DnsServerListProps> = ({
               className="flex flex-wrap items-center gap-2"
             >
               <Tooltip
-                content={validation.error ?? tr('格式错误')}
+                content={validation.error ?? tr('Invalid format')}
                 placement="left"
                 isOpen={!validation.ok}
                 showArrow
                 color="danger"
               >
                 <Input
-                  aria-label={tr('DNS 服务器')}
+                  aria-label={tr('DNS server')}
                   size="sm"
                   className="min-w-52 flex-1"
                   classNames={{
@@ -96,7 +100,7 @@ const DnsServerList: React.FC<DnsServerListProps> = ({
               {!ipOnly && !followRoutingRules && (
                 <>
                   <Select
-                    aria-label={tr('连接方式')}
+                    aria-label={tr('Connection')}
                     size="sm"
                     className="w-30"
                     selectedKeys={
@@ -123,7 +127,7 @@ const DnsServerList: React.FC<DnsServerListProps> = ({
                   size="sm"
                   variant="flat"
                   color="warning"
-                  aria-label={tr('删除')}
+                  aria-label={tr('Delete')}
                   onPress={() => update(index, { ...endpoint, address: '' })}
                 >
                   <MdDeleteForever className="text-lg" />

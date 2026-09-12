@@ -14,7 +14,7 @@ import AppearanceConfig from '@renderer/components/settings/appearance-confis'
 const Settings: React.FC = () => {
   return (
     <BasePage
-      title={tr('应用设置')}
+      title={tr('Application settings')}
       header={
         <>
           {/* <Button

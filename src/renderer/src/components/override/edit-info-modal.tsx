@@ -92,14 +92,16 @@ const EditInfoModal: React.FC<Props> = (props) => {
         <Modal.Container scroll="inside">
           <Modal.Dialog className="w-[min(500px,calc(100%-24px))] max-w-none">
             <Modal.Header className="app-drag pb-1">
-              <Modal.Heading>{item.id ? tr('编辑覆写信息') : tr('导入远程覆写')}</Modal.Heading>
+              <Modal.Heading>
+                {item.id ? tr('Edit override details') : tr('Import remote override')}
+              </Modal.Heading>
             </Modal.Header>
             <Modal.Body className="no-scrollbar max-h-[70vh] overflow-y-auto pt-1 pb-2">
               <Surface variant="transparent" className="flex flex-col">
                 {renderField(
-                  tr('名称'),
+                  tr('Name'),
                   <Input
-                    aria-label={tr('名称')}
+                    aria-label={tr('Name')}
                     data-setting-input="edit-modal-name"
                     value={values.name}
                     variant="secondary"
@@ -110,9 +112,9 @@ const EditInfoModal: React.FC<Props> = (props) => {
                 )}
                 {values.type === 'remote' &&
                   renderField(
-                    tr('覆写地址'),
+                    tr('Override URL'),
                     <Input
-                      aria-label={tr('覆写地址')}
+                      aria-label={tr('Override URL')}
                       data-setting-input="edit-modal"
                       value={values.url || ''}
                       variant="secondary"
@@ -124,9 +126,9 @@ const EditInfoModal: React.FC<Props> = (props) => {
                   )}
                 {values.type === 'remote' &&
                   renderField(
-                    tr('证书指纹'),
+                    tr('Certificate fingerprint'),
                     <Input
-                      aria-label={tr('证书指纹')}
+                      aria-label={tr('Certificate fingerprint')}
                       data-setting-input="edit-modal"
                       value={values.fingerprint ?? ''}
                       variant="secondary"
@@ -138,9 +140,9 @@ const EditInfoModal: React.FC<Props> = (props) => {
                   )}
                 {values.type === 'remote' &&
                   renderField(
-                    tr('指定 UA'),
+                    tr('Custom user agent'),
                     <Input
-                      aria-label={tr('指定 UA')}
+                      aria-label={tr('Custom user agent')}
                       data-setting-input="edit-modal"
                       value={values.ua ?? ''}
                       variant="secondary"
@@ -151,9 +153,9 @@ const EditInfoModal: React.FC<Props> = (props) => {
                     />
                   )}
                 {renderField(
-                  tr('文件类型'),
+                  tr('File type'),
                   <Select
-                    aria-label={tr('文件类型')}
+                    aria-label={tr('File type')}
                     className="w-40!"
                     value={values.ext}
                     variant="secondary"
@@ -181,9 +183,9 @@ const EditInfoModal: React.FC<Props> = (props) => {
                   </Select>
                 )}
                 {renderField(
-                  tr('全局覆写'),
+                  tr('Global overrides'),
                   <Switch
-                    aria-label={tr('全局覆写')}
+                    aria-label={tr('Global overrides')}
                     size="sm"
                     isSelected={values.global ?? false}
                     onChange={(v) => {
@@ -202,10 +204,10 @@ const EditInfoModal: React.FC<Props> = (props) => {
             </Modal.Body>
             <Modal.Footer className="justify-end pt-2">
               <Button size="sm" variant="secondary" onPress={onClose}>
-                {tr('取消')}
+                {tr('Cancel')}
               </Button>
               <Button size="sm" variant="primary" onPress={onSave}>
-                {item.id ? tr('保存') : tr('导入')}
+                {item.id ? tr('Save') : tr('Import')}
               </Button>
             </Modal.Footer>
           </Modal.Dialog>

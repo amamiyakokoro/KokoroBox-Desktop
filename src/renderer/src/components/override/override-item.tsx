@@ -66,21 +66,21 @@ const OverrideItem: React.FC<Props> = (props) => {
     const list = [
       {
         key: 'edit-info',
-        label: tr('编辑信息'),
+        label: tr('Edit details'),
         showDivider: false,
         color: 'default',
         className: ''
       } as MenuItem,
       {
         key: 'edit-file',
-        label: tr('编辑文件'),
+        label: tr('Edit file'),
         showDivider: false,
         color: 'default',
         className: ''
       } as MenuItem,
       {
         key: 'open-file',
-        label: tr('打开文件'),
+        label: tr('Open file'),
         showDivider: false,
         color: 'default',
         className: ''
@@ -89,7 +89,7 @@ const OverrideItem: React.FC<Props> = (props) => {
         ? [
             {
               key: 'qrcode',
-              label: tr('二维码'),
+              label: tr('QR code'),
               showDivider: false,
               color: 'default',
               className: ''
@@ -98,14 +98,14 @@ const OverrideItem: React.FC<Props> = (props) => {
         : []),
       {
         key: 'exec-log',
-        label: tr('执行日志'),
+        label: tr('Execution log'),
         showDivider: true,
         color: 'default',
         className: ''
       } as MenuItem,
       {
         key: 'delete',
-        label: tr('删除'),
+        label: tr('Delete'),
         showDivider: false,
         color: 'danger',
         className: 'text-danger'
@@ -195,9 +195,9 @@ const OverrideItem: React.FC<Props> = (props) => {
       {confirmOpen && (
         <ConfirmModal
           onChange={setConfirmOpen}
-          title={tr('确认删除覆写？')}
-          confirmText={tr('确认删除')}
-          cancelText={tr('取消')}
+          title={tr('Delete this override?')}
+          confirmText={tr('Confirm deletion')}
+          cancelText={tr('Cancel')}
           onConfirm={() => {
             removeOverrideItem(info.id)
             mutateOverrideConfig()
@@ -279,7 +279,7 @@ const OverrideItem: React.FC<Props> = (props) => {
               <div className={`mt-2 flex justify-start`}>
                 {info.global && (
                   <Chip size="sm" variant="dot" color="primary" className="mr-2">
-                    {tr('全局')}
+                    {tr('Global')}
                   </Chip>
                 )}
                 <Chip size="sm" variant="bordered">

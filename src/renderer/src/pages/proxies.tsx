@@ -690,7 +690,7 @@ const Proxies: React.FC = () => {
 
   return (
     <BasePage
-      title={tr('代理组')}
+      title={tr('Proxy groups')}
       header={
         <Button
           size="sm"
@@ -716,7 +716,7 @@ const Proxies: React.FC = () => {
         <div className="h-full w-full flex justify-center items-center">
           <div className="flex flex-col items-center">
             <MdDoubleArrow className="text-foreground-500 text-[100px]" />
-            <h2 className="text-foreground-500 text-[20px]">{tr('直连模式')}</h2>
+            <h2 className="text-foreground-500 text-[20px]">{tr('Direct mode')}</h2>
           </div>
         </div>
       ) : (
