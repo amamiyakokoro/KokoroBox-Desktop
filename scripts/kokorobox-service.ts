@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto'
 
-export const KOKOROBOX_SERVICE_STABLE_TAG = 'v0.2.2'
+export const KOKOROBOX_SERVICE_STABLE_TAG = 'v0.2.3'
 
 const targets: Record<string, string> = {
   'win32-x64': 'kokorobox-service-windows-amd64-v3',
