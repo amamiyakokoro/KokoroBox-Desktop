@@ -21,6 +21,7 @@ import {
   appleSecrets,
   assertAccepted,
   assertDeveloperId,
+  assertDeveloperIdDiskImage,
   assertSystemExtensionHostEntitlements,
   assertProvisioningProfilePermissions,
   assertSMAppServiceBundle,
@@ -49,6 +50,7 @@ const submissionId = '12345678-1234-1234-1234-123456789abc'
 const sparklePrivateKey = 'AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE='
 const sparklePublicKey = 'iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w='
 const details = `Authority=Developer ID Application: Test (${teamId})\nTeamIdentifier=${teamId}\nCodeDirectory flags=0x10000(runtime)\nTimestamp=Sep 5, 2026\n`
+const dmgDetails = `Authority=Developer ID Application: Test (${teamId})\nTeamIdentifier=${teamId}\nCodeDirectory flags=0x0(none)\nTimestamp=Sep 5, 2026\n`
 const safeHostEntitlements = `
 <key>com.apple.application-identifier</key>
 \t<string>755TNLRN92.com.amamiyakokoro.app</string>
@@ -199,7 +201,7 @@ function mockRunner(env: NodeJS.ProcessEnv, projectDir: string, failure?: string
         'signed disk image before stapling'
       )
     }
-    if (label === 'Inspect DMG signing identity') return details
+    if (label === 'Inspect DMG signing identity') return dmgDetails
     if (label === 'Submit DMG for notarization') {
       assert.ok(args.includes('--wait'))
       assert.ok(args.includes('--keychain-profile'))
@@ -297,6 +299,17 @@ test('Developer ID checks reject ad-hoc, wrong-team, unhardened and untimestampe
     details.replace('Authority=Developer ID Application:', 'Signature=adhoc')
   ]) {
     assert.throws(() => assertDeveloperId(text, teamId))
+  }
+})
+
+test('DMG Developer ID checks require identity and timestamp but not Hardened Runtime', () => {
+  assertDeveloperIdDiskImage(dmgDetails, teamId)
+  for (const text of [
+    dmgDetails.replace(teamId, 'WRONGTEAM0').replace(teamId, 'WRONGTEAM0'),
+    dmgDetails.replace('Timestamp=', 'Signed Time='),
+    dmgDetails.replace('Authority=Developer ID Application:', 'Signature=adhoc')
+  ]) {
+    assert.throws(() => assertDeveloperIdDiskImage(text, teamId))
   }
 })
 
