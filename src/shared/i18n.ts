@@ -1,5 +1,7 @@
-import { messages as zhTW } from './locales/zh-TW'
 import { messages as en } from './locales/en'
+import { messages as legacyZhCNSource } from './locales/legacy-zh-CN-source'
+import { messages as zhCN } from './locales/zh-CN'
+import { messages as zhTW } from './locales/zh-TW'
 
 export type Locale = 'zh-CN' | 'zh-TW' | 'en'
 export type LanguagePreference = 'system' | Locale
@@ -17,7 +19,7 @@ export function resolveLocale(
     if (parts.includes('hans')) return 'zh-CN'
     return parts.some((part) => ['hant', 'tw', 'hk', 'mo'].includes(part)) ? 'zh-TW' : 'zh-CN'
   }
-  return 'zh-CN'
+  return 'en'
 }
 
 // The preload supplies the resolved locale before any renderer modules execute,
@@ -35,8 +37,9 @@ export function getLocale(): Locale {
 
 /** Translate only application-owned messages; interpolation values remain untouched. */
 export function tr(message: string, values: readonly unknown[] = []): string {
-  const catalog = currentLocale === 'en' ? en : currentLocale === 'zh-TW' ? zhTW : undefined
-  const translated = catalog && Object.hasOwn(catalog, message) ? catalog[message] : message
+  const source = Object.hasOwn(legacyZhCNSource, message) ? legacyZhCNSource[message] : message
+  const catalog = currentLocale === 'zh-CN' ? zhCN : currentLocale === 'zh-TW' ? zhTW : en
+  const translated = Object.hasOwn(catalog, source) ? catalog[source] : source
   return translated.replace(/\{(\d+)\}/g, (placeholder, index: string) =>
     Number(index) < values.length ? String(values[Number(index)]) : placeholder
   )
