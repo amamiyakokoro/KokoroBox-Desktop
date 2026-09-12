@@ -4,6 +4,7 @@ import path from 'path'
 import crypto from 'crypto'
 import {
   defaultAppRoutingConfig,
+  migrateMacAppRoutingIdentityKinds,
   normalizeAppRoutingConfig,
   parseAppRoutingConfig,
   validateAppRoutingConfig
@@ -18,7 +19,9 @@ function cloneDefault(): AppRoutingConfig {
 }
 
 async function readValidatedConfig(filePath: string): Promise<AppRoutingConfig> {
-  return parseAppRoutingConfig(JSON.parse(await readFile(filePath, 'utf8')))
+  const config = parseAppRoutingConfig(JSON.parse(await readFile(filePath, 'utf8')))
+  if (process.platform !== 'darwin') return config
+  return normalizeAppRoutingConfig(migrateMacAppRoutingIdentityKinds(config))
 }
 
 export async function getAppRoutingConfig(force = false): Promise<AppRoutingConfig> {
@@ -29,7 +32,10 @@ export async function getAppRoutingConfig(force = false): Promise<AppRoutingConf
       try {
         cachedConfig = await readValidatedConfig(`${appRoutingConfigPath()}.backup`)
       } catch {
-        cachedConfig = cloneDefault()
+        cachedConfig =
+          process.platform === 'darwin'
+            ? migrateMacAppRoutingIdentityKinds(cloneDefault())
+            : cloneDefault()
       }
     }
   }

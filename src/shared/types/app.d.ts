@@ -153,7 +153,7 @@ interface AppConfig {
 type AppRoutingAction = 'proxy' | 'direct' | 'block'
 type AppRoutingProtocol = 'tcp' | 'udp' | 'both'
 type AppRoutingIdentifierKind =
-  'windows-executable' | 'macos-signing-identifier' | 'linux-executable'
+  'windows-executable' | 'macos-signing-identifier' | 'macos-process-name' | 'linux-executable'
 type AppRoutingRuntimeState =
   'unsupported' | 'disabled' | 'starting' | 'running' | 'degraded' | 'error'
 
@@ -194,6 +194,7 @@ interface AppRoutingDirectorySelection {
 
 interface AppRoutingConfig {
   version: 1
+  macosIdentityKindsVersion?: 1
   enabled: boolean
   failClosed: true
   proxyUdpDns: boolean

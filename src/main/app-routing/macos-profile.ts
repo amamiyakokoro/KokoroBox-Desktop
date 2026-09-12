@@ -18,6 +18,7 @@ export interface MacBridgeConfiguration {
   diagnosticLogging: boolean
   rules: Array<{
     signingIdentifier: string
+    identifierKind: 'SIGNING_IDENTIFIER' | 'PROCESS_NAME'
     ruleProtocol: 'TCP' | 'UDP' | 'BOTH'
     action: 'PROXY' | 'DIRECT' | 'BLOCK'
     enabled: boolean
@@ -42,10 +43,10 @@ export function buildMacAppRoutingConfiguration(
   const invalidRule = config.rules.find(
     (rule) =>
       isAppRoutingRuleEffectivelyEnabled(config, rule) &&
-      appRoutingIdentifierKind(rule) !== 'macos-signing-identifier'
+      !['macos-signing-identifier', 'macos-process-name'].includes(appRoutingIdentifierKind(rule))
   )
   if (invalidRule) {
-    throw new Error('macOS application routing requires signing-identifier rules')
+    throw new Error('macOS application routing requires typed identity rules')
   }
   return {
     version: 1,
@@ -58,10 +59,16 @@ export function buildMacAppRoutingConfiguration(
     dnsPort: appRoutingDnsPort,
     diagnosticLogging: config.diagnosticLogging,
     rules: config.rules
-      .filter((rule) => appRoutingIdentifierKind(rule) === 'macos-signing-identifier')
+      .filter((rule) =>
+        ['macos-signing-identifier', 'macos-process-name'].includes(appRoutingIdentifierKind(rule))
+      )
       .sort((a, b) => a.priority - b.priority)
       .map((rule) => ({
         signingIdentifier: rule.processPattern,
+        identifierKind:
+          appRoutingIdentifierKind(rule) === 'macos-process-name'
+            ? 'PROCESS_NAME'
+            : 'SIGNING_IDENTIFIER',
         ruleProtocol: protocolValue(rule.protocol),
         action: (rule.action === 'proxy' && !proxyAvailable
           ? 'BLOCK'

@@ -23,7 +23,10 @@ export function useAppRouting(): {
   save: (config: AppRoutingConfig) => Promise<boolean>
   addApplications: () => Promise<void>
   scanDirectory: (groupId?: string) => Promise<void>
-  addPattern: (processPattern: string) => Promise<boolean>
+  addPattern: (
+    processPattern: string,
+    identifierKind?: AppRoutingIdentifierKind
+  ) => Promise<boolean>
   updateRule: (id: string, patch: Partial<AppRoutingRule>) => void
   updateGroup: (id: string, patch: Partial<AppRoutingRuleGroup>) => void
   moveRule: (id: string, offset: number) => void
@@ -106,13 +109,19 @@ export function useAppRouting(): {
     if (!config) return
     const applications = await getApplicationPaths()
     if (!applications?.length) return
-    const existingPatterns = new Set(config.rules.map((rule) => rule.processPattern.toLowerCase()))
+    const existingPatterns = new Set(
+      config.rules.map(
+        (rule) =>
+          `${rule.identifierKind ?? 'windows-executable'}:${rule.processPattern.toLowerCase()}`
+      )
+    )
     const additions: AppRoutingRule[] = []
     for (const application of applications) {
       const { executablePath, identifier, identifierKind, iconDataUrl } = application
       const processPattern = normalizeAppRoutingIdentifier(identifier, identifierKind)
-      if (!processPattern || existingPatterns.has(processPattern.toLowerCase())) continue
-      existingPatterns.add(processPattern.toLowerCase())
+      const patternKey = `${identifierKind}:${processPattern.toLowerCase()}`
+      if (!processPattern || existingPatterns.has(patternKey)) continue
+      existingPatterns.add(patternKey)
       additions.push({
         id: nanoid(),
         processPattern,
@@ -224,18 +233,24 @@ export function useAppRouting(): {
     }
   }
 
-  const addPattern = async (value: string): Promise<boolean> => {
+  const addPattern = async (
+    value: string,
+    requestedIdentifierKind?: AppRoutingIdentifierKind
+  ): Promise<boolean> => {
     if (!config) return false
     const identifierKind: AppRoutingIdentifierKind =
-      window.api.platform === 'darwin'
-        ? 'macos-signing-identifier'
+      requestedIdentifierKind ??
+      (window.api.platform === 'darwin'
+        ? 'macos-process-name'
         : window.api.platform === 'linux'
           ? 'linux-executable'
-          : 'windows-executable'
+          : 'windows-executable')
     const processPattern = normalizeAppRoutingIdentifier(value, identifierKind)
     if (
       config.rules.some(
-        (rule) => rule.processPattern.toLowerCase() === processPattern.toLowerCase()
+        (rule) =>
+          (rule.identifierKind ?? 'windows-executable') === identifierKind &&
+          rule.processPattern.toLowerCase() === processPattern.toLowerCase()
       )
     ) {
       notify(tr('应用程序匹配规则已存在'), { variant: 'warning' })

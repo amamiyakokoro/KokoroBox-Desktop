@@ -92,6 +92,12 @@ export const messages: Readonly<Record<string, string>> = {
   '应用分流支持 Windows 10/11 x64、macOS 13 或更新版本及 Linux x64/arm64。':
     'Application routing supports Windows 10/11 x64, macOS 13 or later, and Linux x64/arm64.',
   签名标识: 'Signing identifier',
+  匹配方式: 'Match by',
+  '规则按从上到下的顺序匹配；可使用进程名称或应用签名标识。':
+    'Rules match from top to bottom by process name or application signing identifier.',
+  '例如：codex 或 Codex Helper*': 'For example: codex or Codex Helper*',
+  '输入进程名称或签名标识，或选择一个或多个 .app，然后设定 Proxy、Direct 或 Block。':
+    'Enter a process name or signing identifier, or select one or more .app bundles, then choose Proxy, Direct, or Block.',
   '规则按从上到下的顺序匹配；使用应用签名标识，可在末尾加入 *。':
     'Rules match from top to bottom. Use an application signing identifier, optionally ending in *.',
   '例如：com.openai.chat 或 com.openai.chat*': 'For example: com.openai.chat or com.openai.chat*',

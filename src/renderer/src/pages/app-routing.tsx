@@ -12,7 +12,17 @@ import {
   startService
 } from '@renderer/utils/ipc'
 import { notify } from '@renderer/utils/notification'
-import { Button, Card, CardBody, Chip, Divider, Input, Switch } from '@heroui/react'
+import {
+  Button,
+  Card,
+  CardBody,
+  Chip,
+  Divider,
+  Input,
+  Select,
+  SelectItem,
+  Switch
+} from '@heroui/react'
 import {
   MdAdd,
   MdFolderOpen,
@@ -146,6 +156,8 @@ const AppRouting: React.FC = () => {
     deleteRule
   } = useAppRouting()
   const [processPattern, setProcessPattern] = useState('')
+  const [macIdentifierKind, setMacIdentifierKind] =
+    useState<AppRoutingIdentifierKind>('macos-process-name')
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(() => new Set())
   const [openingSettings, setOpeningSettings] = useState(false)
   const [preparingService, setPreparingService] = useState(false)
@@ -182,7 +194,9 @@ const AppRouting: React.FC = () => {
         ? 'cgroup v1 net_cls'
         : undefined
   const submitPattern = async (): Promise<void> => {
-    if (await addPattern(processPattern)) setProcessPattern('')
+    if (await addPattern(processPattern, isMac ? macIdentifierKind : undefined)) {
+      setProcessPattern('')
+    }
   }
   const prepareWindowsService = async (): Promise<boolean> => {
     if (!isWindows || preparingService) return false
@@ -382,7 +396,7 @@ const AppRouting: React.FC = () => {
           <h3 className="font-semibold">{tr('应用程序规则')}</h3>
           <p className="text-sm text-foreground-500">
             {isMac
-              ? tr('规则按从上到下的顺序匹配；使用应用签名标识，可在末尾加入 *。')
+              ? tr('规则按从上到下的顺序匹配；可使用进程名称或应用签名标识。')
               : isLinux
                 ? tr('每条规则使用一个绝对可执行文件路径；更改后需重新启动目标程序。')
                 : tr('规则按从上到下的顺序匹配；支持文件名或含 * 的完整路径。')}
@@ -390,11 +404,48 @@ const AppRouting: React.FC = () => {
         </div>
 
         <div className="flex flex-col gap-1">
-          <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+          <div
+            className={`grid gap-2 sm:items-center ${
+              isMac
+                ? 'sm:grid-cols-[11rem_minmax(0,1fr)_auto]'
+                : 'sm:grid-cols-[minmax(0,1fr)_auto]'
+            }`}
+          >
+            {isMac && (
+              <Select
+                size="sm"
+                label={tr('匹配方式')}
+                disallowEmptySelection
+                isDisabled={!supported || !config || saving}
+                selectedKeys={new Set([macIdentifierKind])}
+                onSelectionChange={(keys) =>
+                  setMacIdentifierKind(keys.currentKey as AppRoutingIdentifierKind)
+                }
+              >
+                <SelectItem key="macos-process-name">{tr('进程名称')}</SelectItem>
+                <SelectItem key="macos-signing-identifier">{tr('签名标识')}</SelectItem>
+              </Select>
+            )}
             <Input
               size="sm"
-              label={isMac ? tr('签名标识') : isLinux ? tr('可执行文件路径') : tr('程序匹配')}
-              placeholder={isMac ? 'com.example.app' : isLinux ? '/usr/bin/example' : 'example.exe'}
+              label={
+                isMac
+                  ? macIdentifierKind === 'macos-process-name'
+                    ? tr('进程名称')
+                    : tr('签名标识')
+                  : isLinux
+                    ? tr('可执行文件路径')
+                    : tr('程序匹配')
+              }
+              placeholder={
+                isMac
+                  ? macIdentifierKind === 'macos-process-name'
+                    ? 'codex'
+                    : 'com.example.app'
+                  : isLinux
+                    ? '/usr/bin/example'
+                    : 'example.exe'
+              }
               value={processPattern}
               isDisabled={!supported || !config || saving}
               onValueChange={setProcessPattern}
@@ -411,7 +462,11 @@ const AppRouting: React.FC = () => {
             >
               {tr('新增匹配规则')}
             </Button>
-            <div className="flex flex-wrap items-center justify-end gap-2 sm:col-span-2">
+            <div
+              className={`flex flex-wrap items-center justify-end gap-2 ${
+                isMac ? 'sm:col-span-3' : 'sm:col-span-2'
+              }`}
+            >
               <span className="text-sm text-foreground-500">{tr('或')}</span>
               <Button
                 className="shrink-0"
@@ -437,7 +492,9 @@ const AppRouting: React.FC = () => {
           </div>
           <p className="px-1 text-xs text-foreground-500">
             {isMac
-              ? tr('例如：com.openai.chat 或 com.openai.chat*')
+              ? macIdentifierKind === 'macos-process-name'
+                ? tr('例如：codex 或 Codex Helper*')
+                : tr('例如：com.openai.chat 或 com.openai.chat*')
               : isLinux
                 ? tr('例如：/usr/bin/firefox 或 /opt/example/example')
                 : tr('例如：ChatGPT.exe、ChatGPT*.exe 或 C:\\Program Files\\*\\ChatGPT.exe')}
@@ -456,7 +513,9 @@ const AppRouting: React.FC = () => {
               <p className="font-medium">{tr('尚未添加应用程序')}</p>
               <p className="text-sm text-foreground-500">
                 {isMac
-                  ? tr('输入签名标识，或选择一个或多个 .app，然后设定 Proxy、Direct 或 Block。')
+                  ? tr(
+                      '输入进程名称或签名标识，或选择一个或多个 .app，然后设定 Proxy、Direct 或 Block。'
+                    )
                   : isLinux
                     ? tr(
                         '输入绝对可执行文件路径，或选择一个或多个程序，然后设定 Proxy、Direct 或 Block。'

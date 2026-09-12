@@ -12,6 +12,7 @@ import {
   isProtectedAppRoutingProcess,
   isProtectedLinuxExecutablePath,
   normalizeAppRoutingConfig,
+  migrateMacAppRoutingIdentityKinds,
   normalizeLinuxExecutablePath,
   normalizeMacSigningIdentifier,
   normalizeWindowsExecutablePath,
@@ -137,7 +138,7 @@ test('application inspection and folder scans use the native bridge', () => {
   assert.doesNotMatch(source, /scanWindowsExecutableDirectory/)
 })
 
-test('validates macOS signing identifiers and translates rules atomically', () => {
+test('validates typed macOS identities and translates rules atomically', () => {
   const macRule = rule({
     processPattern: 'com.openai.chat*',
     identifierKind: 'macos-signing-identifier',
@@ -168,6 +169,7 @@ test('validates macOS signing identifiers and translates rules atomically', () =
   assert.deepEqual(macConfiguration.rules, [
     {
       signingIdentifier: 'com.openai.chat*',
+      identifierKind: 'SIGNING_IDENTIFIER',
       ruleProtocol: 'BOTH',
       action: 'PROXY',
       enabled: true,
@@ -175,6 +177,33 @@ test('validates macOS signing identifiers and translates rules atomically', () =
     }
   ])
   assert.equal(buildMacAppRoutingConfiguration(config, false).rules[0].action, 'BLOCK')
+  const processRule = rule({
+    processPattern: 'codex',
+    identifierKind: 'macos-process-name',
+    sourcePath: undefined
+  })
+  const processConfiguration = buildMacAppRoutingConfiguration(
+    { ...config, rules: [processRule] },
+    true
+  )
+  assert.deepEqual(processConfiguration.rules[0], {
+    signingIdentifier: 'codex',
+    identifierKind: 'PROCESS_NAME',
+    ruleProtocol: 'BOTH',
+    action: 'PROXY',
+    enabled: true,
+    priority: 1
+  })
+  validateAppRoutingConfig({
+    ...config,
+    rules: [{ ...processRule, processPattern: 'Codex Helper*' }]
+  })
+  assert.throws(() =>
+    validateAppRoutingConfig({
+      ...config,
+      rules: [{ ...processRule, processPattern: 'KokoroBox' }]
+    })
+  )
   for (const processPattern of ['*', 'com.example.bad?', 'com.amamiyakokoro.app']) {
     assert.throws(() =>
       validateAppRoutingConfig({
@@ -184,6 +213,37 @@ test('validates macOS signing identifiers and translates rules atomically', () =
     )
   }
   assert.throws(() => buildMacAppRoutingConfiguration({ ...config, rules: [rule()] }, true))
+})
+
+test('migrates legacy short macOS identities once without changing selected applications', () => {
+  const legacy = {
+    version: 1,
+    enabled: true,
+    failClosed: true,
+    proxyUdpDns: true,
+    defaultAction: 'proxy',
+    defaultProtocol: 'both',
+    diagnosticLogging: false,
+    rules: [
+      rule({
+        processPattern: 'codex',
+        identifierKind: 'macos-signing-identifier',
+        sourcePath: undefined
+      }),
+      rule({
+        id: 'selected',
+        processPattern: 'com.openai.codex',
+        identifierKind: 'macos-signing-identifier',
+        sourcePath: '/Applications/Codex.app',
+        priority: 2
+      })
+    ]
+  } satisfies AppRoutingConfig
+  const migrated = migrateMacAppRoutingIdentityKinds(legacy)
+  assert.equal(migrated.macosIdentityKindsVersion, 1)
+  assert.equal(migrated.rules[0].identifierKind, 'macos-process-name')
+  assert.equal(migrated.rules[1].identifierKind, 'macos-signing-identifier')
+  assert.deepEqual(migrateMacAppRoutingIdentityKinds(migrated), migrated)
 })
 
 test('validates filename and wildcard patterns while protecting internal processes', () => {
