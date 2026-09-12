@@ -14,6 +14,7 @@ import {
 } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { macOSBundleVersion } from './macos-bundle-version.ts'
 import { artifactName } from './release-artifacts.ts'
 import {
   sparkleAppcastName,
@@ -77,6 +78,8 @@ export function validateSigningEnvironment(env: NodeJS.ProcessEnv) {
   if (!['stable', 'rolling'].includes(env.RELEASE_CHANNEL ?? '')) {
     throw new Error('Invalid macOS release channel')
   }
+  if (!env.KOKOROBOX_BUILD_NUMBER) throw new Error('Missing macOS source build number')
+  macOSBundleVersion(env.RELEASE_VERSION ?? '', env.KOKOROBOX_BUILD_NUMBER)
   sparkleDownloadURLPrefix(env.RELEASE_TAG ?? '')
   validateSparkleSigningKeys(env.SPARKLE_PRIVATE_ED_KEY!, env.SPARKLE_PUBLIC_ED_KEY!)
   const ref = env.GITHUB_REF ?? ''
@@ -110,12 +113,14 @@ export function signingConfig(
   projectDir: string,
   teamId: string,
   appProvisioningProfile?: string,
-  sparkle?: { feedURL: string; publicKey: string }
+  sparkle?: { feedURL: string; publicKey: string },
+  buildVersion?: string
 ) {
   return {
     extends: path.join(projectDir, 'electron-builder.yml'),
     afterPack: path.join(projectDir, 'scripts', 'macos-after-pack.cjs'),
     forceCodeSigning: true,
+    ...(buildVersion ? { buildVersion } : {}),
     mac: {
       identity: teamId,
       type: 'distribution',
@@ -343,6 +348,7 @@ export function signMacRelease(
   validateSigningEnvironment(env)
   const arch = env.TARGET_ARCH!
   const version = env.RELEASE_VERSION ?? ''
+  const { bundleVersion } = macOSBundleVersion(version, env.KOKOROBOX_BUILD_NUMBER)
   const channel = env.RELEASE_CHANNEL!
   const releaseTag = env.RELEASE_TAG!
   const filename = artifactName({ os: 'macos-latest', arch, format: 'pkg' }, version)
@@ -470,10 +476,16 @@ export function signMacRelease(
     writeFileSync(
       configFile,
       JSON.stringify(
-        signingConfig(projectDir, teamId, appProfilePath, {
-          feedURL,
-          publicKey: env.SPARKLE_PUBLIC_ED_KEY!.trim()
-        })
+        signingConfig(
+          projectDir,
+          teamId,
+          appProfilePath,
+          {
+            feedURL,
+            publicKey: env.SPARKLE_PUBLIC_ED_KEY!.trim()
+          },
+          bundleVersion
+        )
       ),
       { mode: 0o600 }
     )

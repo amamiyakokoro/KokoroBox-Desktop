@@ -15,6 +15,10 @@ on:
         description: 'GitHub Release tag containing the artifacts'
         required: true
         type: string
+      build_number:
+        description: 'Monotonic source build number used by macOS and Sparkle'
+        required: true
+        type: string
     secrets:
       CSC_LINK:
         required: true
@@ -114,6 +118,7 @@ jobs:
       SKIP_PREPARE: '1'
       RELEASE_CHANNEL: ${{ inputs.channel }}
       RELEASE_VERSION: ${{ inputs.version }}
+      KOKOROBOX_BUILD_NUMBER: ${{ inputs.build_number }}
     strategy:
       fail-fast: false
       matrix:
@@ -175,6 +180,11 @@ jobs:
           BUILD_CHANNEL: ${{ inputs.channel }}
         shell: bash
         run: |
+          if [[ ! "$KOKOROBOX_BUILD_NUMBER" =~ ^[1-9][0-9]*$ ]]; then
+            echo "Invalid source build number"
+            exit 1
+          fi
+
           case "$BUILD_CHANNEL" in
             stable)
               if [[ ! "$RELEASE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9]+)?$ ]]; then

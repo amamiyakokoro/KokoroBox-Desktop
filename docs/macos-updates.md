@@ -17,6 +17,16 @@ The application archive must contain the same Developer ID-signed app bundle tha
 the PKG. Both the archive and appcast are signed with Sparkle EdDSA keys. Apple code signing,
 notarization and Sparkle signatures are independent checks; none replaces another.
 
+## Version ordering
+
+Sparkle decides whether an update is newer by comparing the numeric `CFBundleVersion`, not the
+human-facing release name. Stable and rolling artifact names keep their semantic version and, for
+rolling builds, the abbreviated source commit. Published macOS builds use the repository commit
+count plus a migration epoch as their shared internal build number. This value is deterministic for
+one source commit and strictly increases along `master`, so a newer rolling build cannot sort below
+or collide with an older one. The host application and embedded Network Extension always receive
+the same internal build number.
+
 ## Native updater boundary
 
 The Electron main process owns update policy and exposes only bounded IPC operations to the

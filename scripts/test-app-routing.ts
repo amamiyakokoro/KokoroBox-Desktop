@@ -981,9 +981,13 @@ test('macOS bundle versions support stable revisions and rolling builds', () => 
     marketingVersion: '2.26.9',
     bundleVersion: '2.26.9007'
   })
-  assert.deepEqual(macOSBundleVersion('2.26.10-rolling-2d6c507'), {
+  assert.deepEqual(macOSBundleVersion('2.26.10-rolling-2d6c507', '4321'), {
     marketingVersion: '2.26.10',
-    bundleVersion: '2.26.10575'
+    bundleVersion: '1004321'
+  })
+  assert.deepEqual(macOSBundleVersion('2.26.10', '4322'), {
+    marketingVersion: '2.26.10',
+    bundleVersion: '1004322'
   })
   assert.deepEqual(macOSBundleVersion('2.27.0'), {
     marketingVersion: '2.27.0',
@@ -991,6 +995,13 @@ test('macOS bundle versions support stable revisions and rolling builds', () => 
   })
   assert.throws(() => macOSBundleVersion('2.26.10-beta.1'), /Unsupported macOS bundle version/)
   assert.throws(() => macOSBundleVersion('2.26.10-rolling-not-a-sha'), /Unsupported macOS/)
+  assert.throws(
+    () => macOSBundleVersion('2.26.10-rolling-2d6c507'),
+    /require a monotonic source build number/
+  )
+  for (const invalid of ['', '0', '01', '-1', '1000000']) {
+    assert.throws(() => macOSBundleVersion('2.26.10', invalid), /source build number/)
+  }
 })
 
 test('new application rules use the configured defaults', () => {

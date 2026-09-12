@@ -44,7 +44,10 @@ const electronVersion = JSON.parse(
 ).version as string
 const packageVersion = JSON.parse(readFileSync(path.join(repositoryRoot, 'package.json'), 'utf8'))
   .version as string
-const { marketingVersion, bundleVersion } = macOSBundleVersion(packageVersion)
+const { marketingVersion, bundleVersion } = macOSBundleVersion(
+  packageVersion,
+  process.env.KOKOROBOX_BUILD_NUMBER
+)
 
 rmSync(buildRoot, { recursive: true, force: true })
 mkdirSync(buildRoot, { recursive: true })

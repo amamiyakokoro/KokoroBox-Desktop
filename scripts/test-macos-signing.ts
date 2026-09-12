@@ -78,6 +78,7 @@ function fixture(callback: (env: NodeJS.ProcessEnv, directory: string) => void) 
     RELEASE_VERSION: '2.26.8',
     RELEASE_CHANNEL: 'stable',
     RELEASE_TAG: 'v2.26.8',
+    KOKOROBOX_BUILD_NUMBER: '1234',
     GITHUB_SHA: sha,
     RUNNER_TEMP: directory,
     GITHUB_ENV: path.join(directory, 'github-env'),
@@ -117,6 +118,7 @@ function mockRunner(env: NodeJS.ProcessEnv, projectDir: string, failure?: string
       assert.equal(childEnv.CSC_IDENTITY_AUTO_DISCOVERY, 'true')
       const config = JSON.parse(readFileSync(args.at(-1)!, 'utf8'))
       assert.equal(config.forceCodeSigning, true)
+      assert.equal(config.buildVersion, '1001234')
       assert.equal(config.mac.identity, teamId)
       assert.equal(config.pkg.identity, teamId)
       assert.equal(config.mac.extendInfo.SUPublicEDKey, sparklePublicKey)
@@ -204,6 +206,10 @@ test('all signing credentials are required and signing rejects untrusted context
     validateSigningEnvironment(env)
     for (const name of appleSecrets)
       assert.throws(() => validateSigningEnvironment({ ...env, [name]: '' }), new RegExp(name))
+    assert.throws(
+      () => validateSigningEnvironment({ ...env, KOKOROBOX_BUILD_NUMBER: '' }),
+      /source build number/
+    )
     for (const override of [
       { GITHUB_EVENT_NAME: 'pull_request' },
       { GITHUB_EVENT_NAME: 'pull_request_target' },

@@ -105,16 +105,21 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     .filter((tag) => stableVersion.test(tag.replace(/^v/, '')))
     .sort(compareVersions)
   const latestTag = stableTags.at(-1)
-  const plan = planRelease({
-    event: process.env.RELEASE_EVENT ?? '',
-    packageVersion: JSON.parse(readFileSync('package.json', 'utf8')).version,
-    sha: process.env.GITHUB_SHA ?? '',
-    inputVersion: process.env.INPUT_VERSION,
-    inputTag: process.env.INPUT_TAG,
-    refName: process.env.REF_NAME,
-    stableTags,
-    hasChanges: !latestTag || git('rev-list', `${latestTag}..HEAD`, '--count') !== '0'
-  })
+  const sourceBuildNumber = git('rev-list', '--count', 'HEAD')
+  if (!/^[1-9]\d*$/.test(sourceBuildNumber)) throw new Error('Invalid source build number')
+  const plan = {
+    ...planRelease({
+      event: process.env.RELEASE_EVENT ?? '',
+      packageVersion: JSON.parse(readFileSync('package.json', 'utf8')).version,
+      sha: process.env.GITHUB_SHA ?? '',
+      inputVersion: process.env.INPUT_VERSION,
+      inputTag: process.env.INPUT_TAG,
+      refName: process.env.REF_NAME,
+      stableTags,
+      hasChanges: !latestTag || git('rev-list', `${latestTag}..HEAD`, '--count') !== '0'
+    }),
+    build_number: sourceBuildNumber
+  }
   if (!process.env.GITHUB_OUTPUT) throw new Error('GITHUB_OUTPUT is required')
   appendFileSync(
     process.env.GITHUB_OUTPUT,

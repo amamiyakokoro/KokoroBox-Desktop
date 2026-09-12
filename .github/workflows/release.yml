@@ -35,6 +35,7 @@ jobs:
       should_release: ${{ steps.release.outputs.should_release }}
       version: ${{ steps.release.outputs.version }}
       tag: ${{ steps.release.outputs.tag }}
+      build_number: ${{ steps.release.outputs.build_number }}
     steps:
       - uses: actions/checkout@v6
         with:
@@ -93,6 +94,7 @@ jobs:
       channel: stable
       version: ${{ needs.prepare.outputs.version }}
       release_tag: ${{ needs.prepare.outputs.tag }}
+      build_number: ${{ needs.prepare.outputs.build_number }}
 
   publish:
     needs: [prepare, build]
