@@ -177,6 +177,17 @@ test('build matrix exactly matches the 10 required platform jobs', () => {
   assert.equal(uploadSteps[1].with.overwrite, true)
 })
 
+test('packaged macOS copies move to Applications before initialization', () => {
+  const source = readFileSync('src/main/index.ts', 'utf8')
+  assert.match(source, /app\.isPackaged/)
+  assert.match(source, /app\.isInApplicationsFolder\(\)/)
+  assert.match(source, /app\.moveToApplicationsFolder\(\)/)
+  assert.ok(
+    source.indexOf('await ensureMacOSApplicationsLocation()') <
+      source.indexOf('appConfig = await (initPromise ?? init())')
+  )
+})
+
 test('desktop uses the independently maintained KokoroBox native packages', () => {
   const packageJson = JSON.parse(readFileSync('package.json', 'utf8'))
   const nativeSpecifier = packageJson.dependencies['kokorobox-native']

@@ -75,15 +75,15 @@ are kept out of the repository and temporary files are deleted after signing.
 Only these two provisioning profiles are required. No third bridge profile exists. Signing order
 is enforced by `scripts/macos-after-pack.cjs` and electron-builder: embed the Extension profile,
 sign the System Extension, sign the Node-API module as ordinary nested code, sign the Electron
-app with its main-app profile, then sign the PKG. The existing notarization, stapling, Gatekeeper,
-and checksum receipt checks remain mandatory.
+app with its main-app profile, then build the PKG and DMG. The existing notarization, stapling,
+Gatekeeper, and checksum receipt checks remain mandatory for both installers.
 
 ## Verification status
 
 Automated checks cover typed identity validation and migration, Windows schema migration,
 ordered policy translation, fail-closed Proxy conversion, entitlement/build configuration,
 Node-API compilation, and unsigned arm64 payload creation. Actual activation and packet routing
-require the approved Apple capabilities, matching provisioning profiles, a signed PKG, and a
+require the approved Apple capabilities, matching provisioning profiles, a signed installer, and a
 physical Mac.
 
 Before merging this spike for release, verify on both Apple Silicon and Intel hardware:

@@ -1,5 +1,10 @@
 // Traditional Chinese (Taiwan). Keys are the Simplified Chinese source messages.
 export const messages: Readonly<Record<string, string>> = {
+  '将 KokoroBox 移到“应用程序”文件夹？': '要將 KokoroBox 移到「應用程式」資料夾嗎？',
+  '系统服务和网络扩展需要从“应用程序”文件夹运行。':
+    '系統服務和網路延伸功能需要從「應用程式」資料夾執行。',
+  '移到“应用程序”': '移到「應用程式」',
+  '无法移动 KokoroBox': '無法移動 KokoroBox',
   应用分流: '程式分流',
   应用分流设置: '程式分流設定',
   '代理应用程序 UDP DNS': '代理應用程式 UDP DNS',

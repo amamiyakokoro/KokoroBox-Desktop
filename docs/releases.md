@@ -4,14 +4,15 @@ The workflows build KokoroBox's supported package matrix, prepare the target nat
 
 ## Outputs
 
-| Platform | Architectures                  | Packages                       |
-| -------- | ------------------------------ | ------------------------------ |
-| Windows  | x64, ARM64                     | Standard NSIS `.exe` installer |
-| macOS    | Intel x64, Apple Silicon ARM64 | `.pkg`, Sparkle `.zip`         |
-| Linux    | x64, ARM64                     | `.deb`, `.rpm`, `.pkg.tar.zst` |
+| Platform | Architectures                  | Packages                                |
+| -------- | ------------------------------ | --------------------------------------- |
+| Windows  | x64, ARM64                     | Standard NSIS `.exe` installer          |
+| macOS    | Intel x64, Apple Silicon ARM64 | `.dmg`, recovery `.pkg`, Sparkle `.zip` |
+| Linux    | x64, ARM64                     | `.deb`, `.rpm`, `.pkg.tar.zst`          |
 
-The build matrix contains 10 platform packages. Publication adds two architecture-specific signed
-Sparkle application archives and appcasts on macOS, plus `latest.yml` and `SHA256SUMS`. Windows
+The build matrix contains 10 platform jobs. Each macOS job publishes a normal-install DMG, a
+recovery PKG, a signed Sparkle application archive, and an appcast. Publication also adds
+`latest.yml` and `SHA256SUMS`. Windows
 publishes one standard `setup.exe` for each supported architecture; the former
 `manual-elevation-setup` compatibility aliases are no longer generated. The updater metadata
 preserves the exact release tag, including a leading `v` when present. Build artifacts remain
@@ -118,9 +119,10 @@ The schedule runs at 12:00 Taipei time on potential month-end dates and filters 
 
 - `Build` runs release tests, OAuth tests, localization tests, and TypeScript checks before packaging.
 - Each package is staged with its target, version, source commit, and SHA-256 checksum.
-- macOS packages additionally require a matching verification receipt written only after PKG and
-  application signing, notarization, stapling, Gatekeeper checks, and Sparkle archive/appcast
-  signing succeed. A missing, stale, modified, or unsigned artifact blocks staging/publication.
+- macOS packages additionally require a matching verification receipt written only after the DMG,
+  PKG, and application complete signing, notarization, stapling, and Gatekeeper checks and the
+  Sparkle archive/appcast signing succeeds. A missing, stale, modified, or unsigned artifact blocks
+  staging/publication.
 - `Publish Packages` rejects missing, empty, modified, stale, wrong-version, or wrong-commit artifacts before uploading anything.
 - Platform jobs use `fail-fast: false` so a failed target does not cancel other builds, but any failed target blocks publication of the entire release.
 - Release notes are generated in CI from Git commit subjects; there is no repository-maintained changelog source file. Template headings and download/signing information are English; commit subjects retain their original language.
@@ -148,15 +150,15 @@ Windows CI packages are currently **not Authenticode-signed**. SignPath signing 
 
 Windows packages declare `asInvoker` in the KokoroBox executable manifest. KokoroBox starts with the current user's privileges and elevates only explicit privileged operations; it does not create a launcher process, stage startup arguments, or run an elevation scheduled task. The permission panel can explicitly restart the current session as administrator and return it to the interactive user's normal token. Neither action persists elevation. Installation and upgrades remove obsolete elevation tasks and runner files. The installed executable, shortcuts, auto-start entry, service, data and IPC names use KokoroBox names. Legacy URI identifiers and the authenticated service wire-format remain supported for compatibility.
 
-Both Intel and Apple Silicon macOS releases require **Developer ID-signed, Apple-notarized PKGs with stapled tickets**. There is no unsigned fallback in either Stable or Rolling releases. The recovery PKG removes the former external LaunchDaemon/runtime during migration and preserves the running state of an already-approved bundled service.
+Both Intel and Apple Silicon macOS releases require **Developer ID-signed, Apple-notarized DMGs and PKGs with stapled tickets**. There is no unsigned fallback in either Stable or Rolling releases. The DMG is the normal first-install download. The recovery PKG removes the former external LaunchDaemon/runtime during migration and preserves the running state of an already-approved bundled service.
 
 The staged migration to native Sparkle application updates is documented in
 [`macos-updates.md`](macos-updates.md). The privileged daemon is embedded and registered through
 `SMAppService`, signed Sparkle
 archives/appcasts are published, and builds containing the bundle-update stage use Sparkle for
 subsequent updates. Older versions install the first transition build through their existing PKG
-updater. The PKG remains available for first installation and explicit recovery while that
-transition is validated on supported Intel and Apple Silicon upgrade paths.
+updater. The PKG remains available for explicit recovery and managed deployment while the DMG is
+the normal first-install download.
 
 `electron-builder.ci.yml` is retained only for unsigned local smoke tests; release workflows no longer use it. The normal `electron-builder.yml` remains available for local production signing.
 
@@ -200,13 +202,15 @@ Signing is restricted to this repository's `master` branch or stable SemVer tags
 6. Staples the PKG ticket, runs `stapler validate`, assesses the installer with Gatekeeper, and rechecks its package signature.
 7. Archives the signed App, submits and staples its independent notarization ticket, then verifies
    it with Gatekeeper and `codesign`.
-8. Creates the final application archive from the stapled App, signs the archive and appcast with
+8. Creates and Developer ID-signs the DMG from the stapled App, submits the final disk image to
+   Apple, staples its ticket, and verifies it with Gatekeeper and `codesign`.
+9. Creates the final application archive from the stapled App, signs the archive and appcast with
    the pinned Sparkle tools, validates the feed URL, and verifies both signatures again before
    publishing.
-9. Writes a verification receipt containing the PKG, application archive, appcast checksums and
-   Apple submission IDs. Artifact staging and collection verify that they match the channel,
-   version, commit, filenames, and bytes.
-10. Restores the original Keychain search list and removes the temporary Keychain, Sparkle private
+10. Writes a verification receipt containing the DMG, PKG, application archive, and appcast
+    checksums and Apple submission IDs. Artifact staging and collection verify that they match the
+    channel, version, commit, filenames, and bytes.
+11. Restores the original Keychain search list and removes the temporary Keychain, Sparkle private
     seed, certificate files, and temporary configuration. An additional `always()` step handles
     cancellation/failure cleanup when possible; hosted runner disposal is the final isolation
     boundary.
@@ -219,6 +223,8 @@ Child packaging processes do not inherit certificate blobs or Apple authenticati
 - **Import application/installer certificate failed**: check Base64 encoding, the matching export password, and that the `.p12` includes the private key.
 - **Validate Apple notarization credentials failed**: check the app-specific password and membership of the specified team; an Apple account password is not accepted.
 - **Sign App and PKG failed**: check that the certificates are valid Developer ID Application/Installer certificates for the same team, not development or App Store certificates.
+- **Build signed DMG from notarized App failed**: confirm that the stapled App remains in the build
+  output and that the imported Developer ID Application identity is available to `codesign`.
 - **Notarization or Gatekeeper failure**: publication stops. Fix the signing/notarization issue before retrying; never bypass the check to ship an unsigned artifact.
 - **Notarization timeout**: Apple may continue processing after the runner stops waiting. No release artifact is staged without a completed verification receipt. Investigate the submission before retrying to avoid unnecessary duplicate submissions.
 - **Invalid Sparkle signing key**: ensure both key secrets are canonical Base64 encodings of a

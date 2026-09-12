@@ -1,5 +1,10 @@
 // English. Keys are the Simplified Chinese source messages.
 export const messages: Readonly<Record<string, string>> = {
+  '将 KokoroBox 移到“应用程序”文件夹？': 'Move KokoroBox to Applications?',
+  '系统服务和网络扩展需要从“应用程序”文件夹运行。':
+    'The system service and Network Extension require KokoroBox to run from Applications.',
+  '移到“应用程序”': 'Move to Applications',
+  '无法移动 KokoroBox': 'Unable to move KokoroBox',
   应用分流: 'Application routing',
   应用分流设置: 'Application routing settings',
   '代理应用程序 UDP DNS': 'Proxy application UDP DNS',

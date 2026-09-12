@@ -37,7 +37,9 @@ Download the appropriate package from [GitHub Releases](https://github.com/amami
 shasum -a 256 -c SHA256SUMS --ignore-missing
 ```
 
-Windows packages are currently unsigned. On macOS, install the PKG before approving the optional application-routing extension.
+Windows packages are currently unsigned. On macOS, use the DMG for normal installation: drag
+KokoroBox to Applications, launch the installed copy, then follow the system-service and optional
+application-routing approval prompts. The PKG is retained for recovery and managed deployment.
 
 ## Development
 
