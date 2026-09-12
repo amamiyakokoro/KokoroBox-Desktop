@@ -46,7 +46,7 @@ const SniffCard: React.FC<Props> = (props) => {
   if (iconOnly) {
     return (
       <div className={`${sniffCardStatus} ${!controlSniff ? 'hidden' : ''} flex justify-center`}>
-        <Tooltip content={tr('域名嗅探')} placement="right">
+        <Tooltip content={tr('Sniffing')} placement="right">
           <Button
             size="sm"
             isIconOnly
@@ -104,7 +104,7 @@ const SniffCard: React.FC<Props> = (props) => {
           <h3
             className={`text-md font-bold ${match ? 'text-primary-foreground' : 'text-foreground'}`}
           >
-            {tr('域名嗅探')}
+            {tr('Sniffing')}
           </h3>
         </CardFooter>
       </Card>

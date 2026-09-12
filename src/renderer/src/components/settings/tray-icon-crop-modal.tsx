@@ -38,21 +38,21 @@ const defaultRgbColor: ImageRgbColor = { red: 255, green: 255, blue: 255 }
 type ColorMode = ImageColorPreset | 'custom'
 
 const colorModeOptions: { id: ColorMode; label: string; previewFilter: string }[] = [
-  { id: 'original', label: tr('原图'), previewFilter: 'none' },
-  { id: 'vivid', label: tr('鲜艳'), previewFilter: 'saturate(1.55) contrast(1.12)' },
-  { id: 'grayscale', label: tr('灰度'), previewFilter: 'grayscale(1)' },
-  { id: 'monochrome', label: tr('黑白'), previewFilter: 'grayscale(1) contrast(1000%)' },
-  { id: 'warm', label: tr('暖色'), previewFilter: 'sepia(0.18) saturate(1.2) brightness(1.04)' },
+  { id: 'original', label: tr('Original image'), previewFilter: 'none' },
+  { id: 'vivid', label: tr('Vivid'), previewFilter: 'saturate(1.55) contrast(1.12)' },
+  { id: 'grayscale', label: tr('Grayscale'), previewFilter: 'grayscale(1)' },
+  { id: 'monochrome', label: tr('Black and white'), previewFilter: 'grayscale(1) contrast(1000%)' },
+  { id: 'warm', label: tr('Warm'), previewFilter: 'sepia(0.18) saturate(1.2) brightness(1.04)' },
   {
     id: 'cool',
-    label: tr('冷色'),
+    label: tr('Cool'),
     previewFilter: 'saturate(1.08) hue-rotate(185deg) brightness(1.03)'
   },
-  { id: 'sepia', label: tr('复古'), previewFilter: 'sepia(0.85) saturate(1.08)' },
-  { id: 'highContrast', label: tr('高对比'), previewFilter: 'contrast(1.42)' },
-  { id: 'soft', label: tr('柔和'), previewFilter: 'contrast(0.9) brightness(1.06) saturate(0.92)' },
-  { id: 'invert', label: tr('反色'), previewFilter: 'invert(1)' },
-  { id: 'custom', label: tr('自定义'), previewFilter: 'url(#tray-icon-rgb-filter)' }
+  { id: 'sepia', label: tr('Retro'), previewFilter: 'sepia(0.85) saturate(1.08)' },
+  { id: 'highContrast', label: tr('High contrast'), previewFilter: 'contrast(1.42)' },
+  { id: 'soft', label: tr('Soft'), previewFilter: 'contrast(0.9) brightness(1.06) saturate(0.92)' },
+  { id: 'invert', label: tr('Invert colors'), previewFilter: 'invert(1)' },
+  { id: 'custom', label: tr('Custom'), previewFilter: 'url(#tray-icon-rgb-filter)' }
 ]
 
 function clamp(value: number, min: number, max: number): number {
@@ -262,7 +262,7 @@ const TrayIconCropModal: React.FC<Props> = (props) => {
         <Modal.Container>
           <Modal.Dialog className="tray-icon-crop-modal w-fit max-w-[calc(100vw-64px)] max-h-[calc(100vh-80px)]">
             <Modal.Header className="app-drag">
-              <Modal.Heading>{tr('裁剪托盘图标')}</Modal.Heading>
+              <Modal.Heading>{tr('Crop tray icon')}</Modal.Heading>
             </Modal.Header>
             <Modal.Body>
               <div className="flex w-fit flex-col items-center gap-3 p-2">
@@ -309,7 +309,7 @@ const TrayIconCropModal: React.FC<Props> = (props) => {
                 </div>
                 <div className="flex w-full min-w-72 flex-col gap-3 border-t border-default-200 pt-3">
                   <Slider
-                    aria-label={tr('圆角')}
+                    aria-label={tr('Corner radius')}
                     className="w-full"
                     minValue={0}
                     maxValue={50}
@@ -318,7 +318,7 @@ const TrayIconCropModal: React.FC<Props> = (props) => {
                     onChange={(value) => setCornerRadiusPercent(getSliderNumber(value))}
                   >
                     <div className="mb-1 flex items-center justify-between gap-3">
-                      <Label className="text-xs text-default-600">{tr('圆角')}</Label>
+                      <Label className="text-xs text-default-600">{tr('Corner radius')}</Label>
                       <Slider.Output className="text-xs text-default-500">
                         {`${cornerRadiusPercent}%`}
                       </Slider.Output>
@@ -329,13 +329,13 @@ const TrayIconCropModal: React.FC<Props> = (props) => {
                     </Slider.Track>
                   </Slider>
                   <div className="flex w-full flex-col gap-2">
-                    <Label className="text-xs text-default-600">{tr('样式')}</Label>
+                    <Label className="text-xs text-default-600">{tr('Style')}</Label>
                     <Tabs
                       selectedKey={colorMode}
                       onSelectionChange={(key) => setColorMode(String(key) as ColorMode)}
                     >
                       <Tabs.ListContainer>
-                        <Tabs.List aria-label={tr('色彩预设')}>
+                        <Tabs.List aria-label={tr('Color presets')}>
                           {colorModeOptions.map((option) => (
                             <Tabs.Tab key={option.id} id={option.id}>
                               {option.label}
@@ -354,16 +354,16 @@ const TrayIconCropModal: React.FC<Props> = (props) => {
                           }}
                         />
                         <TextField
-                          aria-label={tr('RGB 数组')}
+                          aria-label={tr('RGB array')}
                           className="w-28 shrink-0"
                           isInvalid={rgbTextInvalid}
                           value={rgbText}
                           onChange={handleRgbTextChange}
                         >
-                          <Label className="sr-only">{tr('RGB 数组')}</Label>
+                          <Label className="sr-only">{tr('RGB array')}</Label>
                           <Input className="h-7 text-xs" />
                           {rgbTextInvalid && (
-                            <FieldError>{tr('请输入 [0-255, 0-255, 0-255]')}</FieldError>
+                            <FieldError>{tr('Enter [0-255, 0-255, 0-255]')}</FieldError>
                           )}
                         </TextField>
                         <Slider
@@ -425,10 +425,10 @@ const TrayIconCropModal: React.FC<Props> = (props) => {
             </Modal.Body>
             <Modal.Footer className="pt-0">
               <Button size="sm" variant="secondary" onPress={onCancel}>
-                {tr('取消')}
+                {tr('Cancel')}
               </Button>
               <Button size="sm" isDisabled={!crop} onPress={handleConfirm}>
-                {tr('确认')}
+                {tr('Confirm')}
               </Button>
             </Modal.Footer>
           </Modal.Dialog>

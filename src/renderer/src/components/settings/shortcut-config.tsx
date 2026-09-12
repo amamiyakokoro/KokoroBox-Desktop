@@ -56,8 +56,8 @@ const ShortcutConfig: React.FC = () => {
   } = appConfig || {}
 
   return (
-    <SettingCard header={tr('快捷键设置')}>
-      <SettingItem compatKey="legacy" title={tr('打开/关闭窗口')} divider>
+    <SettingCard header={tr('Keyboard shortcuts')}>
+      <SettingItem compatKey="legacy" title={tr('Toggle window')} divider>
         <div className="flex justify-end w-[60%]">
           <ShortcutInput
             value={showWindowShortcut}
@@ -66,7 +66,7 @@ const ShortcutConfig: React.FC = () => {
           />
         </div>
       </SettingItem>
-      <SettingItem compatKey="legacy" title={tr('打开/关闭悬浮窗')} divider>
+      <SettingItem compatKey="legacy" title={tr('Toggle floating window')} divider>
         <div className="flex justify-end w-[60%]">
           <ShortcutInput
             value={showFloatingWindowShortcut}
@@ -75,7 +75,7 @@ const ShortcutConfig: React.FC = () => {
           />
         </div>
       </SettingItem>
-      <SettingItem compatKey="legacy" title={tr('打开/关闭系统代理')} divider>
+      <SettingItem compatKey="legacy" title={tr('Toggle system proxy')} divider>
         <div className="flex justify-end w-[60%]">
           <ShortcutInput
             value={triggerSysProxyShortcut}
@@ -84,7 +84,7 @@ const ShortcutConfig: React.FC = () => {
           />
         </div>
       </SettingItem>
-      <SettingItem compatKey="legacy" title={tr('打开/关闭虚拟网卡')} divider>
+      <SettingItem compatKey="legacy" title={tr('Toggle TUN mode')} divider>
         <div className="flex justify-end w-[60%]">
           <ShortcutInput
             value={triggerTunShortcut}
@@ -93,7 +93,7 @@ const ShortcutConfig: React.FC = () => {
           />
         </div>
       </SettingItem>
-      <SettingItem compatKey="legacy" title={tr('切换规则模式')} divider>
+      <SettingItem compatKey="legacy" title={tr('Switch to rule mode')} divider>
         <div className="flex justify-end w-[60%]">
           <ShortcutInput
             value={ruleModeShortcut}
@@ -102,7 +102,7 @@ const ShortcutConfig: React.FC = () => {
           />
         </div>
       </SettingItem>
-      <SettingItem compatKey="legacy" title={tr('切换全局模式')} divider>
+      <SettingItem compatKey="legacy" title={tr('Switch to global mode')} divider>
         <div className="flex justify-end w-[60%]">
           <ShortcutInput
             value={globalModeShortcut}
@@ -111,7 +111,7 @@ const ShortcutConfig: React.FC = () => {
           />
         </div>
       </SettingItem>
-      <SettingItem compatKey="legacy" title={tr('切换直连模式')} divider>
+      <SettingItem compatKey="legacy" title={tr('Switch to direct mode')} divider>
         <div className="flex justify-end w-[60%]">
           <ShortcutInput
             value={directModeShortcut}
@@ -120,7 +120,7 @@ const ShortcutConfig: React.FC = () => {
           />
         </div>
       </SettingItem>
-      <SettingItem compatKey="legacy" title={tr('保留内核退出')} divider>
+      <SettingItem compatKey="legacy" title={tr('Quit and keep core running')} divider>
         <div className="flex justify-end w-[60%]">
           <ShortcutInput
             value={quitWithoutCoreShortcut}
@@ -129,7 +129,7 @@ const ShortcutConfig: React.FC = () => {
           />
         </div>
       </SettingItem>
-      <SettingItem compatKey="legacy" title={tr('重启应用')}>
+      <SettingItem compatKey="legacy" title={tr('Restart app')}>
         <div className="flex justify-end w-[60%]">
           <ShortcutInput
             value={restartAppShortcut}
@@ -216,18 +216,18 @@ const ShortcutInput: React.FC<{
                 await patchAppConfig({ [action]: inputValue })
                 window.electron.ipcRenderer.send('updateTrayMenu')
               } else {
-                notify(tr('快捷键注册失败'), { variant: 'danger' })
+                notify(tr('Failed to register shortcut'), { variant: 'danger' })
               }
             } catch (e) {
-              notify(tr('快捷键注册失败：{0}', [e]), { variant: 'danger' })
+              notify(tr('Failed to register shortcut: {0}', [e]), { variant: 'danger' })
             }
           }}
         >
-          {tr('确认')}
+          {tr('Confirm')}
         </Button>
       )}
       <Input
-        placeholder={tr('点击输入快捷键')}
+        placeholder={tr('Click to record shortcut')}
         onKeyDown={(e: KeyboardEvent): void => {
           parseShortcut(e, setInputValue)
         }}

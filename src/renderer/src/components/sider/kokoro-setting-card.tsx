@@ -32,7 +32,7 @@ const KokoroSettingCard: React.FC<Props> = ({ iconOnly = false }) => {
   if (iconOnly) {
     return (
       <div className={`${kokoroCardStatus} kokoro-setting-card flex justify-center`}>
-        <Tooltip content={tr('Kokoro 设置')} placement="right">
+        <Tooltip content={tr('Kokoro settings')} placement="right">
           <Button
             size="sm"
             isIconOnly
@@ -82,7 +82,7 @@ const KokoroSettingCard: React.FC<Props> = ({ iconOnly = false }) => {
           <h3
             className={`text-md font-bold ${match ? 'text-primary-foreground' : 'text-foreground'}`}
           >
-            {tr('Kokoro 设置')}
+            {tr('Kokoro settings')}
           </h3>
         </CardFooter>
       </Card>

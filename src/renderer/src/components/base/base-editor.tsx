@@ -82,44 +82,44 @@ const monacoInitialization = (): void => {
             '\\+rules': {
               type: 'array',
               $ref: '#/definitions/rules',
-              description: tr('“+”开头表示将内容插入到原数组前面')
+              description: tr('A leading "+" prepends content to the original array')
             },
             'rules\\+': {
               type: 'array',
               $ref: '#/definitions/rules',
-              description: tr('“+”结尾表示将内容追加到原数组后面')
+              description: tr('A trailing "+" appends content to the original array')
             },
             '\\+proxies': {
               type: 'array',
               $ref: '#/definitions/proxies',
-              description: tr('“+”开头表示将内容插入到原数组前面')
+              description: tr('A leading "+" prepends content to the original array')
             },
             'proxies\\+': {
               type: 'array',
               $ref: '#/definitions/proxies',
-              description: tr('“+”结尾表示将内容追加到原数组后面')
+              description: tr('A trailing "+" appends content to the original array')
             },
             '\\+proxy-groups': {
               type: 'array',
               $ref: '#/definitions/proxy-groups',
-              description: tr('“+”开头表示将内容插入到原数组前面')
+              description: tr('A leading "+" prepends content to the original array')
             },
             'proxy-groups\\+': {
               type: 'array',
               $ref: '#/definitions/proxy-groups',
-              description: tr('“+”结尾表示将内容追加到原数组后面')
+              description: tr('A trailing "+" appends content to the original array')
             },
             '^\\+': {
               type: 'array',
-              description: tr('“+”开头表示将内容插入到原数组前面')
+              description: tr('A leading "+" prepends content to the original array')
             },
             '\\+$': {
               type: 'array',
-              description: tr('“+”结尾表示将内容追加到原数组后面')
+              description: tr('A trailing "+" appends content to the original array')
             },
             '!$': {
               type: 'object',
-              description: tr('“!”结尾表示强制覆盖该项而不进行递归合并')
+              description: tr('A trailing "!" replaces the value instead of merging it recursively')
             }
           }
         }

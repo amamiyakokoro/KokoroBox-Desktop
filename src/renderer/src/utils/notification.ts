@@ -52,7 +52,7 @@ export function showToastNotification(payload: AppNotificationPayload): void {
   const errorDetailAction =
     payload.variant === 'danger' && body
       ? {
-          children: tr('查看详情'),
+          children: tr('View details'),
           onPress: () => errorDetailHandler?.({ title, body })
         }
       : undefined
@@ -64,7 +64,7 @@ export function showToastNotification(payload: AppNotificationPayload): void {
       errorDetailAction ??
       (payload.url
         ? {
-            children: tr('打开'),
+            children: tr('Open'),
             onPress: () => window.open(payload.url, '_blank', 'noopener,noreferrer')
           }
         : undefined),

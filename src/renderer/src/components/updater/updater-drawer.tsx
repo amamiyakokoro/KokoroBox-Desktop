@@ -106,7 +106,7 @@ const UpdaterDrawer: React.FC<Props> = (props) => {
               </div>
               <div className="min-w-0 flex-1">
                 <Drawer.Heading className="truncate text-base font-semibold">
-                  {version} {tr(' 版本就绪')}
+                  {version} {tr(' update ready')}
                 </Drawer.Heading>
               </div>
             </div>
@@ -117,16 +117,23 @@ const UpdaterDrawer: React.FC<Props> = (props) => {
                 target="_blank"
                 rel="noreferrer"
               >
-                {tr('前往 GitHub 下载')}
+                {tr('Download from GitHub')}
               </Link>
             )}
           </Drawer.Header>
           <Drawer.Body className="h-full px-5 py-4 text-foreground">
             {updateStatus?.downloading && (
               <div className="mb-4 rounded-xl border border-separator/70 bg-surface-secondary p-4">
-                <ProgressBar aria-label={tr('下载进度')} color="accent" size="sm" value={progress}>
+                <ProgressBar
+                  aria-label={tr('Download progress')}
+                  color="accent"
+                  size="sm"
+                  value={progress}
+                >
                   <div className="mb-2 flex items-center justify-between gap-3">
-                    <Label className="text-sm font-medium text-foreground">{tr('下载进度')}</Label>
+                    <Label className="text-sm font-medium text-foreground">
+                      {tr('Download progress')}
+                    </Label>
                     <ProgressBar.Output className="text-sm text-muted" />
                   </div>
                   <ProgressBar.Track>
@@ -177,10 +184,10 @@ const UpdaterDrawer: React.FC<Props> = (props) => {
               {updateStatus?.downloading ? (
                 <>
                   <FiX />
-                  {tr('取消下载')}
+                  {tr('Cancel download')}
                 </>
               ) : (
-                tr('取消')
+                tr('Cancel')
               )}
             </Button>
             {!updateStatus?.downloading && (
@@ -191,7 +198,7 @@ const UpdaterDrawer: React.FC<Props> = (props) => {
                 onPress={onUpdate}
               >
                 <FiDownload />
-                {tr('立即更新')}
+                {tr('Update now')}
               </Button>
             )}
           </Drawer.Footer>

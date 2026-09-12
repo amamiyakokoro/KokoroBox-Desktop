@@ -25,18 +25,18 @@ export async function createDriver(navigate: NavigateFunction): Promise<Driver> 
 
   driverInstance = driver({
     showProgress: true,
-    nextBtnText: tr('下一步'),
-    prevBtnText: tr('上一步'),
-    doneBtnText: tr('完成'),
+    nextBtnText: tr('Next'),
+    prevBtnText: tr('Back'),
+    doneBtnText: tr('Done'),
     progressText: '{{current}} / {{total}}',
     overlayOpacity: 0.9,
     steps: [
       {
         element: 'none',
         popover: {
-          title: tr('欢迎使用 KokoroBox'),
+          title: tr('Welcome to KokoroBox'),
           description: tr(
-            '这是一份交互式使用教程，如果您已经完全熟悉本软件的操作，可以直接点击右上角关闭按钮，后续您可以随时从设置中打开本教程'
+            'This interactive tour introduces the app. If you already know your way around, close it using the button at the top right. You can reopen the tour from settings at any time.'
           ),
           align: 'center'
         }
@@ -44,9 +44,9 @@ export async function createDriver(navigate: NavigateFunction): Promise<Driver> 
       {
         element: '.side',
         popover: {
-          title: tr('导航栏'),
+          title: tr('Sidebar'),
           description: tr(
-            '左侧是应用的导航栏，兼顾仪表盘功能，在这里可以切换不同页面，也可以概览常用的状态信息'
+            'The sidebar on the left also acts as a dashboard. Switch pages here and see common status information at a glance.'
           ),
           side: 'right',
           align: 'center'
@@ -55,8 +55,8 @@ export async function createDriver(navigate: NavigateFunction): Promise<Driver> 
       {
         element: '.sysproxy-card',
         popover: {
-          title: tr('卡片'),
-          description: tr('点击导航栏卡片可以跳转到对应页面，拖动导航栏卡片可以自由排列卡片顺序'),
+          title: tr('Cards'),
+          description: tr('Click a sidebar card to open its page. Drag cards to rearrange them.'),
           side: 'right',
           align: 'start'
         }
@@ -64,8 +64,8 @@ export async function createDriver(navigate: NavigateFunction): Promise<Driver> 
       {
         element: '.main',
         popover: {
-          title: tr('主要区域'),
-          description: tr('右侧是应用的主要区域，展示了导航栏所选页面的内容'),
+          title: tr('Main area'),
+          description: tr('The main area on the right displays the page selected in the sidebar'),
           side: 'left',
           align: 'center'
         }
@@ -73,8 +73,8 @@ export async function createDriver(navigate: NavigateFunction): Promise<Driver> 
       {
         element: '.kokoro-setting-card',
         popover: {
-          title: tr('Kokoro 设置'),
-          description: tr('通过 osu! 登录，并从 Kokoro 安全获取 Mihomo 配置'),
+          title: tr('Kokoro settings'),
+          description: tr('Sign in with osu! to securely fetch a Mihomo profile from Kokoro'),
           side: 'right',
           align: 'start',
           onNextClick: async (): Promise<void> => {
@@ -88,9 +88,9 @@ export async function createDriver(navigate: NavigateFunction): Promise<Driver> 
       {
         element: '.kokoro-settings-guide',
         popover: {
-          title: tr('Kokoro 订阅'),
+          title: tr('Kokoro subscription'),
           description: tr(
-            '登录后选择方案、网络运营商和协议，按需调整路由与更新设置，然后点击“获取并添加”。'
+            'After signing in, choose your plan, ISP, and protocol, adjust routing and update settings as needed, then select “Fetch and add”.'
           ),
           side: 'left',
           align: 'start'
@@ -99,9 +99,9 @@ export async function createDriver(navigate: NavigateFunction): Promise<Driver> 
       {
         element: '.profile-card',
         popover: {
-          title: tr('订阅管理'),
+          title: tr('Subscriptions'),
           description: tr(
-            '订阅管理卡片展示当前运行的订阅配置信息，点击进入订阅管理页面可以在这里管理订阅配置'
+            'The subscription card shows the active profile. Click it to open the subscription management page.'
           ),
           side: 'right',
           align: 'start',
@@ -116,9 +116,9 @@ export async function createDriver(navigate: NavigateFunction): Promise<Driver> 
       {
         element: '.profiles-sticky',
         popover: {
-          title: tr('订阅导入'),
+          title: tr('Import subscription'),
           description: tr(
-            'KokoroBox 支持多种订阅导入方式，在此输入订阅链接，点击导入即可导入您的订阅配置，如果您的订阅需要代理才能更新，请勾选"代理"再点击导入，当然这需要已经有一个可以正常使用的订阅才可以'
+            'KokoroBox supports several ways to import subscriptions. Enter a subscription URL here and click Import. If updates require a proxy, enable "Proxy" before importing. This requires an existing working profile.'
           ),
           side: 'bottom',
           align: 'start'
@@ -127,8 +127,10 @@ export async function createDriver(navigate: NavigateFunction): Promise<Driver> 
       {
         element: '.new-profile',
         popover: {
-          title: tr('本地订阅'),
-          description: tr('点击"+"可以选择本地文件进行导入或者直接新建空白配置进行编辑'),
+          title: tr('Local profile'),
+          description: tr(
+            'Click "+" to import a local file or create a blank configuration to edit'
+          ),
           side: 'bottom',
           align: 'start'
         }
@@ -136,9 +138,9 @@ export async function createDriver(navigate: NavigateFunction): Promise<Driver> 
       {
         element: '.sysproxy-card',
         popover: {
-          title: tr('系统代理'),
+          title: tr('System proxy'),
           description: tr(
-            '导入订阅之后，内核已经开始运行并监听指定端口，此时您已经可以通过指定代理端口来使用代理了，如果您要使大部分应用自动使用该端口的代理，您还需要打开系统代理开关'
+            'After importing a subscription, the core starts listening on the configured ports. You can use the proxy through those ports. Enable System proxy to have most apps use it automatically.'
           ),
           side: 'right',
           align: 'start',
@@ -153,9 +155,9 @@ export async function createDriver(navigate: NavigateFunction): Promise<Driver> 
       {
         element: '.sysproxy-settings',
         popover: {
-          title: tr('系统代理设置'),
+          title: tr('System proxy settings'),
           description: tr(
-            '在此您可以进行系统代理相关设置，选择代理模式，如果某些 Windows 应用不遵循系统代理，还可以使用"UWP 工具"解除本地回环限制，对于"手动代理模式"和"PAC 代理模式"的区别，请自行百度'
+            'Configure the system proxy and choose a proxy mode here. If some Windows apps do not use the system proxy, the UWP tool can remove their loopback restrictions. Consult documentation on manual and PAC proxy modes if you are unsure which to use.'
           ),
           side: 'top',
           align: 'start'
@@ -164,9 +166,9 @@ export async function createDriver(navigate: NavigateFunction): Promise<Driver> 
       {
         element: '.tun-card',
         popover: {
-          title: tr('虚拟网卡'),
+          title: tr('TUN mode'),
           description: tr(
-            '虚拟网卡，即同类软件中常见的"Tun 模式"，对于某些不遵循系统代理的应用，您可以打开虚拟网卡以让内核接管所有流量'
+            'TUN mode creates a virtual network interface so the core can handle all traffic, including apps that do not use the system proxy.'
           ),
           side: 'right',
           align: 'start',
@@ -181,9 +183,9 @@ export async function createDriver(navigate: NavigateFunction): Promise<Driver> 
       {
         element: '.tun-settings',
         popover: {
-          title: tr('虚拟网卡设置'),
+          title: tr('TUN settings'),
           description: tr(
-            '这里可以更改虚拟网卡相关设置，KokoroBox 理论上已经完全解决权限问题，如果您的虚拟网卡仍然不可用，可以尝试重设防火墙（Windows）或手动授权内核（MacOS/Linux）后重启内核'
+            'Configure TUN mode here. KokoroBox handles the required permissions. If TUN still does not work, try resetting the firewall on Windows or manually authorizing the core on macOS/Linux, then restart the core.'
           ),
           side: 'bottom',
           align: 'start'
@@ -192,9 +194,9 @@ export async function createDriver(navigate: NavigateFunction): Promise<Driver> 
       {
         element: '.override-card',
         popover: {
-          title: tr('覆写'),
+          title: tr('Overrides'),
           description: tr(
-            'KokoroBox 提供强大的覆写功能，可以对您导入的订阅配置进行个性化修改，如添加规则、自定义代理组等，您可以直接导入别人写好的覆写文件，也可以自己动手编写，<b>编辑好覆写文件一定要记得在需要覆写的订阅上启用</b>，覆写文件的语法请参考 <a href="https://mihomo.party/docs/guide/override" target="_blank">官方文档</a>'
+            'KokoroBox lets you customize imported profiles with overrides, including rules and proxy groups. Import an existing override or write your own. <b>Remember to enable the override on the profiles that should use it.</b> See the <a href="https://mihomo.party/docs/guide/override" target="_blank">official documentation</a> for the syntax.'
           ),
           side: 'right',
           align: 'center'
@@ -205,7 +207,7 @@ export async function createDriver(navigate: NavigateFunction): Promise<Driver> 
         popover: {
           title: 'DNS',
           description: tr(
-            '软件默认接管了内核的 DNS 设置，如果您需要使用订阅配置中的 DNS 设置，可以到应用设置中关闭"接管 DNS 设置"，域名嗅探同理'
+            'The app overrides core DNS settings by default. To use the DNS settings from your profile, disable "Override DNS settings" in Application settings. The same applies to domain sniffing.'
           ),
           side: 'right',
           align: 'center',
@@ -220,8 +222,10 @@ export async function createDriver(navigate: NavigateFunction): Promise<Driver> 
       {
         element: 'none',
         popover: {
-          title: tr('教程结束'),
-          description: tr('现在您已经了解了软件的基本用法，导入您的订阅开始使用吧，祝您使用愉快！'),
+          title: tr('Tour complete'),
+          description: tr(
+            'You now know the basics. Import your subscription to get started. Enjoy KokoroBox!'
+          ),
           side: 'top',
           align: 'center',
           onNextClick: async (): Promise<void> => {

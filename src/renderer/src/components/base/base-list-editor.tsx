@@ -123,7 +123,7 @@ const EditableList: React.FC<EditableListProps> = ({
             isExtra || isEmpty ? true : validate ? validate(entry.part1, entry.part2) : true
           const validation: ValidationResult =
             typeof rawValidation === 'boolean'
-              ? { ok: rawValidation, error: rawValidation ? undefined : tr('格式错误') }
+              ? { ok: rawValidation, error: rawValidation ? undefined : tr('Invalid format') }
               : rawValidation
 
           // part1 单独验证
@@ -135,7 +135,7 @@ const EditableList: React.FC<EditableListProps> = ({
                 : true
           const validation1: ValidationResult =
             typeof rawValidation1 === 'boolean'
-              ? { ok: rawValidation1, error: rawValidation1 ? undefined : tr('格式错误') }
+              ? { ok: rawValidation1, error: rawValidation1 ? undefined : tr('Invalid format') }
               : rawValidation1
 
           // part2 单独验证
@@ -147,7 +147,7 @@ const EditableList: React.FC<EditableListProps> = ({
                 : true
           const validation2: ValidationResult =
             typeof rawValidation2 === 'boolean'
-              ? { ok: rawValidation2, error: rawValidation2 ? undefined : tr('格式错误') }
+              ? { ok: rawValidation2, error: rawValidation2 ? undefined : tr('Invalid format') }
               : rawValidation2
 
           // 使用单独验证优先，如果没有则使用整体验证
@@ -162,7 +162,7 @@ const EditableList: React.FC<EditableListProps> = ({
                 <>
                   <div className="w-1/3">
                     <Tooltip
-                      content={part1Error ?? tr('格式错误')}
+                      content={part1Error ?? tr('Invalid format')}
                       placement="left"
                       isOpen={!part1Valid}
                       showArrow={true}
@@ -185,7 +185,7 @@ const EditableList: React.FC<EditableListProps> = ({
                   <span className="mx-1">:</span>
                   <div className="flex-1">
                     <Tooltip
-                      content={part2Error ?? tr('格式错误')}
+                      content={part2Error ?? tr('Invalid format')}
                       placement="left"
                       isOpen={!part2Valid}
                       showArrow={true}
@@ -208,7 +208,7 @@ const EditableList: React.FC<EditableListProps> = ({
                 </>
               ) : (
                 <Tooltip
-                  content={part1Error ?? tr('格式错误')}
+                  content={part1Error ?? tr('Invalid format')}
                   placement="left"
                   isOpen={!part1Valid}
                   showArrow={true}

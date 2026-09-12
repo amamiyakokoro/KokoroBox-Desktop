@@ -249,7 +249,7 @@ export const TextViewer: React.FC<Props> = ({ value }) => {
                 jumpToMatch(event.shiftKey ? currentMatch - 1 : currentMatch + 1)
               }
             }}
-            placeholder={tr('搜索')}
+            placeholder={tr('Search')}
             className="text-viewer-search w-full pl-8"
           />
         </div>

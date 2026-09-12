@@ -32,7 +32,7 @@ const OverrideCard: React.FC<Props> = (props) => {
   if (iconOnly) {
     return (
       <div className={`${overrideCardStatus} flex justify-center`}>
-        <Tooltip content={tr('覆写')} placement="right">
+        <Tooltip content={tr('Overrides')} placement="right">
           <Button
             size="sm"
             isIconOnly
@@ -84,7 +84,7 @@ const OverrideCard: React.FC<Props> = (props) => {
           <h3
             className={`text-md font-bold ${match ? 'text-primary-foreground' : 'text-foreground'}`}
           >
-            {tr('覆写')}
+            {tr('Overrides')}
           </h3>
         </CardFooter>
       </Card>
