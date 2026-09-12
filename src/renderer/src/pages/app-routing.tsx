@@ -171,6 +171,8 @@ const AppRouting: React.FC = () => {
   const [processPattern, setProcessPattern] = useState('')
   const [macIdentifierKind, setMacIdentifierKind] =
     useState<AppRoutingIdentifierKind>('macos-process-name')
+  const [linuxIdentifierKind, setLinuxIdentifierKind] =
+    useState<AppRoutingIdentifierKind>('linux-executable')
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(() => new Set())
   const knownGroupIds = useRef(new Set<string>())
   const [groupEditor, setGroupEditor] = useState<{ id?: string; name: string }>()
@@ -221,7 +223,8 @@ const AppRouting: React.FC = () => {
         ? 'cgroup v1 net_cls'
         : undefined
   const submitPattern = async (): Promise<void> => {
-    if (await addPattern(processPattern, isMac ? macIdentifierKind : undefined)) {
+    const identifierKind = isMac ? macIdentifierKind : isLinux ? linuxIdentifierKind : undefined
+    if (await addPattern(processPattern, identifierKind)) {
       setProcessPattern('')
     }
   }
@@ -443,7 +446,7 @@ const AppRouting: React.FC = () => {
             {isMac
               ? tr('规则按从上到下的顺序匹配；可使用进程名称或应用签名标识。')
               : isLinux
-                ? tr('每条规则使用一个绝对可执行文件路径；更改后需重新启动目标程序。')
+                ? tr('规则按从上到下的顺序匹配；可使用可执行文件路径或进程名称。')
                 : tr('规则按从上到下的顺序匹配；支持文件名或含 * 的完整路径。')}
           </p>
         </div>
@@ -453,7 +456,9 @@ const AppRouting: React.FC = () => {
             className={`grid gap-2 md:items-center ${
               isMac
                 ? 'md:grid-cols-[10rem_minmax(11rem,1fr)_auto]'
-                : 'sm:grid-cols-[minmax(12rem,1fr)_auto]'
+                : isLinux
+                  ? 'md:grid-cols-[10rem_minmax(11rem,1fr)_auto]'
+                  : 'sm:grid-cols-[minmax(12rem,1fr)_auto]'
             }`}
           >
             {isMac && (
@@ -471,6 +476,21 @@ const AppRouting: React.FC = () => {
                 <SelectItem key="macos-signing-identifier">{tr('签名标识')}</SelectItem>
               </Select>
             )}
+            {isLinux && (
+              <Select
+                size="sm"
+                label={tr('匹配方式')}
+                disallowEmptySelection
+                isDisabled={!supported || !config || saving}
+                selectedKeys={new Set([linuxIdentifierKind])}
+                onSelectionChange={(keys) =>
+                  setLinuxIdentifierKind(keys.currentKey as AppRoutingIdentifierKind)
+                }
+              >
+                <SelectItem key="linux-executable">{tr('可执行文件路径')}</SelectItem>
+                <SelectItem key="linux-process-name">{tr('进程名称')}</SelectItem>
+              </Select>
+            )}
             <Input
               size="sm"
               label={
@@ -479,7 +499,9 @@ const AppRouting: React.FC = () => {
                     ? tr('进程名称')
                     : tr('签名标识')
                   : isLinux
-                    ? tr('可执行文件路径')
+                    ? linuxIdentifierKind === 'linux-process-name'
+                      ? tr('进程名称')
+                      : tr('可执行文件路径')
                     : tr('程序匹配')
               }
               placeholder={
@@ -488,7 +510,9 @@ const AppRouting: React.FC = () => {
                     ? 'codex'
                     : 'com.example.app'
                   : isLinux
-                    ? '/usr/bin/example'
+                    ? linuxIdentifierKind === 'linux-process-name'
+                      ? 'codex'
+                      : '/usr/bin/example'
                     : 'example.exe'
               }
               value={processPattern}
@@ -514,7 +538,9 @@ const AppRouting: React.FC = () => {
                 variant="flat"
                 startContent={<MdAdd className="text-lg" />}
                 isDisabled={!supported || !config || saving}
-                onPress={() => void addApplications()}
+                onPress={() =>
+                  void addApplications(undefined, isLinux ? linuxIdentifierKind : undefined)
+                }
               >
                 {tr('选择应用程序')}
               </Button>
@@ -526,7 +552,9 @@ const AppRouting: React.FC = () => {
                 ? tr('例如：codex 或 Codex Helper*')
                 : tr('例如：com.openai.chat 或 com.openai.chat*')
               : isLinux
-                ? tr('例如：/usr/bin/firefox 或 /opt/example/example')
+                ? linuxIdentifierKind === 'linux-process-name'
+                  ? tr('例如：codex；所有同名可执行程序都会匹配。')
+                  : tr('例如：/usr/bin/firefox 或 /opt/example/example')
                 : tr('例如：ChatGPT.exe、ChatGPT*.exe 或 C:\\Program Files\\*\\ChatGPT.exe')}
           </p>
         </div>
@@ -546,9 +574,13 @@ const AppRouting: React.FC = () => {
                   ? tr(
                       '输入进程名称或签名标识，或选择一个或多个 .app，然后设定 Proxy、Direct 或 Block。'
                     )
-                  : tr(
-                      '输入绝对可执行文件路径，或选择一个或多个程序，然后设定 Proxy、Direct 或 Block。'
-                    )}
+                  : isLinux
+                    ? tr(
+                        '输入可执行文件路径或进程名称，或选择一个或多个程序，然后设定 Proxy、Direct 或 Block。'
+                      )
+                    : tr(
+                        '输入绝对可执行文件路径，或选择一个或多个程序，然后设定 Proxy、Direct 或 Block。'
+                      )}
               </p>
             </CardBody>
           </Card>

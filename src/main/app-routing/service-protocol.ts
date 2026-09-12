@@ -19,18 +19,20 @@ export function buildServiceProcessRouterRules(
     fail_closed: true,
     proxy_udp_dns: config.proxyUdpDns,
     diagnostic_logging: config.diagnosticLogging,
-    rules: config.rules.map((rule) => ({
-      id: rule.id,
-      executable_path: rule.processPattern,
-      executable_name: appRoutingExecutableName(
-        rule.processPattern,
-        appRoutingIdentifierKind(rule)
-      ),
-      protocol: rule.protocol,
-      action: rule.action,
-      enabled: isAppRoutingRuleEffectivelyEnabled(config, rule),
-      priority: rule.priority
-    }))
+    rules: config.rules.map((rule) => {
+      const identifierKind = appRoutingIdentifierKind(rule)
+      const matchesProcessName = identifierKind === 'linux-process-name'
+      return {
+        id: rule.id,
+        ...(matchesProcessName ? { match_kind: 'process_name' as const } : {}),
+        executable_path: matchesProcessName ? (rule.sourcePath ?? '') : rule.processPattern,
+        executable_name: appRoutingExecutableName(rule.processPattern, identifierKind),
+        protocol: rule.protocol,
+        action: rule.action,
+        enabled: isAppRoutingRuleEffectivelyEnabled(config, rule),
+        priority: rule.priority
+      }
+    })
   }
 }
 

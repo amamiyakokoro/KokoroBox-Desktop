@@ -154,7 +154,11 @@ interface AppConfig {
 type AppRoutingAction = 'proxy' | 'direct' | 'block'
 type AppRoutingProtocol = 'tcp' | 'udp' | 'both'
 type AppRoutingIdentifierKind =
-  'windows-executable' | 'macos-signing-identifier' | 'macos-process-name' | 'linux-executable'
+  | 'windows-executable'
+  | 'macos-signing-identifier'
+  | 'macos-process-name'
+  | 'linux-executable'
+  | 'linux-process-name'
 type AppRoutingRuntimeState =
   'unsupported' | 'disabled' | 'starting' | 'running' | 'degraded' | 'error'
 

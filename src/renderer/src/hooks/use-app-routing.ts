@@ -21,7 +21,7 @@ export function useAppRouting(): {
   icons: Record<string, string>
   refresh: () => Promise<void>
   save: (config: AppRoutingConfig) => Promise<boolean>
-  addApplications: (groupId?: string) => Promise<void>
+  addApplications: (groupId?: string, identifierKind?: AppRoutingIdentifierKind) => Promise<void>
   scanDirectory: (groupId?: string) => Promise<void>
   createGroup: (name: string) => Promise<boolean>
   addPattern: (
@@ -108,7 +108,10 @@ export function useAppRouting(): {
     }
   }
 
-  const addApplications = async (groupId?: string): Promise<void> => {
+  const addApplications = async (
+    groupId?: string,
+    requestedIdentifierKind?: AppRoutingIdentifierKind
+  ): Promise<void> => {
     if (!config) return
     if (groupId && !config.groups?.some((group) => group.id === groupId)) return
     const applications = await getApplicationPaths()
@@ -121,8 +124,15 @@ export function useAppRouting(): {
     )
     const additions: AppRoutingRule[] = []
     for (const application of applications) {
-      const { executablePath, identifier, identifierKind, iconDataUrl } = application
-      const processPattern = normalizeAppRoutingIdentifier(identifier, identifierKind)
+      const { executablePath, executableName, identifier, iconDataUrl } = application
+      const identifierKind =
+        requestedIdentifierKind === 'linux-process-name' &&
+        application.identifierKind === 'linux-executable'
+          ? requestedIdentifierKind
+          : application.identifierKind
+      const selectedIdentifier =
+        identifierKind === 'linux-process-name' ? executableName : identifier
+      const processPattern = normalizeAppRoutingIdentifier(selectedIdentifier, identifierKind)
       const patternKey = `${identifierKind}:${processPattern.toLowerCase()}`
       if (!processPattern || existingPatterns.has(patternKey)) continue
       existingPatterns.add(patternKey)

@@ -2,6 +2,7 @@ import { tr } from '../../../../shared/i18n'
 import { Button, Card, CardBody, Input, Select, SelectItem, Switch, Tooltip } from '@heroui/react'
 import { MdArrowDownward, MdArrowUpward, MdDeleteOutline } from 'react-icons/md'
 import defaultApplicationIcon from '../../../../../resources/app-routing-default-icon.svg?url'
+import { appRoutingExecutableName } from '../../../../shared/app-routing'
 
 const actionLabels: Record<AppRoutingAction, string> = {
   proxy: 'Proxy',
@@ -39,6 +40,27 @@ export function AppRoutingRuleRow({
   const isMacRule =
     rule.identifierKind === 'macos-process-name' ||
     rule.identifierKind === 'macos-signing-identifier'
+  const isLinuxRule =
+    rule.identifierKind === 'linux-executable' || rule.identifierKind === 'linux-process-name'
+  const hasIdentifierKindSelector = isMacRule || isLinuxRule
+  const changeIdentifierKind = (identifierKind: AppRoutingIdentifierKind): void => {
+    if (identifierKind === 'linux-process-name') {
+      onChange({
+        identifierKind,
+        processPattern: appRoutingExecutableName(rule.processPattern, 'linux-executable'),
+        sourcePath: rule.sourcePath ?? rule.processPattern
+      })
+      return
+    }
+    if (identifierKind === 'linux-executable') {
+      if (rule.sourcePath) onChange({ identifierKind, processPattern: rule.sourcePath })
+      return
+    }
+    onChange({
+      identifierKind,
+      ...(identifierKind === 'macos-process-name' ? { sourcePath: undefined } : {})
+    })
+  }
   return (
     <Card shadow="sm">
       <CardBody className="grid grid-cols-[2.75rem_minmax(0,1fr)] gap-x-3 gap-y-2 p-3.5">
@@ -79,7 +101,12 @@ export function AppRoutingRuleRow({
                 onBlur={(event) => {
                   const processPattern = event.currentTarget.value.trim()
                   if (processPattern !== rule.processPattern) {
-                    onChange({ processPattern })
+                    onChange({
+                      processPattern,
+                      ...(rule.identifierKind === 'linux-executable'
+                        ? { sourcePath: processPattern }
+                        : {})
+                    })
                   }
                 }}
               />
@@ -119,31 +146,46 @@ export function AppRoutingRuleRow({
         </div>
         <div
           className={`grid min-w-0 items-center gap-2 ${
-            isMacRule
+            hasIdentifierKindSelector
               ? 'grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto]'
               : 'grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]'
           }`}
         >
-          {isMacRule && (
+          {hasIdentifierKindSelector && (
             <div className="min-w-0">
-              <Select
-                aria-label={tr('匹配方式')}
-                size="sm"
-                className="w-full min-w-0"
-                disallowEmptySelection
-                isDisabled={disabled}
-                selectedKeys={new Set([rule.identifierKind!])}
-                onSelectionChange={(keys) => {
-                  const identifierKind = keys.currentKey as AppRoutingIdentifierKind
-                  onChange({
-                    identifierKind,
-                    ...(identifierKind === 'macos-process-name' ? { sourcePath: undefined } : {})
-                  })
-                }}
-              >
-                <SelectItem key="macos-process-name">{tr('进程名称')}</SelectItem>
-                <SelectItem key="macos-signing-identifier">{tr('签名标识')}</SelectItem>
-              </Select>
+              {isMacRule ? (
+                <Select
+                  aria-label={tr('匹配方式')}
+                  size="sm"
+                  className="w-full min-w-0"
+                  disallowEmptySelection
+                  isDisabled={disabled}
+                  selectedKeys={new Set([rule.identifierKind!])}
+                  onSelectionChange={(keys) =>
+                    changeIdentifierKind(keys.currentKey as AppRoutingIdentifierKind)
+                  }
+                >
+                  <SelectItem key="macos-process-name">{tr('进程名称')}</SelectItem>
+                  <SelectItem key="macos-signing-identifier">{tr('签名标识')}</SelectItem>
+                </Select>
+              ) : (
+                <Select
+                  aria-label={tr('匹配方式')}
+                  size="sm"
+                  className="w-full min-w-0"
+                  disallowEmptySelection
+                  isDisabled={disabled}
+                  selectedKeys={new Set([rule.identifierKind!])}
+                  onSelectionChange={(keys) =>
+                    changeIdentifierKind(keys.currentKey as AppRoutingIdentifierKind)
+                  }
+                >
+                  <SelectItem key="linux-executable" isDisabled={!rule.sourcePath}>
+                    {tr('可执行文件路径')}
+                  </SelectItem>
+                  <SelectItem key="linux-process-name">{tr('进程名称')}</SelectItem>
+                </Select>
+              )}
             </div>
           )}
           <div className="min-w-0">

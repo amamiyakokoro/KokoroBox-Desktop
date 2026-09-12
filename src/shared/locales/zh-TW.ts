@@ -120,6 +120,8 @@ export const messages: Readonly<Record<string, string>> = {
   匹配方式: '比對方式',
   '规则按从上到下的顺序匹配；可使用进程名称或应用签名标识。':
     '規則按從上到下的順序比對；可使用程序名稱或應用程式簽署識別碼。',
+  '规则按从上到下的顺序匹配；可使用可执行文件路径或进程名称。':
+    '規則按從上到下的順序比對；可使用執行檔路徑或程序名稱。',
   '例如：codex 或 Codex Helper*': '例如：codex 或 Codex Helper*',
   '输入进程名称或签名标识，或选择一个或多个 .app，然后设定 Proxy、Direct 或 Block。':
     '輸入程序名稱或簽署識別碼，或選擇一個或多個 .app，然後設定 Proxy、Direct 或 Block。',
@@ -128,6 +130,7 @@ export const messages: Readonly<Record<string, string>> = {
   '例如：com.openai.chat 或 com.openai.chat*': '例如：com.openai.chat 或 com.openai.chat*',
   '例如：/usr/bin/firefox 或 /opt/example/example':
     '例如：/usr/bin/firefox 或 /opt/example/example',
+  '例如：codex；所有同名可执行程序都会匹配。': '例如：codex；所有同名執行檔都會符合。',
   '输入签名标识，或选择一个或多个 .app，然后设定 Proxy、Direct 或 Block。':
     '輸入簽署識別碼，或選擇一個或多個 .app，然後設定 Proxy、Direct 或 Block。',
   尚未添加应用程序: '尚未新增應用程式',
@@ -135,6 +138,8 @@ export const messages: Readonly<Record<string, string>> = {
     '選擇一個或多個 .exe，然後設定 Proxy、Direct 或 Block。',
   '输入绝对可执行文件路径，或选择一个或多个程序，然后设定 Proxy、Direct 或 Block。':
     '輸入絕對執行檔路徑，或選擇一個或多個程式，然後設定 Proxy、Direct 或 Block。',
+  '输入可执行文件路径或进程名称，或选择一个或多个程序，然后设定 Proxy、Direct 或 Block。':
+    '輸入執行檔路徑或程序名稱，或選擇一個或多個程式，然後設定 Proxy、Direct 或 Block。',
   动作: '動作',
   启用规则: '啟用規則',
   代理失效保护: '代理失效保護',

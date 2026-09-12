@@ -123,6 +123,8 @@ export const messages: Readonly<Record<string, string>> = {
   匹配方式: 'Match by',
   '规则按从上到下的顺序匹配；可使用进程名称或应用签名标识。':
     'Rules match from top to bottom by process name or application signing identifier.',
+  '规则按从上到下的顺序匹配；可使用可执行文件路径或进程名称。':
+    'Rules match from top to bottom by executable path or process name.',
   '例如：codex 或 Codex Helper*': 'For example: codex or Codex Helper*',
   '输入进程名称或签名标识，或选择一个或多个 .app，然后设定 Proxy、Direct 或 Block。':
     'Enter a process name or signing identifier, or select one or more .app bundles, then choose Proxy, Direct, or Block.',
@@ -131,6 +133,8 @@ export const messages: Readonly<Record<string, string>> = {
   '例如：com.openai.chat 或 com.openai.chat*': 'For example: com.openai.chat or com.openai.chat*',
   '例如：/usr/bin/firefox 或 /opt/example/example':
     'For example: /usr/bin/firefox or /opt/example/example',
+  '例如：codex；所有同名可执行程序都会匹配。':
+    'For example: codex. Every executable with that name will match.',
   '输入签名标识，或选择一个或多个 .app，然后设定 Proxy、Direct 或 Block。':
     'Enter a signing identifier or select one or more .app bundles, then choose Proxy, Direct, or Block.',
   尚未添加应用程序: 'No applications added',
@@ -138,6 +142,8 @@ export const messages: Readonly<Record<string, string>> = {
     'Select one or more .exe files, then choose Proxy, Direct, or Block.',
   '输入绝对可执行文件路径，或选择一个或多个程序，然后设定 Proxy、Direct 或 Block。':
     'Enter an absolute executable path or select one or more applications, then choose Proxy, Direct, or Block.',
+  '输入可执行文件路径或进程名称，或选择一个或多个程序，然后设定 Proxy、Direct 或 Block。':
+    'Enter an executable path or process name, or select one or more applications, then choose Proxy, Direct, or Block.',
   动作: 'Action',
   启用规则: 'Enable rule',
   代理失效保护: 'Proxy failure protection',

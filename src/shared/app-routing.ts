@@ -1,5 +1,12 @@
 const validActions = new Set<AppRoutingAction>(['proxy', 'direct', 'block'])
 const validProtocols = new Set<AppRoutingProtocol>(['tcp', 'udp', 'both'])
+const validIdentifierKinds = new Set<AppRoutingIdentifierKind>([
+  'windows-executable',
+  'macos-signing-identifier',
+  'macos-process-name',
+  'linux-executable',
+  'linux-process-name'
+])
 const maximumAppRoutingGroups = 64
 const reservedProcessNames = new Set([
   'kokorobox.exe',
@@ -105,7 +112,11 @@ export function normalizeAppRoutingIdentifier(
   identifier: string,
   kind: AppRoutingIdentifierKind
 ): string {
-  if (kind === 'macos-signing-identifier' || kind === 'macos-process-name') {
+  if (
+    kind === 'macos-signing-identifier' ||
+    kind === 'macos-process-name' ||
+    kind === 'linux-process-name'
+  ) {
     return normalizeMacSigningIdentifier(identifier)
   }
   if (kind === 'linux-executable') return normalizeLinuxExecutablePath(identifier)
@@ -149,9 +160,11 @@ export function isProtectedMacProcessName(processName: string): boolean {
 }
 
 export function isProtectedLinuxExecutablePath(executablePath: string): boolean {
-  return reservedLinuxExecutableNames.has(
-    appRoutingExecutableName(executablePath, 'linux-executable').toLowerCase()
-  )
+  return isProtectedLinuxProcessName(appRoutingExecutableName(executablePath, 'linux-executable'))
+}
+
+export function isProtectedLinuxProcessName(processName: string): boolean {
+  return reservedLinuxExecutableNames.has(processName.toLowerCase())
 }
 
 function validLinuxExecutablePath(executablePath: string): boolean {
@@ -169,6 +182,21 @@ function validLinuxExecutablePath(executablePath: string): boolean {
     .every((segment) => segment && segment !== '.' && segment !== '..')
 }
 
+function validLinuxProcessName(processName: string): boolean {
+  return (
+    processName.length > 0 &&
+    processName !== '.' &&
+    processName !== '..' &&
+    new TextEncoder().encode(processName).length <= 255 &&
+    ![...processName].some(
+      (character) =>
+        character.charCodeAt(0) < 0x20 ||
+        character.charCodeAt(0) === 0x7f ||
+        '/*?;,'.includes(character)
+    )
+  )
+}
+
 function containsInvalidProcessPatternCharacter(processPattern: string): boolean {
   return [...processPattern].some(
     (character) => character.charCodeAt(0) < 0x20 || '?;,"'.includes(character)
@@ -181,6 +209,9 @@ export function validateAppRoutingRule(rule: AppRoutingRule): void {
     throw new Error('Application routing requires one valid application identifier')
   }
   const kind = appRoutingIdentifierKind(rule)
+  if (!validIdentifierKinds.has(kind)) {
+    throw new Error('Invalid application routing identifier kind')
+  }
   const processPattern = normalizeAppRoutingIdentifier(rule.processPattern, kind)
   if (kind === 'windows-executable') {
     if (
@@ -205,7 +236,9 @@ export function validateAppRoutingRule(rule: AppRoutingRule): void {
       kind === 'macos-process-name'
         ? processPattern !== '*' &&
           /^[^*]+(?:\*)?$/.test(processPattern) &&
-          !/[\0-\x1f\x7f?;,"\\/]/.test(processPattern)
+          !containsInvalidProcessPatternCharacter(processPattern) &&
+          !processPattern.includes('/') &&
+          !processPattern.includes('\\')
         : /^[A-Za-z0-9][A-Za-z0-9._-]*(?:\*[A-Za-z0-9._-]*)?$/.test(processPattern) &&
           processPattern !== '*'
     if (!validIdentity || new TextEncoder().encode(processPattern).length > 512) {
@@ -228,7 +261,7 @@ export function validateAppRoutingRule(rule: AppRoutingRule): void {
     ) {
       throw new Error('Application routing icon source must be an absolute macOS .app path')
     }
-  } else {
+  } else if (kind === 'linux-executable') {
     if (!validLinuxExecutablePath(processPattern)) {
       throw new Error('Application routing requires one absolute Linux executable path')
     }
@@ -240,6 +273,16 @@ export function validateAppRoutingRule(rule: AppRoutingRule): void {
       normalizeLinuxExecutablePath(rule.sourcePath) !== processPattern
     ) {
       throw new Error('Application routing icon source must match the Linux executable path')
+    }
+  } else {
+    if (!validLinuxProcessName(processPattern)) {
+      throw new Error('Application routing requires one valid Linux process name')
+    }
+    if (isProtectedLinuxProcessName(processPattern)) {
+      throw new Error(`${processPattern} cannot be intercepted`)
+    }
+    if (rule.sourcePath !== undefined && !validLinuxExecutablePath(rule.sourcePath)) {
+      throw new Error('Application routing icon source must be an absolute Linux executable path')
     }
   }
   if (!validActions.has(rule.action)) throw new Error('Invalid application routing action')
@@ -384,7 +427,9 @@ export function normalizeAppRoutingConfig(config: AppRoutingConfig): AppRoutingC
             sourcePath:
               appRoutingIdentifierKind(rule) === 'windows-executable'
                 ? normalizeWindowsExecutablePath(rule.sourcePath)
-                : appRoutingIdentifierKind(rule) === 'linux-executable'
+                : ['linux-executable', 'linux-process-name'].includes(
+                      appRoutingIdentifierKind(rule)
+                    )
                   ? normalizeLinuxExecutablePath(rule.sourcePath)
                   : rule.sourcePath
           }

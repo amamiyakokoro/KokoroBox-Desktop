@@ -443,6 +443,7 @@ export interface ServiceProcessRouterRules {
   diagnostic_logging: boolean
   rules: Array<{
     id: string
+    match_kind?: 'process_name'
     executable_path: string
     executable_name: string
     protocol: AppRoutingProtocol

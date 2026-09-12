@@ -39,7 +39,8 @@ The official deb, rpm and pacman package definitions declare the user-space depe
 
 ## Rule and lifecycle semantics
 
-- Linux rules use an exact, absolute executable path. Wildcards are rejected.
+- Linux rules can match either an exact, absolute executable path or an exact executable name. Name matching uses the basename reported by `/proc/<pid>/exe`, so it remains stable across symlinks and versioned installation directories. Wildcards are rejected.
+- Executable-name matching affects every process with that name; use full-path matching when different applications share a filename.
 - Proxy, Direct and Block each have TCP, UDP and combined cgroups.
 - The service scans `/proc` and moves matching processes into the corresponding cgroup. Children normally inherit their parent's cgroup.
 - Restart the selected application after adding, removing or changing a rule. This closes existing sockets and gives the classifier a clean process lifetime.
