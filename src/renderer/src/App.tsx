@@ -7,7 +7,14 @@ import { Button, Divider } from '@heroui/react'
 import { IoSettings } from 'react-icons/io5'
 import routes, { useDeferredRoutePreload } from '@renderer/routes'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
-import { applyTheme, checkUpdate, setNativeTheme, setTitleBarOverlay } from '@renderer/utils/ipc'
+import {
+  applyTheme,
+  checkUpdate,
+  serviceStatus,
+  setNativeTheme,
+  setTitleBarOverlay,
+  testServiceConnection
+} from '@renderer/utils/ipc'
 import { platform } from '@renderer/utils/init'
 import { TitleBarOverlayOptions } from 'electron'
 import MihomoIcon from './components/base/mihomo-icon'
@@ -17,6 +24,7 @@ const ConfirmModal = lazy(() => import('@renderer/components/base/base-confirm')
 const siderCardsPromise = import('@renderer/components/sider/sider-cards')
 const SiderCards = lazy(() => siderCardsPromise)
 const UpdaterButton = lazy(() => import('@renderer/components/updater/updater-button'))
+const MacOSServiceSetup = lazy(() => import('@renderer/components/mihomo/macos-service-setup'))
 
 let navigate: NavigateFunction
 
@@ -150,6 +158,7 @@ const App: React.FC = () => {
   }
 
   const [showQuitConfirm, setShowQuitConfirm] = useState(false)
+  const [showMacOSServiceSetup, setShowMacOSServiceSetup] = useState(false)
   const [showProfileInstallConfirm, setShowProfileInstallConfirm] = useState(false)
   const [showOverrideInstallConfirm, setShowOverrideInstallConfirm] = useState(false)
   const [profileInstallData, setProfileInstallData] = useState<{
@@ -160,6 +169,22 @@ const App: React.FC = () => {
     url: string
     name?: string | null
   }>()
+
+  useEffect(() => {
+    if (platform !== 'darwin' || appConfig?.corePermissionMode !== 'service') return
+    let cancelled = false
+    const timer = setTimeout(() => {
+      void (async () => {
+        const status = await serviceStatus().catch(() => 'unknown' as const)
+        const ready = status === 'running' && (await testServiceConnection().catch(() => false))
+        if (!cancelled && !ready) setShowMacOSServiceSetup(true)
+      })()
+    }, 1500)
+    return () => {
+      cancelled = true
+      clearTimeout(timer)
+    }
+  }, [appConfig?.corePermissionMode])
 
   useEffect(() => {
     const handleShowQuitConfirm = (): void => {
@@ -212,6 +237,7 @@ const App: React.FC = () => {
   return (
     <div className={`w-full h-screen flex ${resizing ? 'cursor-ew-resize' : ''}`}>
       <Suspense fallback={null}>
+        {showMacOSServiceSetup && <MacOSServiceSetup onChange={setShowMacOSServiceSetup} />}
         {showQuitConfirm && (
           <ConfirmModal
             title={tr('确定要退出 KokoroBox 吗？')}

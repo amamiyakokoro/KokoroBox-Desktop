@@ -67,6 +67,12 @@ configurations that never selected a mode receive this default during normal con
 migration. An explicitly saved **Direct** selection is preserved and remains available in Core
 Settings. Windows and Linux retain their existing direct/elevated default.
 
+If the service is not yet usable, the main window presents a focused setup guide. It distinguishes
+registration, macOS approval, service start and authenticated bootstrap instead of reporting one
+generic core-start error. PKG installation requests administrator authorization once. Normal
+bootstrap remains passwordless; only explicit recovery from stale service credentials may request
+administrator verification again. Completing the guide restarts Mihomo through the service.
+
 Service start, restart and repair operations reload the registered daemon through `SMAppService`.
 This refreshes the job from the current application bundle without invoking `osascript`; macOS
 retains the user's existing background-service approval across the unregister/register cycle.

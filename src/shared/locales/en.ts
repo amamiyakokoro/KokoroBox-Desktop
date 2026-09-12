@@ -19,6 +19,27 @@ export const messages: Readonly<Record<string, string>> = {
     'Check and repair the ProxyBridge relay rules for 34010/TCP and 34011/UDP.',
   检查并修复: 'Check and repair',
   应用分流防火墙修复成功: 'Application routing firewall repaired',
+  '完成 macOS 系统服务设置': 'Complete macOS System Service Setup',
+  'KokoroBox 默认通过系统服务运行代理核心，完成后日常启动不再要求提权。':
+    'KokoroBox runs the proxy core through a system service by default. Daily launches no longer require elevation after setup.',
+  当前步骤: 'Current step',
+  尚未注册: 'Not registered',
+  等待安全初始化: 'Waiting for secure initialization',
+  已准备完成: 'Ready',
+  等待启动: 'Waiting to start',
+  需要检查: 'Needs attention',
+  初始化安全连接: 'Initialize secure connection',
+  启动系统服务: 'Start system service',
+  设置系统服务: 'Set up system service',
+  '注册 KokoroBox 的签名系统服务。': 'Register the signed KokoroBox system service.',
+  '若 macOS 打开系统设置，请允许 KokoroBox 后台项目。':
+    'If macOS opens System Settings, allow the KokoroBox background item.',
+  '返回 KokoroBox，初始化安全连接并启动代理核心。':
+    'Return to KokoroBox, initialize the secure connection, and start the proxy core.',
+  'PKG 安装会要求一次管理员授权。服务注册与批准由 macOS 管理；只有修复旧服务认证时，系统才可能再次要求管理员验证。':
+    'The PKG requires administrator authorization once. macOS manages service registration and approval; administrator verification may be requested again only when repairing credentials from an older service.',
+  稍后设置: 'Set up later',
+  系统服务已准备完成: 'System service is ready',
   应用程序: 'Application',
   上游: 'Upstream',
   操作: 'Controls',

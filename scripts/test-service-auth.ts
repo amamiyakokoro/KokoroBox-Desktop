@@ -124,6 +124,11 @@ test('Windows service probes and elevated commands never open a console window',
 test('macOS registers the bundled daemon through SMAppService', () => {
   const managerSource = readFileSync(resolve('src/main/service/manager.ts'), 'utf8')
   const ipcSource = readFileSync(resolve('src/main/utils/ipc.ts'), 'utf8')
+  const appSource = readFileSync(resolve('src/renderer/src/App.tsx'), 'utf8')
+  const setupSource = readFileSync(
+    resolve('src/renderer/src/components/mihomo/macos-service-setup.tsx'),
+    'utf8'
+  )
   const templateSource = readFileSync(resolve('src/main/utils/template.ts'), 'utf8')
   const applicationInitSource = readFileSync(resolve('src/main/utils/init.ts'), 'utf8')
   const apiSource = readFileSync(resolve('src/main/service/api.ts'), 'utf8')
@@ -163,6 +168,13 @@ test('macOS registers the bundled daemon through SMAppService', () => {
     applicationInitSource,
     /if \(!\(key in appConfig\)[\s\S]*?appConfigPatch[\s\S]*?defaultConfig/
   )
+  assert.match(appSource, /appConfig\?\.corePermissionMode !== 'service'/)
+  assert.match(appSource, /setShowMacOSServiceSetup\(true\)/)
+  assert.match(setupSource, /status === 'requires-approval'/)
+  assert.match(setupSource, /openServiceSystemSettings/)
+  assert.match(setupSource, /status === 'need-init' \|\| status === 'running'/)
+  assert.match(setupSource, /run: initService/)
+  assert.match(setupSource, /await restartCore\(\)/)
   assert.match(dirsSource, /\/Library\/LaunchDaemons\/KokoroBoxService\.plist/)
   assert.match(managerSource, /registerMacOSService\(\)/)
   assert.match(managerSource, /unregisterMacOSService\(\)/)
