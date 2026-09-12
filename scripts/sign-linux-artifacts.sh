@@ -5,14 +5,6 @@ release_dir=${1:-dist/release}
 public_key=${2:-build/linux/kokorobox-linux-signing-key.asc}
 : "${LINUX_GPG_PRIVATE_KEY:?LINUX_GPG_PRIVATE_KEY is required}"
 : "${LINUX_GPG_PASSPHRASE:?LINUX_GPG_PASSPHRASE is required}"
-: "${LINUX_GPG_FINGERPRINT:?LINUX_GPG_FINGERPRINT is required}"
-fingerprint=${LINUX_GPG_FINGERPRINT//[[:space:]]/}
-fingerprint=${fingerprint^^}
-
-if [[ ! $fingerprint =~ ^[0-9A-F]{40}$ ]]; then
-  echo 'LINUX_GPG_FINGERPRINT must be a complete OpenPGP fingerprint' >&2
-  exit 1
-fi
 if [[ ! -d $release_dir || ! -f $public_key ]]; then
   echo 'Linux signing input is missing' >&2
   exit 1
@@ -36,9 +28,9 @@ printf '%s' "$LINUX_GPG_PASSPHRASE" > "$passphrase_file"
 chmod 600 "$private_key_file" "$passphrase_file"
 unset LINUX_GPG_PRIVATE_KEY LINUX_GPG_PASSPHRASE
 
-public_fingerprint=$(gpg --batch --show-keys --with-colons "$public_key" | awk -F: '$1 == "fpr" { print toupper($10); exit }')
-if [[ $public_fingerprint != "$fingerprint" ]]; then
-  echo 'The committed Linux signing key does not match LINUX_GPG_FINGERPRINT' >&2
+fingerprint=$(gpg --batch --show-keys --with-colons "$public_key" | awk -F: '$1 == "fpr" { print toupper($10); exit }')
+if [[ ! $fingerprint =~ ^[0-9A-F]{40}$ ]]; then
+  echo 'The committed Linux signing key has no complete primary fingerprint' >&2
   exit 1
 fi
 

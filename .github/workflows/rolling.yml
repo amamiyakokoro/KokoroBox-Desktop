@@ -74,4 +74,3 @@ jobs:
       channel: rolling
       version: ${{ needs.prepare.outputs.version }}
       release_tag: rolling
-      linux_gpg_fingerprint: ${{ vars.LINUX_GPG_FINGERPRINT }}

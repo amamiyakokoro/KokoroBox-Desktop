@@ -95,27 +95,26 @@ Rocky Linux retains compatible dependency declarations but is not yet covered by
 1. Push the workflow changes to the repository's `master` branch.
 2. Open **Actions** on GitHub and enable workflows if GitHub has disabled them for the fork.
 3. Ensure repository/organization Actions policies permit the referenced actions and GitHub-hosted runners. Publication needs `contents: write`; the workflows grant this only to publishing jobs.
-4. Configure the Linux signing secrets and variable below, plus the seven Apple
+4. Configure the two Linux signing secrets below, plus the seven Apple
    signing/notarization secrets and two Sparkle signing secrets. GitHub supplies `GITHUB_TOKEN`
    automatically.
 
 The local Apple Keychain is not available on hosted runners. Do not upload certificates or private keys to Git. No AUR key, translation API key, or SignPath token is required by this pipeline.
 
-### Linux repository secrets and variable
+### Linux repository secrets
 
 The public key is committed at `build/linux/kokorobox-linux-signing-key.asc`. Its primary
 fingerprint is `72B15D008F4052105E238DD5576C2811308ED996`.
 
-| Setting                 | Type     | Value                                  |
-| ----------------------- | -------- | -------------------------------------- |
-| `LINUX_GPG_PRIVATE_KEY` | Secret   | ASCII-armored CI signing subkey export |
-| `LINUX_GPG_PASSPHRASE`  | Secret   | Signing subkey passphrase              |
-| `LINUX_GPG_FINGERPRINT` | Variable | Complete primary fingerprint           |
+| Setting                 | Type   | Value                                  |
+| ----------------------- | ------ | -------------------------------------- |
+| `LINUX_GPG_PRIVATE_KEY` | Secret | ASCII-armored CI signing subkey export |
+| `LINUX_GPG_PASSPHRASE`  | Secret | Signing subkey passphrase              |
 
-The publish job checks that the configured fingerprint matches both the committed public key and
-the imported secret subkey. It signs final RPMs in place, creates detached signatures for DEB and
-Arch packages, regenerates `SHA256SUMS`, verifies every signature, and removes its temporary GnuPG
-home before uploading release assets.
+The publish job derives the primary fingerprint from the committed public key and checks that the
+imported secret subkey matches it. It signs final RPMs in place, creates detached signatures for
+DEB and Arch packages, regenerates `SHA256SUMS`, verifies every signature, and removes its temporary
+GnuPG home before uploading release assets.
 
 ## Rolling prereleases
 

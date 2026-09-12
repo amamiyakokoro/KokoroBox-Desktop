@@ -580,11 +580,7 @@ test('workflows gate publication on all builds and do not invoke upstream-only s
       config.jobs.publish.secrets.LINUX_GPG_PASSPHRASE,
       '${{ secrets.LINUX_GPG_PASSPHRASE }}'
     )
-    assert.equal(
-      config.jobs.publish.with.linux_gpg_fingerprint,
-      '${{ vars.LINUX_GPG_FINGERPRINT }}'
-    )
-    assert.equal(config.jobs.build.with.linux_gpg_fingerprint, undefined)
+    assert.equal(config.jobs.publish.with.linux_gpg_fingerprint, undefined)
     assert.equal(config.concurrency['cancel-in-progress'], false)
     assert.equal(config.jobs.aur, undefined)
     assert.equal(config.jobs['update-version'], undefined)
@@ -617,8 +613,8 @@ test('workflows gate publication on all builds and do not invoke upstream-only s
   const publishWorkflow = workflow('publish')
   assert.equal(publishWorkflow.on.workflow_call.secrets.LINUX_GPG_PRIVATE_KEY.required, true)
   assert.equal(publishWorkflow.on.workflow_call.secrets.LINUX_GPG_PASSPHRASE.required, true)
-  assert.equal(publishWorkflow.on.workflow_call.inputs.linux_gpg_fingerprint.required, true)
-  assert.match(publish, /LINUX_GPG_FINGERPRINT: \$\{\{ inputs\.linux_gpg_fingerprint \}\}/)
+  assert.equal(publishWorkflow.on.workflow_call.inputs.linux_gpg_fingerprint, undefined)
+  assert.doesNotMatch(publish, /LINUX_GPG_FINGERPRINT/)
   assert.doesNotMatch(publish, /dist\/release\/kokorobox-process-router-\*\.cdx\.json/)
   assert.match(publish, /asset\.name\.startsWith\('kokorobox-process-router-'/)
   assert.match(publish, /dist\/release\/appcast-macos-\*\.xml/)
