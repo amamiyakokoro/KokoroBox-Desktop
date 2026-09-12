@@ -53,6 +53,29 @@ export const messages: Readonly<Record<string, string>> = {
   重新扫描文件夹: 'Rescan folder',
   启用规则组: 'Enable rule group',
   单独规则: 'Individual rules',
+  规则组: 'Rule groups',
+  新建规则组: 'New rule group',
+  创建: 'Create',
+  重命名规则组: 'Rename rule group',
+  删除规则组: 'Delete rule group',
+  规则组名称: 'Rule group name',
+  规则组操作: 'Rule group actions',
+  手动规则组: 'Manual rule group',
+  '例如：游戏': 'For example: Games',
+  '创建后可从规则组菜单添加应用程序或扫描文件夹。':
+    'After creating the group, use its menu to add applications or scan a folder.',
+  '规则组名称不能为空且不能超过 80 个字符':
+    'The rule group name is required and must not exceed 80 characters',
+  '删除规则组会同时删除组内的所有应用程序规则。':
+    'Deleting a rule group also deletes every application rule inside it.',
+  '不属于规则组的应用程序。': 'Applications that do not belong to a rule group.',
+  暂无单独规则: 'No individual rules',
+  '统一管理一组应用程序，规则组默认折叠显示。':
+    'Manage applications together. Rule groups are collapsed by default.',
+  暂无规则组: 'No rule groups',
+  '手动创建空规则组，或扫描文件夹并自动添加其中的应用程序。':
+    'Create an empty rule group or scan a folder to add its applications automatically.',
+  规则组中暂无应用程序: 'No applications in this rule group',
   '{0} 个应用程序': '{0} applications',
   '应用程序规则组最多支持 64 个': 'Application routing supports at most 64 groups',
   '所选文件夹中没有可添加的 .exe': 'The selected folder contains no .exe files to add',

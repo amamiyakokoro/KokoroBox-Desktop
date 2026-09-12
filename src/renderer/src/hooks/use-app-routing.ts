@@ -21,14 +21,17 @@ export function useAppRouting(): {
   icons: Record<string, string>
   refresh: () => Promise<void>
   save: (config: AppRoutingConfig) => Promise<boolean>
-  addApplications: () => Promise<void>
+  addApplications: (groupId?: string) => Promise<void>
   scanDirectory: (groupId?: string) => Promise<void>
+  createGroup: (name: string) => Promise<boolean>
   addPattern: (
     processPattern: string,
     identifierKind?: AppRoutingIdentifierKind
   ) => Promise<boolean>
   updateRule: (id: string, patch: Partial<AppRoutingRule>) => void
   updateGroup: (id: string, patch: Partial<AppRoutingRuleGroup>) => void
+  renameGroup: (id: string, name: string) => Promise<boolean>
+  deleteGroup: (id: string) => void
   moveRule: (id: string, offset: number) => void
   deleteRule: (id: string) => void
 } {
@@ -105,8 +108,9 @@ export function useAppRouting(): {
     }
   }
 
-  const addApplications = async (): Promise<void> => {
+  const addApplications = async (groupId?: string): Promise<void> => {
     if (!config) return
+    if (groupId && !config.groups?.some((group) => group.id === groupId)) return
     const applications = await getApplicationPaths()
     if (!applications?.length) return
     const existingPatterns = new Set(
@@ -124,6 +128,7 @@ export function useAppRouting(): {
       existingPatterns.add(patternKey)
       additions.push({
         id: nanoid(),
+        ...(groupId ? { groupId } : {}),
         processPattern,
         identifierKind,
         sourcePath: executablePath,
@@ -152,7 +157,7 @@ export function useAppRouting(): {
       if (!selection) return
 
       const matchingGroup = config.groups?.find(
-        (group) => group.sourceDirectory.toLowerCase() === selection.directoryPath.toLowerCase()
+        (group) => group.sourceDirectory?.toLowerCase() === selection.directoryPath.toLowerCase()
       )
       const group = requestedGroup ??
         matchingGroup ?? {
@@ -275,6 +280,23 @@ export function useAppRouting(): {
     return save({ ...config, rules: [...config.rules, nextRule] })
   }
 
+  const createGroup = async (value: string): Promise<boolean> => {
+    if (!config || window.api.platform !== 'win32') return false
+    if ((config.groups?.length ?? 0) >= 64) {
+      notify(tr('应用程序规则组最多支持 64 个'), { variant: 'danger' })
+      return false
+    }
+    const name = value.trim()
+    if (!name || name.length > 80 || /[\0\r\n]/.test(name)) {
+      notify(tr('规则组名称不能为空且不能超过 80 个字符'), { variant: 'danger' })
+      return false
+    }
+    return save({
+      ...config,
+      groups: [...(config.groups ?? []), { id: nanoid(), name, enabled: true }]
+    })
+  }
+
   const updateRule = (id: string, patch: Partial<AppRoutingRule>): void => {
     if (!config) return
     void save({
@@ -288,6 +310,28 @@ export function useAppRouting(): {
     void save({
       ...config,
       groups: config.groups.map((group) => (group.id === id ? { ...group, ...patch } : group))
+    })
+  }
+
+  const renameGroup = async (id: string, value: string): Promise<boolean> => {
+    if (!config?.groups?.some((group) => group.id === id)) return false
+    const name = value.trim()
+    if (!name || name.length > 80 || /[\0\r\n]/.test(name)) {
+      notify(tr('规则组名称不能为空且不能超过 80 个字符'), { variant: 'danger' })
+      return false
+    }
+    return save({
+      ...config,
+      groups: config.groups.map((group) => (group.id === id ? { ...group, name } : group))
+    })
+  }
+
+  const deleteGroup = (id: string): void => {
+    if (!config?.groups) return
+    void save({
+      ...config,
+      groups: config.groups.filter((group) => group.id !== id),
+      rules: config.rules.filter((rule) => rule.groupId !== id)
     })
   }
 
@@ -316,7 +360,10 @@ export function useAppRouting(): {
     const rules = config.rules.filter((rule) => rule.id !== id)
     const groups = deleted?.groupId
       ? config.groups?.filter(
-          (group) => group.id !== deleted.groupId || rules.some((rule) => rule.groupId === group.id)
+          (group) =>
+            group.id !== deleted.groupId ||
+            group.sourceDirectory === undefined ||
+            rules.some((rule) => rule.groupId === group.id)
         )
       : config.groups
     void save({ ...config, groups, rules })
@@ -335,9 +382,12 @@ export function useAppRouting(): {
     save,
     addApplications,
     scanDirectory,
+    createGroup,
     addPattern,
     updateRule,
     updateGroup,
+    renameGroup,
+    deleteGroup,
     moveRule,
     deleteRule
   }

@@ -609,6 +609,16 @@ test('rule groups preserve child state while controlling effective routing', () 
   assert.equal(JSON.parse(buildProcessRouterCommand(config, true)).rules[0].enabled, false)
   assert.equal(buildServiceProcessRouterRules(config, 7891).rules[0].enabled, false)
 
+  const manualGroupConfig: AppRoutingConfig = {
+    ...config,
+    groups: [{ id: 'manual', name: 'Manual group', enabled: true }],
+    rules: [rule({ id: 'manual-rule', groupId: 'manual' })]
+  }
+  validateAppRoutingConfig(manualGroupConfig)
+  assert.deepEqual(normalizeAppRoutingConfig(manualGroupConfig).groups, [
+    { id: 'manual', name: 'Manual group', enabled: true }
+  ])
+
   const enabled = { ...config, groups: [{ ...config.groups![0], enabled: true }] }
   assert.equal(isAppRoutingRuleEffectivelyEnabled(enabled, groupedRule), true)
   assert.equal(normalizeAppRoutingConfig(enabled).rules[0].groupId, 'games')
@@ -1023,8 +1033,14 @@ test('application routing rules use a two-line identity-first card layout', () =
   assert.match(row, /src=\{icon \|\| defaultApplicationIcon\}/)
   assert.doesNotMatch(page, /grid-cols-\[1fr_9rem_9rem_9rem\]/)
   assert.match(page, /scanDirectory\(\)/)
+  assert.match(page, /createGroup\(name\)/)
+  assert.match(page, /renameGroup\(groupEditor\.id, name\)/)
+  assert.match(page, /deleteGroup\(deletingGroupId\)/)
   assert.match(page, /updateGroup\(group\.id, \{ enabled \}\)/)
   assert.match(page, /group\.sourceDirectory/)
+  assert.match(page, /knownGroupIds/)
+  assert.match(page, /tr\('单独规则'\)/)
+  assert.match(page, /tr\('规则组'\)/)
 })
 
 test('Windows packaging rebuilds the architecture-matched process router payload', () => {

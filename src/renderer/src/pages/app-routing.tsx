@@ -1,7 +1,9 @@
 import { tr } from '../../../shared/i18n'
 import BasePage from '@renderer/components/base/base-page'
 import { AppRoutingRuleRow } from '@renderer/components/app-routing/rule-row'
+import { AppRoutingGroupNameModal } from '@renderer/components/app-routing/group-name-modal'
 import AppRoutingSettingDrawer from '@renderer/components/app-routing/app-routing-setting-drawer'
+import ConfirmModal from '@renderer/components/base/base-confirm'
 import { useAppRouting } from '@renderer/hooks/use-app-routing'
 import {
   initService,
@@ -18,6 +20,10 @@ import {
   CardBody,
   Chip,
   Divider,
+  Dropdown,
+  DropdownItem,
+  DropdownMenu,
+  DropdownTrigger,
   Input,
   Select,
   SelectItem,
@@ -25,13 +31,17 @@ import {
 } from '@heroui/react'
 import {
   MdAdd,
+  MdCreateNewFolder,
+  MdDeleteOutline,
+  MdDriveFileRenameOutline,
   MdFolderOpen,
   MdKeyboardArrowDown,
+  MdMoreHoriz,
   MdOpenInNew,
   MdRefresh,
   MdTune
 } from 'react-icons/md'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 function statusColor(
   status?: AppRoutingStatus
@@ -149,9 +159,12 @@ const AppRouting: React.FC = () => {
     refresh,
     addApplications,
     scanDirectory,
+    createGroup,
     addPattern,
     updateRule,
     updateGroup,
+    renameGroup,
+    deleteGroup,
     moveRule,
     deleteRule
   } = useAppRouting()
@@ -159,9 +172,23 @@ const AppRouting: React.FC = () => {
   const [macIdentifierKind, setMacIdentifierKind] =
     useState<AppRoutingIdentifierKind>('macos-process-name')
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(() => new Set())
+  const knownGroupIds = useRef(new Set<string>())
+  const [groupEditor, setGroupEditor] = useState<{ id?: string; name: string }>()
+  const [deletingGroupId, setDeletingGroupId] = useState<string>()
   const [openingSettings, setOpeningSettings] = useState(false)
   const [preparingService, setPreparingService] = useState(false)
   const [repairingFirewall, setRepairingFirewall] = useState(false)
+  useEffect(() => {
+    const currentIds = new Set(config?.groups?.map((group) => group.id) ?? [])
+    setCollapsedGroups((current) => {
+      const next = new Set([...current].filter((id) => currentIds.has(id)))
+      for (const id of currentIds) {
+        if (!knownGroupIds.current.has(id)) next.add(id)
+      }
+      return next
+    })
+    knownGroupIds.current = currentIds
+  }, [config?.groups])
   const openApprovalSettings = async (): Promise<void> => {
     if (openingSettings) return
     setOpeningSettings(true)
@@ -290,6 +317,24 @@ const AppRouting: React.FC = () => {
           onOpenSystemSettings={() => void openApprovalSettings()}
           onRepairFirewall={() => void repairWindowsFirewall()}
           onClose={() => setIsSettingDrawerOpen(false)}
+        />
+      )}
+      {groupEditor && (
+        <AppRoutingGroupNameModal
+          initialName={groupEditor.name}
+          onSave={(name) =>
+            groupEditor.id ? renameGroup(groupEditor.id, name) : createGroup(name)
+          }
+          onClose={() => setGroupEditor(undefined)}
+        />
+      )}
+      {deletingGroupId && (
+        <ConfirmModal
+          title={tr('删除规则组')}
+          description={tr('删除规则组会同时删除组内的所有应用程序规则。')}
+          confirmText={tr('删除')}
+          onConfirm={() => deleteGroup(deletingGroupId)}
+          onChange={(open) => !open && setDeletingGroupId(undefined)}
         />
       )}
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-4 p-4">
@@ -477,17 +522,6 @@ const AppRouting: React.FC = () => {
               >
                 {tr('选择应用程序')}
               </Button>
-              {isWindows && (
-                <Button
-                  className="shrink-0"
-                  variant="flat"
-                  startContent={<MdFolderOpen className="text-lg" />}
-                  isDisabled={!supported || !config || saving}
-                  onPress={() => void scanDirectory()}
-                >
-                  {tr('扫描文件夹')}
-                </Button>
-              )}
             </div>
           </div>
           <p className="px-1 text-xs text-foreground-500">
@@ -507,7 +541,7 @@ const AppRouting: React.FC = () => {
               {tr('应用分流支持 Windows 10/11 x64、macOS 13 或更新版本及 Linux x64/arm64。')}
             </CardBody>
           </Card>
-        ) : config?.rules.length === 0 ? (
+        ) : !isWindows && config?.rules.length === 0 ? (
           <Card shadow="sm">
             <CardBody className="items-center gap-2 p-8 text-center">
               <p className="font-medium">{tr('尚未添加应用程序')}</p>
@@ -516,103 +550,221 @@ const AppRouting: React.FC = () => {
                   ? tr(
                       '输入进程名称或签名标识，或选择一个或多个 .app，然后设定 Proxy、Direct 或 Block。'
                     )
-                  : isLinux
-                    ? tr(
-                        '输入绝对可执行文件路径，或选择一个或多个程序，然后设定 Proxy、Direct 或 Block。'
-                      )
-                    : tr('输入程序匹配，或选择一个或多个 .exe，然后设定 Proxy、Direct 或 Block。')}
+                  : tr(
+                      '输入绝对可执行文件路径，或选择一个或多个程序，然后设定 Proxy、Direct 或 Block。'
+                    )}
               </p>
             </CardBody>
           </Card>
         ) : (
-          <div className="flex flex-col gap-4">
-            {(config?.groups?.length ?? 0) > 0 && ungroupedRules.length > 0 && (
-              <div className="px-1 text-xs font-medium uppercase tracking-wide text-foreground-500">
-                {tr('单独规则')}
-              </div>
-            )}
-            {ungroupedRules.map((rule, index) => (
-              <AppRoutingRuleRow
-                key={rule.id}
-                rule={rule}
-                index={index}
-                count={ungroupedRules.length}
-                icon={icons[rule.id]}
-                disabled={saving}
-                onChange={(patch) => updateRule(rule.id, patch)}
-                onMove={(offset) => moveRule(rule.id, offset)}
-                onDelete={() => deleteRule(rule.id)}
-              />
-            ))}
-            {config?.groups?.map((group) => {
-              const rules = config.rules.filter((rule) => rule.groupId === group.id)
-              const isCollapsed = collapsedGroups.has(group.id)
-              return (
-                <section key={group.id} className="flex flex-col gap-2">
-                  <div className="flex min-w-0 items-center gap-2 rounded-xl border border-default-200 bg-default-50 px-3 py-2.5 dark:bg-default-100/40">
-                    <button
-                      type="button"
-                      className="flex min-w-0 flex-1 items-center gap-2 text-left"
-                      aria-expanded={!isCollapsed}
-                      onClick={() => toggleGroup(group.id)}
-                    >
-                      <MdKeyboardArrowDown
-                        className={`shrink-0 text-xl text-foreground-500 transition-transform duration-150 ${isCollapsed ? '-rotate-90' : ''}`}
-                      />
-                      <MdFolderOpen className="shrink-0 text-xl text-primary" />
-                      <span className="min-w-0 flex-1">
-                        <span className="block truncate text-sm font-semibold">{group.name}</span>
-                        <span
-                          className="block truncate text-xs text-foreground-500"
-                          title={group.sourceDirectory}
-                        >
-                          {group.sourceDirectory}
-                        </span>
-                      </span>
-                      <Chip size="sm" variant="flat" className="shrink-0">
-                        {tr('{0} 个应用程序', [rules.length])}
+          <div className="flex flex-col gap-5">
+            <section className="flex flex-col gap-3">
+              {isWindows && (
+                <div className="flex items-end justify-between gap-3 px-1">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h4 className="text-sm font-semibold">{tr('单独规则')}</h4>
+                      <Chip size="sm" variant="flat">
+                        {ungroupedRules.length}
                       </Chip>
-                    </button>
-                    <Button
-                      isIconOnly
-                      size="sm"
-                      variant="light"
-                      aria-label={tr('重新扫描文件夹')}
-                      isDisabled={saving}
-                      onPress={() => void scanDirectory(group.id)}
-                    >
-                      <MdRefresh className="text-lg" />
-                    </Button>
-                    <Switch
-                      size="sm"
-                      aria-label={tr('启用规则组')}
-                      isSelected={group.enabled}
-                      isDisabled={saving}
-                      onValueChange={(enabled) => updateGroup(group.id, { enabled })}
-                    />
-                  </div>
-                  {!isCollapsed && (
-                    <div
-                      className={`ml-4 flex flex-col gap-3 border-l-2 pl-3 transition-opacity duration-150 ${group.enabled ? 'border-primary-200' : 'border-default-200 opacity-70'}`}
-                    >
-                      {rules.map((rule, index) => (
-                        <AppRoutingRuleRow
-                          key={rule.id}
-                          rule={rule}
-                          index={index}
-                          count={rules.length}
-                          icon={icons[rule.id]}
-                          disabled={saving}
-                          onChange={(patch) => updateRule(rule.id, patch)}
-                          onMove={(offset) => moveRule(rule.id, offset)}
-                          onDelete={() => deleteRule(rule.id)}
-                        />
-                      ))}
                     </div>
+                    <p className="mt-0.5 text-xs text-foreground-500">
+                      {tr('不属于规则组的应用程序。')}
+                    </p>
+                  </div>
+                </div>
+              )}
+              {ungroupedRules.length === 0 && isWindows ? (
+                <div className="rounded-xl border border-dashed border-default-200 px-4 py-5 text-center text-sm text-foreground-500">
+                  {tr('暂无单独规则')}
+                </div>
+              ) : (
+                ungroupedRules.map((rule, index) => (
+                  <AppRoutingRuleRow
+                    key={rule.id}
+                    rule={rule}
+                    index={index}
+                    count={ungroupedRules.length}
+                    icon={icons[rule.id]}
+                    disabled={saving}
+                    onChange={(patch) => updateRule(rule.id, patch)}
+                    onMove={(offset) => moveRule(rule.id, offset)}
+                    onDelete={() => deleteRule(rule.id)}
+                  />
+                ))
+              )}
+            </section>
+
+            {isWindows && (
+              <>
+                <Divider />
+                <section className="flex flex-col gap-3">
+                  <div className="flex flex-wrap items-end justify-between gap-3 px-1">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h4 className="text-sm font-semibold">{tr('规则组')}</h4>
+                        <Chip size="sm" variant="flat">
+                          {config?.groups?.length ?? 0}
+                        </Chip>
+                      </div>
+                      <p className="mt-0.5 text-xs text-foreground-500">
+                        {tr('统一管理一组应用程序，规则组默认折叠显示。')}
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        size="sm"
+                        variant="flat"
+                        startContent={<MdCreateNewFolder className="text-lg" />}
+                        isDisabled={!config || saving}
+                        onPress={() => setGroupEditor({ name: '' })}
+                      >
+                        {tr('新建规则组')}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="flat"
+                        startContent={<MdFolderOpen className="text-lg" />}
+                        isDisabled={!config || saving}
+                        onPress={() => void scanDirectory()}
+                      >
+                        {tr('扫描文件夹')}
+                      </Button>
+                    </div>
+                  </div>
+
+                  {(config?.groups?.length ?? 0) === 0 ? (
+                    <div className="rounded-xl border border-dashed border-default-200 px-4 py-6 text-center">
+                      <p className="text-sm font-medium">{tr('暂无规则组')}</p>
+                      <p className="mt-1 text-xs text-foreground-500">
+                        {tr('手动创建空规则组，或扫描文件夹并自动添加其中的应用程序。')}
+                      </p>
+                    </div>
+                  ) : (
+                    config?.groups?.map((group) => {
+                      const rules = config.rules.filter((rule) => rule.groupId === group.id)
+                      const isCollapsed = collapsedGroups.has(group.id)
+                      return (
+                        <section key={group.id} className="flex flex-col gap-2">
+                          <div className="flex min-w-0 items-center gap-2 rounded-xl border border-default-200 bg-default-50 px-3 py-2.5 dark:bg-default-100/40">
+                            <button
+                              type="button"
+                              className="flex min-w-0 flex-1 items-center gap-2 text-left"
+                              aria-expanded={!isCollapsed}
+                              onClick={() => toggleGroup(group.id)}
+                            >
+                              <MdKeyboardArrowDown
+                                className={`shrink-0 text-xl text-foreground-500 transition-transform duration-150 ${isCollapsed ? '-rotate-90' : ''}`}
+                              />
+                              <MdFolderOpen className="shrink-0 text-xl text-primary" />
+                              <span className="min-w-0 flex-1">
+                                <span className="block truncate text-sm font-semibold">
+                                  {group.name}
+                                </span>
+                                <span
+                                  className="block truncate text-xs text-foreground-500"
+                                  title={group.sourceDirectory}
+                                >
+                                  {group.sourceDirectory ?? tr('手动规则组')}
+                                </span>
+                              </span>
+                              <Chip size="sm" variant="flat" className="shrink-0">
+                                {tr('{0} 个应用程序', [rules.length])}
+                              </Chip>
+                            </button>
+                            <Dropdown placement="bottom-end">
+                              <DropdownTrigger>
+                                <Button
+                                  isIconOnly
+                                  size="sm"
+                                  variant="light"
+                                  aria-label={tr('规则组操作')}
+                                  isDisabled={saving}
+                                >
+                                  <MdMoreHoriz className="text-lg" />
+                                </Button>
+                              </DropdownTrigger>
+                              <DropdownMenu
+                                aria-label={tr('规则组操作')}
+                                onAction={(key) => {
+                                  if (key === 'add') void addApplications(group.id)
+                                  if (key === 'scan') void scanDirectory(group.id)
+                                  if (key === 'rename')
+                                    setGroupEditor({ id: group.id, name: group.name })
+                                  if (key === 'delete') setDeletingGroupId(group.id)
+                                }}
+                              >
+                                <DropdownItem key="add" startContent={<MdAdd />}>
+                                  {tr('添加应用程序')}
+                                </DropdownItem>
+                                <DropdownItem key="scan" startContent={<MdRefresh />}>
+                                  {group.sourceDirectory ? tr('重新扫描文件夹') : tr('扫描文件夹')}
+                                </DropdownItem>
+                                <DropdownItem
+                                  key="rename"
+                                  startContent={<MdDriveFileRenameOutline />}
+                                >
+                                  {tr('重命名规则组')}
+                                </DropdownItem>
+                                <DropdownItem
+                                  key="delete"
+                                  color="danger"
+                                  className="text-danger"
+                                  startContent={<MdDeleteOutline />}
+                                >
+                                  {tr('删除规则组')}
+                                </DropdownItem>
+                              </DropdownMenu>
+                            </Dropdown>
+                            <Switch
+                              size="sm"
+                              aria-label={tr('启用规则组')}
+                              isSelected={group.enabled}
+                              isDisabled={saving}
+                              onValueChange={(enabled) => updateGroup(group.id, { enabled })}
+                            />
+                          </div>
+                          {!isCollapsed && (
+                            <div
+                              className={`ml-4 flex flex-col gap-3 border-l-2 pl-3 transition-opacity duration-150 ${group.enabled ? 'border-primary-200' : 'border-default-200 opacity-70'}`}
+                            >
+                              {rules.length === 0 ? (
+                                <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-dashed border-default-200 px-4 py-3 text-sm text-foreground-500">
+                                  <span>{tr('规则组中暂无应用程序')}</span>
+                                  <Button
+                                    size="sm"
+                                    variant="flat"
+                                    startContent={<MdAdd />}
+                                    isDisabled={saving}
+                                    onPress={() => void addApplications(group.id)}
+                                  >
+                                    {tr('添加应用程序')}
+                                  </Button>
+                                </div>
+                              ) : (
+                                rules.map((rule, index) => (
+                                  <AppRoutingRuleRow
+                                    key={rule.id}
+                                    rule={rule}
+                                    index={index}
+                                    count={rules.length}
+                                    icon={icons[rule.id]}
+                                    disabled={saving}
+                                    onChange={(patch) => updateRule(rule.id, patch)}
+                                    onMove={(offset) => moveRule(rule.id, offset)}
+                                    onDelete={() => deleteRule(rule.id)}
+                                  />
+                                ))
+                              )}
+                            </div>
+                          )}
+                        </section>
+                      )
+                    })
                   )}
                 </section>
-              )
-            })}
+              </>
+            )}
           </div>
         )}
 

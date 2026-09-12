@@ -259,10 +259,12 @@ function validateAppRoutingGroup(group: AppRoutingRuleGroup): void {
   if (!name || name.length > 80 || /[\0\r\n]/.test(name)) {
     throw new Error('Invalid application rule group name')
   }
-  const isDrivePath = /^[a-zA-Z]:\\[^\0]*$/.test(group.sourceDirectory)
-  const isUncPath = /^\\\\[^\\\0]+\\[^\\\0]+(?:\\[^\0]*)?$/.test(group.sourceDirectory)
-  if (!isDrivePath && !isUncPath) {
-    throw new Error('Application rule group requires an absolute Windows directory')
+  if (group.sourceDirectory !== undefined) {
+    const isDrivePath = /^[a-zA-Z]:\\[^\0]*$/.test(group.sourceDirectory)
+    const isUncPath = /^\\\\[^\\\0]+\\[^\\\0]+(?:\\[^\0]*)?$/.test(group.sourceDirectory)
+    if (!isDrivePath && !isUncPath) {
+      throw new Error('Application rule group requires an absolute Windows directory')
+    }
   }
   if (typeof group.enabled !== 'boolean') throw new Error('Invalid application rule group state')
 }
@@ -294,13 +296,15 @@ export function validateAppRoutingConfig(config: AppRoutingConfig): void {
   const groupDirectories = new Set<string>()
   for (const group of config.groups ?? []) {
     validateAppRoutingGroup(group)
-    const directory = normalizeWindowsExecutablePath(group.sourceDirectory).toLowerCase()
     if (groupIds.has(group.id)) throw new Error('Application rule group IDs must be unique')
-    if (groupDirectories.has(directory)) {
-      throw new Error('Only one application rule group can target a directory')
+    if (group.sourceDirectory) {
+      const directory = normalizeWindowsExecutablePath(group.sourceDirectory).toLowerCase()
+      if (groupDirectories.has(directory)) {
+        throw new Error('Only one application rule group can target a directory')
+      }
+      groupDirectories.add(directory)
     }
     groupIds.add(group.id)
-    groupDirectories.add(directory)
   }
   const ids = new Set<string>()
   const processPatterns = new Set<string>()
@@ -336,7 +340,9 @@ export function normalizeAppRoutingConfig(config: AppRoutingConfig): AppRoutingC
   const groups = (config.groups ?? []).map((group) => ({
     id: group.id,
     name: group.name.trim(),
-    sourceDirectory: normalizeWindowsExecutablePath(group.sourceDirectory),
+    ...(group.sourceDirectory
+      ? { sourceDirectory: normalizeWindowsExecutablePath(group.sourceDirectory) }
+      : {}),
     enabled: group.enabled
   }))
   const sortedRules = [...config.rules].sort(

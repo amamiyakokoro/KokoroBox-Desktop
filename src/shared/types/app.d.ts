@@ -172,7 +172,7 @@ interface AppRoutingRule {
 interface AppRoutingRuleGroup {
   id: string
   name: string
-  sourceDirectory: string
+  sourceDirectory?: string
   enabled: boolean
 }
 
