@@ -259,7 +259,9 @@ const AppRouting: React.FC = () => {
         <AppRoutingSettingDrawer
           reopenSignal={settingDrawerReopenSignal}
           isDisabled={!supported || saving}
+          isMac={isMac}
           isWindows={isWindows}
+          isOpeningSystemSettings={openingSettings}
           isRepairingFirewall={repairingFirewall}
           isProxyUdpDnsEnabled={config.proxyUdpDns}
           defaultAction={config.defaultAction}
@@ -271,6 +273,7 @@ const AppRouting: React.FC = () => {
           onDiagnosticLoggingChange={(diagnosticLogging) =>
             void save({ ...config, diagnosticLogging })
           }
+          onOpenSystemSettings={() => void openApprovalSettings()}
           onRepairFirewall={() => void repairWindowsFirewall()}
           onClose={() => setIsSettingDrawerOpen(false)}
         />

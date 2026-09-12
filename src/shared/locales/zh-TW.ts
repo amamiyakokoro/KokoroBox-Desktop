@@ -11,6 +11,9 @@ export const messages: Readonly<Record<string, string>> = {
   诊断记录: '診斷記錄',
   '记录应用程序分流的匹配目标与处理结果；仅在排查问题时启用。':
     '記錄應用程式分流的比對目標與處理結果；僅在排查問題時啟用。',
+  'macOS 网络扩展': 'macOS 網路延伸功能',
+  '打开系统设置并重新请求 KokoroBox 网络扩展批准。':
+    '開啟「系統設定」並重新要求批准 KokoroBox 網路延伸功能。',
   应用分流防火墙: '程式分流防火牆',
   '检查并修复 ProxyBridge relay 的 34010/TCP 和 34011/UDP 规则。':
     '檢查並修復 ProxyBridge relay 的 34010/TCP 與 34011/UDP 規則。',
