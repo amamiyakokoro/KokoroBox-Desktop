@@ -23,7 +23,7 @@ function publicKeyObject(publicKey: string): crypto.KeyObject {
 function assertSafeInvalidKeyError(action: () => unknown): void {
   assert.throws(action, (error: unknown) => {
     assert.ok(error instanceof Error)
-    assert.equal(error.message, '服务鉴权密钥无效')
+    assert.equal(error.message, 'Invalid service authentication key')
     assert.doesNotMatch(error.message, /PEM|OPENSSL|NO_START_LINE/i)
     return true
   })
@@ -267,7 +267,7 @@ test('macOS privileged core features fail closed through the service boundary', 
   assert.doesNotMatch(runtimeSource, /webContents\.reload\(\)/)
   assert.match(
     permissionSource,
-    /process\.platform === 'darwin'[\s\S]*macOS 特权功能需要 KokoroBox 服务/
+    /process\.platform === 'darwin'[\s\S]*macOS privileged features require KokoroBox Service/
   )
   assert.match(settingsSource, /platform !== 'darwin'/)
 })

@@ -778,7 +778,7 @@ test('custom-rules save preserves local edits on a stale revision without writin
     h.client.replaceKokoroDefaultRules(4, [
       { type: 'DOMAIN-SUFFIX', payload: 'local.example', target: 'DIRECT' }
     ]),
-    /重新加载/
+    /Reload it before saving again/
   )
   assert.equal(h.requests.filter((request) => request.method === 'PUT').length, 0)
 })
@@ -947,8 +947,8 @@ test('Windows privilege changes use explicit non-persistent native relaunches', 
     startup,
     /waitForRelaunchParent\(windowsRelaunchWaitPid\)\.then\(requestPrimaryInstance\)/
   )
-  assert.match(modal, /手动提权并重启/)
-  assert.match(modal, /取消提权并重启/)
+  assert.match(modal, /Restart as administrator/)
+  assert.match(modal, /Restart as standard user/)
 })
 
 test('Windows privilege relaunch only accepts a valid parent process id', () => {

@@ -1,5 +1,3 @@
-import { messages as en } from './locales/en'
-import { messages as legacyZhCNSource } from './locales/legacy-zh-CN-source'
 import { messages as zhCN } from './locales/zh-CN'
 import { messages as zhTW } from './locales/zh-TW'
 
@@ -37,9 +35,8 @@ export function getLocale(): Locale {
 
 /** Translate only application-owned messages; interpolation values remain untouched. */
 export function tr(message: string, values: readonly unknown[] = []): string {
-  const source = Object.hasOwn(legacyZhCNSource, message) ? legacyZhCNSource[message] : message
-  const catalog = currentLocale === 'zh-CN' ? zhCN : currentLocale === 'zh-TW' ? zhTW : en
-  const translated = Object.hasOwn(catalog, source) ? catalog[source] : source
+  const catalog = currentLocale === 'zh-CN' ? zhCN : currentLocale === 'zh-TW' ? zhTW : undefined
+  const translated = catalog && Object.hasOwn(catalog, message) ? catalog[message] : message
   return translated.replace(/\{(\d+)\}/g, (placeholder, index: string) =>
     Number(index) < values.length ? String(values[Number(index)]) : placeholder
   )

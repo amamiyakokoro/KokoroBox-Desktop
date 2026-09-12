@@ -77,7 +77,7 @@ pnpm test:app-routing
 pnpm build:win # or build:mac / build:linux
 ```
 
-For packaging, signing, Linux system-core builds, and release publication, see the [release guide](docs/releases.md). The [native integration guide](docs/native-integration.md) documents the Rust boundary and migration rules.
+For packaging, signing, Linux system-core builds, and release publication, see the [release guide](docs/releases.md). The [native integration guide](docs/native-integration.md) documents the Rust boundary and migration rules. UI text and translation contributions should follow the [localization guide](docs/localization.md).
 
 ## License
 

@@ -5,7 +5,6 @@ import { afterEach, test } from 'node:test'
 import ts from 'typescript'
 import { getLocale, resolveLocale, setLocale, tr } from '../src/shared/i18n.ts'
 import { messages as english } from '../src/shared/locales/en.ts'
-import { messages as legacyZhCNSource } from '../src/shared/locales/legacy-zh-CN-source.ts'
 import { messages as simplifiedChinese } from '../src/shared/locales/zh-CN.ts'
 import { messages as traditionalChinese } from '../src/shared/locales/zh-TW.ts'
 
@@ -57,7 +56,6 @@ test('translates application messages without rewriting interpolation data', () 
   setLocale('zh-CN')
   assert.equal(tr('Application settings'), '应用设置')
   assert.equal(tr('Failed to update {0}\n{1}', [nodeName, url]), `${nodeName} 更新失败\n${url}`)
-  assert.equal(tr('应用设置'), '应用设置', 'legacy Simplified Chinese keys remain compatible')
 })
 
 test('all catalog translations preserve placeholders and intentional whitespace', () => {
@@ -148,7 +146,6 @@ test('preload carries English into isolated and non-isolated renderer startup', 
     (name: string) => {
       const dependencies: Record<string, Readonly<Record<string, string>>> = {
         './locales/en': english,
-        './locales/legacy-zh-CN-source': legacyZhCNSource,
         './locales/zh-CN': simplifiedChinese,
         './locales/zh-TW': traditionalChinese
       }
@@ -161,7 +158,7 @@ test('preload carries English into isolated and non-isolated renderer startup', 
   assert.equal(exports.tr?.('Application settings'), 'Application settings')
 })
 
-test('application translation calls have catalog entries and complete arguments', () => {
+test('application translation calls use canonical English keys with complete arguments', () => {
   const sourceRoot = path.resolve('src')
   const files = readdirSync(sourceRoot, { recursive: true, encoding: 'utf8' }).filter(
     (file) => /^(main|renderer)[/\\].*\.(ts|tsx)$/.test(file) && !file.endsWith('.d.ts')
@@ -182,14 +179,14 @@ test('application translation calls have catalog entries and complete arguments'
       ) {
         const key = node.arguments[0]
         assert.ok(key && ts.isStringLiteral(key), `Use a static message key in ${file}`)
-        const sourceKey = legacyZhCNSource[key.text] ?? key.text
+        assert.doesNotMatch(key.text, /\p{Script=Han}/u, `Use English source text in ${file}`)
         for (const [locale, messages] of Object.entries(catalogs)) {
           assert.ok(
-            Object.hasOwn(messages, sourceKey),
+            Object.hasOwn(messages, key.text),
             `Missing ${locale} translation in ${file}: ${key.text}`
           )
         }
-        const parameters = [...sourceKey.matchAll(/\{(\d+)\}/g)].map((match) => Number(match[1]))
+        const parameters = [...key.text.matchAll(/\{(\d+)\}/g)].map((match) => Number(match[1]))
         if (parameters.length) {
           const values = node.arguments[1]
           assert.ok(
