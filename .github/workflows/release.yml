@@ -108,3 +108,4 @@ jobs:
       channel: stable
       version: ${{ needs.prepare.outputs.version }}
       release_tag: ${{ needs.prepare.outputs.tag }}
+      linux_gpg_fingerprint: ${{ vars.LINUX_GPG_FINGERPRINT }}
