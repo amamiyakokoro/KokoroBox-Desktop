@@ -57,9 +57,15 @@ built and validated in parallel but is not enabled for existing users.
 The `SMAppService` migration is implemented for macOS 13 and later. The signed application embeds
 `KokoroBoxService.plist` in `Contents/Library/LaunchDaemons` and the daemon in
 `Contents/Resources/files`. The plist uses `BundleProgram`, so launchd resolves the executable from
-the current application bundle rather than a copied privileged runtime. Installing the service is
-an explicit in-app action. If macOS requires approval, KokoroBox reports an awaiting-approval state
-and opens the Login Items settings pane instead of treating the daemon as installed.
+the current application bundle rather than a copied privileged runtime. Registration begins when
+the service-mode core first starts and is also available as an explicit service-management action.
+If macOS requires approval, KokoroBox reports an awaiting-approval state and opens the Login Items
+settings pane instead of treating the daemon as installed.
+
+The default macOS core execution mode is **System Service**. New configurations and legacy
+configurations that never selected a mode receive this default during normal configuration
+migration. An explicitly saved **Direct** selection is preserved and remains available in Core
+Settings. Windows and Linux retain their existing direct/elevated default.
 
 Service start, restart and repair operations reload the registered daemon through `SMAppService`.
 This refreshes the job from the current application bundle without invoking `osascript`; macOS

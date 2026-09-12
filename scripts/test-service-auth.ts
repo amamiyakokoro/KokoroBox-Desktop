@@ -124,6 +124,8 @@ test('Windows service probes and elevated commands never open a console window',
 test('macOS registers the bundled daemon through SMAppService', () => {
   const managerSource = readFileSync(resolve('src/main/service/manager.ts'), 'utf8')
   const ipcSource = readFileSync(resolve('src/main/utils/ipc.ts'), 'utf8')
+  const templateSource = readFileSync(resolve('src/main/utils/template.ts'), 'utf8')
+  const applicationInitSource = readFileSync(resolve('src/main/utils/init.ts'), 'utf8')
   const apiSource = readFileSync(resolve('src/main/service/api.ts'), 'utf8')
   const adapterSource = readFileSync(resolve('src/main/service/macos-smappservice.ts'), 'utf8')
   const bridgeSource = readFileSync(
@@ -153,6 +155,14 @@ test('macOS registers the bundled daemon through SMAppService', () => {
   assert.match(launchDaemon, /<key>UserName<\/key>\s*<string>root<\/string>/)
   assert.match(builderSource, /Library\/LaunchDaemons\/KokoroBoxService\.plist/)
   assert.match(packageSource, /prepare:macos-service/)
+  assert.match(
+    templateSource,
+    /corePermissionMode: process\.platform === 'darwin' \? 'service' : 'elevated'/
+  )
+  assert.match(
+    applicationInitSource,
+    /if \(!\(key in appConfig\)[\s\S]*?appConfigPatch[\s\S]*?defaultConfig/
+  )
   assert.match(dirsSource, /\/Library\/LaunchDaemons\/KokoroBoxService\.plist/)
   assert.match(managerSource, /registerMacOSService\(\)/)
   assert.match(managerSource, /unregisterMacOSService\(\)/)
