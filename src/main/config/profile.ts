@@ -40,7 +40,7 @@ export async function setProfileConfig(config: ProfileConfig): Promise<void> {
 
 export async function getProfileItem(id: string | undefined): Promise<ProfileItem | undefined> {
   const { items } = await getProfileConfig()
-  if (!id || id === 'default') return { id: 'default', type: 'local', name: tr('空白订阅') }
+  if (!id || id === 'default') return { id: 'default', type: 'local', name: tr('Blank profile') }
   return items.find((item) => item.id === id)
 }
 
@@ -132,7 +132,9 @@ export async function removeProfileItem(id: string): Promise<void> {
 
 export async function getCurrentProfileItem(): Promise<ProfileItem> {
   const { current } = await getProfileConfig()
-  return (await getProfileItem(current)) || { id: 'default', type: 'local', name: tr('空白订阅') }
+  return (
+    (await getProfileItem(current)) || { id: 'default', type: 'local', name: tr('Blank profile') }
+  )
 }
 
 export async function createProfile(item: Partial<ProfileItem>): Promise<ProfileItem> {
@@ -183,9 +185,9 @@ export async function createProfile(item: Partial<ProfileItem>): Promise<Profile
               item.fingerprint,
               newItem.useProxy && mixedPort != 0 ? mixedPort : undefined,
               {
-                fingerprintMismatch: () => new Error(tr('证书指纹不匹配')),
+                fingerprintMismatch: () => new Error(tr('Certificate fingerprint mismatch')),
                 proxyConnectFailed: (statusCode) =>
-                  new Error(tr('代理连接失败，状态码：{0}', [statusCode]))
+                  new Error(tr('Proxy connection failed with status code {0}', [statusCode]))
               }
             )
           : new https.Agent({ rejectUnauthorized: true })
@@ -203,15 +205,15 @@ export async function createProfile(item: Partial<ProfileItem>): Promise<Profile
       } catch (error) {
         if (axios.isAxiosError(error)) {
           if (error.code === 'ECONNRESET' || error.code === 'ECONNABORTED') {
-            throw new Error(tr('网络连接被重置或超时：{0}', [item.url]))
+            throw new Error(tr('Network connection reset or timed out: {0}', [item.url]))
           } else if (error.code === 'CERT_HAS_EXPIRED') {
-            throw new Error(tr('服务器证书已过期：{0}', [item.url]))
+            throw new Error(tr('Server certificate has expired: {0}', [item.url]))
           } else if (error.code === 'UNABLE_TO_VERIFY_LEAF_SIGNATURE') {
-            throw new Error(tr('无法验证服务器证书：{0}', [item.url]))
+            throw new Error(tr('Unable to verify server certificate: {0}', [item.url]))
           } else if (error.message.includes('Certificate verification failed')) {
-            throw new Error(tr('证书验证失败：{0}', [item.url]))
+            throw new Error(tr('Certificate verification failed: {0}', [item.url]))
           } else {
-            throw new Error(tr('请求失败：{0}', [error.message]))
+            throw new Error(tr('Request failed: {0}', [error.message]))
           }
         }
         throw error
@@ -253,7 +255,10 @@ export async function createProfile(item: Partial<ProfileItem>): Promise<Profile
         try {
           parseYaml<MihomoConfig>(data)
         } catch (error) {
-          throw new Error(tr('订阅格式错误，无法解析为有效的配置文件\n') + (error as Error).message)
+          throw new Error(
+            tr('Invalid subscription format: cannot parse a valid configuration\n') +
+              (error as Error).message
+          )
         }
       }
       await setProfileStr(id, data, newItem)
@@ -335,7 +340,11 @@ async function decryptProfileContent(
 ): Promise<string> {
   if (!isAgeEncryptedText(content)) return content
   if (!item?.ageIdentity) {
-    throw new Error(tr('{0} 已使用 age 加密，请先填写 age 私钥', [item?.name || tr('配置')]))
+    throw new Error(
+      tr('{0} is encrypted with age. Enter your age private key first', [
+        item?.name || tr('Configuration')
+      ])
+    )
   }
   return await decryptAgeText(content, item.ageIdentity)
 }
@@ -508,7 +517,7 @@ export async function getFileStr(path: string, ageSecretKey?: string): Promise<s
   }
 
   if (!ageSecretKey) {
-    throw new Error(tr('当前内容已使用 age 加密，请先配置 age 私钥'))
+    throw new Error(tr('This content is encrypted with age. Configure your age private key first'))
   }
 
   return await decryptAgeText(content, ageSecretKey)

@@ -88,7 +88,11 @@ export function createCoreHookWaiter(hook: CoreStartupHook): CoreHookWaiter {
   }
 
   const handleClose = (code: number | null, signal: NodeJS.Signals | null): void => {
-    complete(new Error(tr('内核启动失败，post-up 未触发，code: {0}, signal: {1}', [code, signal])))
+    complete(
+      new Error(
+        tr('Core startup failed: post-up was not triggered, code: {0}, signal: {1}', [code, signal])
+      )
+    )
   }
 
   const promise = new Promise<void>((resolve, reject) => {
@@ -105,7 +109,7 @@ export function createCoreHookWaiter(hook: CoreStartupHook): CoreHookWaiter {
     watcher.on('error', complete)
 
     timer = setTimeout(() => {
-      complete(new Error(tr('等待内核 post-up 超时：{0}ms', [coreHookTimeout])))
+      complete(new Error(tr('Timed out waiting for core post-up: {0}ms', [coreHookTimeout])))
     }, coreHookTimeout)
   })
 

@@ -129,8 +129,11 @@ export async function getGistUrl(): Promise<string> {
 }
 
 export async function getGistRawUrl(): Promise<string> {
-  const { githubToken, gistSyncEnabled = Boolean(githubToken), gistEncrypted = false } =
-    await getAppConfig()
+  const {
+    githubToken,
+    gistSyncEnabled = Boolean(githubToken),
+    gistEncrypted = false
+  } = await getAppConfig()
   if (!gistSyncEnabled || !githubToken) return ''
 
   let gists = await listGists(githubToken)

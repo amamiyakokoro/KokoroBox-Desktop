@@ -8,7 +8,7 @@ export interface KeyPair {
 }
 
 function invalidServiceAuthKey(): Error {
-  return new Error(tr('服务鉴权密钥无效'))
+  return new Error(tr('Invalid service authentication key'))
 }
 
 function parsePublicKey(publicKey: string): {
@@ -133,28 +133,28 @@ export class KeyManager {
 
   getKeyID(): string {
     if (!this.keyId) {
-      throw new Error(tr('密钥 ID 未初始化'))
+      throw new Error(tr('Key ID is not initialized'))
     }
     return this.keyId
   }
 
   getPublicKey(): string {
     if (!this.publicKey) {
-      throw new Error(tr('公钥未初始化'))
+      throw new Error(tr('Public key is not initialized'))
     }
     return this.publicKey
   }
 
   getPrivateKey(): string {
     if (!this.privateKey) {
-      throw new Error(tr('私钥未初始化'))
+      throw new Error(tr('Private key is not initialized'))
     }
     return this.privateKey
   }
 
   signData(data: string): string {
     if (!this.privateKey) {
-      throw new Error(tr('私钥未初始化'))
+      throw new Error(tr('Private key is not initialized'))
     }
 
     return signData(this.privateKey, data)

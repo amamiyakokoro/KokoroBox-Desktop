@@ -19,11 +19,13 @@ interface KokoroAuthEnvelope {
 
 function assertSecureStorageAvailable(): void {
   if (!safeStorage.isEncryptionAvailable()) {
-    throw new Error(tr('系统安全存储不可用，无法保存 Kokoro 登录凭据'))
+    throw new Error(tr('System secure storage is unavailable. Cannot save Kokoro credentials'))
   }
 
   if (process.platform === 'linux' && safeStorage.getSelectedStorageBackend?.() === 'basic_text') {
-    throw new Error(tr('系统密钥环不可用，无法安全保存 Kokoro 登录凭据'))
+    throw new Error(
+      tr('The system keyring is unavailable. Cannot securely save Kokoro credentials')
+    )
   }
 }
 
@@ -39,7 +41,7 @@ function normalizeCredentials(value: Partial<KokoroCredentials>): KokoroCredenti
     !Number.isFinite(accessExpiresAt) ||
     !Number.isFinite(refreshExpiresAt)
   ) {
-    throw new Error(tr('Kokoro 登录凭据无效'))
+    throw new Error(tr('Invalid Kokoro credentials'))
   }
 
   return { accessToken, accessExpiresAt, refreshToken, refreshExpiresAt }
@@ -59,7 +61,7 @@ export async function loadKokoroCredentials(): Promise<KokoroCredentials | null>
   try {
     envelope = JSON.parse(raw)
   } catch {
-    throw new Error(tr('Kokoro 登录凭据存储格式无效'))
+    throw new Error(tr('Invalid Kokoro credential storage format'))
   }
   if (
     !envelope ||
@@ -67,7 +69,7 @@ export async function loadKokoroCredentials(): Promise<KokoroCredentials | null>
     envelope.storage !== 'electron-safe-storage' ||
     !envelope.encrypted
   ) {
-    throw new Error(tr('Kokoro 登录凭据存储格式无效'))
+    throw new Error(tr('Invalid Kokoro credential storage format'))
   }
 
   try {
@@ -75,7 +77,7 @@ export async function loadKokoroCredentials(): Promise<KokoroCredentials | null>
     return normalizeCredentials(JSON.parse(decrypted) as Partial<KokoroCredentials>)
   } catch {
     // JSON/crypto errors may contain decrypted input. Never send them to the renderer.
-    throw new Error(tr('Kokoro 登录凭据无效'))
+    throw new Error(tr('Invalid Kokoro credentials'))
   }
 }
 

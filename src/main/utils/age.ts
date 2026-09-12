@@ -32,13 +32,13 @@ export async function generateAgeKeyPair(): Promise<AgeKeyPair> {
 export async function ageIdentityToRecipient(identity: string): Promise<string> {
   const identities = splitAgeValues(identity)
   if (identities.length === 0) {
-    throw new Error(tr('age 私钥不能为空'))
+    throw new Error(tr('age private key cannot be empty'))
   }
 
   try {
     return await age.identityToRecipient(identities[0])
   } catch (error) {
-    throw new Error(tr('age 私钥无效：{0}', [formatError(error)]))
+    throw new Error(tr('Invalid age private key: {0}', [formatError(error)]))
   }
 }
 
@@ -48,7 +48,7 @@ export async function encryptAgeText(
 ): Promise<string> {
   const recipientList = splitAgeValues(recipients)
   if (recipientList.length === 0) {
-    throw new Error(tr('age 公钥不能为空'))
+    throw new Error(tr('age public key cannot be empty'))
   }
 
   try {
@@ -57,7 +57,7 @@ export async function encryptAgeText(
     const encrypted = await encrypter.encrypt(content)
     return age.armor.encode(encrypted)
   } catch (error) {
-    throw new Error(tr('age 加密失败：{0}', [formatError(error)]))
+    throw new Error(tr('age encryption failed: {0}', [formatError(error)]))
   }
 }
 
@@ -67,7 +67,7 @@ export async function decryptAgeText(
 ): Promise<string> {
   const identityList = splitAgeValues(identities)
   if (identityList.length === 0) {
-    throw new Error(tr('age 私钥不能为空'))
+    throw new Error(tr('age private key cannot be empty'))
   }
 
   try {
@@ -75,6 +75,6 @@ export async function decryptAgeText(
     identityList.forEach((identity) => decrypter.addIdentity(identity))
     return await decrypter.decrypt(age.armor.decode(content), 'text')
   } catch (error) {
-    throw new Error(tr('age 解密失败：{0}', [formatError(error)]))
+    throw new Error(tr('age decryption failed: {0}', [formatError(error)]))
   }
 }

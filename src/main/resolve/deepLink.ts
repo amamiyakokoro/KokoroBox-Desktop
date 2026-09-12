@@ -21,11 +21,11 @@ export async function handleDeepLink(url: string, context: DeepLinkContext): Pro
       await handleKokoroCallback(url)
       if (!context.getMainWindow()) await context.createWindow()
       context.showWindow()
-      void showNotification({ title: tr('Kokoro 登录成功'), variant: 'success' })
+      void showNotification({ title: tr('Signed in to Kokoro'), variant: 'success' })
     } catch (error) {
       void showNotification({
-        title: tr('Kokoro 登录失败'),
-        body: error instanceof KokoroAPIError ? error.message : tr('Kokoro 请求失败'),
+        title: tr('Kokoro sign-in failed'),
+        body: error instanceof KokoroAPIError ? error.message : tr('Kokoro request failed'),
         variant: 'danger'
       })
     }
@@ -41,7 +41,7 @@ export async function handleDeepLink(url: string, context: DeepLinkContext): Pro
         const profileUrl = urlObj.searchParams.get('url')
         const profileName = urlObj.searchParams.get('name')
         if (!profileUrl) {
-          throw new Error(tr('缺少参数 url'))
+          throw new Error(tr('Missing url parameter'))
         }
 
         const confirmed = await showProfileInstallConfirm(profileUrl, profileName, context)
@@ -53,11 +53,11 @@ export async function handleDeepLink(url: string, context: DeepLinkContext): Pro
             url: profileUrl
           })
           context.getMainWindow()?.webContents.send('profileConfigUpdated')
-          void showNotification({ title: tr('订阅导入成功'), variant: 'success' })
+          void showNotification({ title: tr('Subscription imported'), variant: 'success' })
         }
       } catch (error) {
         void showNotification({
-          title: tr('订阅导入失败'),
+          title: tr('Subscription import failed'),
           body: `${url}\n${error}`,
           variant: 'danger'
         })
@@ -69,7 +69,7 @@ export async function handleDeepLink(url: string, context: DeepLinkContext): Pro
         const urlParam = urlObj.searchParams.get('url')
         const profileName = urlObj.searchParams.get('name')
         if (!urlParam) {
-          throw new Error(tr('缺少参数 url'))
+          throw new Error(tr('Missing url parameter'))
         }
 
         const confirmed = await showOverrideInstallConfirm(urlParam, profileName, context)
@@ -84,11 +84,11 @@ export async function handleDeepLink(url: string, context: DeepLinkContext): Pro
             ext: overrideUrl.pathname.endsWith('.js') ? 'js' : 'yaml'
           })
           context.getMainWindow()?.webContents.send('overrideConfigUpdated')
-          void showNotification({ title: tr('覆写导入成功'), variant: 'success' })
+          void showNotification({ title: tr('Override imported'), variant: 'success' })
         }
       } catch (error) {
         void showNotification({
-          title: tr('覆写导入失败'),
+          title: tr('Override import failed'),
           body: `${url}\n${error}`,
           variant: 'danger'
         })

@@ -36,7 +36,7 @@ import { windowsRelaunchWaitArgument } from '../../shared/windows-relaunch'
 
 export function getFilePath(
   ext: string[],
-  title = tr('选择订阅文件'),
+  title = tr('Choose subscription file'),
   filterName = `${ext} file`
 ): string[] | undefined {
   return dialog.showOpenDialogSync({
@@ -51,13 +51,13 @@ export async function getApplicationPaths(): Promise<AppRoutingApplicationSelect
   const isMac = process.platform === 'darwin'
   const isLinux = process.platform === 'linux'
   const selected = dialog.showOpenDialogSync({
-    title: tr('选择应用程序'),
+    title: tr('Select applications'),
     filters:
       isMac || isLinux
         ? []
         : [
             {
-              name: isMac ? tr('macOS 应用程序') : tr('Windows 应用程序'),
+              name: isMac ? tr('macOS applications') : tr('Windows applications'),
               extensions: [isMac ? 'app' : 'exe']
             }
           ],
@@ -89,7 +89,7 @@ export async function scanAppRoutingDirectory(
   const selectedDirectory =
     requestedDirectory ??
     dialog.showOpenDialogSync({
-      title: tr('扫描应用程序文件夹'),
+      title: tr('Scan application folder'),
       properties: ['openDirectory']
     })?.[0]
   if (!selectedDirectory) return undefined
@@ -236,7 +236,7 @@ export async function checkElevateTask(): Promise<boolean> {
 
 async function relaunchWindowsWithPrivilege(elevated: boolean): Promise<void> {
   if (process.platform !== 'win32') {
-    throw new Error(tr('此功能仅支持 Windows'))
+    throw new Error(tr('This feature is available only on Windows'))
   }
 
   const currentlyElevated = isRunningAsAdmin()

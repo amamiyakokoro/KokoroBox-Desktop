@@ -142,7 +142,9 @@ export function createServiceCoreRuntime(options: ServiceCoreRuntimeOptions) {
     if (process.platform === 'darwin') {
       await appendAppLog(`[Manager]: macOS service core unavailable, ${reason}\n`)
       stopEventHandlers()
-      throw new Error(tr('macOS 特权功能需要 KokoroBox 服务，请安装或修复服务'))
+      throw new Error(
+        tr('macOS privileged features require KokoroBox Service. Install or repair the service.')
+      )
     }
 
     await appendAppLog(`[Manager]: Service unavailable, fallback to elevated core, ${reason}\n`)
@@ -150,7 +152,7 @@ export function createServiceCoreRuntime(options: ServiceCoreRuntimeOptions) {
     await patchAppConfig({ corePermissionMode: 'elevated' })
     mainWindow?.webContents.send('appConfigUpdated')
     floatingWindow?.webContents.send('appConfigUpdated')
-    void showNotification({ title: tr('服务不可用，已切换到非服务模式') })
+    void showNotification({ title: tr('Service unavailable. Switched to non-service mode') })
     return options.startCore(detached)
   }
 
@@ -206,8 +208,8 @@ export function createServiceCoreRuntime(options: ServiceCoreRuntimeOptions) {
     }
     void showNotification({
       title: preserveMacOSServiceCore
-        ? tr('macOS 特权功能需要 KokoroBox 服务，请安装或修复服务')
-        : tr('服务不可用，已切换到非服务模式')
+        ? tr('macOS privileged features require KokoroBox Service. Install or repair the service.')
+        : tr('Service unavailable. Switched to non-service mode')
     })
   }
 
