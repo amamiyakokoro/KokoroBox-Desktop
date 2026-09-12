@@ -617,14 +617,17 @@ test('generated signing config passes electron-builder validation with required 
   assert.equal(config.dmg.writeUpdateInfo, false)
 })
 
-test('both callers forward only the required signing secrets and non-macOS steps do not receive them', () => {
+test('callers isolate macOS build secrets from Linux publication secrets', () => {
   for (const file of ['release', 'rolling']) {
     const config = parse(readFileSync(`.github/workflows/${file}.yml`, 'utf8'))
     assert.deepEqual(
       Object.keys(config.jobs.build.secrets).sort(),
       [...appleSecrets, ...sparkleSecrets].sort()
     )
-    assert.equal(config.jobs.publish.secrets, undefined)
+    assert.deepEqual(Object.keys(config.jobs.publish.secrets).sort(), [
+      'LINUX_GPG_PASSPHRASE',
+      'LINUX_GPG_PRIVATE_KEY'
+    ])
   }
   const config = parse(readFileSync('.github/workflows/build.yml', 'utf8'))
   assert.equal(config.jobs.build['runs-on'], '${{ matrix.runner || matrix.os }}')
