@@ -182,10 +182,11 @@ const AppRouting: React.FC = () => {
   const [repairingFirewall, setRepairingFirewall] = useState(false)
   useEffect(() => {
     const currentIds = new Set(config?.groups?.map((group) => group.id) ?? [])
+    const previousIds = knownGroupIds.current
     setCollapsedGroups((current) => {
       const next = new Set([...current].filter((id) => currentIds.has(id)))
       for (const id of currentIds) {
-        if (!knownGroupIds.current.has(id)) next.add(id)
+        if (!previousIds.has(id)) next.add(id)
       }
       return next
     })
