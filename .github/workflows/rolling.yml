@@ -67,6 +67,9 @@ jobs:
     permissions:
       contents: write
     uses: ./.github/workflows/publish.yml
+    secrets:
+      LINUX_GPG_PRIVATE_KEY: ${{ secrets.LINUX_GPG_PRIVATE_KEY }}
+      LINUX_GPG_PASSPHRASE: ${{ secrets.LINUX_GPG_PASSPHRASE }}
     with:
       channel: rolling
       version: ${{ needs.prepare.outputs.version }}

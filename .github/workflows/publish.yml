@@ -12,6 +12,11 @@ on:
       release_tag:
         required: true
         type: string
+    secrets:
+      LINUX_GPG_PRIVATE_KEY:
+        required: true
+      LINUX_GPG_PASSPHRASE:
+        required: true
 
 permissions:
   contents: write
@@ -50,6 +55,14 @@ jobs:
           fi
       - name: Verify Complete Matrix and Generate Metadata
         run: node scripts/release-artifacts.ts collect
+      - name: Install Linux Signing Tools
+        run: sudo apt-get update && sudo apt-get install -y gnupg rpm
+      - name: Sign Linux Release Packages
+        env:
+          LINUX_GPG_PRIVATE_KEY: ${{ secrets.LINUX_GPG_PRIVATE_KEY }}
+          LINUX_GPG_PASSPHRASE: ${{ secrets.LINUX_GPG_PASSPHRASE }}
+          LINUX_GPG_FINGERPRINT: ${{ vars.LINUX_GPG_FINGERPRINT }}
+        run: scripts/sign-linux-artifacts.sh
       - name: Check Publication Target
         uses: actions/github-script@v8
         env:
@@ -91,7 +104,8 @@ jobs:
           files: |
             dist/release/kokorobox-desktop-*
             dist/release/appcast-macos-*.xml
-            dist/release/SHA256SUMS
+            dist/release/SHA256SUMS*
+            dist/release/kokorobox-linux-signing-key.asc
           fail_on_unmatched_files: true
           draft: ${{ inputs.channel == 'stable' }}
           prerelease: ${{ inputs.channel == 'rolling' }}

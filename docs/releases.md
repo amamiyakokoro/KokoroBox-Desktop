@@ -12,7 +12,8 @@ The workflows build KokoroBox's supported package matrix, prepare the target nat
 
 The build matrix contains 10 platform jobs. Each macOS job publishes a normal-install DMG, a
 recovery PKG, a signed Sparkle application archive, and an appcast. Publication also adds
-`latest.yml` and `SHA256SUMS`. Windows
+`latest.yml`, `SHA256SUMS`, and `SHA256SUMS.asc`. Linux RPMs contain an OpenPGP signature; Debian
+and Arch packages include detached signatures. Windows
 publishes one standard `setup.exe` for each supported architecture; the former
 `manual-elevation-setup` compatibility aliases are no longer generated. The updater metadata
 preserves the exact release tag, including a leading `v` when present. Build artifacts remain
@@ -58,6 +59,20 @@ The RPM dependency declarations target openSUSE, Fedora, and Rocky Linux using s
 
 Install with `sudo zypper install ./package.rpm` on openSUSE or `sudo dnf install ./package.rpm` on Fedora/Rocky Linux so the package manager resolves dependencies.
 
+Before the first RPM installation, download `kokorobox-linux-signing-key.asc` from the same release,
+compare its complete fingerprint with the value documented above, and import it:
+
+```sh
+gpg --show-keys --with-fingerprint kokorobox-linux-signing-key.asc
+sudo rpmkeys --import kokorobox-linux-signing-key.asc
+rpmkeys --checksig --verbose ./package.rpm
+```
+
+After the key is imported, Zypper and DNF verify the RPM's embedded signature during installation.
+DEB downloads are accompanied by `.deb.asc` and Arch packages by `.pkg.tar.zst.sig`; verify those
+with `gpg --verify SIGNATURE PACKAGE`. A future APT repository must sign its `InRelease` metadata
+before APT can perform this verification automatically.
+
 Fedora 43 and 44 are the first runtime validation targets. The reusable build workflow tests the actual x86_64 release RPM on both versions, and a failure blocks publication. Each disposable Fedora container installs the RPM with DNF, checks ELF linkage before installing test tools, checks launcher/desktop/sandbox permissions, starts both bundled Mihomo cores, verifies the packaged renderer and preload/main-process IPC under Xvfb as a regular user, then removes the package and checks cleanup.
 
 On 2026-09-06, the locally built `2.26.9-6` x86_64 RPM passed these checks on both Fedora 43 and 44. ARM64 RPMs are still built and published, but Fedora ARM64 runtime validation is currently disabled because the native-runner smoke tests exceed the 20-minute job limit. To reproduce the x86_64 checks with Docker (or substitute Podman):
@@ -80,11 +95,27 @@ Rocky Linux retains compatible dependency declarations but is not yet covered by
 1. Push the workflow changes to the repository's `master` branch.
 2. Open **Actions** on GitHub and enable workflows if GitHub has disabled them for the fork.
 3. Ensure repository/organization Actions policies permit the referenced actions and GitHub-hosted runners. Publication needs `contents: write`; the workflows grant this only to publishing jobs.
-4. Configure the seven Apple signing/notarization secrets and two Sparkle signing secrets listed
-   below. They are required for the macOS portion of every release. GitHub supplies `GITHUB_TOKEN`
+4. Configure the Linux signing secrets and variable below, plus the seven Apple
+   signing/notarization secrets and two Sparkle signing secrets. GitHub supplies `GITHUB_TOKEN`
    automatically.
 
 The local Apple Keychain is not available on hosted runners. Do not upload certificates or private keys to Git. No AUR key, translation API key, or SignPath token is required by this pipeline.
+
+### Linux repository secrets and variable
+
+The public key is committed at `build/linux/kokorobox-linux-signing-key.asc`. Its primary
+fingerprint is `72B15D008F4052105E238DD5576C2811308ED996`.
+
+| Setting                 | Type     | Value                                  |
+| ----------------------- | -------- | -------------------------------------- |
+| `LINUX_GPG_PRIVATE_KEY` | Secret   | ASCII-armored CI signing subkey export |
+| `LINUX_GPG_PASSPHRASE`  | Secret   | Signing subkey passphrase              |
+| `LINUX_GPG_FINGERPRINT` | Variable | Complete primary fingerprint           |
+
+The publish job checks that the configured fingerprint matches both the committed public key and
+the imported secret subkey. It signs final RPMs in place, creates detached signatures for DEB and
+Arch packages, regenerates `SHA256SUMS`, verifies every signature, and removes its temporary GnuPG
+home before uploading release assets.
 
 ## Rolling prereleases
 
@@ -126,7 +157,8 @@ The schedule runs at 12:00 Taipei time on potential month-end dates and filters 
 - `Publish Packages` rejects missing, empty, modified, stale, wrong-version, or wrong-commit artifacts before uploading anything.
 - Platform jobs use `fail-fast: false` so a failed target does not cancel other builds, but any failed target blocks publication of the entire release.
 - Release notes are generated in CI from Git commit subjects; there is no repository-maintained changelog source file. Template headings and download/signing information are English; commit subjects retain their original language.
-- `SHA256SUMS` is calculated from the final package bytes. It detects corruption but does not authenticate the publisher.
+- `SHA256SUMS` is calculated from the final signed package bytes and authenticated by
+  `SHA256SUMS.asc`.
 
 Run the local checks with:
 

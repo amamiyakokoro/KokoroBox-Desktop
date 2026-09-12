@@ -37,6 +37,22 @@ Download the appropriate package from [GitHub Releases](https://github.com/amami
 shasum -a 256 -c SHA256SUMS --ignore-missing
 ```
 
+Linux packages and `SHA256SUMS` are signed with the KokoroBox Linux package signing key. Verify
+the included `kokorobox-linux-signing-key.asc` fingerprint before importing it:
+
+```text
+72B1 5D00 8F40 5210 5E23  8DD5 576C 2811 308E D996
+```
+
+```sh
+gpg --show-keys --with-fingerprint kokorobox-linux-signing-key.asc
+gpg --import kokorobox-linux-signing-key.asc
+gpg --verify SHA256SUMS.asc SHA256SUMS
+```
+
+RPM signatures are embedded in the package. Debian packages include `.deb.asc`, Arch packages
+include `.pkg.tar.zst.sig`, and the checksum manifest includes `SHA256SUMS.asc`.
+
 Windows packages are currently unsigned. On macOS, use the DMG for normal installation: drag
 KokoroBox to Applications, launch the installed copy, then follow the system-service and optional
 application-routing approval prompts. The PKG is retained for recovery and managed deployment.

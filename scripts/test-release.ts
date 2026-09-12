@@ -421,6 +421,7 @@ test('collects complete builds, generates hashes and concise updater-compatible 
     assert.match(latest.changelog, /- A change/)
     assert.match(latest.changelog, /Use the DMG for a normal first installation/)
     assert.match(latest.changelog, /Developer ID-signed, notarized by Apple/)
+    assert.match(latest.changelog, /Linux RPM packages contain an OpenPGP signature/)
     assert.equal(readdirSync(output).length, 19)
     const lines = readFileSync(path.join(output, 'SHA256SUMS'), 'utf8').trim().split('\n')
     assert.equal(lines.length, 16)
@@ -571,6 +572,14 @@ test('workflows gate publication on all builds and do not invoke upstream-only s
     assert.deepEqual(config.jobs.publish.needs, ['prepare', 'build'])
     assert.equal(config.jobs.build.uses, './.github/workflows/build.yml')
     assert.equal(config.jobs.publish.uses, './.github/workflows/publish.yml')
+    assert.equal(
+      config.jobs.publish.secrets.LINUX_GPG_PRIVATE_KEY,
+      '${{ secrets.LINUX_GPG_PRIVATE_KEY }}'
+    )
+    assert.equal(
+      config.jobs.publish.secrets.LINUX_GPG_PASSPHRASE,
+      '${{ secrets.LINUX_GPG_PASSPHRASE }}'
+    )
     assert.equal(config.concurrency['cancel-in-progress'], false)
     assert.equal(config.jobs.aur, undefined)
     assert.equal(config.jobs['update-version'], undefined)
@@ -600,10 +609,22 @@ test('workflows gate publication on all builds and do not invoke upstream-only s
   assert.equal(rolling.jobs.build.with.build_number, '${{ needs.prepare.outputs.build_number }}')
   assert.equal(release.jobs.build.with.build_number, '${{ needs.prepare.outputs.build_number }}')
   const publish = readFileSync('.github/workflows/publish.yml', 'utf8')
+  const publishWorkflow = workflow('publish')
+  assert.equal(publishWorkflow.on.workflow_call.secrets.LINUX_GPG_PRIVATE_KEY.required, true)
+  assert.equal(publishWorkflow.on.workflow_call.secrets.LINUX_GPG_PASSPHRASE.required, true)
+  assert.match(publish, /LINUX_GPG_FINGERPRINT: \$\{\{ vars\.LINUX_GPG_FINGERPRINT \}\}/)
   assert.doesNotMatch(publish, /dist\/release\/kokorobox-process-router-\*\.cdx\.json/)
   assert.match(publish, /asset\.name\.startsWith\('kokorobox-process-router-'/)
   assert.match(publish, /dist\/release\/appcast-macos-\*\.xml/)
   assert.doesNotMatch(publish, /API_KEY|API_URL|AUR_SSH|delete-release-assets/)
+
+  const signing = readFileSync('scripts/sign-linux-artifacts.sh', 'utf8')
+  assert.match(signing, /rpmsign[\s\S]*--addsign/)
+  assert.match(signing, /\.deb[\s\S]*\.asc/)
+  assert.match(signing, /\.pkg\.tar\.zst[\s\S]*\.sig/)
+  assert.match(signing, /SHA256SUMS\.asc/)
+  assert.match(signing, /rpmkeys[\s\S]*--checksig/)
+  assert.ok(existsSync('build/linux/kokorobox-linux-signing-key.asc'))
 })
 
 test('AUR publication uses KokoroBox package names and layouts', () => {
@@ -897,7 +918,10 @@ test('updater metadata is uploaded only after verifying all replacement packages
     .with.files
   assert.ok(names.indexOf('Verify Uploaded Packages') < names.indexOf('Upload Update Metadata'))
   assert.ok(names.indexOf('Upload Update Metadata') < names.indexOf('Finalize Release'))
+  assert.ok(names.indexOf('Sign Linux Release Packages') < names.indexOf('Upload Release Assets'))
   assert.match(releaseFiles, /appcast-macos-\*\.xml/)
+  assert.match(releaseFiles, /SHA256SUMS\*/)
+  assert.match(releaseFiles, /kokorobox-linux-signing-key\.asc/)
   assert.doesNotMatch(releaseFiles, /latest.yml/)
   const missing = publicationMock({ missingAsset: true })
   await assert.rejects(missing.run('Verify Uploaded Packages'))
