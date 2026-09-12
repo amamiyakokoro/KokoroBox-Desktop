@@ -19,6 +19,12 @@ pattern such as `C:\Program Files\*\ChatGPT.exe`. `*` matches any sequence; each
 one pattern. Filename patterns survive application upgrades that move the executable into a new
 versioned directory.
 
+Individual rules and rule groups are displayed in separate sections. Groups are collapsed by
+default and can be enabled or disabled without changing the saved state of their child rules. A
+group can be created manually and populated through the application picker, or created by scanning
+a folder for `.exe` files. Each group menu supports adding applications, scanning again, renaming,
+and deleting the group. Manually created groups do not require a source directory.
+
 The system picker accepts `.exe` files only. It uses the stable executable filename as the
 default `processPattern`, while retaining the selected canonical path only as the optional icon
 source. KokoroBox persists the version 1 schema: `id`, `enabled`, `priority`, `processPattern`,
