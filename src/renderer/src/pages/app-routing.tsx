@@ -450,10 +450,10 @@ const AppRouting: React.FC = () => {
 
         <div className="flex flex-col gap-1">
           <div
-            className={`grid gap-2 sm:items-center ${
+            className={`grid gap-2 md:items-center ${
               isMac
-                ? 'sm:grid-cols-[11rem_minmax(0,1fr)_auto]'
-                : 'sm:grid-cols-[minmax(0,1fr)_auto]'
+                ? 'md:grid-cols-[10rem_minmax(11rem,1fr)_auto]'
+                : 'sm:grid-cols-[minmax(12rem,1fr)_auto]'
             }`}
           >
             {isMac && (
@@ -498,23 +498,19 @@ const AppRouting: React.FC = () => {
                 if (event.key === 'Enter' && processPattern.trim()) void submitPattern()
               }}
             />
-            <Button
-              className="w-full shrink-0 sm:w-auto"
-              color="primary"
-              startContent={<MdAdd className="text-lg" />}
-              isDisabled={!supported || !config || saving || !processPattern.trim()}
-              onPress={() => void submitPattern()}
-            >
-              {tr('新增匹配规则')}
-            </Button>
-            <div
-              className={`flex flex-wrap items-center justify-end gap-2 ${
-                isMac ? 'sm:col-span-3' : 'sm:col-span-2'
-              }`}
-            >
+            <div className="flex w-full min-w-max items-center gap-2 sm:w-auto sm:justify-end">
+              <Button
+                className="min-w-0 flex-1 shrink-0 sm:flex-none"
+                color="primary"
+                startContent={<MdAdd className="text-lg" />}
+                isDisabled={!supported || !config || saving || !processPattern.trim()}
+                onPress={() => void submitPattern()}
+              >
+                {tr('新增匹配规则')}
+              </Button>
               <span className="text-sm text-foreground-500">{tr('或')}</span>
               <Button
-                className="shrink-0"
+                className="min-w-0 flex-1 shrink-0 sm:flex-none"
                 variant="flat"
                 startContent={<MdAdd className="text-lg" />}
                 isDisabled={!supported || !config || saving}
