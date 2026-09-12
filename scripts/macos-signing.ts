@@ -15,7 +15,7 @@ import {
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { macOSBundleVersion } from './macos-bundle-version.ts'
-import { artifactName } from './release-artifacts.ts'
+import { artifactName, macDmgArtifactName } from './release-artifacts.ts'
 import {
   sparkleAppcastName,
   sparkleDownloadURLPrefix,
@@ -352,6 +352,7 @@ export function signMacRelease(
   const channel = env.RELEASE_CHANNEL!
   const releaseTag = env.RELEASE_TAG!
   const filename = artifactName({ os: 'macos-latest', arch, format: 'pkg' }, version)
+  const dmgFilename = macDmgArtifactName(version, arch)
   const updateArchiveName = sparkleUpdateArchiveName(version, arch)
   const appcastName = sparkleAppcastName(arch)
   const feedURL = sparkleFeedURL(channel, arch)
@@ -655,6 +656,83 @@ export function signMacRelease(
       childEnv
     )
 
+    const dmgPath = path.join(projectDir, 'dist', dmgFilename)
+    console.log(`Creating signed macOS ${arch} DMG from the notarized application`)
+    run(
+      'Build signed DMG from notarized App',
+      process.execPath,
+      [
+        path.join(projectDir, 'node_modules/electron-builder/cli.js'),
+        '--publish',
+        'never',
+        '--mac',
+        'dmg',
+        `--${arch}`,
+        '--prepackaged',
+        appPath,
+        '--config',
+        configFile
+      ],
+      {
+        ...childEnv,
+        CSC_KEYCHAIN: keychain,
+        CSC_IDENTITY_AUTO_DISCOVERY: 'true'
+      },
+      20 * 60_000
+    )
+    run('Verify DMG signature', '/usr/bin/codesign', ['--verify', '--strict', dmgPath], childEnv)
+    const dmgSignature = run(
+      'Inspect DMG signing identity',
+      '/usr/bin/codesign',
+      ['--display', '--verbose=4', dmgPath],
+      childEnv
+    )
+    assertDeveloperId(dmgSignature, teamId)
+    console.log('Submitting the signed DMG to Apple (waiting up to 45 minutes)')
+    const dmgResult = run(
+      'Submit DMG for notarization',
+      '/usr/bin/xcrun',
+      [
+        'notarytool',
+        'submit',
+        dmgPath,
+        '--keychain-profile',
+        profile,
+        '--keychain',
+        keychain,
+        '--wait',
+        '--timeout',
+        '45m',
+        '--output-format',
+        'json'
+      ],
+      childEnv,
+      47 * 60_000
+    )
+    const dmgNotarizationId = assertAccepted(dmgResult)
+    run('Staple DMG ticket', '/usr/bin/xcrun', ['stapler', 'staple', dmgPath], childEnv, 5 * 60_000)
+    run('Validate DMG ticket', '/usr/bin/xcrun', ['stapler', 'validate', dmgPath], childEnv)
+    run(
+      'Assess DMG with Gatekeeper',
+      '/usr/sbin/spctl',
+      [
+        '--assess',
+        '--type',
+        'open',
+        '--context',
+        'context:primary-signature',
+        '--verbose=2',
+        dmgPath
+      ],
+      childEnv
+    )
+    run(
+      'Verify final DMG signature',
+      '/usr/bin/codesign',
+      ['--verify', '--strict', dmgPath],
+      childEnv
+    )
+
     const sparkleDirectory = path.join(directory, 'sparkle')
     mkdirSync(sparkleDirectory)
     const updateArchivePath = path.join(sparkleDirectory, updateArchiveName)
@@ -731,6 +809,11 @@ export function signMacRelease(
         sha: env.GITHUB_SHA,
         filename,
         checksum: createHash('sha256').update(readFileSync(pkgPath)).digest('hex'),
+        dmg: {
+          notarizationId: dmgNotarizationId,
+          filename: dmgFilename,
+          checksum: createHash('sha256').update(readFileSync(dmgPath)).digest('hex')
+        },
         sparkle: {
           appNotarizationId,
           releaseTag,

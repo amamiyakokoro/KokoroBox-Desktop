@@ -35,7 +35,12 @@ import {
   validateSigningEnvironment
 } from './macos-signing.ts'
 import type { CommandRunner } from './macos-signing.ts'
-import { artifactName, stageArtifact, validateMacReceipt } from './release-artifacts.ts'
+import {
+  artifactName,
+  macDmgArtifactName,
+  stageArtifact,
+  validateMacReceipt
+} from './release-artifacts.ts'
 import { sparkleAppcastName, sparkleUpdateArchiveName } from './macos-sparkle.ts'
 
 const teamId = kokoroBoxAppleTeamId
@@ -184,6 +189,24 @@ function mockRunner(env: NodeJS.ProcessEnv, projectDir: string, failure?: string
     if (label === 'Submit App for notarization') {
       return JSON.stringify({ id: submissionId, status: 'Accepted' })
     }
+    if (label === 'Build signed DMG from notarized App') {
+      assert.equal(command, process.execPath)
+      assert.ok(childEnv.CSC_KEYCHAIN)
+      assert.ok(args.includes('--prepackaged'))
+      assert.ok(args.includes('dmg'))
+      writeFileSync(
+        path.join(projectDir, 'dist', macDmgArtifactName(env.RELEASE_VERSION!, env.TARGET_ARCH!)),
+        'signed disk image before stapling'
+      )
+    }
+    if (label === 'Inspect DMG signing identity') return details
+    if (label === 'Submit DMG for notarization') {
+      assert.ok(args.includes('--wait'))
+      assert.ok(args.includes('--keychain-profile'))
+      return JSON.stringify({ id: submissionId, status: 'Accepted' })
+    }
+    if (label === 'Staple DMG ticket')
+      writeFileSync(args.at(-1)!, 'signed disk image with stapled ticket')
     if (label === 'Create Sparkle update archive') writeFileSync(args.at(-1)!, 'signed update')
     if (label === 'Generate signed Sparkle appcast') {
       const output = args[args.indexOf('-o') + 1]
@@ -381,7 +404,7 @@ test('notarization must return Accepted with a valid submission ID', () => {
 })
 
 for (const arch of ['x64', 'arm64']) {
-  test(`${arch}: signs, notarizes, staples, verifies, hashes the final package and cleans credentials`, () => {
+  test(`${arch}: signs, notarizes, staples, verifies, and stages both macOS installers`, () => {
     fixture((env, directory) => {
       env.TARGET_ARCH = arch
       const mock = mockRunner(env, directory)
@@ -391,6 +414,8 @@ for (const arch of ['x64', 'arm64']) {
       )
       assert.equal(receipt.status, 'apple-notarized')
       assert.equal(receipt.notarizationId, submissionId)
+      assert.equal(receipt.dmg.notarizationId, submissionId)
+      assert.equal(receipt.dmg.filename, macDmgArtifactName('2.26.8', arch))
       assert.equal(receipt.sparkle.appNotarizationId, submissionId)
       assert.equal(receipt.sparkle.archiveFilename, sparkleUpdateArchiveName('2.26.8', arch))
       assert.equal(receipt.sparkle.appcastFilename, sparkleAppcastName(arch))
@@ -398,12 +423,23 @@ for (const arch of ['x64', 'arm64']) {
         receipt.checksum,
         createHash('sha256').update('signed package with stapled ticket').digest('hex')
       )
+      assert.equal(
+        receipt.dmg.checksum,
+        createHash('sha256').update('signed disk image with stapled ticket').digest('hex')
+      )
       assert.equal(mock.calls.filter((label) => label === 'Verify App/helper signature').length, 9)
       assert.ok(
         mock.calls.indexOf('Submit PKG for notarization') < mock.calls.indexOf('Staple PKG ticket')
       )
       assert.ok(
         mock.calls.indexOf('Validate PKG ticket') < mock.calls.indexOf('Assess PKG with Gatekeeper')
+      )
+      assert.ok(
+        mock.calls.indexOf('Staple App ticket') <
+          mock.calls.indexOf('Build signed DMG from notarized App')
+      )
+      assert.ok(
+        mock.calls.indexOf('Submit DMG for notarization') < mock.calls.indexOf('Staple DMG ticket')
       )
       assert.deepEqual(mock.calls.slice(-2), [
         'Restore Keychain search list',
@@ -446,6 +482,14 @@ for (const failure of [
   'Staple App ticket',
   'Validate App ticket',
   'Assess App with Gatekeeper',
+  'Build signed DMG from notarized App',
+  'Verify DMG signature',
+  'Inspect DMG signing identity',
+  'Submit DMG for notarization',
+  'Staple DMG ticket',
+  'Validate DMG ticket',
+  'Assess DMG with Gatekeeper',
+  'Verify final DMG signature',
   'Create Sparkle update archive',
   'Generate signed Sparkle appcast',
   'Sign Sparkle appcast feed',
@@ -485,7 +529,8 @@ test('cleanup is idempotent and refuses broad or unrelated directories', () => {
 })
 
 test('unsigned or modified macOS artifacts cannot be staged with a stale receipt', () => {
-  assert.throws(() => validateMacReceipt(undefined, '2.26.8', sha, 'config.pkg', 'abc'))
+  const checksum = 'a'.repeat(64)
+  assert.throws(() => validateMacReceipt(undefined, '2.26.8', sha, 'config.pkg', checksum))
   const receipt = {
     status: 'apple-notarized' as const,
     teamId,
@@ -493,7 +538,12 @@ test('unsigned or modified macOS artifacts cannot be staged with a stale receipt
     version: '2.26.8',
     sha,
     filename: 'config.pkg',
-    checksum: 'abc',
+    checksum,
+    dmg: {
+      notarizationId: submissionId,
+      filename: 'config.dmg',
+      checksum: 'b'.repeat(64)
+    },
     sparkle: {
       appNotarizationId: submissionId,
       releaseTag: 'v2.26.8',
@@ -505,7 +555,7 @@ test('unsigned or modified macOS artifacts cannot be staged with a stale receipt
       publicKey: sparklePublicKey
     }
   }
-  validateMacReceipt(receipt, '2.26.8', sha, 'config.pkg', 'abc')
+  validateMacReceipt(receipt, '2.26.8', sha, 'config.pkg', checksum)
   assert.throws(() => validateMacReceipt(receipt, '2.26.8', sha, 'config.pkg', 'changed'))
   assert.throws(() =>
     validateMacReceipt(
@@ -513,7 +563,7 @@ test('unsigned or modified macOS artifacts cannot be staged with a stale receipt
       '2.26.8',
       sha,
       'config.pkg',
-      'abc'
+      checksum
     )
   )
 })
@@ -550,6 +600,8 @@ test('generated signing config passes electron-builder validation with required 
   assert.match(afterPack, /plistString\(extensionInfo, 'NSSystemExtensionUsageDescription'\)/)
   assert.match(afterPack, /host and System Extension must include usage descriptions/)
   assert.equal(config.pkg.identity, teamId)
+  assert.equal(config.dmg.sign, true)
+  assert.equal(config.dmg.writeUpdateInfo, false)
 })
 
 test('both callers forward only the required signing secrets and non-macOS steps do not receive them', () => {
@@ -578,7 +630,7 @@ test('both callers forward only the required signing secrets and non-macOS steps
   )
   for (const step of config.jobs.build.steps) {
     if (JSON.stringify(step.env ?? {}).includes('secrets.')) {
-      assert.equal(step.name, 'Sign and Notarize macOS PKG')
+      assert.equal(step.name, 'Sign and Notarize macOS Installers')
       assert.equal(step.if, "matrix.os == 'macos-latest'")
     }
   }
