@@ -235,6 +235,18 @@ export function assertDeveloperId(details: string, teamId: string) {
   }
 }
 
+export function assertDeveloperIdDiskImage(details: string, teamId: string) {
+  if (
+    !details.includes(`TeamIdentifier=${teamId}`) ||
+    !details.includes('Authority=Developer ID Application:') ||
+    !/^Timestamp=/m.test(details)
+  ) {
+    throw new Error(
+      'DMG signature is not a timestamped Developer ID Application signature from the expected team'
+    )
+  }
+}
+
 export function assertSystemExtensionHostEntitlements(entitlements: string) {
   if (
     !entitlements.includes('com.apple.application-identifier') ||
@@ -687,7 +699,7 @@ export function signMacRelease(
       ['--display', '--verbose=4', dmgPath],
       childEnv
     )
-    assertDeveloperId(dmgSignature, teamId)
+    assertDeveloperIdDiskImage(dmgSignature, teamId)
     console.log('Submitting the signed DMG to Apple (waiting up to 45 minutes)')
     const dmgResult = run(
       'Submit DMG for notarization',
