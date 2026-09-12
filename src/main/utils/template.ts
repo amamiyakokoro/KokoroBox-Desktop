@@ -5,7 +5,10 @@ export const defaultConfig: AppConfig = {
   language: 'system',
   core: systemCoreOnlyBuild ? 'system' : 'mihomo',
   ...(systemCoreOnlyBuild ? { systemCorePath: systemCoreDefaultPath } : {}),
-  ...(systemCoreOnlyBuild ? { corePermissionMode: 'elevated' as const } : {}),
+  // The signed SMAppService daemon is the normal macOS runtime. Keep direct
+  // execution available as an explicit user choice and preserve the existing
+  // elevated default on Windows and Linux.
+  corePermissionMode: process.platform === 'darwin' ? 'service' : 'elevated',
   updateChannel: 'stable',
   notificationMode: 'system',
   showUpdateButtonAfterNotification: true,
