@@ -37,10 +37,6 @@ updates:
     open-pull-requests-limit: 3
     commit-message:
       prefix: 'chore(ci)'
-    ignore:
-      - dependency-name: '*'
-        update-types:
-          - version-update:semver-major
     groups:
       actions-minor-and-patch:
         patterns:
