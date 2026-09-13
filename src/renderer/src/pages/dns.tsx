@@ -24,7 +24,8 @@ const antiPollutionDnsPreset = {
   enhancedMode: 'fake-ip' as DnsMode,
   fakeIPFilterMode: 'blacklist' as FilterMode,
   fakeIPFilter: defaultFakeIpFilter,
-  defaultNameserver: ['223.5.5.5', '119.29.29.29'],
+  respectRules: true,
+  defaultNameserver: ['tls://223.5.5.5', 'tls://119.29.29.29'],
   // `#<name>` selects a concrete Mihomo proxy group; `PROXY` is not a
   // built-in outbound. Do not ship a preset that assumes such a group exists.
   nameserver: ['https://1.1.1.1/dns-query', 'https://8.8.8.8/dns-query'],
@@ -126,6 +127,7 @@ const DNS: React.FC = () => {
   const isAntiPollutionPreset =
     values.enhancedMode === antiPollutionDnsPreset.enhancedMode &&
     values.fakeIPFilterMode === antiPollutionDnsPreset.fakeIPFilterMode &&
+    values.respectRules === antiPollutionDnsPreset.respectRules &&
     JSON.stringify(values.defaultNameserver) ===
       JSON.stringify(antiPollutionDnsPreset.defaultNameserver) &&
     JSON.stringify(values.nameserver) === JSON.stringify(antiPollutionDnsPreset.nameserver) &&
@@ -235,8 +237,7 @@ const DNS: React.FC = () => {
                 ...antiPollutionDnsPreset,
                 fallback: [],
                 fallbackFilter: {},
-                fallbackLazyQuery: false,
-                respectRules: false
+                fallbackLazyQuery: false
               })
               setFakeIPFilterError(null)
               setDefaultNameserverError(null)
