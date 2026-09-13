@@ -99,8 +99,8 @@ const UpdaterDrawer: React.FC<Props> = (props) => {
     >
       <Drawer.Content placement="right" className="top-12 h-[calc(100%-48px)] p-3 pl-0">
         <Drawer.Dialog className="updater-drawer h-full w-[min(460px,calc(100vw-32px))] max-w-none overflow-hidden rounded-2xl! border border-separator/70 bg-overlay p-0 shadow-overlay">
-          <Drawer.Header className="border-b border-separator/70 px-5 py-4">
-            <div className="flex min-w-0 items-center gap-3">
+          <Drawer.Header className="relative border-b border-separator/70 px-5 py-4 pr-14">
+            <div className="flex min-w-0 flex-1 items-start gap-3">
               <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent-soft-foreground">
                 <FiDownload className="size-4.5" />
               </div>
@@ -108,18 +108,18 @@ const UpdaterDrawer: React.FC<Props> = (props) => {
                 <Drawer.Heading className="truncate text-base font-semibold">
                   {version} {tr(' update ready')}
                 </Drawer.Heading>
+                {!isDownloading && (
+                  <Link
+                    className="app-nodrag mt-2 inline-flex text-sm text-muted hover:text-foreground"
+                    href={releaseUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    {tr('Download from GitHub')}
+                  </Link>
+                )}
               </div>
             </div>
-            {!isDownloading && (
-              <Link
-                className="app-nodrag shrink-0 text-sm"
-                href={releaseUrl}
-                target="_blank"
-                rel="noreferrer"
-              >
-                {tr('Download from GitHub')}
-              </Link>
-            )}
           </Drawer.Header>
           <Drawer.Body className="h-full px-5 py-4 text-foreground">
             {updateStatus?.downloading && (
@@ -202,6 +202,7 @@ const UpdaterDrawer: React.FC<Props> = (props) => {
               </Button>
             )}
           </Drawer.Footer>
+          <Drawer.CloseTrigger className="app-nodrag" />
         </Drawer.Dialog>
       </Drawer.Content>
     </Drawer.Backdrop>
