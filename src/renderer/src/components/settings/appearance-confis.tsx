@@ -256,24 +256,28 @@ const AppearanceConfig: React.FC = () => {
                 </Tabs>
               </SettingItem>
             )}
-            <SettingItem
-              compatKey="legacy"
-              title={tr('Show network speed in the {0}', [
-                platform === 'win32' ? tr('Taskbar') : tr('Menu bar')
-              ])}
-              divider
-            >
-              <Switch
-                size="sm"
-                isSelected={showTraffic}
-                onValueChange={async (v) => {
-                  await patchAppConfig({ showTraffic: v })
-                  await startMonitor()
-                }}
-              />
-            </SettingItem>
           </>
         )}
+        <SettingItem
+          compatKey="legacy"
+          title={tr('Show network speed in the {0}', [
+            platform === 'win32'
+              ? tr('Taskbar')
+              : platform === 'darwin'
+                ? tr('Menu bar')
+                : tr('System tray')
+          ])}
+          divider
+        >
+          <Switch
+            size="sm"
+            isSelected={showTraffic}
+            onValueChange={async (v) => {
+              await patchAppConfig({ showTraffic: v })
+              await startMonitor()
+            }}
+          />
+        </SettingItem>
         {platform === 'darwin' && (
           <>
             <SettingItem compatKey="legacy" title={tr('Show Dock icon')} divider>

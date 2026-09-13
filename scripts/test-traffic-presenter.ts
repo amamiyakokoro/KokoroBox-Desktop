@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
 import {
   encodeTrafficPresenterCommand,
@@ -29,4 +30,17 @@ test('taskbar uses a stacked layout and status areas use a horizontal layout', (
   assert.equal(trafficPresenterLayout('win32'), 'stacked')
   assert.equal(trafficPresenterLayout('darwin'), 'horizontal')
   assert.equal(trafficPresenterLayout('linux'), 'horizontal')
+})
+
+test('Desktop forwards Mihomo traffic and unpacks the executable sidecar', () => {
+  const api = readFileSync('src/main/core/mihomoApi.ts', 'utf8')
+  const builder = readFileSync('electron-builder.yml', 'utf8')
+  const presenter = readFileSync('src/main/resolve/trafficPresenter.ts', 'utf8')
+
+  assert.match(api, /updateTrafficPresenter\(json\)/)
+  assert.match(api, /markTrafficPresenterUnavailable\(\)/)
+  assert.match(builder, /asarUnpack:[\s\S]*kokorobox-native-\*\/kokorobox-traffic-presenter\*/)
+  assert.match(presenter, /app\.asar\.unpacked/)
+  assert.match(presenter, /windowsHide: true/)
+  assert.doesNotMatch(presenter, /detached: true/)
 })

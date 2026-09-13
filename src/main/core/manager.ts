@@ -27,7 +27,7 @@ import path from 'path'
 import os from 'os'
 import { existsSync } from 'fs'
 import { uploadRuntimeConfig } from '../resolve/gistApi'
-import { startMonitor } from '../resolve/trafficMonitor'
+import { stopTrafficPresenter } from '../resolve/trafficPresenter'
 import {
   getCoreStatus,
   startCore as startServiceCore,
@@ -792,7 +792,7 @@ export async function keepCoreAlive(): Promise<void> {
 export async function quitWithoutCore(): Promise<void> {
   await stopAppRouting()
   await keepCoreAlive()
-  await startMonitor(true)
+  await stopTrafficPresenter()
   app.exit()
 }
 

@@ -216,6 +216,7 @@ export const messages: Readonly<Record<string, string>> = {
     'macOS application routing requires macOS 13 or later',
   Taskbar: 'Taskbar',
   'Menu bar': 'Menu bar',
+  'System tray': 'System tray',
   ' (Global)': ' (Global)',
   ' · Expires {0}': ' · Expires {0}',
   ' · No expiration': ' · No expiration',

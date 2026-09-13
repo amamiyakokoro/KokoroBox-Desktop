@@ -38,7 +38,11 @@ function executablePath(): string {
 
 function send(command: TrafficPresenterCommand, target = child): void {
   if (!target?.stdin?.writable) return
-  target.stdin.write(encodeTrafficPresenterCommand(command))
+  try {
+    target.stdin.write(encodeTrafficPresenterCommand(command))
+  } catch {
+    // The exit/error handler owns recovery when the sidecar closes its input.
+  }
 }
 
 function configure(target: ChildProcess): void {
