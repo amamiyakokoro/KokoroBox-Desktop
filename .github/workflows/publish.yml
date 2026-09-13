@@ -39,7 +39,7 @@ jobs:
           node-version: 24
       - run: npm install -g pnpm@11.1.1
       - run: pnpm install --frozen-lockfile --ignore-scripts
-      - uses: actions/download-artifact@v7
+      - uses: actions/download-artifact@v8
         with:
           pattern: packages-*
           path: bin/

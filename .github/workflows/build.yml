@@ -333,7 +333,7 @@ jobs:
         with:
           ref: ${{ github.sha }}
           persist-credentials: false
-      - uses: actions/download-artifact@v7
+      - uses: actions/download-artifact@v8
         with:
           name: packages-ubuntu-latest-x64-rpm
           path: fedora-rpm
@@ -361,7 +361,7 @@ jobs:
         with:
           ref: ${{ github.sha }}
           persist-credentials: false
-      - uses: actions/download-artifact@v7
+      - uses: actions/download-artifact@v8
         with:
           name: packages-ubuntu-latest-x64-rpm
           path: opensuse-rpm
