@@ -6,14 +6,16 @@ output or constructing privileged shell commands in Electron.
 
 ## Current boundary
 
-| Area                      | Native API                                      | Desktop consumer                            |
-| ------------------------- | ----------------------------------------------- | ------------------------------------------- |
-| Applications              | `inspectApplication`, `scanWindowsApplications` | Application routing and Windows rule groups |
-| Icons and rules           | `fileToDataUrl`, `getAppName`, `fileToStr`      | UI metadata and rule conversion             |
-| Login startup             | `getLaunchAtLogin`, `setLaunchAtLogin`          | Kokoro settings and macOS approval guidance |
-| Network state             | `getNetworkContext`                             | SSID switching and macOS DNS recovery       |
-| Unix core permissions     | `getCorePrivilegeStatus`, `setCorePrivileges`   | Mihomo permission checks, grant, and revoke |
-| Windows system operations | SID, explicit privilege relaunch, Firewall APIs | Routing and privileged setup                |
+| Area                      | Native API                                      | Desktop consumer                             |
+| ------------------------- | ----------------------------------------------- | -------------------------------------------- |
+| Applications              | `inspectApplication`, `scanWindowsApplications` | Application routing and Windows rule groups  |
+| Icons and rules           | `fileToDataUrl`, `getAppName`, `fileToStr`      | UI metadata and rule conversion              |
+| Login startup             | `getLaunchAtLogin`, `setLaunchAtLogin`          | Kokoro settings and macOS approval guidance  |
+| Network state             | `getNetworkContext`                             | SSID switching and macOS DNS recovery        |
+| macOS system service      | managed-service lifecycle APIs                  | Bundled LaunchDaemon registration and repair |
+| Executable discovery      | `findExecutables`                               | System Mihomo core selection                 |
+| Unix core permissions     | `getCorePrivilegeStatus`, `setCorePrivileges`   | Mihomo permission checks, grant, and revoke  |
+| Windows system operations | SID, explicit privilege relaunch, Firewall APIs | Routing and privileged setup                 |
 
 The P0 migration consolidates active interface, macOS network-service, DNS, and
 SSID discovery in Rust. Windows SSID lookup uses the Native Wi-Fi API rather
@@ -24,6 +26,17 @@ Launch-at-login now uses native platform registration. On macOS, the returned
 status distinguishes an enabled item from one that still requires approval in
 System Settings. Desktop keeps the switch off in that state and presents a
 direct route to Login Items & Extensions instead of reporting a false success.
+
+The P1 migration removes Desktop's separately compiled Objective-C service
+bridge. Registration, status, approval detection, reload, removal, and opening
+Login Items now come from the versioned native package. The LaunchDaemon plist
+and the service binary remain application-owned packaging assets.
+
+System core discovery also runs behind the native boundary. Desktop no longer
+spawns `which`, `where.exe`, Homebrew, dpkg, rpm, pacman, or Scoop merely to
+find Mihomo. The native API searches validated directories asynchronously,
+checks platform executability rules, canonicalizes results, and deduplicates
+aliases before returning them.
 
 Core privilege changes are also constrained at the native boundary. Only
 existing executable files whose canonical filename is `mihomo` or

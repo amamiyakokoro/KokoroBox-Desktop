@@ -6,8 +6,11 @@ import { existsSync } from 'fs'
 import { promisify } from 'util'
 import path from 'path'
 import { LEGACY_WINDOWS_ELEVATE_TASK_NAME } from './misc'
-import { getLaunchAtLogin, setLaunchAtLogin } from 'kokorobox-native'
-import { openMacOSServiceSystemSettings } from '../service/macos-smappservice'
+import {
+  getLaunchAtLogin,
+  openMacosLoginItemsSettings,
+  setLaunchAtLogin
+} from 'kokorobox-native'
 
 export const WINDOWS_AUTO_RUN_TASK_NAME = 'KokoroBox'
 export const LEGACY_WINDOWS_AUTO_RUN_TASK_NAME = 'sparkle'
@@ -95,7 +98,7 @@ export function openAutoRunSystemSettings(): void {
   if (process.platform !== 'darwin') {
     throw new Error('Launch-at-login system settings are available only on macOS')
   }
-  openMacOSServiceSystemSettings()
+  openMacosLoginItemsSettings()
 }
 
 export async function migrateLegacyWindowsTasks(): Promise<void> {

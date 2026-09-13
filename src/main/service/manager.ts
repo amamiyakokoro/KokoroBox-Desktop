@@ -15,22 +15,39 @@ import { getAppConfig, patchAppConfig } from '../config/app'
 import { execFile } from 'child_process'
 import { promisify } from 'util'
 import { loadServiceAuthSecret, saveServiceAuthSecret, type ServiceAuthSecret } from './auth-store'
-import { getCurrentUserSid } from 'kokorobox-native'
+import {
+  getCurrentUserSid,
+  getMacosManagedServiceStatus,
+  openMacosLoginItemsSettings,
+  registerMacosManagedService,
+  reloadMacosManagedService,
+  unregisterMacosManagedService,
+  type MacOSManagedServiceStatus
+} from 'kokorobox-native'
 import { systemCoreOnlyBuild } from '../../shared/build-flags'
 import { parseServiceLog } from './log-parser'
 import { existsSync } from 'fs'
 import { appendAppLog } from '../utils/log'
-import {
-  macOSServiceRegistrationStatus,
-  openMacOSServiceSystemSettings,
-  reloadMacOSService,
-  registerMacOSService,
-  unregisterMacOSService
-} from './macos-smappservice'
-
 let keyManager: KeyManager | null = null
 let macOSServiceRecoveryPromise: Promise<void> | undefined
 const execFilePromise = promisify(execFile)
+const MACOS_SERVICE_PLIST_NAME = 'KokoroBoxService.plist'
+
+function macOSServiceRegistrationStatus(): MacOSManagedServiceStatus {
+  return getMacosManagedServiceStatus(MACOS_SERVICE_PLIST_NAME)
+}
+
+function registerMacOSService(): MacOSManagedServiceStatus {
+  return registerMacosManagedService(MACOS_SERVICE_PLIST_NAME)
+}
+
+function unregisterMacOSService(): MacOSManagedServiceStatus {
+  return unregisterMacosManagedService(MACOS_SERVICE_PLIST_NAME)
+}
+
+function reloadMacOSService(): MacOSManagedServiceStatus {
+  return reloadMacosManagedService(MACOS_SERVICE_PLIST_NAME)
+}
 
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => {
@@ -272,7 +289,7 @@ async function performMacOSServiceInstall(): Promise<void> {
     `[Service]: macOS SMAppService ${previousStatus === 'enabled' ? 'reload' : 'register'}, ${previousStatus} -> ${status}\n`
   )
   if (status === 'requires-approval') {
-    openMacOSServiceSystemSettings()
+    openMacosLoginItemsSettings()
   }
 }
 
@@ -513,7 +530,7 @@ export async function serviceStatus(): Promise<
 
 export function openServiceSystemSettings(): void {
   if (process.platform !== 'darwin') return
-  openMacOSServiceSystemSettings()
+  openMacosLoginItemsSettings()
 }
 
 export async function testServiceConnection(): Promise<boolean> {

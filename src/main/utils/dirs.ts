@@ -1,9 +1,9 @@
 import { tr } from '../../shared/i18n'
 import { is } from '@electron-toolkit/utils'
-import { existsSync, mkdirSync, readdirSync } from 'fs'
+import { existsSync, mkdirSync } from 'fs'
 import { app } from 'electron'
 import path from 'path'
-import { execFileSync, execSync } from 'child_process'
+import { findExecutables } from 'kokorobox-native'
 import { getAppConfigSync } from '../config/app'
 import { checkCorePermissionPathSync } from '../core/permission-check'
 import {
@@ -245,195 +245,18 @@ export function coreLogPath(): string {
   return datedLogPath('core')
 }
 
-function hasCommand(command: string): boolean {
-  try {
-    const isWin = process.platform === 'win32'
-    if (isWin) {
-      execFileSync('where.exe', [command], {
-        encoding: 'utf8',
-        stdio: 'pipe',
-        windowsHide: true
-      })
-    } else {
-      execSync(`which ${command}`, { encoding: 'utf8', stdio: 'pipe' })
-    }
-    return true
-  } catch (error) {
-    return false
-  }
-}
-
-export function findSystemMihomo(): string[] {
-  const isWin = process.platform === 'win32'
-  const isLinux = process.platform === 'linux'
-  const isMac = process.platform === 'darwin'
+export async function findSystemMihomo(): Promise<string[]> {
   const foundPaths: string[] = []
-  const searchNames = ['mihomo', 'clash']
 
   if (systemCoreDefaultPath && existsSync(systemCoreDefaultPath)) {
     foundPaths.push(systemCoreDefaultPath)
   }
 
-  for (const name of searchNames) {
-    try {
-      const result = (
-        isWin
-          ? execFileSync('where.exe', [name], {
-              encoding: 'utf8',
-              stdio: 'pipe',
-              windowsHide: true
-            })
-          : execSync(`which ${name}`, { encoding: 'utf8', stdio: 'pipe' })
-      ).trim()
-      if (result) {
-        const paths = result.split('\n').filter((p) => p && existsSync(p))
-        for (const p of paths) {
-          if (!foundPaths.includes(p)) {
-            foundPaths.push(p)
-          }
-        }
-      }
-    } catch (error) {
-      // ignore
-    }
-  }
-
-  if (!isWin) {
-    const commonDirs = [
-      '/bin',
-      '/usr/bin',
-      '/usr/local/bin',
-      '/opt/homebrew/bin',
-      path.join(homeDir, '.local/bin'),
-      path.join(homeDir, 'bin')
-    ]
-
-    for (const dir of commonDirs) {
-      if (existsSync(dir)) {
-        try {
-          const files = readdirSync(dir)
-          for (const file of files) {
-            if (file.startsWith('mihomo') || file.startsWith('clash')) {
-              const binPath = path.join(dir, file)
-              if (existsSync(binPath) && !foundPaths.includes(binPath)) {
-                foundPaths.push(binPath)
-              }
-            }
-          }
-        } catch (error) {
-          // ignore
-        }
-      }
-    }
-  }
-
-  if (isMac || isLinux) {
-    // Homebrew
-    if (hasCommand('brew')) {
-      for (const name of searchNames) {
-        try {
-          const result = execSync(`brew --prefix ${name} 2>/dev/null`, {
-            encoding: 'utf8'
-          }).trim()
-          if (result) {
-            const binPath = path.join(result, 'bin', name)
-            if (existsSync(binPath) && !foundPaths.includes(binPath)) {
-              foundPaths.push(binPath)
-            }
-          }
-        } catch (error) {
-          // ignore
-        }
-      }
-    }
-  }
-
-  if (isLinux) {
-    // apt/dpkg (Debian/Ubuntu)
-    if (hasCommand('dpkg')) {
-      for (const name of searchNames) {
-        try {
-          const result = execSync(`dpkg -L ${name} 2>/dev/null | grep bin/${name}$`, {
-            encoding: 'utf8'
-          }).trim()
-          if (result) {
-            const paths = result.split('\n').filter((p) => p && existsSync(p))
-            for (const p of paths) {
-              if (!foundPaths.includes(p)) {
-                foundPaths.push(p)
-              }
-            }
-          }
-        } catch (error) {
-          // ignore
-        }
-      }
-    }
-
-    // rpm/yum (RedHat/CentOS/Fedora)
-    if (hasCommand('rpm')) {
-      for (const name of searchNames) {
-        try {
-          const result = execSync(`rpm -ql ${name} 2>/dev/null | grep bin/${name}$`, {
-            encoding: 'utf8'
-          }).trim()
-          if (result) {
-            const paths = result.split('\n').filter((p) => p && existsSync(p))
-            for (const p of paths) {
-              if (!foundPaths.includes(p)) {
-                foundPaths.push(p)
-              }
-            }
-          }
-        } catch (error) {
-          // ignore
-        }
-      }
-    }
-
-    // pacman (Arch Linux)
-    if (hasCommand('pacman')) {
-      for (const name of searchNames) {
-        try {
-          const result = execSync(`pacman -Ql ${name} 2>/dev/null | grep bin/${name}$`, {
-            encoding: 'utf8'
-          }).trim()
-          if (result) {
-            const paths = result
-              .split('\n')
-              .map((line) => line.split(' ')[1])
-              .filter((p) => p && existsSync(p))
-            for (const p of paths) {
-              if (!foundPaths.includes(p)) {
-                foundPaths.push(p)
-              }
-            }
-          }
-        } catch (error) {
-          // ignore
-        }
-      }
-    }
-  }
-
-  if (isWin) {
-    // Scoop
-    if (hasCommand('scoop')) {
-      for (const name of searchNames) {
-        try {
-          const result = execSync(`scoop which ${name} 2>nul`, {
-            encoding: 'utf8',
-            windowsHide: true
-          }).trim()
-          if (result && existsSync(result) && !foundPaths.includes(result)) {
-            foundPaths.push(result)
-          }
-        } catch (error) {
-          // ignore
-        }
-      }
-    }
-  }
+  const candidates = await findExecutables({
+    names: ['mihomo', 'clash'],
+    matchNamePrefixes: process.platform !== 'win32'
+  })
+  foundPaths.push(...candidates.map((candidate) => candidate.path))
 
   return Array.from(new Set(foundPaths)).sort()
 }
