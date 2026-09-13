@@ -134,7 +134,7 @@ import path from 'path'
 import v8 from 'v8'
 import { getGistRawUrl } from '../resolve/gistApi'
 import { getIconDataURL, getImageDataURL } from './icon'
-import { startMonitor } from '../resolve/trafficMonitor'
+import { startTrafficPresenter } from '../resolve/trafficPresenter'
 import { closeFloatingWindow, showContextMenu, showFloatingWindow } from '../resolve/floatingWindow'
 import { getAppName } from 'kokorobox-native'
 import { showNotification } from './notification'
@@ -333,7 +333,7 @@ export function registerIpcMainHandlers(): void {
   ipcMain.handle('restartCore', ipcErrorWrapper(restartCore))
   ipcMain.handle('stopCore', ipcErrorWrapper(stopCore))
   ipcMain.handle('restartMihomoConnections', ipcErrorWrapper(restartMihomoConnections))
-  ipcMain.handle('startMonitor', (_e, detached) => ipcErrorWrapper(startMonitor)(detached))
+  ipcMain.handle('startMonitor', () => ipcErrorWrapper(startTrafficPresenter)())
   ipcMain.handle('triggerSysProxy', (_e, enable, onlyActiveDevice, useRegistry) =>
     ipcErrorWrapper(triggerSysProxy)(enable, onlyActiveDevice, useRegistry)
   )

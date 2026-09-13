@@ -13,7 +13,7 @@ import { init } from './utils/init'
 import { join } from 'path'
 import { initShortcut } from './resolve/shortcut'
 import { initProfileUpdater } from './core/profileUpdater'
-import { startMonitor } from './resolve/trafficMonitor'
+import { startTrafficPresenter } from './resolve/trafficPresenter'
 import { showFloatingWindow } from './resolve/floatingWindow'
 import { getAppConfigSync } from './config/app'
 import { createMainWindowStateManager } from './resolve/windowState'
@@ -402,7 +402,7 @@ function startPrimaryInstance(initialDeepLinks: string[]): void {
         }
       })()
 
-      runStartupTask('traffic monitor', startMonitor())
+      runStartupTask('traffic presenter', startTrafficPresenter())
 
       await createWindowPromise
 

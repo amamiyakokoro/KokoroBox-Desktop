@@ -206,6 +206,7 @@ export const messages: Readonly<Record<string, string>> = {
     'macOS 應用程式分流需要 macOS 13 或更新版本',
   Taskbar: '工作列',
   'Menu bar': '狀態列',
+  'System tray': '系統匣',
   ' (Global)': ' (全域)',
   ' · Expires {0}': ' · {0} 到期',
   ' · No expiration': ' · 長期有效',

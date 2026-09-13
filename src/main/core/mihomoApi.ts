@@ -9,6 +9,10 @@ import { floatingWindow } from '../resolve/floatingWindow'
 import { mihomoIpcPath, serviceIpcPath } from '../utils/dirs'
 import { publishMihomoLog } from '../utils/log'
 import { createSignedServiceAxios, getServiceAuthHeaders } from '../service/api'
+import {
+  markTrafficPresenterUnavailable,
+  updateTrafficPresenter
+} from '../resolve/trafficPresenter'
 
 let axiosIns: AxiosInstance = null!
 let mihomoTrafficWs: WebSocket | null = null
@@ -334,6 +338,7 @@ export const startMihomoTraffic = async (): Promise<void> => {
 }
 
 export const stopMihomoTraffic = (): void => {
+  markTrafficPresenterUnavailable()
   trafficRetry = 10
   if (trafficReconnectTimer) {
     clearTimeout(trafficReconnectTimer)
@@ -353,6 +358,7 @@ const mihomoTraffic = async (): Promise<void> => {
     const data = e.data as string
     const json = JSON.parse(data) as ControllerTraffic
     trafficRetry = 10
+    updateTrafficPresenter(json)
     try {
       mainWindow?.webContents.send('mihomoTraffic', json)
       if (process.platform !== 'linux') {
@@ -375,6 +381,7 @@ const mihomoTraffic = async (): Promise<void> => {
   ws.onclose = (): void => {
     if (mihomoTrafficWs === ws) {
       mihomoTrafficWs = null
+      markTrafficPresenterUnavailable()
     }
     if (mihomoTrafficWs !== null || !trafficRetry || trafficReconnectTimer) return
 

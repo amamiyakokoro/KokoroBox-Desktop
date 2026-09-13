@@ -205,6 +205,7 @@ export const messages: Readonly<Record<string, string>> = {
   'macOS application routing requires macOS 13 or later': 'macOS 应用分流需要 macOS 13 或更新版本',
   Taskbar: '任务栏',
   'Menu bar': '状态栏',
+  'System tray': '系统托盘',
   ' (Global)': ' (全局)',
   ' · Expires {0}': ' · {0} 到期',
   ' · No expiration': ' · 长期有效',

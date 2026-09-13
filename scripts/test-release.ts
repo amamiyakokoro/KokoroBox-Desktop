@@ -34,11 +34,6 @@ import {
   winDivertArchiveSha256
 } from '../src/main/app-routing/integrity-manifest.ts'
 import {
-  TRAFFIC_MONITOR_VERSION,
-  trafficMonitorAsset,
-  trafficMonitorDownloadUrl
-} from './traffic-monitor.ts'
-import {
   KOKOROBOX_SERVICE_STABLE_TAG,
   kokoroboxServiceAsset,
   verifyKokoroBoxServiceChecksum
@@ -588,7 +583,7 @@ test('workflows gate publication on all builds and do not invoke upstream-only s
   const build = workflow('build')
   assert.equal(build.on.workflow_call.inputs.build_number.required, true)
   assert.equal(build.jobs.build.strategy['fail-fast'], false)
-  assert.deepEqual(build.jobs.build.needs, ['validate', 'validate-traffic-monitor-plugin'])
+  assert.deepEqual(build.jobs.build.needs, ['validate'])
   assert.equal(build.permissions.contents, 'read')
   const ciMac = parse(readFileSync('electron-builder.ci.yml', 'utf8'))
   assert.equal(ciMac.mac.identity, null)
@@ -650,44 +645,24 @@ test('service release download tolerates GitHub asset publication delay', () => 
   )
 })
 
-test('Windows taskbar traffic uses verified official TrafficMonitor packages and a source plugin', () => {
-  assert.equal(TRAFFIC_MONITOR_VERSION, 'V1.86')
-  assert.deepEqual(
-    ['x64', 'arm64', 'ia32'].map((arch) => trafficMonitorAsset(arch).filename),
-    [
-      'TrafficMonitor_V1.86_x64_Lite.zip',
-      'TrafficMonitor_V1.86_arm64ec_Lite.zip',
-      'TrafficMonitor_V1.86_x86_Lite.zip'
-    ]
-  )
-  assert.throws(() => trafficMonitorAsset('mips64'))
-  assert.match(
-    trafficMonitorDownloadUrl(trafficMonitorAsset('x64')),
-    /^https:\/\/github\.com\/zhongyang219\/TrafficMonitor\/releases\/download\/V1\.86\//
-  )
-
+test('traffic status uses the first-party cross-platform native presenter', () => {
   const prepare = readFileSync('scripts/prepare.ts', 'utf8')
-  assert.doesNotMatch(prepare, /xishang0128|sparkle-run\/releases\/download\/monitor/)
-  assert.match(prepare, /TrafficMonitor SHA-256 mismatch/)
-  assert.match(prepare, /portable_mode = true/)
-
-  const plugin = readFileSync('native/windows/traffic-monitor/KokoroBoxTrafficPlugin.cpp', 'utf8')
-  assert.match(plugin, /GET \/traffic HTTP\/1\.1/)
-  assert.match(plugin, /\\\\\\\\\.\\\\pipe\\\\KokoroBox\\\\mihomo/)
-  assert.doesNotMatch(plugin, /\\\\pipe\\\\Sparkle|Sparkle\.dll/)
-
-  const runtime = readFileSync('src/main/resolve/trafficMonitor.ts', 'utf8')
-  assert.match(runtime, /dataDir\(\), 'traffic-monitor'/)
-  assert.match(runtime, /plugin_display_item=KokoroBoxUploadSpeed,KokoroBoxDownloadSpeed/)
-  assert.match(runtime, /KOKOROBOX_MIHOMO_PIPE/)
+  const runtime = readFileSync('src/main/resolve/trafficPresenter.ts', 'utf8')
+  const builder = readFileSync('electron-builder.yml', 'utf8')
+  assert.doesNotMatch(prepare, /TrafficMonitor|traffic-monitor/)
+  assert.match(runtime, /getTrafficPresenterPath/)
+  assert.match(runtime, /type: 'traffic'/)
+  assert.match(runtime, /type: 'unavailable'/)
+  assert.match(builder, /traffic-presenter\/kokorobox-traffic-presenter/)
 
   const buildWorkflow = workflow('build')
-  assert.ok(buildWorkflow.jobs['validate-traffic-monitor-plugin'])
-  assert.deepEqual(buildWorkflow.jobs.build.needs, ['validate', 'validate-traffic-monitor-plugin'])
-  assert.ok(
-    buildWorkflow.jobs.build.steps.some(
-      (step: { name?: string }) => step.name === 'Build KokoroBox TrafficMonitor plugin'
-    )
+  assert.equal(buildWorkflow.jobs['validate-traffic-monitor-plugin'], undefined)
+  assert.deepEqual(buildWorkflow.jobs.build.needs, ['validate'])
+  assert.equal(
+    buildWorkflow.jobs.build.steps.some((step: { name?: string }) =>
+      step.name?.includes('TrafficMonitor')
+    ),
+    false
   )
 })
 
