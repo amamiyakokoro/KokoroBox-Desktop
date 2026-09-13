@@ -476,14 +476,12 @@ const AppRouting: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex flex-col gap-1">
+        <div className="app-routing-rule-entry flex flex-col gap-1">
           <div
-            className={`grid gap-2 md:items-center ${
-              isMac
-                ? 'md:grid-cols-[10rem_minmax(11rem,1fr)_auto]'
-                : isLinux
-                  ? 'md:grid-cols-[10rem_minmax(11rem,1fr)_auto]'
-                  : 'sm:grid-cols-[minmax(12rem,1fr)_auto]'
+            className={`app-routing-rule-entry-grid ${
+              isMac || isLinux
+                ? 'app-routing-rule-entry-grid-with-kind'
+                : 'app-routing-rule-entry-grid-without-kind'
             }`}
           >
             {isMac && (
@@ -547,9 +545,9 @@ const AppRouting: React.FC = () => {
                 if (event.key === 'Enter' && processPattern.trim()) void submitPattern()
               }}
             />
-            <div className="flex w-full min-w-max items-center gap-2 sm:w-auto sm:justify-end">
+            <div className="app-routing-rule-actions">
               <Button
-                className="min-w-0 flex-1 shrink-0 sm:flex-none"
+                className="app-routing-rule-action"
                 color="primary"
                 startContent={<MdAdd className="text-lg" />}
                 isDisabled={!supported || !config || saving || !processPattern.trim()}
@@ -559,7 +557,7 @@ const AppRouting: React.FC = () => {
               </Button>
               <span className="text-sm text-foreground-500">{tr('or')}</span>
               <Button
-                className="min-w-0 flex-1 shrink-0 sm:flex-none"
+                className="app-routing-rule-action"
                 variant="flat"
                 startContent={<MdAdd className="text-lg" />}
                 isDisabled={!supported || !config || saving}
