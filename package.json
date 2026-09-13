@@ -65,7 +65,7 @@
     "@eslint/js": "^10.0.1",
     "@heroui-v3/react": "npm:@heroui/react@3.2.4",
     "@heroui-v3/styles": "npm:@heroui/styles@3.2.4",
-    "@heroui/react": "2.8.10",
+    "@heroui/react": "3.2.4",
     "@tailwindcss/vite": "^4.3.3",
     "@types/adm-zip": "^0.5.8",
     "@types/js-yaml": "^4.0.9",
