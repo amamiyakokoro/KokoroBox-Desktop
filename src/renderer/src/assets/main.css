@@ -113,7 +113,7 @@
  * The application-routing workspace sits beside a persistent sidebar, so viewport
  * breakpoints do not describe the width that is actually available to this form.
  * Let the controls respond to their content container instead. The example
- * stays attached to the identifier field, followed by the related actions.
+ * introduces the identifier field, followed by the related actions.
  */
 .app-routing-rule-entry {
   container: app-routing-rule-entry / inline-size;

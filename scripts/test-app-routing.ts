@@ -1057,9 +1057,10 @@ test('application rule entry keeps match type and identifier on one desktop row'
     /@container app-routing-rule-entry \(min-width: 30rem\)[\s\S]*grid-template-columns: 10rem minmax\(11rem, 1fr\)/
   )
   const examplePosition = page.indexOf('className="app-routing-rule-example')
+  const entryGridPosition = page.indexOf('className={`app-routing-rule-entry-grid')
   const actionsPosition = page.indexOf('className="app-routing-rule-actions"')
-  assert.ok(examplePosition > page.indexOf('className="app-routing-rule-entry-grid'))
-  assert.ok(actionsPosition > examplePosition)
+  assert.ok(examplePosition < entryGridPosition)
+  assert.ok(actionsPosition > entryGridPosition)
   assert.doesNotMatch(styles, /grid-template-columns: 10rem minmax\(11rem, 1fr\) auto/)
   assert.match(styles, /\.app-routing-rule-actions \{[\s\S]*align-self: flex-end/)
 })

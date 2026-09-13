@@ -477,6 +477,19 @@ const AppRouting: React.FC = () => {
         </div>
 
         <div className="app-routing-rule-entry flex flex-col gap-1">
+          <p className="app-routing-rule-example px-1 text-xs text-foreground-500">
+            {isMac
+              ? macIdentifierKind === 'macos-process-name'
+                ? tr('For example: codex or Codex Helper*')
+                : tr('For example: com.openai.chat or com.openai.chat*')
+              : isLinux
+                ? linuxIdentifierKind === 'linux-process-name'
+                  ? tr('For example: codex. Every executable with that name will match.')
+                  : tr('For example: /usr/bin/firefox or /opt/example/example')
+                : tr(
+                    'For example: ChatGPT.exe, ChatGPT*.exe, or C:\\Program Files\\*\\ChatGPT.exe'
+                  )}
+          </p>
           <div
             className={`app-routing-rule-entry-grid ${
               isMac || isLinux
@@ -546,19 +559,6 @@ const AppRouting: React.FC = () => {
               }}
             />
           </div>
-          <p className="app-routing-rule-example px-1 text-xs text-foreground-500">
-            {isMac
-              ? macIdentifierKind === 'macos-process-name'
-                ? tr('For example: codex or Codex Helper*')
-                : tr('For example: com.openai.chat or com.openai.chat*')
-              : isLinux
-                ? linuxIdentifierKind === 'linux-process-name'
-                  ? tr('For example: codex. Every executable with that name will match.')
-                  : tr('For example: /usr/bin/firefox or /opt/example/example')
-                : tr(
-                    'For example: ChatGPT.exe, ChatGPT*.exe, or C:\\Program Files\\*\\ChatGPT.exe'
-                  )}
-          </p>
           <div className="app-routing-rule-actions">
             <Button
               className="app-routing-rule-action"
