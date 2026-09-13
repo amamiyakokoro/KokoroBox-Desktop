@@ -45,4 +45,6 @@ test('Desktop forwards Mihomo traffic and packages the executable sidecar', () =
   assert.match(presenter, /process\.resourcesPath, 'traffic-presenter'/)
   assert.match(presenter, /windowsHide: true/)
   assert.doesNotMatch(presenter, /detached: true/)
+  assert.match(presenter, /new WeakSet<ChildProcess>/)
+  assert.match(presenter, /nextChild\.once\('close'/)
 })

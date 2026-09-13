@@ -20,7 +20,7 @@ type NativePresenterModule = typeof native & {
 
 let child: ChildProcess | undefined
 let desired = false
-let expectedExit = false
+const expectedExits = new WeakSet<ChildProcess>()
 let restartTimer: NodeJS.Timeout | undefined
 let operation = Promise.resolve()
 let latestTraffic: { up: number; down: number } | undefined
@@ -114,7 +114,6 @@ function spawnPresenter(): void {
     stdio: ['pipe', 'ignore', 'pipe']
   })
   child = nextChild
-  expectedExit = false
 
   nextChild.stderr?.setEncoding('utf8')
   nextChild.stderr?.on('data', (chunk: string) => {
@@ -125,9 +124,9 @@ function spawnPresenter(): void {
   nextChild.once('error', (error) => {
     void appendAppLog(`[Traffic presenter]: failed to start, ${error.message}\n`)
   })
-  nextChild.once('exit', (code, signal) => {
+  nextChild.once('close', (code, signal) => {
     if (child === nextChild) child = undefined
-    if (expectedExit || !desired) return
+    if (expectedExits.has(nextChild) || !desired) return
     void appendAppLog(
       `[Traffic presenter]: stopped unexpectedly (code=${code ?? 'none'}, signal=${signal ?? 'none'})\n`
     )
@@ -141,7 +140,7 @@ async function stopPresenter(): Promise<void> {
   const running = child
   if (!running) return
   child = undefined
-  expectedExit = true
+  expectedExits.add(running)
   send({ version: trafficPresenterProtocolVersion, type: 'shutdown' }, running)
 
   await new Promise<void>((resolve) => {
@@ -154,7 +153,7 @@ async function stopPresenter(): Promise<void> {
       resolve()
     }, 750)
     timeout.unref()
-    running.once('exit', () => {
+    running.once('close', () => {
       clearTimeout(timeout)
       resolve()
     })
