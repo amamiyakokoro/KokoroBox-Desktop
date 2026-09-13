@@ -139,7 +139,7 @@
   flex: 1 1 0;
 }
 
-@container app-routing-rule-entry (min-width: 36rem) {
+@container app-routing-rule-entry (min-width: 30rem) {
   .app-routing-rule-entry-grid-with-kind {
     grid-template-columns: 10rem minmax(11rem, 1fr);
   }
