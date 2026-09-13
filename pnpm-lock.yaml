@@ -36,8 +36,8 @@ importers:
         specifier: ^0.7.3
         version: 0.7.3
       kokorobox-native:
-        specifier: ^0.8.1
-        version: 0.8.1
+        specifier: ^0.8.2
+        version: 0.8.2
       webdav:
         specifier: ^5.10.0
         version: 5.10.0
@@ -3952,46 +3952,46 @@ packages:
   keyv@4.5.4:
     resolution: {integrity: sha512-oxVHkHR/EJf2CNXnWxRLW6mg7JyCCUcG0DtEGmL2ctUo1PNTin1PUil+r/+4r5MpVgC/fn1kjsx7mjSujKqIpw==}
 
-  kokorobox-native-darwin-arm64@0.8.1:
-    resolution: {integrity: sha512-vcFGrAhvPwGfTOe96guMKW55N6/mS+Ittj4HyO7rmlXRAfiDwI1bka+fqRz7Tm3HQZEaXPTGpI3wnyhyi1eTxw==}
+  kokorobox-native-darwin-arm64@0.8.2:
+    resolution: {integrity: sha512-J1iy3qx7HBZSxCYOsNUsUaukZDlOfQkECsXGW00Oiaso+rt05AxVewECL2LOZaPdcXEG+/8vY2QjuAh2+AcqNg==}
     engines: {node: '>=16'}
     cpu: [arm64]
     os: [darwin]
 
-  kokorobox-native-darwin-x64@0.8.1:
-    resolution: {integrity: sha512-WD7s8KTU0dWxxgpO0dBjn9GL8/FBO2M9SfuBCIbz/AYM6sZ2vF7RT1biCtvL0PZfigP5MnUSiC0JDH/bgfuRRg==}
+  kokorobox-native-darwin-x64@0.8.2:
+    resolution: {integrity: sha512-n03VyjPnarRlxeRNfdFAILiAN53Dodu/vasRP+31xCjU0aDelSwiHyIw+TlkPl/XmiBtvjQtxjYyEHtSNLlXQA==}
     engines: {node: '>=16'}
     cpu: [x64]
     os: [darwin]
 
-  kokorobox-native-linux-arm64-gnu@0.8.1:
-    resolution: {integrity: sha512-gy3uNuXuJFDOIPiiLJCAP7hLIwJorNPztou6NzpV4gkOOyLbzdeF/dI9mYFDf7+o9P6EEeL1CoqOJlyzAqK2+A==}
+  kokorobox-native-linux-arm64-gnu@0.8.2:
+    resolution: {integrity: sha512-An1l0r86NJNXVB40jBr0zSoXAtqCbk/NY+HqxUJ53fPqHU7Fzlma/hp3LoGrQD+Y1J/Daieztue3tLB+rF0KBA==}
     engines: {node: '>=16'}
     cpu: [arm64]
     os: [linux]
     libc: [glibc]
 
-  kokorobox-native-linux-x64-gnu@0.8.1:
-    resolution: {integrity: sha512-2bFSO8Qcce57EQvd14+5Mas79O67QB2WHXLUjvmfussLwB4z/4EVh0auxIMsUwXBDuix673aNztojk6Z4cOEMA==}
+  kokorobox-native-linux-x64-gnu@0.8.2:
+    resolution: {integrity: sha512-6/X5FhdbovcZAjnVEX/umHXWfX2xHKtTENUPkcQA2h/zAjunv8uk2IXg+gHef3vDjLzY+MBvqBviOZIOdPOzEA==}
     engines: {node: '>=16'}
     cpu: [x64]
     os: [linux]
     libc: [glibc]
 
-  kokorobox-native-win32-arm64-msvc@0.8.1:
-    resolution: {integrity: sha512-2+lqIkoPGYrwNB8ar/Ng0hY35NbvfINHl4FwWwhHx4mTUiBHECTRFqJhG1UGqaUoKStUmkMEf2JvfDrlNQlDZg==}
+  kokorobox-native-win32-arm64-msvc@0.8.2:
+    resolution: {integrity: sha512-OyLHb0RQUHblwBPnQn9EJzYbcmDq2bP0iqPwXQkn3te3pGBPmdrtjyYhe8nGHh2dl+wNsNsDSZFSuJ7fYZU4Mw==}
     engines: {node: '>=16'}
     cpu: [arm64]
     os: [win32]
 
-  kokorobox-native-win32-x64-msvc@0.8.1:
-    resolution: {integrity: sha512-0K/jwNnGTQSqyCTWvmA4Y4J6ZLk2jwVQCKg5DYXXiVQGdNndA37iwNf/iOGFC2JIvw1/vMomjLXzSUKOPH6g7g==}
+  kokorobox-native-win32-x64-msvc@0.8.2:
+    resolution: {integrity: sha512-IRejURPs810NmtGhG5RG81dWFhfJQTeyl7DbgJbGbrGcEkEup7HpNpMYEkLHcTD9bSo8wBYmSvVuMOQqFB7GQg==}
     engines: {node: '>=16'}
     cpu: [x64]
     os: [win32]
 
-  kokorobox-native@0.8.1:
-    resolution: {integrity: sha512-YXY1Q83KpiSNSbFcNkgEnWF0BBw5WsA0TOMoE58TJj6OAqYnuVnP3i5D5qD1G0sKIREVAYVg66jJ8IzdczbSMg==}
+  kokorobox-native@0.8.2:
+    resolution: {integrity: sha512-YCWjVbyV9w+7f+Ms9XHrO6erxQEzEQfqOxOufEpZtRFjb2OHgXtA3xwmySC/Ne0JWsP70XJ2Emi/g0ZSFqGK0g==}
     engines: {node: '>=16'}
 
   layerr@3.0.0:
@@ -5213,6 +5213,11 @@ packages:
 
   use-sync-external-store@1.6.0:
     resolution: {integrity: sha512-Pp6GSwGP/NrPIrxVFAIkOQeyw8lFenOHijQWkUTrDvrF4ALqylP2C/KCkeS9dpUM3KvYRQhna5vt7IL95+ZQ9w==}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+
+  use-sync-external-store@1.7.0:
+    resolution: {integrity: sha512-6L+EeigHMQhdaIPNIFUKwfWJSwWFQ8gJbJ2DLOs5sDIegTwR9fRxvnM3uciHKjIZhFz+KAv2emhWMRvDmMcY8A==}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
 
@@ -10289,32 +10294,32 @@ snapshots:
     dependencies:
       json-buffer: 3.0.1
 
-  kokorobox-native-darwin-arm64@0.8.1:
+  kokorobox-native-darwin-arm64@0.8.2:
     optional: true
 
-  kokorobox-native-darwin-x64@0.8.1:
+  kokorobox-native-darwin-x64@0.8.2:
     optional: true
 
-  kokorobox-native-linux-arm64-gnu@0.8.1:
+  kokorobox-native-linux-arm64-gnu@0.8.2:
     optional: true
 
-  kokorobox-native-linux-x64-gnu@0.8.1:
+  kokorobox-native-linux-x64-gnu@0.8.2:
     optional: true
 
-  kokorobox-native-win32-arm64-msvc@0.8.1:
+  kokorobox-native-win32-arm64-msvc@0.8.2:
     optional: true
 
-  kokorobox-native-win32-x64-msvc@0.8.1:
+  kokorobox-native-win32-x64-msvc@0.8.2:
     optional: true
 
-  kokorobox-native@0.8.1:
+  kokorobox-native@0.8.2:
     optionalDependencies:
-      kokorobox-native-darwin-arm64: 0.8.1
-      kokorobox-native-darwin-x64: 0.8.1
-      kokorobox-native-linux-arm64-gnu: 0.8.1
-      kokorobox-native-linux-x64-gnu: 0.8.1
-      kokorobox-native-win32-arm64-msvc: 0.8.1
-      kokorobox-native-win32-x64-msvc: 0.8.1
+      kokorobox-native-darwin-arm64: 0.8.2
+      kokorobox-native-darwin-x64: 0.8.2
+      kokorobox-native-linux-arm64-gnu: 0.8.2
+      kokorobox-native-linux-x64-gnu: 0.8.2
+      kokorobox-native-win32-arm64-msvc: 0.8.2
+      kokorobox-native-win32-x64-msvc: 0.8.2
 
   layerr@3.0.0: {}
 
@@ -11148,7 +11153,7 @@ snapshots:
       '@react-types/shared': 3.36.1(react@19.2.8)
       '@swc/helpers': 0.5.23
       react: 19.2.8
-      use-sync-external-store: 1.6.0(react@19.2.8)
+      use-sync-external-store: 1.7.0(react@19.2.8)
 
   react-textarea-autosize@8.5.9(@types/react@19.2.18)(react@19.2.8):
     dependencies:
@@ -11764,6 +11769,10 @@ snapshots:
       '@types/react': 19.2.18
 
   use-sync-external-store@1.6.0(react@19.2.8):
+    dependencies:
+      react: 19.2.8
+
+  use-sync-external-store@1.7.0(react@19.2.8):
     dependencies:
       react: 19.2.8
 
