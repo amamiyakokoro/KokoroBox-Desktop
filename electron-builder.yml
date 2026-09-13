@@ -90,6 +90,20 @@ pkg:
   #   file: build/background.png
 dmg:
   artifactName: ${name}-macos-${version}-${arch}.${ext}
+  title: KokoroBox
+  background: build/dmg-background.png
+  window:
+    width: 600
+    height: 400
+  iconSize: 88
+  iconTextSize: 13
+  contents:
+    - x: 120
+      y: 225
+    - x: 350
+      y: 225
+      type: link
+      path: /Applications
   sign: true
   writeUpdateInfo: false
 linux:

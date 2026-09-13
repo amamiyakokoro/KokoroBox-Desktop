@@ -765,6 +765,23 @@ test('CI macOS config loads through electron-builder and preserves PKG installat
   assert.equal(config.pkg.installLocation, '/Applications')
   assert.equal(config.pkg.isRelocatable, false)
   assert.equal(config.pkg.allowCurrentUserHome, false)
+  assert.equal(config.dmg.title, 'KokoroBox')
+  assert.equal(config.dmg.background, 'build/dmg-background.png')
+  assert.deepEqual(config.dmg.window, { width: 600, height: 400 })
+  assert.equal(config.dmg.iconSize, 88)
+  assert.equal(config.dmg.iconTextSize, 13)
+  assert.deepEqual(config.dmg.contents, [
+    { x: 120, y: 225 },
+    { x: 350, y: 225, type: 'link', path: '/Applications' }
+  ])
+  const dmgBackground = readFileSync(config.dmg.background)
+  assert.equal(dmgBackground.subarray(1, 4).toString('ascii'), 'PNG')
+  assert.equal(dmgBackground.readUInt32BE(16), 600)
+  assert.equal(dmgBackground.readUInt32BE(20), 400)
+  const retinaDmgBackground = readFileSync(config.dmg.background.replace(/\.png$/, '@2x.png'))
+  assert.equal(retinaDmgBackground.subarray(1, 4).toString('ascii'), 'PNG')
+  assert.equal(retinaDmgBackground.readUInt32BE(16), 1200)
+  assert.equal(retinaDmgBackground.readUInt32BE(20), 800)
   assert.equal(config.dmg.sign, true)
   assert.equal(config.dmg.writeUpdateInfo, false)
   assert.notEqual(config.pkg.scripts, null)
