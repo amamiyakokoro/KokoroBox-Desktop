@@ -32,13 +32,12 @@
     "prepare": "node scripts/prepare.ts",
     "prepare:windows-routing": "node scripts/prepare-windows-routing.ts",
     "prepare:macos-routing": "node scripts/prepare-macos-routing.ts",
-    "prepare:macos-service": "node scripts/prepare-macos-service.ts",
     "prepare:macos-updater": "node scripts/macos-sparkle.ts",
     "checksum": "node scripts/checksum.ts",
     "dev": "pnpm run ensure:electron && electron-vite dev",
     "postinstall": "pnpm run ensure:electron && electron-builder install-app-deps",
     "build:win": "pnpm run prepare:windows-routing && electron-vite build && electron-builder --publish never --win nsis",
-    "build:mac": "pnpm run prepare:macos-routing && pnpm run prepare:macos-service && pnpm run prepare:macos-updater && electron-vite build && electron-builder --publish never --mac",
+    "build:mac": "pnpm run prepare:macos-routing && pnpm run prepare:macos-updater && electron-vite build && electron-builder --publish never --mac",
     "build:linux": "electron-vite build && node scripts/package-linux.ts"
   },
   "dependencies": {

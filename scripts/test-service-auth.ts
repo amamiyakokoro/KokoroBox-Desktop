@@ -132,11 +132,6 @@ test('macOS registers the bundled daemon through SMAppService', () => {
   const templateSource = readFileSync(resolve('src/main/utils/template.ts'), 'utf8')
   const applicationInitSource = readFileSync(resolve('src/main/utils/init.ts'), 'utf8')
   const apiSource = readFileSync(resolve('src/main/service/api.ts'), 'utf8')
-  const adapterSource = readFileSync(resolve('src/main/service/macos-smappservice.ts'), 'utf8')
-  const bridgeSource = readFileSync(
-    resolve('native/macos-service/KokoroBoxServiceManagementBridge.mm'),
-    'utf8'
-  )
   const launchDaemon = readFileSync(resolve('build/macos-service/KokoroBoxService.plist'), 'utf8')
   const builderSource = readFileSync(resolve('electron-builder.yml'), 'utf8')
   const packageSource = readFileSync(resolve('package.json'), 'utf8')
@@ -144,22 +139,18 @@ test('macOS registers the bundled daemon through SMAppService', () => {
   const preinstallSource = readFileSync(resolve('build/pkg-scripts/preinstall'), 'utf8')
   const postinstallSource = readFileSync(resolve('build/pkg-scripts/postinstall'), 'utf8')
 
-  assert.match(adapterSource, /process\.dlopen\(nativeModule, target\)/)
-  assert.match(adapterSource, /registerMacOSService/)
-  assert.match(adapterSource, /unregisterMacOSService/)
-  assert.match(adapterSource, /reloadMacOSService/)
-  assert.match(adapterSource, /requires-approval/)
-  assert.match(bridgeSource, /daemonServiceWithPlistName:KBServicePlistName/)
-  assert.match(bridgeSource, /registerAndReturnError/)
-  assert.match(bridgeSource, /unregisterAndReturnError/)
-  assert.match(bridgeSource, /KBReload/)
-  assert.match(bridgeSource, /openSystemSettingsLoginItems/)
+  assert.match(managerSource, /getMacosManagedServiceStatus/)
+  assert.match(managerSource, /registerMacosManagedService/)
+  assert.match(managerSource, /unregisterMacosManagedService/)
+  assert.match(managerSource, /reloadMacosManagedService/)
+  assert.match(managerSource, /openMacosLoginItemsSettings/)
+  assert.match(managerSource, /KokoroBoxService\.plist/)
   assert.match(launchDaemon, /<key>BundleProgram<\/key>/)
   assert.match(launchDaemon, /<string>Contents\/Resources\/files\/kokorobox-service<\/string>/)
   assert.match(launchDaemon, /<string>service<\/string>[\s\S]*<string>run<\/string>/)
   assert.match(launchDaemon, /<key>UserName<\/key>\s*<string>root<\/string>/)
   assert.match(builderSource, /Library\/LaunchDaemons\/KokoroBoxService\.plist/)
-  assert.match(packageSource, /prepare:macos-service/)
+  assert.doesNotMatch(packageSource, /prepare:macos-service/)
   assert.match(
     templateSource,
     /corePermissionMode: process\.platform === 'darwin' \? 'service' : 'elevated'/
