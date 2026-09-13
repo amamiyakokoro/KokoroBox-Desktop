@@ -48,3 +48,14 @@ test('Desktop forwards Mihomo traffic and packages the executable sidecar', () =
   assert.match(presenter, /new WeakSet<ChildProcess>/)
   assert.match(presenter, /nextChild\.once\('close'/)
 })
+
+test('macOS uses only the native traffic presenter and keeps the tray icon colored', () => {
+  const connectionCard = readFileSync('src/renderer/src/components/sider/conn-card.tsx', 'utf8')
+  const tray = readFileSync('src/main/resolve/tray.ts', 'utf8')
+
+  assert.doesNotMatch(connectionCard, /drawTrayTrafficIcon|trayIconUpdate/)
+  assert.doesNotMatch(tray, /createTrafficTrayImage|trayIconUpdate/)
+  assert.doesNotMatch(tray, /tray-icon-macos\.png\?asset/)
+  assert.match(tray, /tray-icon-noto\.png\?asset/)
+  assert.match(tray, /setTemplateImage\(false\)/)
+})
