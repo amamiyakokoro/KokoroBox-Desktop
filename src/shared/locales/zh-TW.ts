@@ -39,6 +39,8 @@ export const messages: Readonly<Record<string, string>> = {
   'Register the signed KokoroBox system service.': '註冊 KokoroBox 的已簽署系統服務。',
   'If macOS opens System Settings, allow the KokoroBox background item.':
     '若 macOS 開啟「系統設定」，請允許 KokoroBox 背景項目。',
+  'Allow KokoroBox in System Settings → General → Login Items & Extensions.':
+    '請在「系統設定」→「一般」→「登入項目與延伸功能」中允許 KokoroBox。',
   'Return to KokoroBox, initialize the secure connection, and start the proxy core.':
     '返回 KokoroBox，初始化安全連線並啟動代理核心。',
   'The PKG requires administrator authorization once. macOS manages service registration and approval; administrator verification may be requested again only when repairing credentials from an older service.':

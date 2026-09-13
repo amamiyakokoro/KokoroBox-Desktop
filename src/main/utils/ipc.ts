@@ -24,7 +24,12 @@ import {
   restartMihomoConnections,
   mihomoRulesDisable
 } from '../core/mihomoApi'
-import { checkAutoRun, disableAutoRun, enableAutoRun } from '../sys/autoRun'
+import {
+  checkAutoRun,
+  disableAutoRun,
+  enableAutoRun,
+  openAutoRunSystemSettings
+} from '../sys/autoRun'
 import {
   getAppConfig,
   patchAppConfig,
@@ -267,6 +272,7 @@ export function registerIpcMainHandlers(): void {
   ipcMain.handle('checkAutoRun', ipcErrorWrapper(checkAutoRun))
   ipcMain.handle('enableAutoRun', ipcErrorWrapper(enableAutoRun))
   ipcMain.handle('disableAutoRun', ipcErrorWrapper(disableAutoRun))
+  ipcMain.handle('openAutoRunSystemSettings', ipcErrorWrapper(openAutoRunSystemSettings))
   ipcMain.handle('getAppConfig', (_e, force) => ipcErrorWrapper(getAppConfig)(force))
   ipcMain.handle('getCachedMihomoLogs', () => getCachedMihomoLogs())
   ipcMain.handle('clearCachedMihomoLogs', () => clearCachedMihomoLogs())

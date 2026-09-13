@@ -108,16 +108,20 @@ export async function restartMihomoLogs(): Promise<void> {
   return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('restartMihomoLogs'))
 }
 
-export async function checkAutoRun(): Promise<boolean> {
+export async function checkAutoRun(): Promise<AutoRunStatus> {
   return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('checkAutoRun'))
 }
 
-export async function enableAutoRun(): Promise<void> {
+export async function enableAutoRun(): Promise<AutoRunStatus> {
   return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('enableAutoRun'))
 }
 
-export async function disableAutoRun(): Promise<void> {
+export async function disableAutoRun(): Promise<AutoRunStatus> {
   return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('disableAutoRun'))
+}
+
+export async function openAutoRunSystemSettings(): Promise<void> {
+  return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('openAutoRunSystemSettings'))
 }
 
 export async function getAppConfig(force = false): Promise<AppConfig> {

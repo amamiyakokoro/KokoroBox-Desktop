@@ -7,6 +7,7 @@ import { promisify } from 'util'
 import path from 'path'
 import { LEGACY_WINDOWS_ELEVATE_TASK_NAME } from './misc'
 import { getLaunchAtLogin, setLaunchAtLogin } from 'kokorobox-native'
+import { openMacOSServiceSystemSettings } from '../service/macos-smappservice'
 
 export const WINDOWS_AUTO_RUN_TASK_NAME = 'KokoroBox'
 export const LEGACY_WINDOWS_AUTO_RUN_TASK_NAME = 'sparkle'
@@ -40,30 +41,43 @@ async function windowsTaskExists(name: string): Promise<boolean> {
   }
 }
 
-export async function checkAutoRun(): Promise<boolean> {
+export async function checkAutoRun(): Promise<AutoRunStatus> {
   const current = await getLaunchAtLogin(launchAtLoginOptions())
   if (process.platform === 'win32') {
-    return current.enabled || (await windowsTaskExists(LEGACY_WINDOWS_AUTO_RUN_TASK_NAME))
+    return {
+      enabled: current.enabled || (await windowsTaskExists(LEGACY_WINDOWS_AUTO_RUN_TASK_NAME)),
+      requiresApproval: false,
+      backend: current.backend
+    }
   }
 
   if (process.platform === 'darwin') {
-    return current.enabled
+    return {
+      enabled: current.enabled,
+      requiresApproval: current.requiresApproval,
+      backend: current.backend
+    }
   }
 
   if (process.platform === 'linux') {
-    return current.enabled || existsSync(linuxAutoRunPath(legacyLinuxAppName))
+    return {
+      enabled: current.enabled || existsSync(linuxAutoRunPath(legacyLinuxAppName)),
+      requiresApproval: false,
+      backend: current.backend
+    }
   }
-  return false
+  return { enabled: false, requiresApproval: false, backend: current.backend }
 }
 
-export async function enableAutoRun(): Promise<void> {
+export async function enableAutoRun(): Promise<AutoRunStatus> {
   await setLaunchAtLogin(launchAtLoginOptions(), true)
   if (process.platform === 'linux') {
     await rm(linuxAutoRunPath(legacyLinuxAppName), { force: true })
   }
+  return checkAutoRun()
 }
 
-export async function disableAutoRun(): Promise<void> {
+export async function disableAutoRun(): Promise<AutoRunStatus> {
   await setLaunchAtLogin(launchAtLoginOptions(), false)
   if (process.platform === 'win32') {
     for (const name of [LEGACY_WINDOWS_AUTO_RUN_TASK_NAME]) {
@@ -74,6 +88,14 @@ export async function disableAutoRun(): Promise<void> {
   if (process.platform === 'linux') {
     await rm(linuxAutoRunPath(legacyLinuxAppName), { force: true })
   }
+  return checkAutoRun()
+}
+
+export function openAutoRunSystemSettings(): void {
+  if (process.platform !== 'darwin') {
+    throw new Error('Launch-at-login system settings are available only on macOS')
+  }
+  openMacOSServiceSystemSettings()
 }
 
 export async function migrateLegacyWindowsTasks(): Promise<void> {
