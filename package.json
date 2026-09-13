@@ -24,6 +24,7 @@
     "test:app-routing": "tsx --test scripts/test-app-routing.ts",
     "test:dns": "tsx --test scripts/test-dns.ts",
     "test:service-auth": "tsx --test scripts/test-service-auth.ts",
+    "test:traffic-presenter": "tsx --test scripts/test-traffic-presenter.ts",
     "test:release": "tsx --test scripts/test-release.ts",
     "test:macos-signing": "tsx --test scripts/test-macos-signing.ts",
     "test:macos-sparkle": "tsx --test scripts/test-macos-sparkle.ts",
