@@ -1048,6 +1048,19 @@ test('application routing rules use a two-line identity-first card layout', () =
   assert.match(page, /tr\('Rule groups'\)/)
 })
 
+test('application rule entry keeps match type and identifier on one desktop row', () => {
+  const styles = readFileSync('src/renderer/src/assets/main.css', 'utf8')
+
+  assert.match(
+    styles,
+    /@container app-routing-rule-entry \(min-width: 30rem\)[\s\S]*grid-template-columns: 10rem minmax\(11rem, 1fr\)/
+  )
+  assert.match(
+    styles,
+    /app-routing-rule-entry-grid-with-kind \.app-routing-rule-actions[\s\S]*grid-column: 1 \/ -1/
+  )
+})
+
 test('Windows packaging rebuilds the architecture-matched process router payload', () => {
   const packageJson = JSON.parse(readFileSync('package.json', 'utf8')) as {
     scripts: Record<string, string>
