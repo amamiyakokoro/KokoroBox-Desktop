@@ -55,7 +55,7 @@ jobs:
         run: node scripts/release-plan.ts
       - name: Check Existing Release and Tag
         if: steps.release.outputs.should_release == 'true'
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         env:
           RELEASE_TAG: ${{ steps.release.outputs.tag }}
         with:
