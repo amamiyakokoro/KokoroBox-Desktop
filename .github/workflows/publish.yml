@@ -63,7 +63,7 @@ jobs:
           LINUX_GPG_PASSPHRASE: ${{ secrets.LINUX_GPG_PASSPHRASE }}
         run: scripts/sign-linux-artifacts.sh
       - name: Check Publication Target
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         env:
           RELEASE_CHANNEL: ${{ inputs.channel }}
         with:
@@ -110,7 +110,7 @@ jobs:
           prerelease: ${{ inputs.channel == 'rolling' }}
           make_latest: false
       - name: Verify Uploaded Packages
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const fs = require('node:fs');
@@ -136,7 +136,7 @@ jobs:
           prerelease: ${{ inputs.channel == 'rolling' }}
           make_latest: false
       - name: Finalize Release
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         env:
           RELEASE_CHANNEL: ${{ inputs.channel }}
         with:
