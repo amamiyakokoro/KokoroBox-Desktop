@@ -1,9 +1,11 @@
 import { app } from 'electron'
 import { spawn, type ChildProcess } from 'child_process'
 import { existsSync } from 'fs'
+import { readFile, rm } from 'fs/promises'
 import { sep } from 'path'
 import * as native from 'kokorobox-native'
 import { getAppConfig } from '../config'
+import { dataDir } from '../utils/dirs'
 import { appendAppLog } from '../utils/log'
 import {
   encodeTrafficPresenterCommand,
@@ -22,6 +24,24 @@ let expectedExit = false
 let restartTimer: NodeJS.Timeout | undefined
 let operation = Promise.resolve()
 let latestTraffic: { up: number; down: number } | undefined
+let legacyMonitorMigrated = false
+
+async function migrateLegacyTrafficMonitor(): Promise<void> {
+  if (legacyMonitorMigrated || process.platform !== 'win32') return
+  legacyMonitorMigrated = true
+
+  const pidPath = `${dataDir()}${sep}monitor.pid`
+  try {
+    const pid = Number.parseInt(await readFile(pidPath, 'utf8'), 10)
+    if (Number.isSafeInteger(pid) && pid > 0) process.kill(pid, 'SIGINT')
+  } catch {
+    // A previous installation may not have left a running monitor.
+  }
+  await Promise.all([
+    rm(pidPath, { force: true }),
+    rm(`${dataDir()}${sep}traffic-monitor`, { recursive: true, force: true })
+  ])
+}
 
 function executablePath(): string {
   const resolver = (native as NativePresenterModule).getTrafficPresenterPath
@@ -141,6 +161,7 @@ async function stopPresenter(): Promise<void> {
 }
 
 async function reconcile(): Promise<void> {
+  await migrateLegacyTrafficMonitor()
   const { showTraffic = false } = await getAppConfig()
   desired = showTraffic
   if (!desired) {

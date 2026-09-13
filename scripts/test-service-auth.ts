@@ -101,7 +101,10 @@ test('Windows service probes and elevated commands never open a console window',
   const dirsSource = readFileSync(resolve('src/main/utils/dirs.ts'), 'utf8')
   const coreProfileSource = readFileSync(resolve('src/main/core/profile-check.ts'), 'utf8')
   const kokoroProfileSource = readFileSync(resolve('src/main/kokoro/profile-check.ts'), 'utf8')
-  const trafficMonitorSource = readFileSync(resolve('src/main/resolve/trafficMonitor.ts'), 'utf8')
+  const trafficPresenterSource = readFileSync(
+    resolve('src/main/resolve/trafficPresenter.ts'),
+    'utf8'
+  )
   const miscSource = readFileSync(resolve('src/main/sys/misc.ts'), 'utf8')
   const updaterSource = readFileSync(resolve('src/main/resolve/autoUpdater.ts'), 'utf8')
 
@@ -117,7 +120,7 @@ test('Windows service probes and elevated commands never open a console window',
   assert.doesNotMatch(dirsSource, /execSync\(`which/)
   assert.match(coreProfileSource, /windowsHide: process\.platform === 'win32'/)
   assert.match(kokoroProfileSource, /windowsHide: process\.platform === 'win32'/)
-  assert.match(trafficMonitorSource, /TrafficMonitor\.exe'[\s\S]*windowsHide: true/)
+  assert.match(trafficPresenterSource, /spawn\(executable,[\s\S]*windowsHide: true/)
   assert.match(miscSource, /execFilePromise\(uwpToolPath, \[\], \{ windowsHide:/)
   assert.equal((updaterSource.match(/windowsHide: true/g) || []).length, 2)
 })
