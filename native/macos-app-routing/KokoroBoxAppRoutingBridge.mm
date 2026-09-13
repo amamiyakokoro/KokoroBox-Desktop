@@ -21,6 +21,7 @@ static NSString *const KBPolicyAcknowledgementFilename =
 static NSString *const KBUserApprovalPendingDefaultsKey =
     @"KokoroBoxApplicationRoutingUserApprovalPending";
 static std::atomic_bool KBApprovalSettingsOpenedThisProcess(false);
+static std::atomic_bool KBExtensionActivationConfirmedThisProcess(false);
 
 static NSError *KBError(NSString *message) {
   return [NSError errorWithDomain:KBErrorDomain
@@ -152,14 +153,17 @@ static BOOL KBActivateExtension(BOOL *needsUserApproval, NSError **error) {
     return NO;
   }
   if (delegate.needsUserApproval) {
+    KBExtensionActivationConfirmedThisProcess.store(false);
     KBSetUserApprovalPending(YES);
     if (needsUserApproval) *needsUserApproval = YES;
     return YES;
   }
   if (delegate.error) {
+    KBExtensionActivationConfirmedThisProcess.store(false);
     if (error) *error = delegate.error;
     return NO;
   }
+  KBExtensionActivationConfirmedThisProcess.store(true);
   KBSetUserApprovalPending(NO);
   if (needsUserApproval) *needsUserApproval = NO;
   return YES;
@@ -468,7 +472,13 @@ static NSDictionary *KBInvoke(NSDictionary *request, NSError **error) {
     BOOL activationNeedsUserApproval = NO;
     NSString *existingState = KBCurrentStatus(error);
     if (!existingState) return nil;
-    BOOL mustActivate = KBUserApprovalPending() ||
+    // The manager can still report the previous provider as running after the
+    // host app has been updated. Submit one activation request per app process
+    // so macOS can compare and replace the bundled System Extension. Existing,
+    // approved builds complete silently; a disabled or updated extension uses
+    // requestNeedsUserApproval to open System Settings once.
+    BOOL mustActivate = !KBExtensionActivationConfirmedThisProcess.load() ||
+        KBUserApprovalPending() ||
         [existingState isEqualToString:@"disabled"] ||
         [existingState isEqualToString:@"error"];
     if (![configuration isKindOfClass:[NSDictionary class]] ||

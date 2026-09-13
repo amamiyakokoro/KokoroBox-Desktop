@@ -941,6 +941,7 @@ test('macOS approval guidance returns promptly and remains visible across app re
   const hook = readFileSync('src/renderer/src/hooks/use-app-routing.ts', 'utf8')
 
   assert.match(bridge, /KBUserApprovalPendingDefaultsKey/)
+  assert.match(bridge, /KBExtensionActivationConfirmedThisProcess/)
   assert.match(bridge, /- \(void\)requestNeedsUserApproval[\s\S]*?\[self signalOnce\]/)
   assert.match(bridge, /KBApprovalSettingsOpenedThisProcess\.exchange\(true\)/)
   assert.match(bridge, /requestNeedsUserApproval[\s\S]*?KBOpenSystemSettingsAsync/)
@@ -957,6 +958,10 @@ test('macOS approval guidance returns promptly and remains visible across app re
   assert.match(page, /isLoading=\{openingSettings\}/)
   assert.match(page, /notify\(error, \{ variant: 'danger' \}\)/)
   assert.match(bridge, /needsUserApproval = KBUserApprovalPending\(\)/)
+  assert.match(
+    bridge,
+    /BOOL mustActivate = !KBExtensionActivationConfirmedThisProcess\.load\(\) \|\|[\s\S]*?KBActivateExtension/
+  )
   assert.match(coordinator, /needsUserApproval: response\.needsUserApproval/)
   assert.match(hook, /refreshAppRoutingStatus/)
   assert.match(page, /needsMacApproval/)
