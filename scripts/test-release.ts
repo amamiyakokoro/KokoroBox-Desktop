@@ -653,7 +653,7 @@ test('traffic status uses the first-party cross-platform native presenter', () =
   assert.match(runtime, /getTrafficPresenterPath/)
   assert.match(runtime, /type: 'traffic'/)
   assert.match(runtime, /type: 'unavailable'/)
-  assert.match(builder, /asarUnpack:[\s\S]*kokorobox-traffic-presenter/)
+  assert.match(builder, /traffic-presenter\/kokorobox-traffic-presenter/)
 
   const buildWorkflow = workflow('build')
   assert.equal(buildWorkflow.jobs['validate-traffic-monitor-plugin'], undefined)

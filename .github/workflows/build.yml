@@ -71,6 +71,7 @@ jobs:
       - run: pnpm test:app-routing
       - run: pnpm test:dns
       - run: pnpm test:service-auth
+      - run: pnpm test:traffic-presenter
       - run: pnpm typecheck
 
   build:
@@ -190,12 +191,12 @@ jobs:
         shell: bash
         run: |
           case "${{ matrix.os }}-${{ matrix.arch }}" in
-            windows-latest-x64) PNPM_TARGET_FLAGS="--os=current --os=win32 --cpu=current --cpu=x64"; KOKOROBOX_NATIVE_PACKAGE="kokorobox-native-win32-x64-msvc" ;;
-            windows-latest-arm64) PNPM_TARGET_FLAGS="--os=current --os=win32 --cpu=current --cpu=arm64"; KOKOROBOX_NATIVE_PACKAGE="kokorobox-native-win32-arm64-msvc" ;;
-            ubuntu-latest-x64) PNPM_TARGET_FLAGS="--os=current --os=linux --cpu=current --cpu=x64 --libc=current --libc=glibc"; KOKOROBOX_NATIVE_PACKAGE="kokorobox-native-linux-x64-gnu" ;;
-            ubuntu-latest-arm64) PNPM_TARGET_FLAGS="--os=current --os=linux --cpu=current --cpu=arm64 --libc=current --libc=glibc"; KOKOROBOX_NATIVE_PACKAGE="kokorobox-native-linux-arm64-gnu" ;;
-            macos-latest-x64) PNPM_TARGET_FLAGS="--os=current --os=darwin --cpu=current --cpu=x64"; KOKOROBOX_NATIVE_PACKAGE="kokorobox-native-darwin-x64" ;;
-            macos-latest-arm64) PNPM_TARGET_FLAGS="--os=current --os=darwin --cpu=current --cpu=arm64"; KOKOROBOX_NATIVE_PACKAGE="kokorobox-native-darwin-arm64" ;;
+            windows-latest-x64) PNPM_TARGET_FLAGS="--os=current --os=win32 --cpu=current --cpu=x64"; KOKOROBOX_NATIVE_PACKAGE="kokorobox-native-win32-x64-msvc"; KOKOROBOX_PRESENTER_FILE="kokorobox-traffic-presenter.exe" ;;
+            windows-latest-arm64) PNPM_TARGET_FLAGS="--os=current --os=win32 --cpu=current --cpu=arm64"; KOKOROBOX_NATIVE_PACKAGE="kokorobox-native-win32-arm64-msvc"; KOKOROBOX_PRESENTER_FILE="kokorobox-traffic-presenter.exe" ;;
+            ubuntu-latest-x64) PNPM_TARGET_FLAGS="--os=current --os=linux --cpu=current --cpu=x64 --libc=current --libc=glibc"; KOKOROBOX_NATIVE_PACKAGE="kokorobox-native-linux-x64-gnu"; KOKOROBOX_PRESENTER_FILE="kokorobox-traffic-presenter" ;;
+            ubuntu-latest-arm64) PNPM_TARGET_FLAGS="--os=current --os=linux --cpu=current --cpu=arm64 --libc=current --libc=glibc"; KOKOROBOX_NATIVE_PACKAGE="kokorobox-native-linux-arm64-gnu"; KOKOROBOX_PRESENTER_FILE="kokorobox-traffic-presenter" ;;
+            macos-latest-x64) PNPM_TARGET_FLAGS="--os=current --os=darwin --cpu=current --cpu=x64"; KOKOROBOX_NATIVE_PACKAGE="kokorobox-native-darwin-x64"; KOKOROBOX_PRESENTER_FILE="kokorobox-traffic-presenter" ;;
+            macos-latest-arm64) PNPM_TARGET_FLAGS="--os=current --os=darwin --cpu=current --cpu=arm64"; KOKOROBOX_NATIVE_PACKAGE="kokorobox-native-darwin-arm64"; KOKOROBOX_PRESENTER_FILE="kokorobox-traffic-presenter" ;;
             *) echo "Unsupported native target: ${{ matrix.os }}-${{ matrix.arch }}" && exit 1 ;;
           esac
           pnpm install --frozen-lockfile $PNPM_TARGET_FLAGS
@@ -220,6 +221,8 @@ jobs:
           prune_native_packages "kokorobox-native" "kokorobox-native-" "$KOKOROBOX_NATIVE_PACKAGE"
           verify_native_package "kokorobox-native" "$KOKOROBOX_NATIVE_PACKAGE" \
             || (echo "Missing $KOKOROBOX_NATIVE_PACKAGE. pnpm must install cross-platform optional native dependencies." && exit 1)
+          test -f "node_modules/$KOKOROBOX_NATIVE_PACKAGE/$KOKOROBOX_PRESENTER_FILE" \
+            || (echo "Missing traffic presenter in $KOKOROBOX_NATIVE_PACKAGE." && exit 1)
           SKIP_PREPARE=0 pnpm prepare --${{ matrix.arch }}
 
       - name: Build

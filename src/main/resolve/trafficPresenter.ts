@@ -2,7 +2,7 @@ import { app } from 'electron'
 import { spawn, type ChildProcess } from 'child_process'
 import { existsSync } from 'fs'
 import { readFile, rm } from 'fs/promises'
-import { sep } from 'path'
+import { join, sep } from 'path'
 import * as native from 'kokorobox-native'
 import { getAppConfig } from '../config'
 import { dataDir } from '../utils/dirs'
@@ -44,16 +44,17 @@ async function migrateLegacyTrafficMonitor(): Promise<void> {
 }
 
 function executablePath(): string {
+  if (app.isPackaged) {
+    const filename = `kokorobox-traffic-presenter${process.platform === 'win32' ? '.exe' : ''}`
+    const packaged = join(process.resourcesPath, 'traffic-presenter', filename)
+    if (!existsSync(packaged)) throw new Error('Traffic presenter is missing from the app bundle')
+    return packaged
+  }
+
   const resolver = (native as NativePresenterModule).getTrafficPresenterPath
   if (!resolver)
     throw new Error('Installed kokorobox-native does not include the traffic presenter')
-
-  const resolved = resolver()
-  if (!app.isPackaged) return resolved
-
-  const archiveSegment = `${sep}app.asar${sep}`
-  const unpacked = resolved.replace(archiveSegment, `${sep}app.asar.unpacked${sep}`)
-  return existsSync(unpacked) ? unpacked : resolved
+  return resolver()
 }
 
 function send(command: TrafficPresenterCommand, target = child): void {

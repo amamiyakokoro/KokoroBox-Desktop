@@ -32,15 +32,17 @@ test('taskbar uses a stacked layout and status areas use a horizontal layout', (
   assert.equal(trafficPresenterLayout('linux'), 'horizontal')
 })
 
-test('Desktop forwards Mihomo traffic and unpacks the executable sidecar', () => {
+test('Desktop forwards Mihomo traffic and packages the executable sidecar', () => {
   const api = readFileSync('src/main/core/mihomoApi.ts', 'utf8')
   const builder = readFileSync('electron-builder.yml', 'utf8')
   const presenter = readFileSync('src/main/resolve/trafficPresenter.ts', 'utf8')
 
   assert.match(api, /updateTrafficPresenter\(json\)/)
   assert.match(api, /markTrafficPresenterUnavailable\(\)/)
-  assert.match(builder, /asarUnpack:[\s\S]*kokorobox-native-\*\/kokorobox-traffic-presenter\*/)
-  assert.match(presenter, /app\.asar\.unpacked/)
+  assert.match(builder, /win:[\s\S]*kokorobox-native-win32-\$\{arch\}-msvc/)
+  assert.match(builder, /mac:[\s\S]*kokorobox-native-darwin-\$\{arch\}/)
+  assert.match(builder, /linux:[\s\S]*kokorobox-native-linux-\$\{arch\}-gnu/)
+  assert.match(presenter, /process\.resourcesPath, 'traffic-presenter'/)
   assert.match(presenter, /windowsHide: true/)
   assert.doesNotMatch(presenter, /detached: true/)
 })
