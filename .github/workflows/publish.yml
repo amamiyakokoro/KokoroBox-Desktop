@@ -94,7 +94,7 @@ jobs:
               if (data.sha !== context.sha) throw new Error('Release tag changed during the build.');
             }
       - name: Upload Release Assets
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ inputs.release_tag }}
           name: ${{ inputs.channel == 'rolling' && 'Rolling' || inputs.version }}
@@ -127,7 +127,7 @@ jobs:
             }
       - name: Upload Update Metadata
         # Keep the previous rolling updater metadata until every replacement package is available.
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ inputs.release_tag }}
           files: dist/release/latest.yml
