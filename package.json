@@ -109,7 +109,7 @@
     "tsx": "^4.23.13",
     "types-pac": "^1.0.3",
     "typescript": "^6.0.3",
-    "vite": "^8.2.2"
+    "vite": "^8.3.0"
   },
   "packageManager": "pnpm@11.1.1"
 }
