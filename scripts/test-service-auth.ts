@@ -112,8 +112,9 @@ test('Windows service probes and elevated commands never open a console window',
     (sysproxySource.match(/windowsHide: process\.platform === 'win32'/g) || []).length,
     3
   )
-  assert.match(dirsSource, /execFileSync\('where\.exe',[\s\S]*windowsHide: true/)
-  assert.doesNotMatch(dirsSource, /execSync\(`\$\{whichCmd\}/)
+  assert.match(dirsSource, /findExecutables\(/)
+  assert.doesNotMatch(dirsSource, /execFileSync\('where\.exe'/)
+  assert.doesNotMatch(dirsSource, /execSync\(`which/)
   assert.match(coreProfileSource, /windowsHide: process\.platform === 'win32'/)
   assert.match(kokoroProfileSource, /windowsHide: process\.platform === 'win32'/)
   assert.match(trafficMonitorSource, /TrafficMonitor\.exe'[\s\S]*windowsHide: true/)
