@@ -8,28 +8,7 @@ import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { IoLink } from 'react-icons/io5'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
-import { readImageFileDataURL } from '@renderer/utils/ipc'
-import { platform } from '@renderer/utils/init'
 import TrafficChart from './traffic-chart'
-import macTrayIconUrl from '../../../../../resources/tray-icon-macos.png?url'
-import windowsTrayIconUrl from '../../../../../resources/tray-icon-windows.png?url'
-
-const defaultTrayIconUrl = platform === 'darwin' ? macTrayIconUrl : windowsTrayIconUrl
-
-let currentUpload: number | undefined = undefined
-let currentDownload: number | undefined = undefined
-let currentTrayIcon = ''
-let hasShowTraffic = false
-let drawing = false
-
-const loadImage = (url: string): Promise<HTMLImageElement> => {
-  return new Promise((resolve, reject) => {
-    const image = new Image()
-    image.onload = (): void => resolve(image)
-    image.onerror = (): void => reject(new Error('Failed to load the tray icon'))
-    image.src = url
-  })
-}
 
 interface Props {
   iconOnly?: boolean
@@ -38,16 +17,7 @@ interface Props {
 const ConnCard: React.FC<Props> = (props) => {
   const { iconOnly } = props
   const { appConfig } = useAppConfig()
-  const {
-    showTraffic = false,
-    customTrayIcon = '',
-    connectionCardStatus = 'col-span-2',
-    disableAnimation = false
-  } = appConfig || {}
-  const showTrafficRef = useRef(showTraffic)
-  showTrafficRef.current = showTraffic
-  const customTrayIconRef = useRef(customTrayIcon)
-  customTrayIconRef.current = customTrayIcon
+  const { connectionCardStatus = 'col-span-2', disableAnimation = false } = appConfig || {}
 
   const location = useLocation()
   const navigate = useNavigate()
@@ -75,7 +45,7 @@ const ConnCard: React.FC<Props> = (props) => {
   const transform = tf ? { x: tf.x, y: tf.y, scaleX: 1, scaleY: 1 } : null
 
   useEffect(() => {
-    const handleTraffic = async (_e: unknown, info: ControllerTraffic): Promise<void> => {
+    const handleTraffic = (_e: unknown, info: ControllerTraffic): void => {
       setUpload(info.up)
       setDownload(info.down)
 
@@ -92,26 +62,6 @@ const ConnCard: React.FC<Props> = (props) => {
         })
         updateTimeoutRef.current = null
       }, 100)
-
-      if (platform === 'darwin' && showTrafficRef.current) {
-        if (drawing) return
-        drawing = true
-        try {
-          await drawTrayTrafficIcon(info.up, info.down, customTrayIconRef.current)
-          hasShowTraffic = true
-        } catch {
-          // ignore
-        } finally {
-          drawing = false
-        }
-      } else {
-        if (!hasShowTraffic) return
-        currentUpload = undefined
-        currentDownload = undefined
-        currentTrayIcon = ''
-        window.electron.ipcRenderer.send('trayIconUpdate')
-        hasShowTraffic = false
-      }
     }
 
     window.electron.ipcRenderer.on('mihomoTraffic', handleTraffic)
@@ -239,53 +189,3 @@ const ConnCard: React.FC<Props> = (props) => {
 export default React.memo(ConnCard, (prevProps, nextProps) => {
   return prevProps.iconOnly === nextProps.iconOnly
 })
-
-const drawTrayTrafficIcon = async (
-  upload: number,
-  download: number,
-  customTrayIcon: string
-): Promise<void> => {
-  const trayIconKey = customTrayIcon || 'default'
-  if (upload === currentUpload && download === currentDownload && trayIconKey === currentTrayIcon) {
-    return
-  }
-
-  const uploadText = `${calcTraffic(upload)}/s`
-  const downloadText = `${calcTraffic(download)}/s`
-  const trayIcon = await loadImage(
-    customTrayIcon
-      ? customTrayIcon.startsWith('data:image/')
-        ? customTrayIcon
-        : await readImageFileDataURL(customTrayIcon)
-      : defaultTrayIconUrl
-  )
-
-  const canvas = document.createElement('canvas')
-  canvas.width = 172
-  canvas.height = 36
-  const ctx = canvas.getContext('2d')
-  if (!ctx) throw new Error('Failed to create the tray icon canvas')
-
-  ctx.clearRect(0, 0, canvas.width, canvas.height)
-  ctx.font = 'bold 18px "PingFang SC", Arial'
-  ctx.fillStyle = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'white' : 'black'
-  ctx.textBaseline = 'alphabetic'
-  ctx.textAlign = 'left'
-  ctx.fillText('↑', 0, 15)
-  ctx.fillText('↓', 0, 34)
-  ctx.textAlign = 'right'
-  ctx.fillText(uploadText, 116, 15)
-  ctx.fillText(downloadText, 116, 34)
-  if (!customTrayIcon) {
-    ctx.filter = window.matchMedia('(prefers-color-scheme: dark)').matches
-      ? 'brightness(0) invert(1)'
-      : 'brightness(0)'
-  }
-  ctx.drawImage(trayIcon, 128, 0, 36, 36)
-  ctx.filter = 'none'
-
-  window.electron.ipcRenderer.send('trayIconUpdate', canvas.toDataURL('image/png'))
-  currentUpload = upload
-  currentDownload = download
-  currentTrayIcon = trayIconKey
-}

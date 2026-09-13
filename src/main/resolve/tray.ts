@@ -7,7 +7,7 @@ import {
   patchAppConfig,
   patchControledMihomoConfig
 } from '../config'
-import macTrayIcon from '../../../resources/tray-icon-macos.png?asset'
+import notoTrayIcon from '../../../resources/tray-icon-noto.png?asset'
 import windowsTrayIcon from '../../../resources/tray-icon-windows.png?asset'
 import {
   mihomoChangeProxy,
@@ -24,7 +24,6 @@ import {
   ipcMain,
   Menu,
   nativeImage,
-  nativeTheme,
   screen,
   shell,
   Tray
@@ -41,9 +40,7 @@ import { existsSync } from 'fs'
 export let tray: Tray | null = null
 export let customTrayWindow: BrowserWindow | null = null
 let trayMenu: Menu | null = null
-let trayIconUpdateListenerRegistered = false
 let updateTrayMenuListenerRegistered = false
-let trayThemeListenerRegistered = false
 let defaultTrayIcon: Electron.NativeImage | null = null
 type TrayImage = Electron.NativeImage | string
 const customTrayIconSize = 16
@@ -69,10 +66,10 @@ function createDefaultTrayIcon(): Electron.NativeImage {
 
   const sourceIcon =
     process.platform === 'darwin'
-      ? nativeImage.createFromPath(macTrayIcon)
+      ? nativeImage.createFromPath(notoTrayIcon)
       : createColoredTrayIcon()
-  const icon = process.platform === 'darwin' ? sourceIcon.resize({ height: 16 }) : sourceIcon
-  icon.setTemplateImage(process.platform === 'darwin')
+  const icon = process.platform === 'darwin' ? createMultiScaleTrayImage(sourceIcon) : sourceIcon
+  icon.setTemplateImage(false)
   defaultTrayIcon = icon
   return icon
 }
@@ -128,14 +125,6 @@ function createCustomTrayImage(customTrayIcon: string): TrayImage | null {
   }
 
   return createMultiScaleTrayImage(icon)
-}
-
-function createTrafficTrayImage(png: string): Electron.NativeImage | null {
-  const image = nativeImage.createFromDataURL(png).resize({ height: customTrayIconSize })
-  if (image.isEmpty()) return null
-
-  image.setTemplateImage(false)
-  return image
 }
 
 function positionCustomTrayWindow(win: BrowserWindow): void {
@@ -538,13 +527,6 @@ export async function createTray(): Promise<void> {
   if (tray) {
     return
   }
-  if (!trayThemeListenerRegistered) {
-    nativeTheme.on('updated', () => {
-      defaultTrayIcon = null
-      void updateTrayIcon()
-    })
-    trayThemeListenerRegistered = true
-  }
   if (process.platform === 'linux') {
     tray = new Tray(await createDefaultTrayIcon())
     trayMenu = await buildContextMenu()
@@ -562,21 +544,6 @@ export async function createTray(): Promise<void> {
   if (process.platform === 'darwin') {
     if (!useDockIcon && app.dock) {
       app.dock.hide()
-    }
-    if (!trayIconUpdateListenerRegistered) {
-      ipcMain.on('trayIconUpdate', async (_, png?: string) => {
-        const { customTrayIcon = '' } = await getAppConfig()
-        const customIcon = createCustomTrayImage(customTrayIcon)
-        if (png) {
-          const image = createTrafficTrayImage(png)
-          if (image) {
-            tray?.setImage(image)
-            return
-          }
-        }
-        tray?.setImage(customIcon || (await createDefaultTrayIcon()))
-      })
-      trayIconUpdateListenerRegistered = true
     }
     tray?.addListener('right-click', async () => {
       await triggerMainWindow()
