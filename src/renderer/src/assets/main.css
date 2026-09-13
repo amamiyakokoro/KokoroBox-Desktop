@@ -109,6 +109,70 @@
   touch-action: pan-y;
 }
 
+/*
+ * The application-routing workspace sits beside a persistent sidebar, so viewport
+ * breakpoints do not describe the width that is actually available to this form.
+ * Let the controls respond to their content container instead: actions stay
+ * together on the next row until all three columns genuinely fit.
+ */
+.app-routing-rule-entry {
+  container: app-routing-rule-entry / inline-size;
+}
+
+.app-routing-rule-entry-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.app-routing-rule-actions {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.app-routing-rule-action {
+  min-width: 0;
+  flex: 1 1 0;
+}
+
+@container app-routing-rule-entry (min-width: 36rem) {
+  .app-routing-rule-entry-grid-with-kind {
+    grid-template-columns: 10rem minmax(11rem, 1fr);
+  }
+
+  .app-routing-rule-entry-grid-without-kind {
+    grid-template-columns: minmax(12rem, 1fr) auto;
+  }
+
+  .app-routing-rule-entry-grid-with-kind .app-routing-rule-actions {
+    grid-column: 1 / -1;
+    justify-self: end;
+  }
+
+  .app-routing-rule-actions {
+    width: auto;
+    justify-content: flex-end;
+  }
+
+  .app-routing-rule-action {
+    flex: none;
+  }
+}
+
+@container app-routing-rule-entry (min-width: 58rem) {
+  .app-routing-rule-entry-grid-with-kind {
+    grid-template-columns: 10rem minmax(11rem, 1fr) auto;
+  }
+
+  .app-routing-rule-entry-grid-with-kind .app-routing-rule-actions {
+    grid-column: auto;
+  }
+}
+
 .sysproxy-card,
 .tun-card,
 .dns-card,
