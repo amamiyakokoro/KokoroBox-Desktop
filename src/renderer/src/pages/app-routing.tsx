@@ -545,31 +545,8 @@ const AppRouting: React.FC = () => {
                 if (event.key === 'Enter' && processPattern.trim()) void submitPattern()
               }}
             />
-            <div className="app-routing-rule-actions">
-              <Button
-                className="app-routing-rule-action"
-                color="primary"
-                startContent={<MdAdd className="text-lg" />}
-                isDisabled={!supported || !config || saving || !processPattern.trim()}
-                onPress={() => void submitPattern()}
-              >
-                {tr('Add pattern rule')}
-              </Button>
-              <span className="text-sm text-foreground-500">{tr('or')}</span>
-              <Button
-                className="app-routing-rule-action"
-                variant="flat"
-                startContent={<MdAdd className="text-lg" />}
-                isDisabled={!supported || !config || saving}
-                onPress={() =>
-                  void addApplications(undefined, isLinux ? linuxIdentifierKind : undefined)
-                }
-              >
-                {tr('Select applications')}
-              </Button>
-            </div>
           </div>
-          <p className="px-1 text-xs text-foreground-500">
+          <p className="app-routing-rule-example px-1 text-xs text-foreground-500">
             {isMac
               ? macIdentifierKind === 'macos-process-name'
                 ? tr('For example: codex or Codex Helper*')
@@ -582,6 +559,29 @@ const AppRouting: React.FC = () => {
                     'For example: ChatGPT.exe, ChatGPT*.exe, or C:\\Program Files\\*\\ChatGPT.exe'
                   )}
           </p>
+          <div className="app-routing-rule-actions">
+            <Button
+              className="app-routing-rule-action"
+              color="primary"
+              startContent={<MdAdd className="text-lg" />}
+              isDisabled={!supported || !config || saving || !processPattern.trim()}
+              onPress={() => void submitPattern()}
+            >
+              {tr('Add pattern rule')}
+            </Button>
+            <span className="text-sm text-foreground-500">{tr('or')}</span>
+            <Button
+              className="app-routing-rule-action"
+              variant="flat"
+              startContent={<MdAdd className="text-lg" />}
+              isDisabled={!supported || !config || saving}
+              onPress={() =>
+                void addApplications(undefined, isLinux ? linuxIdentifierKind : undefined)
+              }
+            >
+              {tr('Select applications')}
+            </Button>
+          </div>
         </div>
 
         {!supported ? (

@@ -1049,16 +1049,19 @@ test('application routing rules use a two-line identity-first card layout', () =
 })
 
 test('application rule entry keeps match type and identifier on one desktop row', () => {
+  const page = readFileSync('src/renderer/src/pages/app-routing.tsx', 'utf8')
   const styles = readFileSync('src/renderer/src/assets/main.css', 'utf8')
 
   assert.match(
     styles,
     /@container app-routing-rule-entry \(min-width: 30rem\)[\s\S]*grid-template-columns: 10rem minmax\(11rem, 1fr\)/
   )
-  assert.match(
-    styles,
-    /app-routing-rule-entry-grid-with-kind \.app-routing-rule-actions[\s\S]*grid-column: 1 \/ -1/
-  )
+  const examplePosition = page.indexOf('className="app-routing-rule-example')
+  const actionsPosition = page.indexOf('className="app-routing-rule-actions"')
+  assert.ok(examplePosition > page.indexOf('className="app-routing-rule-entry-grid'))
+  assert.ok(actionsPosition > examplePosition)
+  assert.doesNotMatch(styles, /grid-template-columns: 10rem minmax\(11rem, 1fr\) auto/)
+  assert.match(styles, /\.app-routing-rule-actions \{[\s\S]*align-self: flex-end/)
 })
 
 test('Windows packaging rebuilds the architecture-matched process router payload', () => {
