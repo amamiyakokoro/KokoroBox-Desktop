@@ -10,7 +10,7 @@ output or constructing privileged shell commands in Electron.
 | ------------------------- | ----------------------------------------------- | ------------------------------------------- |
 | Applications              | `inspectApplication`, `scanWindowsApplications` | Application routing and Windows rule groups |
 | Icons and rules           | `fileToDataUrl`, `getAppName`, `fileToStr`      | UI metadata and rule conversion             |
-| Login startup             | `getLaunchAtLogin`, `setLaunchAtLogin`          | Kokoro settings                             |
+| Login startup             | `getLaunchAtLogin`, `setLaunchAtLogin`          | Kokoro settings and macOS approval guidance |
 | Network state             | `getNetworkContext`                             | SSID switching and macOS DNS recovery       |
 | Unix core permissions     | `getCorePrivilegeStatus`, `setCorePrivileges`   | Mihomo permission checks, grant, and revoke |
 | Windows system operations | SID, explicit privilege relaunch, Firewall APIs | Routing and privileged setup                |
@@ -19,6 +19,11 @@ The P0 migration consolidates active interface, macOS network-service, DNS, and
 SSID discovery in Rust. Windows SSID lookup uses the Native Wi-Fi API rather
 than localized command output. The Desktop process consumes one typed network
 snapshot instead of maintaining independent platform parsers.
+
+Launch-at-login now uses native platform registration. On macOS, the returned
+status distinguishes an enabled item from one that still requires approval in
+System Settings. Desktop keeps the switch off in that state and presents a
+direct route to Login Items & Extensions instead of reporting a false success.
 
 Core privilege changes are also constrained at the native boundary. Only
 existing executable files whose canonical filename is `mihomo` or

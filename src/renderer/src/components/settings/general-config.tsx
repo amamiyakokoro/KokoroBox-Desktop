@@ -4,14 +4,20 @@ import SettingCard from '../base/base-setting-card'
 import SettingItem from '../base/base-setting-item'
 import { Button, Select, SelectItem, Switch, Tab, Tabs, Tooltip } from '@heroui/react'
 import useSWR from 'swr'
-import { checkAutoRun, disableAutoRun, enableAutoRun, relaunchApp } from '@renderer/utils/ipc'
+import {
+  checkAutoRun,
+  disableAutoRun,
+  enableAutoRun,
+  openAutoRunSystemSettings,
+  relaunchApp
+} from '@renderer/utils/ipc'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { IoIosHelpCircle } from 'react-icons/io'
 import ConfirmModal from '../base/base-confirm'
 import { notify } from '@renderer/utils/notification'
 
 const GeneralConfig: React.FC = () => {
-  const { data: enable, mutate: mutateEnable } = useSWR('checkAutoRun', checkAutoRun)
+  const { data: autoRunStatus, mutate: mutateAutoRunStatus } = useSWR('checkAutoRun', checkAutoRun)
   const { appConfig, patchAppConfig } = useAppConfig()
   const {
     language = 'system',
@@ -83,23 +89,43 @@ const GeneralConfig: React.FC = () => {
           </div>
         </SettingItem>
         <SettingItem compatKey="legacy" title={tr('Launch at startup')} divider>
-          <Switch
-            size="sm"
-            isSelected={enable}
-            onValueChange={async (v) => {
-              try {
-                if (v) {
-                  await enableAutoRun()
-                } else {
-                  await disableAutoRun()
+          <div className="flex items-center gap-2">
+            {autoRunStatus?.requiresApproval && (
+              <Tooltip
+                content={tr(
+                  'Allow KokoroBox in System Settings → General → Login Items & Extensions.'
+                )}
+              >
+                <Button
+                  size="sm"
+                  color="warning"
+                  variant="flat"
+                  onPress={async () => {
+                    try {
+                      await openAutoRunSystemSettings()
+                    } catch (e) {
+                      notify(e, { variant: 'danger' })
+                    }
+                  }}
+                >
+                  {tr('Awaiting system approval')}
+                </Button>
+              </Tooltip>
+            )}
+            <Switch
+              size="sm"
+              isSelected={autoRunStatus?.enabled ?? false}
+              onValueChange={async (v) => {
+                try {
+                  const status = v ? await enableAutoRun() : await disableAutoRun()
+                  await mutateAutoRunStatus(status, { revalidate: false })
+                } catch (e) {
+                  notify(e, { variant: 'danger' })
+                  await mutateAutoRunStatus()
                 }
-              } catch (e) {
-                notify(e, { variant: 'danger' })
-              } finally {
-                mutateEnable()
-              }
-            }}
-          />
+              }}
+            />
+          </div>
         </SettingItem>
         <SettingItem compatKey="legacy" title={tr('Start minimized')} divider>
           <Switch
