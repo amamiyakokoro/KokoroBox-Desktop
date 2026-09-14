@@ -7,7 +7,9 @@ import { buildMacAppRoutingConfiguration, type MacBridgeConfiguration } from './
 // Native operations have their own bounded waits. This outer limit prevents a
 // broken OS callback from holding an Electron worker indefinitely.
 const bridgeTimeoutMs = 90_000
+const providerHealthCheckIntervalMs = 15_000
 let activePolicyKey = ''
+let lastProviderHealthCheckAt = 0
 let nativeBridge: MacNativeBridge | undefined
 
 interface MacNativeBridge {
@@ -87,15 +89,20 @@ export async function reconcileMacAppRouting(
   const configuration = buildMacAppRoutingConfiguration(config, proxyAvailable)
   const policyKey = JSON.stringify(configuration)
   let response = await invokeBridge('status')
+  const providerHealthCheckDue =
+    response.state === 'running' &&
+    Date.now() - lastProviderHealthCheckAt >= providerHealthCheckIntervalMs
   if (
     policyKey !== activePolicyKey ||
     response.state === 'disabled' ||
-    response.state === 'error'
+    response.state === 'error' ||
+    providerHealthCheckDue
   ) {
     response = await invokeBridge('apply', configuration)
     // Starting only describes the session, not acceptance of this policy.
     // A changed policy must be retried once the provider is connected.
     activePolicyKey = response.state === 'running' ? policyKey : ''
+    lastProviderHealthCheckAt = response.state === 'running' ? Date.now() : 0
   }
   const protectedApplicationCount = config.rules.filter(
     (rule) => isAppRoutingRuleEffectivelyEnabled(config, rule) && rule.action === 'proxy'
@@ -118,6 +125,7 @@ export async function reconcileMacAppRouting(
 
 export async function stopMacAppRouting(): Promise<void> {
   activePolicyKey = ''
+  lastProviderHealthCheckAt = 0
   if (!existsSync(macAppRoutingModulePath())) return
   await invokeBridge('stop')
 }

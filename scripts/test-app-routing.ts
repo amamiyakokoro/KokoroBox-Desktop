@@ -33,6 +33,8 @@ import {
 import { isSuccessfulSocks5Greeting } from '../src/main/app-routing/health'
 import { parseProcessRouterEvent } from '../src/main/app-routing/protocol'
 import {
+  macOSSystemExtensionBundleVersion,
+  macOSSystemExtensionVersion,
   processRouterBinaryNames,
   proxyBridgeRepository,
   proxyBridgeSourceRevision,
@@ -778,6 +780,10 @@ test('native build is pinned to the controlled KokoroBox ProxyBridge fork', () =
   const router = readFileSync('build/proxybridge/kokorobox_process_router.c', 'utf8')
   assert.equal(sourceManifest.proxyBridgeRepository, proxyBridgeRepository)
   assert.equal(sourceManifest.proxyBridgeRevision, proxyBridgeSourceRevision)
+  assert.equal(sourceManifest.macOSSystemExtensionVersion, macOSSystemExtensionVersion)
+  assert.equal(sourceManifest.macOSSystemExtensionBundleVersion, macOSSystemExtensionBundleVersion)
+  assert.match(macOSSystemExtensionVersion, /^\d+\.\d+\.\d+$/)
+  assert.match(macOSSystemExtensionBundleVersion, /^[1-9]\d*$/)
   assert.equal(sourceManifest.winDivertVersion, winDivertVersion)
   assert.equal(sourceManifest.winDivertArchiveSha256, winDivertArchiveSha256)
   assert.match(proxyBridgeRepository, /https:\/\/github\.com\/amamiyakokoro\/ProxyBridge\.git/)
@@ -789,7 +795,10 @@ test('native build is pinned to the controlled KokoroBox ProxyBridge fork', () =
   assert.match(macBuild, /extensionBundleName = `\$\{extensionBundleIdentifier\}\.systemextension`/)
   assert.match(macBuild, /path\.join\(stagingRoot, extensionBundleName\)/)
   assert.match(macBuild, /CODE_SIGNING_ALLOWED=NO/)
+  assert.match(macBuild, /MARKETING_VERSION=\$\{macOSSystemExtensionVersion\}/)
+  assert.match(macBuild, /CURRENT_PROJECT_VERSION=\$\{macOSSystemExtensionBundleVersion\}/)
   assert.match(macBuild, /CURRENT_PROJECT_VERSION=/)
+  assert.doesNotMatch(macBuild, /macOSBundleVersion|KOKOROBOX_BUILD_NUMBER/)
   assert.match(macBuild, /requiredExtensionMetadata/)
   assert.match(macBuild, /CFBundleIdentifier/)
   assert.match(macBuild, /CFBundleExecutable/)
@@ -826,6 +835,9 @@ test('native build is pinned to the controlled KokoroBox ProxyBridge fork', () =
   assert.match(macBridge, /configuration\[@"proxyUdpDns"\]/)
   assert.match(macBridge, /configuration\[@"dnsPort"\]/)
   assert.match(macBridge, /activationRequestForExtension:KBExtensionIdentifier/)
+  assert.match(macBridge, /propertiesRequestForExtension:KBExtensionIdentifier/)
+  assert.match(macBridge, /properties\.isEnabled/)
+  assert.match(macBridge, /properties\.isAwaitingUserApproval/)
   assert.match(macBridge, /queue:dispatch_get_main_queue\(\)/)
   assert.match(macBridge, /openURLs:@\[KBSystemSettingsURL\(\)\]/)
   assert.match(macBridge, /withApplicationAtURL:applicationURL/)
@@ -834,6 +846,16 @@ test('native build is pinned to the controlled KokoroBox ProxyBridge fork', () =
   assert.match(macBridge, /KBStoredConfiguration/)
   assert.match(macBridge, /KBClearSharedPolicy/)
   assert.match(macBridge, /isEqualToDictionary:configuration/)
+  assert.match(macBridge, /KBExtensionReplacementPendingDefaultsKey/)
+  assert.match(
+    macBridge,
+    /actionForReplacingExtension:[\s\S]*?KBSetExtensionReplacementPending\(YES\)/
+  )
+  assert.match(macBridge, /KBRecycleManagerAfterExtensionReplacement/)
+  assert.match(macBridge, /KBStopManagerConnection/)
+  assert.match(macBridge, /NEVPNStatusDidChangeNotification/)
+  assert.match(macCoordinator, /providerHealthCheckIntervalMs = 15_000/)
+  assert.match(macCoordinator, /providerHealthCheckDue/)
   assert.match(macCoordinator, /activePolicyKey = response\.state === 'running' \? policyKey : ''/)
   assert.match(manager, /while \(reconcileRequested\)/)
   assert.match(manager, /void reconcileAppRouting\(\)/)
@@ -941,7 +963,9 @@ test('macOS approval guidance returns promptly and remains visible across app re
   const hook = readFileSync('src/renderer/src/hooks/use-app-routing.ts', 'utf8')
 
   assert.match(bridge, /KBUserApprovalPendingDefaultsKey/)
+  assert.match(bridge, /KBExtensionReplacementPendingDefaultsKey/)
   assert.match(bridge, /KBExtensionActivationConfirmedThisProcess/)
+  assert.match(bridge, /KBCheckExtensionEnabled/)
   assert.match(bridge, /- \(void\)requestNeedsUserApproval[\s\S]*?\[self signalOnce\]/)
   assert.match(bridge, /KBApprovalSettingsOpenedThisProcess\.exchange\(true\)/)
   assert.match(bridge, /requestNeedsUserApproval[\s\S]*?KBOpenSystemSettingsAsync/)

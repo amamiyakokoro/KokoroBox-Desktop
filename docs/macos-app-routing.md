@@ -56,6 +56,12 @@ PROXYBRIDGE_SOURCE_DIR=/path/to/ProxyBridge npm_config_target_arch=arm64 \
 The generated payload is intentionally unsigned. Release packaging signs the native module as
 nested code and embeds the Extension profile before signing the containing app.
 
+The System Extension version is pinned alongside the ProxyBridge revision in
+`build/proxybridge/source-manifest.json`. It intentionally does not follow the Desktop app or
+rolling build number: macOS treats every version change as an extension replacement and may ask
+the user to approve that replacement. Increment both pinned extension version fields only when
+the bundled provider changes. Ordinary Desktop updates then keep the already-approved extension.
+
 ## Apple configuration
 
 The Apple Developer account must have these identifiers and capabilities enabled:

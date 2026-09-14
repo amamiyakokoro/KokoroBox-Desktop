@@ -2,6 +2,8 @@ import sourceManifest from '../../../build/proxybridge/source-manifest.json' wit
 
 export const proxyBridgeRepository = sourceManifest.proxyBridgeRepository
 export const proxyBridgeSourceRevision = sourceManifest.proxyBridgeRevision
+export const macOSSystemExtensionVersion = sourceManifest.macOSSystemExtensionVersion
+export const macOSSystemExtensionBundleVersion = sourceManifest.macOSSystemExtensionBundleVersion
 export const winDivertVersion = sourceManifest.winDivertVersion
 export const winDivertUrl = sourceManifest.winDivertUrl
 export const winDivertArchiveSha256 = sourceManifest.winDivertArchiveSha256

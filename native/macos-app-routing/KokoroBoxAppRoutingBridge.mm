@@ -20,6 +20,8 @@ static NSString *const KBPolicyAcknowledgementFilename =
     @"application-routing-policy-ack.json";
 static NSString *const KBUserApprovalPendingDefaultsKey =
     @"KokoroBoxApplicationRoutingUserApprovalPending";
+static NSString *const KBExtensionReplacementPendingDefaultsKey =
+    @"KokoroBoxApplicationRoutingExtensionReplacementPending";
 static std::atomic_bool KBApprovalSettingsOpenedThisProcess(false);
 static std::atomic_bool KBExtensionActivationConfirmedThisProcess(false);
 
@@ -36,6 +38,16 @@ static BOOL KBUserApprovalPending(void) {
 static void KBSetUserApprovalPending(BOOL pending) {
   [[NSUserDefaults standardUserDefaults] setBool:pending
                                           forKey:KBUserApprovalPendingDefaultsKey];
+}
+
+static BOOL KBExtensionReplacementPending(void) {
+  return [[NSUserDefaults standardUserDefaults]
+      boolForKey:KBExtensionReplacementPendingDefaultsKey];
+}
+
+static void KBSetExtensionReplacementPending(BOOL pending) {
+  [[NSUserDefaults standardUserDefaults] setBool:pending
+                                          forKey:KBExtensionReplacementPendingDefaultsKey];
 }
 
 static BOOL KBWait(dispatch_semaphore_t semaphore, NSTimeInterval seconds) {
@@ -69,10 +81,20 @@ static void KBOpenSystemSettingsAsync(void (^completion)(NSError *)) {
   });
 }
 
+static void KBOpenApprovalSettingsOnce(void) {
+  if (KBApprovalSettingsOpenedThisProcess.exchange(true)) return;
+  KBOpenSystemSettingsAsync(^(NSError *failure) {
+    if (failure) KBApprovalSettingsOpenedThisProcess.store(false);
+  });
+}
+
 @interface KBExtensionActivationDelegate : NSObject <OSSystemExtensionRequestDelegate>
 @property(nonatomic) dispatch_semaphore_t semaphore;
 @property(nonatomic, strong, nullable) NSError *error;
 @property(nonatomic) BOOL needsUserApproval;
+@property(nonatomic) BOOL replacementRequested;
+@property(nonatomic, strong, nullable)
+    NSArray<OSSystemExtensionProperties *> *foundProperties;
 @property(nonatomic) BOOL signaled;
 @end
 
@@ -95,17 +117,24 @@ static void KBOpenSystemSettingsAsync(void (^completion)(NSError *)) {
   // This callback is the authoritative first-install signal. Bring the
   // relevant settings pane forward automatically, but only once per process
   // so periodic reconciliation cannot repeatedly open it.
-  if (!KBApprovalSettingsOpenedThisProcess.exchange(true)) {
-    KBOpenSystemSettingsAsync(^(NSError *failure) {
-      if (failure) KBApprovalSettingsOpenedThisProcess.store(false);
-    });
-  }
+  KBOpenApprovalSettingsOnce();
+  [self signalOnce];
+}
+
+- (void)request:(OSSystemExtensionRequest *)request
+    foundProperties:(NSArray<OSSystemExtensionProperties *> *)properties {
+  self.foundProperties = properties;
   [self signalOnce];
 }
 
 - (OSSystemExtensionReplacementAction)request:(OSSystemExtensionRequest *)request
                  actionForReplacingExtension:(OSSystemExtensionProperties *)existing
                                withExtension:(OSSystemExtensionProperties *)extension {
+  self.replacementRequested = YES;
+  // Replacing a running provider can leave NetworkExtension reporting the old
+  // tunnel as Connected. Persist this across an approval round-trip or app
+  // restart, then recycle the tunnel after activation completes.
+  KBSetExtensionReplacementPending(YES);
   return OSSystemExtensionReplacementActionReplace;
 }
 
@@ -125,6 +154,43 @@ static void KBOpenSystemSettingsAsync(void (^completion)(NSError *)) {
 }
 @end
 
+static BOOL KBCheckExtensionEnabled(BOOL *needsUserApproval, NSError **error) {
+  KBExtensionActivationDelegate *delegate = [[KBExtensionActivationDelegate alloc] init];
+  OSSystemExtensionRequest *request =
+      [OSSystemExtensionRequest propertiesRequestForExtension:KBExtensionIdentifier
+                                                        queue:dispatch_get_main_queue()];
+  request.delegate = delegate;
+  [[OSSystemExtensionManager sharedManager] submitRequest:request];
+  if (!KBWait(delegate.semaphore, 15)) {
+    if (error) *error = KBError(@"Reading the macOS System Extension state timed out");
+    return NO;
+  }
+  if (delegate.error) {
+    if (error) *error = delegate.error;
+    return NO;
+  }
+
+  BOOL found = NO;
+  BOOL enabled = NO;
+  BOOL awaitingApproval = NO;
+  for (OSSystemExtensionProperties *properties in delegate.foundProperties ?: @[]) {
+    if (![properties.bundleIdentifier isEqualToString:KBExtensionIdentifier]) continue;
+    found = YES;
+    enabled = enabled || properties.isEnabled;
+    awaitingApproval = awaitingApproval || properties.isAwaitingUserApproval;
+  }
+  if (!found) {
+    if (error) *error = KBError(@"The macOS System Extension is not registered");
+    return NO;
+  }
+
+  BOOL approvalRequired = awaitingApproval || !enabled;
+  KBSetUserApprovalPending(approvalRequired);
+  if (approvalRequired) KBOpenApprovalSettingsOnce();
+  if (needsUserApproval) *needsUserApproval = approvalRequired;
+  return YES;
+}
+
 static NSString *KBStatusName(NEVPNStatus status) {
   switch (status) {
   case NEVPNStatusInvalid:
@@ -141,7 +207,9 @@ static NSString *KBStatusName(NEVPNStatus status) {
   return @"error";
 }
 
-static BOOL KBActivateExtension(BOOL *needsUserApproval, NSError **error) {
+static BOOL KBActivateExtension(BOOL *needsUserApproval,
+                                BOOL *restartTunnel,
+                                NSError **error) {
   KBExtensionActivationDelegate *delegate = [[KBExtensionActivationDelegate alloc] init];
   OSSystemExtensionRequest *request =
       [OSSystemExtensionRequest activationRequestForExtension:KBExtensionIdentifier
@@ -163,9 +231,22 @@ static BOOL KBActivateExtension(BOOL *needsUserApproval, NSError **error) {
     if (error) *error = delegate.error;
     return NO;
   }
+  BOOL extensionNeedsUserApproval = NO;
+  if (!KBCheckExtensionEnabled(&extensionNeedsUserApproval, error)) {
+    KBExtensionActivationConfirmedThisProcess.store(false);
+    return NO;
+  }
+  if (extensionNeedsUserApproval) {
+    KBExtensionActivationConfirmedThisProcess.store(false);
+    if (needsUserApproval) *needsUserApproval = YES;
+    return YES;
+  }
   KBExtensionActivationConfirmedThisProcess.store(true);
   KBSetUserApprovalPending(NO);
   if (needsUserApproval) *needsUserApproval = NO;
+  if (restartTunnel) {
+    *restartTunnel = delegate.replacementRequested || KBExtensionReplacementPending();
+  }
   return YES;
 }
 
@@ -253,6 +334,49 @@ static BOOL KBSaveManager(NETransparentProxyManager *manager, NSError **error) {
     if (error) *error = loadError;
     return NO;
   }
+  return YES;
+}
+
+static BOOL KBStopManagerConnection(NETransparentProxyManager *manager, NSError **error) {
+  NEVPNStatus status = manager.connection.status;
+  if (status == NEVPNStatusDisconnected || status == NEVPNStatusInvalid) return YES;
+
+  dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
+  std::shared_ptr<std::atomic_bool> disconnected =
+      std::make_shared<std::atomic_bool>(false);
+  id observer = [[NSNotificationCenter defaultCenter]
+      addObserverForName:NEVPNStatusDidChangeNotification
+                  object:manager.connection
+                   queue:nil
+              usingBlock:^(NSNotification *notification) {
+                NEVPNStatus nextStatus = manager.connection.status;
+                if (nextStatus == NEVPNStatusDisconnected ||
+                    nextStatus == NEVPNStatusInvalid) {
+                  disconnected->store(true);
+                  dispatch_semaphore_signal(semaphore);
+                }
+              }];
+  [manager.connection stopVPNTunnel];
+  status = manager.connection.status;
+  if (status == NEVPNStatusDisconnected || status == NEVPNStatusInvalid) {
+    disconnected->store(true);
+  } else {
+    KBWait(semaphore, 15);
+  }
+  [[NSNotificationCenter defaultCenter] removeObserver:observer];
+  if (!disconnected->load()) {
+    if (error) *error = KBError(@"Stopping the previous network extension session timed out");
+    return NO;
+  }
+  return YES;
+}
+
+static BOOL KBRecycleManagerAfterExtensionReplacement(NSError **error) {
+  if (!KBExtensionReplacementPending()) return YES;
+  NETransparentProxyManager *manager = KBLoadManager(error);
+  if (!manager && error && *error) return NO;
+  if (manager && !KBStopManagerConnection(manager, error)) return NO;
+  KBSetExtensionReplacementPending(NO);
   return YES;
 }
 
@@ -401,10 +525,27 @@ static NSString *KBApply(NSDictionary *configuration, NSError **error) {
       [currentState isEqualToString:@"stopping"]) return @"starting";
   NSDictionary *storedConfiguration = KBStoredConfiguration(manager);
   if (manager.connection.status == NEVPNStatusConnected) {
-    if (!KBSendConfiguration(configuration, manager, error)) return nil;
-    // Persisted preferences are not proof that this provider loaded them.
-    // Confirm once after startup/reconnect, without saving unchanged preferences.
-    if ([storedConfiguration isEqualToDictionary:configuration]) return @"running";
+    NSError *providerError = nil;
+    if (KBSendConfiguration(configuration, manager, &providerError)) {
+      // Persisted preferences are not proof that this provider loaded them.
+      // Confirm once after startup/reconnect, without saving unchanged preferences.
+      if ([storedConfiguration isEqualToDictionary:configuration]) return @"running";
+    } else {
+      // A replaced provider can leave a stale Connected session behind. A
+      // provider rejection is authoritative; transport failures are repaired
+      // by recycling the tunnel and applying the same fail-closed policy.
+      if ([providerError.localizedDescription
+              isEqualToString:@"The network extension rejected the application-routing policy"]) {
+        if (error) *error = providerError;
+        return nil;
+      }
+      if (!KBStopManagerConnection(manager, error)) return nil;
+      manager = KBLoadManager(error);
+      if (!manager) {
+        if (error && !*error) *error = KBError(@"The transparent proxy configuration disappeared");
+        return nil;
+      }
+    }
   }
 
   NSData *configurationData =
@@ -470,6 +611,7 @@ static NSDictionary *KBInvoke(NSDictionary *request, NSError **error) {
   if ([command isEqualToString:@"apply"]) {
     NSDictionary *configuration = request[@"configuration"];
     BOOL activationNeedsUserApproval = NO;
+    BOOL restartTunnel = NO;
     NSString *existingState = KBCurrentStatus(error);
     if (!existingState) return nil;
     // The manager can still report the previous provider as running after the
@@ -482,11 +624,17 @@ static NSDictionary *KBInvoke(NSDictionary *request, NSError **error) {
         [existingState isEqualToString:@"disabled"] ||
         [existingState isEqualToString:@"error"];
     if (![configuration isKindOfClass:[NSDictionary class]] ||
-        (mustActivate && !KBActivateExtension(&activationNeedsUserApproval, error))) {
+        (mustActivate &&
+         !KBActivateExtension(&activationNeedsUserApproval, &restartTunnel, error))) {
       if (error && !*error) *error = KBError(@"Invalid bridge request");
       return nil;
     }
     needsUserApproval = KBUserApprovalPending() || activationNeedsUserApproval;
+    if (!needsUserApproval &&
+        (restartTunnel || KBExtensionReplacementPending()) &&
+        !KBRecycleManagerAfterExtensionReplacement(error)) {
+      return nil;
+    }
     // macOS requires explicit user consent. Do not block Electron while the consent sheet is open,
     // and do not create an enabled transparent-proxy manager until the extension is approved.
     state = needsUserApproval ? @"starting" : KBApply(configuration, error);
@@ -498,8 +646,14 @@ static NSDictionary *KBInvoke(NSDictionary *request, NSError **error) {
     // Navigation must not depend on activation succeeding or completing first.
     if (!KBOpenSystemSettings(error)) return nil;
     BOOL activationNeedsUserApproval = NO;
-    if (!KBActivateExtension(&activationNeedsUserApproval, error)) return nil;
+    BOOL restartTunnel = NO;
+    if (!KBActivateExtension(&activationNeedsUserApproval, &restartTunnel, error)) return nil;
     needsUserApproval = KBUserApprovalPending() || activationNeedsUserApproval;
+    if (!needsUserApproval &&
+        (restartTunnel || KBExtensionReplacementPending()) &&
+        !KBRecycleManagerAfterExtensionReplacement(error)) {
+      return nil;
+    }
     state = needsUserApproval ? @"starting" : KBCurrentStatus(error);
   } else {
     if (error) *error = KBError(@"Invalid bridge request");
