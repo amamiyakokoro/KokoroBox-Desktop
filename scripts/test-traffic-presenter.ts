@@ -44,6 +44,7 @@ test('Desktop forwards Mihomo traffic and packages the executable sidecar', () =
   assert.match(builder, /linux:[\s\S]*kokorobox-native-linux-\$\{arch\}-gnu/)
   assert.match(presenter, /process\.resourcesPath, 'traffic-presenter'/)
   assert.match(presenter, /windowsHide: true/)
+  assert.match(presenter, /nativeTheme\.shouldUseDarkColors \? 'dark' : 'light'/)
   assert.doesNotMatch(presenter, /detached: true/)
   assert.match(presenter, /new WeakSet<ChildProcess>/)
   assert.match(presenter, /nextChild\.once\('close'/)

@@ -1,4 +1,4 @@
-import { app } from 'electron'
+import { app, nativeTheme } from 'electron'
 import { spawn, type ChildProcess } from 'child_process'
 import { existsSync } from 'fs'
 import { readFile, rm } from 'fs/promises'
@@ -73,7 +73,7 @@ function configure(target: ChildProcess): void {
       type: 'configure',
       visible: true,
       layout: trafficPresenterLayout(process.platform),
-      theme: 'system'
+      theme: nativeTheme.shouldUseDarkColors ? 'dark' : 'light'
     },
     target
   )
