@@ -174,6 +174,19 @@ function ipcErrorWrapper<T>( // eslint-disable-next-line @typescript-eslint/no-e
   }
 }
 
+async function startTrafficPresenterAndRestoreTray(): Promise<void> {
+  await startTrafficPresenter()
+
+  if (process.platform !== 'darwin') return
+  const { disableTray = false } = await getAppConfig()
+  if (disableTray) return
+
+  // The traffic presenter owns a separate NSStatusItem. Reassert the Electron
+  // tray after it starts or stops so the KokoroBox wind-chime item stays visible.
+  await showTrayIcon()
+  await updateTrayIcon()
+}
+
 async function patchAppConfigWithServiceSync(patch: Partial<AppConfig>): Promise<AppConfig> {
   const nextConfig = await patchAppConfig(await normalizeServiceModePatch(patch))
 
@@ -333,7 +346,7 @@ export function registerIpcMainHandlers(): void {
   ipcMain.handle('restartCore', ipcErrorWrapper(restartCore))
   ipcMain.handle('stopCore', ipcErrorWrapper(stopCore))
   ipcMain.handle('restartMihomoConnections', ipcErrorWrapper(restartMihomoConnections))
-  ipcMain.handle('startMonitor', () => ipcErrorWrapper(startTrafficPresenter)())
+  ipcMain.handle('startMonitor', () => ipcErrorWrapper(startTrafficPresenterAndRestoreTray)())
   ipcMain.handle('triggerSysProxy', (_e, enable, onlyActiveDevice, useRegistry) =>
     ipcErrorWrapper(triggerSysProxy)(enable, onlyActiveDevice, useRegistry)
   )

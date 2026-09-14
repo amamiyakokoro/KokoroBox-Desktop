@@ -52,6 +52,7 @@ test('Desktop forwards Mihomo traffic and packages the executable sidecar', () =
 
 test('macOS uses only the native traffic presenter and keeps the wind chime template icon', () => {
   const connectionCard = readFileSync('src/renderer/src/components/sider/conn-card.tsx', 'utf8')
+  const ipc = readFileSync('src/main/utils/ipc.ts', 'utf8')
   const tray = readFileSync('src/main/resolve/tray.ts', 'utf8')
 
   assert.doesNotMatch(connectionCard, /drawTrayTrafficIcon|trayIconUpdate/)
@@ -59,4 +60,9 @@ test('macOS uses only the native traffic presenter and keeps the wind chime temp
   assert.match(tray, /tray-icon-macos\.svg\?asset/)
   assert.doesNotMatch(tray, /tray-icon-noto\.png\?asset/)
   assert.match(tray, /setTemplateImage\(process\.platform === 'darwin'\)/)
+  assert.match(ipc, /startTrafficPresenterAndRestoreTray/)
+  assert.match(
+    ipc,
+    /if \(disableTray\) return[\s\S]*await showTrayIcon\(\)[\s\S]*await updateTrayIcon\(\)/
+  )
 })
