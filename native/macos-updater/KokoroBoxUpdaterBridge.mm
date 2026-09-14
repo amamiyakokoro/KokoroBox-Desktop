@@ -5,8 +5,10 @@
 #define BUILDING_SPARKLE_SOURCES_EXTERNALLY 1
 #import "../../extra/macos-updater/Sparkle.framework/Headers/SPUStandardUpdaterController.h"
 #import "../../extra/macos-updater/Sparkle.framework/Headers/SPUUpdater.h"
+#import "../../extra/macos-updater/Sparkle.framework/Headers/SPUUpdaterDelegate.h"
 
 static SPUStandardUpdaterController *KBUpdaterController = nil;
+static NSString *KBUpdateChannel = nil;
 
 static void KBThrow(napi_env env, NSString *message) {
   napi_throw_error(env, nullptr, message.UTF8String);
@@ -18,20 +20,74 @@ static BOOL KBRequireMainThread(napi_env env) {
   return NO;
 }
 
+static NSString *KBAppcastName(void) {
+#if defined(__arm64__)
+  return @"appcast-macos-arm64.xml";
+#else
+  return @"appcast-macos-x64.xml";
+#endif
+}
+
+static NSString *KBFeedURLStringForChannel(NSString *channel) {
+  NSString *releasePath = [channel isEqualToString:@"rolling"]
+                              ? @"releases/download/rolling"
+                              : @"releases/latest/download";
+  return [NSString
+      stringWithFormat:@"https://github.com/amamiyakokoro/KokoroBox-Desktop/%@/%@",
+                       releasePath, KBAppcastName()];
+}
+
+static NSString *KBReadChannel(napi_env env, napi_callback_info info) {
+  size_t argc = 1;
+  napi_value args[1];
+  napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+  napi_valuetype type = napi_undefined;
+  if (argc != 1 || napi_typeof(env, args[0], &type) != napi_ok || type != napi_string) {
+    napi_throw_type_error(env, nullptr, "update channel must be stable or rolling");
+    return nil;
+  }
+
+  size_t length = 0;
+  if (napi_get_value_string_utf8(env, args[0], nullptr, 0, &length) != napi_ok || length == 0 ||
+      length >= 8) {
+    napi_throw_range_error(env, nullptr, "invalid update channel");
+    return nil;
+  }
+  char value[8] = {};
+  size_t copied = 0;
+  if (napi_get_value_string_utf8(env, args[0], value, sizeof(value), &copied) != napi_ok ||
+      copied != length) {
+    napi_throw_range_error(env, nullptr, "invalid update channel");
+    return nil;
+  }
+  NSString *channel = [[NSString alloc] initWithBytes:value
+                                               length:copied
+                                             encoding:NSUTF8StringEncoding];
+  if (![channel isEqualToString:@"stable"] && ![channel isEqualToString:@"rolling"]) {
+    napi_throw_range_error(env, nullptr, "update channel must be stable or rolling");
+    return nil;
+  }
+  return channel;
+}
+
+@interface KBUpdaterDelegate : NSObject <SPUUpdaterDelegate>
+@end
+
+@implementation KBUpdaterDelegate
+- (NSString *)feedURLStringForUpdater:(SPUUpdater *)updater {
+  return KBFeedURLStringForChannel(KBUpdateChannel ?: @"stable");
+}
+@end
+
+static KBUpdaterDelegate *KBUpdaterDelegateInstance = nil;
+
 static BOOL KBValidateConfiguration(napi_env env) {
   NSBundle *bundle = [NSBundle mainBundle];
   NSString *feed = [bundle objectForInfoDictionaryKey:@"SUFeedURL"];
   NSString *publicKey = [bundle objectForInfoDictionaryKey:@"SUPublicEDKey"];
-  NSURL *feedURL = [feed isKindOfClass:[NSString class]] ? [NSURL URLWithString:feed] : nil;
-#if defined(__arm64__)
-  NSString *expectedAppcast = @"appcast-macos-arm64.xml";
-#else
-  NSString *expectedAppcast = @"appcast-macos-x64.xml";
-#endif
-  BOOL trustedFeed = feedURL && [feedURL.scheme.lowercaseString isEqualToString:@"https"] &&
-                     [feedURL.host.lowercaseString isEqualToString:@"github.com"] &&
-                     [feedURL.path hasPrefix:@"/amamiyakokoro/KokoroBox-Desktop/releases/"] &&
-                     [feedURL.lastPathComponent isEqualToString:expectedAppcast];
+  BOOL trustedFeed = [feed isKindOfClass:[NSString class]] &&
+                     ([feed isEqualToString:KBFeedURLStringForChannel(@"stable")] ||
+                      [feed isEqualToString:KBFeedURLStringForChannel(@"rolling")]);
   if (!trustedFeed) {
     KBThrow(env, @"The signed application does not contain a trusted Sparkle feed");
     return NO;
@@ -72,11 +128,15 @@ static napi_value KBState(napi_env env, napi_callback_info info) {
 
 static napi_value KBInitializeUpdater(napi_env env, napi_callback_info info) {
   if (!KBRequireMainThread(env) || !KBValidateConfiguration(env)) return nullptr;
+  NSString *channel = KBReadChannel(env, info);
+  if (!channel) return nullptr;
   @try {
+    KBUpdateChannel = [channel copy];
     if (!KBUpdaterController) {
+      KBUpdaterDelegateInstance = [[KBUpdaterDelegate alloc] init];
       KBUpdaterController = [[SPUStandardUpdaterController alloc]
           initWithStartingUpdater:NO
-                 updaterDelegate:nil
+                 updaterDelegate:KBUpdaterDelegateInstance
               userDriverDelegate:nil];
       [KBUpdaterController startUpdater];
     }
@@ -89,11 +149,14 @@ static napi_value KBInitializeUpdater(napi_env env, napi_callback_info info) {
 
 static napi_value KBCheckForUpdates(napi_env env, napi_callback_info info) {
   if (!KBRequireMainThread(env)) return nullptr;
+  NSString *channel = KBReadChannel(env, info);
+  if (!channel) return nullptr;
   if (!KBUpdaterController) {
     KBThrow(env, @"The macOS updater has not been initialized");
     return nullptr;
   }
   @try {
+    KBUpdateChannel = [channel copy];
     [KBUpdaterController checkForUpdates:nil];
     return KBCreateState(env);
   } @catch (NSException *exception) {

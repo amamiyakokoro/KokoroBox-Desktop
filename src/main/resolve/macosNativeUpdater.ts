@@ -1,7 +1,11 @@
 import { is } from '@electron-toolkit/utils'
 import { existsSync } from 'node:fs'
 import path from 'node:path'
-import { MacOSUpdaterBridge, runNativeMacOSUpdater } from './macosNativeUpdaterState'
+import {
+  MacOSUpdateChannel,
+  MacOSUpdaterBridge,
+  runNativeMacOSUpdater
+} from './macosNativeUpdaterState'
 
 // Older builds reach this transition release through the notarized PKG updater. Once this
 // code is installed, the stable privileged runtime and signed appcast can update the App bundle.
@@ -36,12 +40,13 @@ function loadNativeBridge(): MacOSUpdaterBridge {
 
 /** Opens Sparkle's standard update UI in packaged macOS builds. */
 export function showNativeMacOSUpdate(
+  channel: MacOSUpdateChannel,
   platform: NodeJS.Platform = process.platform,
   bridgeOverride?: MacOSUpdaterBridge
 ): boolean {
   if (platform !== 'darwin' || !macOSNativeUpdaterEnabled) return false
 
   const bridge = bridgeOverride ?? loadNativeBridge()
-  runNativeMacOSUpdater(bridge)
+  runNativeMacOSUpdater(bridge, channel)
   return true
 }

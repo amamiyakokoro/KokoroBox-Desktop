@@ -6,9 +6,11 @@ export interface MacOSUpdaterState {
 
 export interface MacOSUpdaterBridge {
   state(): MacOSUpdaterState
-  initialize(): MacOSUpdaterState
-  checkForUpdates(): MacOSUpdaterState
+  initialize(channel: MacOSUpdateChannel): MacOSUpdaterState
+  checkForUpdates(channel: MacOSUpdateChannel): MacOSUpdaterState
 }
+
+export type MacOSUpdateChannel = 'stable' | 'rolling'
 
 function validateState(value: MacOSUpdaterState): MacOSUpdaterState {
   if (
@@ -21,12 +23,15 @@ function validateState(value: MacOSUpdaterState): MacOSUpdaterState {
   return value
 }
 
-export function runNativeMacOSUpdater(bridge: MacOSUpdaterBridge): void {
+export function runNativeMacOSUpdater(
+  bridge: MacOSUpdaterBridge,
+  channel: MacOSUpdateChannel
+): void {
   let state = validateState(bridge.state())
   if (!state.available) throw new Error('The native macOS updater is unavailable')
-  if (!state.initialized) state = validateState(bridge.initialize())
+  if (!state.initialized) state = validateState(bridge.initialize(channel))
   if (!state.initialized || !state.canCheckForUpdates) {
     throw new Error('The native macOS updater is not ready to check for updates')
   }
-  validateState(bridge.checkForUpdates())
+  validateState(bridge.checkForUpdates(channel))
 }

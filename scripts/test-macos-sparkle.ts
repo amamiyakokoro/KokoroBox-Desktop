@@ -83,7 +83,7 @@ test('Sparkle appcast validation requires archive and feed signatures', () => {
   )
 })
 
-test('macOS package stages the updater without exposing dynamic trust inputs', () => {
+test('macOS package stages the updater with only a bounded dynamic channel', () => {
   const build = parse(readFileSync('electron-builder.yml', 'utf8'))
   assert.ok(build.extraResources[0].filter.includes('!macos-updater{,/**/*}'))
   assert.deepEqual(
@@ -101,8 +101,9 @@ test('macOS package stages the updater without exposing dynamic trust inputs', (
   const source = readFileSync('native/macos-updater/KokoroBoxUpdaterBridge.mm', 'utf8')
   assert.match(source, /objectForInfoDictionaryKey:@"SUFeedURL"/)
   assert.match(source, /objectForInfoDictionaryKey:@"SUPublicEDKey"/)
-  assert.match(source, /isEqualToString:@"https"/)
-  assert.doesNotMatch(source, /napi_get_value_string/)
+  assert.match(source, /napi_get_value_string_utf8/)
+  assert.match(source, /update channel must be stable or rolling/)
+  assert.doesNotMatch(source, /URLWithString:channel/)
 
   const binding = JSON.parse(readFileSync('native/macos-updater/binding.gyp', 'utf8'))
   assert.ok(binding.targets[0].xcode_settings.LD_RUNPATH_SEARCH_PATHS.includes('@loader_path'))
@@ -116,42 +117,54 @@ test('main process adapter activates Sparkle and validates its state transitions
   assert.match(adapter, /process\.dlopen\(nativeModule, modulePath\)/)
   assert.doesNotMatch(adapter, /process\.env|napi_get_value_string/)
   assert.match(updater, /return 'native'/)
+  assert.match(updater, /releaseTag === 'rolling' \? 'rolling' : 'stable'/)
   assert.match(updater, /shell\.openExternal/)
   assert.match(updater, /native macOS updater unavailable[\s\S]*return 'external'/)
 
   const calls: string[] = []
   const bridge = {
     state: () => ({ available: true, initialized: false, canCheckForUpdates: false }),
-    initialize: () => {
-      calls.push('initialize')
+    initialize: (channel: 'stable' | 'rolling') => {
+      calls.push(`initialize:${channel}`)
       return { available: true, initialized: true, canCheckForUpdates: true }
     },
-    checkForUpdates: () => {
-      calls.push('check')
+    checkForUpdates: (channel: 'stable' | 'rolling') => {
+      calls.push(`check:${channel}`)
       return { available: true, initialized: true, canCheckForUpdates: true }
     }
   }
-  runNativeMacOSUpdater(bridge)
-  assert.deepEqual(calls, ['initialize', 'check'])
+  runNativeMacOSUpdater(bridge, 'rolling')
+  assert.deepEqual(calls, ['initialize:rolling', 'check:rolling'])
   assert.throws(() =>
-    runNativeMacOSUpdater({
-      ...bridge,
-      state: () => ({ available: false, initialized: false, canCheckForUpdates: false })
-    })
+    runNativeMacOSUpdater(
+      {
+        ...bridge,
+        state: () => ({ available: false, initialized: false, canCheckForUpdates: false })
+      },
+      'stable'
+    )
   )
   assert.throws(() =>
-    runNativeMacOSUpdater({
-      ...bridge,
-      initialize: () => ({ available: true, initialized: true, canCheckForUpdates: false })
-    })
+    runNativeMacOSUpdater(
+      {
+        ...bridge,
+        initialize: () => ({ available: true, initialized: true, canCheckForUpdates: false })
+      },
+      'stable'
+    )
   )
 })
 
 test('native bridge restricts the feed and validates the 32-byte public key', () => {
   const source = readFileSync('native/macos-updater/KokoroBoxUpdaterBridge.mm', 'utf8')
-  assert.match(source, /isEqualToString:@"github\.com"/)
-  assert.match(source, /\/amamiyakokoro\/KokoroBox-Desktop\/releases\//)
+  assert.match(source, /https:\/\/github\.com\/amamiyakokoro\/KokoroBox-Desktop/)
+  assert.match(source, /releases\/latest\/download/)
+  assert.match(source, /releases\/download\/rolling/)
   assert.match(source, /appcast-macos-arm64\.xml/)
   assert.match(source, /appcast-macos-x64\.xml/)
+  assert.match(source, /KBReadChannel/)
+  assert.match(source, /isEqualToString:@"stable"/)
+  assert.match(source, /isEqualToString:@"rolling"/)
+  assert.match(source, /feedURLStringForUpdater/)
   assert.match(source, /decodedPublicKey\.length != 32/)
 })

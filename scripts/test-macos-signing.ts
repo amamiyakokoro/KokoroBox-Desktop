@@ -130,7 +130,7 @@ function mockRunner(env: NodeJS.ProcessEnv, projectDir: string, failure?: string
       assert.equal(childEnv.CSC_IDENTITY_AUTO_DISCOVERY, 'true')
       const config = JSON.parse(readFileSync(args.at(-1)!, 'utf8'))
       assert.equal(config.forceCodeSigning, true)
-      assert.equal(config.buildVersion, '1001234')
+      assert.equal(config.buildVersion, '2002468')
       assert.equal(config.mac.identity, teamId)
       assert.equal(config.pkg.identity, teamId)
       assert.equal(config.mac.extendInfo.SUPublicEDKey, sparklePublicKey)

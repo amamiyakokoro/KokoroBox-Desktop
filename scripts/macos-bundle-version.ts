@@ -6,10 +6,10 @@ export interface MacOSBundleVersion {
 const supportedVersion =
   /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-(?:(0|[1-9]\d*)|rolling-([0-9a-f]{7,40})))?$/
 
-// Older releases encoded the semantic patch and a truncated commit hash in
-// CFBundleVersion. Reserve a higher range so the first build using the new
-// monotonic counter upgrades every installation using that legacy scheme.
-const publishedBuildEpoch = 1_000_000n
+// Older releases used 1,000,000 + the source commit count. Reserve a new range
+// and one channel bit so a rolling build from the same commit is newer than its
+// stable build, while the next commit remains newer than both.
+const publishedBuildEpoch = 2_000_000n
 const maximumSourceBuildNumber = 999_999n
 
 /** Convert KokoroBox release versions into numeric values accepted by Xcode. */
@@ -31,7 +31,7 @@ export function macOSBundleVersion(
     }
     return {
       marketingVersion: `${major}.${minor}.${patch}`,
-      bundleVersion: String(publishedBuildEpoch + build)
+      bundleVersion: String(publishedBuildEpoch + build * 2n + (rollingCommit ? 1n : 0n))
     }
   }
   if (rollingCommit) {

@@ -120,7 +120,8 @@ export async function downloadAndInstallUpdate(
   const releaseTag = resolveReleaseTag(version, tag)
   if (process.platform === 'darwin' && macOSNativeUpdaterEnabled) {
     try {
-      if (!showNativeMacOSUpdate()) throw new Error('Native macOS updater did not start')
+      const channel = releaseTag === 'rolling' ? 'rolling' : 'stable'
+      if (!showNativeMacOSUpdate(channel)) throw new Error('Native macOS updater did not start')
       return 'native'
     } catch (error) {
       const detail = error instanceof Error ? error.message : String(error)

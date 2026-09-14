@@ -1022,12 +1022,16 @@ test('macOS bundle versions support stable revisions and rolling builds', () => 
   })
   assert.deepEqual(macOSBundleVersion('2.26.10-rolling-2d6c507', '4321'), {
     marketingVersion: '2.26.10',
-    bundleVersion: '1004321'
+    bundleVersion: '2008643'
   })
   assert.deepEqual(macOSBundleVersion('2.26.10', '4322'), {
     marketingVersion: '2.26.10',
-    bundleVersion: '1004322'
+    bundleVersion: '2008644'
   })
+  assert.equal(
+    Number(macOSBundleVersion('2.26.10-rolling-2d6c507', '4321').bundleVersion),
+    Number(macOSBundleVersion('2.26.9-7', '4321').bundleVersion) + 1
+  )
   assert.deepEqual(macOSBundleVersion('2.27.0'), {
     marketingVersion: '2.27.0',
     bundleVersion: '2.27.0'

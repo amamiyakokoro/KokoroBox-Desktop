@@ -23,22 +23,23 @@ notarization and Sparkle signatures are independent checks; none replaces anothe
 
 Sparkle decides whether an update is newer by comparing the numeric `CFBundleVersion`, not the
 human-facing release name. Stable and rolling artifact names keep their semantic version and, for
-rolling builds, the abbreviated source commit. Published macOS builds use the repository commit
-count plus a migration epoch as their shared internal build number. This value is deterministic for
-one source commit and strictly increases along `master`, so a newer rolling build cannot sort below
-or collide with an older one. The host application and embedded Network Extension always receive
-the same internal build number.
+rolling builds, the abbreviated source commit. Published macOS builds use a migration epoch plus
+twice the repository commit count as their internal build number. Stable builds use the even slot
+and rolling builds use the following odd slot. A rolling build can therefore upgrade the stable
+build from the same commit, while the next commit remains newer than both. The independently pinned
+Network Extension version changes only when its provider payload changes.
 
 ## Native updater boundary
 
 The Electron main process owns update policy and exposes only bounded IPC operations to the
 renderer. A small macOS Node-API bridge owns `SPUStandardUpdaterController` on the AppKit main
 thread. The renderer can request the standard Sparkle update window but cannot provide a feed URL,
-public key, local package path or command to execute.
+public key, local package path or command to execute. The main process passes only the validated
+`stable` or `rolling` channel, which the native bridge maps to one of two compiled-in GitHub feeds.
 
-The feed URL and public key are embedded in the signed application. Runtime GitHub tokens are not
-forwarded to Sparkle. Stable release assets and appcasts therefore need to remain publicly
-downloadable.
+The signed application embeds its build-channel feed as a validated fallback and embeds the public
+key. Runtime GitHub tokens are not forwarded to Sparkle. Stable and rolling release assets and
+appcasts therefore need to remain publicly downloadable.
 
 ## System extension lifecycle
 
