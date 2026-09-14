@@ -3,10 +3,11 @@ import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } fr
 import os from 'node:os'
 import path from 'node:path'
 import {
+  macOSSystemExtensionBundleVersion,
+  macOSSystemExtensionVersion,
   proxyBridgeRepository,
   proxyBridgeSourceRevision
 } from '../src/main/app-routing/integrity-manifest.ts'
-import { macOSBundleVersion } from './macos-bundle-version.ts'
 
 const repositoryRoot = path.resolve(import.meta.dirname, '..')
 const targetArch = process.env.npm_config_target_arch || process.arch
@@ -42,12 +43,12 @@ const nativeModuleRoot = path.join(repositoryRoot, 'native', 'macos-app-routing'
 const electronVersion = JSON.parse(
   readFileSync(path.join(repositoryRoot, 'node_modules', 'electron', 'package.json'), 'utf8')
 ).version as string
-const packageVersion = JSON.parse(readFileSync(path.join(repositoryRoot, 'package.json'), 'utf8'))
-  .version as string
-const { marketingVersion, bundleVersion } = macOSBundleVersion(
-  packageVersion,
-  process.env.KOKOROBOX_BUILD_NUMBER
-)
+if (
+  !/^\d+\.\d+\.\d+$/.test(macOSSystemExtensionVersion) ||
+  !/^[1-9]\d*$/.test(macOSSystemExtensionBundleVersion)
+) {
+  throw new Error('Invalid pinned macOS System Extension version')
+}
 
 rmSync(buildRoot, { recursive: true, force: true })
 mkdirSync(buildRoot, { recursive: true })
@@ -102,8 +103,8 @@ const xcodeArgs = [
   '-xcconfig',
   path.join(xcodeProjectRoot, 'kokorobox-ext.xcconfig'),
   `KOKOROBOX_TARGET_ARCH=${swiftArch}`,
-  `MARKETING_VERSION=${marketingVersion}`,
-  `CURRENT_PROJECT_VERSION=${bundleVersion}`,
+  `MARKETING_VERSION=${macOSSystemExtensionVersion}`,
+  `CURRENT_PROJECT_VERSION=${macOSSystemExtensionBundleVersion}`,
   'SWIFT_OPTIMIZATION_LEVEL=-O',
   'CODE_SIGNING_ALLOWED=NO',
   'build'
@@ -118,8 +119,8 @@ const requiredExtensionMetadata: Record<string, string> = {
   CFBundleIdentifier: extensionBundleIdentifier,
   CFBundleExecutable: 'KokoroBoxProxyExtension',
   CFBundlePackageType: 'SYSX',
-  CFBundleShortVersionString: marketingVersion,
-  CFBundleVersion: bundleVersion
+  CFBundleShortVersionString: macOSSystemExtensionVersion,
+  CFBundleVersion: macOSSystemExtensionBundleVersion
 }
 for (const [key, expected] of Object.entries(requiredExtensionMetadata)) {
   let actual: string

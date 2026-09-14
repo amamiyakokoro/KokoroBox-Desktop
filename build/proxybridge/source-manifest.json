@@ -1,6 +1,8 @@
 {
   "proxyBridgeRepository": "https://github.com/amamiyakokoro/ProxyBridge.git",
   "proxyBridgeRevision": "84193638336c1c5bf77bfd3b15b25e3546f75795",
+  "macOSSystemExtensionVersion": "3.26.9",
+  "macOSSystemExtensionBundleVersion": "1001635",
   "winDivertVersion": "2.2.2",
   "winDivertUrl": "https://github.com/basil00/WinDivert/releases/download/v2.2.2/WinDivert-2.2.2-A.zip",
   "winDivertArchiveSha256": "63cb41763bb4b20f600b6de04e991a9c2be73279e317d4d82f237b150c5f3f15"
