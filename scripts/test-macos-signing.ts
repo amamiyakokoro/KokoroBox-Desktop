@@ -42,7 +42,7 @@ import {
   stageArtifact,
   validateMacReceipt
 } from './release-artifacts.ts'
-import { sparkleAppcastName, sparkleUpdateArchiveName } from './macos-sparkle.ts'
+import { sparkleAppcastName, sparkleRelease, sparkleUpdateArchiveName } from './macos-sparkle.ts'
 
 const teamId = kokoroBoxAppleTeamId
 const sha = '1234567890abcdef1234567890abcdef12345678'
@@ -65,7 +65,12 @@ const safeHostEntitlements = `
 function fixture(callback: (env: NodeJS.ProcessEnv, directory: string) => void) {
   const directory = realpathSync(mkdtempSync(path.join(os.tmpdir(), 'kokorobox-signing-test-')))
   mkdirSync(path.join(directory, 'dist'))
-  const sparkleBin = path.join(directory, 'kokorobox-sparkle-2.9.6', 'extracted', 'bin')
+  const sparkleBin = path.join(
+    directory,
+    `kokorobox-sparkle-${sparkleRelease.version}`,
+    'extracted',
+    'bin'
+  )
   mkdirSync(sparkleBin, { recursive: true })
   writeFileSync(path.join(sparkleBin, 'generate_appcast'), 'fixture')
   writeFileSync(path.join(sparkleBin, 'sign_update'), 'fixture')

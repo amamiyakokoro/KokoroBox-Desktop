@@ -15,10 +15,10 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 export const sparkleRelease = Object.freeze({
-  version: '2.9.6',
+  version: '2.10.0',
   archiveName: 'Sparkle-for-Swift-Package-Manager.zip',
-  sha256: '8d5fb41d960b43f4a68aa14126bf62b098544ec8d191cdcc73eb14e63a8e7606',
-  url: 'https://github.com/sparkle-project/Sparkle/releases/download/2.9.6/Sparkle-for-Swift-Package-Manager.zip'
+  sha256: '17e28312b8e18ab7cdbbe09a6fb28cc55a5479ec6c371dbc07cdecd2a14fd959',
+  url: 'https://github.com/sparkle-project/Sparkle/releases/download/2.10.0/Sparkle-for-Swift-Package-Manager.zip'
 })
 
 const repositoryRoot = path.resolve(import.meta.dirname, '..')

@@ -148,7 +148,7 @@ Release signing requires a matching Ed25519 key pair in the Actions secrets
 of exactly 32 bytes: the private value is the Ed25519 seed and the public value is its derived
 public key. The build rejects malformed or mismatched keys before importing Apple credentials.
 The private seed is written only to the signing job's mode-`0600` temporary directory, passed to
-the pinned Sparkle 2.9.6 tools, and removed with the other temporary signing material.
+the pinned Sparkle 2.10.0 tools, and removed with the other temporary signing material.
 
 ## Migration stages
 
