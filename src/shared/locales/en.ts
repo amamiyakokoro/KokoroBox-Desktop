@@ -520,6 +520,8 @@ export const messages: Readonly<Record<string, string>> = {
   Expiration: 'Expiration',
   'Refresh interval': 'Refresh interval',
   'Download from GitHub': 'Download from GitHub',
+  'Linux users should update through their system package manager.':
+    'Linux users should update through their system package manager.',
   'Bring all to front': 'Bring all to front',
   Cut: 'Cut',
   Features: 'Features',

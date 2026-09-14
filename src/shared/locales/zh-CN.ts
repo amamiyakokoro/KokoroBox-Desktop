@@ -493,6 +493,8 @@ export const messages: Readonly<Record<string, string>> = {
   Expiration: '到期时间',
   'Refresh interval': '刷新间隔',
   'Download from GitHub': '前往 GitHub 下载',
+  'Linux users should update through their system package manager.':
+    'Linux 用户请通过系统包管理器完成更新。',
   'Bring all to front': '前置所有窗口',
   Cut: '剪切',
   Features: '功能',

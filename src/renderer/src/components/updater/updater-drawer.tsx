@@ -3,6 +3,7 @@ import { Button, Drawer, Label, Link, ProgressBar } from '@heroui-v3/react'
 import ReactMarkdown from 'react-markdown'
 import React, { useEffect, useRef, useState } from 'react'
 import { downloadAndInstallUpdate } from '@renderer/utils/ipc'
+import { platform } from '@renderer/utils/init'
 import { FiX, FiDownload } from 'react-icons/fi'
 import { notify } from '@renderer/utils/notification'
 
@@ -21,6 +22,7 @@ interface Props {
 }
 
 const DRAWER_CLOSE_ANIMATION_MS = 700
+const isLinux = platform === 'linux'
 
 const UpdaterDrawer: React.FC<Props> = (props) => {
   const { version, tag, changelog, updateStatus, onCancel, onClose, reopenSignal } = props
@@ -175,31 +177,39 @@ const UpdaterDrawer: React.FC<Props> = (props) => {
             )}
           </Drawer.Body>
           <Drawer.Footer className="border-t border-separator/70 px-5 py-4">
-            <Button
-              size="sm"
-              className="h-8 min-w-0 px-3 text-sm leading-none"
-              variant="secondary"
-              onPress={handleCancel}
-            >
-              {updateStatus?.downloading ? (
-                <>
-                  <FiX />
-                  {tr('Cancel download')}
-                </>
-              ) : (
-                tr('Cancel')
-              )}
-            </Button>
-            {!updateStatus?.downloading && (
-              <Button
-                size="sm"
-                className="h-8 min-w-0 px-3 text-sm leading-none"
-                isPending={downloading}
-                onPress={onUpdate}
-              >
-                <FiDownload />
-                {tr('Update now')}
-              </Button>
+            {isLinux ? (
+              <p className="text-sm text-muted">
+                {tr('Linux users should update through their system package manager.')}
+              </p>
+            ) : (
+              <>
+                <Button
+                  size="sm"
+                  className="h-8 min-w-0 px-3 text-sm leading-none"
+                  variant="secondary"
+                  onPress={handleCancel}
+                >
+                  {updateStatus?.downloading ? (
+                    <>
+                      <FiX />
+                      {tr('Cancel download')}
+                    </>
+                  ) : (
+                    tr('Cancel')
+                  )}
+                </Button>
+                {!updateStatus?.downloading && (
+                  <Button
+                    size="sm"
+                    className="h-8 min-w-0 px-3 text-sm leading-none"
+                    isPending={downloading}
+                    onPress={onUpdate}
+                  >
+                    <FiDownload />
+                    {tr('Update now')}
+                  </Button>
+                )}
+              </>
             )}
           </Drawer.Footer>
           <Drawer.CloseTrigger className="app-nodrag" />

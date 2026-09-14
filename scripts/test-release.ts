@@ -225,6 +225,17 @@ test('desktop uses the independently maintained KokoroBox native packages', () =
   }
 })
 
+test('update drawer keeps package-manager guidance exclusive to Linux', () => {
+  const drawer = readFileSync('src/renderer/src/components/updater/updater-drawer.tsx', 'utf8')
+
+  assert.match(drawer, /import \{ platform \} from '@renderer\/utils\/init'/)
+  assert.match(drawer, /const isLinux = platform === 'linux'/)
+  assert.match(
+    drawer,
+    /\{isLinux \? \([\s\S]*Linux users should update through their system package manager\.[\s\S]*\) : \([\s\S]*tr\('Update now'\)/
+  )
+})
+
 test('stable builds pin verified service releases while rolling builds follow pre-release', () => {
   assert.equal(KOKOROBOX_SERVICE_STABLE_TAG, 'v0.2.4')
   assert.deepEqual(kokoroboxServiceAsset('win32', 'x64', 'stable'), {
