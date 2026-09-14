@@ -8,6 +8,7 @@ import {
   patchControledMihomoConfig
 } from '../config'
 import macTrayIcon from '../../../resources/tray-icon-macos.svg?asset'
+import macTrayIconFallback from '../../../resources/tray-icon-macos.png?asset'
 import windowsTrayIcon from '../../../resources/tray-icon-windows.png?asset'
 import {
   mihomoChangeProxy,
@@ -52,6 +53,14 @@ function createColoredTrayIcon(): Electron.NativeImage {
   return createMultiScaleTrayImage(sourceIcon)
 }
 
+function createMacTrayIcon(): Electron.NativeImage {
+  const svgIcon = nativeImage.createFromPath(macTrayIcon)
+  const sourceIcon = svgIcon.isEmpty() ? nativeImage.createFromPath(macTrayIconFallback) : svgIcon
+  const icon = createMultiScaleTrayImage(sourceIcon)
+  icon.setTemplateImage(true)
+  return icon
+}
+
 function formatDelayText(delay: number): string {
   if (delay === 0) {
     return 'Timeout'
@@ -64,15 +73,7 @@ function formatDelayText(delay: number): string {
 function createDefaultTrayIcon(): Electron.NativeImage {
   if (defaultTrayIcon) return defaultTrayIcon
 
-  const sourceIcon =
-    process.platform === 'darwin'
-      ? nativeImage.createFromPath(macTrayIcon)
-      : createColoredTrayIcon()
-  const icon =
-    process.platform === 'darwin'
-      ? sourceIcon.resize({ height: customTrayIconSize, quality: 'best' })
-      : sourceIcon
-  icon.setTemplateImage(process.platform === 'darwin')
+  const icon = process.platform === 'darwin' ? createMacTrayIcon() : createColoredTrayIcon()
   defaultTrayIcon = icon
   return icon
 }

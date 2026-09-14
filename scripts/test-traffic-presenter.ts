@@ -58,8 +58,12 @@ test('macOS uses only the native traffic presenter and keeps the wind chime temp
   assert.doesNotMatch(connectionCard, /drawTrayTrafficIcon|trayIconUpdate/)
   assert.doesNotMatch(tray, /createTrafficTrayImage|trayIconUpdate/)
   assert.match(tray, /tray-icon-macos\.svg\?asset/)
+  assert.match(tray, /tray-icon-macos\.png\?asset/)
   assert.doesNotMatch(tray, /tray-icon-noto\.png\?asset/)
-  assert.match(tray, /setTemplateImage\(process\.platform === 'darwin'\)/)
+  assert.match(tray, /function createMacTrayIcon/)
+  assert.match(tray, /svgIcon\.isEmpty\(\)/)
+  assert.match(tray, /createMultiScaleTrayImage\(sourceIcon\)/)
+  assert.match(tray, /setTemplateImage\(true\)/)
   assert.match(ipc, /startTrafficPresenterAndRestoreTray/)
   assert.match(
     ipc,
