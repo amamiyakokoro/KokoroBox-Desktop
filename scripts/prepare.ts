@@ -63,8 +63,8 @@ async function getLatestAlphaVersion() {
 }
 
 /* ======= mihomo release ======= */
-const MIHOMO_VERSION_URL =
-  'https://github.com/MetaCubeX/mihomo/releases/latest/download/version.txt'
+const MIHOMO_STABLE_VERSION = 'v1.19.31'
+const MIHOMO_VERSION_URL = `https://github.com/MetaCubeX/mihomo/releases/download/${MIHOMO_STABLE_VERSION}/version.txt`
 const MIHOMO_URL_PREFIX = `https://github.com/MetaCubeX/mihomo/releases/download`
 let MIHOMO_VERSION: string
 
@@ -87,6 +87,11 @@ async function getLatestReleaseVersion() {
     if (!response.ok) throw new Error(`Mihomo version request failed: HTTP ${response.status}`)
     const v = await response.text()
     MIHOMO_VERSION = v.trim() // Trim to remove extra whitespaces
+    if (MIHOMO_VERSION !== MIHOMO_STABLE_VERSION) {
+      throw new Error(
+        `Mihomo version mismatch: expected ${MIHOMO_STABLE_VERSION}, received ${MIHOMO_VERSION}`
+      )
+    }
     console.log(`Latest release version: ${MIHOMO_VERSION}`)
   } catch (error) {
     console.error('Error fetching latest release version:', getErrorMessage(error))

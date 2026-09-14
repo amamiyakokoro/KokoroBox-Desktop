@@ -271,6 +271,15 @@ test('stable builds pin verified service releases while rolling builds follow pr
   assert.match(prepare, /verifyKokoroBoxServiceChecksum/)
 })
 
+test('stable Mihomo builds pin the requested release', () => {
+  const prepare = readFileSync('scripts/prepare.ts', 'utf8')
+
+  assert.match(prepare, /const MIHOMO_STABLE_VERSION = 'v1\.19\.31'/)
+  assert.match(prepare, /releases\/download\/\$\{MIHOMO_STABLE_VERSION\}\/version\.txt/)
+  assert.match(prepare, /MIHOMO_VERSION !== MIHOMO_STABLE_VERSION/)
+  assert.doesNotMatch(prepare, /mihomo\/releases\/latest\/download\/version\.txt/)
+})
+
 test('platform discovery and core permissions use constrained native APIs', () => {
   const permission = readFileSync('src/main/core/permission.ts', 'utf8')
   const permissionCheck = readFileSync('src/main/core/permission-check.ts', 'utf8')
