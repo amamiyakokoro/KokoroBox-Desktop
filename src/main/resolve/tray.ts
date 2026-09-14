@@ -7,7 +7,7 @@ import {
   patchAppConfig,
   patchControledMihomoConfig
 } from '../config'
-import notoTrayIcon from '../../../resources/tray-icon-noto.png?asset'
+import macTrayIcon from '../../../resources/tray-icon-macos.svg?asset'
 import windowsTrayIcon from '../../../resources/tray-icon-windows.png?asset'
 import {
   mihomoChangeProxy,
@@ -66,10 +66,13 @@ function createDefaultTrayIcon(): Electron.NativeImage {
 
   const sourceIcon =
     process.platform === 'darwin'
-      ? nativeImage.createFromPath(notoTrayIcon)
+      ? nativeImage.createFromPath(macTrayIcon)
       : createColoredTrayIcon()
-  const icon = process.platform === 'darwin' ? createMultiScaleTrayImage(sourceIcon) : sourceIcon
-  icon.setTemplateImage(false)
+  const icon =
+    process.platform === 'darwin'
+      ? sourceIcon.resize({ height: customTrayIconSize, quality: 'best' })
+      : sourceIcon
+  icon.setTemplateImage(process.platform === 'darwin')
   defaultTrayIcon = icon
   return icon
 }
