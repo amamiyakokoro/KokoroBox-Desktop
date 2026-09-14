@@ -1157,8 +1157,8 @@ export const messages: Readonly<Record<string, string>> = {
   'Drag the window using empty areas in page headers. Useful when the system does not provide a draggable title bar.':
     'Drag the window using empty areas in page headers. Useful when the system does not provide a draggable title bar.',
   'Remember expanded proxy groups': 'Remember expanded proxy groups',
-  'Use this icon in the tray. When network speed is shown, it is combined with the icon. PNG, JPG and WebP images are cropped before saving.':
-    'Use this icon in the tray. When network speed is shown, it is combined with the icon. PNG, JPG and WebP images are cropped before saving.',
+  'Use this icon in the tray. PNG, JPG and WebP images are cropped before saving.':
+    'Use this icon in the tray. PNG, JPG and WebP images are cropped before saving.',
   'Configuration method': 'Configuration method',
   'Access key': 'Access key',
   'Certificate fingerprint': 'Certificate fingerprint',

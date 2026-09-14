@@ -174,7 +174,7 @@ const AppearanceConfig: React.FC = () => {
             actions={
               <Tooltip
                 content={tr(
-                  'Use this icon in the tray. When network speed is shown, it is combined with the icon. PNG, JPG and WebP images are cropped before saving.'
+                  'Use this icon in the tray. PNG, JPG and WebP images are cropped before saving.'
                 )}
               >
                 <Button isIconOnly size="sm" variant="light">

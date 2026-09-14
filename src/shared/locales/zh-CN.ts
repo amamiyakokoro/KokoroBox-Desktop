@@ -1119,8 +1119,8 @@ export const messages: Readonly<Record<string, string>> = {
   'Drag the window using empty areas in page headers. Useful when the system does not provide a draggable title bar.':
     '让应用内页面标题的空白区域可用于拖动窗口，适用于系统未提供可拖动标题栏的环境。',
   'Remember expanded proxy groups': '记住代理组展开状态',
-  'Use this icon in the tray. When network speed is shown, it is combined with the icon. PNG, JPG and WebP images are cropped before saving.':
-    '设置后托盘会使用此图标；开启网速显示时会与网速合成。PNG、JPG、WebP 会先裁剪后保存。',
+  'Use this icon in the tray. PNG, JPG and WebP images are cropped before saving.':
+    '设置后托盘会使用此图标。PNG、JPG、WebP 会先裁剪后保存。',
   'Configuration method': '设置方式',
   'Access key': '访问密钥',
   'Certificate fingerprint': '证书指纹',
