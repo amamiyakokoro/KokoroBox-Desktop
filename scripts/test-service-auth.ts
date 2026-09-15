@@ -4,7 +4,6 @@ import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { test } from 'node:test'
 import {
-  KeyManager,
   computeKeyId,
   generateKeyPair,
   signData,
@@ -52,12 +51,7 @@ test('each generated service authentication key pair is unique', () => {
 })
 
 test('invalid PEM is rejected before request signing without exposing OpenSSL details', () => {
-  const keyPair = generateKeyPair()
-  const manager = new KeyManager()
-
-  assertSafeInvalidKeyError(() => manager.setKeyPair(keyPair.publicKey, 'not-a-pem'))
   assertSafeInvalidKeyError(() => signData('not-a-pem', 'payload'))
-  assert.equal(manager.isInitialized(), false)
 })
 
 test('mismatched public and private service keys are rejected', () => {
@@ -79,7 +73,7 @@ test('malformed and non-Ed25519 public keys are rejected', () => {
   assertSafeInvalidKeyError(() => computeKeyId(rsa.publicKey.toString('base64')))
 })
 
-test('startup persists a replacement pair when stored authentication is unavailable', () => {
+test('startup migrates legacy authentication into an opaque native signer', () => {
   const managerSource = readFileSync(resolve('src/main/service/manager.ts'), 'utf8')
   const storeSource = readFileSync(resolve('src/main/service/auth-store.ts'), 'utf8')
   const routingSource = readFileSync(resolve('src/main/app-routing/manager.ts'), 'utf8')
@@ -89,6 +83,10 @@ test('startup persists a replacement pair when stored authentication is unavaila
     /const nextKeyManager = new KeyManager\(\)[\s\S]*await ensurePersistedServiceAuth\(nextKeyManager\)/
   )
   assert.match(storeSource, /return validateKeyPair\(/)
+  assert.match(managerSource, /openNativeServiceIdentity\(serviceIdentityFallbackPath\(\)/)
+  assert.match(managerSource, /await deleteServiceAuthSecret\(\)/)
+  assert.doesNotMatch(managerSource, /getPrivateKey\(/)
+  assert.doesNotMatch(storeSource, /writeFile\(/)
   assert.match(routingSource, /\[401, 403, 409\]/)
   assert.match(routingSource, /重置认证/)
 })

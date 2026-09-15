@@ -1,7 +1,5 @@
 import { tr } from '../../shared/i18n'
-import { existsSync } from 'fs'
-import { mkdir, readFile, rename, unlink, writeFile } from 'fs/promises'
-import { dirname } from 'path'
+import { readFile, unlink } from 'fs/promises'
 import { serviceAuthStorePath } from '../utils/dirs'
 import { validateKeyPair, type KeyPair } from './key'
 
@@ -49,35 +47,6 @@ export async function loadServiceAuthSecret(): Promise<ServiceAuthSecret | null>
   }
 
   throw new Error(tr('Invalid service authentication storage format'))
-}
-
-export async function saveServiceAuthSecret(secret: ServiceAuthSecret): Promise<void> {
-  const normalizedSecret = normalizeServiceAuthSecret(secret)
-  const storePath = serviceAuthStorePath()
-  const tempPath = `${storePath}.tmp`
-  const envelope: ServiceAuthEnvelope = {
-    version: 2,
-    storage: 'plain',
-    ...normalizedSecret
-  }
-  const content = JSON.stringify(envelope, null, 2)
-
-  await mkdir(dirname(storePath), { recursive: true })
-
-  try {
-    await writeFile(tempPath, content, { encoding: 'utf-8', mode: 0o600 })
-    if (existsSync(storePath) && process.platform === 'win32') {
-      await unlink(storePath)
-    }
-    await rename(tempPath, storePath)
-  } catch (error) {
-    try {
-      await unlink(tempPath)
-    } catch {
-      // ignore
-    }
-    throw error
-  }
 }
 
 export async function deleteServiceAuthSecret(): Promise<void> {

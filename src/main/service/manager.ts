@@ -1,7 +1,12 @@
 import { tr } from '../../shared/i18n'
-import { macOSServicePlistPath, macOSServiceRuntimePath, servicePath } from '../utils/dirs'
+import {
+  macOSServicePlistPath,
+  macOSServiceRuntimePath,
+  serviceIdentityFallbackPath,
+  servicePath
+} from '../utils/dirs'
 import { execWithElevation } from '../utils/elevation'
-import { KeyManager, type KeyPair, validateKeyPair } from './key'
+import { KeyManager, openNativeServiceIdentity, validateKeyPair } from './key'
 import {
   bootstrapMacOSServiceAuth,
   initServiceAPI,
@@ -14,7 +19,11 @@ import {
 import { getAppConfig, patchAppConfig } from '../config/app'
 import { execFile } from 'child_process'
 import { promisify } from 'util'
-import { loadServiceAuthSecret, saveServiceAuthSecret, type ServiceAuthSecret } from './auth-store'
+import {
+  deleteServiceAuthSecret,
+  loadServiceAuthSecret,
+  type ServiceAuthSecret
+} from './auth-store'
 import {
   getCurrentUserSid,
   getMacosManagedServiceStatus,
@@ -85,8 +94,6 @@ async function loadServiceAuthFromLegacyConfig(): Promise<ServiceAuthSecret | nu
     return null
   }
 
-  await saveServiceAuthSecret(legacySecret)
-  await clearLegacyServiceAuth()
   return legacySecret
 }
 
@@ -107,36 +114,21 @@ async function loadAvailableServiceAuth(): Promise<ServiceAuthSecret | null> {
   return await loadServiceAuthFromLegacyConfig()
 }
 
-function applyServiceAuthSecret(target: KeyManager, secret: ServiceAuthSecret | null): void {
-  target.clear()
-  if (secret) {
-    target.setKeyPair(secret.publicKey, secret.privateKey, secret.keyId)
-  }
-}
-
-function currentServiceAuthSecret(target: KeyManager): ServiceAuthSecret {
-  return {
-    keyId: target.getKeyID(),
-    publicKey: target.getPublicKey(),
-    privateKey: target.getPrivateKey()
-  }
-}
-
-async function ensurePersistedServiceAuth(target: KeyManager): Promise<ServiceAuthSecret> {
+async function ensurePersistedServiceAuth(target: KeyManager): Promise<{
+  keyId: string
+  publicKey: string
+}> {
   if (target.isInitialized()) {
-    return currentServiceAuthSecret(target)
+    return { keyId: target.getKeyID(), publicKey: target.getPublicKey() }
   }
 
-  const existingSecret = await loadAvailableServiceAuth()
-  if (existingSecret) {
-    applyServiceAuthSecret(target, existingSecret)
-    return existingSecret
-  }
-
-  const generatedKeyPair: KeyPair = target.generateKeyPair()
-  await saveServiceAuthSecret(generatedKeyPair)
+  const legacy = await loadAvailableServiceAuth()
+  const identity = await openNativeServiceIdentity(serviceIdentityFallbackPath(), legacy ?? undefined)
+  target.setIdentity(identity)
+  await appendAppLog(`[Service]: service identity backend: ${target.getBackend()}\n`)
+  await deleteServiceAuthSecret()
   await clearLegacyServiceAuth()
-  return generatedKeyPair
+  return { keyId: target.getKeyID(), publicKey: target.getPublicKey() }
 }
 
 export async function initKeyManager(): Promise<KeyManager> {

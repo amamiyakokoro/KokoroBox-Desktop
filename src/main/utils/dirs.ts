@@ -131,6 +131,10 @@ export function serviceAuthStorePath(): string {
   return path.join(dataDir(), 'service-auth.json')
 }
 
+export function serviceIdentityFallbackPath(): string {
+  return path.join(dataDir(), 'service-identity.native')
+}
+
 export function kokoroAuthStorePath(): string {
   return path.join(dataDir(), 'kokoro-auth.json')
 }

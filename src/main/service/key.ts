@@ -1,10 +1,29 @@
 import { tr } from '../../shared/i18n'
 import crypto from 'crypto'
+import * as native from 'kokorobox-native'
 
 export interface KeyPair {
   keyId: string
   publicKey: string
   privateKey: string
+}
+
+export interface ServiceIdentityInfo {
+  keyId: string
+  publicKey: string
+  backend: string
+}
+
+interface NativeServiceIdentity {
+  getInfo(): ServiceIdentityInfo
+  sign(data: string): string
+}
+
+interface NativeIdentityAPI {
+  openServiceIdentity(
+    options: { service: string; account: string; linuxFallbackPath?: string },
+    legacy?: KeyPair
+  ): Promise<NativeServiceIdentity>
 }
 
 function invalidServiceAuthKey(): Error {
@@ -91,90 +110,69 @@ export function validateKeyPair(publicKey: string, privateKey: string, keyId?: s
 }
 
 export class KeyManager {
-  private keyId: string | null = null
-  private publicKey: string | null = null
-  private privateKey: string | null = null
+  private identity: NativeServiceIdentity | null = null
+  private info: ServiceIdentityInfo | null = null
 
-  generateKeyPair(): KeyPair {
-    const { publicKey: pubKeyObject, privateKey: privKeyPem } = crypto.generateKeyPairSync(
-      'ed25519',
-      {
-        publicKeyEncoding: {
-          type: 'spki',
-          format: 'pem'
-        },
-        privateKeyEncoding: {
-          type: 'pkcs8',
-          format: 'pem'
-        }
-      }
-    )
-
-    const pubKeyPem = pubKeyObject as string
-    const publicKey = pubKeyPem
-      .replace('-----BEGIN PUBLIC KEY-----', '')
-      .replace('-----END PUBLIC KEY-----', '')
-      .replace(/[\n\r\s]/g, '')
-
-    const keyPair = validateKeyPair(publicKey, privKeyPem)
-    this.keyId = keyPair.keyId
-    this.publicKey = keyPair.publicKey
-    this.privateKey = keyPair.privateKey
-
-    return keyPair
-  }
-
-  setKeyPair(publicKey: string, privateKey: string, keyId?: string): void {
-    const keyPair = validateKeyPair(publicKey, privateKey, keyId)
-    this.keyId = keyPair.keyId
-    this.publicKey = keyPair.publicKey
-    this.privateKey = keyPair.privateKey
+  setIdentity(identity: NativeServiceIdentity): void {
+    this.identity = identity
+    this.info = identity.getInfo()
   }
 
   getKeyID(): string {
-    if (!this.keyId) {
+    if (!this.info) {
       throw new Error(tr('Key ID is not initialized'))
     }
-    return this.keyId
+    return this.info.keyId
   }
 
   getPublicKey(): string {
-    if (!this.publicKey) {
+    if (!this.info) {
       throw new Error(tr('Public key is not initialized'))
     }
-    return this.publicKey
+    return this.info.publicKey
   }
 
-  getPrivateKey(): string {
-    if (!this.privateKey) {
-      throw new Error(tr('Private key is not initialized'))
+  getBackend(): string {
+    if (!this.info) {
+      throw new Error(tr('Key ID is not initialized'))
     }
-    return this.privateKey
+    return this.info.backend
   }
 
   signData(data: string): string {
-    if (!this.privateKey) {
+    if (!this.identity) {
       throw new Error(tr('Private key is not initialized'))
     }
 
-    return signData(this.privateKey, data)
+    return this.identity.sign(data)
   }
 
   isInitialized(): boolean {
-    return (
-      this.keyId !== null &&
-      this.publicKey !== null &&
-      this.privateKey !== null &&
-      this.publicKey.trim() !== '' &&
-      this.privateKey.trim() !== ''
-    )
+    return this.identity !== null && this.info !== null
   }
 
   clear(): void {
-    this.keyId = null
-    this.publicKey = null
-    this.privateKey = null
+    this.identity = null
+    this.info = null
   }
+}
+
+export async function openNativeServiceIdentity(
+  linuxFallbackPath: string,
+  legacy?: KeyPair
+): Promise<NativeServiceIdentity> {
+  const api = native as unknown as Partial<NativeIdentityAPI>
+  if (!api.openServiceIdentity) {
+    throw new Error('Installed kokorobox-native does not include secure service identity')
+  }
+  return await api.openServiceIdentity(
+    {
+      service: 'com.amamiyakokoro.KokoroBox',
+      account: 'desktop-service-auth',
+      linuxFallbackPath
+    },
+    legacy
+  )
 }
 
 export function computeKeyId(publicKey: string): string {
@@ -183,8 +181,11 @@ export function computeKeyId(publicKey: string): string {
 }
 
 export function generateKeyPair(): KeyPair {
-  const manager = new KeyManager()
-  return manager.generateKeyPair()
+  const { publicKey, privateKey } = crypto.generateKeyPairSync('ed25519', {
+    publicKeyEncoding: { type: 'spki', format: 'der' },
+    privateKeyEncoding: { type: 'pkcs8', format: 'pem' }
+  })
+  return validateKeyPair(publicKey.toString('base64'), privateKey)
 }
 
 export function signData(privateKey: string, data: string): string {
