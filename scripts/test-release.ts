@@ -283,14 +283,17 @@ test('stable Mihomo builds pin the requested release', () => {
 test('platform discovery and core permissions use constrained native APIs', () => {
   const permission = readFileSync('src/main/core/permission.ts', 'utf8')
   const permissionCheck = readFileSync('src/main/core/permission-check.ts', 'utf8')
+  const networkContext = readFileSync('src/main/sys/network-context.ts', 'utf8')
   const network = readFileSync('src/main/core/network.ts', 'utf8')
   const ssid = readFileSync('src/main/sys/ssid.ts', 'utf8')
 
   assert.match(permission, /setCorePrivileges/)
   assert.match(permissionCheck, /getCorePrivilegeStatus/)
   assert.doesNotMatch(permission, /(?:pkexec|osascript|bash\s+-c|chmod|chown)/)
-  assert.match(network, /getNetworkContext/)
-  assert.match(ssid, /getNetworkContext/)
+  assert.match(networkContext, /native\.getNetworkContext/)
+  assert.match(networkContext, /waitForNetworkContextChange/)
+  assert.match(network, /(?:read|observe)NetworkContext/)
+  assert.match(ssid, /(?:read|observe)NetworkContext/)
   assert.doesNotMatch(ssid, /(?:netsh|iwconfig|airport\s+-I)/)
 })
 
