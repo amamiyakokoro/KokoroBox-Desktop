@@ -1,12 +1,10 @@
 import { execFile } from 'child_process'
-import { net } from 'electron'
-import os from 'os'
 import { promisify } from 'util'
-import { getNetworkContext } from 'kokorobox-native'
-import { getAppConfig, getControledMihomoConfig, patchAppConfig } from '../config'
+import { getAppConfig, patchAppConfig } from '../config'
 import { setSysDns } from '../service/api'
 import { triggerSysProxy } from '../sys/sysproxy'
 import { appendAppLog } from '../utils/log'
+import { observeNetworkContext, readNetworkContext } from '../sys/network-context'
 
 export interface NetworkCoreController {
   shouldStartCore: (networkDownHandled: boolean) => boolean
@@ -16,18 +14,18 @@ export interface NetworkCoreController {
 
 let setPublicDNSTimer: NodeJS.Timeout | null = null
 let recoverDNSTimer: NodeJS.Timeout | null = null
-let networkDetectionTimer: NodeJS.Timeout | null = null
+let stopNetworkContextObserver: (() => void) | null = null
 let networkDetectionGeneration = 0
 let networkDownHandled = false
 
 async function getDefaultService(): Promise<string> {
-  const { defaultService } = await getNetworkContext()
+  const { defaultService } = await readNetworkContext()
   if (!defaultService) throw new Error('Get network service failed')
   return defaultService
 }
 
 async function getOriginDNS(): Promise<void> {
-  const { dnsServers } = await getNetworkContext()
+  const { dnsServers } = await readNetworkContext()
   await patchAppConfig({ originDNS: dnsServers.length > 0 ? dnsServers.join(' ') : 'Empty' })
 }
 
@@ -47,7 +45,7 @@ async function setDNS(dns: string, mode: 'none' | 'exec' | 'service'): Promise<v
 
 export async function setPublicDNS(): Promise<void> {
   if (process.platform !== 'darwin') return
-  if (net.isOnline()) {
+  if ((await readNetworkContext()).online) {
     const { originDNS, autoSetDNSMode = 'none' } = await getAppConfig()
     if (!originDNS) {
       await getOriginDNS()
@@ -61,7 +59,7 @@ export async function setPublicDNS(): Promise<void> {
 
 export async function recoverDNS(): Promise<void> {
   if (process.platform !== 'darwin') return
-  if (net.isOnline()) {
+  if ((await readNetworkContext()).online) {
     const { originDNS, autoSetDNSMode = 'none' } = await getAppConfig()
     if (originDNS) {
       await setDNS(originDNS, autoSetDNSMode)
@@ -78,24 +76,16 @@ export async function startNetworkDetectionController(
 ): Promise<void> {
   const generation = ++networkDetectionGeneration
   let detecting = false
-  const { networkDetectionBypass = [], networkDetectionInterval = 10 } = await getAppConfig()
-  const { tun: { device = process.platform === 'darwin' ? undefined : 'mihomo' } = {} } =
-    await getControledMihomoConfig()
   if (generation !== networkDetectionGeneration) return
-  if (networkDetectionTimer) {
-    clearInterval(networkDetectionTimer)
-  }
-  const extendedBypass = networkDetectionBypass.concat(
-    [device, 'lo', 'docker0', 'utun'].filter((item): item is string => item !== undefined)
-  )
+  stopNetworkContextObserver?.()
 
-  networkDetectionTimer = setInterval(async () => {
+  const handleNetworkContext = async (context: { online: boolean }): Promise<void> => {
     if (detecting || generation !== networkDetectionGeneration) return
     detecting = true
     try {
       const { onlyActiveDevice = false, sysProxy = { enable: false } } = await getAppConfig()
       if (generation !== networkDetectionGeneration) return
-      if (isAnyNetworkInterfaceUp(extendedBypass) && net.isOnline()) {
+      if (context.online) {
         if (controller.shouldStartCore(networkDownHandled)) {
           await controller.startCore()
           if (generation !== networkDetectionGeneration) return
@@ -115,24 +105,13 @@ export async function startNetworkDetectionController(
     } finally {
       detecting = false
     }
-  }, networkDetectionInterval * 1000)
+  }
+
+  stopNetworkContextObserver = observeNetworkContext(handleNetworkContext)
 }
 
 export function stopNetworkDetection(): void {
   networkDetectionGeneration++
-  if (networkDetectionTimer) {
-    clearInterval(networkDetectionTimer)
-    networkDetectionTimer = null
-  }
-}
-
-function isAnyNetworkInterfaceUp(excludedKeywords: string[] = []): boolean {
-  const interfaces = os.networkInterfaces()
-  return Object.entries(interfaces).some(([name, ifaces]) => {
-    if (excludedKeywords.some((keyword) => name.includes(keyword))) return false
-
-    return ifaces?.some((iface) => {
-      return !iface.internal && (iface.family === 'IPv4' || iface.family === 'IPv6')
-    })
-  })
+  stopNetworkContextObserver?.()
+  stopNetworkContextObserver = null
 }
