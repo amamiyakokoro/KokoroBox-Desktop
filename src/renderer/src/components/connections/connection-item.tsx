@@ -5,6 +5,7 @@ import { calcTraffic } from '@renderer/utils/calc'
 import dayjs from 'dayjs'
 import React, { memo, useCallback, useEffect, useMemo, useState } from 'react'
 import { CgClose, CgTrash } from 'react-icons/cg'
+import { connectionIdentityLabel } from './connection-identity'
 
 interface Props {
   index: number
@@ -31,8 +32,14 @@ const ConnectionItemComponent: React.FC<Props> = ({
   setIsDetailModalOpen
 }) => {
   const fallbackProcessName = useMemo(
-    () => info.metadata.process?.replace(/\.exe$/, '') || info.metadata.sourceIP,
-    [info.metadata.process, info.metadata.sourceIP]
+    () => connectionIdentityLabel(info, tr('Application routing')).replace(/\.exe$/, ''),
+    [
+      info.metadata.process,
+      info.metadata.sourceIP,
+      info.metadata.inboundName,
+      info.metadata.inboundPort,
+      info.metadata.type
+    ]
   )
   const processName = displayName || fallbackProcessName
 
