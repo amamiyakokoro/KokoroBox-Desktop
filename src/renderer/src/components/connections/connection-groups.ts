@@ -1,3 +1,10 @@
+import { tr } from '../../../../shared/i18n'
+import {
+  connectionIdentityKey,
+  connectionIdentityLabel,
+  isAppRoutingConnection
+} from './connection-identity'
+
 export type ConnectionGroupSort =
   'name' | 'count' | 'upload' | 'download' | 'uploadSpeed' | 'downloadSpeed'
 
@@ -7,6 +14,7 @@ export interface ConnectionGroup {
   process: string
   processPath: string
   sourceIP: string
+  isAppRouting: boolean
   count: number
   upload: number
   download: number
@@ -16,8 +24,7 @@ export interface ConnectionGroup {
 }
 
 export function groupKey(conn: ControllerConnectionDetail): string {
-  const process = conn.metadata.process || ''
-  return process !== '' ? process : conn.metadata.sourceIP || ''
+  return connectionIdentityKey(conn)
 }
 
 export function buildConnectionGroups(
@@ -34,10 +41,11 @@ export function buildConnectionGroups(
     if (!group) {
       group = {
         key,
-        label: process !== '' ? process : conn.metadata.sourceIP || '',
+        label: connectionIdentityLabel(conn, tr('Application routing')),
         process,
         processPath: conn.metadata.processPath || '',
         sourceIP: conn.metadata.sourceIP || '',
+        isAppRouting: isAppRoutingConnection(conn),
         count: 0,
         upload: 0,
         download: 0,

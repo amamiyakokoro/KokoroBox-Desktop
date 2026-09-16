@@ -47,6 +47,12 @@ import {
   validateServiceProcessRouterStatus
 } from '../src/main/app-routing/service-protocol'
 import {
+  appRoutingGroupKey,
+  connectionIdentityKey,
+  connectionIdentityLabel,
+  isAppRoutingConnection
+} from '../src/renderer/src/components/connections/connection-identity'
+import {
   buildMacAppRoutingConfiguration,
   macAppRoutingOperatingSystemSupported
 } from '../src/main/app-routing/macos-profile'
@@ -64,6 +70,63 @@ function rule(overrides: Partial<AppRoutingRule> = {}): AppRoutingRule {
     ...overrides
   }
 }
+
+test('gives application-routing connections a stable cross-privilege display identity', () => {
+  const serviceConnection = {
+    metadata: {
+      process: '',
+      sourceIP: '127.0.0.1',
+      inboundName: 'kokorobox-app-routing',
+      inboundPort: '7891',
+      type: 'Socks5'
+    }
+  }
+  assert.equal(isAppRoutingConnection(serviceConnection), true)
+  assert.equal(connectionIdentityKey(serviceConnection), appRoutingGroupKey)
+  assert.equal(
+    connectionIdentityLabel(serviceConnection, 'Application routing'),
+    'Application routing'
+  )
+
+  const legacyConnection = {
+    metadata: {
+      process: '',
+      sourceIP: '::1',
+      inboundName: '',
+      inboundPort: '7891',
+      type: 'Socks5'
+    }
+  }
+  assert.equal(isAppRoutingConnection(legacyConnection), true)
+
+  const ordinaryLoopbackConnection = {
+    metadata: {
+      process: '',
+      sourceIP: '127.0.0.1',
+      inboundName: '',
+      inboundPort: '7890',
+      type: 'Socks5'
+    }
+  }
+  assert.equal(isAppRoutingConnection(ordinaryLoopbackConnection), false)
+  assert.equal(connectionIdentityKey(ordinaryLoopbackConnection), '127.0.0.1')
+
+  const resolvedConnection = {
+    metadata: {
+      process: 'kokorobox-process-router.exe',
+      sourceIP: '127.0.0.1',
+      inboundName: 'kokorobox-app-routing',
+      inboundPort: '7891',
+      type: 'Socks5'
+    }
+  }
+  assert.equal(isAppRoutingConnection(resolvedConnection), true)
+  assert.equal(connectionIdentityKey(resolvedConnection), appRoutingGroupKey)
+  assert.equal(
+    connectionIdentityLabel(resolvedConnection, 'Application routing'),
+    'Application routing'
+  )
+})
 
 test('application routing supports Windows x64, macOS, and Linux desktop architectures', () => {
   assert.equal(appRoutingSupported('win32', 'x64'), true)

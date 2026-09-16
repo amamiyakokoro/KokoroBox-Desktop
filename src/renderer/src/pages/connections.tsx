@@ -24,6 +24,11 @@ import {
   buildConnectionGroups,
   type ConnectionGroup
 } from '@renderer/components/connections/connection-groups'
+import {
+  connectionIdentityLabel,
+  isAppRoutingConnection
+} from '@renderer/components/connections/connection-identity'
+import appRoutingDefaultIcon from '../../../../resources/app-routing-default-icon.svg?url'
 import { CgClose, CgTrash } from 'react-icons/cg'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { includesIgnoreCase } from '@renderer/utils/includes'
@@ -111,6 +116,8 @@ const Connections: React.FC = () => {
           connection.metadata.host,
           connection.metadata.destinationIP,
           connection.metadata.sourceIP,
+          connection.metadata.inboundName,
+          connectionIdentityLabel(connection, tr('Application routing')),
           connection.chains?.[0],
           connection.rule,
           connection.rulePayload
@@ -744,10 +751,15 @@ const Connections: React.FC = () => {
     (i: number, connection: ControllerConnectionDetail) => {
       if (!connection) return <div style={{ minHeight: 80 }} />
       const path = connection.metadata.processPath || ''
-      const iconUrl = (displayIcon && findProcessMode !== 'off' && iconMap[path]) || ''
+      const isAppRouting = isAppRoutingConnection(connection)
+      const iconUrl =
+        (displayIcon &&
+          findProcessMode !== 'off' &&
+          (isAppRouting ? appRoutingDefaultIcon : iconMap[path])) ||
+        ''
       const itemKey = i === 0 ? `${connection.id}-${firstItemRefreshTrigger}` : connection.id
       const displayName =
-        displayAppName && connection.metadata.processPath
+        !isAppRouting && displayAppName && connection.metadata.processPath
           ? appNameCache[connection.metadata.processPath]
           : undefined
 
@@ -847,9 +859,14 @@ const Connections: React.FC = () => {
       if (!group) return <div>Never See This</div>
       const path = group.processPath || ''
       const showIcon = displayIconRef.current && findProcessModeRef.current !== 'off'
-      const iconUrl = (showIcon && iconMapRefStable.current[path]) || ''
+      const iconUrl =
+        (showIcon &&
+          (group.isAppRouting ? appRoutingDefaultIcon : iconMapRefStable.current[path])) ||
+        ''
       const displayName =
-        displayAppNameRef.current && path ? appNameCacheRefStable.current[path] : undefined
+        !group.isAppRouting && displayAppNameRef.current && path
+          ? appNameCacheRefStable.current[path]
+          : undefined
 
       return (
         <ConnectionGroupHeader
