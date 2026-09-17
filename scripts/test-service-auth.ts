@@ -251,7 +251,10 @@ test('macOS privileged core features fail closed through the service boundary', 
   const coreManagerSource = readFileSync(resolve('src/main/core/manager.ts'), 'utf8')
   const runtimeSource = readFileSync(resolve('src/main/core/service-core-runtime.ts'), 'utf8')
   const permissionSource = readFileSync(resolve('src/main/core/permission.ts'), 'utf8')
-  const settingsSource = readFileSync(resolve('src/renderer/src/pages/mihomo.tsx'), 'utf8')
+  const settingsSource = readFileSync(
+    resolve('src/renderer/src/components/settings/core-runtime-config.tsx'),
+    'utf8'
+  )
 
   assert.match(
     coreManagerSource,
