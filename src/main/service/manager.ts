@@ -39,6 +39,7 @@ import { existsSync } from 'fs'
 import { appendAppLog } from '../utils/log'
 let keyManager: KeyManager | null = null
 let macOSServiceRecoveryPromise: Promise<void> | undefined
+let pendingLegacyServiceAuthCleanup = false
 const execFilePromise = promisify(execFile)
 const MACOS_SERVICE_PLIST_NAME = 'KokoroBoxService.plist'
 
@@ -123,12 +124,29 @@ async function ensurePersistedServiceAuth(target: KeyManager): Promise<{
   }
 
   const legacy = await loadAvailableServiceAuth()
-  const identity = await openNativeServiceIdentity(serviceIdentityFallbackPath(), legacy ?? undefined)
+  const identity = await openNativeServiceIdentity(
+    serviceIdentityFallbackPath(),
+    legacy ?? undefined
+  )
   target.setIdentity(identity)
   await appendAppLog(`[Service]: service identity backend: ${target.getBackend()}\n`)
-  await deleteServiceAuthSecret()
-  await clearLegacyServiceAuth()
+  // Keep the migration source until the service has accepted an authenticated
+  // request signed by this identity. Otherwise an interrupted upgrade can
+  // strand the service on its old public key with no way to recover it.
+  pendingLegacyServiceAuthCleanup = legacy !== null
   return { keyId: target.getKeyID(), publicKey: target.getPublicKey() }
+}
+
+async function finalizeServiceAuthMigration(): Promise<void> {
+  if (!pendingLegacyServiceAuthCleanup) return
+  try {
+    await clearLegacyServiceAuth()
+    await deleteServiceAuthSecret()
+    pendingLegacyServiceAuthCleanup = false
+    await appendAppLog('[Service]: legacy service identity migration finalized\n')
+  } catch (error) {
+    await appendAppLog(`[Service]: legacy service identity cleanup deferred, ${error}\n`)
+  }
 }
 
 export async function initKeyManager(): Promise<KeyManager> {
@@ -321,6 +339,7 @@ export async function initService(allowInteractiveRecovery = false): Promise<voi
               ...principalArgs
             ])
             await waitForServiceReady()
+            await finalizeServiceAuthMigration()
             return
           }
           if (!isServiceConnectionError(error) || Date.now() - startedAt >= 15000) {
@@ -330,6 +349,7 @@ export async function initService(allowInteractiveRecovery = false): Promise<voi
         }
       }
       await waitForServiceReady()
+      await finalizeServiceAuthMigration()
       return
     }
 
@@ -349,6 +369,7 @@ export async function initService(allowInteractiveRecovery = false): Promise<voi
   }
 
   await waitForServiceReady()
+  await finalizeServiceAuthMigration()
 }
 
 export async function installService(): Promise<void> {
@@ -499,6 +520,7 @@ export async function serviceStatus(): Promise<
     await ping()
     try {
       await test()
+      await finalizeServiceAuthMigration()
       return 'running'
     } catch (error) {
       if (isServiceAuthenticationStateError(error)) return 'need-init'
@@ -528,6 +550,7 @@ export function openServiceSystemSettings(): void {
 export async function testServiceConnection(): Promise<boolean> {
   try {
     await test()
+    await finalizeServiceAuthMigration()
     return true
   } catch {
     return false

@@ -991,10 +991,16 @@ test('Windows application routing requires the privileged firewall lifecycle', (
   assert.doesNotMatch(settingsDrawer, /7891/)
   assert.match(manager, /message\.toLowerCase\(\)\.includes\('service is not initialized'\)/)
   assert.match(manager, /KokoroBox Service 尚未初始化，请初始化服务后重试/)
+  assert.match(manager, /serviceAuthenticationBlocked = true/)
+  assert.match(
+    manager,
+    /isServiceAuthenticationError\(error\)[\s\S]*serviceStopped = true[\s\S]*servicePolicyKey = ''[\s\S]*return/
+  )
   const page = readFileSync('src/renderer/src/pages/app-routing.tsx', 'utf8')
   assert.match(page, /prepareWindowsService = async/)
   assert.match(page, /nextStatus === 'not-installed'[\s\S]*await installService\(\)/)
   assert.match(page, /nextStatus !== 'running'[\s\S]*await initService\(\)/)
+  assert.match(page, /status\.message === 'KokoroBox Service 认证已失效，请在内核设置中重置认证'/)
   assert.match(page, /Initialize service and retry/)
   assert.match(serviceProtocol, /typeof value\.firewall_ready !== 'boolean'/)
   assert.match(serviceProtocol, /application routing without firewall protection/)

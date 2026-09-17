@@ -150,6 +150,7 @@ import {
   startKokoroLogin
 } from '../kokoro/client'
 import { registerAppRoutingIpcHandlers } from '../app-routing/ipc'
+import { resumeAppRoutingAfterServiceInitialization } from '../app-routing/manager'
 
 function ipcErrorWrapper<T>( // eslint-disable-next-line @typescript-eslint/no-explicit-any
   fn: (...args: any[]) => T | Promise<T> // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -369,7 +370,12 @@ export function registerIpcMainHandlers(): void {
   // Only an explicit renderer action may authorize replacement of stale
   // service credentials. Automatic startup recovery calls initService()
   // directly and therefore never opens an administrator prompt.
-  ipcMain.handle('initService', () => ipcErrorWrapper(initService)(true))
+  ipcMain.handle('initService', () =>
+    ipcErrorWrapper(async () => {
+      await initService(true)
+      resumeAppRoutingAfterServiceInitialization()
+    })()
+  )
   if (!systemCoreOnlyBuild) {
     ipcMain.handle('installService', () => ipcErrorWrapper(installService)())
     ipcMain.handle('uninstallService', () => ipcErrorWrapper(uninstallService)())

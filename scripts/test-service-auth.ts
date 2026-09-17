@@ -3,12 +3,7 @@ import crypto from 'node:crypto'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { test } from 'node:test'
-import {
-  computeKeyId,
-  generateKeyPair,
-  signData,
-  validateKeyPair
-} from '../src/main/service/key'
+import { computeKeyId, generateKeyPair, signData, validateKeyPair } from '../src/main/service/key'
 import { parseServiceLog } from '../src/main/service/log-parser'
 
 function publicKeyObject(publicKey: string): crypto.KeyObject {
@@ -83,11 +78,20 @@ test('startup migrates legacy authentication into an opaque native signer', () =
     /const nextKeyManager = new KeyManager\(\)[\s\S]*await ensurePersistedServiceAuth\(nextKeyManager\)/
   )
   assert.match(storeSource, /return validateKeyPair\(/)
-  assert.match(managerSource, /openNativeServiceIdentity\(serviceIdentityFallbackPath\(\)/)
-  assert.match(managerSource, /await deleteServiceAuthSecret\(\)/)
+  assert.match(managerSource, /openNativeServiceIdentity\(\s*serviceIdentityFallbackPath\(\)/)
+  assert.match(
+    managerSource,
+    /pendingLegacyServiceAuthCleanup = legacy !== null[\s\S]*async function finalizeServiceAuthMigration[\s\S]*await clearLegacyServiceAuth\(\)[\s\S]*await deleteServiceAuthSecret\(\)/
+  )
+  assert.match(
+    managerSource,
+    /await test\(\)[\s\S]*await finalizeServiceAuthMigration\(\)[\s\S]*return true/
+  )
   assert.doesNotMatch(managerSource, /getPrivateKey\(/)
   assert.doesNotMatch(storeSource, /writeFile\(/)
-  assert.match(routingSource, /\[401, 403, 409\]/)
+  assert.match(routingSource, /\[401, 403, 409, 503\]/)
+  assert.match(routingSource, /if \(serviceAuthenticationBlocked\)/)
+  assert.match(routingSource, /resumeAppRoutingAfterServiceInitialization/)
   assert.match(routingSource, /重置认证/)
 })
 
@@ -192,7 +196,10 @@ test('macOS registers the bundled daemon through SMAppService', () => {
     initSource,
     /status === 409[\s\S]*?!allowInteractiveRecovery[\s\S]*?execWithElevation\(execPath, \[[\s\S]*?'service',[\s\S]*?'init'/
   )
-  assert.match(ipcSource, /ipcErrorWrapper\(initService\)\(true\)/)
+  assert.match(
+    ipcSource,
+    /await initService\(true\)[\s\S]*resumeAppRoutingAfterServiceInitialization\(\)/
+  )
   assert.doesNotMatch(initSource, /'--ensure-running'/)
   const bootstrapApiSource = apiSource.slice(
     apiSource.indexOf('export const bootstrapMacOSServiceAuth'),

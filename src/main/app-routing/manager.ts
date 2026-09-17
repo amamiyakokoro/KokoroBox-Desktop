@@ -57,6 +57,7 @@ let configGeneration = 0
 let activeBackend: 'direct' | 'service' | undefined
 let servicePolicyKey = ''
 let serviceStopped = false
+let serviceAuthenticationBlocked = false
 let directFirewallReady = false
 let lastDirectFirewallCheck = 0
 let status: AppRoutingStatus = {
@@ -139,7 +140,19 @@ function serviceModeError(error: unknown): Error {
   return error instanceof Error ? error : new Error(String(error))
 }
 
+function isServiceAuthenticationError(error: unknown): boolean {
+  const message = error instanceof Error ? error.message.toLowerCase() : String(error).toLowerCase()
+  return (
+    (error instanceof ServiceAPIError && [401, 403, 409, 503].includes(error.status || 0)) ||
+    message.includes('key id is not registered') ||
+    message.includes('service is not initialized')
+  )
+}
+
 async function reconcileService(config: AppRoutingConfig): Promise<void> {
+  if (serviceAuthenticationBlocked) {
+    throw new Error('KokoroBox Service 认证已失效，请在内核设置中重置认证')
+  }
   if (activeBackend === 'direct') await stopDirectRouter()
   else await stopChild()
   const policyKey = String(configGeneration)
@@ -169,6 +182,7 @@ async function reconcileService(config: AppRoutingConfig): Promise<void> {
       }
     }
   } catch (error) {
+    if (isServiceAuthenticationError(error)) serviceAuthenticationBlocked = true
     throw serviceModeError(error)
   }
   publishServiceStatus(serviceStatus)
@@ -179,6 +193,12 @@ async function disableServiceRouter(allowUnavailable = false): Promise<void> {
   try {
     await stopProcessRouter()
   } catch (error) {
+    if (isServiceAuthenticationError(error)) {
+      serviceAuthenticationBlocked = true
+      serviceStopped = true
+      servicePolicyKey = ''
+      return
+    }
     if (
       !(error instanceof ServiceAPIError && [404, 501].includes(error.status || 0)) &&
       !(allowUnavailable && isServiceConnectionError(error))
@@ -579,6 +599,13 @@ export async function replaceAppRoutingConfig(config: AppRoutingConfig): Promise
 
 export function getAppRoutingStatus(): AppRoutingStatus {
   return { ...status }
+}
+
+export function resumeAppRoutingAfterServiceInitialization(): void {
+  serviceAuthenticationBlocked = false
+  serviceStopped = false
+  servicePolicyKey = ''
+  void reconcileAppRouting()
 }
 
 export async function repairAppRoutingFirewall(): Promise<AppRoutingStatus> {

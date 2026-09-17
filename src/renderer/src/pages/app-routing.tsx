@@ -226,7 +226,8 @@ const AppRouting: React.FC = () => {
     isWindows &&
     config?.enabled &&
     status?.state === 'error' &&
-    (status.message === 'KokoroBox Service 尚未初始化，请初始化服务后重试' ||
+    (status.message === 'KokoroBox Service 认证已失效，请在内核设置中重置认证' ||
+      status.message === 'KokoroBox Service 尚未初始化，请初始化服务后重试' ||
       status.message === 'Windows 应用分流需要已安装、初始化并运行 KokoroBox Service' ||
       status.message?.toLowerCase().includes('service is not initialized'))
   const displayedProxyPort = status?.proxyPort ?? (isLinux ? 7894 : 7891)
