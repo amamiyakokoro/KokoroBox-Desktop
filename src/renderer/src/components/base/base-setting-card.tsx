@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { createContext, useContext } from 'react'
 import { Accordion, AccordionItem, Card, CardBody } from '@heroui/react'
 
 interface Props {
@@ -7,8 +7,26 @@ interface Props {
   className?: string
 }
 
+const SettingCardCollapsibleContext = createContext(true)
+
+export const SettingCardModeProvider = SettingCardCollapsibleContext.Provider
+
 const SettingCard: React.FC<Props> = (props) => {
   const { header, children, className } = props
+  const collapsible = useContext(SettingCardCollapsibleContext)
+
+  if (!collapsible) {
+    return (
+      <section className={`${className || ''} settings-section px-3 py-3`}>
+        {header && (
+          <h2 className="px-1 pb-2 text-sm font-semibold tracking-wide text-foreground-500">
+            {header}
+          </h2>
+        )}
+        <div className="border-y border-divider px-1 py-2">{children}</div>
+      </section>
+    )
+  }
 
   return !header ? (
     <Card className={`${className || ''} m-2`}>

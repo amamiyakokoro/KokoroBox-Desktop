@@ -1,6 +1,10 @@
 import { cn, Divider } from '@heroui/react'
 
-import React from 'react'
+import React, { createContext, useContext } from 'react'
+
+const SettingItemLegacyContext = createContext(true)
+
+export const SettingItemModeProvider = SettingItemLegacyContext.Provider
 
 export interface SettingItemProps {
   title: React.ReactNode
@@ -24,13 +28,14 @@ const SettingItem: React.FC<SettingItemProps> = (props) => {
     variant = 'default',
     contentAlign = 'start'
   } = props
+  const legacyMode = useContext(SettingItemLegacyContext)
   const isCompact = variant === 'compact'
   const hasTitle = title !== null && title !== undefined && title !== false
   const isTitleless = !hasTitle && !actions
 
   return (
     <>
-      {compatKey ? (
+      {compatKey && legacyMode ? (
         <div className="setting-item-legacy select-text h-8 w-full flex justify-between">
           <div className="h-full flex items-center">
             <h4 className="h-full text-md leading-8 whitespace-nowrap">{title}</h4>

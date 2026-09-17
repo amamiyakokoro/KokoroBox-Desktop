@@ -1,23 +1,19 @@
 import { tr } from '../../../../shared/i18n'
 import { useEffect, useState } from 'react'
-import { Button, Input, Select, SelectItem, Switch, Tooltip } from '@heroui/react'
+import { Button, Input, Switch, Tooltip } from '@heroui/react'
 import { IoIosHelpCircle } from 'react-icons/io'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
-import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'
-import { restartCore } from '@renderer/utils/ipc'
 import SettingCard from '../base/base-setting-card'
 import SettingItem from '../base/base-setting-item'
 
 const LogSetting: React.FC = () => {
   const { appConfig, patchAppConfig } = useAppConfig()
-  const { controledMihomoConfig, patchControledMihomoConfig } = useControledMihomoConfig()
   const {
     saveLogs = true,
     maxLogDays = 7,
     maxLogFileSizeMB = 20,
     maxLogEntries = 500
   } = appConfig || {}
-  const { 'log-level': logLevel = 'info' } = controledMihomoConfig || {}
 
   const [maxLogDaysInput, setMaxLogDaysInput] = useState(maxLogDays)
   const [maxLogFileSizeMBInput, setMaxLogFileSizeMBInput] = useState(maxLogFileSizeMB)
@@ -35,13 +31,8 @@ const LogSetting: React.FC = () => {
     setMaxLogEntriesInput(maxLogEntries)
   }, [maxLogEntries])
 
-  const onChangeNeedRestart = async (patch: Partial<MihomoConfig>): Promise<void> => {
-    await patchControledMihomoConfig(patch)
-    await restartCore()
-  }
-
   return (
-    <SettingCard header={tr('Log settings')}>
+    <SettingCard header={tr('Application logs')}>
       <SettingItem
         compatKey="legacy"
         title={tr('Save logs')}
@@ -149,7 +140,6 @@ const LogSetting: React.FC = () => {
             </Button>
           </Tooltip>
         }
-        divider
       >
         <div className="flex">
           {maxLogEntriesInput !== maxLogEntries && (
@@ -176,25 +166,6 @@ const LogSetting: React.FC = () => {
             }}
           />
         </div>
-      </SettingItem>
-      <SettingItem compatKey="legacy" title={tr('Log level')}>
-        <Select
-          aria-label={tr('Log level')}
-          classNames={{ trigger: 'data-[hover=true]:bg-default-200' }}
-          className="w-25"
-          size="sm"
-          selectedKeys={new Set([logLevel])}
-          disallowEmptySelection={true}
-          onSelectionChange={(value) =>
-            onChangeNeedRestart({ 'log-level': value.currentKey as LogLevel })
-          }
-        >
-          <SelectItem key="silent">silent</SelectItem>
-          <SelectItem key="error">error</SelectItem>
-          <SelectItem key="warning">warning</SelectItem>
-          <SelectItem key="info">info</SelectItem>
-          <SelectItem key="debug">debug</SelectItem>
-        </Select>
       </SettingItem>
     </SettingCard>
   )

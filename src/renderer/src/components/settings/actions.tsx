@@ -3,14 +3,14 @@ import { Button, Tooltip } from '@heroui/react'
 import SettingCard from '../base/base-setting-card'
 import SettingItem from '../base/base-setting-item'
 import {
+  cancelUpdate,
   checkUpdate,
   createHeapSnapshot,
   quitApp,
   quitWithoutCore,
-  resetAppConfig,
-  cancelUpdate
+  resetAppConfig
 } from '@renderer/utils/ipc'
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import UpdaterDrawer from '../updater/updater-drawer'
 import { version } from '@renderer/utils/init'
 import { IoIosHelpCircle } from 'react-icons/io'
@@ -40,38 +40,54 @@ const Actions: React.FC = () => {
     downloading: boolean
     progress: number
     error?: string
-  }>({
-    downloading: false,
-    progress: 0
-  })
+  }>({ downloading: false, progress: 0 })
 
   useEffect(() => {
-    const handleUpdateStatus = (
-      _: Electron.IpcRendererEvent,
-      status: typeof updateStatus
-    ): void => {
+    const handleUpdateStatus = (_: Electron.IpcRendererEvent, status: typeof updateStatus): void =>
       setUpdateStatus(status)
-    }
-
-    const unsubscribe = window.electron.ipcRenderer.on('update-status', handleUpdateStatus)
-
-    return (): void => {
-      unsubscribe()
-    }
+    return window.electron.ipcRenderer.on('update-status', handleUpdateStatus)
   }, [])
 
   const handleCancelUpdate = async (): Promise<void> => {
     try {
       await cancelUpdate()
       setUpdateStatus({ downloading: false, progress: 0 })
-    } catch (e) {
-      // ignore
+    } catch {
+      // The updater reports cancellation failures through its own status channel.
     }
   }
 
   const openUpdateDrawer = (): void => {
     setOpenUpdate(true)
     setUpdateDrawerReopenSignal((signal) => signal + 1)
+  }
+
+  const handleCheckUpdate = async (): Promise<void> => {
+    try {
+      setCheckingUpdate(true)
+      const nextVersion = await checkUpdate()
+      if (!nextVersion) {
+        notify(tr("You're up to date"), { body: tr('No update needed') })
+        return
+      }
+      setNewVersion(nextVersion.version)
+      setChangelog(nextVersion.changelog)
+      notify(tr('New version available'), {
+        actionProps: {
+          children: tr('View content'),
+          onPress: openUpdateDrawer,
+          variant: 'secondary'
+        },
+        body: tr('Version {0} is ready', [nextVersion.version]),
+        forceToast: true,
+        timeout: 8000,
+        variant: 'accent'
+      })
+    } catch (e) {
+      notify(e, { variant: 'danger' })
+    } finally {
+      setCheckingUpdate(false)
+    }
   }
 
   return (
@@ -101,63 +117,21 @@ const Actions: React.FC = () => {
           onConfirm={resetAppConfig}
         />
       )}
-      <SettingCard>
+
+      <SettingCard header={tr('Application actions')}>
         <SettingItem compatKey="legacy" title={tr('Open guided tour')} divider>
-          <Button size="sm" onPress={() => startTour(navigate)}>
+          <Button size="sm" variant="flat" onPress={() => startTour(navigate)}>
             {tr('Open guided tour')}
           </Button>
         </SettingItem>
-        <SettingItem compatKey="legacy" title={tr('Check for updates')} divider>
-          <Button
-            size="sm"
-            isLoading={checkingUpdate}
-            onPress={async () => {
-              try {
-                setCheckingUpdate(true)
-                const version = await checkUpdate()
-                if (version) {
-                  setNewVersion(version.version)
-                  setChangelog(version.changelog)
-                  notify(tr('New version available'), {
-                    actionProps: {
-                      children: tr('View content'),
-                      onPress: openUpdateDrawer,
-                      variant: 'secondary'
-                    },
-                    body: tr('Version {0} is ready', [version.version]),
-                    forceToast: true,
-                    timeout: 8000,
-                    variant: 'accent'
-                  })
-                } else {
-                  notify(tr("You're up to date"), { body: tr('No update needed') })
-                }
-              } catch (e) {
-                notify(e, { variant: 'danger' })
-              } finally {
-                setCheckingUpdate(false)
-              }
-            }}
-          >
+        <SettingItem compatKey="legacy" title={tr('Check for updates')}>
+          <Button size="sm" variant="flat" isLoading={checkingUpdate} onPress={handleCheckUpdate}>
             {tr('Check for updates')}
           </Button>
         </SettingItem>
-        <SettingItem
-          compatKey="legacy"
-          title={tr('Reset app')}
-          actions={
-            <Tooltip content={tr('Delete all configuration and reset the app')}>
-              <Button isIconOnly size="sm" variant="light">
-                <IoIosHelpCircle className="text-lg" />
-              </Button>
-            </Tooltip>
-          }
-          divider
-        >
-          <Button size="sm" onPress={() => setConfirmOpen(true)}>
-            {tr('Reset app')}
-          </Button>
-        </SettingItem>
+      </SettingCard>
+
+      <SettingCard header={tr('Diagnostics')}>
         <SettingItem
           compatKey="legacy"
           title={tr('Clear cache')}
@@ -170,7 +144,7 @@ const Actions: React.FC = () => {
           }
           divider
         >
-          <Button size="sm" onPress={() => localStorage.clear()}>
+          <Button size="sm" variant="flat" onPress={() => localStorage.clear()}>
             {tr('Clear cache')}
           </Button>
         </SettingItem>
@@ -184,10 +158,28 @@ const Actions: React.FC = () => {
               </Button>
             </Tooltip>
           }
+        >
+          <Button size="sm" variant="flat" onPress={handleCreateHeapSnapshot}>
+            {tr('Create heap snapshot')}
+          </Button>
+        </SettingItem>
+      </SettingCard>
+
+      <SettingCard header={tr('Danger zone')}>
+        <SettingItem
+          compatKey="legacy"
+          title={tr('Reset app')}
+          actions={
+            <Tooltip content={tr('Delete all configuration and reset the app')}>
+              <Button isIconOnly size="sm" variant="light">
+                <IoIosHelpCircle className="text-lg" />
+              </Button>
+            </Tooltip>
+          }
           divider
         >
-          <Button size="sm" onPress={handleCreateHeapSnapshot}>
-            {tr('Create heap snapshot')}
+          <Button size="sm" color="danger" variant="flat" onPress={() => setConfirmOpen(true)}>
+            {tr('Reset app')}
           </Button>
         </SettingItem>
         <SettingItem
@@ -202,17 +194,20 @@ const Actions: React.FC = () => {
           }
           divider
         >
-          <Button size="sm" onPress={quitWithoutCore}>
+          <Button size="sm" variant="flat" onPress={quitWithoutCore}>
             {tr('Quit')}
           </Button>
         </SettingItem>
-        <SettingItem compatKey="legacy" title={tr('Quit app')} divider>
-          <Button size="sm" onPress={quitApp}>
+        <SettingItem compatKey="legacy" title={tr('Quit app')}>
+          <Button size="sm" color="danger" variant="flat" onPress={quitApp}>
             {tr('Quit app')}
           </Button>
         </SettingItem>
+      </SettingCard>
+
+      <SettingCard header={tr('Version information')}>
         <SettingItem compatKey="legacy" title={tr('App version')}>
-          <div>v{version}</div>
+          <div className="text-sm tabular-nums text-foreground-500">v{version}</div>
         </SettingItem>
       </SettingCard>
     </>
