@@ -18,6 +18,8 @@ export const messages: Readonly<Record<string, string>> = {
   Diagnostics: 'Diagnostics',
   'Danger zone': 'Danger zone',
   'Version information': 'Version information',
+  'Search settings': 'Search settings',
+  'No settings found': 'No settings found',
   'Move KokoroBox to Applications?': 'Move KokoroBox to Applications?',
   'The system service and Network Extension require KokoroBox to run from Applications.':
     'The system service and Network Extension require KokoroBox to run from Applications.',

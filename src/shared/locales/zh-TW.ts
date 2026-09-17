@@ -18,6 +18,8 @@ export const messages: Readonly<Record<string, string>> = {
   Diagnostics: '診斷',
   'Danger zone': '危險操作',
   'Version information': '版本資訊',
+  'Search settings': '搜尋設定',
+  'No settings found': '找不到設定',
   'Move KokoroBox to Applications?': '要將 KokoroBox 移到「應用程式」資料夾嗎？',
   'The system service and Network Extension require KokoroBox to run from Applications.':
     '系統服務和網路延伸功能需要從「應用程式」資料夾執行。',

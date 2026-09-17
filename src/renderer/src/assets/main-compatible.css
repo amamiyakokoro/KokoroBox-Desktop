@@ -530,3 +530,23 @@ input[type='number'] {
   min-width: fit-content;
   padding-inline: calc(var(--spacing) * 3);
 }
+
+.settings-layout .setting-item {
+  grid-template-columns: minmax(10rem, 34%) minmax(0, 1fr);
+  padding-block: calc(var(--spacing) * 3);
+}
+
+.settings-layout .setting-item__title {
+  height: auto;
+  color: var(--foreground);
+  font-weight: 500;
+  line-height: 1.45;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.settings-layout .setting-item__content {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
