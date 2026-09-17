@@ -106,7 +106,7 @@ function statusMessage(message?: string, protectedApplicationCount = 0): string 
   }
   if (message === 'KokoroBox Service 认证已失效，请在内核设置中重置认证') {
     return tr(
-      'KokoroBox Service authentication is no longer valid. Reset authentication in Core Settings.'
+      'KokoroBox Service authentication is no longer valid. Repair the service below and try again.'
     )
   }
   if (
@@ -222,9 +222,8 @@ const AppRouting: React.FC = () => {
   const [settingDrawerReopenSignal, setSettingDrawerReopenSignal] = useState(0)
   const currentStatusMessage = statusMessage(status?.message, status?.protectedApplicationCount)
   const needsMacApproval = isMac && config?.enabled && status?.needsUserApproval === true
-  const needsWindowsServicePreparation =
+  const needsWindowsServiceRepair =
     isWindows &&
-    config?.enabled &&
     status?.state === 'error' &&
     (status.message === 'KokoroBox Service 认证已失效，请在内核设置中重置认证' ||
       status.message === 'KokoroBox Service 尚未初始化，请初始化服务后重试' ||
@@ -383,7 +382,7 @@ const AppRouting: React.FC = () => {
                   {tr('Retry')}
                 </Button>
               )}
-            {needsWindowsServicePreparation && (
+            {needsWindowsServiceRepair && (
               <Button
                 className="mt-2"
                 size="sm"
@@ -394,7 +393,7 @@ const AppRouting: React.FC = () => {
                 isDisabled={saving}
                 onPress={() => void prepareWindowsService()}
               >
-                {tr('Initialize service and retry')}
+                {tr('Repair service')}
               </Button>
             )}
             {config?.enabled && (

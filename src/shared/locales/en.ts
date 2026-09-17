@@ -173,8 +173,8 @@ export const messages: Readonly<Record<string, string>> = {
     'The application routing MVP requires KokoroBox to run as administrator',
   'The installed KokoroBox Service does not support application routing. Update or reinstall the service.':
     'The installed KokoroBox Service does not support application routing. Update or reinstall the service.',
-  'KokoroBox Service authentication is no longer valid. Reset authentication in Core Settings.':
-    'KokoroBox Service authentication is no longer valid. Reset authentication in Core Settings.',
+  'KokoroBox Service authentication is no longer valid. Repair the service below and try again.':
+    'KokoroBox Service authentication is no longer valid. Repair the service below and try again.',
   'KokoroBox Service is not initialized. Initialize the service and try again.':
     'KokoroBox Service is not initialized. Initialize the service and try again.',
   'Initialize service and retry': 'Initialize service and retry',

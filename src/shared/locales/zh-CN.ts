@@ -166,8 +166,8 @@ export const messages: Readonly<Record<string, string>> = {
     '应用分流 MVP 需要以管理员模式运行 KokoroBox',
   'The installed KokoroBox Service does not support application routing. Update or reinstall the service.':
     '当前 KokoroBox Service 不支持应用分流，请更新或重新安装服务',
-  'KokoroBox Service authentication is no longer valid. Reset authentication in Core Settings.':
-    'KokoroBox Service 认证已失效，请在内核设置中重置认证',
+  'KokoroBox Service authentication is no longer valid. Repair the service below and try again.':
+    'KokoroBox Service 认证已失效，请在下方修复服务后重试',
   'KokoroBox Service is not initialized. Initialize the service and try again.':
     'KokoroBox Service 尚未初始化，请初始化服务后重试',
   'Initialize service and retry': '初始化服务并重试',
