@@ -1,5 +1,17 @@
 // English source catalog. Keys are the canonical application-owned messages.
 export const messages: Readonly<Record<string, string>> = {
+  General: 'General',
+  'Settings categories': 'Settings categories',
+  'Core and service': 'Core and service',
+  'Core runtime': 'Core runtime',
+  'Service management': 'Service management',
+  'Backup and restore': 'Backup and restore',
+  'Maintenance and diagnostics': 'Maintenance and diagnostics',
+  'Mihomo settings': 'Mihomo settings',
+  'Developer integration': 'Developer integration',
+  'Background behavior': 'Background behavior',
+  'Environment integration': 'Environment integration',
+  'Network behavior': 'Network behavior',
   'Move KokoroBox to Applications?': 'Move KokoroBox to Applications?',
   'The system service and Network Extension require KokoroBox to run from Applications.':
     'The system service and Network Extension require KokoroBox to run from Applications.',

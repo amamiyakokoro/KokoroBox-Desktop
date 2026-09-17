@@ -1,5 +1,17 @@
 // Simplified Chinese localization. Keys are the canonical English source messages.
 export const messages: Readonly<Record<string, string>> = {
+  General: '通用',
+  'Settings categories': '设置分类',
+  'Core and service': '内核与服务',
+  'Core runtime': '内核运行',
+  'Service management': '服务管理',
+  'Backup and restore': '备份与恢复',
+  'Maintenance and diagnostics': '维护与诊断',
+  'Mihomo settings': 'Mihomo 设置',
+  'Developer integration': '开发者集成',
+  'Background behavior': '后台行为',
+  'Environment integration': '环境集成',
+  'Network behavior': '网络行为',
   'Move KokoroBox to Applications?': '将 KokoroBox 移到“应用程序”文件夹？',
   'The system service and Network Extension require KokoroBox to run from Applications.':
     '系统服务和网络扩展需要从“应用程序”文件夹运行。',
