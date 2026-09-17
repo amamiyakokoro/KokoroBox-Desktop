@@ -5,11 +5,14 @@ import SettingCard from '@renderer/components/base/base-setting-card'
 import SettingItem from '@renderer/components/base/base-setting-item'
 import EditableList from '@renderer/components/base/base-list-editor'
 import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'
+import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { restartCore } from '@renderer/utils/ipc'
 import React, { useState } from 'react'
 import { notify } from '@renderer/utils/notification'
 
 const Sniffer: React.FC = () => {
+  const { appConfig, patchAppConfig } = useAppConfig()
+  const { controlSniff = true } = appConfig || {}
   const { controledMihomoConfig, patchControledMihomoConfig } = useControledMihomoConfig()
   const { sniffer } = controledMihomoConfig || {}
   const {
@@ -109,6 +112,21 @@ const Sniffer: React.FC = () => {
       }
     >
       <SettingCard>
+        <SettingItem compatKey="legacy" title={tr('Override domain sniffing settings')} divider>
+          <Switch
+            size="sm"
+            isSelected={controlSniff}
+            onValueChange={async (value) => {
+              try {
+                await patchAppConfig({ controlSniff: value })
+                await patchControledMihomoConfig({})
+                await restartCore()
+              } catch (e) {
+                notify(e, { variant: 'danger' })
+              }
+            }}
+          />
+        </SettingItem>
         <SettingItem compatKey="legacy" title={tr('Override connection address')} divider>
           <Switch
             size="sm"

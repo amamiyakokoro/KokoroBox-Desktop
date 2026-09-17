@@ -4,13 +4,7 @@ import SettingCard from '../base/base-setting-card'
 import SettingItem from '../base/base-setting-item'
 import { Button, Input, Select, SelectItem, Switch, Tab, Tabs, Tooltip } from '@heroui/react'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
-import {
-  copyEnv,
-  patchControledMihomoConfig,
-  restartCore,
-  startNetworkDetection,
-  stopNetworkDetection
-} from '@renderer/utils/ipc'
+import { copyEnv, startNetworkDetection, stopNetworkDetection } from '@renderer/utils/ipc'
 import { platform } from '@renderer/utils/init'
 import { IoIosHelpCircle } from 'react-icons/io'
 import { BiCopy, BiHide, BiShow } from 'react-icons/bi'
@@ -22,8 +16,6 @@ const emptyArray: string[] = []
 const AdvancedSettings: React.FC = () => {
   const { appConfig, patchAppConfig } = useAppConfig()
   const {
-    controlDns = true,
-    controlSniff = true,
     pauseSSID,
     autoLightweight = false,
     autoLightweightDelay = 60,
@@ -200,36 +192,6 @@ const AdvancedSettings: React.FC = () => {
         </SettingItem>
       </SettingCard>
       <SettingCard header={tr('Network behavior')}>
-        <SettingItem compatKey="legacy" title={tr('Override DNS settings')} divider>
-          <Switch
-            size="sm"
-            isSelected={controlDns}
-            onValueChange={async (v) => {
-              try {
-                await patchAppConfig({ controlDns: v })
-                await patchControledMihomoConfig({})
-                await restartCore()
-              } catch (e) {
-                notify(e, { variant: 'danger' })
-              }
-            }}
-          />
-        </SettingItem>
-        <SettingItem compatKey="legacy" title={tr('Override domain sniffing settings')} divider>
-          <Switch
-            size="sm"
-            isSelected={controlSniff}
-            onValueChange={async (v) => {
-              try {
-                await patchAppConfig({ controlSniff: v })
-                await patchControledMihomoConfig({})
-                await restartCore()
-              } catch (e) {
-                notify(e, { variant: 'danger' })
-              }
-            }}
-          />
-        </SettingItem>
         <SettingItem
           compatKey="legacy"
           title={tr('Stop core when offline')}

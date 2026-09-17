@@ -12,6 +12,12 @@ export const messages: Readonly<Record<string, string>> = {
   'Background behavior': '后台行为',
   'Environment integration': '环境集成',
   'Network behavior': '网络行为',
+  'Application logs': '应用日志',
+  'Core logging': '内核日志',
+  'Application actions': '应用操作',
+  Diagnostics: '诊断',
+  'Danger zone': '危险操作',
+  'Version information': '版本信息',
   'Move KokoroBox to Applications?': '将 KokoroBox 移到“应用程序”文件夹？',
   'The system service and Network Extension require KokoroBox to run from Applications.':
     '系统服务和网络扩展需要从“应用程序”文件夹运行。',

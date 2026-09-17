@@ -42,7 +42,7 @@ const antiPollutionDnsPreset = {
 const DNS: React.FC = () => {
   const { controledMihomoConfig, patchControledMihomoConfig } = useControledMihomoConfig()
   const { appConfig, patchAppConfig } = useAppConfig()
-  const { hosts } = appConfig || {}
+  const { hosts, controlDns = true } = appConfig || {}
   const { dns } = controledMihomoConfig || {}
   const {
     ipv6 = false,
@@ -216,6 +216,21 @@ const DNS: React.FC = () => {
       }
     >
       <SettingCard>
+        <SettingItem compatKey="legacy" title={tr('Override DNS settings')} divider>
+          <Switch
+            size="sm"
+            isSelected={controlDns}
+            onValueChange={async (value) => {
+              try {
+                await patchAppConfig({ controlDns: value })
+                await patchControledMihomoConfig({})
+                await restartCore()
+              } catch (e) {
+                notify(e, { variant: 'danger' })
+              }
+            }}
+          />
+        </SettingItem>
         <SettingItem compatKey="legacy" title="IPv6" divider>
           <Switch
             size="sm"

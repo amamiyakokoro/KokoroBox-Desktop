@@ -7,6 +7,7 @@ import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-c
 import PortSetting from '@renderer/components/mihomo/port-setting'
 import ControllerSetting from '@renderer/components/mihomo/controller-setting'
 import AdvancedSetting from '@renderer/components/mihomo/advanced-settings'
+import CoreLogSetting from '@renderer/components/mihomo/core-log-setting'
 import { restartCore } from '@renderer/utils/ipc'
 import React from 'react'
 
@@ -32,6 +33,7 @@ const Mihomo: React.FC = () => {
       </SettingCard>
       <PortSetting />
       <ControllerSetting />
+      <CoreLogSetting />
       <AdvancedSetting />
     </BasePage>
   )
