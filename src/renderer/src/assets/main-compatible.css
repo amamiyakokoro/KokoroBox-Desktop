@@ -539,12 +539,14 @@ input[type='number'] {
   display: none;
 }
 
-.settings-layout .setting-item {
+.settings-layout .setting-item,
+.feature-settings-layout .setting-item {
   grid-template-columns: minmax(10rem, 34%) minmax(0, 1fr);
   padding-block: calc(var(--spacing) * 3);
 }
 
-.settings-layout .setting-item__title {
+.settings-layout .setting-item__title,
+.feature-settings-layout .setting-item__title {
   height: auto;
   color: var(--foreground);
   font-weight: 500;
@@ -553,7 +555,8 @@ input[type='number'] {
   overflow-wrap: anywhere;
 }
 
-.settings-layout .setting-item__content {
+.settings-layout .setting-item__content,
+.feature-settings-layout .setting-item__content {
   display: flex;
   align-items: center;
   justify-content: flex-end;

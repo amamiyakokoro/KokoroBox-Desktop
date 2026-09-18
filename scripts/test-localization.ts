@@ -289,9 +289,14 @@ test('contextual settings drawers share a sectioned shell', () => {
 test('core feature settings pages use the shared desktop layout', () => {
   const pages = ['syspeoxy', 'tun', 'dns', 'sniffer', 'mihomo']
   const layout = readFileSync('src/renderer/src/components/base/base-feature-settings.tsx', 'utf8')
+  const styles = readFileSync('src/renderer/src/assets/main-compatible.css', 'utf8')
 
   assert.match(layout, /<SettingCardModeProvider value=\{false\}>/)
   assert.match(layout, /<SettingItemModeProvider value=\{false\}>/)
+  assert.match(
+    styles,
+    /\.feature-settings-layout \.setting-item__content\s*\{[^}]*justify-content: flex-end/s
+  )
 
   for (const page of pages) {
     const source = readFileSync(`src/renderer/src/pages/${page}.tsx`, 'utf8')
