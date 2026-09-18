@@ -27,6 +27,8 @@ import EnvSetting from '../mihomo/env-setting'
 import LogSetting from '../mihomo/log-setting'
 import Sysproxy from './network/system-proxy-settings'
 import Tun from './network/tun-settings'
+import DNS from './network/dns-settings'
+import Mihomo from './network/mihomo-settings'
 
 export type SettingsCategory =
   'general' | 'appearance' | 'network' | 'core' | 'data' | 'shortcuts' | 'diagnostics'
@@ -157,6 +159,119 @@ export const getSettingsCategories = (): SettingsCategoryDefinition[] => {
         })
       ],
       content: () => <Tun embedded />
+    },
+    {
+      key: 'dns',
+      label: 'DNS',
+      entries: [
+        entry('dns-override', tr('Override DNS settings'), tr('DNS settings'), { panel: 'dns' }),
+        entry('dns-ipv6', 'IPv6', tr('DNS settings'), { panel: 'dns' }),
+        entry('dns-policy', tr('DNS policy'), tr('DNS settings'), { panel: 'dns' }),
+        entry('dns-mapping-mode', tr('Domain mapping mode'), tr('DNS settings'), { panel: 'dns' }),
+        entry('dns-fake-ip-range', tr('Fake IP range (IPv4)'), tr('Fake IP settings'), {
+          panel: 'dns'
+        }),
+        entry('dns-fake-ip-range6', tr('Fake IP range (IPv6)'), tr('Fake IP settings'), {
+          panel: 'dns'
+        }),
+        entry('dns-fake-ip-filter-mode', tr('Fake-IP filter mode'), tr('Fake IP settings'), {
+          panel: 'dns'
+        }),
+        entry('dns-fake-ip-filter', tr('Fake IP filter'), tr('Fake IP settings'), {
+          panel: 'dns'
+        }),
+        entry('dns-bootstrap-servers', tr('Bootstrap DNS servers'), tr('DNS servers'), {
+          panel: 'dns'
+        }),
+        entry('dns-default-servers', tr('Default DNS servers'), tr('DNS servers'), {
+          panel: 'dns'
+        }),
+        entry(
+          'dns-routing-rules',
+          tr('Follow routing rules for connections'),
+          tr('Advanced DNS settings'),
+          {
+            panel: 'dns'
+          }
+        ),
+        entry(
+          'dns-direct-servers',
+          tr('Direct-connection DNS servers'),
+          tr('Advanced DNS settings'),
+          {
+            panel: 'dns'
+          }
+        ),
+        entry('dns-proxy-servers', tr('Proxy DNS servers'), tr('Advanced DNS settings'), {
+          panel: 'dns'
+        }),
+        entry('dns-fallback-servers', tr('Fallback DNS servers'), tr('Advanced DNS settings'), {
+          panel: 'dns'
+        }),
+        entry('dns-cache', tr('DNS cache algorithm'), tr('Advanced DNS settings'), {
+          panel: 'dns'
+        }),
+        entry('dns-system-hosts', tr('Use system hosts'), tr('Advanced DNS settings'), {
+          panel: 'dns'
+        }),
+        entry('dns-custom-hosts', tr('Custom hosts'), tr('Advanced DNS settings'), {
+          panel: 'dns'
+        })
+      ],
+      content: () => <DNS embedded />
+    },
+    {
+      key: 'mihomo',
+      label: tr('Mihomo settings'),
+      entries: [
+        entry('mihomo-ipv6', 'IPv6', tr('Core network'), { panel: 'mihomo' }),
+        entry('mihomo-mixed-port', tr('Mixed port'), tr('Port settings'), { panel: 'mihomo' }),
+        entry('mihomo-socks-port', tr('SOCKS port'), tr('Port settings'), { panel: 'mihomo' }),
+        entry('mihomo-http-port', tr('HTTP port'), tr('Port settings'), { panel: 'mihomo' }),
+        entry('mihomo-redir-port', tr('Redir port'), tr('Port settings'), { panel: 'mihomo' }),
+        entry('mihomo-tproxy-port', tr('TProxy port'), tr('Port settings'), { panel: 'mihomo' }),
+        entry('mihomo-allow-lan', tr('Allow LAN connections'), tr('Port settings'), {
+          panel: 'mihomo'
+        }),
+        entry('mihomo-authentication', tr('User authentication'), tr('Port settings'), {
+          panel: 'mihomo'
+        }),
+        entry('mihomo-controller', tr('Listen address'), tr('External controller'), {
+          panel: 'mihomo'
+        }),
+        entry('mihomo-controller-key', tr('Access key'), tr('External controller'), {
+          panel: 'mihomo'
+        }),
+        entry('mihomo-dashboard', tr('Enable controller dashboard'), tr('External controller'), {
+          panel: 'mihomo'
+        }),
+        entry('mihomo-controller-cors', tr('CORS configuration'), tr('External controller'), {
+          panel: 'mihomo'
+        }),
+        entry('mihomo-log-level', tr('Log level'), tr('Core logging'), { panel: 'mihomo' }),
+        entry('mihomo-find-process', tr('Find process'), tr('Advanced settings'), {
+          panel: 'mihomo'
+        }),
+        entry('mihomo-store-selected', tr('Remember selected proxies'), tr('Advanced settings'), {
+          panel: 'mihomo'
+        }),
+        entry('mihomo-store-fake-ip', tr('Persist FakeIP mappings'), tr('Advanced settings'), {
+          panel: 'mihomo'
+        }),
+        entry('mihomo-unified-delay', tr('Use RTT latency tests'), tr('Advanced settings'), {
+          panel: 'mihomo'
+        }),
+        entry('mihomo-tcp-concurrent', tr('Concurrent TCP connections'), tr('Advanced settings'), {
+          panel: 'mihomo'
+        }),
+        entry('mihomo-keep-alive', tr('Disable TCP keep-alive'), tr('Advanced settings'), {
+          panel: 'mihomo'
+        }),
+        entry('mihomo-interface', tr('Set outbound interface'), tr('Advanced settings'), {
+          panel: 'mihomo'
+        })
+      ],
+      content: () => <Mihomo embedded />
     }
   ]
 

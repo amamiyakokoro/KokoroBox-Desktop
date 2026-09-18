@@ -1,0 +1,543 @@
+import { tr } from '../../../../../shared/i18n'
+import { Tab, Input, Switch, Tabs, Tooltip } from '@heroui/react'
+import BasePage from '@renderer/components/base/base-page'
+import SettingItem from '@renderer/components/base/base-setting-item'
+import FeatureSettingsLayout, {
+  FeatureSettingsSaveButton,
+  FeatureSettingsSection
+} from '@renderer/components/base/base-feature-settings'
+import EditableList from '@renderer/components/base/base-list-editor'
+import AdvancedDnsSetting from '@renderer/components/dns/advanced-dns-setting'
+import DnsServerList from '@renderer/components/dns/dns-server-list'
+import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'
+import { useAppConfig } from '@renderer/hooks/use-app-config'
+import { restartCore } from '@renderer/utils/ipc'
+import React, { Key, useState } from 'react'
+import { notify } from '@renderer/utils/notification'
+import {
+  isValidIPv4Cidr,
+  isValidIPv6Cidr,
+  isValidDomainWildcard,
+  isValidDnsServer
+} from '@renderer/utils/validate'
+import { useSettingsSave } from '@renderer/hooks/use-settings-save'
+import { useUnsavedChangesGuard } from '@renderer/hooks/use-unsaved-changes'
+
+const defaultFakeIpFilter = ['+.lan', '+.local', 'time.*.com', 'ntp.*.com', '+.market.xiaomi.com']
+
+const antiPollutionDnsPreset = {
+  enhancedMode: 'fake-ip' as DnsMode,
+  fakeIPFilterMode: 'blacklist' as FilterMode,
+  fakeIPFilter: defaultFakeIpFilter,
+  respectRules: true,
+  defaultNameserver: ['tls://223.5.5.5', 'tls://119.29.29.29'],
+  // `#<name>` selects a concrete Mihomo proxy group; `PROXY` is not a
+  // built-in outbound. Do not ship a preset that assumes such a group exists.
+  nameserver: ['https://1.1.1.1/dns-query', 'https://8.8.8.8/dns-query'],
+  proxyServerNameserver: ['https://doh.pub/dns-query', 'https://dns.alidns.com/dns-query'],
+  directNameserver: ['https://doh.pub/dns-query', 'https://dns.alidns.com/dns-query'],
+  directNameserverFollowPolicy: true,
+  nameserverPolicy: {
+    '+.arpa': ['system'],
+    'geosite:cn': ['https://doh.pub/dns-query', 'https://dns.alidns.com/dns-query'],
+    'geosite:geolocation-!cn': ['https://1.1.1.1/dns-query', 'https://8.8.8.8/dns-query']
+  }
+}
+
+interface Props {
+  embedded?: boolean
+}
+
+const DNS: React.FC<Props> = ({ embedded = false }) => {
+  const { controledMihomoConfig, patchControledMihomoConfig, patchControledMihomoConfigOrThrow } =
+    useControledMihomoConfig()
+  const { appConfig, patchAppConfig } = useAppConfig()
+  const { hosts, controlDns = true } = appConfig || {}
+  const { dns } = controledMihomoConfig || {}
+  const {
+    ipv6 = false,
+    'fake-ip-range': fakeIPRange = '198.18.0.1/16',
+    'fake-ip-range6': fakeIPRange6 = '',
+    'fake-ip-filter': fakeIPFilter = defaultFakeIpFilter,
+    'enhanced-mode': enhancedMode = 'fake-ip',
+    'fake-ip-filter-mode': fakeIPFilterMode = 'blacklist',
+    'use-hosts': useHosts = false,
+    'use-system-hosts': useSystemHosts = false,
+    'respect-rules': respectRules = false,
+    'direct-nameserver-follow-policy': directNameserverFollowPolicy = false,
+    'prefer-h3': preferH3 = false,
+    'cache-algorithm': cacheAlgorithm = 'lru',
+    'default-nameserver': defaultNameserver = ['tls://223.5.5.5'],
+    nameserver = ['https://doh.pub/dns-query', 'https://dns.alidns.com/dns-query'],
+    'proxy-server-nameserver': proxyServerNameserver = [],
+    'direct-nameserver': directNameserver = [],
+    fallback = [],
+    'fallback-filter': fallbackFilter = {},
+    'fallback-lazy-query': fallbackLazyQuery = false,
+    'nameserver-policy': nameserverPolicy = {},
+    'proxy-server-nameserver-policy': proxyServerNameserverPolicy = {}
+  } = dns || {}
+  const [changed, setChanged] = useState(false)
+  const { isSaving, runSave } = useSettingsSave()
+  const [values, originSetValues] = useState({
+    ipv6,
+    useHosts,
+    enhancedMode,
+    fakeIPFilterMode,
+    fakeIPRange,
+    fakeIPRange6,
+    fakeIPFilter,
+    useSystemHosts,
+    respectRules,
+    directNameserverFollowPolicy,
+    preferH3,
+    cacheAlgorithm,
+    defaultNameserver,
+    nameserver,
+    proxyServerNameserver,
+    directNameserver,
+    fallback,
+    fallbackFilter,
+    fallbackLazyQuery,
+    nameserverPolicy,
+    proxyServerNameserverPolicy,
+    hosts: useHosts ? hosts : undefined
+  })
+  const [fakeIPRangeError, setFakeIPRangeError] = useState<string | null>(() => {
+    const r = isValidIPv4Cidr(fakeIPRange)
+    return r.ok ? null : (r.error ?? tr('Invalid format'))
+  })
+  const [fakeIPRange6Error, setFakeIPRange6Error] = useState<string | null>(() => {
+    const r = isValidIPv6Cidr(fakeIPRange6)
+    return r.ok ? null : (r.error ?? tr('Invalid format'))
+  })
+  const [fakeIPFilterError, setFakeIPFilterError] = useState<string | null>(() => {
+    if (!Array.isArray(fakeIPFilter)) return null
+    const firstInvalid = fakeIPFilter.find((f) =>
+      fakeIPFilterMode === 'rule' ? !f.trim() : !isValidDomainWildcard(f).ok
+    )
+    if (!firstInvalid) return null
+    return fakeIPFilterMode === 'rule'
+      ? tr('Cannot be empty')
+      : (isValidDomainWildcard(firstInvalid).error ?? tr('Invalid format'))
+  })
+  const [defaultNameserverError, setDefaultNameserverError] = useState<string | null>(() => {
+    if (!Array.isArray(defaultNameserver)) return null
+    const firstInvalid = defaultNameserver.find((f) => !isValidDnsServer(f, true).ok)
+    return firstInvalid
+      ? (isValidDnsServer(firstInvalid, true).error ?? tr('Invalid format'))
+      : null
+  })
+  const [nameserverError, setNameserverError] = useState<string | null>(() => {
+    if (!Array.isArray(nameserver)) return null
+    const firstInvalid = nameserver.find((f) => !isValidDnsServer(f).ok)
+    return firstInvalid ? (isValidDnsServer(firstInvalid).error ?? tr('Invalid format')) : null
+  })
+  const [advancedDnsError, setAdvancedDnsError] = useState(false)
+  const [draftRevision, setDraftRevision] = useState(0)
+  const hasDnsErrors = Boolean(defaultNameserverError || nameserverError || advancedDnsError)
+  const hasValidationErrors =
+    values.enhancedMode === 'fake-ip'
+      ? Boolean(fakeIPRangeError) ||
+        (values.ipv6 && Boolean(fakeIPRange6Error)) ||
+        Boolean(fakeIPFilterError) ||
+        hasDnsErrors
+      : hasDnsErrors
+  const isAntiPollutionPreset =
+    values.enhancedMode === antiPollutionDnsPreset.enhancedMode &&
+    values.fakeIPFilterMode === antiPollutionDnsPreset.fakeIPFilterMode &&
+    values.respectRules === antiPollutionDnsPreset.respectRules &&
+    JSON.stringify(values.defaultNameserver) ===
+      JSON.stringify(antiPollutionDnsPreset.defaultNameserver) &&
+    JSON.stringify(values.nameserver) === JSON.stringify(antiPollutionDnsPreset.nameserver) &&
+    JSON.stringify(values.proxyServerNameserver) ===
+      JSON.stringify(antiPollutionDnsPreset.proxyServerNameserver) &&
+    JSON.stringify(values.directNameserver) ===
+      JSON.stringify(antiPollutionDnsPreset.directNameserver) &&
+    values.directNameserverFollowPolicy === antiPollutionDnsPreset.directNameserverFollowPolicy &&
+    values.fallback.length === 0 &&
+    JSON.stringify(values.nameserverPolicy) ===
+      JSON.stringify(antiPollutionDnsPreset.nameserverPolicy)
+
+  const setValues = (v: typeof values): void => {
+    originSetValues(v)
+    setChanged(true)
+  }
+
+  const onSave = async (patch: Partial<MihomoConfig>): Promise<boolean> => {
+    const saved = await runSave(async () => {
+      await patchAppConfig({
+        hosts: values.hosts
+      })
+      await patchControledMihomoConfigOrThrow(patch)
+      await restartCore()
+    })
+    if (saved) setChanged(false)
+    return saved
+  }
+
+  const saveChanges = (): Promise<boolean> => {
+    const hostsObject =
+      values.useHosts && values.hosts && values.hosts.length > 0
+        ? Object.fromEntries(values.hosts.map(({ domain, value }) => [domain, value]))
+        : undefined
+    const dnsConfig = {
+      ipv6: values.ipv6,
+      'fake-ip-range': values.fakeIPRange,
+      'fake-ip-range6': values.fakeIPRange6,
+      'fake-ip-filter': values.fakeIPFilter,
+      'fake-ip-filter-mode': values.fakeIPFilterMode,
+      'enhanced-mode': values.enhancedMode,
+      'use-hosts': values.useHosts,
+      'use-system-hosts': values.useSystemHosts,
+      'respect-rules': values.respectRules,
+      'direct-nameserver-follow-policy': values.directNameserverFollowPolicy,
+      'prefer-h3': values.preferH3,
+      'cache-algorithm': values.cacheAlgorithm,
+      'default-nameserver': values.defaultNameserver,
+      nameserver: values.nameserver,
+      'proxy-server-nameserver': values.proxyServerNameserver,
+      'direct-nameserver': values.directNameserver,
+      fallback: values.fallback,
+      'fallback-filter': values.fallbackFilter,
+      'fallback-lazy-query': values.fallbackLazyQuery,
+      'nameserver-policy': values.nameserverPolicy,
+      'proxy-server-nameserver-policy': values.proxyServerNameserverPolicy
+    }
+    return onSave({ dns: dnsConfig, hosts: hostsObject })
+  }
+
+  useUnsavedChangesGuard({
+    id: 'dns-settings',
+    label: tr('DNS settings'),
+    isDirty: changed,
+    isSaving,
+    canSave: !hasValidationErrors,
+    onSave: saveChanges,
+    onDiscard: () => {
+      originSetValues({
+        ipv6,
+        useHosts,
+        enhancedMode,
+        fakeIPFilterMode,
+        fakeIPRange,
+        fakeIPRange6,
+        fakeIPFilter,
+        useSystemHosts,
+        respectRules,
+        directNameserverFollowPolicy,
+        preferH3,
+        cacheAlgorithm,
+        defaultNameserver,
+        nameserver,
+        proxyServerNameserver,
+        directNameserver,
+        fallback,
+        fallbackFilter,
+        fallbackLazyQuery,
+        nameserverPolicy,
+        proxyServerNameserverPolicy,
+        hosts: useHosts ? hosts : undefined
+      })
+      setFakeIPRangeError(null)
+      setFakeIPRange6Error(null)
+      setFakeIPFilterError(null)
+      setDefaultNameserverError(null)
+      setNameserverError(null)
+      setAdvancedDnsError(false)
+      setDraftRevision((value) => value + 1)
+      setChanged(false)
+    }
+  })
+
+  const saveButton = (
+    <FeatureSettingsSaveButton
+      isDirty={changed}
+      isSaving={isSaving}
+      isDisabled={hasValidationErrors}
+      onPress={saveChanges}
+    />
+  )
+
+  const content = (
+    <>
+      {embedded && (
+        <div className="mx-auto flex w-full max-w-[1040px] justify-end px-3 pt-2">{saveButton}</div>
+      )}
+      <FeatureSettingsLayout>
+        <FeatureSettingsSection title={tr('DNS behavior')}>
+          <SettingItem title={tr('Override DNS settings')} divider>
+            <Switch
+              size="sm"
+              isSelected={controlDns}
+              onValueChange={async (value) => {
+                try {
+                  await patchAppConfig({ controlDns: value })
+                  await patchControledMihomoConfig({})
+                  await restartCore()
+                } catch (e) {
+                  notify(e, { variant: 'danger' })
+                }
+              }}
+            />
+          </SettingItem>
+          <SettingItem title="IPv6" divider>
+            <Switch
+              size="sm"
+              isSelected={values.ipv6}
+              onValueChange={(v) => {
+                setValues({ ...values, ipv6: v })
+              }}
+            />
+          </SettingItem>
+          <SettingItem title={tr('DNS policy')} divider>
+            <Tabs
+              size="sm"
+              color="primary"
+              selectedKey={isAntiPollutionPreset ? 'anti-pollution' : 'custom'}
+              onSelectionChange={(key: Key) => {
+                if (key !== 'anti-pollution') return
+                setValues({
+                  ...values,
+                  ...antiPollutionDnsPreset,
+                  fallback: [],
+                  fallbackFilter: {},
+                  fallbackLazyQuery: false
+                })
+                setFakeIPFilterError(null)
+                setDefaultNameserverError(null)
+                setNameserverError(null)
+              }}
+            >
+              <Tab key="custom" title={tr('Custom')} />
+              <Tab key="anti-pollution" title={tr('Anti-pollution')} />
+            </Tabs>
+          </SettingItem>
+          <SettingItem title={tr('Domain mapping mode')}>
+            <Tabs
+              size="sm"
+              color="primary"
+              selectedKey={values.enhancedMode}
+              onSelectionChange={(key: Key) =>
+                setValues({ ...values, enhancedMode: key as DnsMode })
+              }
+            >
+              <Tab key="fake-ip" title={tr('Fake IP')} />
+              <Tab key="redir-host" title={tr('Real IP')} />
+              <Tab key="normal" title={tr('Remove mapping')} />
+            </Tabs>
+          </SettingItem>
+        </FeatureSettingsSection>
+
+        {values.enhancedMode === 'fake-ip' && (
+          <FeatureSettingsSection title={tr('Fake IP settings')}>
+            <SettingItem title={tr('Fake IP range (IPv4)')} divider>
+              <Tooltip
+                content={fakeIPRangeError}
+                placement="right"
+                isOpen={!!fakeIPRangeError}
+                showArrow={true}
+                color="danger"
+                offset={15}
+              >
+                <Input
+                  size="sm"
+                  className={
+                    `w-[40%] ` +
+                    (fakeIPRangeError ? 'border-red-500 ring-1 ring-red-500 rounded-lg' : '')
+                  }
+                  placeholder={tr('Example: 198.18.0.1/16')}
+                  value={values.fakeIPRange}
+                  onValueChange={(v) => {
+                    setValues({ ...values, fakeIPRange: v })
+                    const r = isValidIPv4Cidr(v)
+                    setFakeIPRangeError(r.ok ? null : (r.error ?? tr('Invalid format')))
+                  }}
+                />
+              </Tooltip>
+            </SettingItem>
+            {values.ipv6 && (
+              <SettingItem title={tr('Fake IP range (IPv6)')} divider>
+                <Tooltip
+                  content={fakeIPRange6Error}
+                  placement="right"
+                  isOpen={!!fakeIPRange6Error}
+                  showArrow={true}
+                  color="danger"
+                  offset={10}
+                >
+                  <Input
+                    size="sm"
+                    className={
+                      `w-[40%] ` +
+                      (fakeIPRange6Error ? 'border-red-500 ring-1 ring-red-500 rounded-lg' : '')
+                    }
+                    placeholder={tr('Example: fc00::/18')}
+                    value={values.fakeIPRange6}
+                    onValueChange={(v) => {
+                      setValues({ ...values, fakeIPRange6: v })
+                      const r = isValidIPv6Cidr(v)
+                      setFakeIPRange6Error(r.ok ? null : (r.error ?? tr('Invalid format')))
+                    }}
+                  />
+                </Tooltip>
+              </SettingItem>
+            )}
+            <SettingItem title={tr('Fake-IP filter mode')} divider>
+              <Tabs
+                size="sm"
+                color="primary"
+                selectedKey={values.fakeIPFilterMode}
+                onSelectionChange={(key: Key) => {
+                  const fakeIPFilterMode = key as FilterMode
+                  setValues({ ...values, fakeIPFilterMode })
+                  const firstInvalid = values.fakeIPFilter.find((item) =>
+                    fakeIPFilterMode === 'rule' ? !item.trim() : !isValidDomainWildcard(item).ok
+                  )
+                  setFakeIPFilterError(
+                    firstInvalid
+                      ? fakeIPFilterMode === 'rule'
+                        ? tr('Cannot be empty')
+                        : (isValidDomainWildcard(firstInvalid).error ?? tr('Invalid format'))
+                      : null
+                  )
+                }}
+              >
+                <Tab key="blacklist" title={tr('Blacklist')} />
+                <Tab key="whitelist" title={tr('Whitelist')} />
+                <Tab key="rule" title={tr('Rules')} />
+              </Tabs>
+            </SettingItem>
+            <EditableList
+              title={tr('Fake IP filter')}
+              items={values.fakeIPFilter}
+              validate={(part) =>
+                values.fakeIPFilterMode === 'rule'
+                  ? { ok: Boolean((part as string).trim()) }
+                  : isValidDomainWildcard(part as string)
+              }
+              onChange={(list) => {
+                const arr = list as string[]
+                setValues({ ...values, fakeIPFilter: arr })
+                const firstInvalid = arr.find((f) =>
+                  values.fakeIPFilterMode === 'rule' ? !f.trim() : !isValidDomainWildcard(f).ok
+                )
+                setFakeIPFilterError(
+                  firstInvalid
+                    ? values.fakeIPFilterMode === 'rule'
+                      ? tr('Cannot be empty')
+                      : (isValidDomainWildcard(firstInvalid).error ?? tr('Invalid format'))
+                    : null
+                )
+              }}
+              placeholder={tr('Example: +.lan')}
+              divider={false}
+            />
+          </FeatureSettingsSection>
+        )}
+
+        <FeatureSettingsSection title={tr('DNS servers')}>
+          <EditableList
+            title={tr('Bootstrap DNS servers')}
+            items={values.defaultNameserver}
+            validate={(part) => isValidDnsServer(part as string, true)}
+            onChange={(list) => {
+              const arr = list as string[]
+              setValues({ ...values, defaultNameserver: arr })
+              const firstInvalid = arr.find((f) => !isValidDnsServer(f, true).ok)
+              setDefaultNameserverError(
+                firstInvalid
+                  ? (isValidDnsServer(firstInvalid, true).error ?? tr('Invalid format'))
+                  : null
+              )
+            }}
+            placeholder={tr('Example: 223.5.5.5')}
+          />
+          <DnsServerList
+            title={tr('Default DNS servers')}
+            items={values.nameserver}
+            onChange={(arr) => {
+              setValues({ ...values, nameserver: arr })
+              const firstInvalid = arr.find((f) => !isValidDnsServer(f).ok)
+              setNameserverError(
+                firstInvalid ? (isValidDnsServer(firstInvalid).error ?? tr('Invalid format')) : null
+              )
+            }}
+            onErrorChange={setNameserverError}
+            placeholder={tr('Example: https://dns.alidns.com/dns-query')}
+            divider={false}
+            followRoutingRules={values.respectRules}
+          />
+        </FeatureSettingsSection>
+        <AdvancedDnsSetting
+          key={draftRevision}
+          respectRules={values.respectRules}
+          directNameserverFollowPolicy={values.directNameserverFollowPolicy}
+          preferH3={values.preferH3}
+          cacheAlgorithm={values.cacheAlgorithm}
+          directNameserver={values.directNameserver}
+          proxyServerNameserver={values.proxyServerNameserver}
+          fallback={values.fallback}
+          fallbackFilter={values.fallbackFilter}
+          fallbackLazyQuery={values.fallbackLazyQuery}
+          nameserverPolicy={values.nameserverPolicy}
+          proxyServerNameserverPolicy={values.proxyServerNameserverPolicy}
+          hosts={values.hosts}
+          useHosts={values.useHosts}
+          useSystemHosts={values.useSystemHosts}
+          onRespectRulesChange={(v) => {
+            setValues({
+              ...values,
+              respectRules: values.proxyServerNameserver.length === 0 ? false : v
+            })
+          }}
+          onDirectNameserverChange={(arr) => {
+            setValues({
+              ...values,
+              directNameserver: arr,
+              directNameserverFollowPolicy:
+                arr.length === 0 ? false : values.directNameserverFollowPolicy
+            })
+          }}
+          onDirectNameserverFollowPolicyChange={(v) =>
+            setValues({ ...values, directNameserverFollowPolicy: v })
+          }
+          onPreferH3Change={(v) => setValues({ ...values, preferH3: v })}
+          onCacheAlgorithmChange={(v) => setValues({ ...values, cacheAlgorithm: v })}
+          onProxyNameserverChange={(arr) => {
+            setValues({
+              ...values,
+              proxyServerNameserver: arr,
+              respectRules: arr.length === 0 ? false : values.respectRules,
+              proxyServerNameserverPolicy:
+                arr.length === 0 ? {} : values.proxyServerNameserverPolicy
+            })
+          }}
+          onFallbackChange={(arr) => setValues({ ...values, fallback: arr })}
+          onFallbackFilterChange={(filter) => setValues({ ...values, fallbackFilter: filter })}
+          onFallbackLazyQueryChange={(v) => setValues({ ...values, fallbackLazyQuery: v })}
+          onNameserverPolicyChange={(newValue) => {
+            setValues({ ...values, nameserverPolicy: newValue })
+          }}
+          onProxyServerNameserverPolicyChange={(newValue) => {
+            setValues({ ...values, proxyServerNameserverPolicy: newValue })
+          }}
+          onUseSystemHostsChange={(v) => setValues({ ...values, useSystemHosts: v })}
+          onUseHostsChange={(v) => setValues({ ...values, useHosts: v })}
+          onHostsChange={(hostArr) => setValues({ ...values, hosts: hostArr })}
+          onErrorChange={setAdvancedDnsError}
+        />
+      </FeatureSettingsLayout>
+    </>
+  )
+
+  if (embedded) return content
+
+  return (
+    <BasePage title={tr('DNS settings')} contentClassName="no-scrollbar" header={saveButton}>
+      {content}
+    </BasePage>
+  )
+}
+
+export default DNS

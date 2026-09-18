@@ -40,12 +40,12 @@ test('default DNS template does not blacklist every Fake-IP mapping', () => {
 })
 
 test('anti-pollution preset does not assume a proxy group named PROXY', () => {
-  const page = readFileSync('src/renderer/src/pages/dns.tsx', 'utf8')
+  const page = readFileSync('src/renderer/src/components/settings/network/dns-settings.tsx', 'utf8')
   assert.doesNotMatch(page, /antiPollutionDnsPreset[\s\S]*?#PROXY/)
 })
 
 test('anti-pollution DNS defaults respect rules and use redundant TLS bootstrap servers', () => {
-  const page = readFileSync('src/renderer/src/pages/dns.tsx', 'utf8')
+  const page = readFileSync('src/renderer/src/components/settings/network/dns-settings.tsx', 'utf8')
 
   assert.match(page, /respectRules: true/)
   assert.match(page, /defaultNameserver: \['tls:\/\/223\.5\.5\.5', 'tls:\/\/119\.29\.29\.29'\]/)
@@ -54,7 +54,7 @@ test('anti-pollution DNS defaults respect rules and use redundant TLS bootstrap 
 
 test('global DNS rule routing hides redundant per-server connection selectors', () => {
   const component = readFileSync('src/renderer/src/components/dns/dns-server-list.tsx', 'utf8')
-  const page = readFileSync('src/renderer/src/pages/dns.tsx', 'utf8')
+  const page = readFileSync('src/renderer/src/components/settings/network/dns-settings.tsx', 'utf8')
   const advanced = readFileSync('src/renderer/src/components/dns/advanced-dns-setting.tsx', 'utf8')
 
   assert.match(component, /followRoutingRules = false/)
