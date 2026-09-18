@@ -32,11 +32,16 @@ const SettingItem: React.FC<SettingItemProps> = (props) => {
   const isCompact = variant === 'compact'
   const hasTitle = title !== null && title !== undefined && title !== false
   const isTitleless = !hasTitle && !actions
+  const searchableLabel = typeof title === 'string' ? title : undefined
 
   return (
     <>
       {compatKey && legacyMode ? (
-        <div className="setting-item-legacy select-text h-8 w-full flex justify-between">
+        <div
+          className="setting-item-legacy select-text h-8 w-full flex justify-between"
+          data-setting-label={searchableLabel}
+          tabIndex={searchableLabel ? -1 : undefined}
+        >
           <div className="h-full flex items-center">
             <h4 className="h-full text-md leading-8 whitespace-nowrap">{title}</h4>
             <div>{actions}</div>
@@ -52,6 +57,8 @@ const SettingItem: React.FC<SettingItemProps> = (props) => {
             isTitleless && 'setting-item--titleless',
             contentAlign === 'end' && 'setting-item--content-end'
           )}
+          data-setting-label={searchableLabel}
+          tabIndex={searchableLabel ? -1 : undefined}
         >
           {(hasTitle || actions) && (
             <div className="setting-item__title-wrap">

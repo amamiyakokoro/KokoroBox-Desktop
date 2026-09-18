@@ -559,6 +559,31 @@ input[type='number'] {
   justify-content: flex-end;
 }
 
+@keyframes settings-search-highlight {
+  0%,
+  35% {
+    background-color: color-mix(in srgb, var(--primary) 14%, transparent);
+    box-shadow: inset 3px 0 0 var(--primary);
+  }
+
+  100% {
+    background-color: transparent;
+    box-shadow: inset 3px 0 0 transparent;
+  }
+}
+
+.settings-search-target {
+  border-radius: var(--radius-medium);
+  animation: settings-search-highlight 1.8s ease-out;
+  outline: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .settings-search-target {
+    animation-duration: 0.01ms;
+  }
+}
+
 /* Compact desktop windows keep the primary workspace wider by reducing the
  * secondary settings navigation to its stable icon affordances. */
 @media (max-width: 1050px) {

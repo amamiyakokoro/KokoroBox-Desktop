@@ -232,6 +232,10 @@ test('global subscription settings are owned by Application settings', () => {
     'utf8'
   )
   const settingsPage = readFileSync('src/renderer/src/pages/settings.tsx', 'utf8')
+  const settingsRegistry = readFileSync(
+    'src/renderer/src/components/settings/settings-registry.tsx',
+    'utf8'
+  )
 
   for (const key of [
     'diffWorkDir',
@@ -246,7 +250,23 @@ test('global subscription settings are owned by Application settings', () => {
   }
 
   assert.match(profileDrawer, /navigate\('\/settings\?section=data'\)/)
-  assert.match(settingsPage, /<SubscriptionIntegrationSettings \/>/)
+  assert.match(settingsPage, /getSettingsCategories/)
+  assert.match(settingsRegistry, /<SubscriptionIntegrationSettings \/>/)
+})
+
+test('Application settings search supports stable deep links to concrete rows', () => {
+  const settingsPage = readFileSync('src/renderer/src/pages/settings.tsx', 'utf8')
+  const settingsRegistry = readFileSync(
+    'src/renderer/src/components/settings/settings-registry.tsx',
+    'utf8'
+  )
+  const settingItem = readFileSync('src/renderer/src/components/base/base-setting-item.tsx', 'utf8')
+
+  assert.match(settingsRegistry, /interface SettingsEntryDefinition/)
+  assert.match(settingsRegistry, /id: string/)
+  assert.match(settingsPage, /nextParams\.set\('setting', settingId\)/)
+  assert.match(settingsPage, /scrollIntoView/)
+  assert.match(settingItem, /data-setting-label=/)
 })
 
 test('contextual settings drawers share a sectioned shell', () => {

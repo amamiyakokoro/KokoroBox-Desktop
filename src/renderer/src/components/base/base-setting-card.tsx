@@ -17,7 +17,11 @@ const SettingCard: React.FC<Props> = (props) => {
 
   if (!collapsible) {
     return (
-      <section className={`${className || ''} settings-section px-3 py-3`}>
+      <section
+        className={`${className || ''} settings-section px-3 py-3`}
+        data-setting-label={header}
+        tabIndex={header ? -1 : undefined}
+      >
         {header && (
           <h2 className="px-1 pb-2 text-sm font-semibold tracking-wide text-foreground-500">
             {header}
@@ -33,7 +37,13 @@ const SettingCard: React.FC<Props> = (props) => {
       <CardBody>{children}</CardBody>
     </Card>
   ) : (
-    <Accordion isCompact className={`${className || ''} my-2`} variant="splitted">
+    <Accordion
+      isCompact
+      className={`${className || ''} my-2`}
+      variant="splitted"
+      data-setting-label={header}
+      tabIndex={header ? -1 : undefined}
+    >
       <AccordionItem
         aria-label={header}
         className="data-[open=true]:pb-2"

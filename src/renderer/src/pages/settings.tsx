@@ -2,230 +2,31 @@ import { tr } from '../../../shared/i18n'
 import { Button, Input } from '@heroui/react'
 import BasePage from '@renderer/components/base/base-page'
 import { IoLogoGithub } from 'react-icons/io5'
-import WebdavConfig from '@renderer/components/settings/webdav-config'
-import SubscriptionIntegrationSettings from '@renderer/components/settings/subscription-integration-settings'
-import GeneralConfig, { PerformanceConfig } from '@renderer/components/settings/general-config'
 import {
-  BackgroundBehaviorSettings,
-  IntegrationSettings,
-  NetworkBehaviorSettings
-} from '@renderer/components/settings/behavior-settings'
-import Actions from '@renderer/components/settings/actions'
-import ShortcutConfig from '@renderer/components/settings/shortcut-config'
-import SiderConfig from '@renderer/components/settings/sider-config'
-import AppearanceConfig from '@renderer/components/settings/appearance-confis'
-import CoreRuntimeConfig from '@renderer/components/settings/core-runtime-config'
-import LogSetting from '@renderer/components/mihomo/log-setting'
-import EnvSetting from '@renderer/components/mihomo/env-setting'
+  findSettingsEntry,
+  getSettingsCategories,
+  legacyCategoryAliases,
+  type SettingsCategory
+} from '@renderer/components/settings/settings-registry'
 import { SettingCardModeProvider } from '@renderer/components/base/base-setting-card'
 import { SettingItemModeProvider } from '@renderer/components/base/base-setting-item'
-import { platform } from '@renderer/utils/init'
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import {
-  LuAppWindow,
-  LuArchiveRestore,
-  LuBrush,
-  LuChevronRight,
-  LuCommand,
-  LuCpu,
-  LuSearch,
-  LuWrench
-} from 'react-icons/lu'
-
-type SettingsCategory = 'general' | 'appearance' | 'core' | 'data' | 'shortcuts' | 'diagnostics'
-
-interface CategoryDefinition {
-  key: SettingsCategory
-  label: string
-  icon: React.ComponentType<{ className?: string }>
-  entries: string[]
-}
-
-const categories: CategoryDefinition[] = [
-  {
-    key: 'general',
-    label: tr('General'),
-    icon: LuAppWindow,
-    entries: [
-      tr('Interface language'),
-      tr('Launch at startup'),
-      tr('Start minimized'),
-      tr('Check for updates automatically'),
-      tr('Update channel'),
-      tr('Notification style'),
-      tr('Automatic lightweight mode'),
-      tr('Lightweight mode behavior'),
-      tr('Lightweight mode delay')
-    ]
-  },
-  {
-    key: 'appearance',
-    label: tr('Appearance and interface'),
-    icon: LuBrush,
-    entries: [
-      tr('Show floating window'),
-      tr('Rotate floating icon based on network speed'),
-      tr('Disable tray icon'),
-      tr('Custom tray icon'),
-      tr('Show proxy details in tray menu'),
-      tr('Tray menu latency layout'),
-      tr('Show network speed in the {0}', [
-        platform === 'win32'
-          ? tr('Taskbar')
-          : platform === 'darwin'
-            ? tr('Menu bar')
-            : tr('System tray')
-      ]),
-      tr('Show Dock icon'),
-      tr('Use system title bar'),
-      tr('Enable window drag area'),
-      tr('Show update button'),
-      tr('Background color'),
-      tr('Theme'),
-      tr('Disable GPU acceleration'),
-      tr('Reduce animations'),
-      tr('Sidebar settings'),
-      tr('Side panel')
-    ]
-  },
-  {
-    key: 'core',
-    label: tr('Core and system'),
-    icon: LuCpu,
-    entries: [
-      tr('Core version'),
-      tr('Choose system core path'),
-      tr('Core process priority'),
-      tr('Run mode'),
-      tr('Service core execution mode'),
-      tr('Startup detection method'),
-      tr('Elevation status'),
-      tr('Service status'),
-      tr('Disable system CAs'),
-      tr('Disable built-in CAs'),
-      tr('Disable loopback detection'),
-      tr('Disable nftables'),
-      tr('Trusted path'),
-      tr('Stop core when offline'),
-      tr('Connectivity check interval'),
-      tr('Interfaces excluded from detection'),
-      tr('Use direct connections on specified Wi-Fi SSIDs')
-    ]
-  },
-  {
-    key: 'data',
-    label: tr('Data and integrations'),
-    icon: LuArchiveRestore,
-    entries: [
-      'GitHub API Token',
-      tr('Copy environment variable format'),
-      tr('Use a separate working directory for each profile'),
-      tr('Subscription user agent'),
-      tr('Sync runtime configuration to Gist'),
-      tr('Encrypt Gist configuration'),
-      tr('Gist age public key'),
-      tr('Gist age private key'),
-      tr('WebDAV backup'),
-      tr('WebDAV URL'),
-      tr('WebDAV backup directory'),
-      tr('WebDAV username'),
-      tr('WebDAV password')
-    ]
-  },
-  {
-    key: 'shortcuts',
-    label: tr('Keyboard shortcuts'),
-    icon: LuCommand,
-    entries: [
-      tr('Toggle window'),
-      tr('Toggle floating window'),
-      tr('Toggle system proxy'),
-      tr('Toggle TUN mode'),
-      tr('Switch to rule mode'),
-      tr('Switch to global mode'),
-      tr('Switch to direct mode'),
-      tr('Restart app')
-    ]
-  },
-  {
-    key: 'diagnostics',
-    label: tr('Diagnostics and about'),
-    icon: LuWrench,
-    entries: [
-      tr('Save logs'),
-      tr('Log retention days'),
-      tr('Log file size limit'),
-      tr('Live log entry limit'),
-      tr('Open guided tour'),
-      tr('Check for updates'),
-      tr('Clear cache'),
-      tr('Create heap snapshot'),
-      tr('Reset app'),
-      tr('Quit and keep core running'),
-      tr('Quit app'),
-      tr('App version')
-    ]
-  }
-]
-
-const categoryContent: Record<SettingsCategory, React.ReactNode> = {
-  general: (
-    <>
-      <GeneralConfig />
-      <BackgroundBehaviorSettings />
-    </>
-  ),
-  appearance: (
-    <>
-      <AppearanceConfig />
-      <PerformanceConfig />
-      <SiderConfig />
-    </>
-  ),
-  core: (
-    <>
-      <CoreRuntimeConfig />
-      <EnvSetting />
-      <NetworkBehaviorSettings />
-    </>
-  ),
-  data: (
-    <>
-      <SubscriptionIntegrationSettings />
-      <WebdavConfig />
-      <IntegrationSettings />
-    </>
-  ),
-  shortcuts: <ShortcutConfig />,
-  diagnostics: (
-    <>
-      <LogSetting />
-      <Actions />
-    </>
-  )
-}
-
-const legacyCategoryAliases: Readonly<Record<string, SettingsCategory>> = {
-  sidebar: 'appearance',
-  logs: 'diagnostics',
-  backup: 'data',
-  advanced: 'general',
-  maintenance: 'diagnostics'
-}
-
-const isSettingsCategory = (value: string | null): value is SettingsCategory =>
-  categories.some((category) => category.key === value)
+import { LuChevronRight, LuSearch } from 'react-icons/lu'
 
 const Settings: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams()
   const [search, setSearch] = useState('')
+  const categories = useMemo(() => getSettingsCategories(), [])
   const requestedCategory = searchParams.get('section')
+  const requestedSetting = findSettingsEntry(categories, searchParams.get('setting'))
+  const isSettingsCategory = (value: string | null): value is SettingsCategory =>
+    categories.some((item) => item.key === value)
   const category: SettingsCategory = isSettingsCategory(requestedCategory)
     ? requestedCategory
     : requestedCategory
       ? (legacyCategoryAliases[requestedCategory] ?? 'general')
-      : 'general'
+      : (requestedSetting?.category.key ?? 'general')
   const selected = categories.find((item) => item.key === category) ?? categories[0]
   const normalizedSearch = search.trim().toLocaleLowerCase()
   const searchResults = useMemo(
@@ -233,22 +34,63 @@ const Settings: React.FC = () => {
       normalizedSearch
         ? categories.flatMap((item) =>
             item.entries
-              .filter(
-                (entry) =>
-                  entry.toLocaleLowerCase().includes(normalizedSearch) ||
-                  item.label.toLocaleLowerCase().includes(normalizedSearch)
-              )
+              .filter((entry) => {
+                const searchableText = [entry.label, ...(entry.keywords ?? []), item.label]
+                  .join(' ')
+                  .toLocaleLowerCase()
+                return searchableText.includes(normalizedSearch)
+              })
               .map((entry) => ({ category: item, entry }))
           )
         : [],
-    [normalizedSearch]
+    [categories, normalizedSearch]
   )
 
-  const selectCategory = (nextCategory: SettingsCategory): void => {
+  const selectCategory = (nextCategory: SettingsCategory, settingId?: string): void => {
     const nextParams = new URLSearchParams(searchParams)
     nextParams.set('section', nextCategory)
+    if (settingId) nextParams.set('setting', settingId)
+    else nextParams.delete('setting')
     setSearchParams(nextParams)
   }
+
+  useEffect(() => {
+    if (!requestedSetting || requestedSetting.category.key !== category || normalizedSearch) return
+
+    let animationFrame = 0
+    let cleanupTimer: ReturnType<typeof setTimeout> | undefined
+    let attempts = 0
+    const locateSetting = (): void => {
+      const labels = [
+        requestedSetting.entry.targetLabel ?? requestedSetting.entry.label,
+        requestedSetting.entry.fallbackLabel
+      ].filter((label): label is string => Boolean(label))
+      const targets = Array.from(document.querySelectorAll<HTMLElement>('[data-setting-label]'))
+      const target = labels
+        .map((label) => targets.find((node) => node.dataset.settingLabel === label))
+        .find(Boolean)
+
+      if (!target && attempts < 4) {
+        attempts += 1
+        animationFrame = requestAnimationFrame(locateSetting)
+        return
+      }
+      if (!target) return
+
+      target.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      target.focus({ preventScroll: true })
+      target.classList.remove('settings-search-target')
+      void target.offsetWidth
+      target.classList.add('settings-search-target')
+      cleanupTimer = setTimeout(() => target.classList.remove('settings-search-target'), 1800)
+    }
+
+    animationFrame = requestAnimationFrame(locateSetting)
+    return () => {
+      cancelAnimationFrame(animationFrame)
+      if (cleanupTimer) clearTimeout(cleanupTimer)
+    }
+  }, [category, normalizedSearch, requestedSetting])
 
   return (
     <BasePage
@@ -329,17 +171,17 @@ const Settings: React.FC = () => {
               {searchResults.length ? (
                 searchResults.map(({ category: resultCategory, entry }) => (
                   <button
-                    key={`${resultCategory.key}-${entry}`}
+                    key={entry.id}
                     type="button"
                     className="flex w-full items-center gap-3 border-b border-divider px-2 py-3 text-left transition-colors last:border-b-0 hover:bg-default-100 focus-visible:outline-2 focus-visible:outline-primary"
                     onClick={() => {
-                      selectCategory(resultCategory.key)
+                      selectCategory(resultCategory.key, entry.id)
                       setSearch('')
                     }}
                   >
                     <resultCategory.icon className="shrink-0 text-lg text-foreground-400" />
                     <span className="min-w-0 flex-1">
-                      <span className="block text-sm font-medium">{entry}</span>
+                      <span className="block text-sm font-medium">{entry.label}</span>
                       <span className="block text-xs text-foreground-500">
                         {resultCategory.label}
                       </span>
@@ -355,9 +197,7 @@ const Settings: React.FC = () => {
             </div>
           ) : (
             <SettingCardModeProvider value={false}>
-              <SettingItemModeProvider value={false}>
-                {categoryContent[category]}
-              </SettingItemModeProvider>
+              <SettingItemModeProvider value={false}>{selected.content()}</SettingItemModeProvider>
             </SettingCardModeProvider>
           )}
         </main>
