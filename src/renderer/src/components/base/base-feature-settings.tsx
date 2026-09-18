@@ -46,12 +46,12 @@ export const FeatureSettingsSection: React.FC<FeatureSettingsSectionProps> = ({
   description,
   children
 }) => (
-  <section className="feature-settings-section px-3 py-2.5 first:pt-2">
-    <header className="mb-1.5 px-1">
-      <h2 className="text-sm font-semibold tracking-wide text-foreground-500">{title}</h2>
+  <section className="feature-settings-section px-3 py-2 first:pt-2">
+    <header className="px-1 pb-2 pt-1">
+      <h2 className="text-base font-semibold leading-6 text-foreground">{title}</h2>
       {description && <p className="mt-0.5 text-xs leading-4 text-foreground-500">{description}</p>}
     </header>
-    <div className="feature-settings-section__content border-y border-divider px-1 py-1">
+    <div className="feature-settings-section__content border-t border-divider px-1 py-1">
       {children}
     </div>
   </section>
@@ -60,7 +60,7 @@ export const FeatureSettingsSection: React.FC<FeatureSettingsSectionProps> = ({
 const FeatureSettingsLayout: React.FC<FeatureSettingsLayoutProps> = ({ children }) => (
   <SettingCardModeProvider value={false}>
     <SettingItemModeProvider value={false}>
-      <div className="feature-settings-layout mx-auto w-full max-w-[1040px] pb-4 pt-1">
+      <div className="feature-settings-layout mx-auto w-full max-w-[960px] pb-4 pt-1">
         {children}
       </div>
     </SettingItemModeProvider>

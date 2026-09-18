@@ -1,5 +1,5 @@
 import { tr } from '../../../shared/i18n'
-import { Button, Input, Tooltip } from '@heroui/react'
+import { Button, Input } from '@heroui/react'
 import BasePage from '@renderer/components/base/base-page'
 import { IoLogoGithub } from 'react-icons/io5'
 import {
@@ -14,14 +14,9 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { LuChevronRight, LuSearch } from 'react-icons/lu'
 
-const compactNavigationQuery = '(max-width: 1050px)'
-
 const Settings: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams()
   const [search, setSearch] = useState('')
-  const [compactNavigation, setCompactNavigation] = useState(
-    () => window.matchMedia(compactNavigationQuery).matches
-  )
   const layoutRef = useRef<HTMLDivElement>(null)
   const categories = useMemo(() => getSettingsCategories(), [])
   const requestedCategory = searchParams.get('section')
@@ -88,20 +83,10 @@ const Settings: React.FC = () => {
   }
 
   useEffect(() => {
-    const mediaQuery = window.matchMedia(compactNavigationQuery)
-    const updateCompactNavigation = (event?: MediaQueryListEvent): void => {
-      setCompactNavigation(event?.matches ?? mediaQuery.matches)
-    }
-    updateCompactNavigation()
-    mediaQuery.addEventListener('change', updateCompactNavigation)
-    return () => mediaQuery.removeEventListener('change', updateCompactNavigation)
-  }, [])
-
-  useEffect(() => {
     const handleSearchShortcut = (event: KeyboardEvent): void => {
       if ((event.metaKey || event.ctrlKey) && !event.altKey && event.key.toLowerCase() === 'f') {
         const searchInputs = document.querySelectorAll<HTMLInputElement>(
-          '.settings-navigation-search input, .settings-content-search input'
+          '.settings-content-search input'
         )
         const visibleSearch = Array.from(searchInputs).find((input) => input.offsetParent !== null)
         if (!visibleSearch) return
@@ -179,52 +164,33 @@ const Settings: React.FC = () => {
           aria-label={tr('Settings categories')}
           className="settings-navigation sticky top-0 z-10 flex h-[calc(100vh-49px)] flex-col border-r border-divider bg-background/95 p-3 backdrop-blur"
         >
-          <Input
-            size="sm"
-            isClearable
-            value={search}
-            aria-label={tr('Search settings')}
-            placeholder={tr('Search settings')}
-            startContent={<LuSearch className="shrink-0 text-foreground-400" />}
-            className="settings-navigation-search mb-2 shrink-0"
-            onValueChange={setSearch}
-            onClear={() => setSearch('')}
-          />
-          <div className="flex flex-col gap-1 overflow-y-auto">
+          <div className="settings-navigation-list no-scrollbar flex flex-col gap-1 overflow-y-auto">
             {categories.map((item) => {
               const Icon = item.icon
               const active = category === item.key && !normalizedSearch
               return (
-                <Tooltip
+                <Button
                   key={item.key}
-                  content={item.label}
-                  placement="right"
-                  delay={300}
-                  closeDelay={0}
-                  isDisabled={!compactNavigation}
+                  size="sm"
+                  variant={active ? 'flat' : 'light'}
+                  color={active ? 'primary' : 'default'}
+                  className="settings-category-button app-nodrag w-full shrink-0 justify-start px-3"
+                  aria-label={item.label}
+                  aria-current={active ? 'page' : undefined}
+                  startContent={<Icon className="text-base" />}
+                  onPress={() => {
+                    setSearch('')
+                    selectCategory(item.key)
+                  }}
                 >
-                  <Button
-                    size="sm"
-                    variant={active ? 'flat' : 'light'}
-                    color={active ? 'primary' : 'default'}
-                    className="settings-category-button app-nodrag w-full shrink-0 justify-start px-3"
-                    aria-label={item.label}
-                    aria-current={active ? 'page' : undefined}
-                    startContent={<Icon className="text-base" />}
-                    onPress={() => {
-                      setSearch('')
-                      selectCategory(item.key)
-                    }}
-                  >
-                    <span className="settings-category-label">{item.label}</span>
-                  </Button>
-                </Tooltip>
+                  <span className="settings-category-label">{item.label}</span>
+                </Button>
               )
             })}
           </div>
         </nav>
         <main className="min-w-0 px-4 pb-4">
-          <div className="mx-auto w-full max-w-[1040px]">
+          <div className="mx-auto w-full max-w-[960px]">
             <header className="settings-content-header sticky top-0 z-10 border-b border-divider bg-background/95 backdrop-blur-sm">
               <div className="flex items-center gap-4 px-3 py-2">
                 <h1 className="min-w-0 flex-1 text-xl font-semibold tracking-tight">

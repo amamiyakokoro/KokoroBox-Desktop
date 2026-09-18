@@ -532,11 +532,11 @@ input[type='number'] {
 }
 
 .settings-layout {
-  grid-template-columns: 14rem minmax(0, 1fr);
+  grid-template-columns: 12rem minmax(0, 1fr);
 }
 
 .settings-content-search {
-  display: none;
+  display: block;
 }
 
 .settings-layout .setting-item,
@@ -597,29 +597,33 @@ input[type='number'] {
   }
 }
 
-/* Compact desktop windows keep the primary workspace wider by reducing the
- * secondary settings navigation to its stable icon affordances. */
+/* Compact desktop windows move the labeled settings navigation above the
+ * content instead of introducing a second icon-only rail beside the app nav. */
 @media (max-width: 1050px) {
   .settings-layout {
-    grid-template-columns: 4rem minmax(0, 1fr);
+    display: block;
   }
 
   .settings-navigation {
-    padding-inline: calc(var(--spacing) * 2);
+    position: relative;
+    top: auto;
+    height: auto;
+    border-right-width: 0;
+    border-bottom: 1px solid var(--border);
+    padding-block: calc(var(--spacing) * 2);
+    padding-inline: calc(var(--spacing) * 3);
   }
 
-  .settings-navigation-search,
-  .settings-category-label {
-    display: none;
+  .settings-navigation-list {
+    flex-direction: row;
+    overflow-x: auto;
+    overflow-y: hidden;
   }
 
   .settings-category-button {
-    min-width: 0;
-    justify-content: center;
-    padding-inline: 0;
-  }
-
-  .settings-content-search {
-    display: block;
+    width: auto;
+    min-width: max-content;
+    justify-content: flex-start;
+    padding-inline: calc(var(--spacing) * 3);
   }
 }

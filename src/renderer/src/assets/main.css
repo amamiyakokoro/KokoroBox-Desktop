@@ -188,10 +188,22 @@
   user-select: none;
 }
 
-*:focus {
+*:focus:not(:focus-visible) {
   outline: none;
-  outline-width: 0;
-  outline-color: transparent;
+}
+
+:where(
+  button,
+  a,
+  input,
+  select,
+  textarea,
+  [role='button'],
+  [role='link'],
+  [tabindex]
+):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .flag-emoji {

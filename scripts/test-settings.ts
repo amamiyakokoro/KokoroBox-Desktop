@@ -88,15 +88,19 @@ test('staged settings protect unsaved changes across navigation and window lifec
 
 test('application settings keep navigation discoverable in compact desktop windows', () => {
   const settings = readFileSync('src/renderer/src/pages/settings.tsx', 'utf8')
+  const styles = readFileSync('src/renderer/src/assets/main-compatible.css', 'utf8')
   const settingCard = readFileSync('src/renderer/src/components/base/base-setting-card.tsx', 'utf8')
   const general = readFileSync('src/renderer/src/components/settings/general-config.tsx', 'utf8')
 
-  assert.match(settings, /compactNavigationQuery = '\(max-width: 1050px\)'/)
-  assert.match(settings, /isDisabled=\{!compactNavigation\}/)
   assert.match(settings, /aria-current=\{active \? 'page' : undefined\}/)
   assert.match(settings, /event\.key\.toLowerCase\(\) === 'f'/)
   assert.match(settings, /settings-content-header sticky top-0/)
   assert.match(settings, /scrollTo\(\{ top: 0 \}\)/)
+  assert.match(settings, /settings-navigation-list no-scrollbar/)
+  assert.match(settings, /max-w-\[960px\]/)
+  assert.match(styles, /@media \(max-width: 1050px\)/)
+  assert.match(styles, /\.settings-navigation-list \{[\s\S]*flex-direction: row/)
+  assert.doesNotMatch(styles, /\.settings-category-label \{[\s\S]*display: none/)
   assert.match(settingCard, /settings-section__heading/)
   assert.match(settingCard, /text-base font-semibold leading-6 text-foreground/)
   assert.match(settingCard, /settings-section__content border-t border-divider/)
