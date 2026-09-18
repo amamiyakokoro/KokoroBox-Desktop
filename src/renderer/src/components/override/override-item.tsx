@@ -215,12 +215,12 @@ const OverrideItem: React.FC<Props> = (props) => {
         }}
       >
         <div {...attributes} {...listeners} className="h-full w-full">
-          <CardBody>
-            <div className="flex justify-between h-8 gap-1">
+          <CardBody className="p-3">
+            <div className="flex h-7 justify-between gap-1">
               <div className="flex min-w-0 items-center">
                 <h3
                   title={info?.name}
-                  className={`text-ellipsis whitespace-nowrap overflow-hidden text-md font-bold leading-8 text-foreground`}
+                  className="truncate text-sm font-semibold leading-7 text-foreground"
                 >
                   {info?.name}
                 </h3>
@@ -232,6 +232,7 @@ const OverrideItem: React.FC<Props> = (props) => {
                     size="sm"
                     variant="light"
                     color="default"
+                    aria-label={tr('Refresh')}
                     disabled={updating}
                     onPress={async () => {
                       setUpdating(true)
@@ -256,7 +257,13 @@ const OverrideItem: React.FC<Props> = (props) => {
 
                 <Dropdown>
                   <DropdownTrigger>
-                    <Button isIconOnly size="sm" variant="light" color="default">
+                    <Button
+                      isIconOnly
+                      size="sm"
+                      variant="light"
+                      color="default"
+                      aria-label={tr('Edit details')}
+                    >
                       <IoMdMore color="default" className={`text-[24px]`} />
                     </Button>
                   </DropdownTrigger>
@@ -276,19 +283,19 @@ const OverrideItem: React.FC<Props> = (props) => {
               </div>
             </div>
             <div className="flex justify-between">
-              <div className={`mt-2 flex justify-start`}>
+              <div className="mt-1.5 flex items-center">
                 {info.global && (
-                  <Chip size="sm" variant="dot" color="primary" className="mr-2">
+                  <Chip size="sm" variant="dot" color="primary" className="mr-1.5">
                     {tr('Global')}
                   </Chip>
                 )}
-                <Chip size="sm" variant="bordered">
+                <span className="rounded-md bg-default-100 px-1.5 py-0.5 text-[11px] text-foreground-500">
                   {info.ext === 'yaml' ? 'YAML' : 'JavaScript'}
-                </Chip>
+                </span>
               </div>
               {info.type === 'remote' && (
-                <div className={`mt-2 flex justify-end`}>
-                  <small>{dayjs(info.updated).fromNow()}</small>
+                <div className="mt-1.5 flex items-center justify-end">
+                  <small className="text-foreground-500">{dayjs(info.updated).fromNow()}</small>
                 </div>
               )}
             </div>

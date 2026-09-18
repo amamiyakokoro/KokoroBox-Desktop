@@ -7,6 +7,7 @@ import {
   normalizeSiderOrder
 } from '../src/renderer/src/components/sider/sider-order.ts'
 import { normalizeCoreVersion } from '../src/renderer/src/components/sider/core-version.ts'
+import { formatLogTimestamp } from '../src/renderer/src/components/logs/log-display.ts'
 
 test('settings drafts merge nested objects and replace arrays without mutating the source', () => {
   const original = {
@@ -315,6 +316,70 @@ test('connection rows stay dense while preserving realtime data and grouped acti
   assert.match(group, /className="mr-2 size-10 shrink-0 bg-transparent"/)
   assert.match(group, /group-hover:opacity-100 group-focus-within:opacity-100/)
   assert.match(group, /onPress=\{\(\) => onCloseAll\(groupKey\)\}/)
+})
+
+test('operational lists use compact hierarchy without changing their behavior', () => {
+  const rulesPage = readFileSync('src/renderer/src/pages/rules.tsx', 'utf8')
+  const ruleItem = readFileSync('src/renderer/src/components/rules/rule-item.tsx', 'utf8')
+  const geoData = readFileSync('src/renderer/src/components/resources/geo-data.tsx', 'utf8')
+  const ruleProvider = readFileSync(
+    'src/renderer/src/components/resources/rule-provider.tsx',
+    'utf8'
+  )
+  const overridesPage = readFileSync('src/renderer/src/pages/override.tsx', 'utf8')
+  const overrideItem = readFileSync(
+    'src/renderer/src/components/override/override-item.tsx',
+    'utf8'
+  )
+  const logsPage = readFileSync('src/renderer/src/pages/logs.tsx', 'utf8')
+  const logItem = readFileSync('src/renderer/src/components/logs/log-item.tsx', 'utf8')
+
+  assert.match(rulesPage, /<Virtuoso/)
+  assert.match(ruleItem, /<CardBody className="w-full px-3 py-2">/)
+  assert.match(ruleItem, /hasHits \? 'bg-primary\/10 font-medium text-primary'/)
+  assert.match(ruleItem, /aria-hidden="true"[\s\S]*→/)
+  assert.match(ruleItem, /aria-label=\{`\$\{tr\('Enable rule'\)\}:/)
+  assert.match(ruleItem, /mihomoRulesDisable/)
+
+  assert.match(geoData, /title=\{tr\('Geo databases'\)\}/)
+  assert.match(geoData, /max-w-\[40rem\]/)
+  assert.match(geoData, /title=\{value\}/)
+  assert.match(geoData, /mihomoUpgradeGeo\(\)/)
+  assert.match(ruleProvider, /flex min-h-14 items-center gap-3 px-1 py-2/)
+  assert.match(ruleProvider, /tr\('\{0\} rules', \[provider\.ruleCount\]\)/)
+  assert.match(ruleProvider, /provider\.vehicleType\}::\{provider\.behavior/)
+  assert.doesNotMatch(ruleProvider, /<Chip/)
+  assert.match(ruleProvider, /mihomoUpdateRuleProviders/)
+
+  assert.match(overridesPage, /m-2 grid grid-cols-2 gap-2/)
+  assert.doesNotMatch(overridesPage, /lg:grid-cols-3|xl:grid-cols-4/)
+  assert.match(overridesPage, /addOverrideItem/)
+  assert.match(overrideItem, /<CardBody className="p-3">/)
+  assert.match(overrideItem, /bg-default-100 px-1\.5 py-0\.5 text-\[11px\]/)
+  assert.match(overrideItem, /<DropdownMenu onAction=\{onMenuAction\}>/)
+
+  assert.match(logsPage, /<Virtuoso/)
+  assert.match(logsPage, /followOutput=\{trace\}/)
+  assert.match(logsPage, /clearMihomoLogs\(\)/)
+  assert.match(logsPage, /restartMihomoLogs\(\)/)
+  assert.doesNotMatch(logItem, /<Card/)
+  assert.match(logItem, /grid-cols-\[5\.25rem_4\.5rem_minmax\(0,1fr\)\]/)
+  assert.match(logItem, /border-b border-divider\/70/)
+  assert.match(logItem, /whitespace-pre-wrap break-words font-mono/)
+})
+
+test('log timestamps stay compact for today and retain the date across days', () => {
+  const reference = new Date(2026, 8, 19, 12, 0, 0)
+
+  assert.equal(
+    formatLogTimestamp(new Date(2026, 8, 19, 3, 7, 55).toISOString(), reference),
+    '03:07:55'
+  )
+  assert.equal(
+    formatLogTimestamp(new Date(2026, 8, 18, 3, 7, 55).toISOString(), reference),
+    '2026-09-18 03:07:55'
+  )
+  assert.equal(formatLogTimestamp('unparsed timestamp', reference), 'unparsed timestamp')
 })
 
 test('common settings choices use the shared segmented control', () => {

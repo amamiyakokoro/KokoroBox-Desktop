@@ -6,11 +6,11 @@ import {
 } from '@renderer/utils/ipc'
 import { getHash } from '@renderer/utils/hash'
 import Viewer from './viewer'
-import { Fragment, useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import useSWR from 'swr'
 import SettingCard from '../base/base-setting-card'
 import SettingItem from '../base/base-setting-item'
-import { Button, Chip } from '@heroui/react'
+import { Button } from '@heroui/react'
 import { IoMdRefresh } from 'react-icons/io'
 import { CgLoadbarDoc } from 'react-icons/cg'
 import { MdEditDocument } from 'react-icons/md'
@@ -146,54 +146,58 @@ const RuleProvider: React.FC = () => {
         </Button>
       </SettingItem>
       {providers.map((provider, index) => (
-        <Fragment key={provider.name}>
-          <SettingItem
-            compatKey="legacy"
-            title={provider.name}
-            actions={
-              <Chip className="ml-2" size="sm">
-                {provider.ruleCount}
-              </Chip>
-            }
-          >
-            <div className="flex h-8 leading-8 text-foreground-500">
-              <div>{dayjs(provider.updatedAt).fromNow()}</div>
-              {provider.vehicleType !== 'Inline' && (
-                <Button
-                  isIconOnly
-                  className="ml-2"
-                  size="sm"
-                  onPress={() => openProviderDetails(provider)}
-                >
-                  {provider.vehicleType == 'File' ? (
-                    <MdEditDocument className={`text-lg`} />
-                  ) : (
-                    <CgLoadbarDoc className={`text-lg`} />
-                  )}
-                </Button>
-              )}
+        <div
+          key={provider.name}
+          className={`flex min-h-14 items-center gap-3 px-1 py-2 ${
+            index !== providers.length - 1 ? 'border-b border-divider' : ''
+          }`}
+        >
+          <div className="min-w-0 flex-1">
+            <div className="flex min-w-0 items-baseline gap-2">
+              <span className="truncate text-sm font-medium text-foreground" title={provider.name}>
+                {provider.name}
+              </span>
+              <span className="shrink-0 text-xs font-medium text-foreground-600 tabular-nums">
+                {tr('{0} rules', [provider.ruleCount])}
+              </span>
+            </div>
+            <div
+              className="mt-0.5 truncate text-xs text-foreground-500"
+              title={`${provider.vehicleType}::${provider.behavior} · ${provider.format || 'InlineRule'} · ${dayjs(provider.updatedAt).fromNow()}`}
+            >
+              {provider.vehicleType}::{provider.behavior} · {provider.format || 'InlineRule'} ·{' '}
+              {dayjs(provider.updatedAt).fromNow()}
+            </div>
+          </div>
+          <div className="flex shrink-0 items-center gap-1">
+            {provider.vehicleType !== 'Inline' && (
               <Button
                 isIconOnly
-                className="ml-2"
+                variant="light"
                 size="sm"
-                onPress={() => {
-                  onUpdate(provider.name, index)
-                }}
+                aria-label={`${tr('View details')}: ${provider.name}`}
+                onPress={() => openProviderDetails(provider)}
               >
-                <IoMdRefresh className={`text-lg ${updating[index] ? 'animate-spin' : ''}`} />
+                {provider.vehicleType == 'File' ? (
+                  <MdEditDocument className="text-lg" />
+                ) : (
+                  <CgLoadbarDoc className="text-lg" />
+                )}
               </Button>
-            </div>
-          </SettingItem>
-          <SettingItem
-            compatKey="legacy"
-            title={<div className="text-foreground-500">{provider.format || 'InlineRule'}</div>}
-            divider={index !== providers.length - 1}
-          >
-            <div className="h-8 leading-8 text-foreground-500">
-              {provider.vehicleType}::{provider.behavior}
-            </div>
-          </SettingItem>
-        </Fragment>
+            )}
+            <Button
+              isIconOnly
+              variant="light"
+              size="sm"
+              aria-label={`${tr('Refresh')}: ${provider.name}`}
+              onPress={() => {
+                onUpdate(provider.name, index)
+              }}
+            >
+              <IoMdRefresh className={`text-lg ${updating[index] ? 'animate-spin' : ''}`} />
+            </Button>
+          </div>
+        </div>
       ))}
     </SettingCard>
   )

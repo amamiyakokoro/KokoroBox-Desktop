@@ -1,4 +1,5 @@
 import { tr } from '../../../../shared/i18n'
+/* eslint-disable react/prop-types */
 import { Button, Input, Switch, Tab, Tabs } from '@heroui/react'
 import SettingCard from '@renderer/components/base/base-setting-card'
 import SettingItem from '@renderer/components/base/base-setting-item'
@@ -13,6 +14,39 @@ const defaultGeoxUrl = {
   geosite: 'https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geosite.dat',
   mmdb: 'https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geoip.metadb',
   asn: 'https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/GeoLite2-ASN.mmdb'
+}
+
+interface Props {
+  title: string
+  value: string
+  savedValue: string
+  onChange: (value: string) => void
+  onConfirm: () => void
+}
+
+const GeoUrlSetting: React.FC<Props> = (props) => {
+  const { title, value, savedValue, onChange, onConfirm } = props
+
+  return (
+    <SettingItem compatKey="legacy" title={title} divider>
+      <div className="flex w-[70%] max-w-[40rem] min-w-0 items-center justify-end gap-2">
+        <Input
+          size="sm"
+          aria-label={title}
+          title={value}
+          value={value}
+          className="min-w-0 flex-1"
+          classNames={{ input: 'truncate font-mono text-xs' }}
+          onValueChange={onChange}
+        />
+        {value !== savedValue && (
+          <Button size="sm" color="primary" className="shrink-0" onPress={onConfirm}>
+            {tr('Confirm')}
+          </Button>
+        )}
+      </div>
+    </SettingItem>
+  )
 }
 
 const GeoData: React.FC = () => {
@@ -32,6 +66,18 @@ const GeoData: React.FC = () => {
   const [asnInput, setAsnInput] = useState(geoxUrl.asn)
   const [updating, setUpdating] = useState(false)
 
+  const updateDatabases = async (): Promise<void> => {
+    setUpdating(true)
+    try {
+      await mihomoUpgradeGeo()
+      notify(tr('Database updated'), { variant: 'success' })
+    } catch (e) {
+      notify(e, { variant: 'danger' })
+    } finally {
+      setUpdating(false)
+    }
+  }
+
   useEffect(() => {
     setGeoIpInput(geoxUrl.geoip)
     setGeositeInput(geoxUrl.geosite)
@@ -41,75 +87,53 @@ const GeoData: React.FC = () => {
 
   return (
     <SettingCard>
-      <SettingItem compatKey="legacy" title={tr('GeoIP-DAT database')} divider>
-        <div className="flex w-[70%]">
-          {geoipInput !== geoxUrl.geoip && (
-            <Button
-              size="sm"
-              color="primary"
-              className="mr-2"
-              onPress={() => {
-                patchControledMihomoConfig({ 'geox-url': { ...geoxUrl, geoip: geoipInput } })
-              }}
-            >
-              {tr('Confirm')}
-            </Button>
-          )}
-          <Input size="sm" value={geoipInput} onValueChange={setGeoIpInput} />
-        </div>
+      <SettingItem compatKey="legacy" title={tr('Geo databases')} divider>
+        <Button
+          size="sm"
+          isIconOnly
+          variant="light"
+          aria-label={tr('Update databases')}
+          onPress={updateDatabases}
+        >
+          <IoMdRefresh className={`text-lg ${updating ? 'animate-spin' : ''}`} />
+        </Button>
       </SettingItem>
-      <SettingItem compatKey="legacy" title={tr('GeoIP-MMDB database')} divider>
-        <div className="flex w-[70%]">
-          {mmdbInput !== geoxUrl.mmdb && (
-            <Button
-              size="sm"
-              color="primary"
-              className="mr-2"
-              onPress={() => {
-                patchControledMihomoConfig({ 'geox-url': { ...geoxUrl, mmdb: mmdbInput } })
-              }}
-            >
-              {tr('Confirm')}
-            </Button>
-          )}
-          <Input size="sm" value={mmdbInput} onValueChange={setMmdbInput} />
-        </div>
-      </SettingItem>
-      <SettingItem compatKey="legacy" title={tr('GeoSite database')} divider>
-        <div className="flex w-[70%]">
-          {geositeInput !== geoxUrl.geosite && (
-            <Button
-              size="sm"
-              color="primary"
-              className="mr-2"
-              onPress={() => {
-                patchControledMihomoConfig({ 'geox-url': { ...geoxUrl, geosite: geositeInput } })
-              }}
-            >
-              {tr('Confirm')}
-            </Button>
-          )}
-          <Input size="sm" value={geositeInput} onValueChange={setGeositeInput} />
-        </div>
-      </SettingItem>
-
-      <SettingItem compatKey="legacy" title={tr('IP-ASN database')} divider>
-        <div className="flex w-[70%]">
-          {asnInput !== geoxUrl.asn && (
-            <Button
-              size="sm"
-              color="primary"
-              className="mr-2"
-              onPress={() => {
-                patchControledMihomoConfig({ 'geox-url': { ...geoxUrl, asn: asnInput } })
-              }}
-            >
-              {tr('Confirm')}
-            </Button>
-          )}
-          <Input size="sm" value={asnInput} onValueChange={setAsnInput} />
-        </div>
-      </SettingItem>
+      <GeoUrlSetting
+        title={tr('GeoIP-DAT database')}
+        value={geoipInput}
+        savedValue={geoxUrl.geoip}
+        onChange={setGeoIpInput}
+        onConfirm={() => {
+          patchControledMihomoConfig({ 'geox-url': { ...geoxUrl, geoip: geoipInput } })
+        }}
+      />
+      <GeoUrlSetting
+        title={tr('GeoIP-MMDB database')}
+        value={mmdbInput}
+        savedValue={geoxUrl.mmdb}
+        onChange={setMmdbInput}
+        onConfirm={() => {
+          patchControledMihomoConfig({ 'geox-url': { ...geoxUrl, mmdb: mmdbInput } })
+        }}
+      />
+      <GeoUrlSetting
+        title={tr('GeoSite database')}
+        value={geositeInput}
+        savedValue={geoxUrl.geosite}
+        onChange={setGeositeInput}
+        onConfirm={() => {
+          patchControledMihomoConfig({ 'geox-url': { ...geoxUrl, geosite: geositeInput } })
+        }}
+      />
+      <GeoUrlSetting
+        title={tr('IP-ASN database')}
+        value={asnInput}
+        savedValue={geoxUrl.asn}
+        onChange={setAsnInput}
+        onConfirm={() => {
+          patchControledMihomoConfig({ 'geox-url': { ...geoxUrl, asn: asnInput } })
+        }}
+      />
       <SettingItem compatKey="legacy" title={tr('GeoIP mode')} divider>
         <Tabs
           size="sm"
@@ -126,26 +150,6 @@ const GeoData: React.FC = () => {
       <SettingItem
         compatKey="legacy"
         title={tr('Update databases automatically')}
-        actions={
-          <Button
-            size="sm"
-            isIconOnly
-            variant="light"
-            onPress={async () => {
-              setUpdating(true)
-              try {
-                await mihomoUpgradeGeo()
-                notify(tr('Database updated'), { variant: 'success' })
-              } catch (e) {
-                notify(e, { variant: 'danger' })
-              } finally {
-                setUpdating(false)
-              }
-            }}
-          >
-            <IoMdRefresh className={`text-lg ${updating ? 'animate-spin' : ''}`} />
-          </Button>
-        }
         divider={geoAutoUpdate}
       >
         <Switch

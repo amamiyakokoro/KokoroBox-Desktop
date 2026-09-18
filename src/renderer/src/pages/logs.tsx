@@ -4,7 +4,7 @@ import LogItem from '@renderer/components/logs/log-item'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'
 import { startTransition, useEffect, useMemo, useRef, useState } from 'react'
-import { Button, Divider, Input } from '@heroui/react'
+import { Button, Divider, Input, Tooltip } from '@heroui/react'
 import { Virtuoso } from 'react-virtuoso'
 import { IoLocationSharp } from 'react-icons/io5'
 import { CgTrash } from 'react-icons/cg'
@@ -215,32 +215,38 @@ const Logs: React.FC = () => {
                 </ListBox>
               </Select.Popover>
             </Select>
-            <Button
-              size="sm"
-              isIconOnly
-              color={trace ? 'primary' : 'default'}
-              variant={trace ? 'solid' : 'bordered'}
-              onPress={() => {
-                setTrace((prev) => !prev)
-              }}
-            >
-              <IoLocationSharp className="text-lg" />
-            </Button>
-            <Button
-              size="sm"
-              isIconOnly
-              variant="light"
-              color="danger"
-              onPress={() => {
-                clearMihomoLogs()
-              }}
-            >
-              <CgTrash className="text-lg" />
-            </Button>
+            <Tooltip content={trace ? tr('Stop following new logs') : tr('Follow new logs')}>
+              <Button
+                size="sm"
+                isIconOnly
+                color={trace ? 'primary' : 'default'}
+                variant={trace ? 'solid' : 'bordered'}
+                aria-label={trace ? tr('Stop following new logs') : tr('Follow new logs')}
+                onPress={() => {
+                  setTrace((prev) => !prev)
+                }}
+              >
+                <IoLocationSharp className="text-lg" />
+              </Button>
+            </Tooltip>
+            <Tooltip content={tr('Clear logs')}>
+              <Button
+                size="sm"
+                isIconOnly
+                variant="light"
+                color="danger"
+                aria-label={tr('Clear logs')}
+                onPress={() => {
+                  clearMihomoLogs()
+                }}
+              >
+                <CgTrash className="text-lg" />
+              </Button>
+            </Tooltip>
           </div>
           <Divider />
         </div>
-        <div className="min-h-0 flex-1 pt-2">
+        <div className="min-h-0 flex-1 py-1">
           <Virtuoso
             className="h-full pr-1"
             data={filteredLogs}
