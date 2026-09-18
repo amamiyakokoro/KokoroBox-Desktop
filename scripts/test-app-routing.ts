@@ -1146,6 +1146,18 @@ test('application routing rules use a two-line identity-first card layout', () =
   assert.match(page, /knownGroupIds/)
   assert.match(page, /tr\('Individual rules'\)/)
   assert.match(page, /tr\('Rule groups'\)/)
+  assert.match(page, /title=\{tr\('Application routing'\)\}/)
+  assert.doesNotMatch(page, /<h2[^>]*>\{tr\('Application routing'\)\}<\/h2>/)
+  assert.doesNotMatch(page, /<span[^>]*>\{tr\('or'\)\}<\/span>/)
+  assert.match(page, /const isProxyTrafficBlocked =/)
+  assert.match(page, /border-default-200 bg-default-50 text-foreground-600/)
+  assert.match(row, /aria-label=\{tr\('Rule actions'\)\}/)
+  assert.match(row, /disabledKeys=\{/)
+  assert.match(row, /if \(key === 'move-up'\) onMove\(-1\)/)
+  assert.match(row, /if \(key === 'move-down'\) onMove\(1\)/)
+  assert.match(row, /if \(key === 'delete'\) onDelete\(\)/)
+  assert.match(row, /hover:border-default-200/)
+  assert.match(row, /focus-within:border-primary\/40/)
 })
 
 test('application rule entry keeps match type and identifier on one desktop row', () => {

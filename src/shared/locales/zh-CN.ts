@@ -125,6 +125,7 @@ export const messages: Readonly<Record<string, string>> = {
   'Delete rule group': '删除规则组',
   'Rule group name': '规则组名称',
   'Rule group actions': '规则组操作',
+  'Rule actions': '规则操作',
   'Manual rule group': '手动规则组',
   'For example: Games': '例如：游戏',
   'After creating the group, use its menu to add applications or scan a folder.':

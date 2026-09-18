@@ -1,6 +1,19 @@
 import { tr } from '../../../../shared/i18n'
-import { Button, Card, CardBody, Input, Select, SelectItem, Switch, Tooltip } from '@heroui/react'
-import { MdArrowDownward, MdArrowUpward, MdDeleteOutline } from 'react-icons/md'
+import {
+  Button,
+  Card,
+  CardBody,
+  Dropdown,
+  DropdownItem,
+  DropdownMenu,
+  DropdownTrigger,
+  Input,
+  Select,
+  SelectItem,
+  Switch,
+  Tooltip
+} from '@heroui/react'
+import { MdArrowDownward, MdArrowUpward, MdDeleteOutline, MdMoreHoriz } from 'react-icons/md'
 import defaultApplicationIcon from '../../../../../resources/app-routing-default-icon.svg?url'
 import { appRoutingExecutableName } from '../../../../shared/app-routing'
 
@@ -95,8 +108,9 @@ export function AppRoutingRuleRow({
                 defaultValue={rule.processPattern}
                 classNames={{
                   base: 'min-w-0',
-                  input: 'truncate text-base font-semibold',
-                  inputWrapper: 'min-h-9 h-9 px-1 bg-transparent shadow-none'
+                  input: 'cursor-text truncate text-base font-semibold',
+                  inputWrapper:
+                    'min-h-9 h-9 px-2 border border-transparent bg-transparent shadow-none transition-colors hover:border-default-200 hover:bg-default-100/60 focus-within:border-primary/40 focus-within:bg-default-100/70'
                 }}
                 onBlur={(event) => {
                   const processPattern = event.currentTarget.value.trim()
@@ -112,37 +126,46 @@ export function AppRoutingRuleRow({
               />
             </div>
           </Tooltip>
-          <Button
-            isIconOnly
-            size="sm"
-            variant="light"
-            aria-label={tr('Move up')}
-            isDisabled={index === 0 || disabled}
-            onPress={() => onMove(-1)}
-          >
-            <MdArrowUpward />
-          </Button>
-          <Button
-            isIconOnly
-            size="sm"
-            variant="light"
-            aria-label={tr('Move down')}
-            isDisabled={index === count - 1 || disabled}
-            onPress={() => onMove(1)}
-          >
-            <MdArrowDownward />
-          </Button>
-          <Button
-            isIconOnly
-            size="sm"
-            color="danger"
-            variant="light"
-            aria-label={tr('Delete')}
-            isDisabled={disabled}
-            onPress={onDelete}
-          >
-            <MdDeleteOutline className="text-lg" />
-          </Button>
+          <Dropdown placement="bottom-end">
+            <DropdownTrigger>
+              <Button
+                isIconOnly
+                size="sm"
+                variant="light"
+                aria-label={tr('Rule actions')}
+                isDisabled={disabled}
+              >
+                <MdMoreHoriz className="text-lg" />
+              </Button>
+            </DropdownTrigger>
+            <DropdownMenu
+              aria-label={tr('Rule actions')}
+              disabledKeys={[
+                ...(index === 0 ? ['move-up'] : []),
+                ...(index === count - 1 ? ['move-down'] : [])
+              ]}
+              onAction={(key) => {
+                if (key === 'move-up') onMove(-1)
+                if (key === 'move-down') onMove(1)
+                if (key === 'delete') onDelete()
+              }}
+            >
+              <DropdownItem key="move-up" startContent={<MdArrowUpward />}>
+                {tr('Move up')}
+              </DropdownItem>
+              <DropdownItem key="move-down" startContent={<MdArrowDownward />}>
+                {tr('Move down')}
+              </DropdownItem>
+              <DropdownItem
+                key="delete"
+                color="danger"
+                className="text-danger"
+                startContent={<MdDeleteOutline />}
+              >
+                {tr('Delete')}
+              </DropdownItem>
+            </DropdownMenu>
+          </Dropdown>
         </div>
         <div
           className={`grid min-w-0 items-center gap-2 ${

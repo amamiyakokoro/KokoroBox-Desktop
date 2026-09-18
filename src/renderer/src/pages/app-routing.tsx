@@ -138,6 +138,18 @@ const AppRouting: React.FC = () => {
       : status?.backend === 'linux-cgroup-v1-net-cls'
         ? 'cgroup v1 net_cls'
         : undefined
+  const isProxyTrafficBlocked =
+    config?.enabled === true &&
+    (status?.state === 'degraded' || status?.state === 'error') &&
+    status.mihomoAvailable === false &&
+    (status.state === 'degraded' || status.firewallReady === true) &&
+    (status.protectedApplicationCount ?? 0) > 0
+  const failureProtectionTone =
+    isProxyTrafficBlocked && status?.state === 'error'
+      ? 'border-danger/30 bg-danger-50 text-danger-800 dark:bg-danger-900/20 dark:text-danger-300'
+      : isProxyTrafficBlocked
+        ? 'border-warning/30 bg-warning-50 text-warning-800 dark:bg-warning-900/20 dark:text-warning-300'
+        : 'border-default-200 bg-default-50 text-foreground-600 dark:bg-default-100/40'
   const submitPattern = async (): Promise<void> => {
     const identifierKind = isMac ? macIdentifierKind : isLinux ? linuxIdentifierKind : undefined
     if (await addPattern(processPattern, identifierKind)) {
@@ -258,16 +270,17 @@ const AppRouting: React.FC = () => {
       )}
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-4 p-4">
         <div className="flex items-start justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2">
-              <h2 className="text-xl font-semibold">{tr('Application routing')}</h2>
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
               <Chip size="sm" color={statusColor(status)} variant="flat">
                 {getAppRoutingStatusLabel(status)}
               </Chip>
+              <p className="text-sm text-foreground-500">
+                {tr(
+                  'Route selected applications through local Mihomo without system proxy or TUN.'
+                )}
+              </p>
             </div>
-            <p className="mt-1 text-sm text-foreground-500">
-              {tr('Route selected applications through local Mihomo without system proxy or TUN.')}
-            </p>
             {currentStatusMessage && !needsMacApproval && (
               <p
                 className={`mt-2 text-sm ${status?.state === 'error' ? 'text-danger' : 'text-warning'}`}
@@ -470,7 +483,6 @@ const AppRouting: React.FC = () => {
             >
               {tr('Add pattern rule')}
             </Button>
-            <span className="text-sm text-foreground-500">{tr('or')}</span>
             <Button
               className="app-routing-rule-action"
               variant="flat"
@@ -726,7 +738,7 @@ const AppRouting: React.FC = () => {
           </div>
         )}
 
-        <div className="rounded-xl bg-warning-50 p-4 text-sm text-warning-800 dark:bg-warning-900/20 dark:text-warning-300">
+        <div className={`rounded-xl border p-4 text-sm ${failureProtectionTone}`}>
           <div className="font-semibold">{tr('Proxy failure protection')}</div>
           <p className="mt-1">
             {tr(
