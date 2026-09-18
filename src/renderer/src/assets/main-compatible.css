@@ -542,7 +542,7 @@ input[type='number'] {
 .settings-layout .setting-item,
 .feature-settings-layout .setting-item {
   grid-template-columns: minmax(10rem, 34%) minmax(0, 1fr);
-  padding-block: calc(var(--spacing) * 3);
+  padding-block: calc(var(--spacing) * 2);
 }
 
 .settings-layout .setting-item__title,
@@ -565,6 +565,11 @@ input[type='number'] {
 .settings-section__content > .setting-item__divider:last-child,
 .feature-settings-section__content > .setting-item__divider:last-child {
   display: none;
+}
+
+.settings-section__content > .setting-item__divider,
+.feature-settings-section__content > .setting-item__divider {
+  margin-block: 0;
 }
 
 @keyframes settings-search-highlight {

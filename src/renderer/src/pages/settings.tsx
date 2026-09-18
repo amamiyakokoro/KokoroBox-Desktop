@@ -149,57 +149,61 @@ const Settings: React.FC = () => {
             })}
           </div>
         </nav>
-        <main className="min-w-0 px-4 pb-8">
-          <div className="flex items-center gap-4 px-3 pb-1 pt-5">
-            <h1 className="min-w-0 flex-1 text-xl font-semibold tracking-tight">
-              {normalizedSearch ? tr('Search settings') : selected.label}
-            </h1>
-            <Input
-              size="sm"
-              isClearable
-              value={search}
-              aria-label={tr('Search settings')}
-              placeholder={tr('Search settings')}
-              startContent={<LuSearch className="shrink-0 text-foreground-400" />}
-              className="settings-content-search w-60 shrink-0"
-              onValueChange={setSearch}
-              onClear={() => setSearch('')}
-            />
-          </div>
-          {normalizedSearch ? (
-            <div className="mx-3 mt-3 border-y border-divider">
-              {searchResults.length ? (
-                searchResults.map(({ category: resultCategory, entry }) => (
-                  <button
-                    key={entry.id}
-                    type="button"
-                    className="flex w-full items-center gap-3 border-b border-divider px-2 py-3 text-left transition-colors last:border-b-0 hover:bg-default-100 focus-visible:outline-2 focus-visible:outline-primary"
-                    onClick={() => {
-                      selectCategory(resultCategory.key, entry.id)
-                      setSearch('')
-                    }}
-                  >
-                    <resultCategory.icon className="shrink-0 text-lg text-foreground-400" />
-                    <span className="min-w-0 flex-1">
-                      <span className="block text-sm font-medium">{entry.label}</span>
-                      <span className="block text-xs text-foreground-500">
-                        {resultCategory.label}
-                      </span>
-                    </span>
-                    <LuChevronRight className="shrink-0 text-foreground-400" />
-                  </button>
-                ))
-              ) : (
-                <div className="px-2 py-8 text-center text-sm text-foreground-500">
-                  {tr('No settings found')}
-                </div>
-              )}
+        <main className="min-w-0 px-4 pb-4">
+          <div className="mx-auto w-full max-w-[1040px]">
+            <div className="flex items-center gap-4 px-3 pb-1 pt-3">
+              <h1 className="min-w-0 flex-1 text-xl font-semibold tracking-tight">
+                {normalizedSearch ? tr('Search settings') : selected.label}
+              </h1>
+              <Input
+                size="sm"
+                isClearable
+                value={search}
+                aria-label={tr('Search settings')}
+                placeholder={tr('Search settings')}
+                startContent={<LuSearch className="shrink-0 text-foreground-400" />}
+                className="settings-content-search w-60 shrink-0"
+                onValueChange={setSearch}
+                onClear={() => setSearch('')}
+              />
             </div>
-          ) : (
-            <SettingCardModeProvider value={false}>
-              <SettingItemModeProvider value={false}>{selected.content()}</SettingItemModeProvider>
-            </SettingCardModeProvider>
-          )}
+            {normalizedSearch ? (
+              <div className="mx-3 mt-2 border-y border-divider">
+                {searchResults.length ? (
+                  searchResults.map(({ category: resultCategory, entry }) => (
+                    <button
+                      key={entry.id}
+                      type="button"
+                      className="flex w-full items-center gap-3 border-b border-divider px-2 py-2 text-left transition-colors last:border-b-0 hover:bg-default-100 focus-visible:outline-2 focus-visible:outline-primary"
+                      onClick={() => {
+                        selectCategory(resultCategory.key, entry.id)
+                        setSearch('')
+                      }}
+                    >
+                      <resultCategory.icon className="shrink-0 text-lg text-foreground-400" />
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-sm font-medium">{entry.label}</span>
+                        <span className="block text-xs text-foreground-500">
+                          {resultCategory.label}
+                        </span>
+                      </span>
+                      <LuChevronRight className="shrink-0 text-foreground-400" />
+                    </button>
+                  ))
+                ) : (
+                  <div className="px-2 py-6 text-center text-sm text-foreground-500">
+                    {tr('No settings found')}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <SettingCardModeProvider value={false}>
+                <SettingItemModeProvider value={false}>
+                  {selected.content()}
+                </SettingItemModeProvider>
+              </SettingCardModeProvider>
+            )}
+          </div>
         </main>
       </div>
     </BasePage>
