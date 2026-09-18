@@ -53,6 +53,7 @@ const MihomoCoreCard: React.FC<Props> = ({ iconOnly }) => {
   const [mem, setMem] = useState(0)
   const [restarting, setRestarting] = useState(false)
   const coreVersion = normalizeCoreVersion(version?.version)
+  const originalVersion = coreVersion ? version?.version.trim() : undefined
   const versionLabel = versionError
     ? tr('Needs attention')
     : version
@@ -115,6 +116,7 @@ const MihomoCoreCard: React.FC<Props> = ({ iconOnly }) => {
         icon={<LuCpu />}
         title={tr('Core')}
         description={versionLabel}
+        descriptionTitle={originalVersion}
         status={version ? `${tr('Memory')} ${calcTraffic(mem)}` : undefined}
         statusTone={versionError ? 'danger' : 'default'}
         prioritizeDescription

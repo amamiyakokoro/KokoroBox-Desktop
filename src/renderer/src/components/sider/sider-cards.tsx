@@ -76,7 +76,11 @@ interface Props {
 
 export default function SiderCards({ iconOnly = false }: Props): React.JSX.Element {
   const { appConfig, patchAppConfig } = useAppConfig()
-  const configuredOrder = normalizeSiderOrder(appConfig?.siderOrder)
+  const persistedSiderOrder = appConfig?.siderOrder
+  const configuredOrder = useMemo(
+    () => normalizeSiderOrder(persistedSiderOrder),
+    [persistedSiderOrder]
+  )
   const supportsAppRouting = appRoutingSupported(window.api.platform, window.api.arch)
   const siderOrder = useMemo(
     () =>
