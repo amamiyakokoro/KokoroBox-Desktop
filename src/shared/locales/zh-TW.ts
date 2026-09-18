@@ -2,6 +2,10 @@
 export const messages: Readonly<Record<string, string>> = {
   General: '一般',
   'Settings categories': '設定分類',
+  'Appearance and interface': '外觀與介面',
+  'Core and system': '核心與系統',
+  'Data and integrations': '資料與整合',
+  'Diagnostics and about': '診斷與關於',
   'Core and service': '核心與服務',
   'Core runtime': '核心執行',
   'Service management': '服務管理',
@@ -10,6 +14,7 @@ export const messages: Readonly<Record<string, string>> = {
   'Mihomo settings': 'Mihomo 設定',
   'Developer integration': '開發者整合',
   'Background behavior': '背景行為',
+  Performance: '效能',
   'Environment integration': '環境整合',
   'Network behavior': '網路行為',
   'Application logs': '應用程式日誌',

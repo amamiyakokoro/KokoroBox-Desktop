@@ -3,8 +3,12 @@ import { Button, Input } from '@heroui/react'
 import BasePage from '@renderer/components/base/base-page'
 import { IoLogoGithub } from 'react-icons/io5'
 import WebdavConfig from '@renderer/components/settings/webdav-config'
-import GeneralConfig from '@renderer/components/settings/general-config'
-import AdvancedSettings from '@renderer/components/settings/advanced-settings'
+import GeneralConfig, { PerformanceConfig } from '@renderer/components/settings/general-config'
+import {
+  BackgroundBehaviorSettings,
+  IntegrationSettings,
+  NetworkBehaviorSettings
+} from '@renderer/components/settings/behavior-settings'
 import Actions from '@renderer/components/settings/actions'
 import ShortcutConfig from '@renderer/components/settings/shortcut-config'
 import SiderConfig from '@renderer/components/settings/sider-config'
@@ -14,6 +18,7 @@ import LogSetting from '@renderer/components/mihomo/log-setting'
 import EnvSetting from '@renderer/components/mihomo/env-setting'
 import { SettingCardModeProvider } from '@renderer/components/base/base-setting-card'
 import { SettingItemModeProvider } from '@renderer/components/base/base-setting-item'
+import { platform } from '@renderer/utils/init'
 import React, { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import {
@@ -23,23 +28,11 @@ import {
   LuChevronRight,
   LuCommand,
   LuCpu,
-  LuFileText,
-  LuLayoutPanelLeft,
   LuSearch,
-  LuSettings2,
   LuWrench
 } from 'react-icons/lu'
 
-type SettingsCategory =
-  | 'general'
-  | 'appearance'
-  | 'sidebar'
-  | 'core'
-  | 'logs'
-  | 'backup'
-  | 'shortcuts'
-  | 'advanced'
-  | 'maintenance'
+type SettingsCategory = 'general' | 'appearance' | 'core' | 'data' | 'shortcuts' | 'diagnostics'
 
 interface CategoryDefinition {
   key: SettingsCategory
@@ -60,35 +53,44 @@ const categories: CategoryDefinition[] = [
       tr('Check for updates automatically'),
       tr('Update channel'),
       tr('Notification style'),
-      tr('Disable GPU acceleration'),
-      tr('Reduce animations')
+      tr('Automatic lightweight mode'),
+      tr('Lightweight mode behavior'),
+      tr('Lightweight mode delay')
     ]
   },
   {
     key: 'appearance',
-    label: tr('Appearance'),
+    label: tr('Appearance and interface'),
     icon: LuBrush,
     entries: [
       tr('Show floating window'),
+      tr('Rotate floating icon based on network speed'),
       tr('Disable tray icon'),
       tr('Custom tray icon'),
       tr('Show proxy details in tray menu'),
+      tr('Tray menu latency layout'),
+      tr('Show network speed in the {0}', [
+        platform === 'win32'
+          ? tr('Taskbar')
+          : platform === 'darwin'
+            ? tr('Menu bar')
+            : tr('System tray')
+      ]),
       tr('Show Dock icon'),
       tr('Use system title bar'),
+      tr('Enable window drag area'),
       tr('Show update button'),
       tr('Background color'),
-      tr('Theme')
+      tr('Theme'),
+      tr('Disable GPU acceleration'),
+      tr('Reduce animations'),
+      tr('Sidebar settings'),
+      tr('Side panel')
     ]
   },
   {
-    key: 'sidebar',
-    label: tr('Sidebar settings'),
-    icon: LuLayoutPanelLeft,
-    entries: [tr('Sidebar settings'), tr('Side panel')]
-  },
-  {
     key: 'core',
-    label: tr('Core and service'),
+    label: tr('Core and system'),
     icon: LuCpu,
     entries: [
       tr('Core version'),
@@ -99,25 +101,24 @@ const categories: CategoryDefinition[] = [
       tr('Startup detection method'),
       tr('Elevation status'),
       tr('Service status'),
-      tr('Trusted path')
+      tr('Disable system CAs'),
+      tr('Disable built-in CAs'),
+      tr('Disable loopback detection'),
+      tr('Disable nftables'),
+      tr('Trusted path'),
+      tr('Stop core when offline'),
+      tr('Connectivity check interval'),
+      tr('Interfaces excluded from detection'),
+      tr('Use direct connections on specified Wi-Fi SSIDs')
     ]
   },
   {
-    key: 'logs',
-    label: tr('Log settings'),
-    icon: LuFileText,
-    entries: [
-      tr('Save logs'),
-      tr('Log retention days'),
-      tr('Log file size limit'),
-      tr('Live log entry limit')
-    ]
-  },
-  {
-    key: 'backup',
-    label: tr('Backup and restore'),
+    key: 'data',
+    label: tr('Data and integrations'),
     icon: LuArchiveRestore,
     entries: [
+      'GitHub API Token',
+      tr('Copy environment variable format'),
       tr('WebDAV backup'),
       tr('WebDAV URL'),
       tr('WebDAV backup directory'),
@@ -141,25 +142,14 @@ const categories: CategoryDefinition[] = [
     ]
   },
   {
-    key: 'advanced',
-    label: tr('Advanced settings'),
-    icon: LuSettings2,
-    entries: [
-      'GitHub API Token',
-      tr('Automatic lightweight mode'),
-      tr('Lightweight mode behavior'),
-      tr('Copy environment variable format'),
-      tr('Stop core when offline'),
-      tr('Connectivity check interval'),
-      tr('Interfaces excluded from detection'),
-      tr('Use direct connections on specified Wi-Fi SSIDs')
-    ]
-  },
-  {
-    key: 'maintenance',
-    label: tr('Maintenance and diagnostics'),
+    key: 'diagnostics',
+    label: tr('Diagnostics and about'),
     icon: LuWrench,
     entries: [
+      tr('Save logs'),
+      tr('Log retention days'),
+      tr('Log file size limit'),
+      tr('Live log entry limit'),
       tr('Open guided tour'),
       tr('Check for updates'),
       tr('Clear cache'),
@@ -173,20 +163,47 @@ const categories: CategoryDefinition[] = [
 ]
 
 const categoryContent: Record<SettingsCategory, React.ReactNode> = {
-  general: <GeneralConfig />,
-  appearance: <AppearanceConfig />,
-  sidebar: <SiderConfig />,
+  general: (
+    <>
+      <GeneralConfig />
+      <BackgroundBehaviorSettings />
+    </>
+  ),
+  appearance: (
+    <>
+      <AppearanceConfig />
+      <PerformanceConfig />
+      <SiderConfig />
+    </>
+  ),
   core: (
     <>
       <CoreRuntimeConfig />
       <EnvSetting />
+      <NetworkBehaviorSettings />
     </>
   ),
-  logs: <LogSetting />,
-  backup: <WebdavConfig />,
+  data: (
+    <>
+      <IntegrationSettings />
+      <WebdavConfig />
+    </>
+  ),
   shortcuts: <ShortcutConfig />,
-  advanced: <AdvancedSettings />,
-  maintenance: <Actions />
+  diagnostics: (
+    <>
+      <LogSetting />
+      <Actions />
+    </>
+  )
+}
+
+const legacyCategoryAliases: Readonly<Record<string, SettingsCategory>> = {
+  sidebar: 'appearance',
+  logs: 'diagnostics',
+  backup: 'data',
+  advanced: 'general',
+  maintenance: 'diagnostics'
 }
 
 const isSettingsCategory = (value: string | null): value is SettingsCategory =>
@@ -198,7 +215,9 @@ const Settings: React.FC = () => {
   const requestedCategory = searchParams.get('section')
   const category: SettingsCategory = isSettingsCategory(requestedCategory)
     ? requestedCategory
-    : 'general'
+    : requestedCategory
+      ? (legacyCategoryAliases[requestedCategory] ?? 'general')
+      : 'general'
   const selected = categories.find((item) => item.key === category) ?? categories[0]
   const normalizedSearch = search.trim().toLocaleLowerCase()
   const searchResults = useMemo(
