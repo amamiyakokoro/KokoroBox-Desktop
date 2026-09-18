@@ -6,6 +6,7 @@ import {
   groupForSiderKey,
   normalizeSiderOrder
 } from '../src/renderer/src/components/sider/sider-order.ts'
+import { normalizeCoreVersion } from '../src/renderer/src/components/sider/core-version.ts'
 
 test('settings drafts merge nested objects and replace arrays without mutating the source', () => {
   const original = {
@@ -189,6 +190,7 @@ test('desktop sidebar separates controls, live status and navigation', () => {
   assert.match(surfaces, /export const SiderStatusCard/)
   assert.match(surfaces, /metadataSeparator = '·'/)
   assert.match(surfaces, /showChevron \?\? !actions/)
+  assert.match(surfaces, /prioritizeDescription \? 'min-w-0 truncate' : 'shrink-0'/)
   assert.match(surfaces, /columns === 2 \? 'grid grid-cols-2 gap-1\.5' : 'flex flex-col gap-1\.5'/)
   assert.match(surfaces, /aria-current=\{active \? 'page' : undefined\}/)
   assert.equal(quickControl.match(/<button/g)?.length, 1)
@@ -226,6 +228,7 @@ test('desktop sidebar separates controls, live status and navigation', () => {
   assert.doesNotMatch(sniff, /patchMihomoConfig/)
   assert.match(profile, /<SiderStatusCard/)
   assert.match(profile, /aria-label=\{tr\('Runtime configuration'\)\}/)
+  assert.match(profile, /aria-label=\{tr\('Refresh'\)\}/)
   assert.doesNotMatch(profile, /<Card/)
   assert.match(connections, /<SiderStatusCard/)
   assert.match(connections, /<TrafficChart/)
@@ -239,6 +242,11 @@ test('desktop sidebar separates controls, live status and navigation', () => {
     'tun',
     'sysproxy'
   ])
+  assert.equal(normalizeCoreVersion(' v1.19.31 '), 'v1.19.31')
+  assert.equal(normalizeCoreVersion('v.'), undefined)
+  assert.equal(normalizeCoreVersion(''), undefined)
+  assert.match(core, /coreVersion \?\? tr\('Unknown'\)/)
+  assert.match(core, /prioritizeDescription/)
 })
 
 test('common settings choices use the shared segmented control', () => {

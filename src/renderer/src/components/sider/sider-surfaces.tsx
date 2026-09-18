@@ -19,6 +19,7 @@ interface SiderStatusCardProps extends SiderNavItemProps {
   actions?: React.ReactNode
   details?: React.ReactNode
   metadataSeparator?: React.ReactNode
+  prioritizeDescription?: boolean
   showChevron?: boolean
 }
 
@@ -105,6 +106,7 @@ export const SiderStatusCard: React.FC<SiderStatusCardProps> = ({
   actions,
   details,
   metadataSeparator = '·',
+  prioritizeDescription = false,
   showChevron,
   onPress
 }) => (
@@ -133,12 +135,28 @@ export const SiderStatusCard: React.FC<SiderStatusCardProps> = ({
           <span className="block truncate text-sm font-semibold text-foreground">{title}</span>
           {(description || status) && (
             <span className="mt-0.5 flex min-w-0 items-center gap-1 text-xs">
-              {description && <span className="truncate text-foreground-500">{description}</span>}
+              {description && (
+                <span
+                  className={cn(
+                    'truncate text-foreground-500',
+                    prioritizeDescription && 'max-w-[60%] shrink-0'
+                  )}
+                >
+                  {description}
+                </span>
+              )}
               {description && status && (
                 <span className="text-foreground-300">{metadataSeparator}</span>
               )}
               {status && (
-                <span className={cn('shrink-0', statusToneClasses[statusTone])}>{status}</span>
+                <span
+                  className={cn(
+                    prioritizeDescription ? 'min-w-0 truncate' : 'shrink-0',
+                    statusToneClasses[statusTone]
+                  )}
+                >
+                  {status}
+                </span>
               )}
             </span>
           )}

@@ -13,6 +13,7 @@ import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { LuCpu } from 'react-icons/lu'
 import { notify } from '@renderer/utils/notification'
 import { SiderStatusCard } from './sider-surfaces'
+import { normalizeCoreVersion } from './core-version'
 
 interface Props {
   iconOnly?: boolean
@@ -51,6 +52,12 @@ const MihomoCoreCard: React.FC<Props> = ({ iconOnly }) => {
     : null
   const [mem, setMem] = useState(0)
   const [restarting, setRestarting] = useState(false)
+  const coreVersion = normalizeCoreVersion(version?.version)
+  const versionLabel = versionError
+    ? tr('Needs attention')
+    : version
+      ? (coreVersion ?? tr('Unknown'))
+      : tr('Loading')
 
   useEffect(() => {
     const token = PubSub.subscribe('mihomo-core-changed', () => {
@@ -107,9 +114,10 @@ const MihomoCoreCard: React.FC<Props> = ({ iconOnly }) => {
       <SiderStatusCard
         icon={<LuCpu />}
         title={tr('Core')}
-        description={versionError ? tr('Needs attention') : (version?.version ?? tr('Loading'))}
+        description={versionLabel}
         status={version ? `${tr('Memory')} ${calcTraffic(mem)}` : undefined}
         statusTone={versionError ? 'danger' : 'default'}
+        prioritizeDescription
         active={match}
         onPress={() => navigate(settingsPath)}
         actions={
