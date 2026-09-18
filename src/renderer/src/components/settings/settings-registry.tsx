@@ -497,6 +497,58 @@ export const getSettingsCategories = (): SettingsCategoryDefinition[] => {
     }
   ]
 
+  const diagnosticsPanels: SettingsPanelDefinition[] = [
+    {
+      key: 'logs',
+      label: tr('Application logs'),
+      entries: [
+        entry('save-logs', tr('Save logs'), tr('Application logs'), { panel: 'logs' }),
+        entry('log-retention-days', tr('Log retention days'), tr('Application logs'), {
+          panel: 'logs'
+        }),
+        entry('log-size-limit', tr('Log file size limit'), tr('Application logs'), {
+          panel: 'logs'
+        }),
+        entry('live-log-limit', tr('Live log entry limit'), tr('Application logs'), {
+          panel: 'logs'
+        })
+      ],
+      content: () => <LogSetting />
+    },
+    {
+      key: 'maintenance',
+      label: tr('Maintenance and diagnostics'),
+      entries: [
+        entry('guided-tour', tr('Open guided tour'), tr('Application actions'), {
+          panel: 'maintenance'
+        }),
+        entry('check-updates', tr('Check for updates'), tr('Application actions'), {
+          panel: 'maintenance'
+        }),
+        entry('clear-cache', tr('Clear cache'), tr('Diagnostics'), { panel: 'maintenance' }),
+        entry('heap-snapshot', tr('Create heap snapshot'), tr('Diagnostics'), {
+          panel: 'maintenance'
+        })
+      ],
+      content: () => <Actions sections={['application', 'diagnostics']} />
+    },
+    {
+      key: 'lifecycle',
+      label: tr('Version information'),
+      entries: [
+        entry('app-version', tr('App version'), tr('Version information'), {
+          panel: 'lifecycle'
+        }),
+        entry('reset-app', tr('Reset app'), tr('Danger zone'), { panel: 'lifecycle' }),
+        entry('quit-keep-core', tr('Quit and keep core running'), tr('Danger zone'), {
+          panel: 'lifecycle'
+        }),
+        entry('quit-app', tr('Quit app'), tr('Danger zone'), { panel: 'lifecycle' })
+      ],
+      content: () => <Actions sections={['version', 'danger']} />
+    }
+  ]
+
   return (
     [
       {
@@ -636,26 +688,8 @@ export const getSettingsCategories = (): SettingsCategoryDefinition[] => {
         key: 'diagnostics',
         label: tr('Diagnostics and about'),
         icon: LuWrench,
-        entries: [
-          entry('save-logs', tr('Save logs'), tr('Application logs')),
-          entry('log-retention-days', tr('Log retention days'), tr('Application logs')),
-          entry('log-size-limit', tr('Log file size limit'), tr('Application logs')),
-          entry('live-log-limit', tr('Live log entry limit'), tr('Application logs')),
-          entry('guided-tour', tr('Open guided tour'), tr('Application actions')),
-          entry('check-updates', tr('Check for updates'), tr('Application actions')),
-          entry('clear-cache', tr('Clear cache'), tr('Diagnostics')),
-          entry('heap-snapshot', tr('Create heap snapshot'), tr('Diagnostics')),
-          entry('reset-app', tr('Reset app'), tr('Danger zone')),
-          entry('quit-keep-core', tr('Quit and keep core running'), tr('Danger zone')),
-          entry('quit-app', tr('Quit app'), tr('Danger zone')),
-          entry('app-version', tr('App version'), tr('Version information'))
-        ],
-        content: () => (
-          <>
-            <LogSetting />
-            <Actions />
-          </>
-        )
+        entries: diagnosticsPanels.flatMap((panel) => panel.entries),
+        panels: diagnosticsPanels
       }
     ] satisfies SettingsCategoryDefinition[]
   ).map((category) => ({

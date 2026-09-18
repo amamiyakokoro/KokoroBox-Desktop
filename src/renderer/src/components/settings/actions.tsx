@@ -10,7 +10,7 @@ import {
   quitWithoutCore,
   resetAppConfig
 } from '@renderer/utils/ipc'
-import { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import UpdaterDrawer from '../updater/updater-drawer'
 import { version } from '@renderer/utils/init'
 import { IoIosHelpCircle } from 'react-icons/io'
@@ -28,7 +28,15 @@ async function handleCreateHeapSnapshot(): Promise<void> {
   }
 }
 
-const Actions: React.FC = () => {
+export type ActionSection = 'application' | 'diagnostics' | 'danger' | 'version'
+
+interface Props {
+  sections?: ActionSection[]
+}
+
+const Actions: React.FC<Props> = ({
+  sections = ['application', 'diagnostics', 'version', 'danger']
+}) => {
   const navigate = useNavigate()
   const [newVersion, setNewVersion] = useState('')
   const [changelog, setChangelog] = useState('')
@@ -92,7 +100,7 @@ const Actions: React.FC = () => {
 
   return (
     <>
-      {openUpdate && (
+      {sections.includes('application') && openUpdate && (
         <UpdaterDrawer
           onClose={() => setOpenUpdate(false)}
           version={newVersion}
@@ -102,7 +110,7 @@ const Actions: React.FC = () => {
           onCancel={handleCancelUpdate}
         />
       )}
-      {confirmOpen && (
+      {sections.includes('danger') && confirmOpen && (
         <ConfirmModal
           onChange={setConfirmOpen}
           title={tr('Delete this configuration?')}
@@ -118,98 +126,110 @@ const Actions: React.FC = () => {
         />
       )}
 
-      <SettingCard header={tr('Application actions')}>
-        <SettingItem compatKey="legacy" title={tr('Open guided tour')} divider>
-          <Button size="sm" variant="flat" onPress={() => startTour(navigate)}>
-            {tr('Open guided tour')}
-          </Button>
-        </SettingItem>
-        <SettingItem compatKey="legacy" title={tr('Check for updates')}>
-          <Button size="sm" variant="flat" isLoading={checkingUpdate} onPress={handleCheckUpdate}>
-            {tr('Check for updates')}
-          </Button>
-        </SettingItem>
-      </SettingCard>
+      {sections.includes('application') && (
+        <SettingCard header={tr('Application actions')}>
+          <SettingItem compatKey="legacy" title={tr('Open guided tour')} divider>
+            <Button size="sm" variant="flat" onPress={() => startTour(navigate)}>
+              {tr('Open guided tour')}
+            </Button>
+          </SettingItem>
+          <SettingItem compatKey="legacy" title={tr('Check for updates')}>
+            <Button size="sm" variant="flat" isLoading={checkingUpdate} onPress={handleCheckUpdate}>
+              {tr('Check for updates')}
+            </Button>
+          </SettingItem>
+        </SettingCard>
+      )}
 
-      <SettingCard header={tr('Diagnostics')}>
-        <SettingItem
-          compatKey="legacy"
-          title={tr('Clear cache')}
-          actions={
-            <Tooltip content={tr('Clear the app renderer cache')}>
-              <Button isIconOnly size="sm" variant="light">
-                <IoIosHelpCircle className="text-lg" />
-              </Button>
-            </Tooltip>
-          }
-          divider
-        >
-          <Button size="sm" variant="flat" onPress={() => localStorage.clear()}>
-            {tr('Clear cache')}
-          </Button>
-        </SettingItem>
-        <SettingItem
-          compatKey="legacy"
-          title={tr('Create heap snapshot')}
-          actions={
-            <Tooltip content={tr('Create a main-process heap snapshot to diagnose memory issues')}>
-              <Button isIconOnly size="sm" variant="light">
-                <IoIosHelpCircle className="text-lg" />
-              </Button>
-            </Tooltip>
-          }
-        >
-          <Button size="sm" variant="flat" onPress={handleCreateHeapSnapshot}>
-            {tr('Create heap snapshot')}
-          </Button>
-        </SettingItem>
-      </SettingCard>
+      {sections.includes('diagnostics') && (
+        <SettingCard header={tr('Diagnostics')}>
+          <SettingItem
+            compatKey="legacy"
+            title={tr('Clear cache')}
+            actions={
+              <Tooltip content={tr('Clear the app renderer cache')}>
+                <Button isIconOnly size="sm" variant="light">
+                  <IoIosHelpCircle className="text-lg" />
+                </Button>
+              </Tooltip>
+            }
+            divider
+          >
+            <Button size="sm" variant="flat" onPress={() => localStorage.clear()}>
+              {tr('Clear cache')}
+            </Button>
+          </SettingItem>
+          <SettingItem
+            compatKey="legacy"
+            title={tr('Create heap snapshot')}
+            actions={
+              <Tooltip
+                content={tr('Create a main-process heap snapshot to diagnose memory issues')}
+              >
+                <Button isIconOnly size="sm" variant="light">
+                  <IoIosHelpCircle className="text-lg" />
+                </Button>
+              </Tooltip>
+            }
+          >
+            <Button size="sm" variant="flat" onPress={handleCreateHeapSnapshot}>
+              {tr('Create heap snapshot')}
+            </Button>
+          </SettingItem>
+        </SettingCard>
+      )}
 
-      <SettingCard header={tr('Danger zone')}>
-        <SettingItem
-          compatKey="legacy"
-          title={tr('Reset app')}
-          actions={
-            <Tooltip content={tr('Delete all configuration and reset the app')}>
-              <Button isIconOnly size="sm" variant="light">
-                <IoIosHelpCircle className="text-lg" />
-              </Button>
-            </Tooltip>
-          }
-          divider
-        >
-          <Button size="sm" color="danger" variant="flat" onPress={() => setConfirmOpen(true)}>
-            {tr('Reset app')}
-          </Button>
-        </SettingItem>
-        <SettingItem
-          compatKey="legacy"
-          title={tr('Quit and keep core running')}
-          actions={
-            <Tooltip content={tr('Quit the app completely, leaving only the core process running')}>
-              <Button isIconOnly size="sm" variant="light">
-                <IoIosHelpCircle className="text-lg" />
-              </Button>
-            </Tooltip>
-          }
-          divider
-        >
-          <Button size="sm" variant="flat" onPress={quitWithoutCore}>
-            {tr('Quit')}
-          </Button>
-        </SettingItem>
-        <SettingItem compatKey="legacy" title={tr('Quit app')}>
-          <Button size="sm" color="danger" variant="flat" onPress={quitApp}>
-            {tr('Quit app')}
-          </Button>
-        </SettingItem>
-      </SettingCard>
+      {sections.includes('version') && (
+        <SettingCard header={tr('Version information')}>
+          <SettingItem compatKey="legacy" title={tr('App version')}>
+            <div className="text-sm tabular-nums text-foreground-500">v{version}</div>
+          </SettingItem>
+        </SettingCard>
+      )}
 
-      <SettingCard header={tr('Version information')}>
-        <SettingItem compatKey="legacy" title={tr('App version')}>
-          <div className="text-sm tabular-nums text-foreground-500">v{version}</div>
-        </SettingItem>
-      </SettingCard>
+      {sections.includes('danger') && (
+        <SettingCard header={tr('Danger zone')}>
+          <SettingItem
+            compatKey="legacy"
+            title={tr('Reset app')}
+            actions={
+              <Tooltip content={tr('Delete all configuration and reset the app')}>
+                <Button isIconOnly size="sm" variant="light">
+                  <IoIosHelpCircle className="text-lg" />
+                </Button>
+              </Tooltip>
+            }
+            divider
+          >
+            <Button size="sm" color="danger" variant="flat" onPress={() => setConfirmOpen(true)}>
+              {tr('Reset app')}
+            </Button>
+          </SettingItem>
+          <SettingItem
+            compatKey="legacy"
+            title={tr('Quit and keep core running')}
+            actions={
+              <Tooltip
+                content={tr('Quit the app completely, leaving only the core process running')}
+              >
+                <Button isIconOnly size="sm" variant="light">
+                  <IoIosHelpCircle className="text-lg" />
+                </Button>
+              </Tooltip>
+            }
+            divider
+          >
+            <Button size="sm" variant="flat" onPress={quitWithoutCore}>
+              {tr('Quit')}
+            </Button>
+          </SettingItem>
+          <SettingItem compatKey="legacy" title={tr('Quit app')}>
+            <Button size="sm" color="danger" variant="flat" onPress={quitApp}>
+              {tr('Quit app')}
+            </Button>
+          </SettingItem>
+        </SettingCard>
+      )}
     </>
   )
 }

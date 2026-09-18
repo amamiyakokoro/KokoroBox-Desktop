@@ -178,3 +178,26 @@ test('data settings separate subscriptions, backups and developer integrations',
   assert.match(integrations, /hasSubscriptionSection = sections\.includes\('subscription'\)/)
   assert.match(integrations, /hasGistSection = sections\.includes\('gist'\)/)
 })
+
+test('diagnostics settings separate logs, maintenance and lifecycle actions', () => {
+  const registry = readFileSync(
+    'src/renderer/src/components/settings/settings-registry.tsx',
+    'utf8'
+  )
+  const actions = readFileSync('src/renderer/src/components/settings/actions.tsx', 'utf8')
+
+  assert.match(registry, /const diagnosticsPanels:/)
+  assert.match(registry, /key: 'logs'/)
+  assert.match(registry, /content: \(\) => <LogSetting \/>/)
+  assert.match(registry, /key: 'maintenance'/)
+  assert.match(registry, /<Actions sections=\{\['application', 'diagnostics'\]\} \/>/)
+  assert.match(registry, /key: 'lifecycle'/)
+  assert.match(registry, /<Actions sections=\{\['version', 'danger'\]\} \/>/)
+  assert.match(registry, /entries: diagnosticsPanels\.flatMap/)
+  assert.match(registry, /panels: diagnosticsPanels/)
+  assert.match(actions, /export type ActionSection/)
+  assert.match(actions, /sections\.includes\('application'\)/)
+  assert.match(actions, /sections\.includes\('diagnostics'\)/)
+  assert.match(actions, /sections\.includes\('version'\)/)
+  assert.match(actions, /sections\.includes\('danger'\)/)
+})
