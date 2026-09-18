@@ -531,6 +531,7 @@ export const messages: Readonly<Record<string, string>> = {
     '關閉後將停止寫入本機日誌檔案，即時日誌頁面仍可繼續檢視目前會話日誌',
   'Close floating window': '關閉懸浮窗',
   'Close all connections': '關閉所有連線',
+  'Close all {0} active connections': '關閉全部 {0} 個作用中連線',
   'Enter lightweight mode after the window has been closed for the specified time':
     '關閉視窗指定時間後自動進入輕量模式',
   'Close all connections for this process': '關閉該程序全部連線',
@@ -1000,6 +1001,7 @@ export const messages: Readonly<Record<string, string>> = {
   'Mixed port': '混合連接埠',
   'Add default proxy bypasses': '新增預設代理繞過',
   'Clear records': '清空記錄',
+  'Clear all {0} records': '清除全部 {0} 筆記錄',
   'Clear all records for this process': '清空該程序全部記錄',
   'Clear cache': '清除快取',
   'Clear the app renderer cache': '清除軟體渲染程序快取',

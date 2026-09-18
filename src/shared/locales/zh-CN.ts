@@ -528,6 +528,7 @@ export const messages: Readonly<Record<string, string>> = {
     '关闭后将停止写入本地日志文件，实时日志页面仍可继续查看当前会话日志',
   'Close floating window': '关闭悬浮窗',
   'Close all connections': '关闭所有连接',
+  'Close all {0} active connections': '关闭全部 {0} 个活动连接',
   'Enter lightweight mode after the window has been closed for the specified time':
     '关闭窗口指定时间后自动进入轻量模式',
   'Close all connections for this process': '关闭该进程全部连接',
@@ -997,6 +998,7 @@ export const messages: Readonly<Record<string, string>> = {
   'Mixed port': '混合端口',
   'Add default proxy bypasses': '添加默认代理绕过',
   'Clear records': '清空记录',
+  'Clear all {0} records': '清除全部 {0} 条记录',
   'Clear all records for this process': '清空该进程全部记录',
   'Clear cache': '清除缓存',
   'Clear the app renderer cache': '清除软件渲染进程缓存',

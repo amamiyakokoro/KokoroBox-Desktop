@@ -555,6 +555,7 @@ export const messages: Readonly<Record<string, string>> = {
     'When disabled, logs are no longer written to local files. The live log view still shows the current session',
   'Close floating window': 'Close floating window',
   'Close all connections': 'Close all connections',
+  'Close all {0} active connections': 'Close all {0} active connections',
   'Enter lightweight mode after the window has been closed for the specified time':
     'Enter lightweight mode after the window has been closed for the specified time',
   'Close all connections for this process': 'Close all connections for this process',
@@ -1034,6 +1035,7 @@ export const messages: Readonly<Record<string, string>> = {
   'Mixed port': 'Mixed port',
   'Add default proxy bypasses': 'Add default proxy bypasses',
   'Clear records': 'Clear records',
+  'Clear all {0} records': 'Clear all {0} records',
   'Clear all records for this process': 'Clear all records for this process',
   'Clear cache': 'Clear cache',
   'Clear the app renderer cache': 'Clear the app renderer cache',

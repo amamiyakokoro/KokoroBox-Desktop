@@ -287,6 +287,36 @@ test('proxy group rows stay compact while preserving semantic metadata and actio
   assert.match(page, /onGroupDelay\(index\)/)
 })
 
+test('connection rows stay dense while preserving realtime data and grouped actions', () => {
+  const page = readFileSync('src/renderer/src/pages/connections.tsx', 'utf8')
+  const item = readFileSync('src/renderer/src/components/connections/connection-item.tsx', 'utf8')
+  const group = readFileSync(
+    'src/renderer/src/components/connections/connection-group-header.tsx',
+    'utf8'
+  )
+
+  assert.match(item, /style=\{\{ minHeight: 68 \}\}/)
+  assert.match(item, /className="size-11 bg-transparent"/)
+  assert.match(item, /text-\[11px\] text-foreground-400/)
+  assert.match(item, /group-hover:opacity-100 group-focus-within:opacity-100/)
+  assert.match(item, /onClick=\{\(event\) => event\.stopPropagation\(\)\}/)
+  assert.match(item, /font-medium text-primary tabular-nums/)
+  assert.match(item, /title=\{hideProcess \? destination/)
+
+  assert.match(page, /Close all \{0\} active connections/)
+  assert.match(page, /Clear all \{0\} records/)
+  assert.doesNotMatch(page, /content=\{filteredConnections\.length\}/)
+  assert.match(page, /defaultItemHeight=\{68\}/)
+  assert.match(page, /mihomoCloseConnections\(\)/)
+  assert.match(page, /connectionInterval = 500/)
+
+  assert.match(group, /aria-expanded=\{expanded\}/)
+  assert.match(group, /className="min-h-14 w-full p-0"/)
+  assert.match(group, /className="mr-2 size-10 shrink-0 bg-transparent"/)
+  assert.match(group, /group-hover:opacity-100 group-focus-within:opacity-100/)
+  assert.match(group, /onPress=\{\(\) => onCloseAll\(groupKey\)\}/)
+})
+
 test('common settings choices use the shared segmented control', () => {
   const general = readFileSync('src/renderer/src/components/settings/general-config.tsx', 'utf8')
   const controls = readFileSync('src/renderer/src/components/base/base-controls.tsx', 'utf8')

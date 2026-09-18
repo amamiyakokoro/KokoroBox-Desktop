@@ -1,5 +1,5 @@
 import { tr } from '../../../../shared/i18n'
-import { Button, Card, CardBody, Chip } from '@heroui/react'
+import { Button, Card, CardBody } from '@heroui/react'
 import { Avatar } from '@heroui-v3/react'
 import { calcTraffic } from '@renderer/utils/calc'
 import React, { memo, useMemo } from 'react'
@@ -54,36 +54,41 @@ const ConnectionGroupHeaderComponent: React.FC<Props> = ({
   const downloadSpeedText = useMemo(() => calcTraffic(downloadSpeed), [downloadSpeed])
 
   return (
-    <div className={`w-full pt-2 ${isLast && !expanded ? 'pb-2' : ''} px-2`}>
-      <Card as="div" isPressable fullWidth onPress={() => onToggle(groupKey, expanded)}>
-        <CardBody className="w-full h-16 p-0">
-          <div className="flex justify-between items-center h-full pl-2 pr-3">
-            <div className="flex items-center overflow-hidden whitespace-nowrap h-full min-w-0">
+    <div className={`w-full px-2 pt-1.5 ${isLast && !expanded ? 'pb-1.5' : ''}`}>
+      <Card
+        as="div"
+        isPressable
+        fullWidth
+        aria-expanded={expanded}
+        className="group"
+        onPress={() => onToggle(groupKey, expanded)}
+      >
+        <CardBody className="min-h-14 w-full p-0">
+          <div className="flex min-h-14 items-center justify-between px-2.5">
+            <div className="flex min-w-0 items-center overflow-hidden whitespace-nowrap">
               {displayIcon && (
-                <Avatar size="lg" className="mr-2 h-12 w-12 shrink-0 bg-transparent">
+                <Avatar size="md" className="mr-2 size-10 shrink-0 bg-transparent">
                   <Avatar.Image className="object-contain" src={iconUrl} />
                 </Avatar>
               )}
-              <div className="flex flex-col justify-center gap-1 min-w-0 py-2">
-                <div className="text-md text-ellipsis overflow-hidden whitespace-nowrap leading-snug">
+              <div className="flex min-w-0 flex-col justify-center gap-0.5 py-1.5">
+                <div className="truncate text-sm font-medium leading-snug" title={title}>
                   {title}
                 </div>
-                <div className="text-xs text-foreground-500 leading-snug whitespace-nowrap text-ellipsis overflow-hidden">
-                  <span>
+                <div className="truncate whitespace-nowrap text-[11px] leading-snug text-foreground-500 tabular-nums">
+                  <span className="mr-2">
                     ↑ {uploadTraffic} ↓ {downloadTraffic}
                   </span>
                   {hasSpeed && (
-                    <span className="ml-2 text-primary">
+                    <span className="text-xs font-medium text-primary">
                       ↑ {uploadSpeedText}/s ↓ {downloadSpeedText}/s
                     </span>
                   )}
                 </div>
               </div>
             </div>
-            <div className="flex items-center shrink-0">
-              <Chip size="sm" className="my-1 mr-1">
-                {count}
-              </Chip>
+            <div className="flex shrink-0 items-center gap-0.5">
+              <span className="mr-1 text-xs text-foreground-500 tabular-nums">{count}</span>
               <div
                 onClick={(e) => e.stopPropagation()}
                 onPointerDown={(e) => e.stopPropagation()}
@@ -93,7 +98,12 @@ const ConnectionGroupHeaderComponent: React.FC<Props> = ({
                   variant="light"
                   size="sm"
                   isIconOnly
-                  color={isClosed ? 'danger' : 'warning'}
+                  color={isClosed ? 'danger' : 'default'}
+                  className={
+                    isClosed
+                      ? undefined
+                      : 'text-foreground-500 opacity-40 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100'
+                  }
                   aria-label={
                     isClosed
                       ? tr('Clear all records for this process')
@@ -105,7 +115,7 @@ const ConnectionGroupHeaderComponent: React.FC<Props> = ({
                 </Button>
               </div>
               <IoIosArrowBack
-                className={`transition duration-200 ml-1 h-8 text-lg text-foreground-500 flex items-center ${
+                className={`ml-0.5 flex h-8 items-center text-base text-foreground-400 transition duration-200 ${
                   expanded ? '-rotate-90' : ''
                 }`}
               />

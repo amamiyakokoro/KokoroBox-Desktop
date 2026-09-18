@@ -749,7 +749,7 @@ const Connections: React.FC = () => {
 
   const renderConnectionItem = useCallback(
     (i: number, connection: ControllerConnectionDetail) => {
-      if (!connection) return <div style={{ minHeight: 80 }} />
+      if (!connection) return <div style={{ minHeight: 68 }} />
       const path = connection.metadata.processPath || ''
       const isAppRouting = isAppRoutingConnection(connection)
       const iconUrl =
@@ -828,7 +828,7 @@ const Connections: React.FC = () => {
 
   const renderGroupMember = useCallback((i: number) => {
     const connection = flatMembersRef.current[i]
-    if (!connection) return <div style={{ minHeight: 80 }} />
+    if (!connection) return <div style={{ minHeight: 68 }} />
     const path = connection.metadata.processPath || ''
     const displayName =
       displayAppNameRef.current && path ? appNameCacheRefStable.current[path] : undefined
@@ -896,28 +896,28 @@ const Connections: React.FC = () => {
       title={tr('Connections')}
       header={
         <>
-          <div className="flex">
-            <div className="flex items-center">
-              <span className="mx-1 text-gray-400">
-                ↑ {calcTraffic(connectionsInfo?.uploadTotal ?? 0)}{' '}
-              </span>
-              <span className="mx-1 text-gray-400">
-                ↓ {calcTraffic(connectionsInfo?.downloadTotal ?? 0)}{' '}
-              </span>
+          <div className="app-nodrag flex items-center gap-2">
+            <div className="flex items-center gap-2 whitespace-nowrap text-xs text-foreground-500 tabular-nums">
+              <span>↑ {calcTraffic(connectionsInfo?.uploadTotal ?? 0)}</span>
+              <span>↓ {calcTraffic(connectionsInfo?.downloadTotal ?? 0)}</span>
             </div>
-            <Badge
-              className="mt-2"
-              color="primary"
-              variant="flat"
-              showOutline={false}
-              content={filteredConnections.length}
+            <Tooltip
+              placement="bottom"
+              content={
+                tab === 'active'
+                  ? tr('Close all {0} active connections', [filteredConnections.length])
+                  : tr('Clear all {0} records', [filteredConnections.length])
+              }
             >
               <Button
-                className="app-nodrag ml-1"
                 isIconOnly
                 size="sm"
                 variant="light"
-                aria-label={tab === 'active' ? tr('Close all connections') : tr('Clear records')}
+                aria-label={
+                  tab === 'active'
+                    ? tr('Close all {0} active connections', [filteredConnections.length])
+                    : tr('Clear all {0} records', [filteredConnections.length])
+                }
                 onPress={() => {
                   if (filter === '') {
                     closeAllConnections()
@@ -934,7 +934,7 @@ const Connections: React.FC = () => {
                   <CgTrash className="text-lg" />
                 )}
               </Button>
-            </Badge>
+            </Tooltip>
           </div>
           <Button
             size="sm"
@@ -1121,7 +1121,7 @@ const Connections: React.FC = () => {
               groupCounts={groupCounts}
               groupContent={renderGroupHeader}
               itemContent={renderGroupMember}
-              defaultItemHeight={80}
+              defaultItemHeight={68}
               overscan={200}
             />
           ) : (

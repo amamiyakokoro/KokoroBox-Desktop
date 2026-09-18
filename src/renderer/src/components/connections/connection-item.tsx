@@ -96,63 +96,65 @@ const ConnectionItemComponent: React.FC<Props> = ({
   }, [close, info.id])
 
   return (
-    <div className={`px-2 pb-2 ${index === 0 ? 'pt-2' : ''}`} style={{ minHeight: 80 }}>
-      <Card as="div" isPressable className="w-full" onPress={handleCardPress}>
-        <div className="w-full flex justify-between items-center">
+    <div className={`px-2 pb-1.5 ${index === 0 ? 'pt-1.5' : ''}`} style={{ minHeight: 68 }}>
+      <Card as="div" isPressable className="group w-full" onPress={handleCardPress}>
+        <div className="flex w-full items-center justify-between">
           {displayIcon && (
-            <div>
-              <Avatar size="lg" className="bg-transparent ml-2 w-14 h-14">
-                <Avatar.Image src={iconUrl} />
+            <div className="shrink-0 pl-2">
+              <Avatar size="md" className="size-11 bg-transparent">
+                <Avatar.Image className="object-contain" src={iconUrl} />
               </Avatar>
             </div>
           )}
-          <div
-            className={`w-full flex flex-col justify-start truncate relative ${displayIcon ? '-ml-2' : ''}`}
-          >
-            <CardHeader className="pb-0 gap-1 flex items-center pr-12 relative">
-              <div className="ml-2 flex-1 text-ellipsis whitespace-nowrap overflow-hidden text-left">
-                <span style={{ textAlign: 'left' }}>
+          <div className="relative flex min-w-0 flex-1 flex-col justify-start">
+            <CardHeader className="relative flex min-h-8 items-center gap-1 px-3 pb-0 pt-2 pr-12">
+              <div className="min-w-0 flex-1 truncate text-left text-sm font-medium">
+                <span title={hideProcess ? destination : `${processName} → ${destination}`}>
                   {hideProcess ? destination : `${processName} → ${destination}`}
                 </span>
               </div>
-              <small className="ml-2 whitespace-nowrap text-foreground-500">{timeAgo}</small>
+              <small className="ml-2 whitespace-nowrap text-[11px] text-foreground-400">
+                {timeAgo}
+              </small>
               <Button
-                color={info.isActive ? 'warning' : 'danger'}
+                color={info.isActive ? 'default' : 'danger'}
                 variant="light"
                 isIconOnly
                 size="sm"
                 aria-label={info.isActive ? tr('Close connection') : tr('Delete record')}
-                className="absolute right-2 transform"
+                className={`absolute right-2 transition-opacity ${
+                  info.isActive
+                    ? 'text-foreground-500 opacity-40 group-hover:opacity-100 group-focus-within:opacity-100'
+                    : ''
+                }`}
+                onClick={(event) => event.stopPropagation()}
+                onPointerDown={(event) => event.stopPropagation()}
                 onPress={handleClose}
               >
                 {info.isActive ? <CgClose className="text-lg" /> : <CgTrash className="text-lg" />}
               </Button>
             </CardHeader>
-            <CardFooter className="pt-2">
-              <div className="flex gap-1 overflow-x-auto no-scrollbar">
-                <Chip
-                  color={info.isActive ? 'primary' : 'danger'}
-                  size="sm"
-                  radius="sm"
-                  variant="dot"
+            <CardFooter className="px-3 pb-2 pt-1">
+              <div className="no-scrollbar flex min-w-0 items-center gap-2 overflow-x-auto whitespace-nowrap">
+                <span
+                  className={`rounded-md bg-default-100 px-1.5 py-0.5 text-[11px] ${
+                    info.isActive ? 'text-foreground-500' : 'text-danger-500'
+                  }`}
                 >
                   {info.metadata.type}({info.metadata.network.toUpperCase()})
+                </span>
+                <Chip className="flag-emoji max-w-52 shrink-0" size="sm" radius="sm" variant="flat">
+                  <span className="truncate" title={info.chains[0]}>
+                    {info.chains[0]}
+                  </span>
                 </Chip>
-                <Chip
-                  className="flag-emoji whitespace-nowrap overflow-hidden"
-                  size="sm"
-                  radius="sm"
-                  variant="bordered"
-                >
-                  {info.chains[0]}
-                </Chip>
-                <Chip size="sm" radius="sm" variant="bordered">
+                <span className="text-[11px] text-foreground-500 tabular-nums">
                   ↑ {uploadTraffic} ↓ {downloadTraffic}
-                </Chip>
+                </span>
                 {hasSpeed && (
-                  <Chip color="primary" size="sm" radius="sm" variant="bordered">
+                  <span className="text-xs font-medium text-primary tabular-nums">
                     ↑ {uploadSpeed || '0 B'}/s ↓ {downloadSpeed || '0 B'}/s
-                  </Chip>
+                  </span>
                 )}
               </div>
             </CardFooter>
