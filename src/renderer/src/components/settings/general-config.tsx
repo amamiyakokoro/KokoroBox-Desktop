@@ -30,118 +30,123 @@ const GeneralConfig: React.FC = () => {
   const [languageChanged, setLanguageChanged] = useState(false)
 
   return (
-    <SettingCard>
-      <SettingItem compatKey="legacy" title={tr('Interface language')} divider>
-        <div className="flex max-w-full flex-wrap items-center justify-end gap-2">
-          <Select
-            aria-label={tr('Interface language')}
-            className="w-44"
+    <>
+      <SettingCard header={tr('Language and notifications')}>
+        <SettingItem compatKey="legacy" title={tr('Interface language')} divider>
+          <div className="flex max-w-full flex-wrap items-center justify-end gap-2">
+            <Select
+              aria-label={tr('Interface language')}
+              className="w-44"
+              size="sm"
+              selectedKeys={[language]}
+              disallowEmptySelection
+              onSelectionChange={async (selection) => {
+                const nextLanguage = selection.currentKey
+                if (!['system', 'zh-CN', 'zh-TW', 'en'].includes(nextLanguage || '')) return
+                const saved = await patchAppConfig({ language: nextLanguage as AppLanguage })
+                if (saved) setLanguageChanged(true)
+              }}
+            >
+              <SelectItem key="system">{tr('System default')}</SelectItem>
+              <SelectItem key="zh-CN">简体中文</SelectItem>
+              <SelectItem key="zh-TW">繁體中文</SelectItem>
+              <SelectItem key="en">English</SelectItem>
+            </Select>
+            {languageChanged && (
+              <Button size="sm" color="primary" onPress={() => relaunchApp()}>
+                {tr('Restart to apply language')}
+              </Button>
+            )}
+          </div>
+        </SettingItem>
+        <SettingItem compatKey="legacy" title={tr('Notification style')}>
+          <Tabs
             size="sm"
-            selectedKeys={[language]}
-            disallowEmptySelection
-            onSelectionChange={async (selection) => {
-              const nextLanguage = selection.currentKey
-              if (!['system', 'zh-CN', 'zh-TW', 'en'].includes(nextLanguage || '')) return
-              const saved = await patchAppConfig({ language: nextLanguage as AppLanguage })
-              if (saved) setLanguageChanged(true)
+            color="primary"
+            selectedKey={notificationMode}
+            onSelectionChange={(v) => {
+              patchAppConfig({ notificationMode: v as AppNotificationMode })
             }}
           >
-            <SelectItem key="system">{tr('System default')}</SelectItem>
-            <SelectItem key="zh-CN">简体中文</SelectItem>
-            <SelectItem key="zh-TW">繁體中文</SelectItem>
-            <SelectItem key="en">English</SelectItem>
-          </Select>
-          {languageChanged && (
-            <Button size="sm" color="primary" onPress={() => relaunchApp()}>
-              {tr('Restart to apply language')}
-            </Button>
-          )}
-        </div>
-      </SettingItem>
-      <SettingItem compatKey="legacy" title={tr('Launch at startup')} divider>
-        <div className="flex items-center gap-2">
-          {autoRunStatus?.requiresApproval && (
-            <Tooltip
-              content={tr(
-                'Allow KokoroBox in System Settings → General → Login Items & Extensions.'
-              )}
-            >
-              <Button
-                size="sm"
-                color="warning"
-                variant="flat"
-                onPress={async () => {
-                  try {
-                    await openAutoRunSystemSettings()
-                  } catch (e) {
-                    notify(e, { variant: 'danger' })
-                  }
-                }}
+            <Tab key="system" title={tr('System')} />
+            <Tab key="toast" title={tr('In-app')} />
+          </Tabs>
+        </SettingItem>
+      </SettingCard>
+
+      <SettingCard header={tr('Startup and updates')}>
+        <SettingItem compatKey="legacy" title={tr('Launch at startup')} divider>
+          <div className="flex items-center gap-2">
+            {autoRunStatus?.requiresApproval && (
+              <Tooltip
+                content={tr(
+                  'Allow KokoroBox in System Settings → General → Login Items & Extensions.'
+                )}
               >
-                {tr('Awaiting system approval')}
-              </Button>
-            </Tooltip>
-          )}
+                <Button
+                  size="sm"
+                  color="warning"
+                  variant="flat"
+                  onPress={async () => {
+                    try {
+                      await openAutoRunSystemSettings()
+                    } catch (e) {
+                      notify(e, { variant: 'danger' })
+                    }
+                  }}
+                >
+                  {tr('Awaiting system approval')}
+                </Button>
+              </Tooltip>
+            )}
+            <Switch
+              size="sm"
+              isSelected={autoRunStatus?.enabled ?? false}
+              onValueChange={async (v) => {
+                try {
+                  const status = v ? await enableAutoRun() : await disableAutoRun()
+                  await mutateAutoRunStatus(status, { revalidate: false })
+                } catch (e) {
+                  notify(e, { variant: 'danger' })
+                  await mutateAutoRunStatus()
+                }
+              }}
+            />
+          </div>
+        </SettingItem>
+        <SettingItem compatKey="legacy" title={tr('Start minimized')} divider>
           <Switch
             size="sm"
-            isSelected={autoRunStatus?.enabled ?? false}
-            onValueChange={async (v) => {
-              try {
-                const status = v ? await enableAutoRun() : await disableAutoRun()
-                await mutateAutoRunStatus(status, { revalidate: false })
-              } catch (e) {
-                notify(e, { variant: 'danger' })
-                await mutateAutoRunStatus()
-              }
+            isSelected={silentStart}
+            onValueChange={(v) => {
+              patchAppConfig({ silentStart: v })
             }}
           />
-        </div>
-      </SettingItem>
-      <SettingItem compatKey="legacy" title={tr('Start minimized')} divider>
-        <Switch
-          size="sm"
-          isSelected={silentStart}
-          onValueChange={(v) => {
-            patchAppConfig({ silentStart: v })
-          }}
-        />
-      </SettingItem>
-      <SettingItem compatKey="legacy" title={tr('Check for updates automatically')} divider>
-        <Switch
-          size="sm"
-          isSelected={autoCheckUpdate}
-          onValueChange={(v) => {
-            patchAppConfig({ autoCheckUpdate: v })
-          }}
-        />
-      </SettingItem>
-      <SettingItem compatKey="legacy" title={tr('Update channel')} divider>
-        <Tabs
-          size="sm"
-          color="primary"
-          selectedKey={updateChannel}
-          onSelectionChange={async (v) => {
-            patchAppConfig({ updateChannel: v as AppUpdateChannel })
-          }}
-        >
-          <Tab key="stable" title={tr('Stable')} />
-          <Tab key="rolling" title={tr('Rolling')} />
-        </Tabs>
-      </SettingItem>
-      <SettingItem compatKey="legacy" title={tr('Notification style')} divider>
-        <Tabs
-          size="sm"
-          color="primary"
-          selectedKey={notificationMode}
-          onSelectionChange={(v) => {
-            patchAppConfig({ notificationMode: v as AppNotificationMode })
-          }}
-        >
-          <Tab key="system" title={tr('System')} />
-          <Tab key="toast" title={tr('In-app')} />
-        </Tabs>
-      </SettingItem>
-    </SettingCard>
+        </SettingItem>
+        <SettingItem compatKey="legacy" title={tr('Check for updates automatically')} divider>
+          <Switch
+            size="sm"
+            isSelected={autoCheckUpdate}
+            onValueChange={(v) => {
+              patchAppConfig({ autoCheckUpdate: v })
+            }}
+          />
+        </SettingItem>
+        <SettingItem compatKey="legacy" title={tr('Update channel')}>
+          <Tabs
+            size="sm"
+            color="primary"
+            selectedKey={updateChannel}
+            onSelectionChange={async (v) => {
+              patchAppConfig({ updateChannel: v as AppUpdateChannel })
+            }}
+          >
+            <Tab key="stable" title={tr('Stable')} />
+            <Tab key="rolling" title={tr('Rolling')} />
+          </Tabs>
+        </SettingItem>
+      </SettingCard>
+    </>
   )
 }
 

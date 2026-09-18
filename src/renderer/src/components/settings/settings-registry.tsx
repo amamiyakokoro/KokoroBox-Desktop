@@ -556,12 +556,16 @@ export const getSettingsCategories = (): SettingsCategoryDefinition[] => {
         label: tr('General'),
         icon: LuAppWindow,
         entries: [
-          entry('interface-language', tr('Interface language'), tr('General')),
-          entry('launch-at-startup', tr('Launch at startup'), tr('General')),
-          entry('start-minimized', tr('Start minimized'), tr('General')),
-          entry('automatic-update-checks', tr('Check for updates automatically'), tr('General')),
-          entry('update-channel', tr('Update channel'), tr('General')),
-          entry('notification-style', tr('Notification style'), tr('General')),
+          entry('interface-language', tr('Interface language'), tr('Language and notifications')),
+          entry('notification-style', tr('Notification style'), tr('Language and notifications')),
+          entry('launch-at-startup', tr('Launch at startup'), tr('Startup and updates')),
+          entry('start-minimized', tr('Start minimized'), tr('Startup and updates')),
+          entry(
+            'automatic-update-checks',
+            tr('Check for updates automatically'),
+            tr('Startup and updates')
+          ),
+          entry('update-channel', tr('Update channel'), tr('Startup and updates')),
           entry(
             'automatic-lightweight-mode',
             tr('Automatic lightweight mode'),

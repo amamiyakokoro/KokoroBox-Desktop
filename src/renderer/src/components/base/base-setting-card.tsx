@@ -23,11 +23,11 @@ const SettingCard: React.FC<Props> = (props) => {
         tabIndex={header ? -1 : undefined}
       >
         {header && (
-          <h2 className="px-1 pb-1.5 text-sm font-semibold tracking-wide text-foreground-500">
+          <h2 className="settings-section__heading px-1 pb-2 pt-1 text-base font-semibold leading-6 text-foreground">
             {header}
           </h2>
         )}
-        <div className="settings-section__content border-y border-divider px-1 py-1">
+        <div className="settings-section__content border-t border-divider px-1 py-1">
           {children}
         </div>
       </section>

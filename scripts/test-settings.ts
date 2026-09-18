@@ -88,6 +88,8 @@ test('staged settings protect unsaved changes across navigation and window lifec
 
 test('application settings keep navigation discoverable in compact desktop windows', () => {
   const settings = readFileSync('src/renderer/src/pages/settings.tsx', 'utf8')
+  const settingCard = readFileSync('src/renderer/src/components/base/base-setting-card.tsx', 'utf8')
+  const general = readFileSync('src/renderer/src/components/settings/general-config.tsx', 'utf8')
 
   assert.match(settings, /compactNavigationQuery = '\(max-width: 1050px\)'/)
   assert.match(settings, /isDisabled=\{!compactNavigation\}/)
@@ -95,6 +97,12 @@ test('application settings keep navigation discoverable in compact desktop windo
   assert.match(settings, /event\.key\.toLowerCase\(\) === 'f'/)
   assert.match(settings, /settings-content-header sticky top-0/)
   assert.match(settings, /scrollTo\(\{ top: 0 \}\)/)
+  assert.match(settingCard, /settings-section__heading/)
+  assert.match(settingCard, /text-base font-semibold leading-6 text-foreground/)
+  assert.match(settingCard, /settings-section__content border-t border-divider/)
+  assert.doesNotMatch(settingCard, /settings-section__content border-y/)
+  assert.match(general, /header=\{tr\('Language and notifications'\)\}/)
+  assert.match(general, /header=\{tr\('Startup and updates'\)\}/)
 })
 
 test('network settings use nested panels and preserve legacy routes', () => {

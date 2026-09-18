@@ -44,6 +44,8 @@ export const messages: Readonly<Record<string, string>> = {
   'Maintenance and diagnostics': '维护与诊断',
   'Mihomo settings': 'Mihomo 设置',
   'Developer integration': '开发者集成',
+  'Language and notifications': '语言与通知',
+  'Startup and updates': '启动与更新',
   'Background behavior': '后台行为',
   Performance: '性能',
   'Environment integration': '环境集成',
