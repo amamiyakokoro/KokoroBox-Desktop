@@ -148,6 +148,10 @@ test('network settings use nested panels and preserve legacy routes', () => {
 test('desktop sidebar separates controls, live status and navigation', () => {
   const sider = readFileSync('src/renderer/src/components/sider/sider-cards.tsx', 'utf8')
   const surfaces = readFileSync('src/renderer/src/components/sider/sider-surfaces.tsx', 'utf8')
+  const sidebarSettings = readFileSync(
+    'src/renderer/src/components/settings/sider-config.tsx',
+    'utf8'
+  )
   const systemProxy = readFileSync(
     'src/renderer/src/components/sider/sysproxy-switcher.tsx',
     'utf8'
@@ -157,12 +161,22 @@ test('desktop sidebar separates controls, live status and navigation', () => {
   const dns = readFileSync('src/renderer/src/components/sider/dns-card.tsx', 'utf8')
   const sniff = readFileSync('src/renderer/src/components/sider/sniff-card.tsx', 'utf8')
 
-  assert.match(sider, /SiderSection title=\{tr\('Quick controls'\)\}/)
+  assert.match(sider, /SiderSection title=\{tr\('Quick controls'\)\} columns=\{2\}/)
   assert.match(sider, /SiderSection title=\{tr\('Current status'\)\}/)
   assert.match(sider, /SiderSection title=\{tr\('Navigation'\)\}/)
+  assert.match(sider, /groupForKey\(String\(active\.id\)\)/)
+  assert.match(sider, /orderedKeys\(quickControlKeys\)/)
+  assert.match(sider, /orderedKeys\(currentStatusKeys\)/)
+  assert.match(sider, /orderedKeys\(navigationKeys\)/)
   assert.match(surfaces, /export const SiderQuickControl/)
   assert.match(surfaces, /export const SiderNavItem/)
+  assert.match(surfaces, /columns === 2 \? 'grid grid-cols-2 gap-1\.5' : 'flex flex-col gap-1\.5'/)
   assert.match(surfaces, /aria-current=\{active \? 'page' : undefined\}/)
+  assert.match(sidebarSettings, /title: tr\('Quick controls'\)/)
+  assert.match(sidebarSettings, /title: tr\('Current status'\)/)
+  assert.match(sidebarSettings, /title: tr\('Navigation'\)/)
+  assert.match(sidebarSettings, /isSelected=\{status !== 'hidden'\}/)
+  assert.doesNotMatch(sidebarSettings, /<Radio/)
   assert.match(systemProxy, /<SiderQuickControl/)
   assert.match(tun, /<SiderQuickControl/)
   assert.match(appRouting, /getAppRoutingStatus/)

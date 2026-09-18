@@ -3,85 +3,115 @@ import { appRoutingSupported } from '../../../../shared/app-routing'
 import React from 'react'
 import SettingCard from '../base/base-setting-card'
 import SettingItem from '../base/base-setting-item'
-import { RadioGroup, Radio } from '@heroui/react'
+import { Switch } from '@heroui/react'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
-const titleMap = {
-  sysproxyCardStatus: tr('System proxy'),
-  tunCardStatus: tr('TUN mode'),
-  appRoutingCardStatus: tr('Application routing'),
-  profileCardStatus: tr('Subscriptions'),
-  kokoroCardStatus: tr('Kokoro account and subscription'),
-  proxyCardStatus: tr('Proxy groups'),
-  ruleCardStatus: tr('Rules'),
-  resourceCardStatus: tr('External resources'),
-  overrideCardStatus: tr('Overrides'),
-  connectionCardStatus: tr('Connections'),
-  mihomoCoreCardStatus: tr('Core'),
-  dnsCardStatus: 'DNS',
-  sniffCardStatus: tr('Sniffing'),
-  logCardStatus: tr('Logs')
+
+type SiderCardConfigKey =
+  | 'sysproxyCardStatus'
+  | 'tunCardStatus'
+  | 'appRoutingCardStatus'
+  | 'profileCardStatus'
+  | 'kokoroCardStatus'
+  | 'proxyCardStatus'
+  | 'ruleCardStatus'
+  | 'resourceCardStatus'
+  | 'overrideCardStatus'
+  | 'connectionCardStatus'
+  | 'mihomoCoreCardStatus'
+  | 'dnsCardStatus'
+  | 'sniffCardStatus'
+  | 'logCardStatus'
+
+interface SiderConfigEntry {
+  key: SiderCardConfigKey
+  title: string
+  defaultStatus: Exclude<CardStatus, 'hidden'>
+  supported?: boolean
 }
+
 const SiderConfig: React.FC = () => {
   const { appConfig, patchAppConfig } = useAppConfig()
-  const {
-    sysproxyCardStatus = 'col-span-1',
-    tunCardStatus = 'col-span-1',
-    appRoutingCardStatus = 'col-span-2',
-    profileCardStatus = 'col-span-2',
-    kokoroCardStatus = 'col-span-2',
-    proxyCardStatus = 'col-span-2',
-    ruleCardStatus = 'col-span-1',
-    resourceCardStatus = 'col-span-1',
-    overrideCardStatus = 'col-span-1',
-    connectionCardStatus = 'col-span-2',
-    mihomoCoreCardStatus = 'col-span-2',
-    dnsCardStatus = 'col-span-1',
-    sniffCardStatus = 'col-span-1',
-    logCardStatus = 'col-span-1'
-  } = appConfig || {}
-
-  const cardStatus = {
-    sysproxyCardStatus,
-    tunCardStatus,
-    ...(appRoutingSupported(window.api.platform, window.api.arch) ? { appRoutingCardStatus } : {}),
-    profileCardStatus,
-    kokoroCardStatus,
-    proxyCardStatus,
-    ruleCardStatus,
-    resourceCardStatus,
-    overrideCardStatus,
-    connectionCardStatus,
-    mihomoCoreCardStatus,
-    dnsCardStatus,
-    sniffCardStatus,
-    logCardStatus
-  }
+  const groups: { title: string; entries: SiderConfigEntry[] }[] = [
+    {
+      title: tr('Quick controls'),
+      entries: [
+        { key: 'sysproxyCardStatus', title: tr('System proxy'), defaultStatus: 'col-span-1' },
+        { key: 'tunCardStatus', title: tr('TUN mode'), defaultStatus: 'col-span-1' }
+      ]
+    },
+    {
+      title: tr('Current status'),
+      entries: [
+        { key: 'profileCardStatus', title: tr('Subscriptions'), defaultStatus: 'col-span-2' },
+        { key: 'proxyCardStatus', title: tr('Proxy groups'), defaultStatus: 'col-span-2' },
+        {
+          key: 'appRoutingCardStatus',
+          title: tr('Application routing'),
+          defaultStatus: 'col-span-2',
+          supported: appRoutingSupported(window.api.platform, window.api.arch)
+        },
+        {
+          key: 'connectionCardStatus',
+          title: tr('Connections'),
+          defaultStatus: 'col-span-2'
+        },
+        { key: 'mihomoCoreCardStatus', title: tr('Core'), defaultStatus: 'col-span-2' }
+      ]
+    },
+    {
+      title: tr('Navigation'),
+      entries: [
+        { key: 'dnsCardStatus', title: 'DNS', defaultStatus: 'col-span-1' },
+        { key: 'sniffCardStatus', title: tr('Sniffing'), defaultStatus: 'col-span-1' },
+        {
+          key: 'kokoroCardStatus',
+          title: tr('Kokoro account and subscription'),
+          defaultStatus: 'col-span-2'
+        },
+        { key: 'ruleCardStatus', title: tr('Rules'), defaultStatus: 'col-span-1' },
+        {
+          key: 'resourceCardStatus',
+          title: tr('External resources'),
+          defaultStatus: 'col-span-1'
+        },
+        { key: 'overrideCardStatus', title: tr('Overrides'), defaultStatus: 'col-span-1' },
+        { key: 'logCardStatus', title: tr('Logs'), defaultStatus: 'col-span-1' }
+      ]
+    }
+  ]
 
   return (
-    <SettingCard header={tr('Sidebar settings')}>
-      {Object.keys(cardStatus).map((key, index, array) => {
+    <section data-setting-label={tr('Sidebar settings')} tabIndex={-1}>
+      {groups.map((group) => {
+        const entries = group.entries.filter((item) => item.supported !== false)
         return (
-          <SettingItem
-            compatKey="legacy"
-            title={titleMap[key]}
-            key={key}
-            divider={index !== array.length - 1}
-          >
-            <RadioGroup
-              orientation="horizontal"
-              value={cardStatus[key]}
-              onValueChange={(v) => {
-                patchAppConfig({ [key]: v as CardStatus })
-              }}
-            >
-              <Radio value="col-span-2">{tr('Large')}</Radio>
-              <Radio value="col-span-1">{tr('Small')}</Radio>
-              <Radio value="hidden">{tr('Hide')}</Radio>
-            </RadioGroup>
-          </SettingItem>
+          <SettingCard key={group.title} header={group.title}>
+            {entries.map((item, index) => {
+              const status = appConfig?.[item.key] ?? item.defaultStatus
+              return (
+                <SettingItem
+                  compatKey="legacy"
+                  title={item.title}
+                  key={item.key}
+                  divider={index !== entries.length - 1}
+                >
+                  <Switch
+                    size="sm"
+                    aria-label={item.title}
+                    isSelected={status !== 'hidden'}
+                    onValueChange={(visible) => {
+                      void patchAppConfig({
+                        [item.key]: visible ? item.defaultStatus : 'hidden'
+                      })
+                    }}
+                  />
+                </SettingItem>
+              )
+            })}
+          </SettingCard>
         )
       })}
-    </SettingCard>
+    </section>
   )
 }
 

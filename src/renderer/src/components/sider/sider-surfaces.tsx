@@ -25,10 +25,13 @@ const statusToneClasses: Record<SiderStatusTone, string> = {
 export const SiderSection: React.FC<{
   title: string
   children: React.ReactNode
-}> = ({ title, children }) => (
+  columns?: 1 | 2
+}> = ({ title, children, columns = 1 }) => (
   <section className="sider-section">
     <h2 className="mb-1 px-1 text-xs font-semibold text-foreground-500">{title}</h2>
-    <div className="grid grid-cols-2 gap-1.5">{children}</div>
+    <div className={columns === 2 ? 'grid grid-cols-2 gap-1.5' : 'flex flex-col gap-1.5'}>
+      {children}
+    </div>
   </section>
 )
 

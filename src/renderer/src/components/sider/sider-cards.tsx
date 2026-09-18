@@ -46,6 +46,13 @@ const quickControlKeys = new Set(['sysproxy', 'tun'])
 const currentStatusKeys = new Set(['profile', 'proxy', 'app-routing', 'connection', 'mihomo'])
 const navigationKeys = new Set(['dns', 'sniff', 'kokoro', 'rule', 'resource', 'override', 'log'])
 
+const groupForKey = (key: string): 'quick' | 'status' | 'navigation' | undefined => {
+  if (quickControlKeys.has(key)) return 'quick'
+  if (currentStatusKeys.has(key)) return 'status'
+  if (navigationKeys.has(key)) return 'navigation'
+  return undefined
+}
+
 const siderCardRouteMap = {
   'sysproxy-card': '/settings?section=network&panel=system-proxy',
   'tun-card': '/settings?section=network&panel=tun',
@@ -135,6 +142,7 @@ export default function SiderCards({ iconOnly = false }: Props): React.JSX.Eleme
   const onDragEnd = async (event: DragEndEvent): Promise<void> => {
     const { active, over } = event
     if (over && active.id !== over.id) {
+      if (groupForKey(String(active.id)) !== groupForKey(String(over.id))) return
       const newOrder = order.slice()
       const activeIndex = newOrder.indexOf(active.id as string)
       const overIndex = newOrder.indexOf(over.id as string)
@@ -172,6 +180,8 @@ export default function SiderCards({ iconOnly = false }: Props): React.JSX.Eleme
       return [<Component key={key} iconOnly={iconOnly} />]
     })
 
+  const orderedKeys = (keys: Set<string>): string[] => order.filter((key) => keys.has(key))
+
   if (iconOnly) {
     return (
       <div className="min-h-0 flex-1 overflow-y-auto no-scrollbar">
@@ -194,13 +204,17 @@ export default function SiderCards({ iconOnly = false }: Props): React.JSX.Eleme
         }}
       >
         <div className="m-2 flex flex-col gap-3" onClickCapture={onClickCapture}>
-          <SortableContext items={order}>
-            <SiderSection title={tr('Quick controls')}>
+          <SortableContext items={orderedKeys(quickControlKeys)}>
+            <SiderSection title={tr('Quick controls')} columns={2}>
               {renderCards(quickControlKeys)}
             </SiderSection>
+          </SortableContext>
+          <SortableContext items={orderedKeys(currentStatusKeys)}>
             <SiderSection title={tr('Current status')}>
               {renderCards(currentStatusKeys)}
             </SiderSection>
+          </SortableContext>
+          <SortableContext items={orderedKeys(navigationKeys)}>
             <SiderSection title={tr('Navigation')}>{renderCards(navigationKeys)}</SiderSection>
           </SortableContext>
         </div>
