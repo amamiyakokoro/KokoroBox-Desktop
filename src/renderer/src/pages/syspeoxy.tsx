@@ -15,6 +15,7 @@ import React, { Key, useEffect, useState } from 'react'
 import ByPassEditorModal from '@renderer/components/sysproxy/bypass-editor-modal'
 import { IoIosHelpCircle } from 'react-icons/io'
 import { notify } from '@renderer/utils/notification'
+import { useSettingsSave } from '@renderer/hooks/use-settings-save'
 
 const defaultPacScript = `
 function FindProxyForURL(url, host) {
@@ -73,6 +74,7 @@ const Sysproxy: React.FC = () => {
   const { sysProxy, onlyActiveDevice = false } =
     appConfig || ({ sysProxy: { enable: false } } as AppConfig)
   const [changed, setChanged] = useState(false)
+  const { isSaving, runSave } = useSettingsSave()
   const [values, originSetValues] = useState({
     enable: sysProxy.enable,
     host: sysProxy.host ?? '',
@@ -131,28 +133,31 @@ const Sysproxy: React.FC = () => {
   }
 
   const onSave = async (): Promise<void> => {
-    // check valid TODO
-    const nextValues = await normalizeServiceModeValues()
-    const nextConfig =
-      (await patchAppConfig({ sysProxy: nextValues })) ?? (await getAppConfig(true))
-    syncValuesFromSysProxy(nextConfig.sysProxy)
-    mutateAppConfig()
-    setChanged(false)
-    if (nextConfig.sysProxy.enable) {
-      try {
-        await triggerSysProxy(nextConfig.sysProxy.enable, onlyActiveDevice)
-      } catch (e) {
-        notify(e, { variant: 'danger' })
-        await patchAppConfig({ sysProxy: { enable: false } })
+    const saved = await runSave(async () => {
+      // check valid TODO
+      const nextValues = await normalizeServiceModeValues()
+      let nextConfig =
+        (await patchAppConfig({ sysProxy: nextValues })) ?? (await getAppConfig(true))
+      if (nextConfig.sysProxy.enable) {
+        try {
+          await triggerSysProxy(nextConfig.sysProxy.enable, onlyActiveDevice)
+        } catch (e) {
+          notify(e, { variant: 'danger' })
+          nextConfig =
+            (await patchAppConfig({ sysProxy: { enable: false } })) ?? (await getAppConfig(true))
+        }
       }
-    }
+      syncValuesFromSysProxy(nextConfig.sysProxy)
+      await mutateAppConfig()
+    })
+    if (saved) setChanged(false)
   }
 
   return (
     <BasePage
       title={tr('System proxy settings')}
       contentClassName="no-scrollbar"
-      header={<FeatureSettingsSaveButton isDirty={changed} onPress={onSave} />}
+      header={<FeatureSettingsSaveButton isDirty={changed} isSaving={isSaving} onPress={onSave} />}
     >
       {openPacEditor && (
         <PacEditorModal

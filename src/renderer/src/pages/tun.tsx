@@ -13,6 +13,7 @@ import { platform } from '@renderer/utils/init'
 import React, { Key, useState } from 'react'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { notify } from '@renderer/utils/notification'
+import { useSettingsSave } from '@renderer/hooks/use-settings-save'
 
 const Tun: React.FC = () => {
   const { controledMihomoConfig, patchControledMihomoConfig } = useControledMihomoConfig()
@@ -33,6 +34,7 @@ const Tun: React.FC = () => {
     mtu = 1500
   } = tun || {}
   const [changed, setChanged] = useState(false)
+  const { isSaving, runSave } = useSettingsSave()
   const [values, originSetValues] = useState({
     device,
     stack,
@@ -51,9 +53,11 @@ const Tun: React.FC = () => {
   }
 
   const onSave = async (patch: Partial<MihomoConfig>): Promise<void> => {
-    await patchControledMihomoConfig(patch)
-    await restartCore()
-    setChanged(false)
+    const saved = await runSave(async () => {
+      await patchControledMihomoConfig(patch)
+      await restartCore()
+    })
+    if (saved) setChanged(false)
   }
 
   return (
@@ -64,6 +68,7 @@ const Tun: React.FC = () => {
         header={
           <FeatureSettingsSaveButton
             isDirty={changed}
+            isSaving={isSaving}
             onPress={() =>
               onSave({
                 tun: {

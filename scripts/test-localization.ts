@@ -319,5 +319,9 @@ test('migrated feature settings use modern rows and stable save actions', () => 
     const source = readFileSync(`src/renderer/src/pages/${page}.tsx`, 'utf8')
     assert.match(source, /<FeatureSettingsSaveButton/)
     assert.match(source, /isDirty=\{changed\}/)
+    assert.match(source, /useSettingsSave\(\)/)
+    assert.match(source, /const saved = await runSave/)
+    assert.match(source, /if \(saved\) setChanged\(false\)/)
+    assert.match(source, /isSaving=\{isSaving\}/)
   }
 })

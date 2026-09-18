@@ -16,12 +16,14 @@ interface FeatureSettingsSectionProps {
 interface FeatureSettingsSaveButtonProps {
   isDirty: boolean
   isDisabled?: boolean
+  isSaving?: boolean
   onPress: () => void | Promise<void>
 }
 
 export const FeatureSettingsSaveButton: React.FC<FeatureSettingsSaveButtonProps> = ({
   isDirty,
   isDisabled = false,
+  isSaving = false,
   onPress
 }) => (
   <Button
@@ -29,7 +31,8 @@ export const FeatureSettingsSaveButton: React.FC<FeatureSettingsSaveButtonProps>
     className="app-nodrag min-w-16"
     color={isDirty ? 'primary' : 'default'}
     variant={isDirty ? 'solid' : 'flat'}
-    isDisabled={!isDirty || isDisabled}
+    isDisabled={!isDirty || isDisabled || isSaving}
+    isLoading={isSaving}
     aria-label={tr('Save')}
     onPress={onPress}
   >

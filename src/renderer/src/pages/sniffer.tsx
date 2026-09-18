@@ -12,6 +12,7 @@ import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { restartCore } from '@renderer/utils/ipc'
 import React, { useState } from 'react'
 import { notify } from '@renderer/utils/notification'
+import { useSettingsSave } from '@renderer/hooks/use-settings-save'
 
 const Sniffer: React.FC = () => {
   const { appConfig, patchAppConfig } = useAppConfig()
@@ -46,6 +47,7 @@ const Sniffer: React.FC = () => {
     'skip-src-address': skipSrcAddress = []
   } = sniffer || {}
   const [changed, setChanged] = useState(false)
+  const { isSaving, runSave } = useSettingsSave()
   const [values, originSetValues] = useState({
     parsePureIP,
     forceDNSMapping,
@@ -62,13 +64,11 @@ const Sniffer: React.FC = () => {
   }
 
   const onSave = async (patch: Partial<MihomoConfig>): Promise<void> => {
-    try {
-      setChanged(false)
+    const saved = await runSave(async () => {
       await patchControledMihomoConfig(patch)
       await restartCore()
-    } catch (e) {
-      notify(e, { variant: 'danger' })
-    }
+    })
+    if (saved) setChanged(false)
   }
 
   const handleSniffPortChange = (protocol: keyof typeof sniff, value: string): void => {
@@ -91,6 +91,7 @@ const Sniffer: React.FC = () => {
       header={
         <FeatureSettingsSaveButton
           isDirty={changed}
+          isSaving={isSaving}
           onPress={() =>
             onSave({
               sniffer: {

@@ -20,6 +20,7 @@ import {
   isValidDomainWildcard,
   isValidDnsServer
 } from '@renderer/utils/validate'
+import { useSettingsSave } from '@renderer/hooks/use-settings-save'
 
 const defaultFakeIpFilter = ['+.lan', '+.local', 'time.*.com', 'ntp.*.com', '+.market.xiaomi.com']
 
@@ -71,6 +72,7 @@ const DNS: React.FC = () => {
     'proxy-server-nameserver-policy': proxyServerNameserverPolicy = {}
   } = dns || {}
   const [changed, setChanged] = useState(false)
+  const { isSaving, runSave } = useSettingsSave()
   const [values, originSetValues] = useState({
     ipv6,
     useHosts,
@@ -149,16 +151,14 @@ const DNS: React.FC = () => {
   }
 
   const onSave = async (patch: Partial<MihomoConfig>): Promise<void> => {
-    await patchAppConfig({
-      hosts: values.hosts
-    })
-    try {
-      setChanged(false)
+    const saved = await runSave(async () => {
+      await patchAppConfig({
+        hosts: values.hosts
+      })
       await patchControledMihomoConfig(patch)
       await restartCore()
-    } catch (e) {
-      notify(e, { variant: 'danger' })
-    }
+    })
+    if (saved) setChanged(false)
   }
 
   return (
@@ -168,6 +168,7 @@ const DNS: React.FC = () => {
       header={
         <FeatureSettingsSaveButton
           isDirty={changed}
+          isSaving={isSaving}
           isDisabled={
             values && values.enhancedMode === 'fake-ip'
               ? Boolean(fakeIPRangeError) ||
