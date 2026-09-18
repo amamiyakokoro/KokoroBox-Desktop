@@ -66,11 +66,7 @@ const ControllerSetting: React.FC = () => {
 
   return (
     <SettingCard header={tr('External controller')}>
-      <SettingItem
-        compatKey="legacy"
-        title={tr('Listen address')}
-        divider={externalController !== ''}
-      >
+      <SettingItem title={tr('Listen address')} divider={externalController !== ''}>
         <div className="flex">
           {externalControllerInput != externalController && !externalControllerError && (
             <Button
@@ -111,7 +107,6 @@ const ControllerSetting: React.FC = () => {
       {externalController && externalController !== '' && (
         <>
           <SettingItem
-            compatKey="legacy"
             title={tr('Access key')}
             actions={
               <Button
@@ -160,7 +155,7 @@ const ControllerSetting: React.FC = () => {
               />
             </div>
           </SettingItem>
-          <SettingItem compatKey="legacy" title={tr('Enable controller dashboard')} divider>
+          <SettingItem title={tr('Enable controller dashboard')} divider>
             <Switch
               size="sm"
               isSelected={enableExternalUi}
@@ -174,7 +169,6 @@ const ControllerSetting: React.FC = () => {
           </SettingItem>
           {enableExternalUi && (
             <SettingItem
-              compatKey="legacy"
               title={tr('Controller dashboard')}
               actions={
                 <>
@@ -272,9 +266,9 @@ const ControllerSetting: React.FC = () => {
               </div>
             </SettingItem>
           )}
-          <SettingItem compatKey="legacy" title={tr('CORS configuration')}></SettingItem>
+          <SettingItem title={tr('CORS configuration')}></SettingItem>
           <div className="flex flex-col space-y-2 mt-2"></div>
-          <SettingItem compatKey="legacy" title={tr('Allow private network access')}>
+          <SettingItem title={tr('Allow private network access')}>
             <Switch
               size="sm"
               isSelected={allowPrivateNetwork}
@@ -289,7 +283,7 @@ const ControllerSetting: React.FC = () => {
             />
           </SettingItem>
           <div className="mt-1"></div>
-          <SettingItem compatKey="legacy" title={tr('Allowed origins')}>
+          <SettingItem title={tr('Allowed origins')}>
             {allowOriginsInput.join(',') != initialAllowOrigins.join(',') && (
               <Button
                 size="sm"

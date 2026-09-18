@@ -1,3 +1,5 @@
+import { tr } from '../../../../shared/i18n'
+import { Button } from '@heroui/react'
 import React, { type ReactNode } from 'react'
 import { SettingItemModeProvider } from './base-setting-item'
 
@@ -10,6 +12,30 @@ interface FeatureSettingsSectionProps {
   description?: string
   children: ReactNode
 }
+
+interface FeatureSettingsSaveButtonProps {
+  isDirty: boolean
+  isDisabled?: boolean
+  onPress: () => void | Promise<void>
+}
+
+export const FeatureSettingsSaveButton: React.FC<FeatureSettingsSaveButtonProps> = ({
+  isDirty,
+  isDisabled = false,
+  onPress
+}) => (
+  <Button
+    size="sm"
+    className="app-nodrag min-w-16"
+    color={isDirty ? 'primary' : 'default'}
+    variant={isDirty ? 'solid' : 'flat'}
+    isDisabled={!isDirty || isDisabled}
+    aria-label={tr('Save')}
+    onPress={onPress}
+  >
+    {tr('Save')}
+  </Button>
+)
 
 export const FeatureSettingsSection: React.FC<FeatureSettingsSectionProps> = ({
   title,

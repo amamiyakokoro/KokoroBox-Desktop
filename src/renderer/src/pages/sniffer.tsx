@@ -1,8 +1,9 @@
 import { tr } from '../../../shared/i18n'
-import { Button, Input, Switch } from '@heroui/react'
+import { Input, Switch } from '@heroui/react'
 import BasePage from '@renderer/components/base/base-page'
 import SettingItem from '@renderer/components/base/base-setting-item'
 import FeatureSettingsLayout, {
+  FeatureSettingsSaveButton,
   FeatureSettingsSection
 } from '@renderer/components/base/base-feature-settings'
 import EditableList from '@renderer/components/base/base-list-editor'
@@ -88,34 +89,28 @@ const Sniffer: React.FC = () => {
       title={tr('Domain sniffing settings')}
       contentClassName="no-scrollbar"
       header={
-        changed && (
-          <Button
-            size="sm"
-            className="app-nodrag"
-            color="primary"
-            onPress={() =>
-              onSave({
-                sniffer: {
-                  'parse-pure-ip': values.parsePureIP,
-                  'force-dns-mapping': values.forceDNSMapping,
-                  'override-destination': values.overrideDestination,
-                  sniff: values.sniff,
-                  'skip-domain': values.skipDomain,
-                  'force-domain': values.forceDomain,
-                  'skip-dst-address': values.skipDstAddress,
-                  'skip-src-address': values.skipSrcAddress
-                }
-              })
-            }
-          >
-            {tr('Save')}
-          </Button>
-        )
+        <FeatureSettingsSaveButton
+          isDirty={changed}
+          onPress={() =>
+            onSave({
+              sniffer: {
+                'parse-pure-ip': values.parsePureIP,
+                'force-dns-mapping': values.forceDNSMapping,
+                'override-destination': values.overrideDestination,
+                sniff: values.sniff,
+                'skip-domain': values.skipDomain,
+                'force-domain': values.forceDomain,
+                'skip-dst-address': values.skipDstAddress,
+                'skip-src-address': values.skipSrcAddress
+              }
+            })
+          }
+        />
       }
     >
       <FeatureSettingsLayout>
         <FeatureSettingsSection title={tr('Sniffing behavior')}>
-          <SettingItem compatKey="legacy" title={tr('Override domain sniffing settings')} divider>
+          <SettingItem title={tr('Override domain sniffing settings')} divider>
             <Switch
               size="sm"
               isSelected={controlSniff}
@@ -130,7 +125,7 @@ const Sniffer: React.FC = () => {
               }}
             />
           </SettingItem>
-          <SettingItem compatKey="legacy" title={tr('Override connection address')} divider>
+          <SettingItem title={tr('Override connection address')} divider>
             <Switch
               size="sm"
               isSelected={values.overrideDestination}
@@ -150,7 +145,7 @@ const Sniffer: React.FC = () => {
               }}
             />
           </SettingItem>
-          <SettingItem compatKey="legacy" title={tr('Sniff real IP mappings')} divider>
+          <SettingItem title={tr('Sniff real IP mappings')} divider>
             <Switch
               size="sm"
               isSelected={values.forceDNSMapping}
@@ -159,7 +154,7 @@ const Sniffer: React.FC = () => {
               }}
             />
           </SettingItem>
-          <SettingItem compatKey="legacy" title={tr('Sniff unmapped IP addresses')}>
+          <SettingItem title={tr('Sniff unmapped IP addresses')}>
             <Switch
               size="sm"
               isSelected={values.parsePureIP}
@@ -171,7 +166,7 @@ const Sniffer: React.FC = () => {
         </FeatureSettingsSection>
 
         <FeatureSettingsSection title={tr('Protocol ports')}>
-          <SettingItem compatKey="legacy" title={tr('HTTP sniffing ports')} divider>
+          <SettingItem title={tr('HTTP sniffing ports')} divider>
             <Input
               size="sm"
               className="w-[50%]"
@@ -180,7 +175,7 @@ const Sniffer: React.FC = () => {
               onValueChange={(v) => handleSniffPortChange('HTTP', v)}
             />
           </SettingItem>
-          <SettingItem compatKey="legacy" title={tr('TLS sniffing ports')} divider>
+          <SettingItem title={tr('TLS sniffing ports')} divider>
             <Input
               size="sm"
               className="w-[50%]"
@@ -189,7 +184,7 @@ const Sniffer: React.FC = () => {
               onValueChange={(v) => handleSniffPortChange('TLS', v)}
             />
           </SettingItem>
-          <SettingItem compatKey="legacy" title={tr('QUIC sniffing ports')}>
+          <SettingItem title={tr('QUIC sniffing ports')}>
             <Input
               size="sm"
               className="w-[50%]"

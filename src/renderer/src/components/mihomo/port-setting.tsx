@@ -65,7 +65,7 @@ const PortSetting: React.FC = () => {
     <>
       {lanOpen && <InterfaceModal onClose={() => setLanOpen(false)} />}
       <SettingCard header={tr('Port settings')}>
-        <SettingItem compatKey="legacy" title={tr('Mixed port')} divider>
+        <SettingItem title={tr('Mixed port')} divider>
           <div className="flex">
             {mixedPortInput !== mixedPort && (
               <Button
@@ -96,7 +96,7 @@ const PortSetting: React.FC = () => {
             />
           </div>
         </SettingItem>
-        <SettingItem compatKey="legacy" title={tr('SOCKS port')} divider>
+        <SettingItem title={tr('SOCKS port')} divider>
           <div className="flex">
             {socksPortInput !== socksPort && (
               <Button
@@ -124,7 +124,7 @@ const PortSetting: React.FC = () => {
             />
           </div>
         </SettingItem>
-        <SettingItem compatKey="legacy" title={tr('HTTP port')} divider>
+        <SettingItem title={tr('HTTP port')} divider>
           <div className="flex">
             {httpPortInput !== httpPort && (
               <Button
@@ -153,7 +153,7 @@ const PortSetting: React.FC = () => {
           </div>
         </SettingItem>
         {platform !== 'win32' && (
-          <SettingItem compatKey="legacy" title={tr('Redir port')} divider>
+          <SettingItem title={tr('Redir port')} divider>
             <div className="flex">
               {redirPortInput !== redirPort && (
                 <Button
@@ -183,7 +183,7 @@ const PortSetting: React.FC = () => {
           </SettingItem>
         )}
         {platform === 'linux' && (
-          <SettingItem compatKey="legacy" title={tr('TProxy port')} divider>
+          <SettingItem title={tr('TProxy port')} divider>
             <div className="flex">
               {tproxyPortInput !== tproxyPort && (
                 <Button
@@ -213,7 +213,6 @@ const PortSetting: React.FC = () => {
           </SettingItem>
         )}
         <SettingItem
-          compatKey="legacy"
           title={tr('Allow LAN connections')}
           actions={
             <Button
@@ -239,7 +238,7 @@ const PortSetting: React.FC = () => {
         </SettingItem>
         {allowLan && (
           <>
-            <SettingItem compatKey="legacy" title={tr('Allowed IP ranges')}>
+            <SettingItem title={tr('Allowed IP ranges')}>
               {lanAllowedIpsInput.join('') !== lanAllowedIps.join('') && (
                 <Button
                   size="sm"
@@ -257,7 +256,7 @@ const PortSetting: React.FC = () => {
               onChange={(items) => setLanAllowedIpsInput(items as string[])}
               placeholder={tr('IP range')}
             />
-            <SettingItem compatKey="legacy" title={tr('Blocked IP ranges')}>
+            <SettingItem title={tr('Blocked IP ranges')}>
               {lanDisallowedIpsInput.join('') !== lanDisallowedIps.join('') && (
                 <Button
                   size="sm"
@@ -277,7 +276,7 @@ const PortSetting: React.FC = () => {
             />
           </>
         )}
-        <SettingItem compatKey="legacy" title={tr('User authentication')}>
+        <SettingItem title={tr('User authentication')}>
           {authenticationInput.join() !== authentication.join() && (
             <Button
               size="sm"
@@ -296,7 +295,7 @@ const PortSetting: React.FC = () => {
           parse={parseAuth}
           format={formatAuth}
         />
-        <SettingItem compatKey="legacy" title={tr('IP ranges exempt from authentication')}>
+        <SettingItem title={tr('IP ranges exempt from authentication')}>
           {skipAuthPrefixesInput.join('') !== skipAuthPrefixes.join('') && (
             <Button
               size="sm"

@@ -1,8 +1,9 @@
 import { tr } from '../../../shared/i18n'
-import { Button, Tab, Input, Switch, Tabs, Tooltip } from '@heroui/react'
+import { Tab, Input, Switch, Tabs, Tooltip } from '@heroui/react'
 import BasePage from '@renderer/components/base/base-page'
 import SettingItem from '@renderer/components/base/base-setting-item'
 import FeatureSettingsLayout, {
+  FeatureSettingsSaveButton,
   FeatureSettingsSection
 } from '@renderer/components/base/base-feature-settings'
 import EditableList from '@renderer/components/base/base-list-editor'
@@ -165,61 +166,55 @@ const DNS: React.FC = () => {
       title={tr('DNS settings')}
       contentClassName="no-scrollbar"
       header={
-        changed && (
-          <Button
-            size="sm"
-            className="app-nodrag"
-            color="primary"
-            isDisabled={
-              values && values.enhancedMode === 'fake-ip'
-                ? Boolean(fakeIPRangeError) ||
-                  (values.ipv6 && Boolean(fakeIPRange6Error)) ||
-                  Boolean(fakeIPFilterError) ||
-                  hasDnsErrors
-                : hasDnsErrors
+        <FeatureSettingsSaveButton
+          isDirty={changed}
+          isDisabled={
+            values && values.enhancedMode === 'fake-ip'
+              ? Boolean(fakeIPRangeError) ||
+                (values.ipv6 && Boolean(fakeIPRange6Error)) ||
+                Boolean(fakeIPFilterError) ||
+                hasDnsErrors
+              : hasDnsErrors
+          }
+          onPress={() => {
+            const hostsObject =
+              values.useHosts && values.hosts && values.hosts.length > 0
+                ? Object.fromEntries(values.hosts.map(({ domain, value }) => [domain, value]))
+                : undefined
+            const dnsConfig = {
+              ipv6: values.ipv6,
+              'fake-ip-range': values.fakeIPRange,
+              'fake-ip-range6': values.fakeIPRange6,
+              'fake-ip-filter': values.fakeIPFilter,
+              'fake-ip-filter-mode': values.fakeIPFilterMode,
+              'enhanced-mode': values.enhancedMode,
+              'use-hosts': values.useHosts,
+              'use-system-hosts': values.useSystemHosts,
+              'respect-rules': values.respectRules,
+              'direct-nameserver-follow-policy': values.directNameserverFollowPolicy,
+              'prefer-h3': values.preferH3,
+              'cache-algorithm': values.cacheAlgorithm,
+              'default-nameserver': values.defaultNameserver,
+              nameserver: values.nameserver,
+              'proxy-server-nameserver': values.proxyServerNameserver,
+              'direct-nameserver': values.directNameserver,
+              fallback: values.fallback,
+              'fallback-filter': values.fallbackFilter,
+              'fallback-lazy-query': values.fallbackLazyQuery,
+              'nameserver-policy': values.nameserverPolicy,
+              'proxy-server-nameserver-policy': values.proxyServerNameserverPolicy
             }
-            onPress={() => {
-              const hostsObject =
-                values.useHosts && values.hosts && values.hosts.length > 0
-                  ? Object.fromEntries(values.hosts.map(({ domain, value }) => [domain, value]))
-                  : undefined
-              const dnsConfig = {
-                ipv6: values.ipv6,
-                'fake-ip-range': values.fakeIPRange,
-                'fake-ip-range6': values.fakeIPRange6,
-                'fake-ip-filter': values.fakeIPFilter,
-                'fake-ip-filter-mode': values.fakeIPFilterMode,
-                'enhanced-mode': values.enhancedMode,
-                'use-hosts': values.useHosts,
-                'use-system-hosts': values.useSystemHosts,
-                'respect-rules': values.respectRules,
-                'direct-nameserver-follow-policy': values.directNameserverFollowPolicy,
-                'prefer-h3': values.preferH3,
-                'cache-algorithm': values.cacheAlgorithm,
-                'default-nameserver': values.defaultNameserver,
-                nameserver: values.nameserver,
-                'proxy-server-nameserver': values.proxyServerNameserver,
-                'direct-nameserver': values.directNameserver,
-                fallback: values.fallback,
-                'fallback-filter': values.fallbackFilter,
-                'fallback-lazy-query': values.fallbackLazyQuery,
-                'nameserver-policy': values.nameserverPolicy,
-                'proxy-server-nameserver-policy': values.proxyServerNameserverPolicy
-              }
-              onSave({
-                dns: dnsConfig,
-                hosts: hostsObject
-              })
-            }}
-          >
-            {tr('Save')}
-          </Button>
-        )
+            onSave({
+              dns: dnsConfig,
+              hosts: hostsObject
+            })
+          }}
+        />
       }
     >
       <FeatureSettingsLayout>
         <FeatureSettingsSection title={tr('DNS behavior')}>
-          <SettingItem compatKey="legacy" title={tr('Override DNS settings')} divider>
+          <SettingItem title={tr('Override DNS settings')} divider>
             <Switch
               size="sm"
               isSelected={controlDns}
@@ -234,7 +229,7 @@ const DNS: React.FC = () => {
               }}
             />
           </SettingItem>
-          <SettingItem compatKey="legacy" title="IPv6" divider>
+          <SettingItem title="IPv6" divider>
             <Switch
               size="sm"
               isSelected={values.ipv6}
@@ -243,7 +238,7 @@ const DNS: React.FC = () => {
               }}
             />
           </SettingItem>
-          <SettingItem compatKey="legacy" title={tr('DNS policy')} divider>
+          <SettingItem title={tr('DNS policy')} divider>
             <Tabs
               size="sm"
               color="primary"
@@ -266,7 +261,7 @@ const DNS: React.FC = () => {
               <Tab key="anti-pollution" title={tr('Anti-pollution')} />
             </Tabs>
           </SettingItem>
-          <SettingItem compatKey="legacy" title={tr('Domain mapping mode')}>
+          <SettingItem title={tr('Domain mapping mode')}>
             <Tabs
               size="sm"
               color="primary"
@@ -284,7 +279,7 @@ const DNS: React.FC = () => {
 
         {values.enhancedMode === 'fake-ip' && (
           <FeatureSettingsSection title={tr('Fake IP settings')}>
-            <SettingItem compatKey="legacy" title={tr('Fake IP range (IPv4)')} divider>
+            <SettingItem title={tr('Fake IP range (IPv4)')} divider>
               <Tooltip
                 content={fakeIPRangeError}
                 placement="right"
@@ -310,7 +305,7 @@ const DNS: React.FC = () => {
               </Tooltip>
             </SettingItem>
             {values.ipv6 && (
-              <SettingItem compatKey="legacy" title={tr('Fake IP range (IPv6)')} divider>
+              <SettingItem title={tr('Fake IP range (IPv6)')} divider>
                 <Tooltip
                   content={fakeIPRange6Error}
                   placement="right"
@@ -336,7 +331,7 @@ const DNS: React.FC = () => {
                 </Tooltip>
               </SettingItem>
             )}
-            <SettingItem compatKey="legacy" title={tr('Fake-IP filter mode')} divider>
+            <SettingItem title={tr('Fake-IP filter mode')} divider>
               <Tabs
                 size="sm"
                 color="primary"

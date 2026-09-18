@@ -3,6 +3,7 @@ import { Button, Input, Switch, Tab, Tabs, Tooltip } from '@heroui/react'
 import BasePage from '@renderer/components/base/base-page'
 import SettingItem from '@renderer/components/base/base-setting-item'
 import FeatureSettingsLayout, {
+  FeatureSettingsSaveButton,
   FeatureSettingsSection
 } from '@renderer/components/base/base-feature-settings'
 import EditableList from '@renderer/components/base/base-list-editor'
@@ -151,13 +152,7 @@ const Sysproxy: React.FC = () => {
     <BasePage
       title={tr('System proxy settings')}
       contentClassName="no-scrollbar"
-      header={
-        changed && (
-          <Button color="primary" className="app-nodrag" size="sm" onPress={onSave}>
-            {tr('Save')}
-          </Button>
-        )
-      }
+      header={<FeatureSettingsSaveButton isDirty={changed} onPress={onSave} />}
     >
       {openPacEditor && (
         <PacEditorModal
@@ -184,7 +179,7 @@ const Sysproxy: React.FC = () => {
       )}
       <FeatureSettingsLayout>
         <FeatureSettingsSection title={tr('Proxy configuration')}>
-          <SettingItem compatKey="legacy" title={tr('Proxy host')} divider>
+          <SettingItem title={tr('Proxy host')} divider>
             <Input
               size="sm"
               className="w-[50%]"
@@ -195,7 +190,7 @@ const Sysproxy: React.FC = () => {
               }}
             />
           </SettingItem>
-          <SettingItem compatKey="legacy" title={tr('Proxy mode')} divider={values.mode === 'auto'}>
+          <SettingItem title={tr('Proxy mode')} divider={values.mode === 'auto'}>
             <Tabs
               size="sm"
               color="primary"
@@ -207,7 +202,7 @@ const Sysproxy: React.FC = () => {
             </Tabs>
           </SettingItem>
           {values.mode === 'auto' && (
-            <SettingItem compatKey="legacy" title={tr('PAC script')}>
+            <SettingItem title={tr('PAC script')}>
               <Button size="sm" onPress={() => setOpenPacEditor(true)}>
                 {tr('Edit')}
               </Button>
@@ -217,7 +212,7 @@ const Sysproxy: React.FC = () => {
 
         <FeatureSettingsSection title={tr('System integration')}>
           {platform === 'win32' && (
-            <SettingItem compatKey="legacy" title={tr('UWP tool')} divider>
+            <SettingItem title={tr('UWP tool')} divider>
               <Button
                 size="sm"
                 onPress={async () => {
@@ -229,7 +224,6 @@ const Sysproxy: React.FC = () => {
             </SettingItem>
           )}
           <SettingItem
-            compatKey="legacy"
             title={tr('Configuration method')}
             divider={platform === 'linux' || values.settingMode === 'service'}
           >
@@ -253,7 +247,6 @@ const Sysproxy: React.FC = () => {
           </SettingItem>
           {platform === 'linux' && (
             <SettingItem
-              compatKey="legacy"
               title={tr('Terminal proxy')}
               actions={
                 <Tooltip
@@ -282,7 +275,6 @@ const Sysproxy: React.FC = () => {
           )}
           {platform !== 'linux' && values.settingMode === 'service' && (
             <SettingItem
-              compatKey="legacy"
               title={tr('Active interfaces only')}
               actions={
                 <Tooltip
@@ -318,7 +310,6 @@ const Sysproxy: React.FC = () => {
           <FeatureSettingsSection title={tr('Reliability and exclusions')}>
             {values.settingMode === 'service' && (
               <SettingItem
-                compatKey="legacy"
                 title={tr('System proxy watchdog')}
                 actions={
                   <Tooltip
@@ -348,7 +339,6 @@ const Sysproxy: React.FC = () => {
             )}
             {values.settingMode === 'service' && values.guard && (
               <SettingItem
-                compatKey="legacy"
                 title={tr('Watchdog notifications')}
                 actions={
                   <Tooltip
@@ -375,7 +365,7 @@ const Sysproxy: React.FC = () => {
             )}
             {values.mode === 'manual' && (
               <>
-                <SettingItem compatKey="legacy" title={tr('Add default proxy bypasses')} divider>
+                <SettingItem title={tr('Add default proxy bypasses')} divider>
                   <Button
                     size="sm"
                     onPress={() => {
@@ -388,7 +378,7 @@ const Sysproxy: React.FC = () => {
                     {tr('Add default proxy bypasses')}
                   </Button>
                 </SettingItem>
-                <SettingItem compatKey="legacy" title={tr('Proxy bypass list')}>
+                <SettingItem title={tr('Proxy bypass list')}>
                   <Button
                     size="sm"
                     onPress={async () => {

@@ -3,6 +3,7 @@ import { Button, Input, Switch, Tab, Tabs } from '@heroui/react'
 import BasePage from '@renderer/components/base/base-page'
 import SettingItem from '@renderer/components/base/base-setting-item'
 import FeatureSettingsLayout, {
+  FeatureSettingsSaveButton,
   FeatureSettingsSection
 } from '@renderer/components/base/base-feature-settings'
 import EditableList from '@renderer/components/base/base-list-editor'
@@ -61,38 +62,32 @@ const Tun: React.FC = () => {
         title={tr('TUN settings')}
         contentClassName="no-scrollbar"
         header={
-          changed && (
-            <Button
-              size="sm"
-              className="app-nodrag"
-              color="primary"
-              onPress={() =>
-                onSave({
-                  tun: {
-                    device: values.device,
-                    stack: values.stack,
-                    'auto-route': values.autoRoute,
-                    'auto-redirect': values.autoRedirect,
-                    'auto-detect-interface': values.autoDetectInterface,
-                    'dns-hijack': values.dnsHijack,
-                    'strict-route': values.strictRoute,
-                    'route-exclude-address': values.routeExcludeAddress,
-                    'disable-icmp-forwarding': values.disableIcmpForwarding,
-                    mtu: values.mtu
-                  }
-                })
-              }
-            >
-              {tr('Save')}
-            </Button>
-          )
+          <FeatureSettingsSaveButton
+            isDirty={changed}
+            onPress={() =>
+              onSave({
+                tun: {
+                  device: values.device,
+                  stack: values.stack,
+                  'auto-route': values.autoRoute,
+                  'auto-redirect': values.autoRedirect,
+                  'auto-detect-interface': values.autoDetectInterface,
+                  'dns-hijack': values.dnsHijack,
+                  'strict-route': values.strictRoute,
+                  'route-exclude-address': values.routeExcludeAddress,
+                  'disable-icmp-forwarding': values.disableIcmpForwarding,
+                  mtu: values.mtu
+                }
+              })
+            }
+          />
         }
       >
         <FeatureSettingsLayout>
           {(platform === 'win32' || platform === 'darwin') && (
             <FeatureSettingsSection title={tr('Platform integration')}>
               {platform === 'win32' && (
-                <SettingItem compatKey="legacy" title={tr('Reset firewall')}>
+                <SettingItem title={tr('Reset firewall')}>
                   <Button
                     size="sm"
                     color="primary"
@@ -115,7 +110,7 @@ const Tun: React.FC = () => {
                 </SettingItem>
               )}
               {platform === 'darwin' && (
-                <SettingItem compatKey="legacy" title={tr('Configure system DNS automatically')}>
+                <SettingItem title={tr('Configure system DNS automatically')}>
                   <Tabs
                     size="sm"
                     color="primary"
@@ -134,7 +129,7 @@ const Tun: React.FC = () => {
           )}
 
           <FeatureSettingsSection title={tr('TUN routing')}>
-            <SettingItem compatKey="legacy" title={tr('TUN network stack')} divider>
+            <SettingItem title={tr('TUN network stack')} divider>
               <Tabs
                 size="sm"
                 color="primary"
@@ -149,7 +144,7 @@ const Tun: React.FC = () => {
             </SettingItem>
             {platform !== 'darwin' && (
               <>
-                <SettingItem compatKey="legacy" title={tr('TUN interface name')} divider>
+                <SettingItem title={tr('TUN interface name')} divider>
                   <Input
                     size="sm"
                     className="w-25"
@@ -159,7 +154,7 @@ const Tun: React.FC = () => {
                     }}
                   />
                 </SettingItem>
-                <SettingItem compatKey="legacy" title={tr('Strict routing')} divider>
+                <SettingItem title={tr('Strict routing')} divider>
                   <Switch
                     size="sm"
                     isSelected={values.strictRoute}
@@ -170,7 +165,7 @@ const Tun: React.FC = () => {
                 </SettingItem>
               </>
             )}
-            <SettingItem compatKey="legacy" title={tr('Configure routes automatically')} divider>
+            <SettingItem title={tr('Configure routes automatically')} divider>
               <Switch
                 size="sm"
                 isSelected={values.autoRoute}
@@ -180,11 +175,7 @@ const Tun: React.FC = () => {
               />
             </SettingItem>
             {platform === 'linux' && (
-              <SettingItem
-                compatKey="legacy"
-                title={tr('Configure TCP redirection automatically')}
-                divider
-              >
+              <SettingItem title={tr('Configure TCP redirection automatically')} divider>
                 <Switch
                   size="sm"
                   isSelected={values.autoRedirect}
@@ -194,7 +185,7 @@ const Tun: React.FC = () => {
                 />
               </SettingItem>
             )}
-            <SettingItem compatKey="legacy" title={tr('Select outbound interface automatically')}>
+            <SettingItem title={tr('Select outbound interface automatically')}>
               <Switch
                 size="sm"
                 isSelected={values.autoDetectInterface}
@@ -206,7 +197,7 @@ const Tun: React.FC = () => {
           </FeatureSettingsSection>
 
           <FeatureSettingsSection title={tr('DNS and packet handling')}>
-            <SettingItem compatKey="legacy" title={tr('ICMP forwarding')} divider>
+            <SettingItem title={tr('ICMP forwarding')} divider>
               <Switch
                 size="sm"
                 isSelected={!values.disableIcmpForwarding}
@@ -215,7 +206,7 @@ const Tun: React.FC = () => {
                 }}
               />
             </SettingItem>
-            <SettingItem compatKey="legacy" title="MTU" divider>
+            <SettingItem title="MTU" divider>
               <Input
                 size="sm"
                 type="number"
@@ -230,11 +221,7 @@ const Tun: React.FC = () => {
                 }}
               />
             </SettingItem>
-            <SettingItem
-              compatKey="legacy"
-              title={tr('DNS hijacking targets, separated by commas')}
-              divider
-            >
+            <SettingItem title={tr('DNS hijacking targets, separated by commas')} divider>
               <Input
                 size="sm"
                 className="w-[50%]"

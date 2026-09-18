@@ -26,7 +26,7 @@ const Mihomo: React.FC = () => {
     <BasePage title={tr('Mihomo settings')} contentClassName="no-scrollbar">
       <FeatureSettingsLayout>
         <FeatureSettingsSection title={tr('Core network')}>
-          <SettingItem compatKey="legacy" title="IPv6">
+          <SettingItem title="IPv6">
             <Switch
               size="sm"
               isSelected={ipv6}

@@ -11,7 +11,7 @@ const CoreLogSetting: React.FC = () => {
 
   return (
     <SettingCard header={tr('Core logging')}>
-      <SettingItem compatKey="legacy" title={tr('Log level')}>
+      <SettingItem title={tr('Log level')}>
         <Select
           aria-label={tr('Log level')}
           classNames={{ trigger: 'data-[hover=true]:bg-default-200' }}

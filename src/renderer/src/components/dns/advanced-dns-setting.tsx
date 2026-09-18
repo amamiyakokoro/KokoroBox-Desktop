@@ -100,7 +100,7 @@ const AdvancedDnsSetting: React.FC<AdvancedDnsSettingProps> = ({
 
   return (
     <SettingCard header={tr('Advanced DNS settings')}>
-      <SettingItem compatKey="legacy" title={tr('Follow routing rules for connections')} divider>
+      <SettingItem title={tr('Follow routing rules for connections')} divider>
         <Switch
           size="sm"
           isSelected={respectRules}
@@ -117,7 +117,6 @@ const AdvancedDnsSetting: React.FC<AdvancedDnsSettingProps> = ({
         followRoutingRules={respectRules}
       />
       <SettingItem
-        compatKey="legacy"
         title={tr('Apply domain DNS policy to direct DNS')}
         actions={
           <Tooltip
@@ -284,14 +283,14 @@ const AdvancedDnsSetting: React.FC<AdvancedDnsSettingProps> = ({
       />
       {fallback.length > 0 && (
         <>
-          <SettingItem compatKey="legacy" title={tr('Fallback GeoIP filter')} divider>
+          <SettingItem title={tr('Fallback GeoIP filter')} divider>
             <Switch
               size="sm"
               isSelected={fallbackFilter.geoip !== false}
               onValueChange={(geoip) => onFallbackFilterChange({ ...fallbackFilter, geoip })}
             />
           </SettingItem>
-          <SettingItem compatKey="legacy" title={tr('Fallback GeoIP country')} divider>
+          <SettingItem title={tr('Fallback GeoIP country')} divider>
             <Input
               aria-label={tr('Fallback GeoIP country')}
               size="sm"
@@ -302,7 +301,7 @@ const AdvancedDnsSetting: React.FC<AdvancedDnsSettingProps> = ({
               }
             />
           </SettingItem>
-          <SettingItem compatKey="legacy" title={tr('Query fallback DNS lazily')} divider>
+          <SettingItem title={tr('Query fallback DNS lazily')} divider>
             <Switch
               size="sm"
               isSelected={fallbackLazyQuery}
@@ -311,10 +310,10 @@ const AdvancedDnsSetting: React.FC<AdvancedDnsSettingProps> = ({
           </SettingItem>
         </>
       )}
-      <SettingItem compatKey="legacy" title={tr('Prefer HTTP/3')} divider>
+      <SettingItem title={tr('Prefer HTTP/3')} divider>
         <Switch size="sm" isSelected={preferH3} onValueChange={onPreferH3Change} />
       </SettingItem>
-      <SettingItem compatKey="legacy" title={tr('DNS cache algorithm')} divider>
+      <SettingItem title={tr('DNS cache algorithm')} divider>
         <Select
           aria-label={tr('DNS cache algorithm')}
           className="w-28"
@@ -327,10 +326,10 @@ const AdvancedDnsSetting: React.FC<AdvancedDnsSettingProps> = ({
           <SelectItem key="arc">ARC</SelectItem>
         </Select>
       </SettingItem>
-      <SettingItem compatKey="legacy" title={tr('Use system hosts')} divider>
+      <SettingItem title={tr('Use system hosts')} divider>
         <Switch size="sm" isSelected={useSystemHosts} onValueChange={onUseSystemHostsChange} />
       </SettingItem>
-      <SettingItem compatKey="legacy" title={tr('Custom hosts')}>
+      <SettingItem title={tr('Custom hosts')}>
         <Switch size="sm" isSelected={useHosts} onValueChange={onUseHostsChange} />
       </SettingItem>
       {useHosts && (

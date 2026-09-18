@@ -34,7 +34,7 @@ const AdvancedSetting: React.FC = () => {
 
   return (
     <SettingCard header={tr('Advanced settings')}>
-      <SettingItem compatKey="legacy" title={tr('Find process')} divider>
+      <SettingItem title={tr('Find process')} divider>
         <Tabs
           size="sm"
           color="primary"
@@ -48,7 +48,7 @@ const AdvancedSetting: React.FC = () => {
           <Tab key="always" title={tr('Enabled')}></Tab>
         </Tabs>
       </SettingItem>
-      <SettingItem compatKey="legacy" title={tr('Remember selected proxies')} divider>
+      <SettingItem title={tr('Remember selected proxies')} divider>
         <Switch
           size="sm"
           isSelected={storeSelected}
@@ -57,7 +57,7 @@ const AdvancedSetting: React.FC = () => {
           }}
         />
       </SettingItem>
-      <SettingItem compatKey="legacy" title={tr('Persist FakeIP mappings')} divider>
+      <SettingItem title={tr('Persist FakeIP mappings')} divider>
         <Switch
           size="sm"
           isSelected={storeFakeIp}
@@ -67,7 +67,6 @@ const AdvancedSetting: React.FC = () => {
         />
       </SettingItem>
       <SettingItem
-        compatKey="legacy"
         title={tr('Use RTT latency tests')}
         actions={
           <Tooltip
@@ -91,7 +90,6 @@ const AdvancedSetting: React.FC = () => {
         />
       </SettingItem>
       <SettingItem
-        compatKey="legacy"
         title={tr('Concurrent TCP connections')}
         actions={
           <Tooltip
@@ -114,7 +112,7 @@ const AdvancedSetting: React.FC = () => {
           }}
         />
       </SettingItem>
-      <SettingItem compatKey="legacy" title={tr('Disable TCP keep-alive')} divider>
+      <SettingItem title={tr('Disable TCP keep-alive')} divider>
         <Switch
           size="sm"
           isSelected={disableKeepAlive}
@@ -123,7 +121,7 @@ const AdvancedSetting: React.FC = () => {
           }}
         />
       </SettingItem>
-      <SettingItem compatKey="legacy" title={tr('TCP keep-alive interval')} divider>
+      <SettingItem title={tr('TCP keep-alive interval')} divider>
         <div className="flex">
           {intervalInput !== interval && (
             <Button
@@ -149,7 +147,7 @@ const AdvancedSetting: React.FC = () => {
           />
         </div>
       </SettingItem>
-      <SettingItem compatKey="legacy" title={tr('TCP keep-alive idle time')} divider>
+      <SettingItem title={tr('TCP keep-alive idle time')} divider>
         <div className="flex">
           {idleInput !== idle && (
             <Button
@@ -175,7 +173,7 @@ const AdvancedSetting: React.FC = () => {
           />
         </div>
       </SettingItem>
-      <SettingItem compatKey="legacy" title={tr('Set outbound interface')}>
+      <SettingItem title={tr('Set outbound interface')}>
         <InterfaceSelect
           value={interfaceName}
           exclude={[device, 'lo']}

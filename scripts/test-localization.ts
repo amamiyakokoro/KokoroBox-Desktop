@@ -276,3 +276,28 @@ test('core feature settings pages use the shared desktop layout', () => {
     assert.match(source, /<FeatureSettingsSection/)
   }
 })
+
+test('migrated feature settings use modern rows and stable save actions', () => {
+  const featureFiles = [
+    'src/renderer/src/pages/syspeoxy.tsx',
+    'src/renderer/src/pages/tun.tsx',
+    'src/renderer/src/pages/dns.tsx',
+    'src/renderer/src/pages/sniffer.tsx',
+    'src/renderer/src/pages/mihomo.tsx',
+    'src/renderer/src/components/dns/advanced-dns-setting.tsx',
+    'src/renderer/src/components/mihomo/advanced-settings.tsx',
+    'src/renderer/src/components/mihomo/port-setting.tsx',
+    'src/renderer/src/components/mihomo/controller-setting.tsx',
+    'src/renderer/src/components/mihomo/core-log-setting.tsx'
+  ]
+
+  for (const file of featureFiles) {
+    assert.doesNotMatch(readFileSync(file, 'utf8'), /compatKey=["']legacy["']/)
+  }
+
+  for (const page of ['syspeoxy', 'tun', 'dns', 'sniffer']) {
+    const source = readFileSync(`src/renderer/src/pages/${page}.tsx`, 'utf8')
+    assert.match(source, /<FeatureSettingsSaveButton/)
+    assert.match(source, /isDirty=\{changed\}/)
+  }
+})
