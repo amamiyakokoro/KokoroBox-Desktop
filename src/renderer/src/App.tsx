@@ -1,16 +1,18 @@
 import { tr } from '../../shared/i18n'
 import { useTheme } from 'next-themes'
 import { lazy, Suspense, useEffect, useRef, useState } from 'react'
-import { NavigateFunction, useLocation, useNavigate, useRoutes } from 'react-router-dom'
+import { NavigateFunction, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import OutboundModeSwitcher from '@renderer/components/sider/outbound-mode-switcher'
 import { Button, Divider } from '@heroui/react'
 import { IoSettings } from 'react-icons/io5'
-import routes, { useDeferredRoutePreload } from '@renderer/routes'
+import { useDeferredRoutePreload } from '@renderer/routes'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import {
   applyTheme,
   checkUpdate,
+  confirmCloseMainWindow,
   serviceStatus,
+  setRendererHasUnsavedChanges,
   setNativeTheme,
   setTitleBarOverlay,
   testServiceConnection
@@ -19,6 +21,7 @@ import { platform } from '@renderer/utils/init'
 import { TitleBarOverlayOptions } from 'electron'
 import MihomoIcon from './components/base/mihomo-icon'
 import useSWR from 'swr'
+import { useUnsavedChanges } from '@renderer/hooks/use-unsaved-changes'
 
 const ConfirmModal = lazy(() => import('@renderer/components/base/base-confirm'))
 const siderCardsPromise = import('@renderer/components/sider/sider-cards')
@@ -49,7 +52,8 @@ const App: React.FC = () => {
   const { setTheme, systemTheme } = useTheme()
   navigate = useNavigate()
   const location = useLocation()
-  const page = useRoutes(routes)
+  const page = <Outlet />
+  const { hasUnsavedChanges, confirmUnsavedChanges } = useUnsavedChanges()
   useDeferredRoutePreload()
 
   const setTitlebar = (): void => {
@@ -171,6 +175,13 @@ const App: React.FC = () => {
   }>()
 
   useEffect(() => {
+    void setRendererHasUnsavedChanges(hasUnsavedChanges)
+    return () => {
+      void setRendererHasUnsavedChanges(false)
+    }
+  }, [hasUnsavedChanges])
+
+  useEffect(() => {
     if (platform !== 'darwin' || appConfig?.corePermissionMode !== 'service') return
     let cancelled = false
     const timer = setTimeout(() => {
@@ -188,7 +199,15 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const handleShowQuitConfirm = (): void => {
-      setShowQuitConfirm(true)
+      void confirmUnsavedChanges().then((canQuit) => {
+        if (canQuit) setShowQuitConfirm(true)
+        else window.electron.ipcRenderer.send('quit-confirm-result', false)
+      })
+    }
+    const handleShowUnsavedCloseConfirm = (): void => {
+      void confirmUnsavedChanges().then((canClose) => {
+        if (canClose) void confirmCloseMainWindow()
+      })
     }
     const handleShowProfileInstallConfirm = (
       _event: unknown,
@@ -206,6 +225,7 @@ const App: React.FC = () => {
     }
 
     window.electron.ipcRenderer.on('show-quit-confirm', handleShowQuitConfirm)
+    window.electron.ipcRenderer.on('show-unsaved-close-confirm', handleShowUnsavedCloseConfirm)
     window.electron.ipcRenderer.on('show-profile-install-confirm', handleShowProfileInstallConfirm)
     window.electron.ipcRenderer.on(
       'show-override-install-confirm',
@@ -214,10 +234,11 @@ const App: React.FC = () => {
 
     return (): void => {
       window.electron.ipcRenderer.removeAllListeners('show-quit-confirm')
+      window.electron.ipcRenderer.removeAllListeners('show-unsaved-close-confirm')
       window.electron.ipcRenderer.removeAllListeners('show-profile-install-confirm')
       window.electron.ipcRenderer.removeAllListeners('show-override-install-confirm')
     }
-  }, [])
+  }, [confirmUnsavedChanges])
 
   const handleQuitConfirm = (confirmed: boolean): void => {
     setShowQuitConfirm(false)

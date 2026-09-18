@@ -117,7 +117,9 @@ import {
 import { registerShortcut } from '../resolve/shortcut'
 import {
   closeMainWindow,
+  confirmCloseMainWindow,
   mainWindow,
+  setRendererHasUnsavedChanges,
   setNotQuitDialog,
   showMainWindow,
   triggerMainWindow
@@ -434,6 +436,10 @@ export function registerIpcMainHandlers(): void {
   ipcMain.handle('setDockVisible', (_e, visible: boolean) => setDockVisible(visible))
   ipcMain.handle('showMainWindow', showMainWindow)
   ipcMain.handle('closeMainWindow', closeMainWindow)
+  ipcMain.handle('confirmCloseMainWindow', confirmCloseMainWindow)
+  ipcMain.handle('setRendererHasUnsavedChanges', (_event, value: boolean) => {
+    setRendererHasUnsavedChanges(value)
+  })
   ipcMain.handle('triggerMainWindow', triggerMainWindow)
   ipcMain.handle('showFloatingWindow', () => ipcErrorWrapper(showFloatingWindow)())
   ipcMain.handle('closeFloatingWindow', () => ipcErrorWrapper(closeFloatingWindow)())

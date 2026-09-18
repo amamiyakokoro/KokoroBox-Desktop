@@ -577,6 +577,16 @@ export async function closeMainWindow(): Promise<void> {
   return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('closeMainWindow'))
 }
 
+export async function confirmCloseMainWindow(): Promise<void> {
+  return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('confirmCloseMainWindow'))
+}
+
+export async function setRendererHasUnsavedChanges(value: boolean): Promise<void> {
+  return ipcErrorWrapper(
+    await window.electron.ipcRenderer.invoke('setRendererHasUnsavedChanges', value)
+  )
+}
+
 export async function triggerMainWindow(): Promise<void> {
   return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('triggerMainWindow'))
 }

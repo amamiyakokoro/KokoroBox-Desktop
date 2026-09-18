@@ -2,7 +2,7 @@ import React from 'react'
 import './utils/locale'
 import { getLocale } from '../../shared/i18n'
 import ReactDOM from 'react-dom/client'
-import { HashRouter } from 'react-router-dom'
+import { createHashRouter, RouterProvider } from 'react-router-dom'
 import { ThemeProvider as NextThemesProvider } from 'next-themes'
 import { HeroUIProvider } from '@heroui/react'
 import { init, platform } from '@renderer/utils/init'
@@ -17,12 +17,40 @@ import { ProfileConfigProvider } from './hooks/use-profile-config'
 import { RulesProvider } from './hooks/use-rules'
 import { GroupsProvider } from './hooks/use-groups'
 import AppNotificationProvider from './components/base/app-notification-provider'
+import routes from './routes'
+import { UnsavedChangesProvider } from './hooks/use-unsaved-changes'
 
 let F12Count = 0
 
 if (!window.location.hash) {
   window.history.replaceState(null, '', '#/proxies')
 }
+
+const ApplicationProviders: React.FC = () => (
+  <AppConfigProvider>
+    <ControledMihomoConfigProvider>
+      <ProfileConfigProvider>
+        <OverrideConfigProvider>
+          <GroupsProvider>
+            <RulesProvider>
+              <UnsavedChangesProvider>
+                <App />
+              </UnsavedChangesProvider>
+            </RulesProvider>
+          </GroupsProvider>
+        </OverrideConfigProvider>
+      </ProfileConfigProvider>
+    </ControledMihomoConfigProvider>
+  </AppConfigProvider>
+)
+
+const router = createHashRouter([
+  {
+    path: '/',
+    element: <ApplicationProviders />,
+    children: routes
+  }
+])
 
 init().then(() => {
   document.addEventListener('keydown', (e) => {
@@ -55,21 +83,7 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
       <NextThemesProvider attribute="class" enableSystem defaultTheme="dark">
         <AppNotificationProvider />
         <BaseErrorBoundary>
-          <HashRouter>
-            <AppConfigProvider>
-              <ControledMihomoConfigProvider>
-                <ProfileConfigProvider>
-                  <OverrideConfigProvider>
-                    <GroupsProvider>
-                      <RulesProvider>
-                        <App />
-                      </RulesProvider>
-                    </GroupsProvider>
-                  </OverrideConfigProvider>
-                </ProfileConfigProvider>
-              </ControledMihomoConfigProvider>
-            </AppConfigProvider>
-          </HashRouter>
+          <RouterProvider router={router} />
         </BaseErrorBoundary>
       </NextThemesProvider>
     </HeroUIProvider>

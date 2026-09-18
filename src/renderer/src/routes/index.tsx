@@ -34,67 +34,67 @@ function startupRoute(element: ReactNode): ReactNode {
 
 const routes = [
   {
-    path: '/mihomo',
+    path: 'mihomo',
     element: startupRoute(<Mihomo />)
   },
   {
-    path: '/sysproxy',
+    path: 'sysproxy',
     element: startupRoute(<Sysproxy />)
   },
   {
-    path: '/tun',
+    path: 'tun',
     element: startupRoute(<Tun />)
   },
   {
-    path: '/app-routing',
+    path: 'app-routing',
     element: startupRoute(<AppRouting />)
   },
   {
-    path: '/proxies',
+    path: 'proxies',
     element: startupRoute(<Proxies />)
   },
   {
-    path: '/rules',
+    path: 'rules',
     element: startupRoute(<Rules />)
   },
   {
-    path: '/resources',
+    path: 'resources',
     element: startupRoute(<Resources />)
   },
   {
-    path: '/dns',
+    path: 'dns',
     element: startupRoute(<DNS />)
   },
   {
-    path: '/sniffer',
+    path: 'sniffer',
     element: startupRoute(<Sniffer />)
   },
   {
-    path: '/logs',
+    path: 'logs',
     element: startupRoute(<Logs />)
   },
   {
-    path: '/connections',
+    path: 'connections',
     element: startupRoute(<Connections />)
   },
   {
-    path: '/override',
+    path: 'override',
     element: startupRoute(<Override />)
   },
   {
-    path: '/profiles',
+    path: 'profiles',
     element: startupRoute(<Profiles />)
   },
   {
-    path: '/kokoro',
+    path: 'kokoro',
     element: startupRoute(<Kokoro />)
   },
   {
-    path: '/settings',
+    path: 'settings',
     element: startupRoute(<Settings />)
   },
   {
-    path: '/',
+    index: true,
     element: <Navigate to="/proxies" />
   }
 ]

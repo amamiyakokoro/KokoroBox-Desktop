@@ -57,6 +57,8 @@ let windowShown = false
 let createWindowPromiseResolve: (() => void) | null = null
 let createWindowPromise: Promise<void> | null = null
 let initialWindowDisplayPromiseResolve: (() => void) | null = null
+let rendererHasUnsavedChanges = false
+let allowUnsavedWindowCloseOnce = false
 const initialWindowDisplayPromise = new Promise<void>((resolve) => {
   initialWindowDisplayPromiseResolve = resolve
 })
@@ -254,7 +256,9 @@ function isProcessRunning(pid: number): boolean {
 
 async function waitForRelaunchParent(pid: number): Promise<void> {
   while (isProcessRunning(pid)) {
-    await new Promise((resolve) => setTimeout(resolve, 100))
+    await new Promise((resolve) => {
+      setTimeout(resolve, 100)
+    })
   }
 }
 
@@ -527,9 +531,19 @@ export async function createWindow(appConfig?: AppConfig): Promise<void> {
     })
 
     mainWindow.on('close', async (event) => {
+      const window = mainWindow
+      if (!window) return
       // Normal window closes hide KokoroBox in the tray. An intentional app
       // quit must be allowed through so Electron can shut down cleanly.
       if (isAppQuitting()) return
+      if (rendererHasUnsavedChanges && !allowUnsavedWindowCloseOnce) {
+        event.preventDefault()
+        window.show()
+        window.focusOnWebView()
+        window.webContents.send('show-unsaved-close-confirm')
+        return
+      }
+      allowUnsavedWindowCloseOnce = false
       event.preventDefault()
       mainWindow?.hide()
       if (windowShown) {
@@ -622,4 +636,13 @@ export function closeMainWindow(): void {
   if (mainWindow) {
     mainWindow.close()
   }
+}
+
+export function setRendererHasUnsavedChanges(value: boolean): void {
+  rendererHasUnsavedChanges = value
+}
+
+export function confirmCloseMainWindow(): void {
+  allowUnsavedWindowCloseOnce = true
+  closeMainWindow()
 }
