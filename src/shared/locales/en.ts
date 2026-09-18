@@ -1,6 +1,14 @@
 // English source catalog. Keys are the canonical application-owned messages.
 export const messages: Readonly<Record<string, string>> = {
   General: 'General',
+  Display: 'Display',
+  'Grouping and sorting': 'Grouping and sorting',
+  Refresh: 'Refresh',
+  'Selection behavior': 'Selection behavior',
+  'Latency testing': 'Latency testing',
+  'Rule defaults': 'Rule defaults',
+  'DNS handling': 'DNS handling',
+  'Diagnostics and system integration': 'Diagnostics and system integration',
   'Settings categories': 'Settings categories',
   'Appearance and interface': 'Appearance and interface',
   'Core and system': 'Core and system',

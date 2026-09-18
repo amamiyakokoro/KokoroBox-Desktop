@@ -248,3 +248,20 @@ test('global subscription settings are owned by Application settings', () => {
   assert.match(profileDrawer, /navigate\('\/settings\?section=data'\)/)
   assert.match(settingsPage, /<SubscriptionIntegrationSettings \/>/)
 })
+
+test('contextual settings drawers share a sectioned shell', () => {
+  const drawers = [
+    'src/renderer/src/components/proxies/proxy-setting-drawer.tsx',
+    'src/renderer/src/components/connections/connection-setting-drawer.tsx',
+    'src/renderer/src/components/profiles/profile-setting-drawer.tsx',
+    'src/renderer/src/components/app-routing/app-routing-setting-drawer.tsx'
+  ]
+
+  for (const drawer of drawers) {
+    const source = readFileSync(drawer, 'utf8')
+    assert.match(source, /base-settings-drawer/)
+    assert.match(source, /<PageSettingsDrawer/)
+    assert.match(source, /<PageSettingsSection/)
+    assert.doesNotMatch(source, /<Drawer\./)
+  }
+})

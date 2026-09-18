@@ -1,6 +1,14 @@
 // Traditional Chinese (Taiwan) localization. Keys are the canonical English source messages.
 export const messages: Readonly<Record<string, string>> = {
   General: '一般',
+  Display: '顯示',
+  'Grouping and sorting': '分組與排序',
+  Refresh: '重新整理',
+  'Selection behavior': '選擇行為',
+  'Latency testing': '延遲測試',
+  'Rule defaults': '規則預設值',
+  'DNS handling': 'DNS 處理',
+  'Diagnostics and system integration': '診斷與系統整合',
   'Settings categories': '設定分類',
   'Appearance and interface': '外觀與介面',
   'Core and system': '核心與系統',
