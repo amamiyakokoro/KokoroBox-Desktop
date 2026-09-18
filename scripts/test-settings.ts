@@ -76,3 +76,14 @@ test('staged settings protect unsaved changes across navigation and window lifec
   assert.match(main, /rendererHasUnsavedChanges/)
   assert.match(main, /show-unsaved-close-confirm/)
 })
+
+test('application settings keep navigation discoverable in compact desktop windows', () => {
+  const settings = readFileSync('src/renderer/src/pages/settings.tsx', 'utf8')
+
+  assert.match(settings, /compactNavigationQuery = '\(max-width: 1050px\)'/)
+  assert.match(settings, /isDisabled=\{!compactNavigation\}/)
+  assert.match(settings, /aria-current=\{active \? 'page' : undefined\}/)
+  assert.match(settings, /event\.key\.toLowerCase\(\) === 'f'/)
+  assert.match(settings, /settings-content-header sticky top-0/)
+  assert.match(settings, /scrollTo\(\{ top: 0 \}\)/)
+})

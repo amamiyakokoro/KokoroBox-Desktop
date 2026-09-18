@@ -1,5 +1,5 @@
 import { tr } from '../../../shared/i18n'
-import { Button, Input } from '@heroui/react'
+import { Button, Input, Tooltip } from '@heroui/react'
 import BasePage from '@renderer/components/base/base-page'
 import { IoLogoGithub } from 'react-icons/io5'
 import {
@@ -10,13 +10,19 @@ import {
 } from '@renderer/components/settings/settings-registry'
 import { SettingCardModeProvider } from '@renderer/components/base/base-setting-card'
 import { SettingItemModeProvider } from '@renderer/components/base/base-setting-item'
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { LuChevronRight, LuSearch } from 'react-icons/lu'
+
+const compactNavigationQuery = '(max-width: 1050px)'
 
 const Settings: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams()
   const [search, setSearch] = useState('')
+  const [compactNavigation, setCompactNavigation] = useState(
+    () => window.matchMedia(compactNavigationQuery).matches
+  )
+  const layoutRef = useRef<HTMLDivElement>(null)
   const categories = useMemo(() => getSettingsCategories(), [])
   const requestedCategory = searchParams.get('section')
   const requestedSetting = findSettingsEntry(categories, searchParams.get('setting'))
@@ -52,7 +58,45 @@ const Settings: React.FC = () => {
     if (settingId) nextParams.set('setting', settingId)
     else nextParams.delete('setting')
     setSearchParams(nextParams)
+    if (!settingId) {
+      requestAnimationFrame(() => {
+        layoutRef.current?.closest<HTMLElement>('.content')?.scrollTo({ top: 0 })
+      })
+    }
   }
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia(compactNavigationQuery)
+    const updateCompactNavigation = (event?: MediaQueryListEvent): void => {
+      setCompactNavigation(event?.matches ?? mediaQuery.matches)
+    }
+    updateCompactNavigation()
+    mediaQuery.addEventListener('change', updateCompactNavigation)
+    return () => mediaQuery.removeEventListener('change', updateCompactNavigation)
+  }, [])
+
+  useEffect(() => {
+    const handleSearchShortcut = (event: KeyboardEvent): void => {
+      if ((event.metaKey || event.ctrlKey) && !event.altKey && event.key.toLowerCase() === 'f') {
+        const searchInputs = document.querySelectorAll<HTMLInputElement>(
+          '.settings-navigation-search input, .settings-content-search input'
+        )
+        const visibleSearch = Array.from(searchInputs).find((input) => input.offsetParent !== null)
+        if (!visibleSearch) return
+        event.preventDefault()
+        visibleSearch.focus()
+        visibleSearch.select()
+        return
+      }
+      if (event.key === 'Escape' && search) {
+        event.preventDefault()
+        setSearch('')
+      }
+    }
+
+    window.addEventListener('keydown', handleSearchShortcut)
+    return () => window.removeEventListener('keydown', handleSearchShortcut)
+  }, [search])
 
   useEffect(() => {
     if (!requestedSetting || requestedSetting.category.key !== category || normalizedSearch) return
@@ -108,7 +152,7 @@ const Settings: React.FC = () => {
         </Button>
       }
     >
-      <div className="settings-layout grid min-h-full">
+      <div ref={layoutRef} className="settings-layout grid min-h-full">
         <nav
           aria-label={tr('Settings categories')}
           className="settings-navigation sticky top-0 z-10 flex h-[calc(100vh-49px)] flex-col border-r border-divider bg-background/95 p-3 backdrop-blur"
@@ -129,29 +173,37 @@ const Settings: React.FC = () => {
               const Icon = item.icon
               const active = category === item.key && !normalizedSearch
               return (
-                <Button
+                <Tooltip
                   key={item.key}
-                  size="sm"
-                  variant={active ? 'flat' : 'light'}
-                  color={active ? 'primary' : 'default'}
-                  className="settings-category-button app-nodrag w-full shrink-0 justify-start px-3"
-                  aria-label={item.label}
-                  title={item.label}
-                  startContent={<Icon className="text-base" />}
-                  onPress={() => {
-                    setSearch('')
-                    selectCategory(item.key)
-                  }}
+                  content={item.label}
+                  placement="right"
+                  delay={300}
+                  closeDelay={0}
+                  isDisabled={!compactNavigation}
                 >
-                  <span className="settings-category-label">{item.label}</span>
-                </Button>
+                  <Button
+                    size="sm"
+                    variant={active ? 'flat' : 'light'}
+                    color={active ? 'primary' : 'default'}
+                    className="settings-category-button app-nodrag w-full shrink-0 justify-start px-3"
+                    aria-label={item.label}
+                    aria-current={active ? 'page' : undefined}
+                    startContent={<Icon className="text-base" />}
+                    onPress={() => {
+                      setSearch('')
+                      selectCategory(item.key)
+                    }}
+                  >
+                    <span className="settings-category-label">{item.label}</span>
+                  </Button>
+                </Tooltip>
               )
             })}
           </div>
         </nav>
         <main className="min-w-0 px-4 pb-4">
           <div className="mx-auto w-full max-w-[1040px]">
-            <div className="flex items-center gap-4 px-3 pb-1 pt-3">
+            <div className="settings-content-header sticky top-0 z-10 flex items-center gap-4 border-b border-divider bg-background/95 px-3 py-2 backdrop-blur-sm">
               <h1 className="min-w-0 flex-1 text-xl font-semibold tracking-tight">
                 {normalizedSearch ? tr('Search settings') : selected.label}
               </h1>
