@@ -14,8 +14,6 @@ import {
   Rules,
   Settings,
   Sniffer,
-  Sysproxy,
-  Tun,
   AppRouting
 } from './route-pages'
 
@@ -39,11 +37,11 @@ const routes = [
   },
   {
     path: 'sysproxy',
-    element: startupRoute(<Sysproxy />)
+    element: startupRoute(<Navigate to="/settings?section=network&panel=system-proxy" replace />)
   },
   {
     path: 'tun',
-    element: startupRoute(<Tun />)
+    element: startupRoute(<Navigate to="/settings?section=network&panel=tun" replace />)
   },
   {
     path: 'app-routing',

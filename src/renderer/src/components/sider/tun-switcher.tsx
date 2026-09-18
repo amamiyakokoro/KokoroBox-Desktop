@@ -14,11 +14,15 @@ interface Props {
   iconOnly?: boolean
 }
 
+const settingsPath = '/settings?section=network&panel=tun'
+
 const TunSwitcher: React.FC<Props> = (props) => {
   const { iconOnly } = props
   const location = useLocation()
   const navigate = useNavigate()
-  const match = location.pathname.includes('/tun') || false
+  const match =
+    location.pathname.includes('/tun') ||
+    (location.pathname.includes('/settings') && location.search.includes('panel=tun'))
   const { appConfig } = useAppConfig()
   const { tunCardStatus = 'col-span-1', disableAnimation = false } = appConfig || {}
   const { controledMihomoConfig, patchControledMihomoConfig } = useControledMihomoConfig()
@@ -56,7 +60,7 @@ const TunSwitcher: React.FC<Props> = (props) => {
             color={match ? 'primary' : 'default'}
             variant={match ? 'solid' : 'light'}
             onPress={() => {
-              navigate('/tun')
+              navigate(settingsPath)
             }}
           >
             <TbDeviceIpadHorizontalBolt className="text-[20px]" />

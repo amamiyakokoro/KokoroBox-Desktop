@@ -145,7 +145,7 @@ export async function createDriver(navigate: NavigateFunction): Promise<Driver> 
           side: 'right',
           align: 'start',
           onNextClick: async (): Promise<void> => {
-            navigate('/sysproxy')
+            navigate('/settings?section=network&panel=system-proxy')
             setTimeout(() => {
               driverInstance?.moveNext()
             }, 0)
@@ -173,7 +173,7 @@ export async function createDriver(navigate: NavigateFunction): Promise<Driver> 
           side: 'right',
           align: 'start',
           onNextClick: async (): Promise<void> => {
-            navigate('/tun')
+            navigate('/settings?section=network&panel=tun')
             setTimeout(() => {
               driverInstance?.moveNext()
             }, 0)

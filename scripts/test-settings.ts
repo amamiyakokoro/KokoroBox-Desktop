@@ -48,9 +48,15 @@ test('Mihomo settings stage edits and restart the core once from the page', () =
 })
 
 test('staged settings protect unsaved changes across navigation and window lifecycle', () => {
-  const guardedPages = ['syspeoxy', 'tun', 'dns', 'sniffer', 'mihomo']
+  const guardedPages = [
+    'src/renderer/src/components/settings/network/system-proxy-settings.tsx',
+    'src/renderer/src/components/settings/network/tun-settings.tsx',
+    'src/renderer/src/pages/dns.tsx',
+    'src/renderer/src/pages/sniffer.tsx',
+    'src/renderer/src/pages/mihomo.tsx'
+  ]
   for (const page of guardedPages) {
-    const source = readFileSync(`src/renderer/src/pages/${page}.tsx`, 'utf8')
+    const source = readFileSync(page, 'utf8')
     assert.match(source, /useUnsavedChangesGuard/)
     assert.match(source, /isDirty[:,]/)
     assert.match(source, /onSave[:,]/)
@@ -86,4 +92,26 @@ test('application settings keep navigation discoverable in compact desktop windo
   assert.match(settings, /event\.key\.toLowerCase\(\) === 'f'/)
   assert.match(settings, /settings-content-header sticky top-0/)
   assert.match(settings, /scrollTo\(\{ top: 0 \}\)/)
+})
+
+test('network settings use nested panels and preserve legacy routes', () => {
+  const registry = readFileSync(
+    'src/renderer/src/components/settings/settings-registry.tsx',
+    'utf8'
+  )
+  const settings = readFileSync('src/renderer/src/pages/settings.tsx', 'utf8')
+  const routes = readFileSync('src/renderer/src/routes/index.tsx', 'utf8')
+  const sider = readFileSync('src/renderer/src/components/sider/sider-cards.tsx', 'utf8')
+
+  assert.match(registry, /key: 'network'/)
+  assert.match(registry, /key: 'system-proxy'/)
+  assert.match(registry, /content: \(\) => <Sysproxy embedded \/>/)
+  assert.match(registry, /key: 'tun'/)
+  assert.match(registry, /content: \(\) => <Tun embedded \/>/)
+  assert.match(settings, /selected\.panels/)
+  assert.match(settings, /selectedPanel\?\.content\(\)/)
+  assert.match(routes, /settings\?section=network&panel=system-proxy/)
+  assert.match(routes, /settings\?section=network&panel=tun/)
+  assert.match(sider, /settings\?section=network&panel=system-proxy/)
+  assert.match(sider, /settings\?section=network&panel=tun/)
 })

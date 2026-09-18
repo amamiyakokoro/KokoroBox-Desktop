@@ -41,8 +41,8 @@ const defaultSiderOrder = [
 ]
 
 const siderCardRouteMap = {
-  'sysproxy-card': '/sysproxy',
-  'tun-card': '/tun',
+  'sysproxy-card': '/settings?section=network&panel=system-proxy',
+  'tun-card': '/settings?section=network&panel=tun',
   'app-routing-card': '/app-routing',
   'profile-card': '/profiles',
   'proxy-card': '/proxies',

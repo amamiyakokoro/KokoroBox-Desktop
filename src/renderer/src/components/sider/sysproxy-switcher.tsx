@@ -15,11 +15,15 @@ interface Props {
   iconOnly?: boolean
 }
 
+const settingsPath = '/settings?section=network&panel=system-proxy'
+
 const SysproxySwitcher: React.FC<Props> = (props) => {
   const { iconOnly } = props
   const location = useLocation()
   const navigate = useNavigate()
-  const match = location.pathname.includes('/sysproxy')
+  const match =
+    location.pathname.includes('/sysproxy') ||
+    (location.pathname.includes('/settings') && location.search.includes('panel=system-proxy'))
   const { appConfig, patchAppConfig } = useAppConfig()
   const {
     sysProxy,
@@ -65,7 +69,7 @@ const SysproxySwitcher: React.FC<Props> = (props) => {
             color={match ? 'primary' : 'default'}
             variant={match ? 'solid' : 'light'}
             onPress={() => {
-              navigate('/sysproxy')
+              navigate(settingsPath)
             }}
           >
             <AiOutlineGlobal className="text-[20px]" />

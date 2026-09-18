@@ -11,8 +11,6 @@ const KokoroPage = createPreloadablePage(() => import('@renderer/pages/kokoro'))
 const LogsPage = createPreloadablePage(() => import('@renderer/pages/logs'))
 const ConnectionsPage = createPreloadablePage(() => import('@renderer/pages/connections'))
 const MihomoPage = createPreloadablePage(() => import('@renderer/pages/mihomo'))
-const SysproxyPage = createPreloadablePage(() => import('@renderer/pages/syspeoxy'))
-const TunPage = createPreloadablePage(() => import('@renderer/pages/tun'))
 const ResourcesPage = createPreloadablePage(() => import('@renderer/pages/resources'))
 const DNSPage = createPreloadablePage(() => import('@renderer/pages/dns'))
 const SnifferPage = createPreloadablePage(() => import('@renderer/pages/sniffer'))
@@ -27,8 +25,6 @@ export const Kokoro = KokoroPage.Page
 export const Logs = LogsPage.Page
 export const Connections = ConnectionsPage.Page
 export const Mihomo = MihomoPage.Page
-export const Sysproxy = SysproxyPage.Page
-export const Tun = TunPage.Page
 export const Resources = ResourcesPage.Page
 export const DNS = DNSPage.Page
 export const Sniffer = SnifferPage.Page
@@ -43,8 +39,6 @@ const remainingPageLoaders: Array<() => Promise<unknown>> = [
   ConnectionsPage.preload,
   RulesPage.preload,
   MihomoPage.preload,
-  SysproxyPage.preload,
-  TunPage.preload,
   DNSPage.preload,
   SnifferPage.preload,
   AppRoutingPage.preload,
