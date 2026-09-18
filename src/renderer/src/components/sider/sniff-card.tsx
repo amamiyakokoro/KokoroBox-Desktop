@@ -50,6 +50,7 @@ const SniffCard: React.FC<Props> = (props) => {
           <Button
             size="sm"
             isIconOnly
+            aria-label={tr('Sniffing')}
             color={match ? 'primary' : 'default'}
             variant={match ? 'solid' : 'light'}
             onPress={() => {

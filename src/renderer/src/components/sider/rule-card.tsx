@@ -40,6 +40,7 @@ const RuleCard: React.FC<Props> = (props) => {
           <Button
             size="sm"
             isIconOnly
+            aria-label={tr('Rules')}
             color={match ? 'primary' : 'default'}
             variant={match ? 'solid' : 'light'}
             onPress={() => {
@@ -71,7 +72,7 @@ const RuleCard: React.FC<Props> = (props) => {
         <SiderNavItem
           icon={<MdOutlineAltRoute />}
           title={tr('Rules')}
-          description={tr('{0} rules', [rules?.rules?.length ?? 0])}
+          description={String(rules?.rules?.length ?? 0)}
           active={match}
           onPress={() => navigate('/rules')}
         />

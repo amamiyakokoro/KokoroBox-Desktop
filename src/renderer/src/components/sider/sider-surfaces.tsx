@@ -31,6 +31,13 @@ const statusToneClasses: Record<SiderStatusTone, string> = {
   danger: 'text-danger-600 dark:text-danger-400'
 }
 
+const navigationStatusIndicatorClasses: Record<SiderStatusTone, string> = {
+  default: 'bg-foreground-300',
+  success: 'bg-success-500',
+  warning: 'bg-warning-500',
+  danger: 'bg-danger-500'
+}
+
 export const SiderSection: React.FC<{
   title: string
   children: React.ReactNode
@@ -56,32 +63,49 @@ export const SiderNavItem: React.FC<SiderNavItemProps> = ({
 }) => (
   <div
     className={cn(
-      'group flex min-h-13 items-center rounded-xl border border-transparent transition-colors',
+      'group flex items-center rounded-xl border border-transparent transition-colors',
       active ? 'bg-primary/12 text-primary' : 'hover:bg-default-100'
     )}
   >
     <button
       type="button"
-      className="flex min-w-0 flex-1 items-center gap-2.5 rounded-xl px-2.5 py-2 text-left"
+      className="flex min-w-0 flex-1 items-center gap-2.5 rounded-xl px-2.5 py-2 text-left focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-primary"
       aria-current={active ? 'page' : undefined}
       onClick={onPress}
     >
       <span
         className={cn(
-          'flex size-7 shrink-0 items-center justify-center rounded-lg bg-default-100 text-lg text-foreground-600 transition-colors',
-          active && 'bg-primary/15 text-primary'
+          'flex size-7 shrink-0 items-center justify-center rounded-lg bg-default-100/60 text-base text-foreground-500 transition-colors',
+          active && 'bg-primary/12 text-primary'
         )}
       >
         {icon}
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-sm font-medium text-foreground">{title}</span>
+        <span
+          className={cn(
+            'block truncate text-sm font-medium text-foreground',
+            active && 'text-primary'
+          )}
+          title={title}
+        >
+          {title}
+        </span>
         {(description || status) && (
           <span className="mt-0.5 flex min-w-0 items-center gap-1 text-xs">
             {description && <span className="truncate text-foreground-500">{description}</span>}
             {description && status && <span className="text-foreground-300">·</span>}
             {status && (
-              <span className={cn('shrink-0', statusToneClasses[statusTone])}>{status}</span>
+              <span className="inline-flex shrink-0 items-center gap-1 text-foreground-500">
+                <span
+                  aria-hidden="true"
+                  className={cn(
+                    'size-1.5 rounded-full',
+                    navigationStatusIndicatorClasses[statusTone]
+                  )}
+                />
+                {status}
+              </span>
             )}
           </span>
         )}
@@ -92,7 +116,7 @@ export const SiderNavItem: React.FC<SiderNavItemProps> = ({
         {trailing}
       </div>
     ) : (
-      <LuChevronRight className="mr-2.5 shrink-0 text-sm text-foreground-300 transition-transform group-hover:translate-x-0.5 group-hover:text-foreground-500" />
+      <LuChevronRight className="mr-2.5 shrink-0 text-sm text-foreground-200 transition-all group-hover:translate-x-0.5 group-hover:text-foreground-500 group-focus-within:text-foreground-500" />
     )}
   </div>
 )

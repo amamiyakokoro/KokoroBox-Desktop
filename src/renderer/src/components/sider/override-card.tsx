@@ -37,6 +37,7 @@ const OverrideCard: React.FC<Props> = (props) => {
           <Button
             size="sm"
             isIconOnly
+            aria-label={tr('Overrides')}
             color={match ? 'primary' : 'default'}
             variant={match ? 'solid' : 'light'}
             onPress={() => {

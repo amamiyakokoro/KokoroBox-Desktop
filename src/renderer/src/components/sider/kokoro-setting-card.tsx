@@ -37,6 +37,7 @@ const KokoroSettingCard: React.FC<Props> = ({ iconOnly = false }) => {
           <Button
             size="sm"
             isIconOnly
+            aria-label={tr('Kokoro account and subscription')}
             color={match ? 'primary' : 'default'}
             variant={match ? 'solid' : 'light'}
             onPress={() => navigate('/kokoro')}
@@ -67,7 +68,6 @@ const KokoroSettingCard: React.FC<Props> = ({ iconOnly = false }) => {
         <SiderNavItem
           icon={<MdManageAccounts />}
           title={tr('Kokoro account and subscription')}
-          description={tr('Account, plan and profile import')}
           active={match}
           onPress={() => navigate('/kokoro')}
         />

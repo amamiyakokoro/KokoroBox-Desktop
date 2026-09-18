@@ -50,6 +50,7 @@ const DNSCard: React.FC<Props> = (props) => {
           <Button
             size="sm"
             isIconOnly
+            aria-label="DNS"
             color={match ? 'primary' : 'default'}
             variant={match ? 'solid' : 'light'}
             onPress={() => {

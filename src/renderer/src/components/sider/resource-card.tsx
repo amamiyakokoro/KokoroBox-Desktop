@@ -38,6 +38,7 @@ const ResourceCard: React.FC<Props> = (props) => {
           <Button
             size="sm"
             isIconOnly
+            aria-label={tr('External resources')}
             color={match ? 'primary' : 'default'}
             variant={match ? 'solid' : 'light'}
             onPress={() => {
