@@ -17,7 +17,7 @@ import {
   IntegrationSettings,
   NetworkBehaviorSettings
 } from './behavior-settings'
-import CoreRuntimeConfig from './core-runtime-config'
+import { CoreExecutionSettings, ServiceManagementSettings } from './core-runtime-config'
 import GeneralConfig, { PerformanceConfig } from './general-config'
 import ShortcutConfig from './shortcut-config'
 import SiderConfig from './sider-config'
@@ -356,6 +356,72 @@ export const getSettingsCategories = (): SettingsCategoryDefinition[] => {
     }
   ]
 
+  const corePanels: SettingsPanelDefinition[] = [
+    {
+      key: 'runtime',
+      label: tr('Core runtime'),
+      entries: [
+        entry('core-version', tr('Core version'), tr('Core runtime'), { panel: 'runtime' }),
+        entry('system-core-path', tr('Choose system core path'), tr('Core runtime'), {
+          panel: 'runtime'
+        }),
+        entry('core-process-priority', tr('Core process priority'), tr('Core runtime'), {
+          panel: 'runtime'
+        }),
+        entry('core-run-mode', tr('Run mode'), tr('Core runtime'), { panel: 'runtime' }),
+        entry('service-core-run-mode', tr('Service core execution mode'), tr('Core runtime'), {
+          panel: 'runtime',
+          platforms: ['linux']
+        }),
+        entry('startup-detection', tr('Startup detection method'), tr('Core runtime'), {
+          panel: 'runtime',
+          platforms: ['darwin', 'linux']
+        })
+      ],
+      content: () => <CoreExecutionSettings />
+    },
+    {
+      key: 'service',
+      label: tr('Service management'),
+      entries: [
+        entry('elevation-status', tr('Elevation status'), tr('Service management'), {
+          panel: 'service',
+          platforms: ['win32', 'linux']
+        }),
+        entry('service-status', tr('Service status'), tr('Service management'), {
+          panel: 'service'
+        })
+      ],
+      content: () => <ServiceManagementSettings />
+    },
+    {
+      key: 'environment',
+      label: tr('Environment variables'),
+      entries: [
+        entry('disable-system-ca', tr('Disable system CAs'), tr('Environment variables'), {
+          panel: 'environment'
+        }),
+        entry('disable-built-in-ca', tr('Disable built-in CAs'), tr('Environment variables'), {
+          panel: 'environment'
+        }),
+        entry(
+          'disable-loopback-detection',
+          tr('Disable loopback detection'),
+          tr('Environment variables'),
+          { panel: 'environment' }
+        ),
+        entry('disable-nftables', tr('Disable nftables'), tr('Environment variables'), {
+          panel: 'environment',
+          platforms: ['linux']
+        }),
+        entry('trusted-path', tr('Trusted path'), tr('Environment variables'), {
+          panel: 'environment'
+        })
+      ],
+      content: () => <EnvSetting />
+    }
+  ]
+
   return (
     [
       {
@@ -456,39 +522,8 @@ export const getSettingsCategories = (): SettingsCategoryDefinition[] => {
         key: 'core',
         label: tr('Core and system'),
         icon: LuCpu,
-        entries: [
-          entry('core-version', tr('Core version'), tr('Core runtime')),
-          entry('system-core-path', tr('Choose system core path'), tr('Core runtime')),
-          entry('core-process-priority', tr('Core process priority'), tr('Core runtime')),
-          entry('core-run-mode', tr('Run mode'), tr('Core runtime')),
-          entry('service-core-run-mode', tr('Service core execution mode'), tr('Core runtime'), {
-            platforms: ['linux']
-          }),
-          entry('startup-detection', tr('Startup detection method'), tr('Core runtime'), {
-            platforms: ['darwin', 'linux']
-          }),
-          entry('elevation-status', tr('Elevation status'), tr('Service management'), {
-            platforms: ['win32', 'linux']
-          }),
-          entry('service-status', tr('Service status'), tr('Service management')),
-          entry('disable-system-ca', tr('Disable system CAs'), tr('Environment variables')),
-          entry('disable-built-in-ca', tr('Disable built-in CAs'), tr('Environment variables')),
-          entry(
-            'disable-loopback-detection',
-            tr('Disable loopback detection'),
-            tr('Environment variables')
-          ),
-          entry('disable-nftables', tr('Disable nftables'), tr('Environment variables'), {
-            platforms: ['linux']
-          }),
-          entry('trusted-path', tr('Trusted path'), tr('Environment variables'))
-        ],
-        content: () => (
-          <>
-            <CoreRuntimeConfig />
-            <EnvSetting />
-          </>
-        )
+        entries: corePanels.flatMap((panel) => panel.entries),
+        panels: corePanels
       },
       {
         key: 'data',

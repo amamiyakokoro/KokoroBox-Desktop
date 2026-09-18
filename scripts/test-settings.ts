@@ -132,3 +132,26 @@ test('network settings use nested panels and preserve legacy routes', () => {
   assert.match(sider, /settings\?section=network&panel=mihomo/)
   assert.match(sider, /settings\?section=network&panel=sniffer/)
 })
+
+test('core settings separate runtime, service and environment concerns', () => {
+  const registry = readFileSync(
+    'src/renderer/src/components/settings/settings-registry.tsx',
+    'utf8'
+  )
+  const runtime = readFileSync(
+    'src/renderer/src/components/settings/core-runtime-config.tsx',
+    'utf8'
+  )
+
+  assert.match(registry, /const corePanels:/)
+  assert.match(registry, /key: 'runtime'/)
+  assert.match(registry, /content: \(\) => <CoreExecutionSettings \/>/)
+  assert.match(registry, /key: 'service'/)
+  assert.match(registry, /content: \(\) => <ServiceManagementSettings \/>/)
+  assert.match(registry, /key: 'environment'/)
+  assert.match(registry, /content: \(\) => <EnvSetting \/>/)
+  assert.match(registry, /entries: corePanels\.flatMap/)
+  assert.match(registry, /panels: corePanels/)
+  assert.match(runtime, /sections\.includes\('runtime'\)/)
+  assert.match(runtime, /sections\.includes\('service'\)/)
+})

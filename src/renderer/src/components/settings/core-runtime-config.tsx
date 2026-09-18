@@ -46,7 +46,13 @@ const getSystemCorePaths = async (): Promise<string[]> => {
 
 getSystemCorePaths().catch(() => {})
 
-const CoreRuntimeConfig: React.FC = () => {
+type CoreRuntimeSection = 'runtime' | 'service'
+
+interface Props {
+  sections?: CoreRuntimeSection[]
+}
+
+const CoreRuntimeConfig: React.FC<Props> = ({ sections = ['runtime', 'service'] }) => {
   const { appConfig, patchAppConfig } = useAppConfig()
   const { controledMihomoConfig } = useControledMihomoConfig()
   const { tun } = controledMihomoConfig || {}
@@ -167,150 +173,160 @@ const CoreRuntimeConfig: React.FC = () => {
             : {})}
         />
       )}
-      <SettingCard header={tr('Core runtime')}>
-        <SettingItem
-          compatKey="legacy"
-          title={tr('Core version')}
-          actions={
-            !systemCoreOnlyBuild && (core === 'mihomo' || core === 'mihomo-alpha') ? (
-              <Button
+      {sections.includes('runtime') && (
+        <SettingCard header={tr('Core runtime')}>
+          <SettingItem
+            compatKey="legacy"
+            title={tr('Core version')}
+            actions={
+              !systemCoreOnlyBuild && (core === 'mihomo' || core === 'mihomo-alpha') ? (
+                <Button
+                  size="sm"
+                  isIconOnly
+                  variant="light"
+                  isLoading={upgrading}
+                  onPress={handleCoreUpgrade}
+                >
+                  <IoMdCloudDownload className="text-lg" />
+                </Button>
+              ) : null
+            }
+            divider
+          >
+            {systemCoreOnlyBuild ? (
+              <span className="text-sm text-foreground-600">{tr('System core')}</span>
+            ) : (
+              <Select
+                aria-label={tr('Core version')}
+                classNames={{ trigger: 'data-[hover=true]:bg-default-200' }}
+                className="w-37.5"
                 size="sm"
-                isIconOnly
-                variant="light"
-                isLoading={upgrading}
-                onPress={handleCoreUpgrade}
+                selectedKeys={new Set([core])}
+                disallowEmptySelection
+                onSelectionChange={(value) =>
+                  handleCoreChange(value.currentKey as 'mihomo' | 'mihomo-alpha' | 'system')
+                }
               >
-                <IoMdCloudDownload className="text-lg" />
-              </Button>
-            ) : null
-          }
-          divider
-        >
-          {systemCoreOnlyBuild ? (
-            <span className="text-sm text-foreground-600">{tr('System core')}</span>
-          ) : (
+                <SelectItem key="mihomo">{tr('Built-in stable')}</SelectItem>
+                <SelectItem key="mihomo-alpha">{tr('Built-in preview')}</SelectItem>
+                <SelectItem key="system">{tr('Use system core')}</SelectItem>
+              </Select>
+            )}
+          </SettingItem>
+          {core === 'system' && (
+            <SettingItem compatKey="legacy" title={tr('Choose system core path')} divider>
+              <Select
+                aria-label={tr('System core path')}
+                classNames={{ trigger: 'data-[hover=true]:bg-default-200' }}
+                className="w-87.5"
+                size="sm"
+                selectedKeys={new Set([appConfig?.systemCorePath || ''])}
+                disallowEmptySelection={systemCorePaths.length > 0}
+                isDisabled={loadingPaths}
+                onSelectionChange={(value) => {
+                  const selectedPath = value.currentKey as string
+                  if (selectedPath) handleConfigChangeWithRestart('systemCorePath', selectedPath)
+                }}
+              >
+                {loadingPaths ? (
+                  <SelectItem key="">{tr('Searching for a system core...')}</SelectItem>
+                ) : systemCorePaths.length > 0 ? (
+                  systemCorePaths.map((path) => <SelectItem key={path}>{path}</SelectItem>)
+                ) : (
+                  <SelectItem key="">{tr('System core not found')}</SelectItem>
+                )}
+              </Select>
+            </SettingItem>
+          )}
+          <SettingItem compatKey="legacy" title={tr('Core process priority')} divider>
             <Select
-              aria-label={tr('Core version')}
+              aria-label={tr('Core process priority')}
               classNames={{ trigger: 'data-[hover=true]:bg-default-200' }}
               className="w-37.5"
               size="sm"
-              selectedKeys={new Set([core])}
+              selectedKeys={new Set([mihomoCpuPriority])}
               disallowEmptySelection
               onSelectionChange={(value) =>
-                handleCoreChange(value.currentKey as 'mihomo' | 'mihomo-alpha' | 'system')
+                handleConfigChangeWithRestart('mihomoCpuPriority', value.currentKey as Priority)
               }
             >
-              <SelectItem key="mihomo">{tr('Built-in stable')}</SelectItem>
-              <SelectItem key="mihomo-alpha">{tr('Built-in preview')}</SelectItem>
-              <SelectItem key="system">{tr('Use system core')}</SelectItem>
+              <SelectItem key="PRIORITY_HIGHEST">{tr('Real time')}</SelectItem>
+              <SelectItem key="PRIORITY_HIGH">{tr('High')}</SelectItem>
+              <SelectItem key="PRIORITY_ABOVE_NORMAL">{tr('Above normal')}</SelectItem>
+              <SelectItem key="PRIORITY_NORMAL">{tr('Normal')}</SelectItem>
+              <SelectItem key="PRIORITY_BELOW_NORMAL">{tr('Below normal')}</SelectItem>
+              <SelectItem key="PRIORITY_LOW">{tr('Low')}</SelectItem>
             </Select>
+          </SettingItem>
+          <SettingItem compatKey="legacy" title={tr('Run mode')} divider>
+            <Tabs
+              size="sm"
+              color="primary"
+              selectedKey={corePermissionMode}
+              onSelectionChange={(key) => handlePermissionModeChange(key as string)}
+            >
+              <Tab key="elevated" title={tr('Direct run')} />
+              <Tab key="service" title={tr('System service')} />
+            </Tabs>
+          </SettingItem>
+          {platform === 'linux' && corePermissionMode === 'service' && (
+            <SettingItem compatKey="legacy" title={tr('Service core execution mode')} divider>
+              <Tabs
+                size="sm"
+                color="primary"
+                selectedKey={serviceRunMode}
+                onSelectionChange={(key) => handleConfigChangeWithRestart('serviceRunMode', key)}
+              >
+                <Tab key="auto" title={tr('Automatic')} />
+                <Tab key="sandbox" title={tr('Sandbox')} />
+                <Tab key="direct" title={tr('Start directly')} />
+              </Tabs>
+            </SettingItem>
           )}
-        </SettingItem>
-        {core === 'system' && (
-          <SettingItem compatKey="legacy" title={tr('Choose system core path')} divider>
-            <Select
-              aria-label={tr('System core path')}
-              classNames={{ trigger: 'data-[hover=true]:bg-default-200' }}
-              className="w-87.5"
-              size="sm"
-              selectedKeys={new Set([appConfig?.systemCorePath || ''])}
-              disallowEmptySelection={systemCorePaths.length > 0}
-              isDisabled={loadingPaths}
-              onSelectionChange={(value) => {
-                const selectedPath = value.currentKey as string
-                if (selectedPath) handleConfigChangeWithRestart('systemCorePath', selectedPath)
-              }}
-            >
-              {loadingPaths ? (
-                <SelectItem key="">{tr('Searching for a system core...')}</SelectItem>
-              ) : systemCorePaths.length > 0 ? (
-                systemCorePaths.map((path) => <SelectItem key={path}>{path}</SelectItem>)
-              ) : (
-                <SelectItem key="">{tr('System core not found')}</SelectItem>
-              )}
-            </Select>
-          </SettingItem>
-        )}
-        <SettingItem compatKey="legacy" title={tr('Core process priority')} divider>
-          <Select
-            aria-label={tr('Core process priority')}
-            classNames={{ trigger: 'data-[hover=true]:bg-default-200' }}
-            className="w-37.5"
-            size="sm"
-            selectedKeys={new Set([mihomoCpuPriority])}
-            disallowEmptySelection
-            onSelectionChange={(value) =>
-              handleConfigChangeWithRestart('mihomoCpuPriority', value.currentKey as Priority)
-            }
-          >
-            <SelectItem key="PRIORITY_HIGHEST">{tr('Real time')}</SelectItem>
-            <SelectItem key="PRIORITY_HIGH">{tr('High')}</SelectItem>
-            <SelectItem key="PRIORITY_ABOVE_NORMAL">{tr('Above normal')}</SelectItem>
-            <SelectItem key="PRIORITY_NORMAL">{tr('Normal')}</SelectItem>
-            <SelectItem key="PRIORITY_BELOW_NORMAL">{tr('Below normal')}</SelectItem>
-            <SelectItem key="PRIORITY_LOW">{tr('Low')}</SelectItem>
-          </Select>
-        </SettingItem>
-        <SettingItem compatKey="legacy" title={tr('Run mode')} divider>
-          <Tabs
-            size="sm"
-            color="primary"
-            selectedKey={corePermissionMode}
-            onSelectionChange={(key) => handlePermissionModeChange(key as string)}
-          >
-            <Tab key="elevated" title={tr('Direct run')} />
-            <Tab key="service" title={tr('System service')} />
-          </Tabs>
-        </SettingItem>
-        {platform === 'linux' && corePermissionMode === 'service' && (
-          <SettingItem compatKey="legacy" title={tr('Service core execution mode')} divider>
-            <Tabs
+          {corePermissionMode !== 'service' && platform !== 'win32' && (
+            <SettingItem compatKey="legacy" title={tr('Startup detection method')} divider>
+              <Tabs
+                size="sm"
+                color="primary"
+                selectedKey={coreStartupMode}
+                onSelectionChange={(key) => handleConfigChangeWithRestart('coreStartupMode', key)}
+              >
+                <Tab key="post-up" title="Post Up" />
+                <Tab key="log" title={tr('Log parsing')} />
+              </Tabs>
+            </SettingItem>
+          )}
+        </SettingCard>
+      )}
+      {sections.includes('service') && (
+        <SettingCard header={tr('Service management')}>
+          {!systemCoreOnlyBuild && platform !== 'darwin' && (
+            <SettingItem compatKey="legacy" title={tr('Elevation status')} divider>
+              <Button size="sm" variant="flat" onPress={() => setShowPermissionModal(true)}>
+                {tr('Manage')}
+              </Button>
+            </SettingItem>
+          )}
+          <SettingItem compatKey="legacy" title={tr('Service status')}>
+            <Button
               size="sm"
               color="primary"
-              selectedKey={serviceRunMode}
-              onSelectionChange={(key) => handleConfigChangeWithRestart('serviceRunMode', key)}
+              variant="flat"
+              onPress={() => setShowServiceModal(true)}
             >
-              <Tab key="auto" title={tr('Automatic')} />
-              <Tab key="sandbox" title={tr('Sandbox')} />
-              <Tab key="direct" title={tr('Start directly')} />
-            </Tabs>
-          </SettingItem>
-        )}
-        {corePermissionMode !== 'service' && platform !== 'win32' && (
-          <SettingItem compatKey="legacy" title={tr('Startup detection method')} divider>
-            <Tabs
-              size="sm"
-              color="primary"
-              selectedKey={coreStartupMode}
-              onSelectionChange={(key) => handleConfigChangeWithRestart('coreStartupMode', key)}
-            >
-              <Tab key="post-up" title="Post Up" />
-              <Tab key="log" title={tr('Log parsing')} />
-            </Tabs>
-          </SettingItem>
-        )}
-      </SettingCard>
-      <SettingCard header={tr('Service management')}>
-        {!systemCoreOnlyBuild && platform !== 'darwin' && (
-          <SettingItem compatKey="legacy" title={tr('Elevation status')} divider>
-            <Button size="sm" variant="flat" onPress={() => setShowPermissionModal(true)}>
               {tr('Manage')}
             </Button>
           </SettingItem>
-        )}
-        <SettingItem compatKey="legacy" title={tr('Service status')}>
-          <Button
-            size="sm"
-            color="primary"
-            variant="flat"
-            onPress={() => setShowServiceModal(true)}
-          >
-            {tr('Manage')}
-          </Button>
-        </SettingItem>
-      </SettingCard>
+        </SettingCard>
+      )}
     </>
   )
 }
+
+export const CoreExecutionSettings: React.FC = () => <CoreRuntimeConfig sections={['runtime']} />
+
+export const ServiceManagementSettings: React.FC = () => (
+  <CoreRuntimeConfig sections={['service']} />
+)
 
 export default CoreRuntimeConfig
