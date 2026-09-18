@@ -69,7 +69,7 @@ const SettingItem: React.FC<SettingItemProps> = (props) => {
           <div className="setting-item__content">{children}</div>
         </div>
       )}
-      {divider && <Divider className="my-2" />}
+      {divider && <Divider className="setting-item__divider my-2" />}
     </>
   )
 }

@@ -562,6 +562,11 @@ input[type='number'] {
   justify-content: flex-end;
 }
 
+.settings-section__content > .setting-item__divider:last-child,
+.feature-settings-section__content > .setting-item__divider:last-child {
+  display: none;
+}
+
 @keyframes settings-search-highlight {
   0%,
   35% {

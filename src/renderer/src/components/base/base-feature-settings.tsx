@@ -51,7 +51,9 @@ export const FeatureSettingsSection: React.FC<FeatureSettingsSectionProps> = ({
       <h2 className="text-sm font-semibold tracking-wide text-foreground-500">{title}</h2>
       {description && <p className="mt-1 text-xs leading-5 text-foreground-500">{description}</p>}
     </header>
-    <div className="border-y border-divider px-1 py-2">{children}</div>
+    <div className="feature-settings-section__content border-y border-divider px-1 py-2">
+      {children}
+    </div>
   </section>
 )
 

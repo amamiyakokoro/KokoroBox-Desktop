@@ -297,6 +297,10 @@ test('core feature settings pages use the shared desktop layout', () => {
     styles,
     /\.feature-settings-layout \.setting-item__content\s*\{[^}]*justify-content: flex-end/s
   )
+  assert.match(
+    styles,
+    /\.settings-section__content > \.setting-item__divider:last-child[\s\S]*display: none/
+  )
 
   for (const page of pages) {
     const source = readFileSync(`src/renderer/src/pages/${page}.tsx`, 'utf8')

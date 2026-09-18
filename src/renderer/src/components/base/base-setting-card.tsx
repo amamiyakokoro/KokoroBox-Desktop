@@ -27,7 +27,9 @@ const SettingCard: React.FC<Props> = (props) => {
             {header}
           </h2>
         )}
-        <div className="border-y border-divider px-1 py-2">{children}</div>
+        <div className="settings-section__content border-y border-divider px-1 py-2">
+          {children}
+        </div>
       </section>
     )
   }
