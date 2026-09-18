@@ -62,7 +62,6 @@ const ProxySettingDrawer: React.FC<Props> = (props) => {
         <SettingItem title={tr('Proxy columns')} {...settingItemProps} divider>
           <Select
             aria-label={tr('Proxy columns')}
-            className="w-40!"
             value={proxyCols}
             variant="secondary"
             onChange={async (value) => {

@@ -1,10 +1,9 @@
-import { tr } from '../../../../shared/i18n'
 /* eslint-disable react/prop-types */
-import { Button, ListBox, Select, Switch, Tooltip } from '@heroui-v3/react'
+import { tr } from '../../../../shared/i18n'
+import { Button, ListBox, Select, Switch } from '@heroui-v3/react'
 import SettingItem from '../base/base-setting-item'
 import { settingItemProps } from '../base/base-controls'
 import PageSettingsDrawer, { PageSettingsSection } from '../base/base-settings-drawer'
-import { IoIosHelpCircle } from 'react-icons/io'
 
 interface Props {
   isDisabled: boolean
@@ -24,17 +23,6 @@ interface Props {
   onRepairFirewall: () => void
   onClose: () => void
   reopenSignal?: number
-}
-
-function SettingHelp({ label, content }: { label: string; content: string }): React.ReactNode {
-  return (
-    <Tooltip delay={0}>
-      <Button aria-label={`${label} ${tr('Description')}`} isIconOnly size="sm" variant="ghost">
-        <IoIosHelpCircle className="text-lg" />
-      </Button>
-      <Tooltip.Content>{content}</Tooltip.Content>
-    </Tooltip>
-  )
 }
 
 const AppRoutingSettingDrawer: React.FC<Props> = (props) => {
@@ -67,7 +55,6 @@ const AppRoutingSettingDrawer: React.FC<Props> = (props) => {
         <SettingItem title={tr('Default action for new rules')} {...settingItemProps} divider>
           <Select
             aria-label={tr('Default action for new rules')}
-            className="w-36"
             variant="secondary"
             value={defaultAction}
             isDisabled={isDisabled}
@@ -101,7 +88,6 @@ const AppRoutingSettingDrawer: React.FC<Props> = (props) => {
         <SettingItem title={tr('Default protocol for new rules')} {...settingItemProps}>
           <Select
             aria-label={tr('Default protocol for new rules')}
-            className="w-36"
             variant="secondary"
             value={defaultProtocol}
             isDisabled={isDisabled}
@@ -137,14 +123,9 @@ const AppRoutingSettingDrawer: React.FC<Props> = (props) => {
       <PageSettingsSection title={tr('DNS handling')}>
         <SettingItem
           title={tr('Proxy application UDP DNS')}
-          actions={
-            <SettingHelp
-              label={tr('Proxy application UDP DNS')}
-              content={tr(
-                'Send UDP/53 queries issued by applications with Proxy rules through Mihomo.'
-              )}
-            />
-          }
+          description={tr(
+            'Send UDP/53 queries issued by applications with Proxy rules through Mihomo.'
+          )}
           {...settingItemProps}
         >
           <Switch
@@ -165,14 +146,9 @@ const AppRoutingSettingDrawer: React.FC<Props> = (props) => {
       <PageSettingsSection title={tr('Diagnostics and system integration')}>
         <SettingItem
           title={tr('Diagnostic logging')}
-          actions={
-            <SettingHelp
-              label={tr('Diagnostic logging')}
-              content={tr(
-                'Log application routing destinations and decisions. Enable only while troubleshooting.'
-              )}
-            />
-          }
+          description={tr(
+            'Log application routing destinations and decisions. Enable only while troubleshooting.'
+          )}
           {...settingItemProps}
           divider={isMac || isWindows}
         >
@@ -192,14 +168,9 @@ const AppRoutingSettingDrawer: React.FC<Props> = (props) => {
         {isMac && (
           <SettingItem
             title={tr('macOS Network Extension')}
-            actions={
-              <SettingHelp
-                label={tr('macOS Network Extension')}
-                content={tr(
-                  'Open System Settings and request approval for the KokoroBox Network Extension again.'
-                )}
-              />
-            }
+            description={tr(
+              'Open System Settings and request approval for the KokoroBox Network Extension again.'
+            )}
             {...settingItemProps}
           >
             <Button
@@ -216,14 +187,9 @@ const AppRoutingSettingDrawer: React.FC<Props> = (props) => {
         {isWindows && (
           <SettingItem
             title={tr('Application routing firewall')}
-            actions={
-              <SettingHelp
-                label={tr('Application routing firewall')}
-                content={tr(
-                  'Check and repair the ProxyBridge relay rules for 34010/TCP and 34011/UDP.'
-                )}
-              />
-            }
+            description={tr(
+              'Check and repair the ProxyBridge relay rules for 34010/TCP and 34011/UDP.'
+            )}
             {...settingItemProps}
           >
             <Button

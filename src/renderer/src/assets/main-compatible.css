@@ -163,6 +163,17 @@
   white-space: nowrap;
 }
 
+.setting-item__label-group {
+  min-width: 0;
+}
+
+.setting-item__description {
+  margin-top: calc(var(--spacing) * 0.5);
+  color: var(--muted);
+  font-size: var(--text-xs);
+  line-height: 1.35;
+}
+
 .setting-item--compact .setting-item__title {
   height: 100%;
   color: var(--foreground);
@@ -473,7 +484,8 @@ input[type='number'] {
   width: calc(var(--spacing) * 90);
 }
 
-.setting-item .input[data-setting-input='number'] {
+.setting-item .input[data-setting-input='number'],
+.setting-item .input-group[data-setting-input='number'] {
   width: calc(var(--spacing) * 32);
 }
 
@@ -529,6 +541,69 @@ input[type='number'] {
   height: calc(var(--spacing) * 8);
   min-width: fit-content;
   padding-inline: calc(var(--spacing) * 3);
+}
+
+/* Contextual page settings use a compact desktop inspector rhythm while the
+ * application-wide settings pages retain their existing layout. */
+.page-settings-drawer-backdrop {
+  background-color: rgb(0 0 0 / 8%) !important;
+  backdrop-filter: none;
+  transition-duration: 220ms;
+}
+
+.page-settings-drawer-backdrop[data-exiting='true'] {
+  transition-duration: 200ms;
+}
+
+.page-settings-drawer {
+  --drawer-enter-duration: 220ms;
+  --drawer-exit-duration: 200ms;
+}
+
+.page-settings-drawer .setting-item--compact {
+  grid-template-columns: minmax(0, 1fr) auto;
+  min-height: calc(var(--spacing) * 11);
+  height: auto;
+  padding-block: calc(var(--spacing) * 1.5);
+}
+
+.page-settings-drawer .setting-item--compact.setting-item--described {
+  min-height: calc(var(--spacing) * 14);
+}
+
+.page-settings-drawer .setting-item--compact .setting-item__title-wrap {
+  min-height: calc(var(--spacing) * 8);
+}
+
+.page-settings-drawer .setting-item--compact .setting-item__title {
+  height: auto;
+  font-size: var(--text-sm);
+  line-height: 1.4;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.page-settings-drawer .setting-item__content {
+  display: flex;
+  align-items: center;
+}
+
+.page-settings-drawer .setting-item__divider {
+  margin-block: 0;
+}
+
+@media (max-width: 44rem) {
+  .page-settings-drawer-backdrop {
+    background-color: rgb(0 0 0 / 24%) !important;
+    backdrop-filter: blur(3px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-settings-drawer-backdrop,
+  .page-settings-drawer {
+    transition-duration: 0.01ms !important;
+  }
 }
 
 .settings-container {

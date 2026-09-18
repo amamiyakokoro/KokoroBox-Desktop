@@ -157,6 +157,49 @@ test('network settings use nested panels and preserve legacy routes', () => {
   assert.match(sider, /settings\?section=network&panel=sniffer/)
 })
 
+test('page settings drawers use the shared compact inspector behavior', () => {
+  const drawer = readFileSync('src/renderer/src/components/base/base-settings-drawer.tsx', 'utf8')
+  const settingItem = readFileSync('src/renderer/src/components/base/base-setting-item.tsx', 'utf8')
+  const styles = readFileSync('src/renderer/src/assets/main-compatible.css', 'utf8')
+  const connections = readFileSync(
+    'src/renderer/src/components/connections/connection-setting-drawer.tsx',
+    'utf8'
+  )
+  const appRouting = readFileSync(
+    'src/renderer/src/components/app-routing/app-routing-setting-drawer.tsx',
+    'utf8'
+  )
+  const consumers = [
+    connections,
+    appRouting,
+    readFileSync('src/renderer/src/components/profiles/profile-setting-drawer.tsx', 'utf8'),
+    readFileSync('src/renderer/src/components/proxies/proxy-setting-drawer.tsx', 'utf8')
+  ]
+
+  assert.match(drawer, /const DRAWER_CLOSE_ANIMATION_MS = 220/)
+  assert.match(drawer, /variant="transparent"/)
+  assert.match(drawer, /w-\[min\(432px,calc\(100vw-16px\)\)\]/)
+  assert.match(drawer, /w-\[min\(520px,calc\(100vw-16px\)\)\]/)
+  assert.match(drawer, /aria-labelledby=\{headingId\}/)
+  assert.match(drawer, /aria-label=\{tr\('Close'\)\}/)
+  assert.match(styles, /\.page-settings-drawer-backdrop\s*\{[^}]*backdrop-filter: none/s)
+  assert.match(styles, /\.page-settings-drawer \.setting-item--compact\s*\{[^}]*min-height:/s)
+  assert.match(styles, /\.input-group\[data-setting-input='number'\]/)
+  assert.match(styles, /@media \(prefers-reduced-motion: reduce\)/)
+  assert.match(settingItem, /description\?: React\.ReactNode/)
+
+  for (const consumer of consumers) {
+    assert.match(consumer, /<PageSettingsDrawer/)
+    assert.match(consumer, /<PageSettingsSection/)
+  }
+
+  assert.match(connections, /onBlur=\{applyInterval\}/)
+  assert.match(connections, /event\.key === 'Enter'/)
+  assert.doesNotMatch(connections, /tr\('Confirm'\)/)
+  assert.match(appRouting, /description=\{tr\(/)
+  assert.doesNotMatch(appRouting, /<Tooltip|SettingHelp/)
+})
+
 test('desktop sidebar separates controls, live status and navigation', () => {
   const sider = readFileSync('src/renderer/src/components/sider/sider-cards.tsx', 'utf8')
   const surfaces = readFileSync('src/renderer/src/components/sider/sider-surfaces.tsx', 'utf8')

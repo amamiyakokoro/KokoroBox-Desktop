@@ -1,5 +1,7 @@
+/* eslint-disable react/prop-types */
+import { tr } from '../../../../shared/i18n'
 import { Drawer } from '@heroui-v3/react'
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
 
 interface PageSettingsDrawerProps {
   title: string
@@ -11,25 +13,34 @@ interface PageSettingsDrawerProps {
 
 interface PageSettingsSectionProps {
   title: string
-  description?: string
+  description?: ReactNode
   children: ReactNode
 }
 
-const DRAWER_CLOSE_ANIMATION_MS = 700
+const DRAWER_CLOSE_ANIMATION_MS = 220
 
 export const PageSettingsSection: React.FC<PageSettingsSectionProps> = ({
   title,
   description,
   children
-}) => (
-  <section className="border-t border-separator/70 py-4 first:border-t-0 first:pt-0 last:pb-0">
-    <header className="mb-2 px-1">
-      <h3 className="text-sm font-semibold text-foreground-600">{title}</h3>
-      {description && <p className="mt-1 text-xs leading-5 text-foreground-500">{description}</p>}
-    </header>
-    <div className="flex flex-col gap-1">{children}</div>
-  </section>
-)
+}) => {
+  const headingId = useId()
+
+  return (
+    <section
+      aria-labelledby={headingId}
+      className="border-t border-separator/70 py-5 first:border-t-0 first:pt-0 last:pb-0"
+    >
+      <header className="mb-1.5 px-1">
+        <h3 id={headingId} className="text-xs font-medium text-foreground-500">
+          {title}
+        </h3>
+        {description && <p className="mt-1 text-xs leading-4 text-foreground-500">{description}</p>}
+      </header>
+      <div className="flex flex-col">{children}</div>
+    </section>
+  )
+}
 
 const PageSettingsDrawer: React.FC<PageSettingsDrawerProps> = ({
   title,
@@ -65,7 +76,7 @@ const PageSettingsDrawer: React.FC<PageSettingsDrawerProps> = ({
   }
 
   const widthClass =
-    width === 'wide' ? 'w-[min(520px,calc(100vw-32px))]' : 'w-[min(460px,calc(100vw-32px))]'
+    width === 'wide' ? 'w-[min(520px,calc(100vw-16px))]' : 'w-[min(432px,calc(100vw-16px))]'
 
   return (
     <Drawer.Backdrop
@@ -73,20 +84,23 @@ const PageSettingsDrawer: React.FC<PageSettingsDrawerProps> = ({
       onOpenChange={(open) => {
         if (!open) closeWithAnimation()
       }}
-      variant="blur"
-      className="top-12 h-[calc(100%-48px)]"
+      variant="transparent"
+      className="page-settings-drawer-backdrop top-12 h-[calc(100%-48px)]"
     >
-      <Drawer.Content placement="right" className="top-12 h-[calc(100%-48px)] p-3 pl-0">
+      <Drawer.Content
+        placement="right"
+        className="page-settings-drawer-content top-12 h-[calc(100%-48px)] p-2 pl-0"
+      >
         <Drawer.Dialog
-          className={`flag-emoji flex h-full ${widthClass} max-w-none flex-col overflow-hidden rounded-2xl! border border-separator/70 bg-overlay p-0 shadow-overlay`}
+          className={`page-settings-drawer flag-emoji flex h-full ${widthClass} max-w-none flex-col overflow-hidden rounded-xl! border border-separator/80 bg-overlay p-0 shadow-overlay`}
         >
-          <Drawer.Header className="border-b border-separator/70 px-5 py-4">
+          <Drawer.Header className="border-b border-separator/70 px-4 py-3">
             <Drawer.Heading className="text-base font-semibold">{title}</Drawer.Heading>
           </Drawer.Header>
-          <Drawer.Body className="no-scrollbar flex-1 overflow-y-auto px-5 py-4">
+          <Drawer.Body className="no-scrollbar flex-1 overflow-y-auto px-4 py-3">
             {children}
           </Drawer.Body>
-          <Drawer.CloseTrigger className="app-nodrag" />
+          <Drawer.CloseTrigger aria-label={tr('Close')} className="app-nodrag" />
         </Drawer.Dialog>
       </Drawer.Content>
     </Drawer.Backdrop>

@@ -1,6 +1,6 @@
 import { tr } from '../../../../shared/i18n'
 import { Button, InputGroup, ListBox, Select, Switch } from '@heroui-v3/react'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import SettingItem from '../base/base-setting-item'
 import { settingItemProps } from '../base/base-controls'
 import PageSettingsDrawer, { PageSettingsSection } from '../base/base-settings-drawer'
@@ -26,6 +26,18 @@ const ConnectionSettingDrawer: React.FC<Props> = (props) => {
     connectionGroupDirection = 'asc'
   } = appConfig || {}
   const [intervalInput, setIntervalInput] = useState(connectionInterval)
+
+  useEffect(() => {
+    setIntervalInput(connectionInterval)
+  }, [connectionInterval])
+
+  const applyInterval = (): void => {
+    const actualValue = Math.min(10000, Math.max(100, intervalInput))
+    setIntervalInput(actualValue)
+    if (actualValue === connectionInterval) return
+    patchAppConfig({ connectionInterval: actualValue })
+    restartMihomoConnections()
+  }
 
   return (
     <PageSettingsDrawer
@@ -91,7 +103,6 @@ const ConnectionSettingDrawer: React.FC<Props> = (props) => {
             <div className="flex items-center justify-end gap-2">
               <Select
                 aria-label={tr('Group sort field')}
-                className="w-24"
                 variant="secondary"
                 value={connectionGroupSort}
                 onChange={(value) => {
@@ -161,35 +172,23 @@ const ConnectionSettingDrawer: React.FC<Props> = (props) => {
 
       <PageSettingsSection title={tr('Refresh')}>
         <SettingItem title={tr('Refresh interval')} {...settingItemProps}>
-          <div className="setting-item__inline-controls">
-            {intervalInput !== connectionInterval && (
-              <Button
-                size="sm"
-                variant="primary"
-                onPress={() => {
-                  const actualValue = Math.min(10000, Math.max(100, intervalInput))
-                  setIntervalInput(actualValue)
-                  patchAppConfig({ connectionInterval: actualValue })
-                  restartMihomoConnections()
-                }}
-              >
-                {tr('Confirm')}
-              </Button>
-            )}
-            <InputGroup variant="secondary">
-              <InputGroup.Input
-                aria-label={tr('Refresh interval')}
-                type="number"
-                value={intervalInput.toString()}
-                max={10000}
-                min={100}
-                onChange={(event) => {
-                  setIntervalInput(parseInt(event.target.value) || 100)
-                }}
-              />
-              <InputGroup.Suffix>ms</InputGroup.Suffix>
-            </InputGroup>
-          </div>
+          <InputGroup data-setting-input="number" variant="secondary">
+            <InputGroup.Input
+              aria-label={tr('Refresh interval')}
+              type="number"
+              value={intervalInput.toString()}
+              max={10000}
+              min={100}
+              onBlur={applyInterval}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') event.currentTarget.blur()
+              }}
+              onChange={(event) => {
+                setIntervalInput(parseInt(event.target.value) || 100)
+              }}
+            />
+            <InputGroup.Suffix>ms</InputGroup.Suffix>
+          </InputGroup>
         </SettingItem>
       </PageSettingsSection>
     </PageSettingsDrawer>

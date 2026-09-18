@@ -8,6 +8,7 @@ export const SettingItemModeProvider = SettingItemLegacyContext.Provider
 
 export interface SettingItemProps {
   title: React.ReactNode
+  description?: React.ReactNode
   actions?: React.ReactNode
   children?: React.ReactNode
   divider?: boolean
@@ -20,6 +21,7 @@ export interface SettingItemProps {
 const SettingItem: React.FC<SettingItemProps> = (props) => {
   const {
     title,
+    description,
     actions,
     children,
     divider = false,
@@ -55,6 +57,7 @@ const SettingItem: React.FC<SettingItemProps> = (props) => {
             align === 'start' ? 'setting-item--start' : 'setting-item--center',
             isCompact && 'setting-item--compact',
             isTitleless && 'setting-item--titleless',
+            description && 'setting-item--described',
             contentAlign === 'end' && 'setting-item--content-end'
           )}
           data-setting-label={searchableLabel}
@@ -62,7 +65,15 @@ const SettingItem: React.FC<SettingItemProps> = (props) => {
         >
           {(hasTitle || actions) && (
             <div className="setting-item__title-wrap">
-              {hasTitle && <h4 className="setting-item__title">{title}</h4>}
+              {hasTitle &&
+                (description ? (
+                  <div className="setting-item__label-group">
+                    <h4 className="setting-item__title">{title}</h4>
+                    <p className="setting-item__description">{description}</p>
+                  </div>
+                ) : (
+                  <h4 className="setting-item__title">{title}</h4>
+                ))}
               {actions}
             </div>
           )}
