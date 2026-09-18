@@ -155,3 +155,26 @@ test('core settings separate runtime, service and environment concerns', () => {
   assert.match(runtime, /sections\.includes\('runtime'\)/)
   assert.match(runtime, /sections\.includes\('service'\)/)
 })
+
+test('data settings separate subscriptions, backups and developer integrations', () => {
+  const registry = readFileSync(
+    'src/renderer/src/components/settings/settings-registry.tsx',
+    'utf8'
+  )
+  const integrations = readFileSync(
+    'src/renderer/src/components/settings/subscription-integration-settings.tsx',
+    'utf8'
+  )
+
+  assert.match(registry, /const dataPanels:/)
+  assert.match(registry, /key: 'subscriptions'/)
+  assert.match(registry, /content: \(\) => <SubscriptionDataSettings \/>/)
+  assert.match(registry, /key: 'backup'/)
+  assert.match(registry, /content: \(\) => <WebdavConfig \/>/)
+  assert.match(registry, /key: 'integrations'/)
+  assert.match(registry, /<GistIntegrationSettings \/>/)
+  assert.match(registry, /entries: dataPanels\.flatMap/)
+  assert.match(registry, /panels: dataPanels/)
+  assert.match(integrations, /hasSubscriptionSection = sections\.includes\('subscription'\)/)
+  assert.match(integrations, /hasGistSection = sections\.includes\('gist'\)/)
+})

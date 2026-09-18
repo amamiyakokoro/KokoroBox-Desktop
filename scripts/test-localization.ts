@@ -251,7 +251,8 @@ test('global subscription settings are owned by Application settings', () => {
 
   assert.match(profileDrawer, /navigate\('\/settings\?section=data'\)/)
   assert.match(settingsPage, /getSettingsCategories/)
-  assert.match(settingsRegistry, /<SubscriptionIntegrationSettings \/>/)
+  assert.match(settingsRegistry, /<SubscriptionDataSettings \/>/)
+  assert.match(settingsRegistry, /<GistIntegrationSettings \/>/)
 })
 
 test('Application settings search supports stable deep links to concrete rows', () => {

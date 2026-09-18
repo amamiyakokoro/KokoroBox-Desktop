@@ -21,7 +21,10 @@ import { CoreExecutionSettings, ServiceManagementSettings } from './core-runtime
 import GeneralConfig, { PerformanceConfig } from './general-config'
 import ShortcutConfig from './shortcut-config'
 import SiderConfig from './sider-config'
-import SubscriptionIntegrationSettings from './subscription-integration-settings'
+import {
+  GistIntegrationSettings,
+  SubscriptionDataSettings
+} from './subscription-integration-settings'
 import WebdavConfig from './webdav-config'
 import EnvSetting from '../mihomo/env-setting'
 import LogSetting from '../mihomo/log-setting'
@@ -422,6 +425,78 @@ export const getSettingsCategories = (): SettingsCategoryDefinition[] => {
     }
   ]
 
+  const dataPanels: SettingsPanelDefinition[] = [
+    {
+      key: 'subscriptions',
+      label: tr('Subscription data'),
+      entries: [
+        entry(
+          'separate-profile-workdir',
+          tr('Use a separate working directory for each profile'),
+          tr('Subscription data'),
+          { panel: 'subscriptions' }
+        ),
+        entry('subscription-user-agent', tr('Subscription user agent'), tr('Subscription data'), {
+          panel: 'subscriptions'
+        })
+      ],
+      content: () => <SubscriptionDataSettings />
+    },
+    {
+      key: 'backup',
+      label: tr('Backup and restore'),
+      entries: [
+        entry('webdav-url', tr('WebDAV URL'), tr('WebDAV backup'), { panel: 'backup' }),
+        entry('webdav-directory', tr('WebDAV backup directory'), tr('WebDAV backup'), {
+          panel: 'backup'
+        }),
+        entry('webdav-username', tr('WebDAV username'), tr('WebDAV backup'), {
+          panel: 'backup'
+        }),
+        entry('webdav-password', tr('WebDAV password'), tr('WebDAV backup'), {
+          panel: 'backup'
+        })
+      ],
+      content: () => <WebdavConfig />
+    },
+    {
+      key: 'integrations',
+      label: tr('Developer integration'),
+      entries: [
+        entry('github-token', 'GitHub API Token', tr('Developer integration'), {
+          panel: 'integrations'
+        }),
+        entry(
+          'copy-environment-format',
+          tr('Copy environment variable format'),
+          tr('Environment integration'),
+          { panel: 'integrations' }
+        ),
+        entry(
+          'gist-runtime-sync',
+          tr('Sync runtime configuration to Gist'),
+          tr('Gist synchronization'),
+          { panel: 'integrations' }
+        ),
+        entry('gist-encryption', tr('Encrypt Gist configuration'), tr('Gist synchronization'), {
+          panel: 'integrations'
+        }),
+        entry('gist-age-public-key', tr('Gist age public key'), tr('Gist synchronization'), {
+          panel: 'integrations'
+        }),
+        entry('gist-age-private-key', tr('Gist age private key'), tr('Gist synchronization'), {
+          panel: 'integrations'
+        })
+      ],
+      content: () => (
+        <>
+          <IntegrationSettings />
+          <GistIntegrationSettings />
+        </>
+      )
+    }
+  ]
+
   return (
     [
       {
@@ -529,39 +604,8 @@ export const getSettingsCategories = (): SettingsCategoryDefinition[] => {
         key: 'data',
         label: tr('Data and integrations'),
         icon: LuArchiveRestore,
-        entries: [
-          entry('github-token', 'GitHub API Token', tr('Developer integration')),
-          entry(
-            'copy-environment-format',
-            tr('Copy environment variable format'),
-            tr('Environment integration')
-          ),
-          entry(
-            'separate-profile-workdir',
-            tr('Use a separate working directory for each profile'),
-            tr('Subscription data')
-          ),
-          entry('subscription-user-agent', tr('Subscription user agent'), tr('Subscription data')),
-          entry(
-            'gist-runtime-sync',
-            tr('Sync runtime configuration to Gist'),
-            tr('Gist synchronization')
-          ),
-          entry('gist-encryption', tr('Encrypt Gist configuration'), tr('Gist synchronization')),
-          entry('gist-age-public-key', tr('Gist age public key'), tr('Gist synchronization')),
-          entry('gist-age-private-key', tr('Gist age private key'), tr('Gist synchronization')),
-          entry('webdav-url', tr('WebDAV URL'), tr('WebDAV backup')),
-          entry('webdav-directory', tr('WebDAV backup directory'), tr('WebDAV backup')),
-          entry('webdav-username', tr('WebDAV username'), tr('WebDAV backup')),
-          entry('webdav-password', tr('WebDAV password'), tr('WebDAV backup'))
-        ],
-        content: () => (
-          <>
-            <SubscriptionIntegrationSettings />
-            <WebdavConfig />
-            <IntegrationSettings />
-          </>
-        )
+        entries: dataPanels.flatMap((panel) => panel.entries),
+        panels: dataPanels
       },
       {
         key: 'shortcuts',
