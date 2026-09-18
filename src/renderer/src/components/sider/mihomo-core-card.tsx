@@ -59,6 +59,7 @@ const MihomoCoreCard: React.FC<Props> = ({ iconOnly }) => {
     : version
       ? (coreVersion ?? tr('Unknown'))
       : tr('Loading')
+  const memoryLabel = calcTraffic(mem)
 
   useEffect(() => {
     const token = PubSub.subscribe('mihomo-core-changed', () => {
@@ -117,7 +118,8 @@ const MihomoCoreCard: React.FC<Props> = ({ iconOnly }) => {
         title={tr('Core')}
         description={versionLabel}
         descriptionTitle={originalVersion}
-        status={version ? `${tr('Memory')} ${calcTraffic(mem)}` : undefined}
+        status={version ? memoryLabel : undefined}
+        statusTitle={version ? `${tr('Memory')} ${memoryLabel}` : undefined}
         statusTone={versionError ? 'danger' : 'default'}
         prioritizeDescription
         active={match}

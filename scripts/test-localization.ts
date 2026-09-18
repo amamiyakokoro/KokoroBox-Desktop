@@ -312,7 +312,7 @@ test('core feature settings pages use the shared desktop layout', () => {
   for (const page of pages) {
     const source = readFileSync(page, 'utf8')
     assert.match(source, /base-feature-settings/)
-    assert.match(source, /<FeatureSettingsLayout>/)
+    assert.match(source, /<FeatureSettingsLayout(?:\s|>)/)
     assert.match(source, /<FeatureSettingsSection/)
   }
 })

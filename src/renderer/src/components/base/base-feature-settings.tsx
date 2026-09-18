@@ -6,6 +6,7 @@ import { SettingItemModeProvider } from './base-setting-item'
 
 interface FeatureSettingsLayoutProps {
   children: ReactNode
+  action?: ReactNode
 }
 
 interface FeatureSettingsSectionProps {
@@ -26,20 +27,24 @@ export const FeatureSettingsSaveButton: React.FC<FeatureSettingsSaveButtonProps>
   isDisabled = false,
   isSaving = false,
   onPress
-}) => (
-  <Button
-    size="sm"
-    className="app-nodrag min-w-16"
-    color={isDirty ? 'primary' : 'default'}
-    variant={isDirty ? 'solid' : 'flat'}
-    isDisabled={!isDirty || isDisabled || isSaving}
-    isLoading={isSaving}
-    aria-label={tr('Save')}
-    onPress={onPress}
-  >
-    {tr('Save')}
-  </Button>
-)
+}) => {
+  if (!isDirty) return null
+
+  return (
+    <Button
+      size="sm"
+      className="app-nodrag min-w-16"
+      color="primary"
+      variant="solid"
+      isDisabled={isDisabled || isSaving}
+      isLoading={isSaving}
+      aria-label={tr('Save')}
+      onPress={onPress}
+    >
+      {tr('Save')}
+    </Button>
+  )
+}
 
 export const FeatureSettingsSection: React.FC<FeatureSettingsSectionProps> = ({
   title,
@@ -57,10 +62,13 @@ export const FeatureSettingsSection: React.FC<FeatureSettingsSectionProps> = ({
   </section>
 )
 
-const FeatureSettingsLayout: React.FC<FeatureSettingsLayoutProps> = ({ children }) => (
+const FeatureSettingsLayout: React.FC<FeatureSettingsLayoutProps> = ({ children, action }) => (
   <SettingCardModeProvider value={false}>
     <SettingItemModeProvider value={false}>
-      <div className="feature-settings-layout mx-auto w-full max-w-[960px] pb-4 pt-1">
+      <div
+        className={`feature-settings-layout relative mx-auto w-full max-w-[960px] pb-4 pt-1 ${action ? 'feature-settings-layout--has-action' : ''}`}
+      >
+        {action && <div className="feature-settings-layout__action">{action}</div>}
         {children}
       </div>
     </SettingItemModeProvider>

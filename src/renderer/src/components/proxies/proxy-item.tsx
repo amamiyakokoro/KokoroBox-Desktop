@@ -4,6 +4,7 @@ import { mihomoUnfixedProxy } from '@renderer/utils/ipc'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { FaMapPin } from 'react-icons/fa6'
 import ProxyDetailTooltip from './proxy-detail-tooltip'
+import { formatProxyType } from './proxy-display'
 
 interface Props {
   mutateProxies: () => void
@@ -139,17 +140,15 @@ const ProxyItem: React.FC<Props> = (props) => {
     document.addEventListener('mousemove', handleMouseMove)
     return () => document.removeEventListener('mousemove', handleMouseMove)
   }, [showTooltip])
-  function delayColor(delay: number): 'primary' | 'success' | 'warning' | 'danger' {
-    if (delay === -1) return 'primary'
+  function delayColor(delay: number): 'default' | 'danger' {
     if (delay === 0) return 'danger'
-    if (delay < 500) return 'success'
-    return 'warning'
+    return 'default'
   }
 
   function delayText(delay: number): string {
     if (delay === -1) return tr('Test')
     if (delay === 0) return tr('Timeout')
-    return delay.toString()
+    return `${delay} ms`
   }
 
   const onDelay = (): void => {
@@ -182,8 +181,14 @@ const ProxyItem: React.FC<Props> = (props) => {
         }}
         isPressable
         fullWidth
-        shadow="sm"
-        className={`${fixed ? 'bg-secondary/30' : selected ? 'bg-primary/30' : 'bg-content2'}`}
+        shadow="none"
+        className={`border ${
+          fixed
+            ? 'border-secondary/30 bg-secondary/12'
+            : selected
+              ? 'border-primary/35 bg-primary/12'
+              : 'border-divider/70 bg-content1/75 hover:bg-default-50'
+        }`}
         radius="sm"
       >
         <CardBody className="py-1.5 px-2">
@@ -197,7 +202,7 @@ const ProxyItem: React.FC<Props> = (props) => {
                     <div className="flag-emoji inline">{proxy.name}</div>
                   </div>
                   <div className="text-[12px] text-foreground-500 leading-snug mt-0.5 overflow-hidden whitespace-nowrap text-ellipsis">
-                    <span>{proxy.type}</span>
+                    <span>{formatProxyType(proxy.type)}</span>
                     {proxy.udp !== undefined && !shouldShowGroupSelectedProxy && (
                       <span className="ml-1 opacity-60"> UDP</span>
                     )}
@@ -225,12 +230,11 @@ const ProxyItem: React.FC<Props> = (props) => {
                     </Button>
                   )}
                   <Button
-                    isIconOnly
                     isLoading={loading}
                     color={delayColor(delay)}
                     onPress={onDelay}
                     variant="light"
-                    className="h-8 w-8 min-w-8 p-0 text-xs"
+                    className="h-8 min-w-12 px-1.5 text-xs tabular-nums"
                   >
                     {delayText(delay)}
                   </Button>
@@ -242,7 +246,9 @@ const ProxyItem: React.FC<Props> = (props) => {
                   <div className="flag-emoji inline">{proxy.name}</div>
                   {proxyDisplayLayout === 'single' && (
                     <>
-                      <div className="inline ml-2 text-foreground-500">{proxy.type}</div>
+                      <div className="inline ml-2 text-foreground-500">
+                        {formatProxyType(proxy.type)}
+                      </div>
                       {shouldShowGroupSelectedProxy && (
                         <div className="inline ml-2 text-foreground-500 flag-emoji">
                           → {proxy.now}
@@ -270,12 +276,11 @@ const ProxyItem: React.FC<Props> = (props) => {
                   )}
                   <div className="flex items-center">
                     <Button
-                      isIconOnly
                       isLoading={loading}
                       color={delayColor(delay)}
                       onPress={onDelay}
                       variant="light"
-                      className="h-full w-8 min-w-8 p-0 text-sm"
+                      className="h-8 min-w-12 px-1.5 text-xs tabular-nums"
                     >
                       {delayText(delay)}
                     </Button>

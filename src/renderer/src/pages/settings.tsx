@@ -177,7 +177,7 @@ const Settings: React.FC = () => {
             aria-label={tr('Settings categories')}
             className="settings-navigation sticky top-0 z-10 flex h-[calc(100vh-49px)] flex-col border-r border-divider bg-background/95 p-3 backdrop-blur"
           >
-            <div className="settings-navigation-list no-scrollbar flex flex-col gap-1 overflow-y-auto">
+            <div className="settings-navigation-list flex flex-col gap-1 overflow-y-auto">
               {categories.map((item) => {
                 const Icon = item.icon
                 const active = category === item.key && !normalizedSearch
@@ -226,7 +226,7 @@ const Settings: React.FC = () => {
                 {!normalizedSearch && selected.panels && selected.panels.length > 1 && (
                   <nav
                     aria-label={tr('Settings panels')}
-                    className="no-scrollbar flex gap-1 overflow-x-auto px-3 pb-2"
+                    className="settings-panel-navigation no-scrollbar flex gap-1 overflow-x-auto px-3 pb-2"
                   >
                     {selected.panels.map((panel) => {
                       const active = panel.key === selectedPanel?.key
@@ -234,9 +234,9 @@ const Settings: React.FC = () => {
                         <Button
                           key={panel.key}
                           size="sm"
-                          variant={active ? 'flat' : 'light'}
-                          color={active ? 'primary' : 'default'}
-                          className="app-nodrag shrink-0"
+                          variant="light"
+                          color="default"
+                          className={`settings-panel-button app-nodrag shrink-0 ${active ? 'settings-panel-button--active' : ''}`}
                           aria-current={active ? 'page' : undefined}
                           onPress={() => selectPanel(panel.key)}
                         >

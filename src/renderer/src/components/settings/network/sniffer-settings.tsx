@@ -126,16 +126,13 @@ const Sniffer: React.FC<Props> = ({ embedded = false }) => {
     })
   }
 
-  const saveButton = (
+  const saveButton = changed ? (
     <FeatureSettingsSaveButton isDirty={changed} isSaving={isSaving} onPress={saveChanges} />
-  )
+  ) : null
 
   const content = (
     <>
-      {embedded && (
-        <div className="mx-auto flex w-full max-w-[1040px] justify-end px-3 pt-2">{saveButton}</div>
-      )}
-      <FeatureSettingsLayout>
+      <FeatureSettingsLayout action={embedded ? saveButton : undefined}>
         <FeatureSettingsSection title={tr('Sniffing behavior')}>
           <SettingItem title={tr('Override domain sniffing settings')} divider>
             <Switch

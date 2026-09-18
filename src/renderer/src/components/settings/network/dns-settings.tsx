@@ -250,21 +250,18 @@ const DNS: React.FC<Props> = ({ embedded = false }) => {
     }
   })
 
-  const saveButton = (
+  const saveButton = changed ? (
     <FeatureSettingsSaveButton
       isDirty={changed}
       isSaving={isSaving}
       isDisabled={hasValidationErrors}
       onPress={saveChanges}
     />
-  )
+  ) : null
 
   const content = (
     <>
-      {embedded && (
-        <div className="mx-auto flex w-full max-w-[1040px] justify-end px-3 pt-2">{saveButton}</div>
-      )}
-      <FeatureSettingsLayout>
+      <FeatureSettingsLayout action={embedded ? saveButton : undefined}>
         <FeatureSettingsSection title={tr('DNS behavior')}>
           <SettingItem title={tr('Override DNS settings')} divider>
             <Switch

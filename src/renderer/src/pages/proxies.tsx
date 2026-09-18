@@ -143,7 +143,12 @@ const GroupHeader = memo(function GroupHeader({
         isPressable
         fullWidth
         aria-expanded={isOpen}
-        className={isRelevant ? 'bg-primary/8 ring-1 ring-primary/20' : undefined}
+        shadow="none"
+        className={`border ${
+          isRelevant
+            ? 'border-primary/25 bg-primary/8'
+            : 'border-divider/80 bg-content1/90 hover:bg-default-50'
+        }`}
         onPress={() => onToggle(index, isOpen)}
       >
         <CardBody className="min-h-14 w-full px-3 py-2">
@@ -759,7 +764,7 @@ const Proxies: React.FC = () => {
             : ''
         } ${
           groupIndex === gc.length - 1 && innerIndex === gc[groupIndex] - 1 ? 'pb-2' : ''
-        } gap-2 pt-2 mx-2`}
+        } gap-2 pt-2 mx-3`}
       >
         {items}
       </div>

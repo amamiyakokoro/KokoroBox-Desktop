@@ -18,6 +18,7 @@ interface SiderNavItemProps {
 interface SiderStatusCardProps extends SiderNavItemProps {
   actions?: React.ReactNode
   descriptionTitle?: string
+  statusTitle?: string
   details?: React.ReactNode
   metadataSeparator?: React.ReactNode
   prioritizeDescription?: boolean
@@ -130,6 +131,7 @@ export const SiderStatusCard: React.FC<SiderStatusCardProps> = ({
   active = false,
   actions,
   descriptionTitle,
+  statusTitle,
   details,
   metadataSeparator = '·',
   prioritizeDescription = false,
@@ -138,7 +140,7 @@ export const SiderStatusCard: React.FC<SiderStatusCardProps> = ({
 }) => (
   <div
     className={cn(
-      'group overflow-hidden rounded-xl border border-divider bg-content1 shadow-xs transition-colors',
+      'group overflow-hidden rounded-xl border border-divider bg-content1/85 shadow-none transition-colors',
       active ? 'border-primary/35 bg-primary/8' : 'hover:border-default-300 hover:bg-default-50'
     )}
   >
@@ -179,6 +181,7 @@ export const SiderStatusCard: React.FC<SiderStatusCardProps> = ({
               )}
               {status && (
                 <span
+                  title={statusTitle}
                   className={cn(
                     prioritizeDescription ? 'min-w-0 truncate' : 'shrink-0',
                     statusToneClasses[statusTone]

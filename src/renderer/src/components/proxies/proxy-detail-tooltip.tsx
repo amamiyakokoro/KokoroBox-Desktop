@@ -2,6 +2,7 @@ import { tr } from '../../../../shared/i18n'
 import { Chip, Separator, Surface } from '@heroui-v3/react'
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { formatProxyType } from './proxy-display'
 
 interface Props {
   proxy: ControllerProxiesDetail | ControllerGroupDetail
@@ -19,19 +20,18 @@ const isGroupProxy = (
   p: ControllerProxiesDetail | ControllerGroupDetail
 ): p is ControllerGroupDetail => 'now' in p
 
-type DelayColor = 'default' | 'accent' | 'success' | 'warning' | 'danger'
+type DelayColor = 'default' | 'danger'
 
 function getDelayChipColor(delay: number): DelayColor {
   if (delay === -1) return 'default'
   if (delay === 0) return 'danger'
-  if (delay < 500) return 'success'
-  return 'warning'
+  return 'default'
 }
 
 function getDelayText(delay: number): string {
   if (delay === -1) return tr('Not tested')
   if (delay === 0) return tr('Timeout')
-  return `${delay}ms`
+  return `${delay} ms`
 }
 
 function getDelayLabel(delay: number): string {
@@ -44,8 +44,7 @@ function getDelayLabel(delay: number): string {
 function getDelaySvgColor(delay: number): string {
   if (delay === -1) return 'var(--color-default)'
   if (delay === 0) return 'var(--color-danger)'
-  if (delay < 500) return 'var(--color-success)'
-  return 'var(--color-warning)'
+  return 'var(--muted)'
 }
 
 const ProxyDetailTooltip: React.FC<Props> = ({ proxy, anchorEl, visible }) => {
@@ -164,7 +163,7 @@ const ProxyDetailTooltip: React.FC<Props> = ({ proxy, anchorEl, visible }) => {
         <div className="px-3 py-2 grid grid-cols-[auto_1fr] gap-x-2 gap-y-1.5 items-center">
           <span className="text-[10px] text-muted">{tr('Type')}</span>
           <Chip className="justify-self-end" variant="soft" size="sm">
-            {proxy.type}
+            {formatProxyType(proxy.type)}
           </Chip>
 
           <span className="text-[10px] text-muted">{tr('Status')}</span>

@@ -93,21 +93,18 @@ const Mihomo: React.FC<Props> = ({ embedded = false }) => {
     }
   })
 
-  const saveButton = (
+  const saveButton = isDirty ? (
     <FeatureSettingsSaveButton
       isDirty={isDirty}
       isDisabled={validationErrors.size > 0}
       isSaving={isSaving}
       onPress={saveChanges}
     />
-  )
+  ) : null
 
   const content = (
     <>
-      {embedded && (
-        <div className="mx-auto flex w-full max-w-[1040px] justify-end px-3 pt-2">{saveButton}</div>
-      )}
-      <FeatureSettingsLayout>
+      <FeatureSettingsLayout action={embedded ? saveButton : undefined}>
         <FeatureSettingsSection title={tr('Core network')}>
           <SettingItem title="IPv6">
             <Switch

@@ -171,6 +171,10 @@ const Sysproxy: React.FC<Props> = ({ embedded = false }) => {
     }
   })
 
+  const saveButton = changed ? (
+    <FeatureSettingsSaveButton isDirty={changed} isSaving={isSaving} onPress={onSave} />
+  ) : null
+
   const content = (
     <>
       {openPacEditor && (
@@ -196,12 +200,7 @@ const Sysproxy: React.FC<Props> = ({ embedded = false }) => {
           }}
         />
       )}
-      {embedded && (
-        <div className="mx-auto flex w-full max-w-[1040px] justify-end px-3 pt-2">
-          <FeatureSettingsSaveButton isDirty={changed} isSaving={isSaving} onPress={onSave} />
-        </div>
-      )}
-      <FeatureSettingsLayout>
+      <FeatureSettingsLayout action={embedded ? saveButton : undefined}>
         <FeatureSettingsSection title={tr('Proxy configuration')}>
           <SettingItem title={tr('Proxy host')} divider>
             <Input
@@ -432,7 +431,7 @@ const Sysproxy: React.FC<Props> = ({ embedded = false }) => {
     <BasePage
       title={tr('System proxy settings')}
       contentClassName="no-scrollbar"
-      header={<FeatureSettingsSaveButton isDirty={changed} isSaving={isSaving} onPress={onSave} />}
+      header={saveButton}
     >
       {content}
     </BasePage>

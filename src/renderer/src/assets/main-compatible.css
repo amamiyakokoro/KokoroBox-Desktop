@@ -620,6 +620,39 @@ input[type='number'] {
   display: block;
 }
 
+.settings-panel-button {
+  position: relative;
+  border-radius: var(--radius-md);
+  color: var(--muted);
+}
+
+.settings-panel-button--active {
+  background-color: color-mix(in oklab, var(--accent) 8%, transparent) !important;
+  color: var(--foreground) !important;
+}
+
+.settings-panel-button--active::after {
+  position: absolute;
+  right: calc(var(--spacing) * 2);
+  bottom: 0;
+  left: calc(var(--spacing) * 2);
+  height: 2px;
+  border-radius: 9999px;
+  background: var(--accent);
+  content: '';
+}
+
+.feature-settings-layout__action {
+  position: absolute;
+  z-index: 1;
+  top: calc(var(--spacing) * 3);
+  right: calc(var(--spacing) * 4);
+}
+
+.feature-settings-layout--has-action > .feature-settings-section:first-of-type > header {
+  padding-inline-end: calc(var(--spacing) * 24);
+}
+
 .settings-layout .setting-item,
 .feature-settings-layout .setting-item {
   grid-template-columns: minmax(10rem, 34%) minmax(0, 1fr);
@@ -697,14 +730,28 @@ input[type='number'] {
 
   .settings-navigation-list {
     flex-direction: row;
+    gap: calc(var(--spacing) * 0.5);
     overflow-x: auto;
     overflow-y: hidden;
+    padding-bottom: calc(var(--spacing) * 1);
+    scrollbar-color: color-mix(in oklab, var(--muted) 35%, transparent) transparent;
+    scrollbar-width: thin;
+  }
+
+  .settings-navigation-list::-webkit-scrollbar {
+    display: block;
+    height: 4px;
+  }
+
+  .settings-navigation-list::-webkit-scrollbar-thumb {
+    border-radius: 9999px;
+    background: color-mix(in oklab, var(--muted) 35%, transparent);
   }
 
   .settings-category-button {
     width: auto;
     min-width: max-content;
     justify-content: flex-start;
-    padding-inline: calc(var(--spacing) * 3);
+    padding-inline: calc(var(--spacing) * 2.5);
   }
 }

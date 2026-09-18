@@ -8,6 +8,7 @@ import {
 } from '../src/renderer/src/components/sider/sider-order.ts'
 import { normalizeCoreVersion } from '../src/renderer/src/components/sider/core-version.ts'
 import { formatLogTimestamp } from '../src/renderer/src/components/logs/log-display.ts'
+import { formatProxyType } from '../src/renderer/src/components/proxies/proxy-display.ts'
 
 test('settings drafts merge nested objects and replace arrays without mutating the source', () => {
   const original = {
@@ -102,7 +103,8 @@ test('application settings keep navigation discoverable in compact desktop windo
   assert.match(settings, /event\.key\.toLowerCase\(\) === 'f'/)
   assert.match(settings, /settings-content-header sticky top-0/)
   assert.match(settings, /scrollTo\(\{ top: 0 \}\)/)
-  assert.match(settings, /settings-navigation-list no-scrollbar/)
+  assert.match(settings, /settings-navigation-list/)
+  assert.match(settings, /settings-panel-button--active/)
   assert.match(settings, /settings-container min-h-full/)
   assert.match(settings, /max-w-\[960px\]/)
   assert.match(settings, /entry\.fallbackLabel/)
@@ -112,6 +114,8 @@ test('application settings keep navigation discoverable in compact desktop windo
   assert.match(styles, /@container settings \(max-width: 50rem\)/)
   assert.doesNotMatch(styles, /@media \(max-width: 1050px\)/)
   assert.match(styles, /\.settings-navigation-list \{[\s\S]*flex-direction: row/)
+  assert.match(styles, /\.settings-navigation-list::-webkit-scrollbar/)
+  assert.match(styles, /\.settings-panel-button--active::after/)
   assert.doesNotMatch(styles, /\.settings-category-label \{[\s\S]*display: none/)
   assert.match(settingCard, /settings-section__heading/)
   assert.match(settingCard, /text-base font-semibold leading-6 text-foreground/)
@@ -155,6 +159,31 @@ test('network settings use nested panels and preserve legacy routes', () => {
   assert.match(sider, /settings\?section=network&panel=dns/)
   assert.match(sider, /settings\?section=network&panel=mihomo/)
   assert.match(sider, /settings\?section=network&panel=sniffer/)
+})
+
+test('feature settings only surface save actions for dirty embedded panels', () => {
+  const shared = readFileSync('src/renderer/src/components/base/base-feature-settings.tsx', 'utf8')
+  const styles = readFileSync('src/renderer/src/assets/main-compatible.css', 'utf8')
+  const featurePages = [
+    'src/renderer/src/components/settings/network/system-proxy-settings.tsx',
+    'src/renderer/src/components/settings/network/tun-settings.tsx',
+    'src/renderer/src/components/settings/network/dns-settings.tsx',
+    'src/renderer/src/components/settings/network/sniffer-settings.tsx',
+    'src/renderer/src/components/settings/network/mihomo-settings.tsx'
+  ]
+
+  assert.match(shared, /if \(!isDirty\) return null/)
+  assert.match(shared, /action\?: ReactNode/)
+  assert.match(shared, /feature-settings-layout__action/)
+  assert.match(styles, /\.feature-settings-layout__action/)
+  assert.match(styles, /\.feature-settings-layout--has-action/)
+
+  for (const page of featurePages) {
+    const source = readFileSync(page, 'utf8')
+    assert.match(source, /<FeatureSettingsLayout[\s\S]*action=/)
+    assert.doesNotMatch(source, /mx-auto flex w-full max-w-\[1040px\] justify-end/)
+    assert.match(source, /useUnsavedChangesGuard/)
+  }
 })
 
 test('page settings drawers use the shared compact inspector behavior', () => {
@@ -272,7 +301,8 @@ test('desktop sidebar separates controls, live status and navigation', () => {
   assert.match(proxy, /status=\{primaryGroup\?\.now/)
   assert.match(proxy, /metadataSeparator="→"/)
   assert.match(core, /<SiderStatusCard/)
-  assert.match(core, /status=\{version \? `\$\{tr\('Memory'\)\}/)
+  assert.match(core, /status=\{version \? memoryLabel : undefined\}/)
+  assert.match(core, /statusTitle=\{version \? `\$\{tr\('Memory'\)\}/)
   assert.match(core, /aria-label=\{tr\('Restart'\)\}/)
   assert.match(dns, /<SiderNavItem/)
   assert.match(dns, /status=\{enable \? tr\('Enabled'\) : tr\('Disabled'\)\}/)
@@ -314,6 +344,11 @@ test('desktop sidebar separates controls, live status and navigation', () => {
 
 test('proxy group rows stay compact while preserving semantic metadata and actions', () => {
   const page = readFileSync('src/renderer/src/pages/proxies.tsx', 'utf8')
+  const item = readFileSync('src/renderer/src/components/proxies/proxy-item.tsx', 'utf8')
+  const tooltip = readFileSync(
+    'src/renderer/src/components/proxies/proxy-detail-tooltip.tsx',
+    'utf8'
+  )
 
   assert.match(page, /<CardBody className="min-h-14 w-full px-3 py-2">/)
   assert.match(page, /function GroupMetadata/)
@@ -329,6 +364,16 @@ test('proxy group rows stay compact while preserving semantic metadata and actio
   assert.match(page, /title=\{group\.name\}/)
   assert.match(page, /title=\{group\.now\}/)
   assert.match(page, /onGroupDelay\(index\)/)
+  assert.match(page, /shadow="none"/)
+  assert.match(page, /gap-2 pt-2 mx-3/)
+  assert.match(item, /return `\$\{delay\} ms`/)
+  assert.match(item, /shadow="none"/)
+  assert.doesNotMatch(item, /delay < 500/)
+  assert.match(tooltip, /return `\$\{delay\} ms`/)
+  assert.doesNotMatch(tooltip, /delay < 500/)
+  assert.equal(formatProxyType('Socks5'), 'SOCKS')
+  assert.equal(formatProxyType('Http'), 'HTTP')
+  assert.equal(formatProxyType('Trojan'), 'Trojan')
 })
 
 test('connection rows stay dense while preserving realtime data and grouped actions', () => {
