@@ -55,7 +55,7 @@ test('staged settings protect unsaved changes across navigation and window lifec
     'src/renderer/src/components/settings/network/system-proxy-settings.tsx',
     'src/renderer/src/components/settings/network/tun-settings.tsx',
     'src/renderer/src/components/settings/network/dns-settings.tsx',
-    'src/renderer/src/pages/sniffer.tsx',
+    'src/renderer/src/components/settings/network/sniffer-settings.tsx',
     'src/renderer/src/components/settings/network/mihomo-settings.tsx'
   ]
   for (const page of guardedPages) {
@@ -115,14 +115,20 @@ test('network settings use nested panels and preserve legacy routes', () => {
   assert.match(registry, /content: \(\) => <DNS embedded \/>/)
   assert.match(registry, /key: 'mihomo'/)
   assert.match(registry, /content: \(\) => <Mihomo embedded \/>/)
+  assert.match(registry, /key: 'network-behavior'/)
+  assert.match(registry, /content: \(\) => <NetworkBehaviorSettings \/>/)
+  assert.match(registry, /key: 'sniffer'/)
+  assert.match(registry, /content: \(\) => <Sniffer embedded \/>/)
   assert.match(settings, /selected\.panels/)
   assert.match(settings, /selectedPanel\?\.content\(\)/)
   assert.match(routes, /settings\?section=network&panel=system-proxy/)
   assert.match(routes, /settings\?section=network&panel=tun/)
   assert.match(routes, /settings\?section=network&panel=dns/)
   assert.match(routes, /settings\?section=network&panel=mihomo/)
+  assert.match(routes, /settings\?section=network&panel=sniffer/)
   assert.match(sider, /settings\?section=network&panel=system-proxy/)
   assert.match(sider, /settings\?section=network&panel=tun/)
   assert.match(sider, /settings\?section=network&panel=dns/)
   assert.match(sider, /settings\?section=network&panel=mihomo/)
+  assert.match(sider, /settings\?section=network&panel=sniffer/)
 })

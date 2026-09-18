@@ -11,7 +11,6 @@ const KokoroPage = createPreloadablePage(() => import('@renderer/pages/kokoro'))
 const LogsPage = createPreloadablePage(() => import('@renderer/pages/logs'))
 const ConnectionsPage = createPreloadablePage(() => import('@renderer/pages/connections'))
 const ResourcesPage = createPreloadablePage(() => import('@renderer/pages/resources'))
-const SnifferPage = createPreloadablePage(() => import('@renderer/pages/sniffer'))
 const AppRoutingPage = createPreloadablePage(() => import('@renderer/pages/app-routing'))
 
 export const Override = OverridePage.Page
@@ -23,7 +22,6 @@ export const Kokoro = KokoroPage.Page
 export const Logs = LogsPage.Page
 export const Connections = ConnectionsPage.Page
 export const Resources = ResourcesPage.Page
-export const Sniffer = SnifferPage.Page
 export const AppRouting = AppRoutingPage.Page
 
 void ProxiesPage.preload().catch(() => {})
@@ -34,7 +32,6 @@ const remainingPageLoaders: Array<() => Promise<unknown>> = [
   KokoroPage.preload,
   ConnectionsPage.preload,
   RulesPage.preload,
-  SnifferPage.preload,
   AppRoutingPage.preload,
   ResourcesPage.preload,
   OverridePage.preload,

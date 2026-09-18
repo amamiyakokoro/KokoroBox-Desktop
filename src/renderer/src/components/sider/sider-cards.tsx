@@ -49,7 +49,7 @@ const siderCardRouteMap = {
   'mihomo-core-card': '/settings?section=network&panel=mihomo',
   'conn-card': '/connections',
   'dns-card': '/settings?section=network&panel=dns',
-  'sniff-card': '/sniffer',
+  'sniff-card': '/settings?section=network&panel=sniffer',
   'kokoro-setting-card': '/kokoro',
   'log-card': '/logs',
   'rule-card': '/rules',

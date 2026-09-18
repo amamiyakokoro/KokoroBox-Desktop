@@ -11,7 +11,6 @@ import {
   Resources,
   Rules,
   Settings,
-  Sniffer,
   AppRouting
 } from './route-pages'
 
@@ -63,7 +62,7 @@ const routes = [
   },
   {
     path: 'sniffer',
-    element: startupRoute(<Sniffer />)
+    element: startupRoute(<Navigate to="/settings?section=network&panel=sniffer" replace />)
   },
   {
     path: 'logs',

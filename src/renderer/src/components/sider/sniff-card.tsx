@@ -13,6 +13,8 @@ import React from 'react'
 interface Props {
   iconOnly?: boolean
 }
+const settingsPath = '/settings?section=network&panel=sniffer'
+
 const SniffCard: React.FC<Props> = (props) => {
   const { appConfig } = useAppConfig()
   const { iconOnly } = props
@@ -23,7 +25,11 @@ const SniffCard: React.FC<Props> = (props) => {
   } = appConfig || {}
   const location = useLocation()
   const navigate = useNavigate()
-  const match = location.pathname.includes('/sniffer')
+  const match =
+    location.pathname.includes('/sniffer') ||
+    (location.pathname.includes('/settings') &&
+      location.search.includes('section=network') &&
+      location.search.includes('panel=sniffer'))
   const { controledMihomoConfig, patchControledMihomoConfig } = useControledMihomoConfig()
   const { sniffer } = controledMihomoConfig || {}
   const { enable } = sniffer || {}
@@ -53,7 +59,7 @@ const SniffCard: React.FC<Props> = (props) => {
             color={match ? 'primary' : 'default'}
             variant={match ? 'solid' : 'light'}
             onPress={() => {
-              navigate('/sniffer')
+              navigate(settingsPath)
             }}
           >
             <RiScan2Fill className="text-[20px]" />
