@@ -8,8 +8,12 @@ import { MdOutlineAppShortcut } from 'react-icons/md'
 import { useLocation, useNavigate } from 'react-router-dom'
 import useSWR from 'swr'
 import { getAppRoutingConfig, getAppRoutingStatus } from '@renderer/utils/ipc'
+import {
+  getAppRoutingStatusLabel,
+  getAppRoutingStatusMessage
+} from '@renderer/utils/app-routing-status'
 import { isAppRoutingRuleEffectivelyEnabled } from '../../../../shared/app-routing'
-import { SiderNavItem } from './sider-surfaces'
+import { SiderStatusCard } from './sider-surfaces'
 
 interface Props {
   iconOnly?: boolean
@@ -58,18 +62,11 @@ const AppRoutingCard: React.FC<Props> = ({ iconOnly = false }) => {
   const enabledRuleCount = config
     ? config.rules.filter((rule) => isAppRoutingRuleEffectivelyEnabled(config, rule)).length
     : 0
-  const runtimeLabel =
-    status?.state === 'running'
-      ? tr('Running')
-      : status?.state === 'starting'
-        ? tr('Starting')
-        : status?.state === 'degraded'
-          ? tr('Safely blocked')
-          : status?.state === 'error'
-            ? tr('Needs attention')
-            : config?.enabled
-              ? tr('Loading')
-              : tr('Disabled')
+  const runtimeLabel = status
+    ? getAppRoutingStatusLabel(status)
+    : config?.enabled
+      ? tr('Loading')
+      : tr('Disabled')
   const statusTone =
     status?.state === 'running'
       ? ('success' as const)
@@ -78,6 +75,15 @@ const AppRoutingCard: React.FC<Props> = ({ iconOnly = false }) => {
         : status?.state === 'error'
           ? ('danger' as const)
           : ('default' as const)
+  const statusMessage = getAppRoutingStatusMessage(
+    status?.message,
+    status?.protectedApplicationCount
+  )
+  const attentionMessage = status?.needsUserApproval
+    ? tr('Network Extension approval required')
+    : status && ['degraded', 'error'].includes(status.state)
+      ? statusMessage
+      : undefined
 
   if (iconOnly) {
     return (
@@ -86,6 +92,7 @@ const AppRoutingCard: React.FC<Props> = ({ iconOnly = false }) => {
           <Button
             size="sm"
             isIconOnly
+            aria-label={tr('Application routing')}
             color={match ? 'primary' : 'default'}
             variant={match ? 'solid' : 'light'}
             onPress={() => navigate('/app-routing')}
@@ -100,27 +107,36 @@ const AppRoutingCard: React.FC<Props> = ({ iconOnly = false }) => {
   return (
     <div
       ref={setNodeRef}
+      {...attributes}
+      {...listeners}
       style={{
         position: 'relative',
         transform: CSS.Transform.toString(transform),
         transition,
         zIndex: isDragging ? 'calc(infinity)' : undefined
       }}
-      className={`${appRoutingCardStatus} app-routing-card`}
-      {...attributes}
-      {...listeners}
+      className={`${appRoutingCardStatus} app-routing-card ${isDragging && !disableAnimation ? 'scale-[0.98]' : ''}`}
     >
-      <div className={isDragging && !disableAnimation ? 'scale-[0.98]' : undefined}>
-        <SiderNavItem
-          icon={<MdOutlineAppShortcut />}
-          title={tr('Application routing')}
-          description={tr('{0} applications', [enabledRuleCount])}
-          status={runtimeLabel}
-          statusTone={statusTone}
-          active={match}
-          onPress={() => navigate('/app-routing')}
-        />
-      </div>
+      <SiderStatusCard
+        icon={<MdOutlineAppShortcut />}
+        title={tr('Application routing')}
+        description={tr('{0} applications', [enabledRuleCount])}
+        status={runtimeLabel}
+        statusTone={statusTone}
+        active={match}
+        onPress={() => navigate('/app-routing')}
+        details={
+          attentionMessage ? (
+            <p
+              role="status"
+              className={`line-clamp-2 text-xs leading-4 ${status?.state === 'error' ? 'text-danger-600 dark:text-danger-400' : 'text-warning-600 dark:text-warning-400'}`}
+              title={attentionMessage}
+            >
+              {attentionMessage}
+            </p>
+          ) : undefined
+        }
+      />
     </div>
   )
 }

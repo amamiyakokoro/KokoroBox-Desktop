@@ -523,6 +523,7 @@ export const messages: Readonly<Record<string, string>> = {
   'Close all connections for this process': '关闭该进程全部连接',
   'Close connection': '关闭连接',
   Core: '内核',
+  Memory: '内存',
   'Failed to start core': '内核启动出错',
   'Core startup failed, code: {0}, signal: {1}': '内核启动失败，code: {0}, signal: {1}',
   'Core startup failed: {0}': '内核启动失败：{0}',

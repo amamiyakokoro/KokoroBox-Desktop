@@ -7,15 +7,14 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { useGroups } from '@renderer/hooks/use-groups'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import React from 'react'
-import { SiderNavItem } from './sider-surfaces'
+import { SiderStatusCard } from './sider-surfaces'
 
 interface Props {
   iconOnly?: boolean
 }
 
-const ProxyCard: React.FC<Props> = (props) => {
+const ProxyCard: React.FC<Props> = ({ iconOnly }) => {
   const { appConfig } = useAppConfig()
-  const { iconOnly } = props
   const { proxyCardStatus = 'col-span-2', disableAnimation = false } = appConfig || {}
   const location = useLocation()
   const navigate = useNavigate()
@@ -25,13 +24,13 @@ const ProxyCard: React.FC<Props> = (props) => {
     attributes,
     listeners,
     setNodeRef,
-    transform: tf,
+    transform: sortableTransform,
     transition,
     isDragging
-  } = useSortable({
-    id: 'proxy'
-  })
-  const transform = tf ? { x: tf.x, y: tf.y, scaleX: 1, scaleY: 1 } : null
+  } = useSortable({ id: 'proxy' })
+  const transform = sortableTransform
+    ? { x: sortableTransform.x, y: sortableTransform.y, scaleX: 1, scaleY: 1 }
+    : null
   const primaryGroup = groups.find((group) => group.name.toUpperCase() === 'GLOBAL') ?? groups[0]
 
   if (iconOnly) {
@@ -41,11 +40,10 @@ const ProxyCard: React.FC<Props> = (props) => {
           <Button
             size="sm"
             isIconOnly
+            aria-label={tr('Proxy groups')}
             color={match ? 'primary' : 'default'}
             variant={match ? 'solid' : 'light'}
-            onPress={() => {
-              navigate('/proxies')
-            }}
+            onPress={() => navigate('/proxies')}
           >
             <LuGroup className="text-[20px]" />
           </Button>
@@ -55,29 +53,25 @@ const ProxyCard: React.FC<Props> = (props) => {
   }
   return (
     <div
+      ref={setNodeRef}
+      {...attributes}
+      {...listeners}
       style={{
         position: 'relative',
         transform: CSS.Transform.toString(transform),
         transition,
         zIndex: isDragging ? 'calc(infinity)' : undefined
       }}
-      className={`${proxyCardStatus} proxy-card`}
+      className={`${proxyCardStatus} proxy-card ${isDragging && !disableAnimation ? 'scale-[0.98]' : ''}`}
     >
-      <div
-        ref={setNodeRef}
-        {...attributes}
-        {...listeners}
-        className={isDragging && !disableAnimation ? 'scale-[0.98]' : undefined}
-      >
-        <SiderNavItem
-          icon={<LuGroup />}
-          title={tr('Proxy groups')}
-          description={primaryGroup?.name ?? tr('{0} groups', [groups.length])}
-          status={primaryGroup?.now}
-          active={match}
-          onPress={() => navigate('/proxies')}
-        />
-      </div>
+      <SiderStatusCard
+        icon={<LuGroup />}
+        title={tr('Proxy')}
+        description={primaryGroup?.name ?? tr('Proxy groups')}
+        status={primaryGroup?.now ?? tr('{0} groups', [groups.length])}
+        active={match}
+        onPress={() => navigate('/proxies')}
+      />
     </div>
   )
 }

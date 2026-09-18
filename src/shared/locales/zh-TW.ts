@@ -526,6 +526,7 @@ export const messages: Readonly<Record<string, string>> = {
   'Close all connections for this process': '關閉該程序全部連線',
   'Close connection': '關閉連線',
   Core: '核心',
+  Memory: '記憶體',
   'Failed to start core': '核心啟動出錯',
   'Core startup failed, code: {0}, signal: {1}': '核心啟動失敗，code: {0}, signal: {1}',
   'Core startup failed: {0}': '核心啟動失敗：{0}',

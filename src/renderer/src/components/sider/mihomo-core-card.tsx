@@ -12,7 +12,7 @@ import useSWR from 'swr'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { LuCpu } from 'react-icons/lu'
 import { notify } from '@renderer/utils/notification'
-import { SiderNavItem } from './sider-surfaces'
+import { SiderStatusCard } from './sider-surfaces'
 
 interface Props {
   iconOnly?: boolean
@@ -20,9 +20,8 @@ interface Props {
 
 const settingsPath = '/settings?section=network&panel=mihomo'
 
-const MihomoCoreCard: React.FC<Props> = (props) => {
+const MihomoCoreCard: React.FC<Props> = ({ iconOnly }) => {
   const { appConfig } = useAppConfig()
-  const { iconOnly } = props
   const { mihomoCoreCardStatus = 'col-span-2', disableAnimation = false } = appConfig || {}
   const {
     data: version,
@@ -43,13 +42,13 @@ const MihomoCoreCard: React.FC<Props> = (props) => {
     attributes,
     listeners,
     setNodeRef,
-    transform: tf,
+    transform: sortableTransform,
     transition,
     isDragging
-  } = useSortable({
-    id: 'mihomo'
-  })
-  const transform = tf ? { x: tf.x, y: tf.y, scaleX: 1, scaleY: 1 } : null
+  } = useSortable({ id: 'mihomo' })
+  const transform = sortableTransform
+    ? { x: sortableTransform.x, y: sortableTransform.y, scaleX: 1, scaleY: 1 }
+    : null
   const [mem, setMem] = useState(0)
   const [restarting, setRestarting] = useState(false)
 
@@ -80,11 +79,10 @@ const MihomoCoreCard: React.FC<Props> = (props) => {
           <Button
             size="sm"
             isIconOnly
+            aria-label={tr('Mihomo settings')}
             color={match ? 'primary' : 'default'}
             variant={match ? 'solid' : 'light'}
-            onPress={() => {
-              navigate(settingsPath)
-            }}
+            onPress={() => navigate(settingsPath)}
           >
             <LuCpu className="text-[20px]" />
           </Button>
@@ -95,57 +93,53 @@ const MihomoCoreCard: React.FC<Props> = (props) => {
 
   return (
     <div
+      ref={setNodeRef}
+      {...attributes}
+      {...listeners}
       style={{
         position: 'relative',
         transform: CSS.Transform.toString(transform),
         transition,
         zIndex: isDragging ? 'calc(infinity)' : undefined
       }}
-      className={`${mihomoCoreCardStatus} mihomo-core-card`}
+      className={`${mihomoCoreCardStatus} mihomo-core-card ${isDragging && !disableAnimation ? 'scale-[0.98]' : ''}`}
     >
-      <div
-        ref={setNodeRef}
-        {...attributes}
-        {...listeners}
-        className={isDragging && !disableAnimation ? 'scale-[0.98]' : undefined}
-      >
-        <SiderNavItem
-          icon={<LuCpu />}
-          title={tr('Core')}
-          description={versionError ? tr('Needs attention') : (version?.version ?? tr('Loading'))}
-          status={version ? calcTraffic(mem) : undefined}
-          statusTone={versionError ? 'danger' : 'default'}
-          active={match}
-          onPress={() => navigate(settingsPath)}
-          trailing={
-            <Tooltip content={tr('Restart')}>
-              <Button
-                isIconOnly
-                size="sm"
-                variant="light"
-                isDisabled={restarting}
-                aria-label={tr('Restart')}
-                onPress={async () => {
-                  try {
-                    setRestarting(true)
-                    await restartCore()
-                    await new Promise((resolve) => {
-                      setTimeout(resolve, 2000)
-                    })
-                  } catch (e) {
-                    notify(e, { variant: 'danger' })
-                  } finally {
-                    setRestarting(false)
-                    void mutate()
-                  }
-                }}
-              >
-                <IoMdRefresh className={restarting ? 'animate-spin' : undefined} />
-              </Button>
-            </Tooltip>
-          }
-        />
-      </div>
+      <SiderStatusCard
+        icon={<LuCpu />}
+        title={tr('Core')}
+        description={versionError ? tr('Needs attention') : (version?.version ?? tr('Loading'))}
+        status={version ? `${tr('Memory')} ${calcTraffic(mem)}` : undefined}
+        statusTone={versionError ? 'danger' : 'default'}
+        active={match}
+        onPress={() => navigate(settingsPath)}
+        actions={
+          <Tooltip content={tr('Restart')}>
+            <Button
+              isIconOnly
+              size="sm"
+              variant="light"
+              isDisabled={restarting}
+              aria-label={tr('Restart')}
+              onPress={async () => {
+                try {
+                  setRestarting(true)
+                  await restartCore()
+                  await new Promise((resolve) => {
+                    setTimeout(resolve, 2000)
+                  })
+                } catch (error) {
+                  notify(error, { variant: 'danger' })
+                } finally {
+                  setRestarting(false)
+                  void mutate()
+                }
+              }}
+            >
+              <IoMdRefresh className={restarting ? 'animate-spin' : undefined} />
+            </Button>
+          </Tooltip>
+        }
+      />
     </div>
   )
 }

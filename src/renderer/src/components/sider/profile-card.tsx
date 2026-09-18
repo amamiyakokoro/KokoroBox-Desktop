@@ -101,7 +101,7 @@ const ProfileCard: React.FC<Props> = ({ iconOnly }) => {
         icon={<TiFolder />}
         title={info.name}
         description={tr('Subscriptions')}
-        status={tr(info.type === 'remote' ? 'Remote' : 'Local')}
+        status={info.type === 'remote' ? tr('Remote') : tr('Local')}
         active={match}
         onPress={() => navigate('/profiles')}
         actions={

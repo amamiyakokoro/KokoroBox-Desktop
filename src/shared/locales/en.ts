@@ -550,6 +550,7 @@ export const messages: Readonly<Record<string, string>> = {
   'Close all connections for this process': 'Close all connections for this process',
   'Close connection': 'Close connection',
   Core: 'Core',
+  Memory: 'Memory',
   'Failed to start core': 'Failed to start core',
   'Core startup failed, code: {0}, signal: {1}': 'Core startup failed, code: {0}, signal: {1}',
   'Core startup failed: {0}': 'Core startup failed: {0}',

@@ -1026,6 +1026,7 @@ test('macOS approval guidance returns promptly and remains visible across app re
   const bridge = readFileSync('native/macos-app-routing/KokoroBoxAppRoutingBridge.mm', 'utf8')
   const coordinator = readFileSync('src/main/app-routing/macos.ts', 'utf8')
   const page = readFileSync('src/renderer/src/pages/app-routing.tsx', 'utf8')
+  const statusMessages = readFileSync('src/renderer/src/utils/app-routing-status.ts', 'utf8')
   const settingsDrawer = readFileSync(
     'src/renderer/src/components/app-routing/app-routing-setting-drawer.tsx',
     'utf8'
@@ -1066,7 +1067,8 @@ test('macOS approval guidance returns promptly and remains visible across app re
   assert.match(settingsDrawer, /\{isMac && \(/)
   assert.match(settingsDrawer, /macOS Network Extension/)
   assert.match(settingsDrawer, /onPress=\{onOpenSystemSettings\}/)
-  assert.match(page, /Network Extension did not acknowledge the update/)
+  assert.match(page, /getAppRoutingStatusMessage/)
+  assert.match(statusMessages, /Network Extension did not acknowledge the update/)
 })
 
 test('macOS health polling does not publish a transient start status', () => {
