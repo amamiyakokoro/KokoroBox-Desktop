@@ -28,7 +28,10 @@ test('settings drafts merge nested objects and replace arrays without mutating t
 })
 
 test('Mihomo settings stage edits and restart the core once from the page', () => {
-  const page = readFileSync('src/renderer/src/pages/mihomo.tsx', 'utf8')
+  const page = readFileSync(
+    'src/renderer/src/components/settings/network/mihomo-settings.tsx',
+    'utf8'
+  )
   const stagedComponents = [
     'src/renderer/src/components/mihomo/port-setting.tsx',
     'src/renderer/src/components/mihomo/controller-setting.tsx',
@@ -51,9 +54,9 @@ test('staged settings protect unsaved changes across navigation and window lifec
   const guardedPages = [
     'src/renderer/src/components/settings/network/system-proxy-settings.tsx',
     'src/renderer/src/components/settings/network/tun-settings.tsx',
-    'src/renderer/src/pages/dns.tsx',
+    'src/renderer/src/components/settings/network/dns-settings.tsx',
     'src/renderer/src/pages/sniffer.tsx',
-    'src/renderer/src/pages/mihomo.tsx'
+    'src/renderer/src/components/settings/network/mihomo-settings.tsx'
   ]
   for (const page of guardedPages) {
     const source = readFileSync(page, 'utf8')
@@ -108,10 +111,18 @@ test('network settings use nested panels and preserve legacy routes', () => {
   assert.match(registry, /content: \(\) => <Sysproxy embedded \/>/)
   assert.match(registry, /key: 'tun'/)
   assert.match(registry, /content: \(\) => <Tun embedded \/>/)
+  assert.match(registry, /key: 'dns'/)
+  assert.match(registry, /content: \(\) => <DNS embedded \/>/)
+  assert.match(registry, /key: 'mihomo'/)
+  assert.match(registry, /content: \(\) => <Mihomo embedded \/>/)
   assert.match(settings, /selected\.panels/)
   assert.match(settings, /selectedPanel\?\.content\(\)/)
   assert.match(routes, /settings\?section=network&panel=system-proxy/)
   assert.match(routes, /settings\?section=network&panel=tun/)
+  assert.match(routes, /settings\?section=network&panel=dns/)
+  assert.match(routes, /settings\?section=network&panel=mihomo/)
   assert.match(sider, /settings\?section=network&panel=system-proxy/)
   assert.match(sider, /settings\?section=network&panel=tun/)
+  assert.match(sider, /settings\?section=network&panel=dns/)
+  assert.match(sider, /settings\?section=network&panel=mihomo/)
 })

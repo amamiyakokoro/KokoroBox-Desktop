@@ -10,9 +10,7 @@ const ProfilesPage = createPreloadablePage(() => import('@renderer/pages/profile
 const KokoroPage = createPreloadablePage(() => import('@renderer/pages/kokoro'))
 const LogsPage = createPreloadablePage(() => import('@renderer/pages/logs'))
 const ConnectionsPage = createPreloadablePage(() => import('@renderer/pages/connections'))
-const MihomoPage = createPreloadablePage(() => import('@renderer/pages/mihomo'))
 const ResourcesPage = createPreloadablePage(() => import('@renderer/pages/resources'))
-const DNSPage = createPreloadablePage(() => import('@renderer/pages/dns'))
 const SnifferPage = createPreloadablePage(() => import('@renderer/pages/sniffer'))
 const AppRoutingPage = createPreloadablePage(() => import('@renderer/pages/app-routing'))
 
@@ -24,9 +22,7 @@ export const Profiles = ProfilesPage.Page
 export const Kokoro = KokoroPage.Page
 export const Logs = LogsPage.Page
 export const Connections = ConnectionsPage.Page
-export const Mihomo = MihomoPage.Page
 export const Resources = ResourcesPage.Page
-export const DNS = DNSPage.Page
 export const Sniffer = SnifferPage.Page
 export const AppRouting = AppRoutingPage.Page
 
@@ -38,8 +34,6 @@ const remainingPageLoaders: Array<() => Promise<unknown>> = [
   KokoroPage.preload,
   ConnectionsPage.preload,
   RulesPage.preload,
-  MihomoPage.preload,
-  DNSPage.preload,
   SnifferPage.preload,
   AppRoutingPage.preload,
   ResourcesPage.preload,

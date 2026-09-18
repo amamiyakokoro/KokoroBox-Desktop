@@ -12,6 +12,8 @@ import React from 'react'
 interface Props {
   iconOnly?: boolean
 }
+const settingsPath = '/settings?section=network&panel=dns'
+
 const DNSCard: React.FC<Props> = (props) => {
   const { appConfig } = useAppConfig()
   const { iconOnly } = props
@@ -22,7 +24,11 @@ const DNSCard: React.FC<Props> = (props) => {
   } = appConfig || {}
   const location = useLocation()
   const navigate = useNavigate()
-  const match = location.pathname.includes('/dns')
+  const match =
+    location.pathname.includes('/dns') ||
+    (location.pathname.includes('/settings') &&
+      location.search.includes('section=network') &&
+      location.search.includes('panel=dns'))
   const { controledMihomoConfig, patchControledMihomoConfig } = useControledMihomoConfig()
   const { dns, tun } = controledMihomoConfig || {}
   const { enable = true } = dns || {}
@@ -52,7 +58,7 @@ const DNSCard: React.FC<Props> = (props) => {
             color={match ? 'primary' : 'default'}
             variant={match ? 'solid' : 'light'}
             onPress={() => {
-              navigate('/dns')
+              navigate(settingsPath)
             }}
           >
             <LuServer className="text-[20px]" />

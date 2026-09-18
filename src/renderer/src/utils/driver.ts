@@ -212,7 +212,7 @@ export async function createDriver(navigate: NavigateFunction): Promise<Driver> 
           side: 'right',
           align: 'center',
           onNextClick: async (): Promise<void> => {
-            navigate('/profiles')
+            navigate('/settings?section=network&panel=dns')
             setTimeout(() => {
               driverInstance?.moveNext()
             }, 0)

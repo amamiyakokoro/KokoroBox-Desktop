@@ -17,6 +17,8 @@ interface Props {
   iconOnly?: boolean
 }
 
+const settingsPath = '/settings?section=network&panel=mihomo'
+
 const MihomoCoreCard: React.FC<Props> = (props) => {
   const { appConfig } = useAppConfig()
   const { iconOnly } = props
@@ -27,7 +29,11 @@ const MihomoCoreCard: React.FC<Props> = (props) => {
   })
   const location = useLocation()
   const navigate = useNavigate()
-  const match = location.pathname.includes('/mihomo')
+  const match =
+    location.pathname.includes('/mihomo') ||
+    (location.pathname.includes('/settings') &&
+      location.search.includes('section=network') &&
+      location.search.includes('panel=mihomo'))
   const {
     attributes,
     listeners,
@@ -72,7 +78,7 @@ const MihomoCoreCard: React.FC<Props> = (props) => {
             color={match ? 'primary' : 'default'}
             variant={match ? 'solid' : 'light'}
             onPress={() => {
-              navigate('/mihomo')
+              navigate(settingsPath)
             }}
           >
             <LuCpu className="text-[20px]" />

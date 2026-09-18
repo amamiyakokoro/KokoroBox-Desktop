@@ -3,10 +3,8 @@ import { Navigate } from 'react-router-dom'
 import { markInitialContentPartReady } from '@renderer/utils/startup'
 import {
   Connections,
-  DNS,
   Kokoro,
   Logs,
-  Mihomo,
   Override,
   Profiles,
   Proxies,
@@ -33,7 +31,7 @@ function startupRoute(element: ReactNode): ReactNode {
 const routes = [
   {
     path: 'mihomo',
-    element: startupRoute(<Mihomo />)
+    element: startupRoute(<Navigate to="/settings?section=network&panel=mihomo" replace />)
   },
   {
     path: 'sysproxy',
@@ -61,7 +59,7 @@ const routes = [
   },
   {
     path: 'dns',
-    element: startupRoute(<DNS />)
+    element: startupRoute(<Navigate to="/settings?section=network&panel=dns" replace />)
   },
   {
     path: 'sniffer',
