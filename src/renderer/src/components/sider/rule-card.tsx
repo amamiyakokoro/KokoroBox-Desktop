@@ -1,5 +1,5 @@
 import { tr } from '../../../../shared/i18n'
-import { Button, Card, CardBody, CardFooter, Chip, Tooltip } from '@heroui/react'
+import { Button, Tooltip } from '@heroui/react'
 import { MdOutlineAltRoute } from 'react-icons/md'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useSortable } from '@dnd-kit/sortable'
@@ -7,6 +7,7 @@ import { CSS } from '@dnd-kit/utilities'
 import { useRules } from '@renderer/hooks/use-rules'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import React from 'react'
+import { SiderNavItem } from './sider-surfaces'
 
 interface Props {
   iconOnly?: boolean
@@ -61,54 +62,20 @@ const RuleCard: React.FC<Props> = (props) => {
       }}
       className={`${ruleCardStatus} rule-card`}
     >
-      <Card
-        fullWidth
+      <div
         ref={setNodeRef}
         {...attributes}
         {...listeners}
-        className={`${match ? 'bg-primary' : 'hover:bg-primary/30'} ${isDragging ? `${disableAnimation ? '' : 'scale-[0.95]'} tap-highlight-transparent` : ''}`}
+        className={isDragging && !disableAnimation ? 'scale-[0.98]' : undefined}
       >
-        <CardBody className="pb-1 pt-0 px-0 overflow-y-visible">
-          <div className="flex justify-between">
-            <Button
-              isIconOnly
-              className="bg-transparent pointer-events-none"
-              variant="flat"
-              color="default"
-            >
-              <MdOutlineAltRoute
-                color="default"
-                className={`${match ? 'text-primary-foreground' : 'text-foreground'} text-[24px]`}
-              />
-            </Button>
-            <Chip
-              classNames={
-                match
-                  ? {
-                      base: 'border-primary-foreground',
-                      content: 'text-primary-foreground'
-                    }
-                  : {
-                      base: 'border-primary',
-                      content: 'text-primary'
-                    }
-              }
-              size="sm"
-              variant="bordered"
-              className="mr-2 mt-2"
-            >
-              {rules?.rules?.length ?? 0}
-            </Chip>
-          </div>
-        </CardBody>
-        <CardFooter className="pt-1">
-          <h3
-            className={`text-md font-bold ${match ? 'text-primary-foreground' : 'text-foreground'}`}
-          >
-            {tr('Rules')}
-          </h3>
-        </CardFooter>
-      </Card>
+        <SiderNavItem
+          icon={<MdOutlineAltRoute />}
+          title={tr('Rules')}
+          description={tr('{0} rules', [rules?.rules?.length ?? 0])}
+          active={match}
+          onPress={() => navigate('/rules')}
+        />
+      </div>
     </div>
   )
 }

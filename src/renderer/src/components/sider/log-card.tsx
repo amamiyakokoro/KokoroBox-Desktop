@@ -1,11 +1,12 @@
 import { tr } from '../../../../shared/i18n'
-import { Button, Card, CardBody, CardFooter, Tooltip } from '@heroui/react'
+import { Button, Tooltip } from '@heroui/react'
 import { IoJournalOutline } from 'react-icons/io5'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import React from 'react'
+import { SiderNavItem } from './sider-surfaces'
 
 interface Props {
   iconOnly?: boolean
@@ -59,36 +60,19 @@ const LogCard: React.FC<Props> = (props) => {
       }}
       className={`${logCardStatus} log-card`}
     >
-      <Card
-        fullWidth
+      <div
         ref={setNodeRef}
         {...attributes}
         {...listeners}
-        className={`${match ? 'bg-primary' : 'hover:bg-primary/30'} ${isDragging ? `${disableAnimation ? '' : 'scale-[0.95]'} tap-highlight-transparent` : ''}`}
+        className={isDragging && !disableAnimation ? 'scale-[0.98]' : undefined}
       >
-        <CardBody className="pb-1 pt-0 px-0 overflow-y-visible">
-          <div className="flex justify-between">
-            <Button
-              isIconOnly
-              className="bg-transparent pointer-events-none"
-              variant="flat"
-              color="default"
-            >
-              <IoJournalOutline
-                color="default"
-                className={`${match ? 'text-primary-foreground' : 'text-foreground'} text-[24px] font-bold`}
-              />
-            </Button>
-          </div>
-        </CardBody>
-        <CardFooter className="pt-1">
-          <h3
-            className={`text-md font-bold ${match ? 'text-primary-foreground' : 'text-foreground'}`}
-          >
-            {tr('Logs')}
-          </h3>
-        </CardFooter>
-      </Card>
+        <SiderNavItem
+          icon={<IoJournalOutline />}
+          title={tr('Logs')}
+          active={match}
+          onPress={() => navigate('/logs')}
+        />
+      </div>
     </div>
   )
 }

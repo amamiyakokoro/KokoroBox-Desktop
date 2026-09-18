@@ -1,5 +1,5 @@
 import { tr } from '../../../../shared/i18n'
-import { Button, Card, CardBody, CardFooter, Tooltip } from '@heroui/react'
+import { Button, Tooltip } from '@heroui/react'
 import BorderSwitch from '@renderer/components/base/border-swtich'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
@@ -10,6 +10,7 @@ import React from 'react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { notify } from '@renderer/utils/notification'
+import { SiderQuickControl } from './sider-surfaces'
 
 interface Props {
   iconOnly?: boolean
@@ -89,41 +90,30 @@ const SysproxySwitcher: React.FC<Props> = (props) => {
       }}
       className={`${sysproxyCardStatus} sysproxy-card`}
     >
-      <Card
-        fullWidth
+      <div
         ref={setNodeRef}
         {...attributes}
         {...listeners}
-        className={`${match ? 'bg-primary' : 'hover:bg-primary/30'} ${isDragging ? `${disableAnimation ? '' : 'scale-[0.95]'} tap-highlight-transparent` : ''}`}
+        className={`${isDragging ? `${disableAnimation ? '' : 'scale-[0.98]'} tap-highlight-transparent` : ''}`}
       >
-        <CardBody className="pb-1 pt-0 px-0 overflow-y-visible">
-          <div className="flex justify-between">
-            <Button
-              isIconOnly
-              className="bg-transparent pointer-events-none"
-              variant="flat"
-              color="default"
-            >
-              <AiOutlineGlobal
-                className={`${match ? 'text-primary-foreground' : 'text-foreground'} text-[24px] font-bold`}
-              />
-            </Button>
+        <SiderQuickControl
+          icon={<AiOutlineGlobal />}
+          title={tr('System proxy')}
+          status={enable ? tr('Enabled') : tr('Disabled')}
+          enabled={Boolean(enable)}
+          disabled={mode === 'manual' && disabled}
+          active={match}
+          onPress={() => navigate(settingsPath)}
+          control={
             <BorderSwitch
-              isShowBorder={match && enable}
+              isShowBorder={false}
               isSelected={!(mode != 'auto' && disabled) && enable}
               isDisabled={mode == 'manual' && disabled}
               onValueChange={onChange}
             />
-          </div>
-        </CardBody>
-        <CardFooter className="pt-1">
-          <h3
-            className={`text-md font-bold ${match ? 'text-primary-foreground' : 'text-foreground'}`}
-          >
-            {tr('System proxy')}
-          </h3>
-        </CardFooter>
-      </Card>
+          }
+        />
+      </div>
     </div>
   )
 }

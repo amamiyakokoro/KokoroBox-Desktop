@@ -1,5 +1,5 @@
 import { tr } from '../../../../shared/i18n'
-import { Button, Card, CardBody, CardFooter, Tooltip } from '@heroui/react'
+import { Button, Tooltip } from '@heroui/react'
 import { calcTraffic } from '@renderer/utils/calc'
 import { mihomoVersion, restartCore } from '@renderer/utils/ipc'
 import React, { useEffect, useState } from 'react'
@@ -12,6 +12,7 @@ import useSWR from 'swr'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { LuCpu } from 'react-icons/lu'
 import { notify } from '@renderer/utils/notification'
+import { SiderNavItem } from './sider-surfaces'
 
 interface Props {
   iconOnly?: boolean
@@ -23,7 +24,11 @@ const MihomoCoreCard: React.FC<Props> = (props) => {
   const { appConfig } = useAppConfig()
   const { iconOnly } = props
   const { mihomoCoreCardStatus = 'col-span-2', disableAnimation = false } = appConfig || {}
-  const { data: version, mutate } = useSWR('mihomoVersion', mihomoVersion, {
+  const {
+    data: version,
+    error: versionError,
+    mutate
+  } = useSWR('mihomoVersion', mihomoVersion, {
     errorRetryInterval: 200,
     errorRetryCount: 10
   })
@@ -98,33 +103,28 @@ const MihomoCoreCard: React.FC<Props> = (props) => {
       }}
       className={`${mihomoCoreCardStatus} mihomo-core-card`}
     >
-      {mihomoCoreCardStatus === 'col-span-2' ? (
-        <Card
-          fullWidth
-          ref={setNodeRef}
-          {...attributes}
-          {...listeners}
-          className={`${match ? 'bg-primary' : 'hover:bg-primary/30'} ${isDragging ? `${disableAnimation ? '' : 'scale-[0.95]'} tap-highlight-transparent` : ''}`}
-        >
-          <CardBody>
-            <div
-              ref={setNodeRef}
-              {...attributes}
-              {...listeners}
-              className="flex justify-between h-8"
-            >
-              <h3
-                className={`text-md font-bold leading-8 ${match ? 'text-primary-foreground' : 'text-foreground'} `}
-              >
-                {version?.version ?? '-'}
-              </h3>
-
+      <div
+        ref={setNodeRef}
+        {...attributes}
+        {...listeners}
+        className={isDragging && !disableAnimation ? 'scale-[0.98]' : undefined}
+      >
+        <SiderNavItem
+          icon={<LuCpu />}
+          title={tr('Core')}
+          description={versionError ? tr('Needs attention') : (version?.version ?? tr('Loading'))}
+          status={version ? calcTraffic(mem) : undefined}
+          statusTone={versionError ? 'danger' : 'default'}
+          active={match}
+          onPress={() => navigate(settingsPath)}
+          trailing={
+            <Tooltip content={tr('Restart')}>
               <Button
                 isIconOnly
                 size="sm"
                 variant="light"
-                disabled={restarting}
-                color="default"
+                isDisabled={restarting}
+                aria-label={tr('Restart')}
                 onPress={async () => {
                   try {
                     setRestarting(true)
@@ -132,61 +132,20 @@ const MihomoCoreCard: React.FC<Props> = (props) => {
                     await new Promise((resolve) => {
                       setTimeout(resolve, 2000)
                     })
-                    setRestarting(false)
                   } catch (e) {
                     notify(e, { variant: 'danger' })
                   } finally {
-                    mutate()
+                    setRestarting(false)
+                    void mutate()
                   }
                 }}
               >
-                <IoMdRefresh
-                  className={`text-[24px] ${match ? 'text-primary-foreground' : 'text-foreground'} ${restarting ? 'animate-spin' : ''}`}
-                />
+                <IoMdRefresh className={restarting ? 'animate-spin' : undefined} />
               </Button>
-            </div>
-          </CardBody>
-          <CardFooter className="pt-1">
-            <div
-              className={`flex justify-between w-full text-md font-bold ${match ? 'text-primary-foreground' : 'text-foreground'}`}
-            >
-              <h4>{tr('Mihomo settings')}</h4>
-              <h4>{calcTraffic(mem)}</h4>
-            </div>
-          </CardFooter>
-        </Card>
-      ) : (
-        <Card
-          fullWidth
-          ref={setNodeRef}
-          {...attributes}
-          {...listeners}
-          className={`${match ? 'bg-primary' : 'hover:bg-primary/30'} ${isDragging ? `${disableAnimation ? '' : 'scale-[0.95]'} tap-highlight-transparent` : ''}`}
-        >
-          <CardBody className="pb-1 pt-0 px-0 overflow-y-visible">
-            <div className="flex justify-between">
-              <Button
-                isIconOnly
-                className="bg-transparent pointer-events-none"
-                variant="flat"
-                color="default"
-              >
-                <LuCpu
-                  color="default"
-                  className={`${match ? 'text-primary-foreground' : 'text-foreground'} text-[24px] font-bold`}
-                />
-              </Button>
-            </div>
-          </CardBody>
-          <CardFooter className="pt-1">
-            <h3
-              className={`text-md font-bold ${match ? 'text-primary-foreground' : 'text-foreground'}`}
-            >
-              {tr('Mihomo settings')}
-            </h3>
-          </CardFooter>
-        </Card>
-      )}
+            </Tooltip>
+          }
+        />
+      </div>
     </div>
   )
 }

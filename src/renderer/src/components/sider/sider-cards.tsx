@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type MouseEvent } from 'react'
+import { tr } from '../../../../shared/i18n'
 import { closestCorners, DndContext, type DragEndEvent } from '@dnd-kit/core'
 import { SortableContext } from '@dnd-kit/sortable'
 import { useNavigate } from 'react-router-dom'
@@ -20,6 +21,7 @@ import SniffCard from './sniff-card'
 import SysproxySwitcher from './sysproxy-switcher'
 import TunSwitcher from './tun-switcher'
 import AppRoutingCard from './app-routing-card'
+import { SiderSection } from './sider-surfaces'
 
 const interactiveSelector = 'button:not(.pointer-events-none), [role="switch"]'
 
@@ -39,6 +41,10 @@ const defaultSiderOrder = [
   'override',
   'log'
 ]
+
+const quickControlKeys = new Set(['sysproxy', 'tun'])
+const currentStatusKeys = new Set(['profile', 'proxy', 'app-routing', 'connection', 'mihomo'])
+const navigationKeys = new Set(['dns', 'sniff', 'kokoro', 'rule', 'resource', 'override', 'log'])
 
 const siderCardRouteMap = {
   'sysproxy-card': '/settings?section=network&panel=system-proxy',
@@ -158,16 +164,18 @@ export default function SiderCards({ iconOnly = false }: Props): React.JSX.Eleme
     if (route) navigate(route)
   }
 
-  const cards = order.map((key: string) => {
-    const Component = componentMap[key]
-    if (!Component) return null
-    return <Component key={key} iconOnly={iconOnly} />
-  })
+  const renderCards = (keys?: Set<string>): React.ReactNode[] =>
+    order.flatMap((key: string) => {
+      if (keys && !keys.has(key)) return []
+      const Component = componentMap[key]
+      if (!Component) return []
+      return [<Component key={key} iconOnly={iconOnly} />]
+    })
 
   if (iconOnly) {
     return (
       <div className="min-h-0 flex-1 overflow-y-auto no-scrollbar">
-        <div className="min-h-full w-full flex flex-col gap-2">{cards}</div>
+        <div className="min-h-full w-full flex flex-col gap-2">{renderCards()}</div>
       </div>
     )
   }
@@ -185,8 +193,16 @@ export default function SiderCards({ iconOnly = false }: Props): React.JSX.Eleme
           void onDragEnd(event).finally(releaseClickSuppression)
         }}
       >
-        <div className="grid grid-cols-2 gap-2 m-2" onClickCapture={onClickCapture}>
-          <SortableContext items={order}>{cards}</SortableContext>
+        <div className="m-2 flex flex-col gap-3" onClickCapture={onClickCapture}>
+          <SortableContext items={order}>
+            <SiderSection title={tr('Quick controls')}>
+              {renderCards(quickControlKeys)}
+            </SiderSection>
+            <SiderSection title={tr('Current status')}>
+              {renderCards(currentStatusKeys)}
+            </SiderSection>
+            <SiderSection title={tr('Navigation')}>{renderCards(navigationKeys)}</SiderSection>
+          </SortableContext>
         </div>
       </DndContext>
     </div>

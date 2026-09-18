@@ -1,5 +1,5 @@
 import { tr } from '../../../../shared/i18n'
-import { Button, Card, CardBody, CardFooter, Chip, Tooltip } from '@heroui/react'
+import { Button, Tooltip } from '@heroui/react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { LuGroup } from 'react-icons/lu'
@@ -7,6 +7,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { useGroups } from '@renderer/hooks/use-groups'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import React from 'react'
+import { SiderNavItem } from './sider-surfaces'
 
 interface Props {
   iconOnly?: boolean
@@ -31,6 +32,7 @@ const ProxyCard: React.FC<Props> = (props) => {
     id: 'proxy'
   })
   const transform = tf ? { x: tf.x, y: tf.y, scaleX: 1, scaleY: 1 } : null
+  const primaryGroup = groups.find((group) => group.name.toUpperCase() === 'GLOBAL') ?? groups[0]
 
   if (iconOnly) {
     return (
@@ -61,53 +63,21 @@ const ProxyCard: React.FC<Props> = (props) => {
       }}
       className={`${proxyCardStatus} proxy-card`}
     >
-      <Card
-        fullWidth
+      <div
         ref={setNodeRef}
         {...attributes}
         {...listeners}
-        className={`${match ? 'bg-primary' : 'hover:bg-primary/30'} ${isDragging ? `${disableAnimation ? '' : 'scale-[0.95]'} tap-highlight-transparent` : ''}`}
+        className={isDragging && !disableAnimation ? 'scale-[0.98]' : undefined}
       >
-        <CardBody className="pb-1 pt-0 px-0 overflow-y-visible">
-          <div className="flex justify-between">
-            <Button
-              isIconOnly
-              className="bg-transparent pointer-events-none"
-              variant="flat"
-              color="default"
-            >
-              <LuGroup
-                className={`${match ? 'text-primary-foreground' : 'text-foreground'} text-[24px] font-bold`}
-              />
-            </Button>
-            <Chip
-              classNames={
-                match
-                  ? {
-                      base: 'border-primary-foreground',
-                      content: 'text-primary-foreground'
-                    }
-                  : {
-                      base: 'border-primary',
-                      content: 'text-primary'
-                    }
-              }
-              size="sm"
-              variant="bordered"
-              className="mr-2 mt-2"
-            >
-              {groups.length}
-            </Chip>
-          </div>
-        </CardBody>
-        <CardFooter className="pt-1">
-          <h3
-            className={`text-md font-bold ${match ? 'text-primary-foreground' : 'text-foreground'}`}
-          >
-            {tr('Proxy groups')}
-          </h3>
-        </CardFooter>
-      </Card>
+        <SiderNavItem
+          icon={<LuGroup />}
+          title={tr('Proxy groups')}
+          description={primaryGroup?.name ?? tr('{0} groups', [groups.length])}
+          status={primaryGroup?.now}
+          active={match}
+          onPress={() => navigate('/proxies')}
+        />
+      </div>
     </div>
   )
 }

@@ -1,14 +1,13 @@
 import { tr } from '../../../../shared/i18n'
-import { Button, Card, CardBody, CardFooter, Tooltip } from '@heroui/react'
-import BorderSwitch from '@renderer/components/base/border-swtich'
+import { Button, Tooltip } from '@heroui/react'
 import { RiScan2Fill } from 'react-icons/ri'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { patchMihomoConfig } from '@renderer/utils/ipc'
 import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import React from 'react'
+import { SiderNavItem } from './sider-surfaces'
 
 interface Props {
   iconOnly?: boolean
@@ -30,7 +29,7 @@ const SniffCard: React.FC<Props> = (props) => {
     (location.pathname.includes('/settings') &&
       location.search.includes('section=network') &&
       location.search.includes('panel=sniffer'))
-  const { controledMihomoConfig, patchControledMihomoConfig } = useControledMihomoConfig()
+  const { controledMihomoConfig } = useControledMihomoConfig()
   const { sniffer } = controledMihomoConfig || {}
   const { enable } = sniffer || {}
   const {
@@ -44,11 +43,6 @@ const SniffCard: React.FC<Props> = (props) => {
     id: 'sniff'
   })
   const transform = tf ? { x: tf.x, y: tf.y, scaleX: 1, scaleY: 1 } : null
-  const onChange = async (enable: boolean): Promise<void> => {
-    await patchControledMihomoConfig({ sniffer: { enable } })
-    await patchMihomoConfig({ sniffer: { enable } })
-  }
-
   if (iconOnly) {
     return (
       <div className={`${sniffCardStatus} ${!controlSniff ? 'hidden' : ''} flex justify-center`}>
@@ -79,41 +73,21 @@ const SniffCard: React.FC<Props> = (props) => {
       }}
       className={`${sniffCardStatus} ${!controlSniff ? 'hidden' : ''} sniff-card`}
     >
-      <Card
-        fullWidth
+      <div
         ref={setNodeRef}
         {...attributes}
         {...listeners}
-        className={`${match ? 'bg-primary' : 'hover:bg-primary/30'} ${isDragging ? `${disableAnimation ? '' : 'scale-[0.95]'} tap-highlight-transparent` : ''}`}
+        className={isDragging && !disableAnimation ? 'scale-[0.98]' : undefined}
       >
-        <CardBody className="pb-1 pt-0 px-0 overflow-y-visible">
-          <div className="flex justify-between">
-            <Button
-              isIconOnly
-              className="bg-transparent pointer-events-none"
-              variant="flat"
-              color="default"
-            >
-              <RiScan2Fill
-                color="default"
-                className={`${match ? 'text-primary-foreground' : 'text-foreground'} text-[24px]`}
-              />
-            </Button>
-            <BorderSwitch
-              isShowBorder={match && enable}
-              isSelected={enable}
-              onValueChange={onChange}
-            />
-          </div>
-        </CardBody>
-        <CardFooter className="pt-1">
-          <h3
-            className={`text-md font-bold ${match ? 'text-primary-foreground' : 'text-foreground'}`}
-          >
-            {tr('Sniffing')}
-          </h3>
-        </CardFooter>
-      </Card>
+        <SiderNavItem
+          icon={<RiScan2Fill />}
+          title={tr('Sniffing')}
+          status={enable ? tr('Enabled') : tr('Disabled')}
+          statusTone={enable ? 'success' : 'default'}
+          active={match}
+          onPress={() => navigate(settingsPath)}
+        />
+      </div>
     </div>
   )
 }

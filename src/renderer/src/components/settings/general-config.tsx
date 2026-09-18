@@ -2,7 +2,7 @@ import { tr } from '../../../../shared/i18n'
 import React, { useState } from 'react'
 import SettingCard from '../base/base-setting-card'
 import SettingItem from '../base/base-setting-item'
-import { Button, Select, SelectItem, Switch, Tab, Tabs, Tooltip } from '@heroui/react'
+import { Button, Select, SelectItem, Switch, Tooltip } from '@heroui/react'
 import useSWR from 'swr'
 import {
   checkAutoRun,
@@ -15,6 +15,7 @@ import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { IoIosHelpCircle } from 'react-icons/io'
 import ConfirmModal from '../base/base-confirm'
 import { notify } from '@renderer/utils/notification'
+import { SettingTabs } from '../base/base-controls'
 
 const GeneralConfig: React.FC = () => {
   const { data: autoRunStatus, mutate: mutateAutoRunStatus } = useSWR('checkAutoRun', checkAutoRun)
@@ -60,17 +61,17 @@ const GeneralConfig: React.FC = () => {
           </div>
         </SettingItem>
         <SettingItem compatKey="legacy" title={tr('Notification style')}>
-          <Tabs
-            size="sm"
-            color="primary"
+          <SettingTabs
+            ariaLabel={tr('Notification style')}
             selectedKey={notificationMode}
-            onSelectionChange={(v) => {
-              patchAppConfig({ notificationMode: v as AppNotificationMode })
+            options={[
+              { id: 'system', label: tr('System') },
+              { id: 'toast', label: tr('In-app') }
+            ]}
+            onChange={(key) => {
+              patchAppConfig({ notificationMode: key as AppNotificationMode })
             }}
-          >
-            <Tab key="system" title={tr('System')} />
-            <Tab key="toast" title={tr('In-app')} />
-          </Tabs>
+          />
         </SettingItem>
       </SettingCard>
 
@@ -133,17 +134,17 @@ const GeneralConfig: React.FC = () => {
           />
         </SettingItem>
         <SettingItem compatKey="legacy" title={tr('Update channel')}>
-          <Tabs
-            size="sm"
-            color="primary"
+          <SettingTabs
+            ariaLabel={tr('Update channel')}
             selectedKey={updateChannel}
-            onSelectionChange={async (v) => {
-              patchAppConfig({ updateChannel: v as AppUpdateChannel })
+            options={[
+              { id: 'stable', label: tr('Stable') },
+              { id: 'rolling', label: tr('Rolling') }
+            ]}
+            onChange={(key) => {
+              patchAppConfig({ updateChannel: key as AppUpdateChannel })
             }}
-          >
-            <Tab key="stable" title={tr('Stable')} />
-            <Tab key="rolling" title={tr('Rolling')} />
-          </Tabs>
+          />
         </SettingItem>
       </SettingCard>
     </>

@@ -1,11 +1,12 @@
 import { tr } from '../../../../shared/i18n'
-import { Button, Card, CardBody, CardFooter, Tooltip } from '@heroui/react'
+import { Button, Tooltip } from '@heroui/react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import React from 'react'
 import { MdManageAccounts } from 'react-icons/md'
 import { useLocation, useNavigate } from 'react-router-dom'
+import { SiderNavItem } from './sider-surfaces'
 
 interface Props {
   iconOnly?: boolean
@@ -32,7 +33,7 @@ const KokoroSettingCard: React.FC<Props> = ({ iconOnly = false }) => {
   if (iconOnly) {
     return (
       <div className={`${kokoroCardStatus} kokoro-setting-card flex justify-center`}>
-        <Tooltip content={tr('Kokoro settings')} placement="right">
+        <Tooltip content={tr('Kokoro account and subscription')} placement="right">
           <Button
             size="sm"
             isIconOnly
@@ -57,35 +58,20 @@ const KokoroSettingCard: React.FC<Props> = ({ iconOnly = false }) => {
       }}
       className={`${kokoroCardStatus} kokoro-setting-card`}
     >
-      <Card
-        fullWidth
+      <div
         ref={setNodeRef}
         {...attributes}
         {...listeners}
-        className={`${match ? 'bg-primary' : 'hover:bg-primary/30'} ${isDragging ? `${disableAnimation ? '' : 'scale-[0.95]'} tap-highlight-transparent` : ''}`}
+        className={isDragging && !disableAnimation ? 'scale-[0.98]' : undefined}
       >
-        <CardBody className="pb-1 pt-0 px-0 overflow-y-visible">
-          <div className="flex justify-between">
-            <Button
-              isIconOnly
-              className="bg-transparent pointer-events-none"
-              variant="flat"
-              color="default"
-            >
-              <MdManageAccounts
-                className={`${match ? 'text-primary-foreground' : 'text-foreground'} text-[24px]`}
-              />
-            </Button>
-          </div>
-        </CardBody>
-        <CardFooter className="pt-1">
-          <h3
-            className={`text-md font-bold ${match ? 'text-primary-foreground' : 'text-foreground'}`}
-          >
-            {tr('Kokoro settings')}
-          </h3>
-        </CardFooter>
-      </Card>
+        <SiderNavItem
+          icon={<MdManageAccounts />}
+          title={tr('Kokoro account and subscription')}
+          description={tr('Account, plan and profile import')}
+          active={match}
+          onPress={() => navigate('/kokoro')}
+        />
+      </div>
     </div>
   )
 }

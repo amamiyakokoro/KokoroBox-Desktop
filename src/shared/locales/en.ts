@@ -143,6 +143,11 @@ export const messages: Readonly<Record<string, string>> = {
     'Create an empty rule group or scan a folder to add its applications automatically.',
   'No applications in this rule group': 'No applications in this rule group',
   '{0} applications': '{0} applications',
+  '{0} rules': '{0} rules',
+  '{0} groups': '{0} groups',
+  'Quick controls': 'Quick controls',
+  'Current status': 'Current status',
+  Navigation: 'Navigation',
   'Application routing supports at most 64 groups':
     'Application routing supports at most 64 groups',
   'The selected folder contains no .exe files to add':
@@ -317,6 +322,8 @@ export const messages: Readonly<Record<string, string>> = {
   'Kokoro subscription': 'Kokoro subscription',
   'Kokoro subscription added': 'Kokoro subscription added',
   'Kokoro settings': 'Kokoro settings',
+  'Kokoro account and subscription': 'Kokoro account and subscription',
+  'Account, plan and profile import': 'Account, plan and profile import',
   'Kokoro request failed': 'Kokoro request failed',
   'Kokoro authorization failed. Please sign in again':
     'Kokoro authorization failed. Please sign in again',

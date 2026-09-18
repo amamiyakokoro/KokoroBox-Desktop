@@ -1,13 +1,13 @@
-import { Button, Card, CardBody, CardFooter, Tooltip } from '@heroui/react'
+import { Button, Tooltip } from '@heroui/react'
 import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'
-import BorderSwitch from '@renderer/components/base/border-swtich'
 import { LuServer } from 'react-icons/lu'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { patchMihomoConfig } from '@renderer/utils/ipc'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import React from 'react'
+import { tr } from '../../../../shared/i18n'
+import { SiderNavItem } from './sider-surfaces'
 
 interface Props {
   iconOnly?: boolean
@@ -29,8 +29,8 @@ const DNSCard: React.FC<Props> = (props) => {
     (location.pathname.includes('/settings') &&
       location.search.includes('section=network') &&
       location.search.includes('panel=dns'))
-  const { controledMihomoConfig, patchControledMihomoConfig } = useControledMihomoConfig()
-  const { dns, tun } = controledMihomoConfig || {}
+  const { controledMihomoConfig } = useControledMihomoConfig()
+  const { dns } = controledMihomoConfig || {}
   const { enable = true } = dns || {}
   const {
     attributes,
@@ -43,11 +43,6 @@ const DNSCard: React.FC<Props> = (props) => {
     id: 'dns'
   })
   const transform = tf ? { x: tf.x, y: tf.y, scaleX: 1, scaleY: 1 } : null
-  const onChange = async (enable: boolean): Promise<void> => {
-    await patchControledMihomoConfig({ dns: { enable } })
-    await patchMihomoConfig({ dns: { enable } })
-  }
-
   if (iconOnly) {
     return (
       <div className={`${dnsCardStatus} ${!controlDns ? 'hidden' : ''} flex justify-center`}>
@@ -78,41 +73,21 @@ const DNSCard: React.FC<Props> = (props) => {
       }}
       className={`${dnsCardStatus} ${!controlDns ? 'hidden' : ''} dns-card`}
     >
-      <Card
-        fullWidth
+      <div
         ref={setNodeRef}
         {...attributes}
         {...listeners}
-        className={`${match ? 'bg-primary' : 'hover:bg-primary/30'} ${isDragging ? `${disableAnimation ? '' : 'scale-[0.95]'} tap-highlight-transparent` : ''}`}
+        className={isDragging && !disableAnimation ? 'scale-[0.98]' : undefined}
       >
-        <CardBody className="pb-1 pt-0 px-0 overflow-y-visible">
-          <div className="flex justify-between">
-            <Button
-              isIconOnly
-              className="bg-transparent pointer-events-none"
-              variant="flat"
-              color="default"
-            >
-              <LuServer
-                className={`${match ? 'text-primary-foreground' : 'text-foreground'} text-[24px] font-bold`}
-              />
-            </Button>
-            <BorderSwitch
-              isShowBorder={match && enable}
-              isSelected={enable}
-              isDisabled={tun?.enable}
-              onValueChange={onChange}
-            />
-          </div>
-        </CardBody>
-        <CardFooter className="pt-1">
-          <h3
-            className={`text-md font-bold ${match ? 'text-primary-foreground' : 'text-foreground'}`}
-          >
-            DNS
-          </h3>
-        </CardFooter>
-      </Card>
+        <SiderNavItem
+          icon={<LuServer />}
+          title="DNS"
+          status={enable ? tr('Enabled') : tr('Disabled')}
+          statusTone={enable ? 'success' : 'default'}
+          active={match}
+          onPress={() => navigate(settingsPath)}
+        />
+      </div>
     </div>
   )
 }

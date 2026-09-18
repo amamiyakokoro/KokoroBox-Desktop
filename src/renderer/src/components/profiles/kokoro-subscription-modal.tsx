@@ -165,7 +165,7 @@ const KokoroSettingsPage: React.FC = () => {
   }
 
   return (
-    <BasePage title={tr('Kokoro settings')} contentClassName="no-scrollbar">
+    <BasePage title={tr('Kokoro account and subscription')} contentClassName="no-scrollbar">
       <div className="kokoro-settings-guide mx-auto flex min-h-full w-full max-w-[1120px] flex-col px-4 py-5">
         {!session?.authenticated && (
           <header className="mb-5 border-b border-default-100 pb-4">

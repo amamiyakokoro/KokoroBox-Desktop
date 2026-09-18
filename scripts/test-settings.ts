@@ -145,6 +145,45 @@ test('network settings use nested panels and preserve legacy routes', () => {
   assert.match(sider, /settings\?section=network&panel=sniffer/)
 })
 
+test('desktop sidebar separates controls, live status and navigation', () => {
+  const sider = readFileSync('src/renderer/src/components/sider/sider-cards.tsx', 'utf8')
+  const surfaces = readFileSync('src/renderer/src/components/sider/sider-surfaces.tsx', 'utf8')
+  const systemProxy = readFileSync(
+    'src/renderer/src/components/sider/sysproxy-switcher.tsx',
+    'utf8'
+  )
+  const tun = readFileSync('src/renderer/src/components/sider/tun-switcher.tsx', 'utf8')
+  const appRouting = readFileSync('src/renderer/src/components/sider/app-routing-card.tsx', 'utf8')
+  const dns = readFileSync('src/renderer/src/components/sider/dns-card.tsx', 'utf8')
+  const sniff = readFileSync('src/renderer/src/components/sider/sniff-card.tsx', 'utf8')
+
+  assert.match(sider, /SiderSection title=\{tr\('Quick controls'\)\}/)
+  assert.match(sider, /SiderSection title=\{tr\('Current status'\)\}/)
+  assert.match(sider, /SiderSection title=\{tr\('Navigation'\)\}/)
+  assert.match(surfaces, /export const SiderQuickControl/)
+  assert.match(surfaces, /export const SiderNavItem/)
+  assert.match(surfaces, /aria-current=\{active \? 'page' : undefined\}/)
+  assert.match(systemProxy, /<SiderQuickControl/)
+  assert.match(tun, /<SiderQuickControl/)
+  assert.match(appRouting, /getAppRoutingStatus/)
+  assert.match(appRouting, /isAppRoutingRuleEffectivelyEnabled/)
+  assert.match(appRouting, /statusTone=\{statusTone\}/)
+  assert.match(dns, /<SiderNavItem/)
+  assert.doesNotMatch(dns, /patchMihomoConfig/)
+  assert.match(sniff, /<SiderNavItem/)
+  assert.doesNotMatch(sniff, /patchMihomoConfig/)
+})
+
+test('common settings choices use the shared segmented control', () => {
+  const general = readFileSync('src/renderer/src/components/settings/general-config.tsx', 'utf8')
+  const controls = readFileSync('src/renderer/src/components/base/base-controls.tsx', 'utf8')
+
+  assert.match(controls, /export const SettingTabs/)
+  assert.match(general, /ariaLabel=\{tr\('Notification style'\)\}/)
+  assert.match(general, /ariaLabel=\{tr\('Update channel'\)\}/)
+  assert.doesNotMatch(general, /<Tabs/)
+})
+
 test('core settings separate runtime, service and environment concerns', () => {
   const registry = readFileSync(
     'src/renderer/src/components/settings/settings-registry.tsx',

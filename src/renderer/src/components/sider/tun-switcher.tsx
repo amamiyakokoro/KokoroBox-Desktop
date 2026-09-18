@@ -1,5 +1,5 @@
 import { tr } from '../../../../shared/i18n'
-import { Button, Card, CardBody, CardFooter, Tooltip } from '@heroui/react'
+import { Button, Tooltip } from '@heroui/react'
 import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'
 import BorderSwitch from '@renderer/components/base/border-swtich'
 import { TbDeviceIpadHorizontalBolt } from 'react-icons/tb'
@@ -9,6 +9,7 @@ import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import React from 'react'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
+import { SiderQuickControl } from './sider-surfaces'
 
 interface Props {
   iconOnly?: boolean
@@ -80,40 +81,24 @@ const TunSwitcher: React.FC<Props> = (props) => {
       }}
       className={`${tunCardStatus} tun-card`}
     >
-      <Card
-        fullWidth
+      <div
         ref={setNodeRef}
         {...attributes}
         {...listeners}
-        className={`${match ? 'bg-primary' : 'hover:bg-primary/30'} ${isDragging ? `${disableAnimation ? '' : 'scale-[0.95]'} tap-highlight-transparent` : ''}`}
+        className={`${isDragging ? `${disableAnimation ? '' : 'scale-[0.98]'} tap-highlight-transparent` : ''}`}
       >
-        <CardBody className="pb-1 pt-0 px-0 overflow-y-visible">
-          <div className="flex justify-between">
-            <Button
-              isIconOnly
-              className="bg-transparent pointer-events-none"
-              variant="flat"
-              color="default"
-            >
-              <TbDeviceIpadHorizontalBolt
-                className={`${match ? 'text-primary-foreground' : 'text-foreground'} text-[24px] font-bold`}
-              />
-            </Button>
-            <BorderSwitch
-              isShowBorder={match && enable}
-              isSelected={enable}
-              onValueChange={onChange}
-            />
-          </div>
-        </CardBody>
-        <CardFooter className="pt-1">
-          <h3
-            className={`text-md font-bold ${match ? 'text-primary-foreground' : 'text-foreground'}`}
-          >
-            {tr('TUN mode')}
-          </h3>
-        </CardFooter>
-      </Card>
+        <SiderQuickControl
+          icon={<TbDeviceIpadHorizontalBolt />}
+          title={tr('TUN mode')}
+          status={enable ? tr('Enabled') : tr('Disabled')}
+          enabled={Boolean(enable)}
+          active={match}
+          onPress={() => navigate(settingsPath)}
+          control={
+            <BorderSwitch isShowBorder={false} isSelected={enable} onValueChange={onChange} />
+          }
+        />
+      </div>
     </div>
   )
 }

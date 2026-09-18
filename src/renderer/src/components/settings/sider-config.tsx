@@ -10,7 +10,7 @@ const titleMap = {
   tunCardStatus: tr('TUN mode'),
   appRoutingCardStatus: tr('Application routing'),
   profileCardStatus: tr('Subscriptions'),
-  kokoroCardStatus: tr('Kokoro settings'),
+  kokoroCardStatus: tr('Kokoro account and subscription'),
   proxyCardStatus: tr('Proxy groups'),
   ruleCardStatus: tr('Rules'),
   resourceCardStatus: tr('External resources'),
