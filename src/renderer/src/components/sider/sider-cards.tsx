@@ -22,36 +22,15 @@ import SysproxySwitcher from './sysproxy-switcher'
 import TunSwitcher from './tun-switcher'
 import AppRoutingCard from './app-routing-card'
 import { SiderSection } from './sider-surfaces'
+import {
+  currentStatusKeys,
+  groupForSiderKey,
+  navigationKeys,
+  normalizeSiderOrder,
+  quickControlKeys
+} from './sider-order'
 
 const interactiveSelector = 'button:not(.pointer-events-none), [role="switch"]'
-
-const defaultSiderOrder = [
-  'sysproxy',
-  'tun',
-  'app-routing',
-  'dns',
-  'sniff',
-  'kokoro',
-  'proxy',
-  'connection',
-  'profile',
-  'mihomo',
-  'rule',
-  'resource',
-  'override',
-  'log'
-]
-
-const quickControlKeys = new Set(['sysproxy', 'tun'])
-const currentStatusKeys = new Set(['profile', 'proxy', 'app-routing', 'connection', 'mihomo'])
-const navigationKeys = new Set(['dns', 'sniff', 'kokoro', 'rule', 'resource', 'override', 'log'])
-
-const groupForKey = (key: string): 'quick' | 'status' | 'navigation' | undefined => {
-  if (quickControlKeys.has(key)) return 'quick'
-  if (currentStatusKeys.has(key)) return 'status'
-  if (navigationKeys.has(key)) return 'navigation'
-  return undefined
-}
 
 const siderCardRouteMap = {
   'sysproxy-card': '/settings?section=network&panel=system-proxy',
@@ -97,7 +76,7 @@ interface Props {
 
 export default function SiderCards({ iconOnly = false }: Props): React.JSX.Element {
   const { appConfig, patchAppConfig } = useAppConfig()
-  const configuredOrder = appConfig?.siderOrder ?? defaultSiderOrder
+  const configuredOrder = normalizeSiderOrder(appConfig?.siderOrder)
   const supportsAppRouting = appRoutingSupported(window.api.platform, window.api.arch)
   const siderOrder = useMemo(
     () =>
@@ -142,7 +121,7 @@ export default function SiderCards({ iconOnly = false }: Props): React.JSX.Eleme
   const onDragEnd = async (event: DragEndEvent): Promise<void> => {
     const { active, over } = event
     if (over && active.id !== over.id) {
-      if (groupForKey(String(active.id)) !== groupForKey(String(over.id))) return
+      if (groupForSiderKey(String(active.id)) !== groupForSiderKey(String(over.id))) return
       const newOrder = order.slice()
       const activeIndex = newOrder.indexOf(active.id as string)
       const overIndex = newOrder.indexOf(over.id as string)

@@ -30,7 +30,6 @@ const TunSwitcher: React.FC<Props> = (props) => {
   const { tun } = controledMihomoConfig || {}
   const { enable } = tun || {}
   const {
-    attributes,
     listeners,
     setNodeRef,
     transform: tf,
@@ -83,7 +82,6 @@ const TunSwitcher: React.FC<Props> = (props) => {
     >
       <div
         ref={setNodeRef}
-        {...attributes}
         {...listeners}
         className={`${isDragging ? `${disableAnimation ? '' : 'scale-[0.98]'} tap-highlight-transparent` : ''}`}
       >
@@ -95,7 +93,12 @@ const TunSwitcher: React.FC<Props> = (props) => {
           active={match}
           onPress={() => navigate(settingsPath)}
           control={
-            <BorderSwitch isShowBorder={false} isSelected={enable} onValueChange={onChange} />
+            <BorderSwitch
+              isShowBorder={false}
+              aria-label={tr('TUN mode')}
+              isSelected={enable}
+              onValueChange={onChange}
+            />
           }
         />
       </div>

@@ -36,7 +36,6 @@ const SysproxySwitcher: React.FC<Props> = (props) => {
   const { controledMihomoConfig } = useControledMihomoConfig()
   const { 'mixed-port': mixedPort } = controledMihomoConfig || {}
   const {
-    attributes,
     listeners,
     setNodeRef,
     transform: tf,
@@ -92,7 +91,6 @@ const SysproxySwitcher: React.FC<Props> = (props) => {
     >
       <div
         ref={setNodeRef}
-        {...attributes}
         {...listeners}
         className={`${isDragging ? `${disableAnimation ? '' : 'scale-[0.98]'} tap-highlight-transparent` : ''}`}
       >
@@ -107,6 +105,7 @@ const SysproxySwitcher: React.FC<Props> = (props) => {
           control={
             <BorderSwitch
               isShowBorder={false}
+              aria-label={tr('System proxy')}
               isSelected={!(mode != 'auto' && disabled) && enable}
               isDisabled={mode == 'manual' && disabled}
               onValueChange={onChange}

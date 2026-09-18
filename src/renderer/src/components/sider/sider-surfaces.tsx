@@ -18,6 +18,8 @@ interface SiderNavItemProps {
 interface SiderStatusCardProps extends SiderNavItemProps {
   actions?: React.ReactNode
   details?: React.ReactNode
+  metadataSeparator?: React.ReactNode
+  showChevron?: boolean
 }
 
 const statusToneClasses: Record<SiderStatusTone, string> = {
@@ -102,6 +104,8 @@ export const SiderStatusCard: React.FC<SiderStatusCardProps> = ({
   active = false,
   actions,
   details,
+  metadataSeparator = '·',
+  showChevron,
   onPress
 }) => (
   <div
@@ -130,14 +134,18 @@ export const SiderStatusCard: React.FC<SiderStatusCardProps> = ({
           {(description || status) && (
             <span className="mt-0.5 flex min-w-0 items-center gap-1 text-xs">
               {description && <span className="truncate text-foreground-500">{description}</span>}
-              {description && status && <span className="text-foreground-300">·</span>}
+              {description && status && (
+                <span className="text-foreground-300">{metadataSeparator}</span>
+              )}
               {status && (
                 <span className={cn('shrink-0', statusToneClasses[statusTone])}>{status}</span>
               )}
             </span>
           )}
         </span>
-        <LuChevronRight className="shrink-0 text-sm text-foreground-300 transition-transform group-hover:translate-x-0.5 group-hover:text-foreground-500" />
+        {(showChevron ?? !actions) && (
+          <LuChevronRight className="shrink-0 text-sm text-foreground-300 transition-transform group-hover:translate-x-0.5 group-hover:text-foreground-500" />
+        )}
       </button>
       {actions && (
         <div
@@ -185,25 +193,32 @@ export const SiderQuickControl: React.FC<SiderQuickControlProps> = ({
         type="button"
         aria-label={title}
         className={cn(
-          'flex size-8 items-center justify-center rounded-lg text-xl text-foreground-600 hover:bg-default-100',
+          'flex min-w-0 flex-1 flex-col items-start rounded-lg text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary',
           active && 'text-primary'
         )}
         onClick={onPress}
       >
-        {icon}
+        <span
+          className={cn(
+            'flex size-8 items-center justify-center text-xl text-foreground-600',
+            active && 'text-primary'
+          )}
+        >
+          {icon}
+        </span>
+        <span className="mt-1 block w-full truncate text-sm font-semibold text-foreground">
+          {title}
+        </span>
+        <span
+          className={cn(
+            'mt-0.5 block text-xs',
+            enabled ? 'text-success-600 dark:text-success-400' : 'text-foreground-500'
+          )}
+        >
+          {status}
+        </span>
       </button>
       <div onPointerDown={(event) => event.stopPropagation()}>{control}</div>
     </div>
-    <button type="button" className="mt-1 block w-full text-left" onClick={onPress}>
-      <span className="block truncate text-sm font-semibold text-foreground">{title}</span>
-      <span
-        className={cn(
-          'mt-0.5 block text-xs',
-          enabled ? 'text-success-600 dark:text-success-400' : 'text-foreground-500'
-        )}
-      >
-        {status}
-      </span>
-    </button>
   </div>
 )

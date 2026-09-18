@@ -531,6 +531,12 @@ input[type='number'] {
   padding-inline: calc(var(--spacing) * 3);
 }
 
+.settings-container {
+  min-width: 0;
+  container-name: settings;
+  container-type: inline-size;
+}
+
 .settings-layout {
   grid-template-columns: 12rem minmax(0, 1fr);
 }
@@ -599,7 +605,7 @@ input[type='number'] {
 
 /* Compact desktop windows move the labeled settings navigation above the
  * content instead of introducing a second icon-only rail beside the app nav. */
-@media (max-width: 1050px) {
+@container settings (max-width: 50rem) {
   .settings-layout {
     display: block;
   }

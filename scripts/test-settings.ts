@@ -2,6 +2,10 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
 import { mergeSettingsPatch } from '../src/renderer/src/utils/merge-settings-patch.ts'
+import {
+  groupForSiderKey,
+  normalizeSiderOrder
+} from '../src/renderer/src/components/sider/sider-order.ts'
 
 test('settings drafts merge nested objects and replace arrays without mutating the source', () => {
   const original = {
@@ -97,8 +101,14 @@ test('application settings keep navigation discoverable in compact desktop windo
   assert.match(settings, /settings-content-header sticky top-0/)
   assert.match(settings, /scrollTo\(\{ top: 0 \}\)/)
   assert.match(settings, /settings-navigation-list no-scrollbar/)
+  assert.match(settings, /settings-container min-h-full/)
   assert.match(settings, /max-w-\[960px\]/)
-  assert.match(styles, /@media \(max-width: 1050px\)/)
+  assert.match(settings, /entry\.fallbackLabel/)
+  assert.match(settings, /panelLabel/)
+  assert.match(settings, /item\.panels\?\.find\(\(panel\) => panel\.key === entry\.panel\)/)
+  assert.match(styles, /\.settings-container \{[\s\S]*container-type: inline-size/)
+  assert.match(styles, /@container settings \(max-width: 50rem\)/)
+  assert.doesNotMatch(styles, /@media \(max-width: 1050px\)/)
   assert.match(styles, /\.settings-navigation-list \{[\s\S]*flex-direction: row/)
   assert.doesNotMatch(styles, /\.settings-category-label \{[\s\S]*display: none/)
   assert.match(settingCard, /settings-section__heading/)
@@ -165,26 +175,37 @@ test('desktop sidebar separates controls, live status and navigation', () => {
   const sniff = readFileSync('src/renderer/src/components/sider/sniff-card.tsx', 'utf8')
   const profile = readFileSync('src/renderer/src/components/sider/profile-card.tsx', 'utf8')
   const connections = readFileSync('src/renderer/src/components/sider/conn-card.tsx', 'utf8')
+  const quickControl = surfaces.slice(surfaces.indexOf('export const SiderQuickControl'))
 
   assert.match(sider, /SiderSection title=\{tr\('Quick controls'\)\} columns=\{2\}/)
   assert.match(sider, /SiderSection title=\{tr\('Current status'\)\}/)
   assert.match(sider, /SiderSection title=\{tr\('Navigation'\)\}/)
-  assert.match(sider, /groupForKey\(String\(active\.id\)\)/)
+  assert.match(sider, /groupForSiderKey\(String\(active\.id\)\)/)
   assert.match(sider, /orderedKeys\(quickControlKeys\)/)
   assert.match(sider, /orderedKeys\(currentStatusKeys\)/)
   assert.match(sider, /orderedKeys\(navigationKeys\)/)
   assert.match(surfaces, /export const SiderQuickControl/)
   assert.match(surfaces, /export const SiderNavItem/)
   assert.match(surfaces, /export const SiderStatusCard/)
+  assert.match(surfaces, /metadataSeparator = '·'/)
+  assert.match(surfaces, /showChevron \?\? !actions/)
   assert.match(surfaces, /columns === 2 \? 'grid grid-cols-2 gap-1\.5' : 'flex flex-col gap-1\.5'/)
   assert.match(surfaces, /aria-current=\{active \? 'page' : undefined\}/)
+  assert.equal(quickControl.match(/<button/g)?.length, 1)
+  assert.match(quickControl, /aria-label=\{title\}/)
   assert.match(sidebarSettings, /title: tr\('Quick controls'\)/)
   assert.match(sidebarSettings, /title: tr\('Current status'\)/)
   assert.match(sidebarSettings, /title: tr\('Navigation'\)/)
+  assert.match(sidebarSettings, /moveSiderItem/)
+  assert.match(sidebarSettings, /aria-label=\{`\$\{tr\('Move up'\)\}: \$\{item\.title\}`\}/)
+  assert.match(sidebarSettings, /aria-label=\{`\$\{tr\('Move down'\)\}: \$\{item\.title\}`\}/)
+  assert.match(sidebarSettings, /patchAppConfig\(\{ siderOrder: nextOrder \}\)/)
   assert.match(sidebarSettings, /isSelected=\{status !== 'hidden'\}/)
   assert.doesNotMatch(sidebarSettings, /<Radio/)
   assert.match(systemProxy, /<SiderQuickControl/)
+  assert.doesNotMatch(systemProxy, /\.\.\.attributes/)
   assert.match(tun, /<SiderQuickControl/)
+  assert.doesNotMatch(tun, /\.\.\.attributes/)
   assert.match(appRouting, /getAppRoutingStatus/)
   assert.match(appRouting, /getAppRoutingStatusMessage/)
   assert.match(appRouting, /isAppRoutingRuleEffectivelyEnabled/)
@@ -195,6 +216,7 @@ test('desktop sidebar separates controls, live status and navigation', () => {
   assert.match(appRoutingStatus, /export function getAppRoutingStatusMessage/)
   assert.match(proxy, /<SiderStatusCard/)
   assert.match(proxy, /status=\{primaryGroup\?\.now/)
+  assert.match(proxy, /metadataSeparator="→"/)
   assert.match(core, /<SiderStatusCard/)
   assert.match(core, /status=\{version \? `\$\{tr\('Memory'\)\}/)
   assert.match(core, /aria-label=\{tr\('Restart'\)\}/)
@@ -208,6 +230,15 @@ test('desktop sidebar separates controls, live status and navigation', () => {
   assert.match(connections, /<SiderStatusCard/)
   assert.match(connections, /<TrafficChart/)
   assert.doesNotMatch(connections, /<Card/)
+
+  assert.equal(groupForSiderKey('sysproxy'), 'quick')
+  assert.equal(groupForSiderKey('profile'), 'status')
+  assert.equal(groupForSiderKey('dns'), 'navigation')
+  assert.notEqual(groupForSiderKey('sysproxy'), groupForSiderKey('profile'))
+  assert.deepEqual(normalizeSiderOrder(['tun', 'sysproxy', 'tun', 'unknown']).slice(0, 2), [
+    'tun',
+    'sysproxy'
+  ])
 })
 
 test('common settings choices use the shared segmented control', () => {

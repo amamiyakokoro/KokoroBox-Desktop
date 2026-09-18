@@ -69,6 +69,7 @@ const ProxyCard: React.FC<Props> = ({ iconOnly }) => {
         title={tr('Proxy')}
         description={primaryGroup?.name ?? tr('Proxy groups')}
         status={primaryGroup?.now ?? tr('{0} groups', [groups.length])}
+        metadataSeparator="→"
         active={match}
         onPress={() => navigate('/proxies')}
       />

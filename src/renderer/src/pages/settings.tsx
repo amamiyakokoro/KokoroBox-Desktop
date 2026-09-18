@@ -39,12 +39,24 @@ const Settings: React.FC = () => {
         ? categories.flatMap((item) =>
             item.entries
               .filter((entry) => {
-                const searchableText = [entry.label, ...(entry.keywords ?? []), item.label]
+                const panelLabel = item.panels?.find((panel) => panel.key === entry.panel)?.label
+                const searchableText = [
+                  entry.label,
+                  entry.fallbackLabel,
+                  panelLabel,
+                  ...(entry.keywords ?? []),
+                  item.label
+                ]
+                  .filter((value): value is string => Boolean(value))
                   .join(' ')
                   .toLocaleLowerCase()
                 return searchableText.includes(normalizedSearch)
               })
-              .map((entry) => ({ category: item, entry }))
+              .map((entry) => ({
+                category: item,
+                entry,
+                panelLabel: item.panels?.find((panel) => panel.key === entry.panel)?.label
+              }))
           )
         : [],
     [categories, normalizedSearch]
@@ -159,119 +171,122 @@ const Settings: React.FC = () => {
         </Button>
       }
     >
-      <div ref={layoutRef} className="settings-layout grid min-h-full">
-        <nav
-          aria-label={tr('Settings categories')}
-          className="settings-navigation sticky top-0 z-10 flex h-[calc(100vh-49px)] flex-col border-r border-divider bg-background/95 p-3 backdrop-blur"
-        >
-          <div className="settings-navigation-list no-scrollbar flex flex-col gap-1 overflow-y-auto">
-            {categories.map((item) => {
-              const Icon = item.icon
-              const active = category === item.key && !normalizedSearch
-              return (
-                <Button
-                  key={item.key}
-                  size="sm"
-                  variant={active ? 'flat' : 'light'}
-                  color={active ? 'primary' : 'default'}
-                  className="settings-category-button app-nodrag w-full shrink-0 justify-start px-3"
-                  aria-label={item.label}
-                  aria-current={active ? 'page' : undefined}
-                  startContent={<Icon className="text-base" />}
-                  onPress={() => {
-                    setSearch('')
-                    selectCategory(item.key)
-                  }}
-                >
-                  <span className="settings-category-label">{item.label}</span>
-                </Button>
-              )
-            })}
-          </div>
-        </nav>
-        <main className="min-w-0 px-4 pb-4">
-          <div className="mx-auto w-full max-w-[960px]">
-            <header className="settings-content-header sticky top-0 z-10 border-b border-divider bg-background/95 backdrop-blur-sm">
-              <div className="flex items-center gap-4 px-3 py-2">
-                <h1 className="min-w-0 flex-1 text-xl font-semibold tracking-tight">
-                  {normalizedSearch
-                    ? tr('Search settings')
-                    : (selectedPanel?.label ?? selected.label)}
-                </h1>
-                <Input
-                  size="sm"
-                  isClearable
-                  value={search}
-                  aria-label={tr('Search settings')}
-                  placeholder={tr('Search settings')}
-                  startContent={<LuSearch className="shrink-0 text-foreground-400" />}
-                  className="settings-content-search w-60 shrink-0"
-                  onValueChange={setSearch}
-                  onClear={() => setSearch('')}
-                />
-              </div>
-              {!normalizedSearch && selected.panels && selected.panels.length > 1 && (
-                <nav
-                  aria-label={tr('Settings panels')}
-                  className="no-scrollbar flex gap-1 overflow-x-auto px-3 pb-2"
-                >
-                  {selected.panels.map((panel) => {
-                    const active = panel.key === selectedPanel?.key
-                    return (
-                      <Button
-                        key={panel.key}
-                        size="sm"
-                        variant={active ? 'flat' : 'light'}
-                        color={active ? 'primary' : 'default'}
-                        className="app-nodrag shrink-0"
-                        aria-current={active ? 'page' : undefined}
-                        onPress={() => selectPanel(panel.key)}
-                      >
-                        {panel.label}
-                      </Button>
-                    )
-                  })}
-                </nav>
-              )}
-            </header>
-            {normalizedSearch ? (
-              <div className="mx-3 mt-2 border-y border-divider">
-                {searchResults.length ? (
-                  searchResults.map(({ category: resultCategory, entry }) => (
-                    <button
-                      key={entry.id}
-                      type="button"
-                      className="flex w-full items-center gap-3 border-b border-divider px-2 py-2 text-left transition-colors last:border-b-0 hover:bg-default-100 focus-visible:outline-2 focus-visible:outline-primary"
-                      onClick={() => {
-                        selectCategory(resultCategory.key, entry.id, entry.panel)
-                        setSearch('')
-                      }}
-                    >
-                      <resultCategory.icon className="shrink-0 text-lg text-foreground-400" />
-                      <span className="min-w-0 flex-1">
-                        <span className="block text-sm font-medium">{entry.label}</span>
-                        <span className="block text-xs text-foreground-500">
-                          {resultCategory.label}
-                        </span>
-                      </span>
-                      <LuChevronRight className="shrink-0 text-foreground-400" />
-                    </button>
-                  ))
-                ) : (
-                  <div className="px-2 py-6 text-center text-sm text-foreground-500">
-                    {tr('No settings found')}
-                  </div>
+      <div className="settings-container min-h-full">
+        <div ref={layoutRef} className="settings-layout grid min-h-full">
+          <nav
+            aria-label={tr('Settings categories')}
+            className="settings-navigation sticky top-0 z-10 flex h-[calc(100vh-49px)] flex-col border-r border-divider bg-background/95 p-3 backdrop-blur"
+          >
+            <div className="settings-navigation-list no-scrollbar flex flex-col gap-1 overflow-y-auto">
+              {categories.map((item) => {
+                const Icon = item.icon
+                const active = category === item.key && !normalizedSearch
+                return (
+                  <Button
+                    key={item.key}
+                    size="sm"
+                    variant={active ? 'flat' : 'light'}
+                    color={active ? 'primary' : 'default'}
+                    className="settings-category-button app-nodrag w-full shrink-0 justify-start px-3"
+                    aria-label={item.label}
+                    aria-current={active ? 'page' : undefined}
+                    startContent={<Icon className="text-base" />}
+                    onPress={() => {
+                      setSearch('')
+                      selectCategory(item.key)
+                    }}
+                  >
+                    <span className="settings-category-label">{item.label}</span>
+                  </Button>
+                )
+              })}
+            </div>
+          </nav>
+          <main className="min-w-0 px-4 pb-4">
+            <div className="mx-auto w-full max-w-[960px]">
+              <header className="settings-content-header sticky top-0 z-10 border-b border-divider bg-background/95 backdrop-blur-sm">
+                <div className="flex items-center gap-4 px-3 py-2">
+                  <h1 className="min-w-0 flex-1 text-xl font-semibold tracking-tight">
+                    {normalizedSearch
+                      ? tr('Search settings')
+                      : (selectedPanel?.label ?? selected.label)}
+                  </h1>
+                  <Input
+                    size="sm"
+                    isClearable
+                    value={search}
+                    aria-label={tr('Search settings')}
+                    placeholder={tr('Search settings')}
+                    startContent={<LuSearch className="shrink-0 text-foreground-400" />}
+                    className="settings-content-search w-60 shrink-0"
+                    onValueChange={setSearch}
+                    onClear={() => setSearch('')}
+                  />
+                </div>
+                {!normalizedSearch && selected.panels && selected.panels.length > 1 && (
+                  <nav
+                    aria-label={tr('Settings panels')}
+                    className="no-scrollbar flex gap-1 overflow-x-auto px-3 pb-2"
+                  >
+                    {selected.panels.map((panel) => {
+                      const active = panel.key === selectedPanel?.key
+                      return (
+                        <Button
+                          key={panel.key}
+                          size="sm"
+                          variant={active ? 'flat' : 'light'}
+                          color={active ? 'primary' : 'default'}
+                          className="app-nodrag shrink-0"
+                          aria-current={active ? 'page' : undefined}
+                          onPress={() => selectPanel(panel.key)}
+                        >
+                          {panel.label}
+                        </Button>
+                      )
+                    })}
+                  </nav>
                 )}
-              </div>
-            ) : (
-              <SettingCardModeProvider value={false}>
-                <SettingItemModeProvider value={false}>
-                  {selectedPanel?.content() ?? selected.content?.()}
-                </SettingItemModeProvider>
-              </SettingCardModeProvider>
-            )}
-          </div>
-        </main>
+              </header>
+              {normalizedSearch ? (
+                <div className="mx-3 mt-2 border-y border-divider">
+                  {searchResults.length ? (
+                    searchResults.map(({ category: resultCategory, entry, panelLabel }) => (
+                      <button
+                        key={entry.id}
+                        type="button"
+                        className="flex w-full items-center gap-3 border-b border-divider px-2 py-2 text-left transition-colors last:border-b-0 hover:bg-default-100 focus-visible:outline-2 focus-visible:outline-primary"
+                        onClick={() => {
+                          selectCategory(resultCategory.key, entry.id, entry.panel)
+                          setSearch('')
+                        }}
+                      >
+                        <resultCategory.icon className="shrink-0 text-lg text-foreground-400" />
+                        <span className="min-w-0 flex-1">
+                          <span className="block text-sm font-medium">{entry.label}</span>
+                          <span className="block text-xs text-foreground-500">
+                            {resultCategory.label}
+                            {panelLabel ? ` · ${panelLabel}` : ''}
+                          </span>
+                        </span>
+                        <LuChevronRight className="shrink-0 text-foreground-400" />
+                      </button>
+                    ))
+                  ) : (
+                    <div className="px-2 py-6 text-center text-sm text-foreground-500">
+                      {tr('No settings found')}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <SettingCardModeProvider value={false}>
+                  <SettingItemModeProvider value={false}>
+                    {selectedPanel?.content() ?? selected.content?.()}
+                  </SettingItemModeProvider>
+                </SettingCardModeProvider>
+              )}
+            </div>
+          </main>
+        </div>
       </div>
     </BasePage>
   )
