@@ -239,7 +239,7 @@ const Settings: React.FC = () => {
         </Button>
       }
     >
-      <div className="settings-layout grid min-h-full grid-cols-[14rem_minmax(0,1fr)]">
+      <div className="settings-layout grid min-h-full">
         <nav
           aria-label={tr('Settings categories')}
           className="settings-navigation sticky top-0 z-10 flex h-[calc(100vh-49px)] flex-col border-r border-divider bg-background/95 p-3 backdrop-blur"
@@ -251,7 +251,7 @@ const Settings: React.FC = () => {
             aria-label={tr('Search settings')}
             placeholder={tr('Search settings')}
             startContent={<LuSearch className="shrink-0 text-foreground-400" />}
-            className="mb-2 shrink-0"
+            className="settings-navigation-search mb-2 shrink-0"
             onValueChange={setSearch}
             onClear={() => setSearch('')}
           />
@@ -265,24 +265,37 @@ const Settings: React.FC = () => {
                   size="sm"
                   variant={active ? 'flat' : 'light'}
                   color={active ? 'primary' : 'default'}
-                  className="app-nodrag w-full shrink-0 justify-start px-3"
+                  className="settings-category-button app-nodrag w-full shrink-0 justify-start px-3"
+                  aria-label={item.label}
+                  title={item.label}
                   startContent={<Icon className="text-base" />}
                   onPress={() => {
                     setSearch('')
                     selectCategory(item.key)
                   }}
                 >
-                  {item.label}
+                  <span className="settings-category-label">{item.label}</span>
                 </Button>
               )
             })}
           </div>
         </nav>
         <main className="min-w-0 px-4 pb-8">
-          <div className="px-3 pb-1 pt-5">
-            <h1 className="text-xl font-semibold tracking-tight">
+          <div className="flex items-center gap-4 px-3 pb-1 pt-5">
+            <h1 className="min-w-0 flex-1 text-xl font-semibold tracking-tight">
               {normalizedSearch ? tr('Search settings') : selected.label}
             </h1>
+            <Input
+              size="sm"
+              isClearable
+              value={search}
+              aria-label={tr('Search settings')}
+              placeholder={tr('Search settings')}
+              startContent={<LuSearch className="shrink-0 text-foreground-400" />}
+              className="settings-content-search w-60 shrink-0"
+              onValueChange={setSearch}
+              onClear={() => setSearch('')}
+            />
           </div>
           {normalizedSearch ? (
             <div className="mx-3 mt-3 border-y border-divider">

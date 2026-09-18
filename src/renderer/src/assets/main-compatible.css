@@ -531,6 +531,14 @@ input[type='number'] {
   padding-inline: calc(var(--spacing) * 3);
 }
 
+.settings-layout {
+  grid-template-columns: 14rem minmax(0, 1fr);
+}
+
+.settings-content-search {
+  display: none;
+}
+
 .settings-layout .setting-item {
   grid-template-columns: minmax(10rem, 34%) minmax(0, 1fr);
   padding-block: calc(var(--spacing) * 3);
@@ -549,4 +557,31 @@ input[type='number'] {
   display: flex;
   align-items: center;
   justify-content: flex-end;
+}
+
+/* Compact desktop windows keep the primary workspace wider by reducing the
+ * secondary settings navigation to its stable icon affordances. */
+@media (max-width: 1050px) {
+  .settings-layout {
+    grid-template-columns: 4rem minmax(0, 1fr);
+  }
+
+  .settings-navigation {
+    padding-inline: calc(var(--spacing) * 2);
+  }
+
+  .settings-navigation-search,
+  .settings-category-label {
+    display: none;
+  }
+
+  .settings-category-button {
+    min-width: 0;
+    justify-content: center;
+    padding-inline: 0;
+  }
+
+  .settings-content-search {
+    display: block;
+  }
 }
