@@ -287,7 +287,13 @@ test('contextual settings drawers share a sectioned shell', () => {
 })
 
 test('core feature settings pages use the shared desktop layout', () => {
-  const pages = ['syspeoxy', 'tun', 'dns', 'sniffer', 'mihomo']
+  const pages = [
+    'src/renderer/src/components/settings/network/system-proxy-settings.tsx',
+    'src/renderer/src/components/settings/network/tun-settings.tsx',
+    'src/renderer/src/pages/dns.tsx',
+    'src/renderer/src/pages/sniffer.tsx',
+    'src/renderer/src/pages/mihomo.tsx'
+  ]
   const layout = readFileSync('src/renderer/src/components/base/base-feature-settings.tsx', 'utf8')
   const styles = readFileSync('src/renderer/src/assets/main-compatible.css', 'utf8')
 
@@ -303,7 +309,7 @@ test('core feature settings pages use the shared desktop layout', () => {
   )
 
   for (const page of pages) {
-    const source = readFileSync(`src/renderer/src/pages/${page}.tsx`, 'utf8')
+    const source = readFileSync(page, 'utf8')
     assert.match(source, /base-feature-settings/)
     assert.match(source, /<FeatureSettingsLayout>/)
     assert.match(source, /<FeatureSettingsSection/)
@@ -312,8 +318,8 @@ test('core feature settings pages use the shared desktop layout', () => {
 
 test('migrated feature settings use modern rows and stable save actions', () => {
   const featureFiles = [
-    'src/renderer/src/pages/syspeoxy.tsx',
-    'src/renderer/src/pages/tun.tsx',
+    'src/renderer/src/components/settings/network/system-proxy-settings.tsx',
+    'src/renderer/src/components/settings/network/tun-settings.tsx',
     'src/renderer/src/pages/dns.tsx',
     'src/renderer/src/pages/sniffer.tsx',
     'src/renderer/src/pages/mihomo.tsx',
@@ -328,22 +334,22 @@ test('migrated feature settings use modern rows and stable save actions', () => 
     assert.doesNotMatch(readFileSync(file, 'utf8'), /compatKey=["']legacy["']/)
   }
 
-  for (const page of ['syspeoxy', 'tun', 'dns', 'sniffer', 'mihomo']) {
-    const source = readFileSync(`src/renderer/src/pages/${page}.tsx`, 'utf8')
+  for (const page of featureFiles.slice(0, 5)) {
+    const source = readFileSync(page, 'utf8')
     assert.match(source, /<FeatureSettingsSaveButton/)
     assert.match(source, /useSettingsSave\(\)/)
     assert.match(source, /const saved = await runSave/)
     assert.match(source, /isSaving=\{isSaving\}/)
   }
 
-  for (const page of ['syspeoxy', 'tun', 'dns', 'sniffer']) {
-    const source = readFileSync(`src/renderer/src/pages/${page}.tsx`, 'utf8')
+  for (const page of featureFiles.slice(0, 4)) {
+    const source = readFileSync(page, 'utf8')
     assert.match(source, /isDirty=\{changed\}/)
     assert.match(source, /if \(saved\) setChanged\(false\)/)
   }
 
-  for (const page of ['tun', 'dns', 'sniffer']) {
-    const source = readFileSync(`src/renderer/src/pages/${page}.tsx`, 'utf8')
+  for (const page of featureFiles.slice(1, 4)) {
+    const source = readFileSync(page, 'utf8')
     assert.match(source, /patchControledMihomoConfigOrThrow\(patch\)/)
   }
 })

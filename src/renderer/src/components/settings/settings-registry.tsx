@@ -1,7 +1,15 @@
 import { tr } from '../../../../shared/i18n'
 import { platform } from '@renderer/utils/init'
 import React, { type ReactNode } from 'react'
-import { LuAppWindow, LuArchiveRestore, LuBrush, LuCommand, LuCpu, LuWrench } from 'react-icons/lu'
+import {
+  LuAppWindow,
+  LuArchiveRestore,
+  LuBrush,
+  LuCommand,
+  LuCpu,
+  LuNetwork,
+  LuWrench
+} from 'react-icons/lu'
 import Actions from './actions'
 import AppearanceConfig from './appearance-confis'
 import {
@@ -17,9 +25,11 @@ import SubscriptionIntegrationSettings from './subscription-integration-settings
 import WebdavConfig from './webdav-config'
 import EnvSetting from '../mihomo/env-setting'
 import LogSetting from '../mihomo/log-setting'
+import Sysproxy from './network/system-proxy-settings'
+import Tun from './network/tun-settings'
 
 export type SettingsCategory =
-  'general' | 'appearance' | 'core' | 'data' | 'shortcuts' | 'diagnostics'
+  'general' | 'appearance' | 'network' | 'core' | 'data' | 'shortcuts' | 'diagnostics'
 
 type SettingsPlatform = 'win32' | 'darwin' | 'linux'
 
@@ -30,6 +40,14 @@ export interface SettingsEntryDefinition {
   targetLabel?: string
   fallbackLabel?: string
   platforms?: SettingsPlatform[]
+  panel?: string
+}
+
+export interface SettingsPanelDefinition {
+  key: string
+  label: string
+  entries: SettingsEntryDefinition[]
+  content: () => ReactNode
 }
 
 export interface SettingsCategoryDefinition {
@@ -37,21 +55,112 @@ export interface SettingsCategoryDefinition {
   label: string
   icon: React.ComponentType<{ className?: string }>
   entries: SettingsEntryDefinition[]
-  content: () => ReactNode
+  content?: () => ReactNode
+  panels?: SettingsPanelDefinition[]
 }
 
 const entry = (
   id: string,
   label: string,
   fallbackLabel: string,
-  options: Pick<SettingsEntryDefinition, 'keywords' | 'platforms' | 'targetLabel'> = {}
+  options: Pick<SettingsEntryDefinition, 'keywords' | 'platforms' | 'targetLabel' | 'panel'> = {}
 ): SettingsEntryDefinition => ({ id, label, fallbackLabel, ...options })
 
 const availableOnCurrentPlatform = (setting: SettingsEntryDefinition): boolean =>
   !setting.platforms || setting.platforms.includes(platform as SettingsPlatform)
 
-export const getSettingsCategories = (): SettingsCategoryDefinition[] =>
-  (
+export const getSettingsCategories = (): SettingsCategoryDefinition[] => {
+  const networkPanels: SettingsPanelDefinition[] = [
+    {
+      key: 'system-proxy',
+      label: tr('System proxy'),
+      entries: [
+        entry('system-proxy-host', tr('Proxy host'), tr('System proxy settings'), {
+          panel: 'system-proxy'
+        }),
+        entry('system-proxy-mode', tr('Proxy mode'), tr('System proxy settings'), {
+          panel: 'system-proxy'
+        }),
+        entry('system-proxy-pac', tr('PAC script'), tr('System proxy settings'), {
+          panel: 'system-proxy'
+        }),
+        entry('system-proxy-method', tr('Configuration method'), tr('System proxy settings'), {
+          panel: 'system-proxy'
+        }),
+        entry('system-proxy-terminal', tr('Terminal proxy'), tr('System proxy settings'), {
+          panel: 'system-proxy',
+          platforms: ['linux']
+        }),
+        entry(
+          'system-proxy-active-interfaces',
+          tr('Active interfaces only'),
+          tr('System proxy settings'),
+          { panel: 'system-proxy', platforms: ['win32', 'darwin'] }
+        ),
+        entry('system-proxy-watchdog', tr('System proxy watchdog'), tr('System proxy settings'), {
+          panel: 'system-proxy'
+        }),
+        entry(
+          'system-proxy-watchdog-notifications',
+          tr('Watchdog notifications'),
+          tr('System proxy settings'),
+          { panel: 'system-proxy' }
+        ),
+        entry('system-proxy-bypass', tr('Proxy bypass list'), tr('System proxy settings'), {
+          panel: 'system-proxy'
+        })
+      ],
+      content: () => <Sysproxy embedded />
+    },
+    {
+      key: 'tun',
+      label: tr('TUN mode'),
+      entries: [
+        entry('tun-platform-integration', tr('Platform integration'), tr('TUN settings'), {
+          panel: 'tun',
+          platforms: ['win32', 'darwin']
+        }),
+        entry('tun-network-stack', tr('TUN network stack'), tr('TUN settings'), { panel: 'tun' }),
+        entry('tun-interface-name', tr('TUN interface name'), tr('TUN settings'), {
+          panel: 'tun',
+          platforms: ['win32', 'linux']
+        }),
+        entry('tun-strict-routing', tr('Strict routing'), tr('TUN settings'), {
+          panel: 'tun',
+          platforms: ['win32', 'linux']
+        }),
+        entry('tun-auto-routes', tr('Configure routes automatically'), tr('TUN settings'), {
+          panel: 'tun'
+        }),
+        entry(
+          'tun-auto-redirect',
+          tr('Configure TCP redirection automatically'),
+          tr('TUN settings'),
+          { panel: 'tun', platforms: ['linux'] }
+        ),
+        entry(
+          'tun-auto-interface',
+          tr('Select outbound interface automatically'),
+          tr('TUN settings'),
+          { panel: 'tun' }
+        ),
+        entry('tun-icmp-forwarding', tr('ICMP forwarding'), tr('TUN settings'), { panel: 'tun' }),
+        entry('tun-mtu', 'MTU', tr('TUN settings'), { panel: 'tun' }),
+        entry(
+          'tun-dns-hijacking',
+          tr('DNS hijacking targets, separated by commas'),
+          tr('TUN settings'),
+          { panel: 'tun' }
+        ),
+        entry('tun-excluded-ranges', tr('Exclude custom IP ranges'), tr('TUN settings'), {
+          panel: 'tun'
+        })
+      ],
+      content: () => <Tun embedded />
+    }
+  ]
+
+  return (
     [
       {
         key: 'general',
@@ -139,6 +248,13 @@ export const getSettingsCategories = (): SettingsCategoryDefinition[] =>
             <SiderConfig />
           </>
         )
+      },
+      {
+        key: 'network',
+        label: tr('Network'),
+        icon: LuNetwork,
+        entries: networkPanels.flatMap((panel) => panel.entries),
+        panels: networkPanels
       },
       {
         key: 'core',
@@ -286,8 +402,13 @@ export const getSettingsCategories = (): SettingsCategoryDefinition[] =>
     ] satisfies SettingsCategoryDefinition[]
   ).map((category) => ({
     ...category,
-    entries: category.entries.filter(availableOnCurrentPlatform)
+    entries: category.entries.filter(availableOnCurrentPlatform),
+    panels: category.panels?.map((panel) => ({
+      ...panel,
+      entries: panel.entries.filter(availableOnCurrentPlatform)
+    }))
   }))
+}
 
 export const legacyCategoryAliases: Readonly<Record<string, SettingsCategory>> = {
   sidebar: 'appearance',

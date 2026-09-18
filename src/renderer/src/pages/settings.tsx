@@ -34,6 +34,9 @@ const Settings: React.FC = () => {
       ? (legacyCategoryAliases[requestedCategory] ?? 'general')
       : (requestedSetting?.category.key ?? 'general')
   const selected = categories.find((item) => item.key === category) ?? categories[0]
+  const requestedPanel = searchParams.get('panel') ?? requestedSetting?.entry.panel
+  const selectedPanel =
+    selected.panels?.find((panel) => panel.key === requestedPanel) ?? selected.panels?.[0]
   const normalizedSearch = search.trim().toLocaleLowerCase()
   const searchResults = useMemo(
     () =>
@@ -52,17 +55,36 @@ const Settings: React.FC = () => {
     [categories, normalizedSearch]
   )
 
-  const selectCategory = (nextCategory: SettingsCategory, settingId?: string): void => {
+  const selectCategory = (
+    nextCategory: SettingsCategory,
+    settingId?: string,
+    panelKey?: string
+  ): void => {
     const nextParams = new URLSearchParams(searchParams)
     nextParams.set('section', nextCategory)
     if (settingId) nextParams.set('setting', settingId)
     else nextParams.delete('setting')
+    const nextCategoryDefinition = categories.find((item) => item.key === nextCategory)
+    const nextPanel = panelKey ?? nextCategoryDefinition?.panels?.[0]?.key
+    if (nextPanel) nextParams.set('panel', nextPanel)
+    else nextParams.delete('panel')
     setSearchParams(nextParams)
     if (!settingId) {
       requestAnimationFrame(() => {
         layoutRef.current?.closest<HTMLElement>('.content')?.scrollTo({ top: 0 })
       })
     }
+  }
+
+  const selectPanel = (panelKey: string): void => {
+    const nextParams = new URLSearchParams(searchParams)
+    nextParams.set('section', selected.key)
+    nextParams.set('panel', panelKey)
+    nextParams.delete('setting')
+    setSearchParams(nextParams)
+    requestAnimationFrame(() => {
+      layoutRef.current?.closest<HTMLElement>('.content')?.scrollTo({ top: 0 })
+    })
   }
 
   useEffect(() => {
@@ -203,22 +225,49 @@ const Settings: React.FC = () => {
         </nav>
         <main className="min-w-0 px-4 pb-4">
           <div className="mx-auto w-full max-w-[1040px]">
-            <div className="settings-content-header sticky top-0 z-10 flex items-center gap-4 border-b border-divider bg-background/95 px-3 py-2 backdrop-blur-sm">
-              <h1 className="min-w-0 flex-1 text-xl font-semibold tracking-tight">
-                {normalizedSearch ? tr('Search settings') : selected.label}
-              </h1>
-              <Input
-                size="sm"
-                isClearable
-                value={search}
-                aria-label={tr('Search settings')}
-                placeholder={tr('Search settings')}
-                startContent={<LuSearch className="shrink-0 text-foreground-400" />}
-                className="settings-content-search w-60 shrink-0"
-                onValueChange={setSearch}
-                onClear={() => setSearch('')}
-              />
-            </div>
+            <header className="settings-content-header sticky top-0 z-10 border-b border-divider bg-background/95 backdrop-blur-sm">
+              <div className="flex items-center gap-4 px-3 py-2">
+                <h1 className="min-w-0 flex-1 text-xl font-semibold tracking-tight">
+                  {normalizedSearch
+                    ? tr('Search settings')
+                    : (selectedPanel?.label ?? selected.label)}
+                </h1>
+                <Input
+                  size="sm"
+                  isClearable
+                  value={search}
+                  aria-label={tr('Search settings')}
+                  placeholder={tr('Search settings')}
+                  startContent={<LuSearch className="shrink-0 text-foreground-400" />}
+                  className="settings-content-search w-60 shrink-0"
+                  onValueChange={setSearch}
+                  onClear={() => setSearch('')}
+                />
+              </div>
+              {!normalizedSearch && selected.panels && selected.panels.length > 1 && (
+                <nav
+                  aria-label={tr('Settings panels')}
+                  className="no-scrollbar flex gap-1 overflow-x-auto px-3 pb-2"
+                >
+                  {selected.panels.map((panel) => {
+                    const active = panel.key === selectedPanel?.key
+                    return (
+                      <Button
+                        key={panel.key}
+                        size="sm"
+                        variant={active ? 'flat' : 'light'}
+                        color={active ? 'primary' : 'default'}
+                        className="app-nodrag shrink-0"
+                        aria-current={active ? 'page' : undefined}
+                        onPress={() => selectPanel(panel.key)}
+                      >
+                        {panel.label}
+                      </Button>
+                    )
+                  })}
+                </nav>
+              )}
+            </header>
             {normalizedSearch ? (
               <div className="mx-3 mt-2 border-y border-divider">
                 {searchResults.length ? (
@@ -228,7 +277,7 @@ const Settings: React.FC = () => {
                       type="button"
                       className="flex w-full items-center gap-3 border-b border-divider px-2 py-2 text-left transition-colors last:border-b-0 hover:bg-default-100 focus-visible:outline-2 focus-visible:outline-primary"
                       onClick={() => {
-                        selectCategory(resultCategory.key, entry.id)
+                        selectCategory(resultCategory.key, entry.id, entry.panel)
                         setSearch('')
                       }}
                     >
@@ -251,7 +300,7 @@ const Settings: React.FC = () => {
             ) : (
               <SettingCardModeProvider value={false}>
                 <SettingItemModeProvider value={false}>
-                  {selected.content()}
+                  {selectedPanel?.content() ?? selected.content?.()}
                 </SettingItemModeProvider>
               </SettingCardModeProvider>
             )}
