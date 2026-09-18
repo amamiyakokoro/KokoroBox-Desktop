@@ -13,6 +13,7 @@ import { restartCore } from '@renderer/utils/ipc'
 import React, { useState } from 'react'
 import { notify } from '@renderer/utils/notification'
 import { useSettingsSave } from '@renderer/hooks/use-settings-save'
+import { useUnsavedChangesGuard } from '@renderer/hooks/use-unsaved-changes'
 
 const Sniffer: React.FC = () => {
   const { appConfig, patchAppConfig } = useAppConfig()
@@ -64,13 +65,49 @@ const Sniffer: React.FC = () => {
     setChanged(true)
   }
 
-  const onSave = async (patch: Partial<MihomoConfig>): Promise<void> => {
+  const onSave = async (patch: Partial<MihomoConfig>): Promise<boolean> => {
     const saved = await runSave(async () => {
       await patchControledMihomoConfigOrThrow(patch)
       await restartCore()
     })
     if (saved) setChanged(false)
+    return saved
   }
+
+  const saveChanges = (): Promise<boolean> =>
+    onSave({
+      sniffer: {
+        'parse-pure-ip': values.parsePureIP,
+        'force-dns-mapping': values.forceDNSMapping,
+        'override-destination': values.overrideDestination,
+        sniff: values.sniff,
+        'skip-domain': values.skipDomain,
+        'force-domain': values.forceDomain,
+        'skip-dst-address': values.skipDstAddress,
+        'skip-src-address': values.skipSrcAddress
+      }
+    })
+
+  useUnsavedChangesGuard({
+    id: 'sniffer-settings',
+    label: tr('Domain sniffing settings'),
+    isDirty: changed,
+    isSaving,
+    onSave: saveChanges,
+    onDiscard: () => {
+      originSetValues({
+        parsePureIP,
+        forceDNSMapping,
+        overrideDestination,
+        sniff,
+        skipDomain,
+        forceDomain,
+        skipDstAddress,
+        skipSrcAddress
+      })
+      setChanged(false)
+    }
+  })
 
   const handleSniffPortChange = (protocol: keyof typeof sniff, value: string): void => {
     setValues({
@@ -90,24 +127,7 @@ const Sniffer: React.FC = () => {
       title={tr('Domain sniffing settings')}
       contentClassName="no-scrollbar"
       header={
-        <FeatureSettingsSaveButton
-          isDirty={changed}
-          isSaving={isSaving}
-          onPress={() =>
-            onSave({
-              sniffer: {
-                'parse-pure-ip': values.parsePureIP,
-                'force-dns-mapping': values.forceDNSMapping,
-                'override-destination': values.overrideDestination,
-                sniff: values.sniff,
-                'skip-domain': values.skipDomain,
-                'force-domain': values.forceDomain,
-                'skip-dst-address': values.skipDstAddress,
-                'skip-src-address': values.skipSrcAddress
-              }
-            })
-          }
-        />
+        <FeatureSettingsSaveButton isDirty={changed} isSaving={isSaving} onPress={saveChanges} />
       }
     >
       <FeatureSettingsLayout>

@@ -18,7 +18,7 @@ interface FeatureSettingsSaveButtonProps {
   isDirty: boolean
   isDisabled?: boolean
   isSaving?: boolean
-  onPress: () => void | Promise<void>
+  onPress: () => void | Promise<unknown>
 }
 
 export const FeatureSettingsSaveButton: React.FC<FeatureSettingsSaveButtonProps> = ({

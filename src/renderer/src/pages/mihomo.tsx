@@ -17,6 +17,7 @@ import { mergeSettingsPatch } from '@renderer/utils/merge-settings-patch'
 import { useSettingsSave } from '@renderer/hooks/use-settings-save'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { notify } from '@renderer/utils/notification'
+import { useUnsavedChangesGuard } from '@renderer/hooks/use-unsaved-changes'
 
 const Mihomo: React.FC = () => {
   const { controledMihomoConfig, patchControledMihomoConfigOrThrow } = useControledMihomoConfig()
@@ -46,13 +47,13 @@ const Mihomo: React.FC = () => {
     })
   }, [])
 
-  const saveChanges = async (): Promise<void> => {
+  const saveChanges = async (): Promise<boolean> => {
     const patch = draftPatch
     const saved = await runSave(async () => {
       await patchControledMihomoConfigOrThrow(patch)
       await restartCore()
     })
-    if (!saved) return
+    if (!saved) return false
 
     setDraftPatch({})
     if ('mixed-port' in patch && sysProxy?.enable) {
@@ -72,7 +73,21 @@ const Mihomo: React.FC = () => {
         }
       }, 1000)
     }
+    return true
   }
+
+  useUnsavedChangesGuard({
+    id: 'mihomo-settings',
+    label: tr('Mihomo settings'),
+    isDirty,
+    isSaving,
+    canSave: validationErrors.size === 0,
+    onSave: saveChanges,
+    onDiscard: () => {
+      setDraftPatch({})
+      setValidationErrors(new Set())
+    }
+  })
 
   return (
     <BasePage

@@ -46,3 +46,33 @@ test('Mihomo settings stage edits and restart the core once from the page', () =
     assert.doesNotMatch(source, /patchControledMihomoConfig/)
   }
 })
+
+test('staged settings protect unsaved changes across navigation and window lifecycle', () => {
+  const guardedPages = ['syspeoxy', 'tun', 'dns', 'sniffer', 'mihomo']
+  for (const page of guardedPages) {
+    const source = readFileSync(`src/renderer/src/pages/${page}.tsx`, 'utf8')
+    assert.match(source, /useUnsavedChangesGuard/)
+    assert.match(source, /isDirty[:,]/)
+    assert.match(source, /onSave[:,]/)
+    assert.match(source, /onDiscard:/)
+  }
+
+  const guard = readFileSync('src/renderer/src/hooks/use-unsaved-changes.tsx', 'utf8')
+  assert.match(guard, /useBlocker/)
+  assert.match(guard, /useBeforeUnload/)
+  assert.match(guard, /tr\('Save changes'\)/)
+  assert.match(guard, /tr\('Discard changes'\)/)
+
+  const rendererEntry = readFileSync('src/renderer/src/main.tsx', 'utf8')
+  assert.match(rendererEntry, /createHashRouter/)
+  assert.match(rendererEntry, /<UnsavedChangesProvider>/)
+  assert.match(rendererEntry, /<RouterProvider router=\{router\}/)
+
+  const app = readFileSync('src/renderer/src/App.tsx', 'utf8')
+  assert.match(app, /show-unsaved-close-confirm/)
+  assert.match(app, /confirmUnsavedChanges/)
+
+  const main = readFileSync('src/main/index.ts', 'utf8')
+  assert.match(main, /rendererHasUnsavedChanges/)
+  assert.match(main, /show-unsaved-close-confirm/)
+})

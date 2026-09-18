@@ -16,6 +16,7 @@ import ByPassEditorModal from '@renderer/components/sysproxy/bypass-editor-modal
 import { IoIosHelpCircle } from 'react-icons/io'
 import { notify } from '@renderer/utils/notification'
 import { useSettingsSave } from '@renderer/hooks/use-settings-save'
+import { useUnsavedChangesGuard } from '@renderer/hooks/use-unsaved-changes'
 
 const defaultPacScript = `
 function FindProxyForURL(url, host) {
@@ -132,7 +133,7 @@ const Sysproxy: React.FC = () => {
     return nextValues
   }
 
-  const onSave = async (): Promise<void> => {
+  const onSave = async (): Promise<boolean> => {
     const saved = await runSave(async () => {
       // check valid TODO
       const nextValues = await normalizeServiceModeValues()
@@ -151,7 +152,20 @@ const Sysproxy: React.FC = () => {
       await mutateAppConfig()
     })
     if (saved) setChanged(false)
+    return saved
   }
+
+  useUnsavedChangesGuard({
+    id: 'system-proxy-settings',
+    label: tr('System proxy settings'),
+    isDirty: changed,
+    isSaving,
+    onSave,
+    onDiscard: () => {
+      syncValuesFromSysProxy(sysProxy)
+      setChanged(false)
+    }
+  })
 
   return (
     <BasePage

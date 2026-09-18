@@ -21,6 +21,7 @@ import {
   isValidDnsServer
 } from '@renderer/utils/validate'
 import { useSettingsSave } from '@renderer/hooks/use-settings-save'
+import { useUnsavedChangesGuard } from '@renderer/hooks/use-unsaved-changes'
 
 const defaultFakeIpFilter = ['+.lan', '+.local', 'time.*.com', 'ntp.*.com', '+.market.xiaomi.com']
 
@@ -129,7 +130,15 @@ const DNS: React.FC = () => {
     return firstInvalid ? (isValidDnsServer(firstInvalid).error ?? tr('Invalid format')) : null
   })
   const [advancedDnsError, setAdvancedDnsError] = useState(false)
+  const [draftRevision, setDraftRevision] = useState(0)
   const hasDnsErrors = Boolean(defaultNameserverError || nameserverError || advancedDnsError)
+  const hasValidationErrors =
+    values.enhancedMode === 'fake-ip'
+      ? Boolean(fakeIPRangeError) ||
+        (values.ipv6 && Boolean(fakeIPRange6Error)) ||
+        Boolean(fakeIPFilterError) ||
+        hasDnsErrors
+      : hasDnsErrors
   const isAntiPollutionPreset =
     values.enhancedMode === antiPollutionDnsPreset.enhancedMode &&
     values.fakeIPFilterMode === antiPollutionDnsPreset.fakeIPFilterMode &&
@@ -151,7 +160,7 @@ const DNS: React.FC = () => {
     setChanged(true)
   }
 
-  const onSave = async (patch: Partial<MihomoConfig>): Promise<void> => {
+  const onSave = async (patch: Partial<MihomoConfig>): Promise<boolean> => {
     const saved = await runSave(async () => {
       await patchAppConfig({
         hosts: values.hosts
@@ -160,7 +169,82 @@ const DNS: React.FC = () => {
       await restartCore()
     })
     if (saved) setChanged(false)
+    return saved
   }
+
+  const saveChanges = (): Promise<boolean> => {
+    const hostsObject =
+      values.useHosts && values.hosts && values.hosts.length > 0
+        ? Object.fromEntries(values.hosts.map(({ domain, value }) => [domain, value]))
+        : undefined
+    const dnsConfig = {
+      ipv6: values.ipv6,
+      'fake-ip-range': values.fakeIPRange,
+      'fake-ip-range6': values.fakeIPRange6,
+      'fake-ip-filter': values.fakeIPFilter,
+      'fake-ip-filter-mode': values.fakeIPFilterMode,
+      'enhanced-mode': values.enhancedMode,
+      'use-hosts': values.useHosts,
+      'use-system-hosts': values.useSystemHosts,
+      'respect-rules': values.respectRules,
+      'direct-nameserver-follow-policy': values.directNameserverFollowPolicy,
+      'prefer-h3': values.preferH3,
+      'cache-algorithm': values.cacheAlgorithm,
+      'default-nameserver': values.defaultNameserver,
+      nameserver: values.nameserver,
+      'proxy-server-nameserver': values.proxyServerNameserver,
+      'direct-nameserver': values.directNameserver,
+      fallback: values.fallback,
+      'fallback-filter': values.fallbackFilter,
+      'fallback-lazy-query': values.fallbackLazyQuery,
+      'nameserver-policy': values.nameserverPolicy,
+      'proxy-server-nameserver-policy': values.proxyServerNameserverPolicy
+    }
+    return onSave({ dns: dnsConfig, hosts: hostsObject })
+  }
+
+  useUnsavedChangesGuard({
+    id: 'dns-settings',
+    label: tr('DNS settings'),
+    isDirty: changed,
+    isSaving,
+    canSave: !hasValidationErrors,
+    onSave: saveChanges,
+    onDiscard: () => {
+      originSetValues({
+        ipv6,
+        useHosts,
+        enhancedMode,
+        fakeIPFilterMode,
+        fakeIPRange,
+        fakeIPRange6,
+        fakeIPFilter,
+        useSystemHosts,
+        respectRules,
+        directNameserverFollowPolicy,
+        preferH3,
+        cacheAlgorithm,
+        defaultNameserver,
+        nameserver,
+        proxyServerNameserver,
+        directNameserver,
+        fallback,
+        fallbackFilter,
+        fallbackLazyQuery,
+        nameserverPolicy,
+        proxyServerNameserverPolicy,
+        hosts: useHosts ? hosts : undefined
+      })
+      setFakeIPRangeError(null)
+      setFakeIPRange6Error(null)
+      setFakeIPFilterError(null)
+      setDefaultNameserverError(null)
+      setNameserverError(null)
+      setAdvancedDnsError(false)
+      setDraftRevision((value) => value + 1)
+      setChanged(false)
+    }
+  })
 
   return (
     <BasePage
@@ -170,47 +254,8 @@ const DNS: React.FC = () => {
         <FeatureSettingsSaveButton
           isDirty={changed}
           isSaving={isSaving}
-          isDisabled={
-            values && values.enhancedMode === 'fake-ip'
-              ? Boolean(fakeIPRangeError) ||
-                (values.ipv6 && Boolean(fakeIPRange6Error)) ||
-                Boolean(fakeIPFilterError) ||
-                hasDnsErrors
-              : hasDnsErrors
-          }
-          onPress={() => {
-            const hostsObject =
-              values.useHosts && values.hosts && values.hosts.length > 0
-                ? Object.fromEntries(values.hosts.map(({ domain, value }) => [domain, value]))
-                : undefined
-            const dnsConfig = {
-              ipv6: values.ipv6,
-              'fake-ip-range': values.fakeIPRange,
-              'fake-ip-range6': values.fakeIPRange6,
-              'fake-ip-filter': values.fakeIPFilter,
-              'fake-ip-filter-mode': values.fakeIPFilterMode,
-              'enhanced-mode': values.enhancedMode,
-              'use-hosts': values.useHosts,
-              'use-system-hosts': values.useSystemHosts,
-              'respect-rules': values.respectRules,
-              'direct-nameserver-follow-policy': values.directNameserverFollowPolicy,
-              'prefer-h3': values.preferH3,
-              'cache-algorithm': values.cacheAlgorithm,
-              'default-nameserver': values.defaultNameserver,
-              nameserver: values.nameserver,
-              'proxy-server-nameserver': values.proxyServerNameserver,
-              'direct-nameserver': values.directNameserver,
-              fallback: values.fallback,
-              'fallback-filter': values.fallbackFilter,
-              'fallback-lazy-query': values.fallbackLazyQuery,
-              'nameserver-policy': values.nameserverPolicy,
-              'proxy-server-nameserver-policy': values.proxyServerNameserverPolicy
-            }
-            onSave({
-              dns: dnsConfig,
-              hosts: hostsObject
-            })
-          }}
+          isDisabled={hasValidationErrors}
+          onPress={saveChanges}
         />
       }
     >
@@ -420,6 +465,7 @@ const DNS: React.FC = () => {
           />
         </FeatureSettingsSection>
         <AdvancedDnsSetting
+          key={draftRevision}
           respectRules={values.respectRules}
           directNameserverFollowPolicy={values.directNameserverFollowPolicy}
           preferH3={values.preferH3}

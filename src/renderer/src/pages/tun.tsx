@@ -14,6 +14,7 @@ import React, { Key, useState } from 'react'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { notify } from '@renderer/utils/notification'
 import { useSettingsSave } from '@renderer/hooks/use-settings-save'
+import { useUnsavedChangesGuard } from '@renderer/hooks/use-unsaved-changes'
 
 const Tun: React.FC = () => {
   const { controledMihomoConfig, patchControledMihomoConfigOrThrow } = useControledMihomoConfig()
@@ -52,13 +53,53 @@ const Tun: React.FC = () => {
     setChanged(true)
   }
 
-  const onSave = async (patch: Partial<MihomoConfig>): Promise<void> => {
+  const onSave = async (patch: Partial<MihomoConfig>): Promise<boolean> => {
     const saved = await runSave(async () => {
       await patchControledMihomoConfigOrThrow(patch)
       await restartCore()
     })
     if (saved) setChanged(false)
+    return saved
   }
+
+  const saveChanges = (): Promise<boolean> =>
+    onSave({
+      tun: {
+        device: values.device,
+        stack: values.stack,
+        'auto-route': values.autoRoute,
+        'auto-redirect': values.autoRedirect,
+        'auto-detect-interface': values.autoDetectInterface,
+        'dns-hijack': values.dnsHijack,
+        'strict-route': values.strictRoute,
+        'route-exclude-address': values.routeExcludeAddress,
+        'disable-icmp-forwarding': values.disableIcmpForwarding,
+        mtu: values.mtu
+      }
+    })
+
+  useUnsavedChangesGuard({
+    id: 'tun-settings',
+    label: tr('TUN settings'),
+    isDirty: changed,
+    isSaving,
+    onSave: saveChanges,
+    onDiscard: () => {
+      originSetValues({
+        device,
+        stack,
+        autoRoute,
+        autoRedirect,
+        autoDetectInterface,
+        dnsHijack,
+        strictRoute,
+        routeExcludeAddress,
+        disableIcmpForwarding,
+        mtu: Math.min(Math.max(mtu || 1500, 1), 65535)
+      })
+      setChanged(false)
+    }
+  })
 
   return (
     <>
@@ -66,26 +107,7 @@ const Tun: React.FC = () => {
         title={tr('TUN settings')}
         contentClassName="no-scrollbar"
         header={
-          <FeatureSettingsSaveButton
-            isDirty={changed}
-            isSaving={isSaving}
-            onPress={() =>
-              onSave({
-                tun: {
-                  device: values.device,
-                  stack: values.stack,
-                  'auto-route': values.autoRoute,
-                  'auto-redirect': values.autoRedirect,
-                  'auto-detect-interface': values.autoDetectInterface,
-                  'dns-hijack': values.dnsHijack,
-                  'strict-route': values.strictRoute,
-                  'route-exclude-address': values.routeExcludeAddress,
-                  'disable-icmp-forwarding': values.disableIcmpForwarding,
-                  mtu: values.mtu
-                }
-              })
-            }
-          />
+          <FeatureSettingsSaveButton isDirty={changed} isSaving={isSaving} onPress={saveChanges} />
         }
       >
         <FeatureSettingsLayout>
