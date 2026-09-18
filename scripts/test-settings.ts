@@ -268,6 +268,25 @@ test('desktop sidebar separates controls, live status and navigation', () => {
   assert.match(core, /prioritizeDescription/)
 })
 
+test('proxy group rows stay compact while preserving semantic metadata and actions', () => {
+  const page = readFileSync('src/renderer/src/pages/proxies.tsx', 'utf8')
+
+  assert.match(page, /<CardBody className="min-h-14 w-full px-3 py-2">/)
+  assert.match(page, /function GroupMetadata/)
+  assert.match(page, /getGroupTypeLabel\(group\.type\)/)
+  assert.match(page, /→/)
+  assert.match(page, /tr\('\{0\} nodes', \[group\.all\.length\]\)/)
+  assert.doesNotMatch(page, /<Chip/)
+  assert.match(page, /aria-label=\{tr\('Test group latency'\)\}/)
+  assert.match(page, /aria-label=\{tr\('Proxy group actions'\)\}/)
+  assert.match(page, /if \(key === 'search'\) setSearchVisible\(true\)/)
+  assert.match(page, /if \(key === 'current'\) onScrollToProxy\(index\)/)
+  assert.match(page, /mode === 'global' && g\[index\]\.name\.toUpperCase\(\) === 'GLOBAL'/)
+  assert.match(page, /title=\{group\.name\}/)
+  assert.match(page, /title=\{group\.now\}/)
+  assert.match(page, /onGroupDelay\(index\)/)
+})
+
 test('common settings choices use the shared segmented control', () => {
   const general = readFileSync('src/renderer/src/components/settings/general-config.tsx', 'utf8')
   const controls = readFileSync('src/renderer/src/components/base/base-controls.tsx', 'utf8')

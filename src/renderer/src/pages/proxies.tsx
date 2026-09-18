@@ -1,5 +1,13 @@
 import { tr } from '../../../shared/i18n'
-import { Button, Card, CardBody, Chip } from '@heroui/react'
+import {
+  Button,
+  Card,
+  CardBody,
+  Dropdown,
+  DropdownItem,
+  DropdownMenu,
+  DropdownTrigger
+} from '@heroui/react'
 import { Avatar } from '@heroui-v3/react'
 import BasePage from '@renderer/components/base/base-page'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
@@ -25,7 +33,7 @@ import { GroupedVirtuoso, GroupedVirtuosoHandle } from 'react-virtuoso'
 import ProxyItem from '@renderer/components/proxies/proxy-item'
 import ProxySettingDrawer from '@renderer/components/proxies/proxy-setting-drawer'
 import { IoIosArrowBack } from 'react-icons/io'
-import { MdDoubleArrow, MdOutlineSpeed, MdTune } from 'react-icons/md'
+import { MdDoubleArrow, MdMoreHoriz, MdOutlineSpeed, MdSearch, MdTune } from 'react-icons/md'
 import { useGroups } from '@renderer/hooks/use-groups'
 import CollapseInput from '@renderer/components/base/collapse-input'
 import { includesIgnoreCase } from '@renderer/utils/includes'
@@ -54,6 +62,45 @@ function getProviderName(proxy: ProxyLike): string | undefined {
   return 'provider-name' in proxy ? proxy['provider-name'] : undefined
 }
 
+function getGroupTypeLabel(type: MihomoProxyType): string {
+  const labels: Partial<Record<MihomoProxyType, string>> = {
+    Selector: tr('Selector'),
+    Fallback: tr('Fallback'),
+    URLTest: tr('URL test'),
+    LoadBalance: tr('Load balance'),
+    Relay: tr('Relay')
+  }
+  return labels[type] ?? type
+}
+
+function GroupMetadata({
+  group,
+  className = ''
+}: {
+  group: ControllerMixedGroup
+  className?: string
+}) {
+  const showsSelectedTarget =
+    Boolean(group.now) && ['Selector', 'Fallback', 'URLTest'].includes(group.type)
+
+  return (
+    <span className={`flex min-w-0 items-center gap-1 text-xs text-foreground-500 ${className}`}>
+      <span className="shrink-0">{getGroupTypeLabel(group.type)}</span>
+      {showsSelectedTarget && (
+        <>
+          <span aria-hidden="true" className="shrink-0">
+            →
+          </span>
+          <span className="flag-emoji min-w-0 truncate" title={group.now}>
+            {group.now}
+          </span>
+        </>
+      )}
+      <span className="shrink-0">· {tr('{0} nodes', [group.all.length])}</span>
+    </span>
+  )
+}
+
 interface GroupHeaderProps {
   index: number
   group: ControllerMixedGroup
@@ -62,6 +109,7 @@ interface GroupHeaderProps {
   groupDisplayLayout: 'hidden' | 'single' | 'double'
   searchValue: string
   delaying: boolean
+  isRelevant: boolean
   onToggle: (index: number, currentlyOpen: boolean) => void
   onUpdateSearch: (index: number, value: string) => void
   onScrollToProxy: (index: number) => void
@@ -76,20 +124,34 @@ const GroupHeader = memo(function GroupHeader({
   groupDisplayLayout,
   searchValue,
   delaying,
+  isRelevant,
   onToggle,
   onUpdateSearch,
   onScrollToProxy,
   onGroupDelay
 }: GroupHeaderProps) {
+  const [searchVisible, setSearchVisible] = useState(Boolean(searchValue))
+
+  useEffect(() => {
+    if (searchValue) setSearchVisible(true)
+  }, [searchValue])
+
   return (
-    <div className={`w-full pt-2 ${isLast && !isOpen ? 'pb-2' : ''} px-2`}>
-      <Card as="div" isPressable fullWidth onPress={() => onToggle(index, isOpen)}>
-        <CardBody className="w-full h-14">
-          <div className="flex justify-between h-full">
-            <div className="flex text-ellipsis overflow-hidden whitespace-nowrap h-full">
+    <div className={`w-full px-2 pt-1.5 ${isLast && !isOpen ? 'pb-1.5' : ''}`}>
+      <Card
+        as="div"
+        isPressable
+        fullWidth
+        aria-expanded={isOpen}
+        className={isRelevant ? 'bg-primary/8 ring-1 ring-primary/20' : undefined}
+        onPress={() => onToggle(index, isOpen)}
+      >
+        <CardBody className="min-h-14 w-full px-3 py-2">
+          <div className="flex min-h-10 items-center justify-between gap-2">
+            <div className="flex min-w-0 flex-1 items-center overflow-hidden whitespace-nowrap">
               {group.icon ? (
                 <Avatar
-                  className="mr-2 h-8 w-8 shrink-0 bg-transparent overflow-visible! rounded-none!"
+                  className="mr-2 size-8 shrink-0 overflow-visible! rounded-none! bg-transparent"
                   size="sm"
                 >
                   <Avatar.Image
@@ -103,62 +165,79 @@ const GroupHeader = memo(function GroupHeader({
                 </Avatar>
               ) : null}
               <div
-                className={`flex flex-col h-full ${
-                  groupDisplayLayout === 'double' ? '' : 'justify-center'
-                }`}
+                className={`flex min-w-0 flex-1 flex-col ${groupDisplayLayout === 'double' ? 'gap-0.5' : 'justify-center'}`}
               >
-                <div
-                  className={`text-ellipsis overflow-hidden whitespace-nowrap leading-tight ${
-                    groupDisplayLayout === 'double' ? 'text-md flex-5 flex items-center' : 'text-lg'
-                  }`}
-                >
-                  <span className="flag-emoji inline-block">{group.name}</span>
+                <div className="flex min-w-0 items-center leading-tight">
+                  <span
+                    className="flag-emoji min-w-0 truncate text-sm font-semibold"
+                    title={group.name}
+                  >
+                    {group.name}
+                  </span>
                   {groupDisplayLayout === 'single' && (
-                    <>
-                      <div className="inline ml-2 text-sm text-foreground-500">{group.type}</div>
-                      <div className="inline flag-emoji ml-2 text-sm text-foreground-500">
-                        {group.now}
-                      </div>
-                    </>
+                    <GroupMetadata group={group} className="ml-2 max-w-[60%]" />
                   )}
                 </div>
-                {groupDisplayLayout === 'double' && (
-                  <div className="text-ellipsis whitespace-nowrap text-[10px] text-foreground-500 leading-tight flex-3 flex items-center">
-                    <span>{group.type}</span>
-                    <span className="flag-emoji ml-1 inline-block">{group.now}</span>
-                  </div>
-                )}
+                {groupDisplayLayout === 'double' && <GroupMetadata group={group} />}
               </div>
             </div>
-            <div className="flex items-center">
+            <div className="flex shrink-0 items-center gap-0.5">
               <div
-                className="flex items-center"
+                className="flex items-center gap-0.5"
                 onClick={(e) => e.stopPropagation()}
                 onPointerDown={(e) => e.stopPropagation()}
                 onKeyDown={(e) => e.stopPropagation()}
               >
-                <Chip size="sm" className="my-1 mr-2">
-                  {group.all.length}
-                </Chip>
-                <CollapseInput
-                  value={searchValue}
-                  onValueChange={(v) => onUpdateSearch(index, v)}
-                />
-                <Button variant="light" size="sm" isIconOnly onPress={() => onScrollToProxy(index)}>
-                  <FaLocationCrosshairs className="text-lg text-foreground-500" />
-                </Button>
+                {searchVisible && (
+                  <CollapseInput
+                    autoFocus
+                    aria-label={tr('Search group')}
+                    value={searchValue}
+                    onBlur={() => {
+                      if (!searchValue) setSearchVisible(false)
+                    }}
+                    onValueChange={(v) => onUpdateSearch(index, v)}
+                  />
+                )}
                 <Button
                   variant="light"
                   isLoading={delaying}
                   size="sm"
                   isIconOnly
+                  aria-label={tr('Test group latency')}
                   onPress={() => onGroupDelay(index)}
                 >
                   <MdOutlineSpeed className="text-lg text-foreground-500" />
                 </Button>
+                <Dropdown placement="bottom-end">
+                  <DropdownTrigger>
+                    <Button
+                      variant="light"
+                      size="sm"
+                      isIconOnly
+                      aria-label={tr('Proxy group actions')}
+                    >
+                      <MdMoreHoriz className="text-lg text-foreground-500" />
+                    </Button>
+                  </DropdownTrigger>
+                  <DropdownMenu
+                    aria-label={tr('Proxy group actions')}
+                    onAction={(key) => {
+                      if (key === 'search') setSearchVisible(true)
+                      if (key === 'current') onScrollToProxy(index)
+                    }}
+                  >
+                    <DropdownItem key="search" startContent={<MdSearch />}>
+                      {tr('Search group')}
+                    </DropdownItem>
+                    <DropdownItem key="current" startContent={<FaLocationCrosshairs />}>
+                      {tr('Show selected proxy')}
+                    </DropdownItem>
+                  </DropdownMenu>
+                </Dropdown>
               </div>
               <IoIosArrowBack
-                className={`transition duration-200 ml-2 h-8 text-lg text-foreground-500 flex items-center ${
+                className={`ml-1 flex h-8 items-center text-base text-foreground-400 transition duration-200 ${
                   isOpen ? '-rotate-90' : ''
                 }`}
               />
@@ -622,6 +701,7 @@ const Proxies: React.FC = () => {
           groupDisplayLayout={groupDisplayLayoutRef.current}
           searchValue={searchValueRef.current[index]}
           delaying={delayingRef.current[index]}
+          isRelevant={mode === 'global' && g[index].name.toUpperCase() === 'GLOBAL'}
           onToggle={toggleOpenRef.current}
           onUpdateSearch={updateSearchValueRef.current}
           onScrollToProxy={scrollToCurrentProxyStable}
@@ -631,7 +711,7 @@ const Proxies: React.FC = () => {
         <div>Never See This</div>
       )
     },
-    [isOpen, scrollToCurrentProxyStable, onGroupDelayStable]
+    [isOpen, mode, scrollToCurrentProxyStable, onGroupDelayStable]
   )
 
   const itemContent = useCallback((index: number, groupIndex: number) => {
@@ -697,6 +777,7 @@ const Proxies: React.FC = () => {
           isIconOnly
           variant="light"
           className="app-nodrag"
+          aria-label={tr('Proxy group settings')}
           onPress={() => {
             setIsSettingDrawerOpen(true)
             setSettingDrawerReopenSignal((signal) => signal + 1)
