@@ -16,6 +16,14 @@ interface AppQuitLifecycleContext {
 let isQuitting = false
 let notQuitDialog = false
 let lastQuitAttempt = 0
+let quitPromise: Promise<void> | undefined
+let quitConfirmationPromise: Promise<boolean> | undefined
+
+// Cleanup normally completes almost immediately. Keep a bounded fallback for
+// unavailable services and OS extensions so an explicit quit can never leave
+// the Electron process waiting indefinitely.
+const cleanupTaskTimeoutMs = 8_000
+const quitConfirmationTimeoutMs = 30_000
 
 export function setNotQuitDialog(): void {
   notQuitDialog = true
@@ -38,24 +46,28 @@ export function initAppQuitLifecycle(context: AppQuitLifecycleContext): void {
     // Don't quit app when all windows are closed
   })
 
-  app.on('before-quit', async (event) => {
-    if (!isQuitting && !notQuitDialog) {
-      event.preventDefault()
+  app.on('before-quit', (event) => {
+    if (isQuitting) return
 
-      const now = Date.now()
-      if (now - lastQuitAttempt < 500) {
-        await quit(context)
-        return
-      }
-      lastQuitAttempt = now
-
-      if (await showQuitConfirmDialog(context)) {
-        await quit(context)
-      }
-    } else if (notQuitDialog) {
-      event.preventDefault()
-      await quit(context)
+    event.preventDefault()
+    if (notQuitDialog) {
+      void quit(context)
+      return
     }
+
+    const now = Date.now()
+    if (now - lastQuitAttempt < 500) {
+      void quit(context)
+      return
+    }
+    lastQuitAttempt = now
+
+    quitConfirmationPromise ??= showQuitConfirmDialog(context).finally(() => {
+      quitConfirmationPromise = undefined
+    })
+    void quitConfirmationPromise.then((confirmed) => {
+      if (confirmed) void quit(context)
+    })
   })
 
   powerMonitor.on('shutdown', async () => {
@@ -70,67 +82,86 @@ export function initAppQuitLifecycle(context: AppQuitLifecycleContext): void {
 }
 
 async function quit(context: AppQuitLifecycleContext): Promise<void> {
+  if (quitPromise) return quitPromise
   isQuitting = true
-  context.clearLightweightTimeout()
-  await cleanupBeforeExit(false)
-  context.exitApp()
+  quitPromise = (async () => {
+    context.clearLightweightTimeout()
+    await cleanupBeforeExit(false)
+    context.exitApp()
+  })()
+  return quitPromise
 }
 
 async function cleanupBeforeExit(useRegistry: boolean): Promise<void> {
-  try {
-    await stopNetworkDetection()
-  } catch (error) {
-    await appendAppLog(`[App]: stop network detection before exit failed, ${error}\n`)
-  }
+  await runCleanupTask('stop network detection', async () => stopNetworkDetection())
 
   await Promise.all([
-    (async (): Promise<void> => {
-      try {
-        await stopAppRouting()
-      } catch (error) {
-        await appendAppLog(`[App]: stop application routing before exit failed, ${error}\n`)
-      }
-    })(),
-    (async (): Promise<void> => {
-      try {
-        await triggerSysProxy(false, false, useRegistry)
-      } catch (error) {
-        await appendAppLog(`[App]: disable sysproxy before exit failed after fallback, ${error}\n`)
-      }
-    })(),
-    (async (): Promise<void> => {
-      try {
-        await stopCore()
-      } catch (error) {
-        await appendAppLog(`[App]: stop core before exit failed, ${error}\n`)
-      }
-    })(),
-    (async (): Promise<void> => {
-      try {
-        await stopTrafficPresenter()
-      } catch (error) {
-        await appendAppLog(`[App]: stop traffic presenter before exit failed, ${error}\n`)
-      }
-    })()
+    runCleanupTask('stop application routing', stopAppRouting),
+    runCleanupTask('disable system proxy', async () => triggerSysProxy(false, false, useRegistry)),
+    runCleanupTask('stop core', stopCore),
+    runCleanupTask('stop traffic presenter', stopTrafficPresenter)
   ])
+}
+
+async function runCleanupTask(name: string, task: () => void | Promise<void>): Promise<void> {
+  let timeout: NodeJS.Timeout | undefined
+  try {
+    await Promise.race([
+      Promise.resolve().then(task),
+      new Promise<never>((_, reject) => {
+        timeout = setTimeout(
+          () => reject(new Error(`timed out after ${cleanupTaskTimeoutMs} ms`)),
+          cleanupTaskTimeoutMs
+        )
+      })
+    ])
+  } catch (error) {
+    await appendAppLog(`[App]: ${name} before exit failed, ${error}\n`).catch(() => {})
+  } finally {
+    if (timeout) clearTimeout(timeout)
+  }
 }
 
 function showQuitConfirmDialog(context: AppQuitLifecycleContext): Promise<boolean> {
   return new Promise((resolve) => {
     const mainWindow = context.getMainWindow()
-    if (!mainWindow) {
+    if (!mainWindow || mainWindow.isDestroyed() || mainWindow.webContents.isDestroyed()) {
       resolve(true)
       return
     }
 
+    let settled = false
+    let showTimer: NodeJS.Timeout | undefined
+    const confirmTimer = setTimeout(() => finish(false), quitConfirmationTimeoutMs)
+    const finish = (confirmed: boolean): void => {
+      if (settled) return
+      settled = true
+      if (showTimer) clearTimeout(showTimer)
+      clearTimeout(confirmTimer)
+      ipcMain.off('quit-confirm-result', handleQuitConfirm)
+      mainWindow.webContents.off('destroyed', handleRendererUnavailable)
+      resolve(confirmed)
+    }
+    const handleRendererUnavailable = (): void => finish(true)
+    const handleQuitConfirm = (event: IpcMainEvent, confirmed: boolean): void => {
+      if (event.sender !== mainWindow.webContents) return
+      finish(confirmed)
+    }
+
+    ipcMain.on('quit-confirm-result', handleQuitConfirm)
+    mainWindow.webContents.once('destroyed', handleRendererUnavailable)
     const delay = context.showWindow()
-    setTimeout(() => {
-      context.getMainWindow()?.webContents.send('show-quit-confirm')
-      const handleQuitConfirm = (_event: IpcMainEvent, confirmed: boolean): void => {
-        ipcMain.off('quit-confirm-result', handleQuitConfirm)
-        resolve(confirmed)
+    showTimer = setTimeout(() => {
+      const currentWindow = context.getMainWindow()
+      if (
+        !currentWindow ||
+        currentWindow.isDestroyed() ||
+        currentWindow.webContents.isDestroyed()
+      ) {
+        finish(true)
+        return
       }
-      ipcMain.once('quit-confirm-result', handleQuitConfirm)
+      currentWindow.webContents.send('show-quit-confirm')
     }, delay)
   })
 }

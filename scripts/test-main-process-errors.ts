@@ -85,3 +85,17 @@ test('main renderer load failures use bounded retries and retain diagnostics', (
   assert.match(source, /render-process-gone/)
   assert.match(source, /\[Window\]: renderer process exited/)
 })
+
+test('application quit cannot wait indefinitely for cleanup or renderer confirmation', () => {
+  const source = readFileSync(resolve('src/main/resolve/appLifecycle.ts'), 'utf8')
+
+  assert.match(source, /cleanupTaskTimeoutMs = 8_000/)
+  assert.match(source, /Promise\.race\(\[/)
+  assert.match(source, /runCleanupTask\('stop application routing'/)
+  assert.match(source, /runCleanupTask\('disable system proxy'/)
+  assert.match(source, /runCleanupTask\('stop core'/)
+  assert.match(source, /runCleanupTask\('stop traffic presenter'/)
+  assert.match(source, /quitConfirmationTimeoutMs = 30_000/)
+  assert.match(source, /webContents\.once\('destroyed', handleRendererUnavailable\)/)
+  assert.match(source, /if \(quitPromise\) return quitPromise/)
+})
