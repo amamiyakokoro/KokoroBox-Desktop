@@ -5,6 +5,12 @@ export const messages: Readonly<Record<string, string>> = {
   'Appearance and interface': 'Appearance and interface',
   'Core and system': 'Core and system',
   'Data and integrations': 'Data and integrations',
+  'Subscription data': 'Subscription data',
+  'Gist synchronization': 'Gist synchronization',
+  'Subscription data and sync': 'Subscription data and sync',
+  'Global subscription and Gist settings are managed in Application settings.':
+    'Global subscription and Gist settings are managed in Application settings.',
+  'Open data and integrations': 'Open data and integrations',
   'Diagnostics and about': 'Diagnostics and about',
   'Core and service': 'Core and service',
   'Core runtime': 'Core runtime',

@@ -5,6 +5,12 @@ export const messages: Readonly<Record<string, string>> = {
   'Appearance and interface': '外觀與介面',
   'Core and system': '核心與系統',
   'Data and integrations': '資料與整合',
+  'Subscription data': '訂閱資料',
+  'Gist synchronization': 'Gist 同步',
+  'Subscription data and sync': '訂閱資料與同步',
+  'Global subscription and Gist settings are managed in Application settings.':
+    '訂閱與 Gist 的全域設定已移至應用程式設定。',
+  'Open data and integrations': '開啟資料與整合',
   'Diagnostics and about': '診斷與關於',
   'Core and service': '核心與服務',
   'Core runtime': '核心執行',

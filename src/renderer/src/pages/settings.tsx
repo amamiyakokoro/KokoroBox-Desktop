@@ -3,6 +3,7 @@ import { Button, Input } from '@heroui/react'
 import BasePage from '@renderer/components/base/base-page'
 import { IoLogoGithub } from 'react-icons/io5'
 import WebdavConfig from '@renderer/components/settings/webdav-config'
+import SubscriptionIntegrationSettings from '@renderer/components/settings/subscription-integration-settings'
 import GeneralConfig, { PerformanceConfig } from '@renderer/components/settings/general-config'
 import {
   BackgroundBehaviorSettings,
@@ -119,6 +120,12 @@ const categories: CategoryDefinition[] = [
     entries: [
       'GitHub API Token',
       tr('Copy environment variable format'),
+      tr('Use a separate working directory for each profile'),
+      tr('Subscription user agent'),
+      tr('Sync runtime configuration to Gist'),
+      tr('Encrypt Gist configuration'),
+      tr('Gist age public key'),
+      tr('Gist age private key'),
       tr('WebDAV backup'),
       tr('WebDAV URL'),
       tr('WebDAV backup directory'),
@@ -185,8 +192,9 @@ const categoryContent: Record<SettingsCategory, React.ReactNode> = {
   ),
   data: (
     <>
-      <IntegrationSettings />
+      <SubscriptionIntegrationSettings />
       <WebdavConfig />
+      <IntegrationSettings />
     </>
   ),
   shortcuts: <ShortcutConfig />,

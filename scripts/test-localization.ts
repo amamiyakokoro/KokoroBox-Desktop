@@ -221,3 +221,30 @@ test('guided tour introduces Kokoro settings before profile import', () => {
   assert.match(kokoroPage, /kokoro-settings-guide/)
   assert.match(kokoroPage, /!session\?\.authenticated\s*&&\s*\(\s*<header/)
 })
+
+test('global subscription settings are owned by Application settings', () => {
+  const profileDrawer = readFileSync(
+    'src/renderer/src/components/profiles/profile-setting-drawer.tsx',
+    'utf8'
+  )
+  const subscriptionSettings = readFileSync(
+    'src/renderer/src/components/settings/subscription-integration-settings.tsx',
+    'utf8'
+  )
+  const settingsPage = readFileSync('src/renderer/src/pages/settings.tsx', 'utf8')
+
+  for (const key of [
+    'diffWorkDir',
+    'userAgent',
+    'gistSyncEnabled',
+    'gistEncrypted',
+    'gistAgeRecipient',
+    'gistAgeIdentity'
+  ]) {
+    assert.doesNotMatch(profileDrawer, new RegExp(`\\b${key}\\b`))
+    assert.match(subscriptionSettings, new RegExp(`\\b${key}\\b`))
+  }
+
+  assert.match(profileDrawer, /navigate\('\/settings\?section=data'\)/)
+  assert.match(settingsPage, /<SubscriptionIntegrationSettings \/>/)
+})
