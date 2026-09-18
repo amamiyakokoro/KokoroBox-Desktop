@@ -29,6 +29,7 @@ import Sysproxy from './network/system-proxy-settings'
 import Tun from './network/tun-settings'
 import DNS from './network/dns-settings'
 import Mihomo from './network/mihomo-settings'
+import Sniffer from './network/sniffer-settings'
 
 export type SettingsCategory =
   'general' | 'appearance' | 'network' | 'core' | 'data' | 'shortcuts' | 'diagnostics'
@@ -222,7 +223,7 @@ export const getSettingsCategories = (): SettingsCategoryDefinition[] => {
     },
     {
       key: 'mihomo',
-      label: tr('Mihomo settings'),
+      label: 'Mihomo',
       entries: [
         entry('mihomo-ipv6', 'IPv6', tr('Core network'), { panel: 'mihomo' }),
         entry('mihomo-mixed-port', tr('Mixed port'), tr('Port settings'), { panel: 'mihomo' }),
@@ -272,6 +273,86 @@ export const getSettingsCategories = (): SettingsCategoryDefinition[] => {
         })
       ],
       content: () => <Mihomo embedded />
+    },
+    {
+      key: 'network-behavior',
+      label: tr('Network behavior'),
+      entries: [
+        entry('stop-core-offline', tr('Stop core when offline'), tr('Network behavior'), {
+          panel: 'network-behavior'
+        }),
+        entry(
+          'connectivity-check-interval',
+          tr('Connectivity check interval'),
+          tr('Network behavior'),
+          { panel: 'network-behavior' }
+        ),
+        entry(
+          'excluded-network-interfaces',
+          tr('Interfaces excluded from detection'),
+          tr('Network behavior'),
+          { panel: 'network-behavior' }
+        ),
+        entry(
+          'direct-wifi-ssids',
+          tr('Use direct connections on specified Wi-Fi SSIDs'),
+          tr('Network behavior'),
+          { panel: 'network-behavior' }
+        )
+      ],
+      content: () => <NetworkBehaviorSettings />
+    },
+    {
+      key: 'sniffer',
+      label: tr('Sniffing'),
+      entries: [
+        entry(
+          'sniffer-override',
+          tr('Override domain sniffing settings'),
+          tr('Domain sniffing settings'),
+          { panel: 'sniffer' }
+        ),
+        entry(
+          'sniffer-override-address',
+          tr('Override connection address'),
+          tr('Sniffing behavior'),
+          { panel: 'sniffer' }
+        ),
+        entry('sniffer-real-ip', tr('Sniff real IP mappings'), tr('Sniffing behavior'), {
+          panel: 'sniffer'
+        }),
+        entry('sniffer-unmapped-ip', tr('Sniff unmapped IP addresses'), tr('Sniffing behavior'), {
+          panel: 'sniffer'
+        }),
+        entry('sniffer-http-ports', tr('HTTP sniffing ports'), tr('Protocol ports'), {
+          panel: 'sniffer'
+        }),
+        entry('sniffer-tls-ports', tr('TLS sniffing ports'), tr('Protocol ports'), {
+          panel: 'sniffer'
+        }),
+        entry('sniffer-quic-ports', tr('QUIC sniffing ports'), tr('Protocol ports'), {
+          panel: 'sniffer'
+        }),
+        entry('sniffer-skip-domain', tr('Skip domain sniffing'), tr('Sniffing exceptions'), {
+          panel: 'sniffer'
+        }),
+        entry('sniffer-force-domain', tr('Force domain sniffing'), tr('Sniffing exceptions'), {
+          panel: 'sniffer'
+        }),
+        entry(
+          'sniffer-skip-destination',
+          tr('Skip destination address sniffing'),
+          tr('Sniffing exceptions'),
+          { panel: 'sniffer' }
+        ),
+        entry(
+          'sniffer-skip-source',
+          tr('Skip source address sniffing'),
+          tr('Sniffing exceptions'),
+          { panel: 'sniffer' }
+        )
+      ],
+      content: () => <Sniffer embedded />
     }
   ]
 
@@ -400,29 +481,12 @@ export const getSettingsCategories = (): SettingsCategoryDefinition[] => {
           entry('disable-nftables', tr('Disable nftables'), tr('Environment variables'), {
             platforms: ['linux']
           }),
-          entry('trusted-path', tr('Trusted path'), tr('Environment variables')),
-          entry('stop-core-offline', tr('Stop core when offline'), tr('Network behavior')),
-          entry(
-            'connectivity-check-interval',
-            tr('Connectivity check interval'),
-            tr('Network behavior')
-          ),
-          entry(
-            'excluded-network-interfaces',
-            tr('Interfaces excluded from detection'),
-            tr('Network behavior')
-          ),
-          entry(
-            'direct-wifi-ssids',
-            tr('Use direct connections on specified Wi-Fi SSIDs'),
-            tr('Network behavior')
-          )
+          entry('trusted-path', tr('Trusted path'), tr('Environment variables'))
         ],
         content: () => (
           <>
             <CoreRuntimeConfig />
             <EnvSetting />
-            <NetworkBehaviorSettings />
           </>
         )
       },

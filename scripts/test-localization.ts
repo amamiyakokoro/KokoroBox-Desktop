@@ -291,7 +291,7 @@ test('core feature settings pages use the shared desktop layout', () => {
     'src/renderer/src/components/settings/network/system-proxy-settings.tsx',
     'src/renderer/src/components/settings/network/tun-settings.tsx',
     'src/renderer/src/components/settings/network/dns-settings.tsx',
-    'src/renderer/src/pages/sniffer.tsx',
+    'src/renderer/src/components/settings/network/sniffer-settings.tsx',
     'src/renderer/src/components/settings/network/mihomo-settings.tsx'
   ]
   const layout = readFileSync('src/renderer/src/components/base/base-feature-settings.tsx', 'utf8')
@@ -321,7 +321,7 @@ test('migrated feature settings use modern rows and stable save actions', () => 
     'src/renderer/src/components/settings/network/system-proxy-settings.tsx',
     'src/renderer/src/components/settings/network/tun-settings.tsx',
     'src/renderer/src/components/settings/network/dns-settings.tsx',
-    'src/renderer/src/pages/sniffer.tsx',
+    'src/renderer/src/components/settings/network/sniffer-settings.tsx',
     'src/renderer/src/components/settings/network/mihomo-settings.tsx',
     'src/renderer/src/components/dns/advanced-dns-setting.tsx',
     'src/renderer/src/components/mihomo/advanced-settings.tsx',
