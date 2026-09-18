@@ -15,6 +15,11 @@ interface SiderNavItemProps {
   onPress: () => void
 }
 
+interface SiderStatusCardProps extends SiderNavItemProps {
+  actions?: React.ReactNode
+  details?: React.ReactNode
+}
+
 const statusToneClasses: Record<SiderStatusTone, string> = {
   default: 'text-foreground-500',
   success: 'text-success-600 dark:text-success-400',
@@ -85,6 +90,65 @@ export const SiderNavItem: React.FC<SiderNavItemProps> = ({
     ) : (
       <LuChevronRight className="mr-2.5 shrink-0 text-sm text-foreground-300 transition-transform group-hover:translate-x-0.5 group-hover:text-foreground-500" />
     )}
+  </div>
+)
+
+export const SiderStatusCard: React.FC<SiderStatusCardProps> = ({
+  icon,
+  title,
+  description,
+  status,
+  statusTone = 'default',
+  active = false,
+  actions,
+  details,
+  onPress
+}) => (
+  <div
+    className={cn(
+      'group overflow-hidden rounded-xl border border-divider bg-content1 shadow-xs transition-colors',
+      active ? 'border-primary/35 bg-primary/8' : 'hover:border-default-300 hover:bg-default-50'
+    )}
+  >
+    <div className="flex min-h-14 items-center">
+      <button
+        type="button"
+        className="flex min-w-0 flex-1 items-center gap-2.5 px-2.5 py-2 text-left focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-primary"
+        aria-current={active ? 'page' : undefined}
+        onClick={onPress}
+      >
+        <span
+          className={cn(
+            'flex size-8 shrink-0 items-center justify-center rounded-lg bg-default-100 text-xl text-foreground-600 transition-colors',
+            active && 'bg-primary/15 text-primary'
+          )}
+        >
+          {icon}
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-sm font-semibold text-foreground">{title}</span>
+          {(description || status) && (
+            <span className="mt-0.5 flex min-w-0 items-center gap-1 text-xs">
+              {description && <span className="truncate text-foreground-500">{description}</span>}
+              {description && status && <span className="text-foreground-300">·</span>}
+              {status && (
+                <span className={cn('shrink-0', statusToneClasses[statusTone])}>{status}</span>
+              )}
+            </span>
+          )}
+        </span>
+        <LuChevronRight className="shrink-0 text-sm text-foreground-300 transition-transform group-hover:translate-x-0.5 group-hover:text-foreground-500" />
+      </button>
+      {actions && (
+        <div
+          className="flex shrink-0 items-center gap-0.5 pr-2"
+          onPointerDown={(event) => event.stopPropagation()}
+        >
+          {actions}
+        </div>
+      )}
+    </div>
+    {details && <div className="border-t border-divider/70 px-2.5 py-2">{details}</div>}
   </div>
 )
 

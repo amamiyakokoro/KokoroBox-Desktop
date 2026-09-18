@@ -1,5 +1,5 @@
 import { tr } from '../../../../shared/i18n'
-import { Button, Card, CardBody, CardFooter, Chip, Tooltip } from '@heroui/react'
+import { Button, Tooltip } from '@heroui/react'
 import { Meter } from '@heroui-v3/react'
 import { useProfileConfig } from '@renderer/hooks/use-profile-config'
 import { useLocation, useNavigate } from 'react-router-dom'
@@ -14,6 +14,7 @@ import React, { useState } from 'react'
 import ConfigViewer from './config-viewer'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { TiFolder } from 'react-icons/ti'
+import { SiderStatusCard } from './sider-surfaces'
 
 dayjs.extend(relativeTime)
 
@@ -21,9 +22,8 @@ interface Props {
   iconOnly?: boolean
 }
 
-const ProfileCard: React.FC<Props> = (props) => {
+const ProfileCard: React.FC<Props> = ({ iconOnly }) => {
   const { appConfig, patchAppConfig } = useAppConfig()
-  const { iconOnly } = props
   const {
     profileCardStatus = 'col-span-2',
     profileDisplayDate = 'expire',
@@ -40,22 +40,29 @@ const ProfileCard: React.FC<Props> = (props) => {
     attributes,
     listeners,
     setNodeRef,
-    transform: tf,
+    transform: sortableTransform,
     transition,
     isDragging
-  } = useSortable({
-    id: 'profile'
-  })
-  const transform = tf ? { x: tf.x, y: tf.y, scaleX: 1, scaleY: 1 } : null
+  } = useSortable({ id: 'profile' })
+  const transform = sortableTransform
+    ? { x: sortableTransform.x, y: sortableTransform.y, scaleX: 1, scaleY: 1 }
+    : null
   const info = items?.find((item) => item.id === current) ?? {
     id: 'default',
     type: 'local',
     name: tr('Blank profile')
   }
 
-  const extra = info?.extra
+  const extra = info.extra
   const usage = (extra?.upload ?? 0) + (extra?.download ?? 0)
   const total = extra?.total ?? 0
+  const dateLabel = profileDisplayDate === 'expire' ? tr('Expiration') : tr('Last updated')
+  const dateValue =
+    profileDisplayDate === 'expire'
+      ? extra?.expire
+        ? dayjs.unix(extra.expire).format('YYYY-MM-DD')
+        : tr('No expiration')
+      : dayjs(info.updated).fromNow()
 
   if (iconOnly) {
     return (
@@ -64,11 +71,10 @@ const ProfileCard: React.FC<Props> = (props) => {
           <Button
             size="sm"
             isIconOnly
+            aria-label={tr('Subscriptions')}
             color={match ? 'primary' : 'default'}
             variant={match ? 'solid' : 'light'}
-            onPress={() => {
-              navigate('/profiles')
-            }}
+            onPress={() => navigate('/profiles')}
           >
             <TiFolder className="text-[20px]" />
           </Button>
@@ -79,199 +85,100 @@ const ProfileCard: React.FC<Props> = (props) => {
 
   return (
     <div
+      ref={setNodeRef}
+      {...attributes}
+      {...listeners}
       style={{
         position: 'relative',
         transform: CSS.Transform.toString(transform),
         transition,
         zIndex: isDragging ? 'calc(infinity)' : undefined
       }}
-      className={`${profileCardStatus} profile-card`}
+      className={`${profileCardStatus} profile-card ${isDragging && !disableAnimation ? 'scale-[0.98]' : ''}`}
     >
       {showRuntimeConfig && <ConfigViewer onClose={() => setShowRuntimeConfig(false)} />}
-      {profileCardStatus === 'col-span-2' ? (
-        <Card
-          fullWidth
-          ref={setNodeRef}
-          {...attributes}
-          {...listeners}
-          className={`${match ? 'bg-primary' : 'hover:bg-primary/30'} ${isDragging ? `${disableAnimation ? '' : 'scale-[0.95]'} tap-highlight-transparent` : ''}`}
-        >
-          <CardBody className="pb-1">
-            <div
-              ref={setNodeRef}
-              {...attributes}
-              {...listeners}
-              className="flex justify-between h-8"
-            >
-              <h3
-                title={info?.name}
-                className={`text-ellipsis whitespace-nowrap overflow-hidden text-md font-bold leading-8 ${match ? 'text-primary-foreground' : 'text-foreground'} `}
+      <SiderStatusCard
+        icon={<TiFolder />}
+        title={info.name}
+        description={tr('Subscriptions')}
+        status={tr(info.type === 'remote' ? 'Remote' : 'Local')}
+        active={match}
+        onPress={() => navigate('/profiles')}
+        actions={
+          <>
+            <Tooltip content={tr('Runtime configuration')} placement="top">
+              <Button
+                isIconOnly
+                size="sm"
+                variant="light"
+                aria-label={tr('Runtime configuration')}
+                onPress={() => setShowRuntimeConfig(true)}
               >
-                {info?.name}
-              </h3>
-              <div className="flex">
+                <CgLoadbarDoc className="text-lg" />
+              </Button>
+            </Tooltip>
+            {info.type === 'remote' && (
+              <Tooltip
+                content={`${tr('Refresh')} · ${dayjs(info.updated).fromNow()}`}
+                placement="top"
+              >
                 <Button
                   isIconOnly
                   size="sm"
                   variant="light"
-                  color="default"
-                  onPress={() => {
-                    setShowRuntimeConfig(true)
+                  aria-label={tr('Refresh')}
+                  isDisabled={updating}
+                  onPress={async () => {
+                    setUpdating(true)
+                    await addProfileItem(info)
+                    setUpdating(false)
                   }}
                 >
-                  <CgLoadbarDoc
-                    className={`text-[24px] ${match ? 'text-primary-foreground' : 'text-foreground'}`}
-                  />
+                  <IoMdRefresh className={`text-lg ${updating ? 'animate-spin' : ''}`} />
                 </Button>
-                {info.type === 'remote' && (
-                  <Tooltip delay={1000} placement="left" content={dayjs(info.updated).fromNow()}>
+              </Tooltip>
+            )}
+          </>
+        }
+        details={
+          info.type === 'remote' ? (
+            extra ? (
+              <div className="space-y-1.5">
+                <div className="flex min-w-0 items-center justify-between gap-2 text-xs">
+                  <span className="truncate text-foreground-500">
+                    {calcTraffic(usage)} / {calcTraffic(total)}
+                  </span>
+                  <Tooltip content={dateLabel} placement="top">
                     <Button
-                      isIconOnly
                       size="sm"
-                      disabled={updating}
                       variant="light"
-                      color="default"
-                      onPress={async () => {
-                        setUpdating(true)
-                        await addProfileItem(info)
-                        setUpdating(false)
-                      }}
+                      className="h-6 min-w-0 px-1.5 text-xs text-foreground-500"
+                      aria-label={dateLabel}
+                      onPress={() =>
+                        patchAppConfig({
+                          profileDisplayDate: profileDisplayDate === 'expire' ? 'update' : 'expire'
+                        })
+                      }
                     >
-                      <IoMdRefresh
-                        className={`text-[24px] ${match ? 'text-primary-foreground' : 'text-foreground'} ${updating ? 'animate-spin' : ''}`}
-                      />
+                      {dateValue}
                     </Button>
                   </Tooltip>
-                )}
+                </div>
+                <Meter aria-label={tr('Traffic usage')} maxValue={total} value={usage}>
+                  <Meter.Track className="h-1.5 bg-default-200">
+                    <Meter.Fill className="bg-primary" />
+                  </Meter.Track>
+                </Meter>
               </div>
-            </div>
-            {info.type === 'remote' && extra && (
-              <div
-                className={`mt-2 flex justify-between ${match ? 'text-primary-foreground' : 'text-foreground'} `}
-              >
-                <small>{`${calcTraffic(usage)}/${calcTraffic(total)}`}</small>
-                {profileDisplayDate === 'expire' ? (
-                  <Button
-                    size="sm"
-                    variant="light"
-                    className={`h-5 p-1 m-0 ${match ? 'text-primary-foreground' : 'text-foreground'}`}
-                    onPress={async () => {
-                      await patchAppConfig({ profileDisplayDate: 'update' })
-                    }}
-                  >
-                    {extra.expire
-                      ? dayjs.unix(extra.expire).format('YYYY-MM-DD')
-                      : tr('No expiration')}
-                  </Button>
-                ) : (
-                  <Button
-                    size="sm"
-                    variant="light"
-                    className={`h-5 p-1 m-0 ${match ? 'text-primary-foreground' : 'text-foreground'}`}
-                    onPress={async () => {
-                      await patchAppConfig({ profileDisplayDate: 'expire' })
-                    }}
-                  >
-                    {dayjs(info.updated).fromNow()}
-                  </Button>
-                )}
+            ) : (
+              <div className="flex items-center justify-between gap-2 text-xs text-foreground-500">
+                <span>{tr('Last updated')}</span>
+                <span>{dayjs(info.updated).fromNow()}</span>
               </div>
-            )}
-          </CardBody>
-          <CardFooter className="pt-0">
-            {info.type === 'remote' && !extra && (
-              <div
-                className={`w-full mt-2 flex justify-between ${match ? 'text-primary-foreground' : 'text-foreground'}`}
-              >
-                <Chip
-                  size="sm"
-                  variant="bordered"
-                  className={`${match ? 'text-primary-foreground border-primary-foreground' : 'border-primary text-primary'}`}
-                >
-                  {tr('Remote')}
-                </Chip>
-                <small>{dayjs(info.updated).fromNow()}</small>
-              </div>
-            )}
-            {info.type === 'local' && (
-              <div
-                className={`mt-2 flex justify-between ${match ? 'text-primary-foreground' : 'text-foreground'}`}
-              >
-                <Chip
-                  size="sm"
-                  variant="bordered"
-                  className={`${match ? 'text-primary-foreground border-primary-foreground' : 'border-primary text-primary'}`}
-                >
-                  {tr('Local')}
-                </Chip>
-              </div>
-            )}
-            {extra && (
-              <Meter aria-label={tr('Traffic usage')} maxValue={total} value={usage}>
-                <Meter.Track
-                  className={
-                    match
-                      ? 'h-2.5 bg-black/22 shadow-[inset_0_0_0_1px_rgb(255_255_255/0.35)]'
-                      : undefined
-                  }
-                >
-                  <Meter.Fill
-                    className={
-                      match
-                        ? 'bg-(--color-accent-foreground) shadow-[0_0_8px_rgb(255_255_255/0.45)]'
-                        : undefined
-                    }
-                  />
-                </Meter.Track>
-              </Meter>
-            )}
-          </CardFooter>
-        </Card>
-      ) : (
-        <Card
-          fullWidth
-          ref={setNodeRef}
-          {...attributes}
-          {...listeners}
-          className={`${match ? 'bg-primary' : 'hover:bg-primary/30'} ${isDragging ? `${disableAnimation ? '' : 'scale-[0.95]'} tap-highlight-transparent` : ''}`}
-        >
-          <CardBody className="pb-1 pt-0 px-0 overflow-y-visible">
-            <div className="flex justify-between">
-              <Button
-                isIconOnly
-                className="bg-transparent pointer-events-none"
-                variant="flat"
-                color="default"
-              >
-                <TiFolder
-                  color="default"
-                  className={`${match ? 'text-primary-foreground' : 'text-foreground'} text-[24px]`}
-                />
-              </Button>
-              <Button
-                isIconOnly
-                className="bg-transparent"
-                variant="flat"
-                color="default"
-                onPress={() => {
-                  setShowRuntimeConfig(true)
-                }}
-              >
-                <CgLoadbarDoc
-                  className={`text-[24px] ${match ? 'text-primary-foreground' : 'text-foreground'}`}
-                />
-              </Button>
-            </div>
-          </CardBody>
-          <CardFooter className="pt-1">
-            <h3
-              className={`text-md font-bold ${match ? 'text-primary-foreground' : 'text-foreground'}`}
-            >
-              {tr('Subscriptions')}
-            </h3>
-          </CardFooter>
-        </Card>
-      )}
+            )
+          ) : undefined
+        }
+      />
     </div>
   )
 }

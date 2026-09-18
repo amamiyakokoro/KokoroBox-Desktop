@@ -160,6 +160,8 @@ test('desktop sidebar separates controls, live status and navigation', () => {
   const appRouting = readFileSync('src/renderer/src/components/sider/app-routing-card.tsx', 'utf8')
   const dns = readFileSync('src/renderer/src/components/sider/dns-card.tsx', 'utf8')
   const sniff = readFileSync('src/renderer/src/components/sider/sniff-card.tsx', 'utf8')
+  const profile = readFileSync('src/renderer/src/components/sider/profile-card.tsx', 'utf8')
+  const connections = readFileSync('src/renderer/src/components/sider/conn-card.tsx', 'utf8')
 
   assert.match(sider, /SiderSection title=\{tr\('Quick controls'\)\} columns=\{2\}/)
   assert.match(sider, /SiderSection title=\{tr\('Current status'\)\}/)
@@ -170,6 +172,7 @@ test('desktop sidebar separates controls, live status and navigation', () => {
   assert.match(sider, /orderedKeys\(navigationKeys\)/)
   assert.match(surfaces, /export const SiderQuickControl/)
   assert.match(surfaces, /export const SiderNavItem/)
+  assert.match(surfaces, /export const SiderStatusCard/)
   assert.match(surfaces, /columns === 2 \? 'grid grid-cols-2 gap-1\.5' : 'flex flex-col gap-1\.5'/)
   assert.match(surfaces, /aria-current=\{active \? 'page' : undefined\}/)
   assert.match(sidebarSettings, /title: tr\('Quick controls'\)/)
@@ -186,6 +189,12 @@ test('desktop sidebar separates controls, live status and navigation', () => {
   assert.doesNotMatch(dns, /patchMihomoConfig/)
   assert.match(sniff, /<SiderNavItem/)
   assert.doesNotMatch(sniff, /patchMihomoConfig/)
+  assert.match(profile, /<SiderStatusCard/)
+  assert.match(profile, /aria-label=\{tr\('Runtime configuration'\)\}/)
+  assert.doesNotMatch(profile, /<Card/)
+  assert.match(connections, /<SiderStatusCard/)
+  assert.match(connections, /<TrafficChart/)
+  assert.doesNotMatch(connections, /<Card/)
 })
 
 test('common settings choices use the shared segmented control', () => {

@@ -2,7 +2,6 @@ import React, { useId, useMemo } from 'react'
 
 export interface TrafficChartProps {
   data: Array<{ traffic: number; index: number }>
-  isActive: boolean
 }
 
 interface Point {
@@ -66,7 +65,7 @@ function createMonotoneAreaPath(values: number[]): string {
 }
 
 const TrafficChart: React.FC<TrafficChartProps> = (props) => {
-  const { data, isActive } = props
+  const { data } = props
   const id = useId()
 
   const areaPath = useMemo(() => {
@@ -75,9 +74,7 @@ const TrafficChart: React.FC<TrafficChartProps> = (props) => {
   }, [data])
 
   const gradientId = `traffic-gradient-${id.replaceAll(':', '')}`
-  const chartColor = isActive
-    ? 'hsl(var(--heroui-primary-foreground))'
-    : 'hsl(var(--heroui-foreground))'
+  const chartColor = 'hsl(var(--heroui-primary))'
 
   return (
     <svg
@@ -90,7 +87,7 @@ const TrafficChart: React.FC<TrafficChartProps> = (props) => {
     >
       <defs>
         <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={chartColor} stopOpacity={0.8} />
+          <stop offset="0%" stopColor={chartColor} stopOpacity={0.65} />
           <stop offset="100%" stopColor={chartColor} stopOpacity={0} />
         </linearGradient>
       </defs>
