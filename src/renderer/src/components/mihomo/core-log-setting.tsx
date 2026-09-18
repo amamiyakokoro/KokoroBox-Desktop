@@ -1,13 +1,16 @@
 import { tr } from '../../../../shared/i18n'
 import { Select, SelectItem } from '@heroui/react'
-import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'
-import { restartCore } from '@renderer/utils/ipc'
 import SettingCard from '../base/base-setting-card'
 import SettingItem from '../base/base-setting-item'
+import React from 'react'
 
-const CoreLogSetting: React.FC = () => {
-  const { controledMihomoConfig, patchControledMihomoConfig } = useControledMihomoConfig()
-  const { 'log-level': logLevel = 'info' } = controledMihomoConfig || {}
+interface CoreLogSettingProps {
+  config: Partial<MihomoConfig>
+  onChange: (patch: Partial<MihomoConfig>) => void
+}
+
+const CoreLogSetting: React.FC<CoreLogSettingProps> = ({ config, onChange }) => {
+  const { 'log-level': logLevel = 'info' } = config
 
   return (
     <SettingCard header={tr('Core logging')}>
@@ -19,11 +22,10 @@ const CoreLogSetting: React.FC = () => {
           size="sm"
           selectedKeys={new Set([logLevel])}
           disallowEmptySelection
-          onSelectionChange={async (value) => {
-            await patchControledMihomoConfig({
+          onSelectionChange={(value) => {
+            onChange({
               'log-level': value.currentKey as LogLevel
             })
-            await restartCore()
           }}
         >
           <SelectItem key="silent">silent</SelectItem>

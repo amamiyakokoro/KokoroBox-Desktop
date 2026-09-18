@@ -1,33 +1,36 @@
 import { tr } from '../../../../shared/i18n'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import SettingCard from '../base/base-setting-card'
 import SettingItem from '../base/base-setting-item'
 import EditableList from '../base/base-list-editor'
 
-import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'
-import { restartCore, triggerSysProxy } from '@renderer/utils/ipc'
-import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { platform } from '@renderer/utils/init'
 import { Button, Input, Switch } from '@heroui/react'
 import { FaNetworkWired } from 'react-icons/fa'
 import InterfaceModal from '@renderer/components/mihomo/interface-modal'
 
-const PortSetting: React.FC = () => {
-  const { appConfig } = useAppConfig()
-  const { sysProxy, onlyActiveDevice = false } = appConfig || {}
-  const { controledMihomoConfig, patchControledMihomoConfig } = useControledMihomoConfig()
+const emptyStringList: string[] = []
+const defaultSkipAuthPrefixes = ['127.0.0.1/32']
+
+interface PortSettingProps {
+  config: Partial<MihomoConfig>
+  onChange: (patch: Partial<MihomoConfig>) => void
+  onValidationChange: (key: string, invalid: boolean) => void
+}
+
+const PortSetting: React.FC<PortSettingProps> = ({ config, onChange, onValidationChange }) => {
   const {
-    authentication = [],
-    'skip-auth-prefixes': skipAuthPrefixes = ['127.0.0.1/32'],
+    authentication = emptyStringList,
+    'skip-auth-prefixes': skipAuthPrefixes = defaultSkipAuthPrefixes,
     'allow-lan': allowLan,
-    'lan-allowed-ips': lanAllowedIps = [],
-    'lan-disallowed-ips': lanDisallowedIps = [],
+    'lan-allowed-ips': lanAllowedIps = emptyStringList,
+    'lan-disallowed-ips': lanDisallowedIps = emptyStringList,
     'mixed-port': mixedPort = 7890,
     'socks-port': socksPort = 0,
     port: httpPort = 0,
     'redir-port': redirPort = 0,
     'tproxy-port': tproxyPort = 0
-  } = controledMihomoConfig || {}
+  } = config
 
   const [mixedPortInput, setMixedPortInput] = useState(mixedPort)
   const [socksPortInput, setSocksPortInput] = useState(socksPort)
@@ -39,6 +42,16 @@ const PortSetting: React.FC = () => {
   const [authenticationInput, setAuthenticationInput] = useState(authentication)
   const [skipAuthPrefixesInput, setSkipAuthPrefixesInput] = useState(skipAuthPrefixes)
   const [lanOpen, setLanOpen] = useState(false)
+
+  useEffect(() => setMixedPortInput(mixedPort), [mixedPort])
+  useEffect(() => setSocksPortInput(socksPort), [socksPort])
+  useEffect(() => setHttpPortInput(httpPort), [httpPort])
+  useEffect(() => setRedirPortInput(redirPort), [redirPort])
+  useEffect(() => setTproxyPortInput(tproxyPort), [tproxyPort])
+  useEffect(() => setLanAllowedIpsInput(lanAllowedIps), [lanAllowedIps])
+  useEffect(() => setLanDisallowedIpsInput(lanDisallowedIps), [lanDisallowedIps])
+  useEffect(() => setAuthenticationInput(authentication), [authentication])
+  useEffect(() => setSkipAuthPrefixesInput(skipAuthPrefixes), [skipAuthPrefixes])
 
   const parseAuth = (item: string): { part1: string; part2: string } => {
     const [user = '', pass = ''] = item.split(':')
@@ -56,160 +69,102 @@ const PortSetting: React.FC = () => {
     return new Set(ports).size !== ports.length
   }
 
-  const onChangeNeedRestart = async (patch: Partial<MihomoConfig>): Promise<void> => {
-    await patchControledMihomoConfig(patch)
-    await restartCore()
-  }
+  const ports = [mixedPortInput, socksPortInput, httpPortInput, redirPortInput, tproxyPortInput]
+  const portConflict = hasPortConflict()
+  const invalidPort = ports.some((port) => port < 0 || port > 65535)
+  const hasPortError = portConflict || invalidPort
+
+  useEffect(() => {
+    onValidationChange('ports', hasPortError)
+    return () => onValidationChange('ports', false)
+  }, [hasPortError, onValidationChange])
 
   return (
     <>
       {lanOpen && <InterfaceModal onClose={() => setLanOpen(false)} />}
       <SettingCard header={tr('Port settings')}>
         <SettingItem title={tr('Mixed port')} divider>
-          <div className="flex">
-            {mixedPortInput !== mixedPort && (
-              <Button
-                size="sm"
-                color="primary"
-                className="mr-2"
-                isDisabled={hasPortConflict()}
-                onPress={async () => {
-                  await onChangeNeedRestart({ 'mixed-port': mixedPortInput })
-                  if (sysProxy?.enable) {
-                    triggerSysProxy(true, onlyActiveDevice)
-                  }
-                }}
-              >
-                {tr('Confirm')}
-              </Button>
-            )}
-            <Input
-              size="sm"
-              type="number"
-              className="w-25"
-              value={mixedPortInput.toString()}
-              max={65535}
-              min={0}
-              onValueChange={(v) => {
-                setMixedPortInput(parseInt(v) || 0)
-              }}
-            />
-          </div>
+          <Input
+            size="sm"
+            type="number"
+            className="w-25"
+            value={mixedPortInput.toString()}
+            max={65535}
+            min={0}
+            isInvalid={hasPortError}
+            onValueChange={(v) => {
+              const value = parseInt(v) || 0
+              setMixedPortInput(value)
+              onChange({ 'mixed-port': value })
+            }}
+          />
         </SettingItem>
         <SettingItem title={tr('SOCKS port')} divider>
-          <div className="flex">
-            {socksPortInput !== socksPort && (
-              <Button
-                size="sm"
-                color="primary"
-                className="mr-2"
-                isDisabled={hasPortConflict()}
-                onPress={() => {
-                  onChangeNeedRestart({ 'socks-port': socksPortInput })
-                }}
-              >
-                {tr('Confirm')}
-              </Button>
-            )}
-            <Input
-              size="sm"
-              type="number"
-              className="w-25"
-              value={socksPortInput.toString()}
-              max={65535}
-              min={0}
-              onValueChange={(v) => {
-                setSocksPortInput(parseInt(v) || 0)
-              }}
-            />
-          </div>
+          <Input
+            size="sm"
+            type="number"
+            className="w-25"
+            value={socksPortInput.toString()}
+            max={65535}
+            min={0}
+            isInvalid={hasPortError}
+            onValueChange={(v) => {
+              const value = parseInt(v) || 0
+              setSocksPortInput(value)
+              onChange({ 'socks-port': value })
+            }}
+          />
         </SettingItem>
         <SettingItem title={tr('HTTP port')} divider>
-          <div className="flex">
-            {httpPortInput !== httpPort && (
-              <Button
-                size="sm"
-                color="primary"
-                className="mr-2"
-                isDisabled={hasPortConflict()}
-                onPress={() => {
-                  onChangeNeedRestart({ port: httpPortInput })
-                }}
-              >
-                {tr('Confirm')}
-              </Button>
-            )}
-            <Input
-              size="sm"
-              type="number"
-              className="w-25"
-              value={httpPortInput.toString()}
-              max={65535}
-              min={0}
-              onValueChange={(v) => {
-                setHttpPortInput(parseInt(v) || 0)
-              }}
-            />
-          </div>
+          <Input
+            size="sm"
+            type="number"
+            className="w-25"
+            value={httpPortInput.toString()}
+            max={65535}
+            min={0}
+            isInvalid={hasPortError}
+            onValueChange={(v) => {
+              const value = parseInt(v) || 0
+              setHttpPortInput(value)
+              onChange({ port: value })
+            }}
+          />
         </SettingItem>
         {platform !== 'win32' && (
           <SettingItem title={tr('Redir port')} divider>
-            <div className="flex">
-              {redirPortInput !== redirPort && (
-                <Button
-                  size="sm"
-                  color="primary"
-                  className="mr-2"
-                  isDisabled={hasPortConflict()}
-                  onPress={() => {
-                    onChangeNeedRestart({ 'redir-port': redirPortInput })
-                  }}
-                >
-                  {tr('Confirm')}
-                </Button>
-              )}
-              <Input
-                size="sm"
-                type="number"
-                className="w-25"
-                value={redirPortInput.toString()}
-                max={65535}
-                min={0}
-                onValueChange={(v) => {
-                  setRedirPortInput(parseInt(v) || 0)
-                }}
-              />
-            </div>
+            <Input
+              size="sm"
+              type="number"
+              className="w-25"
+              value={redirPortInput.toString()}
+              max={65535}
+              min={0}
+              isInvalid={hasPortError}
+              onValueChange={(v) => {
+                const value = parseInt(v) || 0
+                setRedirPortInput(value)
+                onChange({ 'redir-port': value })
+              }}
+            />
           </SettingItem>
         )}
         {platform === 'linux' && (
           <SettingItem title={tr('TProxy port')} divider>
-            <div className="flex">
-              {tproxyPortInput !== tproxyPort && (
-                <Button
-                  size="sm"
-                  color="primary"
-                  className="mr-2"
-                  isDisabled={hasPortConflict()}
-                  onPress={() => {
-                    onChangeNeedRestart({ 'tproxy-port': tproxyPortInput })
-                  }}
-                >
-                  {tr('Confirm')}
-                </Button>
-              )}
-              <Input
-                size="sm"
-                type="number"
-                className="w-25"
-                value={tproxyPortInput.toString()}
-                max={65535}
-                min={0}
-                onValueChange={(v) => {
-                  setTproxyPortInput(parseInt(v) || 0)
-                }}
-              />
-            </div>
+            <Input
+              size="sm"
+              type="number"
+              className="w-25"
+              value={tproxyPortInput.toString()}
+              max={65535}
+              min={0}
+              isInvalid={hasPortError}
+              onValueChange={(v) => {
+                const value = parseInt(v) || 0
+                setTproxyPortInput(value)
+                onChange({ 'tproxy-port': value })
+              }}
+            />
           </SettingItem>
         )}
         <SettingItem
@@ -232,85 +187,55 @@ const PortSetting: React.FC = () => {
             size="sm"
             isSelected={allowLan}
             onValueChange={(v) => {
-              onChangeNeedRestart({ 'allow-lan': v })
+              onChange({ 'allow-lan': v })
             }}
           />
         </SettingItem>
         {allowLan && (
           <>
-            <SettingItem title={tr('Allowed IP ranges')}>
-              {lanAllowedIpsInput.join('') !== lanAllowedIps.join('') && (
-                <Button
-                  size="sm"
-                  color="primary"
-                  onPress={() => {
-                    onChangeNeedRestart({ 'lan-allowed-ips': lanAllowedIpsInput })
-                  }}
-                >
-                  {tr('Confirm')}
-                </Button>
-              )}
-            </SettingItem>
+            <SettingItem title={tr('Allowed IP ranges')} />
             <EditableList
               items={lanAllowedIpsInput}
-              onChange={(items) => setLanAllowedIpsInput(items as string[])}
+              onChange={(items) => {
+                const value = items as string[]
+                setLanAllowedIpsInput(value)
+                onChange({ 'lan-allowed-ips': value })
+              }}
               placeholder={tr('IP range')}
             />
-            <SettingItem title={tr('Blocked IP ranges')}>
-              {lanDisallowedIpsInput.join('') !== lanDisallowedIps.join('') && (
-                <Button
-                  size="sm"
-                  color="primary"
-                  onPress={() => {
-                    onChangeNeedRestart({ 'lan-disallowed-ips': lanDisallowedIpsInput })
-                  }}
-                >
-                  {tr('Confirm')}
-                </Button>
-              )}
-            </SettingItem>
+            <SettingItem title={tr('Blocked IP ranges')} />
             <EditableList
               items={lanDisallowedIpsInput}
-              onChange={(items) => setLanDisallowedIpsInput(items as string[])}
+              onChange={(items) => {
+                const value = items as string[]
+                setLanDisallowedIpsInput(value)
+                onChange({ 'lan-disallowed-ips': value })
+              }}
               placeholder={tr('IP range')}
             />
           </>
         )}
-        <SettingItem title={tr('User authentication')}>
-          {authenticationInput.join() !== authentication.join() && (
-            <Button
-              size="sm"
-              color="primary"
-              onPress={() => onChangeNeedRestart({ authentication: authenticationInput })}
-            >
-              {tr('Confirm')}
-            </Button>
-          )}
-        </SettingItem>
+        <SettingItem title={tr('User authentication')} />
         <EditableList
           items={authenticationInput}
-          onChange={(items) => setAuthenticationInput(items as string[])}
+          onChange={(items) => {
+            const value = items as string[]
+            setAuthenticationInput(value)
+            onChange({ authentication: value })
+          }}
           placeholder={tr('Username')}
           part2Placeholder={tr('Password')}
           parse={parseAuth}
           format={formatAuth}
         />
-        <SettingItem title={tr('IP ranges exempt from authentication')}>
-          {skipAuthPrefixesInput.join('') !== skipAuthPrefixes.join('') && (
-            <Button
-              size="sm"
-              color="primary"
-              onPress={() => {
-                onChangeNeedRestart({ 'skip-auth-prefixes': skipAuthPrefixesInput })
-              }}
-            >
-              {tr('Confirm')}
-            </Button>
-          )}
-        </SettingItem>
+        <SettingItem title={tr('IP ranges exempt from authentication')} />
         <EditableList
           items={skipAuthPrefixesInput}
-          onChange={(items) => setSkipAuthPrefixesInput(items as string[])}
+          onChange={(items) => {
+            const value = items as string[]
+            setSkipAuthPrefixesInput(value)
+            onChange({ 'skip-auth-prefixes': value })
+          }}
           placeholder={tr('IP range')}
           disableFirst
           divider={false}

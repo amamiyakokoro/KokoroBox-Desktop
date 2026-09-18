@@ -315,14 +315,18 @@ test('migrated feature settings use modern rows and stable save actions', () => 
     assert.doesNotMatch(readFileSync(file, 'utf8'), /compatKey=["']legacy["']/)
   }
 
-  for (const page of ['syspeoxy', 'tun', 'dns', 'sniffer']) {
+  for (const page of ['syspeoxy', 'tun', 'dns', 'sniffer', 'mihomo']) {
     const source = readFileSync(`src/renderer/src/pages/${page}.tsx`, 'utf8')
     assert.match(source, /<FeatureSettingsSaveButton/)
-    assert.match(source, /isDirty=\{changed\}/)
     assert.match(source, /useSettingsSave\(\)/)
     assert.match(source, /const saved = await runSave/)
-    assert.match(source, /if \(saved\) setChanged\(false\)/)
     assert.match(source, /isSaving=\{isSaving\}/)
+  }
+
+  for (const page of ['syspeoxy', 'tun', 'dns', 'sniffer']) {
+    const source = readFileSync(`src/renderer/src/pages/${page}.tsx`, 'utf8')
+    assert.match(source, /isDirty=\{changed\}/)
+    assert.match(source, /if \(saved\) setChanged\(false\)/)
   }
 
   for (const page of ['tun', 'dns', 'sniffer']) {

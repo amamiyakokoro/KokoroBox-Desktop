@@ -3,6 +3,7 @@ import { Switch } from '@heroui/react'
 import BasePage from '@renderer/components/base/base-page'
 import SettingItem from '@renderer/components/base/base-setting-item'
 import FeatureSettingsLayout, {
+  FeatureSettingsSaveButton,
   FeatureSettingsSection
 } from '@renderer/components/base/base-feature-settings'
 import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'
@@ -10,34 +11,104 @@ import PortSetting from '@renderer/components/mihomo/port-setting'
 import ControllerSetting from '@renderer/components/mihomo/controller-setting'
 import AdvancedSetting from '@renderer/components/mihomo/advanced-settings'
 import CoreLogSetting from '@renderer/components/mihomo/core-log-setting'
-import { restartCore } from '@renderer/utils/ipc'
-import React from 'react'
+import { mihomoUpgradeUI, restartCore, triggerSysProxy } from '@renderer/utils/ipc'
+import React, { useCallback, useMemo, useState } from 'react'
+import { mergeSettingsPatch } from '@renderer/utils/merge-settings-patch'
+import { useSettingsSave } from '@renderer/hooks/use-settings-save'
+import { useAppConfig } from '@renderer/hooks/use-app-config'
+import { notify } from '@renderer/utils/notification'
 
 const Mihomo: React.FC = () => {
-  const { controledMihomoConfig, patchControledMihomoConfig } = useControledMihomoConfig()
-  const { ipv6 } = controledMihomoConfig || {}
+  const { controledMihomoConfig, patchControledMihomoConfigOrThrow } = useControledMihomoConfig()
+  const { appConfig } = useAppConfig()
+  const { sysProxy, onlyActiveDevice = false } = appConfig || {}
+  const [draftPatch, setDraftPatch] = useState<Partial<MihomoConfig>>({})
+  const [validationErrors, setValidationErrors] = useState<Set<string>>(() => new Set())
+  const { isSaving, runSave } = useSettingsSave()
+  const values = useMemo(
+    () => mergeSettingsPatch(controledMihomoConfig || {}, draftPatch),
+    [controledMihomoConfig, draftPatch]
+  )
+  const { ipv6 } = values
+  const isDirty = Object.keys(draftPatch).length > 0
 
-  const onChangeNeedRestart = async (patch: Partial<MihomoConfig>): Promise<void> => {
-    await patchControledMihomoConfig(patch)
-    await restartCore()
+  const stageChange = useCallback((patch: Partial<MihomoConfig>): void => {
+    setDraftPatch((current) => mergeSettingsPatch(current, patch))
+  }, [])
+
+  const handleValidationChange = useCallback((key: string, invalid: boolean): void => {
+    setValidationErrors((current) => {
+      const next = new Set(current)
+      if (invalid) next.add(key)
+      else next.delete(key)
+      if (next.size === current.size && [...next].every((item) => current.has(item))) return current
+      return next
+    })
+  }, [])
+
+  const saveChanges = async (): Promise<void> => {
+    const patch = draftPatch
+    const saved = await runSave(async () => {
+      await patchControledMihomoConfigOrThrow(patch)
+      await restartCore()
+    })
+    if (!saved) return
+
+    setDraftPatch({})
+    if ('mixed-port' in patch && sysProxy?.enable) {
+      try {
+        await triggerSysProxy(true, onlyActiveDevice)
+      } catch (error) {
+        notify(error, { variant: 'danger' })
+      }
+    }
+    if ('external-ui-url' in patch) {
+      setTimeout(async () => {
+        try {
+          await mihomoUpgradeUI()
+          notify(tr('Dashboard updated'), { variant: 'success' })
+        } catch (error) {
+          notify(error, { variant: 'danger' })
+        }
+      }, 1000)
+    }
   }
 
   return (
-    <BasePage title={tr('Mihomo settings')} contentClassName="no-scrollbar">
+    <BasePage
+      title={tr('Mihomo settings')}
+      contentClassName="no-scrollbar"
+      header={
+        <FeatureSettingsSaveButton
+          isDirty={isDirty}
+          isDisabled={validationErrors.size > 0}
+          isSaving={isSaving}
+          onPress={saveChanges}
+        />
+      }
+    >
       <FeatureSettingsLayout>
         <FeatureSettingsSection title={tr('Core network')}>
           <SettingItem title="IPv6">
             <Switch
               size="sm"
               isSelected={ipv6}
-              onValueChange={(value) => onChangeNeedRestart({ ipv6: value })}
+              onValueChange={(value) => stageChange({ ipv6: value })}
             />
           </SettingItem>
         </FeatureSettingsSection>
-        <PortSetting />
-        <ControllerSetting />
-        <CoreLogSetting />
-        <AdvancedSetting />
+        <PortSetting
+          config={values}
+          onChange={stageChange}
+          onValidationChange={handleValidationChange}
+        />
+        <ControllerSetting
+          config={values}
+          onChange={stageChange}
+          onValidationChange={handleValidationChange}
+        />
+        <CoreLogSetting config={values} onChange={stageChange} />
+        <AdvancedSetting config={values} onChange={stageChange} />
       </FeatureSettingsLayout>
     </BasePage>
   )

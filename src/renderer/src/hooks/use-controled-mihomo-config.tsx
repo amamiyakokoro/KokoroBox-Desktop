@@ -5,7 +5,7 @@ import { notify } from '@renderer/utils/notification'
 
 interface ControledMihomoConfigContextType {
   controledMihomoConfig: Partial<MihomoConfig> | undefined
-  mutateControledMihomoConfig: () => void
+  mutateControledMihomoConfig: () => Promise<Partial<MihomoConfig> | undefined>
   patchControledMihomoConfig: (value: Partial<MihomoConfig>) => Promise<void>
   patchControledMihomoConfigOrThrow: (value: Partial<MihomoConfig>) => Promise<void>
 }
@@ -26,7 +26,7 @@ export const ControledMihomoConfigProvider: React.FC<{ children: ReactNode }> = 
     } catch (e) {
       notify(e, { variant: 'danger' })
     } finally {
-      mutateControledMihomoConfig()
+      await mutateControledMihomoConfig()
     }
   }
 
@@ -34,7 +34,7 @@ export const ControledMihomoConfigProvider: React.FC<{ children: ReactNode }> = 
     try {
       await patch(value)
     } finally {
-      mutateControledMihomoConfig()
+      await mutateControledMihomoConfig()
     }
   }
 

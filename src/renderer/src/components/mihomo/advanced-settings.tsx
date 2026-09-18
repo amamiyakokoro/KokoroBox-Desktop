@@ -1,15 +1,17 @@
 import { tr } from '../../../../shared/i18n'
-import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'
 import SettingCard from '../base/base-setting-card'
 import SettingItem from '../base/base-setting-item'
 import InterfaceSelect from '../base/interface-select'
-import { restartCore } from '@renderer/utils/ipc'
 import { Button, Input, Switch, Tab, Tabs, Tooltip } from '@heroui/react'
-import { useState } from 'react'
 import { IoIosHelpCircle } from 'react-icons/io'
+import React from 'react'
 
-const AdvancedSetting: React.FC = () => {
-  const { controledMihomoConfig, patchControledMihomoConfig } = useControledMihomoConfig()
+interface AdvancedSettingProps {
+  config: Partial<MihomoConfig>
+  onChange: (patch: Partial<MihomoConfig>) => void
+}
+
+const AdvancedSetting: React.FC<AdvancedSettingProps> = ({ config, onChange }) => {
   const {
     'unified-delay': unifiedDelay,
     'tcp-concurrent': tcpConcurrent,
@@ -20,17 +22,9 @@ const AdvancedSetting: React.FC = () => {
     'keep-alive-interval': interval = 15,
     profile = {},
     tun = {}
-  } = controledMihomoConfig || {}
+  } = config
   const { 'store-selected': storeSelected, 'store-fake-ip': storeFakeIp } = profile
   const { device = 'mihomo' } = tun
-
-  const [idleInput, setIdleInput] = useState(idle)
-  const [intervalInput, setIntervalInput] = useState(interval)
-
-  const onChangeNeedRestart = async (patch: Partial<MihomoConfig>): Promise<void> => {
-    await patchControledMihomoConfig(patch)
-    await restartCore()
-  }
 
   return (
     <SettingCard header={tr('Advanced settings')}>
@@ -40,7 +34,7 @@ const AdvancedSetting: React.FC = () => {
           color="primary"
           selectedKey={findProcessMode}
           onSelectionChange={(key) => {
-            onChangeNeedRestart({ 'find-process-mode': key as FindProcessMode })
+            onChange({ 'find-process-mode': key as FindProcessMode })
           }}
         >
           <Tab key="strict" title={tr('Automatic')}></Tab>
@@ -53,7 +47,7 @@ const AdvancedSetting: React.FC = () => {
           size="sm"
           isSelected={storeSelected}
           onValueChange={(v) => {
-            onChangeNeedRestart({ profile: { 'store-selected': v } })
+            onChange({ profile: { 'store-selected': v } })
           }}
         />
       </SettingItem>
@@ -62,7 +56,7 @@ const AdvancedSetting: React.FC = () => {
           size="sm"
           isSelected={storeFakeIp}
           onValueChange={(v) => {
-            onChangeNeedRestart({ profile: { 'store-fake-ip': v } })
+            onChange({ profile: { 'store-fake-ip': v } })
           }}
         />
       </SettingItem>
@@ -85,7 +79,7 @@ const AdvancedSetting: React.FC = () => {
           size="sm"
           isSelected={unifiedDelay}
           onValueChange={(v) => {
-            onChangeNeedRestart({ 'unified-delay': v })
+            onChange({ 'unified-delay': v })
           }}
         />
       </SettingItem>
@@ -108,7 +102,7 @@ const AdvancedSetting: React.FC = () => {
           size="sm"
           isSelected={tcpConcurrent}
           onValueChange={(v) => {
-            onChangeNeedRestart({ 'tcp-concurrent': v })
+            onChange({ 'tcp-concurrent': v })
           }}
         />
       </SettingItem>
@@ -117,67 +111,35 @@ const AdvancedSetting: React.FC = () => {
           size="sm"
           isSelected={disableKeepAlive}
           onValueChange={(v) => {
-            onChangeNeedRestart({ 'disable-keep-alive': v })
+            onChange({ 'disable-keep-alive': v })
           }}
         />
       </SettingItem>
       <SettingItem title={tr('TCP keep-alive interval')} divider>
-        <div className="flex">
-          {intervalInput !== interval && (
-            <Button
-              size="sm"
-              color="primary"
-              className="mr-2"
-              onPress={async () => {
-                await onChangeNeedRestart({ 'keep-alive-interval': intervalInput })
-              }}
-            >
-              {tr('Confirm')}
-            </Button>
-          )}
-          <Input
-            size="sm"
-            type="number"
-            className="w-25"
-            value={intervalInput.toString()}
-            min={0}
-            onValueChange={(v) => {
-              setIntervalInput(parseInt(v) || 0)
-            }}
-          />
-        </div>
+        <Input
+          size="sm"
+          type="number"
+          className="w-25"
+          value={interval.toString()}
+          min={0}
+          onValueChange={(v) => onChange({ 'keep-alive-interval': parseInt(v) || 0 })}
+        />
       </SettingItem>
       <SettingItem title={tr('TCP keep-alive idle time')} divider>
-        <div className="flex">
-          {idleInput !== idle && (
-            <Button
-              size="sm"
-              color="primary"
-              className="mr-2"
-              onPress={async () => {
-                await onChangeNeedRestart({ 'keep-alive-idle': idleInput })
-              }}
-            >
-              {tr('Confirm')}
-            </Button>
-          )}
-          <Input
-            size="sm"
-            type="number"
-            className="w-25"
-            value={idleInput.toString()}
-            min={0}
-            onValueChange={(v) => {
-              setIdleInput(parseInt(v) || 0)
-            }}
-          />
-        </div>
+        <Input
+          size="sm"
+          type="number"
+          className="w-25"
+          value={idle.toString()}
+          min={0}
+          onValueChange={(v) => onChange({ 'keep-alive-idle': parseInt(v) || 0 })}
+        />
       </SettingItem>
       <SettingItem title={tr('Set outbound interface')}>
         <InterfaceSelect
           value={interfaceName}
           exclude={[device, 'lo']}
-          onChange={(iface) => onChangeNeedRestart({ 'interface-name': iface })}
+          onChange={(iface) => onChange({ 'interface-name': iface })}
         />
       </SettingItem>
     </SettingCard>
