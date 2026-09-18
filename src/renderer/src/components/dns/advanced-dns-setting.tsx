@@ -99,7 +99,7 @@ const AdvancedDnsSetting: React.FC<AdvancedDnsSettingProps> = ({
   ])
 
   return (
-    <SettingCard header={tr('More settings')}>
+    <SettingCard header={tr('Advanced DNS settings')}>
       <SettingItem compatKey="legacy" title={tr('Follow routing rules for connections')} divider>
         <Switch
           size="sm"

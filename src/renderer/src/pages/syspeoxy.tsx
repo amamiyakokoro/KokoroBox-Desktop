@@ -1,8 +1,10 @@
 import { tr } from '../../../shared/i18n'
 import { Button, Input, Switch, Tab, Tabs, Tooltip } from '@heroui/react'
 import BasePage from '@renderer/components/base/base-page'
-import SettingCard from '@renderer/components/base/base-setting-card'
 import SettingItem from '@renderer/components/base/base-setting-item'
+import FeatureSettingsLayout, {
+  FeatureSettingsSection
+} from '@renderer/components/base/base-feature-settings'
 import EditableList from '@renderer/components/base/base-list-editor'
 import PacEditorModal from '@renderer/components/sysproxy/pac-editor-modal'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
@@ -180,219 +182,233 @@ const Sysproxy: React.FC = () => {
           }}
         />
       )}
-      <SettingCard className="sysproxy-settings">
-        <SettingItem compatKey="legacy" title={tr('Proxy host')} divider>
-          <Input
-            size="sm"
-            className="w-[50%]"
-            value={values.host}
-            placeholder={tr('Default: 127.0.0.1. Change only if needed')}
-            onValueChange={(v) => {
-              setValues({ ...values, host: v })
-            }}
-          />
-        </SettingItem>
-        <SettingItem compatKey="legacy" title={tr('Proxy mode')} divider>
-          <Tabs
-            size="sm"
-            color="primary"
-            selectedKey={values.mode}
-            onSelectionChange={(key: Key) => setValues({ ...values, mode: key as SysProxyMode })}
-          >
-            <Tab key="manual" title={tr('Manual')} />
-            <Tab key="auto" title="PAC" />
-          </Tabs>
-        </SettingItem>
-        {platform === 'win32' && (
-          <SettingItem compatKey="legacy" title={tr('UWP tool')} divider>
-            <Button
+      <FeatureSettingsLayout>
+        <FeatureSettingsSection title={tr('Proxy configuration')}>
+          <SettingItem compatKey="legacy" title={tr('Proxy host')} divider>
+            <Input
               size="sm"
-              onPress={async () => {
-                await openUWPTool()
+              className="w-[50%]"
+              value={values.host}
+              placeholder={tr('Default: 127.0.0.1. Change only if needed')}
+              onValueChange={(v) => {
+                setValues({ ...values, host: v })
               }}
+            />
+          </SettingItem>
+          <SettingItem compatKey="legacy" title={tr('Proxy mode')} divider={values.mode === 'auto'}>
+            <Tabs
+              size="sm"
+              color="primary"
+              selectedKey={values.mode}
+              onSelectionChange={(key: Key) => setValues({ ...values, mode: key as SysProxyMode })}
             >
-              {tr('Open UWP tool')}
-            </Button>
+              <Tab key="manual" title={tr('Manual')} />
+              <Tab key="auto" title="PAC" />
+            </Tabs>
           </SettingItem>
-        )}
-        <SettingItem compatKey="legacy" title={tr('Configuration method')} divider>
-          <Tabs
-            size="sm"
-            color="primary"
-            selectedKey={values.settingMode}
-            onSelectionChange={(key) => {
-              const settingMode = key as 'exec' | 'service'
-              setValues({
-                ...values,
-                settingMode,
-                guard: settingMode === 'service' ? values.guard : false,
-                guardNotify: settingMode === 'service' ? values.guardNotify : false
-              })
-            }}
-          >
-            <Tab key="exec" title={tr('Run command')} />
-            <Tab key="service" title={tr('Service mode')} />
-          </Tabs>
-        </SettingItem>
-        {platform === 'linux' && (
-          <SettingItem
-            compatKey="legacy"
-            title={tr('Terminal proxy')}
-            actions={
-              <Tooltip
-                content={
-                  <div>
-                    {tr(
-                      'Existing terminals do not update automatically after enabling or disabling this setting. Fully close and reopen the terminal; some desktop environments may require signing in again.'
-                    )}
-                  </div>
-                }
-              >
-                <Button isIconOnly size="sm" variant="light">
-                  <IoIosHelpCircle className="text-lg" />
-                </Button>
-              </Tooltip>
-            }
-            divider
-          >
-            <Switch
-              size="sm"
-              isSelected={values.terminalProxy}
-              onValueChange={(v) => {
-                setValues({ ...values, terminalProxy: v })
-              }}
-            />
-          </SettingItem>
-        )}
-        {platform !== 'linux' && values.settingMode === 'service' && (
-          <SettingItem
-            compatKey="legacy"
-            title={tr('Active interfaces only')}
-            actions={
-              <Tooltip
-                content={
-                  <>
-                    <div>
-                      {tr(
-                        'Apply the system proxy only to active network interfaces. Requires service mode'
-                      )}
-                    </div>
-                  </>
-                }
-              >
-                <Button isIconOnly size="sm" variant="light">
-                  <IoIosHelpCircle className="text-lg" />
-                </Button>
-              </Tooltip>
-            }
-            divider
-          >
-            <Switch
-              size="sm"
-              isSelected={onlyActiveDevice}
-              isDisabled={!values.settingMode || values.settingMode !== 'service'}
-              onValueChange={(v) => {
-                patchAppConfig({ onlyActiveDevice: v })
-              }}
-            />
-          </SettingItem>
-        )}
-        {values.settingMode === 'service' && (
-          <SettingItem
-            compatKey="legacy"
-            title={tr('System proxy watchdog')}
-            actions={
-              <Tooltip
-                content={
-                  <div>
-                    {tr(
-                      'Restore the system proxy automatically if it is changed. Requires service mode'
-                    )}
-                  </div>
-                }
-              >
-                <Button isIconOnly size="sm" variant="light">
-                  <IoIosHelpCircle className="text-lg" />
-                </Button>
-              </Tooltip>
-            }
-            divider
-          >
-            <Switch
-              size="sm"
-              isSelected={values.guard}
-              onValueChange={(v) => {
-                setValues({ ...values, guard: v, guardNotify: v ? values.guardNotify : false })
-              }}
-            />
-          </SettingItem>
-        )}
-        {values.settingMode === 'service' && values.guard && (
-          <SettingItem
-            compatKey="legacy"
-            title={tr('Watchdog notifications')}
-            actions={
-              <Tooltip
-                content={<div>{tr('Notify when system proxy restoration succeeds or fails')}</div>}
-              >
-                <Button isIconOnly size="sm" variant="light">
-                  <IoIosHelpCircle className="text-lg" />
-                </Button>
-              </Tooltip>
-            }
-            divider
-          >
-            <Switch
-              size="sm"
-              isSelected={values.guardNotify}
-              isDisabled={!values.guard}
-              onValueChange={(v) => {
-                setValues({ ...values, guardNotify: v })
-              }}
-            />
-          </SettingItem>
-        )}
-        {values.mode === 'auto' && (
-          <SettingItem compatKey="legacy" title={tr('Proxy mode')}>
-            <Button size="sm" onPress={() => setOpenPacEditor(true)}>
-              {tr('Edit PAC script')}
-            </Button>
-          </SettingItem>
-        )}
-        {values.mode === 'manual' && (
-          <>
-            <SettingItem compatKey="legacy" title={tr('Add default proxy bypasses')} divider>
-              <Button
-                size="sm"
-                onPress={() => {
-                  setValues({
-                    ...values,
-                    bypass: Array.from(new Set([...defaultBypass, ...values.bypass]))
-                  })
-                }}
-              >
-                {tr('Add default proxy bypasses')}
-              </Button>
-            </SettingItem>
-            <SettingItem compatKey="legacy" title={tr('Proxy bypass list')}>
-              <Button
-                size="sm"
-                onPress={async () => {
-                  setOpenEditor(true)
-                }}
-              >
+          {values.mode === 'auto' && (
+            <SettingItem compatKey="legacy" title={tr('PAC script')}>
+              <Button size="sm" onPress={() => setOpenPacEditor(true)}>
                 {tr('Edit')}
               </Button>
             </SettingItem>
-            <EditableList
-              items={values.bypass}
-              onChange={(list) => setValues({ ...values, bypass: list as string[] })}
-              placeholder={tr('Example: *.baidu.com')}
-              divider={false}
-            />
-          </>
+          )}
+        </FeatureSettingsSection>
+
+        <FeatureSettingsSection title={tr('System integration')}>
+          {platform === 'win32' && (
+            <SettingItem compatKey="legacy" title={tr('UWP tool')} divider>
+              <Button
+                size="sm"
+                onPress={async () => {
+                  await openUWPTool()
+                }}
+              >
+                {tr('Open UWP tool')}
+              </Button>
+            </SettingItem>
+          )}
+          <SettingItem
+            compatKey="legacy"
+            title={tr('Configuration method')}
+            divider={platform === 'linux' || values.settingMode === 'service'}
+          >
+            <Tabs
+              size="sm"
+              color="primary"
+              selectedKey={values.settingMode}
+              onSelectionChange={(key) => {
+                const settingMode = key as 'exec' | 'service'
+                setValues({
+                  ...values,
+                  settingMode,
+                  guard: settingMode === 'service' ? values.guard : false,
+                  guardNotify: settingMode === 'service' ? values.guardNotify : false
+                })
+              }}
+            >
+              <Tab key="exec" title={tr('Run command')} />
+              <Tab key="service" title={tr('Service mode')} />
+            </Tabs>
+          </SettingItem>
+          {platform === 'linux' && (
+            <SettingItem
+              compatKey="legacy"
+              title={tr('Terminal proxy')}
+              actions={
+                <Tooltip
+                  content={
+                    <div>
+                      {tr(
+                        'Existing terminals do not update automatically after enabling or disabling this setting. Fully close and reopen the terminal; some desktop environments may require signing in again.'
+                      )}
+                    </div>
+                  }
+                >
+                  <Button isIconOnly size="sm" variant="light">
+                    <IoIosHelpCircle className="text-lg" />
+                  </Button>
+                </Tooltip>
+              }
+            >
+              <Switch
+                size="sm"
+                isSelected={values.terminalProxy}
+                onValueChange={(v) => {
+                  setValues({ ...values, terminalProxy: v })
+                }}
+              />
+            </SettingItem>
+          )}
+          {platform !== 'linux' && values.settingMode === 'service' && (
+            <SettingItem
+              compatKey="legacy"
+              title={tr('Active interfaces only')}
+              actions={
+                <Tooltip
+                  content={
+                    <>
+                      <div>
+                        {tr(
+                          'Apply the system proxy only to active network interfaces. Requires service mode'
+                        )}
+                      </div>
+                    </>
+                  }
+                >
+                  <Button isIconOnly size="sm" variant="light">
+                    <IoIosHelpCircle className="text-lg" />
+                  </Button>
+                </Tooltip>
+              }
+            >
+              <Switch
+                size="sm"
+                isSelected={onlyActiveDevice}
+                isDisabled={!values.settingMode || values.settingMode !== 'service'}
+                onValueChange={(v) => {
+                  patchAppConfig({ onlyActiveDevice: v })
+                }}
+              />
+            </SettingItem>
+          )}
+        </FeatureSettingsSection>
+
+        {(values.settingMode === 'service' || values.mode === 'manual') && (
+          <FeatureSettingsSection title={tr('Reliability and exclusions')}>
+            {values.settingMode === 'service' && (
+              <SettingItem
+                compatKey="legacy"
+                title={tr('System proxy watchdog')}
+                actions={
+                  <Tooltip
+                    content={
+                      <div>
+                        {tr(
+                          'Restore the system proxy automatically if it is changed. Requires service mode'
+                        )}
+                      </div>
+                    }
+                  >
+                    <Button isIconOnly size="sm" variant="light">
+                      <IoIosHelpCircle className="text-lg" />
+                    </Button>
+                  </Tooltip>
+                }
+                divider={values.guard || values.mode === 'manual'}
+              >
+                <Switch
+                  size="sm"
+                  isSelected={values.guard}
+                  onValueChange={(v) => {
+                    setValues({ ...values, guard: v, guardNotify: v ? values.guardNotify : false })
+                  }}
+                />
+              </SettingItem>
+            )}
+            {values.settingMode === 'service' && values.guard && (
+              <SettingItem
+                compatKey="legacy"
+                title={tr('Watchdog notifications')}
+                actions={
+                  <Tooltip
+                    content={
+                      <div>{tr('Notify when system proxy restoration succeeds or fails')}</div>
+                    }
+                  >
+                    <Button isIconOnly size="sm" variant="light">
+                      <IoIosHelpCircle className="text-lg" />
+                    </Button>
+                  </Tooltip>
+                }
+                divider={values.mode === 'manual'}
+              >
+                <Switch
+                  size="sm"
+                  isSelected={values.guardNotify}
+                  isDisabled={!values.guard}
+                  onValueChange={(v) => {
+                    setValues({ ...values, guardNotify: v })
+                  }}
+                />
+              </SettingItem>
+            )}
+            {values.mode === 'manual' && (
+              <>
+                <SettingItem compatKey="legacy" title={tr('Add default proxy bypasses')} divider>
+                  <Button
+                    size="sm"
+                    onPress={() => {
+                      setValues({
+                        ...values,
+                        bypass: Array.from(new Set([...defaultBypass, ...values.bypass]))
+                      })
+                    }}
+                  >
+                    {tr('Add default proxy bypasses')}
+                  </Button>
+                </SettingItem>
+                <SettingItem compatKey="legacy" title={tr('Proxy bypass list')}>
+                  <Button
+                    size="sm"
+                    onPress={async () => {
+                      setOpenEditor(true)
+                    }}
+                  >
+                    {tr('Edit')}
+                  </Button>
+                </SettingItem>
+                <EditableList
+                  items={values.bypass}
+                  onChange={(list) => setValues({ ...values, bypass: list as string[] })}
+                  placeholder={tr('Example: *.baidu.com')}
+                  divider={false}
+                />
+              </>
+            )}
+          </FeatureSettingsSection>
         )}
-      </SettingCard>
+      </FeatureSettingsLayout>
     </BasePage>
   )
 }

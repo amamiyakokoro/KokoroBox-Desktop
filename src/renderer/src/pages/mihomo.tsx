@@ -1,8 +1,10 @@
 import { tr } from '../../../shared/i18n'
 import { Switch } from '@heroui/react'
 import BasePage from '@renderer/components/base/base-page'
-import SettingCard from '@renderer/components/base/base-setting-card'
 import SettingItem from '@renderer/components/base/base-setting-item'
+import FeatureSettingsLayout, {
+  FeatureSettingsSection
+} from '@renderer/components/base/base-feature-settings'
 import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'
 import PortSetting from '@renderer/components/mihomo/port-setting'
 import ControllerSetting from '@renderer/components/mihomo/controller-setting'
@@ -22,19 +24,21 @@ const Mihomo: React.FC = () => {
 
   return (
     <BasePage title={tr('Mihomo settings')} contentClassName="no-scrollbar">
-      <SettingCard>
-        <SettingItem compatKey="legacy" title="IPv6">
-          <Switch
-            size="sm"
-            isSelected={ipv6}
-            onValueChange={(value) => onChangeNeedRestart({ ipv6: value })}
-          />
-        </SettingItem>
-      </SettingCard>
-      <PortSetting />
-      <ControllerSetting />
-      <CoreLogSetting />
-      <AdvancedSetting />
+      <FeatureSettingsLayout>
+        <FeatureSettingsSection title={tr('Core network')}>
+          <SettingItem compatKey="legacy" title="IPv6">
+            <Switch
+              size="sm"
+              isSelected={ipv6}
+              onValueChange={(value) => onChangeNeedRestart({ ipv6: value })}
+            />
+          </SettingItem>
+        </FeatureSettingsSection>
+        <PortSetting />
+        <ControllerSetting />
+        <CoreLogSetting />
+        <AdvancedSetting />
+      </FeatureSettingsLayout>
     </BasePage>
   )
 }

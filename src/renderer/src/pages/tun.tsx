@@ -1,8 +1,10 @@
 import { tr } from '../../../shared/i18n'
 import { Button, Input, Switch, Tab, Tabs } from '@heroui/react'
 import BasePage from '@renderer/components/base/base-page'
-import SettingCard from '@renderer/components/base/base-setting-card'
 import SettingItem from '@renderer/components/base/base-setting-item'
+import FeatureSettingsLayout, {
+  FeatureSettingsSection
+} from '@renderer/components/base/base-feature-settings'
 import EditableList from '@renderer/components/base/base-list-editor'
 import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'
 import { restartCore, setupFirewall } from '@renderer/utils/ipc'
@@ -86,170 +88,172 @@ const Tun: React.FC = () => {
           )
         }
       >
-        <SettingCard className="tun-settings">
-          {platform === 'win32' && (
-            <SettingItem compatKey="legacy" title={tr('Reset firewall')} divider>
-              <Button
-                size="sm"
-                color="primary"
-                isLoading={loading}
-                onPress={async () => {
-                  setLoading(true)
-                  try {
-                    await setupFirewall()
-                    notify(tr('Firewall reset'))
-                    await restartCore()
-                  } catch (e) {
-                    notify(e, { variant: 'danger' })
-                  } finally {
-                    setLoading(false)
-                  }
-                }}
-              >
-                {tr('Reset firewall')}
-              </Button>
-            </SettingItem>
+        <FeatureSettingsLayout>
+          {(platform === 'win32' || platform === 'darwin') && (
+            <FeatureSettingsSection title={tr('Platform integration')}>
+              {platform === 'win32' && (
+                <SettingItem compatKey="legacy" title={tr('Reset firewall')}>
+                  <Button
+                    size="sm"
+                    color="primary"
+                    isLoading={loading}
+                    onPress={async () => {
+                      setLoading(true)
+                      try {
+                        await setupFirewall()
+                        notify(tr('Firewall reset'))
+                        await restartCore()
+                      } catch (e) {
+                        notify(e, { variant: 'danger' })
+                      } finally {
+                        setLoading(false)
+                      }
+                    }}
+                  >
+                    {tr('Reset firewall')}
+                  </Button>
+                </SettingItem>
+              )}
+              {platform === 'darwin' && (
+                <SettingItem compatKey="legacy" title={tr('Configure system DNS automatically')}>
+                  <Tabs
+                    size="sm"
+                    color="primary"
+                    selectedKey={autoSetDNSMode}
+                    onSelectionChange={async (key: Key) => {
+                      await patchAppConfig({ autoSetDNSMode: key as 'none' | 'exec' | 'service' })
+                    }}
+                  >
+                    <Tab key="none" title={tr('Do not configure automatically')} />
+                    <Tab key="exec" title={tr('Run command')} />
+                    <Tab key="service" title={tr('Service mode')} />
+                  </Tabs>
+                </SettingItem>
+              )}
+            </FeatureSettingsSection>
           )}
-          {platform === 'darwin' && (
-            <SettingItem
-              compatKey="legacy"
-              title={tr('Configure system DNS automatically')}
-              divider
-            >
+
+          <FeatureSettingsSection title={tr('TUN routing')}>
+            <SettingItem compatKey="legacy" title={tr('TUN network stack')} divider>
               <Tabs
                 size="sm"
                 color="primary"
-                selectedKey={autoSetDNSMode}
-                onSelectionChange={async (key: Key) => {
-                  await patchAppConfig({ autoSetDNSMode: key as 'none' | 'exec' | 'service' })
-                }}
+                selectedKey={values.stack}
+                onSelectionChange={(key: Key) => setValues({ ...values, stack: key as TunStack })}
               >
-                <Tab key="none" title={tr('Do not configure automatically')} />
-                <Tab key="exec" title={tr('Run command')} />
-                <Tab key="service" title={tr('Service mode')} />
+                <Tab key="gvisor" title="gVisor" />
+                <Tab key="mixed" title="Mixed" />
+                <Tab key="system" title="System" />
+                <Tab key="mips" title="MIPS" />
               </Tabs>
             </SettingItem>
-          )}
-          <SettingItem compatKey="legacy" title={tr('TUN network stack')} divider>
-            <Tabs
-              size="sm"
-              color="primary"
-              selectedKey={values.stack}
-              onSelectionChange={(key: Key) => setValues({ ...values, stack: key as TunStack })}
-            >
-              <Tab key="gvisor" title="gVisor" />
-              <Tab key="mixed" title="Mixed" />
-              <Tab key="system" title="System" />
-              <Tab key="mips" title="MIPS" />
-            </Tabs>
-          </SettingItem>
-          {platform !== 'darwin' && (
-            <>
-              <SettingItem compatKey="legacy" title={tr('TUN interface name')} divider>
-                <Input
-                  size="sm"
-                  className="w-25"
-                  value={values.device}
-                  onValueChange={(v) => {
-                    setValues({ ...values, device: v })
-                  }}
-                />
-              </SettingItem>
-              <SettingItem compatKey="legacy" title={tr('Strict routing')} divider>
-                <Switch
-                  size="sm"
-                  isSelected={values.strictRoute}
-                  onValueChange={(v) => {
-                    setValues({ ...values, strictRoute: v })
-                  }}
-                />
-              </SettingItem>
-            </>
-          )}
-          <SettingItem compatKey="legacy" title={tr('Configure routes automatically')} divider>
-            <Switch
-              size="sm"
-              isSelected={values.autoRoute}
-              onValueChange={(v) => {
-                setValues({ ...values, autoRoute: v })
-              }}
-            />
-          </SettingItem>
-          {platform === 'linux' && (
-            <SettingItem
-              compatKey="legacy"
-              title={tr('Configure TCP redirection automatically')}
-              divider
-            >
+            {platform !== 'darwin' && (
+              <>
+                <SettingItem compatKey="legacy" title={tr('TUN interface name')} divider>
+                  <Input
+                    size="sm"
+                    className="w-25"
+                    value={values.device}
+                    onValueChange={(v) => {
+                      setValues({ ...values, device: v })
+                    }}
+                  />
+                </SettingItem>
+                <SettingItem compatKey="legacy" title={tr('Strict routing')} divider>
+                  <Switch
+                    size="sm"
+                    isSelected={values.strictRoute}
+                    onValueChange={(v) => {
+                      setValues({ ...values, strictRoute: v })
+                    }}
+                  />
+                </SettingItem>
+              </>
+            )}
+            <SettingItem compatKey="legacy" title={tr('Configure routes automatically')} divider>
               <Switch
                 size="sm"
-                isSelected={values.autoRedirect}
+                isSelected={values.autoRoute}
                 onValueChange={(v) => {
-                  setValues({ ...values, autoRedirect: v })
+                  setValues({ ...values, autoRoute: v })
                 }}
               />
             </SettingItem>
-          )}
-          <SettingItem
-            compatKey="legacy"
-            title={tr('Select outbound interface automatically')}
-            divider
-          >
-            <Switch
-              size="sm"
-              isSelected={values.autoDetectInterface}
-              onValueChange={(v) => {
-                setValues({ ...values, autoDetectInterface: v })
-              }}
+            {platform === 'linux' && (
+              <SettingItem
+                compatKey="legacy"
+                title={tr('Configure TCP redirection automatically')}
+                divider
+              >
+                <Switch
+                  size="sm"
+                  isSelected={values.autoRedirect}
+                  onValueChange={(v) => {
+                    setValues({ ...values, autoRedirect: v })
+                  }}
+                />
+              </SettingItem>
+            )}
+            <SettingItem compatKey="legacy" title={tr('Select outbound interface automatically')}>
+              <Switch
+                size="sm"
+                isSelected={values.autoDetectInterface}
+                onValueChange={(v) => {
+                  setValues({ ...values, autoDetectInterface: v })
+                }}
+              />
+            </SettingItem>
+          </FeatureSettingsSection>
+
+          <FeatureSettingsSection title={tr('DNS and packet handling')}>
+            <SettingItem compatKey="legacy" title={tr('ICMP forwarding')} divider>
+              <Switch
+                size="sm"
+                isSelected={!values.disableIcmpForwarding}
+                onValueChange={(v) => {
+                  setValues({ ...values, disableIcmpForwarding: !v })
+                }}
+              />
+            </SettingItem>
+            <SettingItem compatKey="legacy" title="MTU" divider>
+              <Input
+                size="sm"
+                type="number"
+                className="w-25"
+                value={values.mtu.toString()}
+                min={1}
+                onValueChange={(v) => {
+                  setValues({
+                    ...values,
+                    mtu: Math.min(Math.max(parseInt(v) || 1500, 1), 65535)
+                  })
+                }}
+              />
+            </SettingItem>
+            <SettingItem
+              compatKey="legacy"
+              title={tr('DNS hijacking targets, separated by commas')}
+              divider
+            >
+              <Input
+                size="sm"
+                className="w-[50%]"
+                value={values.dnsHijack.join(',')}
+                onValueChange={(v) => {
+                  const arr = v !== '' ? v.split(',') : []
+                  setValues({ ...values, dnsHijack: arr })
+                }}
+              />
+            </SettingItem>
+            <EditableList
+              title={tr('Exclude custom IP ranges')}
+              items={values.routeExcludeAddress}
+              placeholder={tr('Example: 172.20.0.0/16')}
+              onChange={(list) => setValues({ ...values, routeExcludeAddress: list as string[] })}
+              divider={false}
             />
-          </SettingItem>
-          <SettingItem compatKey="legacy" title={tr('ICMP forwarding')} divider>
-            <Switch
-              size="sm"
-              isSelected={!values.disableIcmpForwarding}
-              onValueChange={(v) => {
-                setValues({ ...values, disableIcmpForwarding: !v })
-              }}
-            />
-          </SettingItem>
-          <SettingItem compatKey="legacy" title="MTU" divider>
-            <Input
-              size="sm"
-              type="number"
-              className="w-25"
-              value={values.mtu.toString()}
-              min={1}
-              onValueChange={(v) => {
-                setValues({
-                  ...values,
-                  mtu: Math.min(Math.max(parseInt(v) || 1500, 1), 65535)
-                })
-              }}
-            />
-          </SettingItem>
-          <SettingItem
-            compatKey="legacy"
-            title={tr('DNS hijacking targets, separated by commas')}
-            divider
-          >
-            <Input
-              size="sm"
-              className="w-[50%]"
-              value={values.dnsHijack.join(',')}
-              onValueChange={(v) => {
-                const arr = v !== '' ? v.split(',') : []
-                setValues({ ...values, dnsHijack: arr })
-              }}
-            />
-          </SettingItem>
-          <EditableList
-            title={tr('Exclude custom IP ranges')}
-            items={values.routeExcludeAddress}
-            placeholder={tr('Example: 172.20.0.0/16')}
-            onChange={(list) => setValues({ ...values, routeExcludeAddress: list as string[] })}
-            divider={false}
-          />
-        </SettingCard>
+          </FeatureSettingsSection>
+        </FeatureSettingsLayout>
       </BasePage>
     </>
   )

@@ -265,3 +265,14 @@ test('contextual settings drawers share a sectioned shell', () => {
     assert.doesNotMatch(source, /<Drawer\./)
   }
 })
+
+test('core feature settings pages use the shared desktop layout', () => {
+  const pages = ['syspeoxy', 'tun', 'dns', 'sniffer', 'mihomo']
+
+  for (const page of pages) {
+    const source = readFileSync(`src/renderer/src/pages/${page}.tsx`, 'utf8')
+    assert.match(source, /base-feature-settings/)
+    assert.match(source, /<FeatureSettingsLayout>/)
+    assert.match(source, /<FeatureSettingsSection/)
+  }
+})

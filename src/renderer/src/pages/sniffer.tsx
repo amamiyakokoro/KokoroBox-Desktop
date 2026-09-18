@@ -1,8 +1,10 @@
 import { tr } from '../../../shared/i18n'
 import { Button, Input, Switch } from '@heroui/react'
 import BasePage from '@renderer/components/base/base-page'
-import SettingCard from '@renderer/components/base/base-setting-card'
 import SettingItem from '@renderer/components/base/base-setting-item'
+import FeatureSettingsLayout, {
+  FeatureSettingsSection
+} from '@renderer/components/base/base-feature-settings'
 import EditableList from '@renderer/components/base/base-list-editor'
 import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
@@ -111,113 +113,121 @@ const Sniffer: React.FC = () => {
         )
       }
     >
-      <SettingCard>
-        <SettingItem compatKey="legacy" title={tr('Override domain sniffing settings')} divider>
-          <Switch
-            size="sm"
-            isSelected={controlSniff}
-            onValueChange={async (value) => {
-              try {
-                await patchAppConfig({ controlSniff: value })
-                await patchControledMihomoConfig({})
-                await restartCore()
-              } catch (e) {
-                notify(e, { variant: 'danger' })
-              }
-            }}
-          />
-        </SettingItem>
-        <SettingItem compatKey="legacy" title={tr('Override connection address')} divider>
-          <Switch
-            size="sm"
-            isSelected={values.overrideDestination}
-            onValueChange={(v) => {
-              setValues({
-                ...values,
-                overrideDestination: v,
-                sniff: {
-                  ...values.sniff,
-                  HTTP: {
-                    ...values.sniff.HTTP,
-                    'override-destination': v,
-                    ports: values.sniff.HTTP?.ports || [80, 443]
-                  }
+      <FeatureSettingsLayout>
+        <FeatureSettingsSection title={tr('Sniffing behavior')}>
+          <SettingItem compatKey="legacy" title={tr('Override domain sniffing settings')} divider>
+            <Switch
+              size="sm"
+              isSelected={controlSniff}
+              onValueChange={async (value) => {
+                try {
+                  await patchAppConfig({ controlSniff: value })
+                  await patchControledMihomoConfig({})
+                  await restartCore()
+                } catch (e) {
+                  notify(e, { variant: 'danger' })
                 }
-              })
-            }}
+              }}
+            />
+          </SettingItem>
+          <SettingItem compatKey="legacy" title={tr('Override connection address')} divider>
+            <Switch
+              size="sm"
+              isSelected={values.overrideDestination}
+              onValueChange={(v) => {
+                setValues({
+                  ...values,
+                  overrideDestination: v,
+                  sniff: {
+                    ...values.sniff,
+                    HTTP: {
+                      ...values.sniff.HTTP,
+                      'override-destination': v,
+                      ports: values.sniff.HTTP?.ports || [80, 443]
+                    }
+                  }
+                })
+              }}
+            />
+          </SettingItem>
+          <SettingItem compatKey="legacy" title={tr('Sniff real IP mappings')} divider>
+            <Switch
+              size="sm"
+              isSelected={values.forceDNSMapping}
+              onValueChange={(v) => {
+                setValues({ ...values, forceDNSMapping: v })
+              }}
+            />
+          </SettingItem>
+          <SettingItem compatKey="legacy" title={tr('Sniff unmapped IP addresses')}>
+            <Switch
+              size="sm"
+              isSelected={values.parsePureIP}
+              onValueChange={(v) => {
+                setValues({ ...values, parsePureIP: v })
+              }}
+            />
+          </SettingItem>
+        </FeatureSettingsSection>
+
+        <FeatureSettingsSection title={tr('Protocol ports')}>
+          <SettingItem compatKey="legacy" title={tr('HTTP sniffing ports')} divider>
+            <Input
+              size="sm"
+              className="w-[50%]"
+              placeholder={tr('Port numbers, separated by commas')}
+              value={values.sniff.HTTP?.ports.join(',')}
+              onValueChange={(v) => handleSniffPortChange('HTTP', v)}
+            />
+          </SettingItem>
+          <SettingItem compatKey="legacy" title={tr('TLS sniffing ports')} divider>
+            <Input
+              size="sm"
+              className="w-[50%]"
+              placeholder={tr('Port numbers, separated by commas')}
+              value={values.sniff.TLS?.ports.join(',')}
+              onValueChange={(v) => handleSniffPortChange('TLS', v)}
+            />
+          </SettingItem>
+          <SettingItem compatKey="legacy" title={tr('QUIC sniffing ports')}>
+            <Input
+              size="sm"
+              className="w-[50%]"
+              placeholder={tr('Port numbers, separated by commas')}
+              value={values.sniff.QUIC?.ports.join(',')}
+              onValueChange={(v) => handleSniffPortChange('QUIC', v)}
+            />
+          </SettingItem>
+        </FeatureSettingsSection>
+
+        <FeatureSettingsSection title={tr('Sniffing exceptions')}>
+          <EditableList
+            title={tr('Skip domain sniffing')}
+            items={values.skipDomain}
+            onChange={(list) => setValues({ ...values, skipDomain: list as string[] })}
+            placeholder={tr('Example: +.push.apple.com')}
           />
-        </SettingItem>
-        <SettingItem compatKey="legacy" title={tr('Sniff real IP mappings')} divider>
-          <Switch
-            size="sm"
-            isSelected={values.forceDNSMapping}
-            onValueChange={(v) => {
-              setValues({ ...values, forceDNSMapping: v })
-            }}
+          <EditableList
+            title={tr('Force domain sniffing')}
+            items={values.forceDomain}
+            onChange={(list) => setValues({ ...values, forceDomain: list as string[] })}
+            placeholder={tr('Example: v2ex.com')}
           />
-        </SettingItem>
-        <SettingItem compatKey="legacy" title={tr('Sniff unmapped IP addresses')} divider>
-          <Switch
-            size="sm"
-            isSelected={values.parsePureIP}
-            onValueChange={(v) => {
-              setValues({ ...values, parsePureIP: v })
-            }}
+          <EditableList
+            title={tr('Skip destination address sniffing')}
+            items={values.skipDstAddress}
+            onChange={(list) => setValues({ ...values, skipDstAddress: list as string[] })}
+            placeholder={tr('Example: 1.1.1.1/32')}
           />
-        </SettingItem>
-        <SettingItem compatKey="legacy" title={tr('HTTP sniffing ports')} divider>
-          <Input
-            size="sm"
-            className="w-[50%]"
-            placeholder={tr('Port numbers, separated by commas')}
-            value={values.sniff.HTTP?.ports.join(',')}
-            onValueChange={(v) => handleSniffPortChange('HTTP', v)}
+          <EditableList
+            title={tr('Skip source address sniffing')}
+            items={values.skipSrcAddress}
+            onChange={(list) => setValues({ ...values, skipSrcAddress: list as string[] })}
+            placeholder={tr('Example: 192.168.1.1/24')}
+            divider={false}
           />
-        </SettingItem>
-        <SettingItem compatKey="legacy" title={tr('TLS sniffing ports')} divider>
-          <Input
-            size="sm"
-            className="w-[50%]"
-            placeholder={tr('Port numbers, separated by commas')}
-            value={values.sniff.TLS?.ports.join(',')}
-            onValueChange={(v) => handleSniffPortChange('TLS', v)}
-          />
-        </SettingItem>
-        <SettingItem compatKey="legacy" title={tr('QUIC sniffing ports')} divider>
-          <Input
-            size="sm"
-            className="w-[50%]"
-            placeholder={tr('Port numbers, separated by commas')}
-            value={values.sniff.QUIC?.ports.join(',')}
-            onValueChange={(v) => handleSniffPortChange('QUIC', v)}
-          />
-        </SettingItem>
-        <EditableList
-          title={tr('Skip domain sniffing')}
-          items={values.skipDomain}
-          onChange={(list) => setValues({ ...values, skipDomain: list as string[] })}
-          placeholder={tr('Example: +.push.apple.com')}
-        />
-        <EditableList
-          title={tr('Force domain sniffing')}
-          items={values.forceDomain}
-          onChange={(list) => setValues({ ...values, forceDomain: list as string[] })}
-          placeholder={tr('Example: v2ex.com')}
-        />
-        <EditableList
-          title={tr('Skip destination address sniffing')}
-          items={values.skipDstAddress}
-          onChange={(list) => setValues({ ...values, skipDstAddress: list as string[] })}
-          placeholder={tr('Example: 1.1.1.1/32')}
-        />
-        <EditableList
-          title={tr('Skip source address sniffing')}
-          items={values.skipSrcAddress}
-          onChange={(list) => setValues({ ...values, skipSrcAddress: list as string[] })}
-          placeholder={tr('Example: 192.168.1.1/24')}
-          divider={false}
-        />
-      </SettingCard>
+        </FeatureSettingsSection>
+      </FeatureSettingsLayout>
     </BasePage>
   )
 }
