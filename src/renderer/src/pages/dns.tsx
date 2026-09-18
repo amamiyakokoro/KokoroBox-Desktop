@@ -44,7 +44,8 @@ const antiPollutionDnsPreset = {
 }
 
 const DNS: React.FC = () => {
-  const { controledMihomoConfig, patchControledMihomoConfig } = useControledMihomoConfig()
+  const { controledMihomoConfig, patchControledMihomoConfig, patchControledMihomoConfigOrThrow } =
+    useControledMihomoConfig()
   const { appConfig, patchAppConfig } = useAppConfig()
   const { hosts, controlDns = true } = appConfig || {}
   const { dns } = controledMihomoConfig || {}
@@ -155,7 +156,7 @@ const DNS: React.FC = () => {
       await patchAppConfig({
         hosts: values.hosts
       })
-      await patchControledMihomoConfig(patch)
+      await patchControledMihomoConfigOrThrow(patch)
       await restartCore()
     })
     if (saved) setChanged(false)

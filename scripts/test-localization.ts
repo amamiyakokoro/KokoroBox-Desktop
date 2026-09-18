@@ -324,4 +324,9 @@ test('migrated feature settings use modern rows and stable save actions', () => 
     assert.match(source, /if \(saved\) setChanged\(false\)/)
     assert.match(source, /isSaving=\{isSaving\}/)
   }
+
+  for (const page of ['tun', 'dns', 'sniffer']) {
+    const source = readFileSync(`src/renderer/src/pages/${page}.tsx`, 'utf8')
+    assert.match(source, /patchControledMihomoConfigOrThrow\(patch\)/)
+  }
 })

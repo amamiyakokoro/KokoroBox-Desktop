@@ -17,7 +17,8 @@ import { useSettingsSave } from '@renderer/hooks/use-settings-save'
 const Sniffer: React.FC = () => {
   const { appConfig, patchAppConfig } = useAppConfig()
   const { controlSniff = true } = appConfig || {}
-  const { controledMihomoConfig, patchControledMihomoConfig } = useControledMihomoConfig()
+  const { controledMihomoConfig, patchControledMihomoConfig, patchControledMihomoConfigOrThrow } =
+    useControledMihomoConfig()
   const { sniffer } = controledMihomoConfig || {}
   const {
     'parse-pure-ip': parsePureIP = true,
@@ -65,7 +66,7 @@ const Sniffer: React.FC = () => {
 
   const onSave = async (patch: Partial<MihomoConfig>): Promise<void> => {
     const saved = await runSave(async () => {
-      await patchControledMihomoConfig(patch)
+      await patchControledMihomoConfigOrThrow(patch)
       await restartCore()
     })
     if (saved) setChanged(false)

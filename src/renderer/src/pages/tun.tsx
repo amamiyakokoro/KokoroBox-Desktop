@@ -16,7 +16,7 @@ import { notify } from '@renderer/utils/notification'
 import { useSettingsSave } from '@renderer/hooks/use-settings-save'
 
 const Tun: React.FC = () => {
-  const { controledMihomoConfig, patchControledMihomoConfig } = useControledMihomoConfig()
+  const { controledMihomoConfig, patchControledMihomoConfigOrThrow } = useControledMihomoConfig()
   const { appConfig, patchAppConfig } = useAppConfig()
   const { autoSetDNSMode = 'none' } = appConfig || {}
   const { tun } = controledMihomoConfig || {}
@@ -54,7 +54,7 @@ const Tun: React.FC = () => {
 
   const onSave = async (patch: Partial<MihomoConfig>): Promise<void> => {
     const saved = await runSave(async () => {
-      await patchControledMihomoConfig(patch)
+      await patchControledMihomoConfigOrThrow(patch)
       await restartCore()
     })
     if (saved) setChanged(false)

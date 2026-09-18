@@ -7,6 +7,7 @@ interface ControledMihomoConfigContextType {
   controledMihomoConfig: Partial<MihomoConfig> | undefined
   mutateControledMihomoConfig: () => void
   patchControledMihomoConfig: (value: Partial<MihomoConfig>) => Promise<void>
+  patchControledMihomoConfigOrThrow: (value: Partial<MihomoConfig>) => Promise<void>
 }
 
 const ControledMihomoConfigContext = createContext<ControledMihomoConfigContextType | undefined>(
@@ -29,6 +30,14 @@ export const ControledMihomoConfigProvider: React.FC<{ children: ReactNode }> = 
     }
   }
 
+  const patchControledMihomoConfigOrThrow = async (value: Partial<MihomoConfig>): Promise<void> => {
+    try {
+      await patch(value)
+    } finally {
+      mutateControledMihomoConfig()
+    }
+  }
+
   React.useEffect(() => {
     window.electron.ipcRenderer.on('controledMihomoConfigUpdated', () => {
       mutateControledMihomoConfig()
@@ -40,7 +49,12 @@ export const ControledMihomoConfigProvider: React.FC<{ children: ReactNode }> = 
 
   return (
     <ControledMihomoConfigContext.Provider
-      value={{ controledMihomoConfig, mutateControledMihomoConfig, patchControledMihomoConfig }}
+      value={{
+        controledMihomoConfig,
+        mutateControledMihomoConfig,
+        patchControledMihomoConfig,
+        patchControledMihomoConfigOrThrow
+      }}
     >
       {children}
     </ControledMihomoConfigContext.Provider>
