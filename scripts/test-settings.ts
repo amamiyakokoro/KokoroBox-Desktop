@@ -545,6 +545,41 @@ test('renderer components use the canonical HeroUI v3 package', () => {
   }
 })
 
+test('service management separates maintenance, danger and state-specific actions', () => {
+  const serviceModal = readFileSync(
+    'src/renderer/src/components/mihomo/service-modal.tsx',
+    'utf8'
+  )
+  const footer = serviceModal.slice(
+    serviceModal.indexOf('<Modal.Footer'),
+    serviceModal.indexOf('</Modal.Footer>')
+  )
+
+  assert.match(serviceModal, /type ServiceAction =/)
+  assert.match(serviceModal, /useState<ServiceAction \| null>\(null\)/)
+  assert.doesNotMatch(serviceModal, /const \[loading, setLoading\]/)
+  assert.match(serviceModal, /aria-labelledby="service-maintenance-heading"/)
+  assert.match(serviceModal, /aria-labelledby="service-danger-heading"/)
+  assert.ok(
+    serviceModal.indexOf('service-maintenance-heading') < serviceModal.indexOf('<Modal.Footer')
+  )
+  assert.ok(serviceModal.indexOf('service-danger-heading') < serviceModal.indexOf('<Modal.Footer'))
+  assert.doesNotMatch(footer, /Initialize again|Restart|Repair service|Uninstall/)
+  assert.equal((footer.match(/tr\('Close'\)/g) || []).length, 1)
+  assert.match(footer, /status === 'not-installed'/)
+  assert.match(footer, /status === 'need-init'/)
+  assert.match(footer, /status === 'stopped'/)
+  assert.match(footer, /status === 'paused'/)
+  assert.match(footer, /status === 'requires-approval'/)
+  assert.match(serviceModal, /isPending=\{activeAction === 'restart'\}/)
+  assert.match(serviceModal, /isPending=\{activeAction === 'repair'\}/)
+  assert.match(serviceModal, /isPending=\{activeAction === 'uninstall'\}/)
+  assert.match(serviceModal, /isDisabled=\{isBusy\}/)
+  assert.match(serviceModal, /while \(retries > 0/)
+  assert.match(serviceModal, /await refreshServiceStatus\(result\)/)
+  assert.match(serviceModal, /<Modal\.CloseTrigger className="app-nodrag" \/>/)
+})
+
 test('migrated HeroUI v3 cards preserve layout safety without requiring v2 spacing', () => {
   const connection = readFileSync(
     'src/renderer/src/components/connections/connection-item.tsx',

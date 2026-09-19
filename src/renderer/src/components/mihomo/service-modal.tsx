@@ -21,6 +21,43 @@ interface Props {
 
 type ServiceStatusType = Awaited<ReturnType<typeof serviceStatus>>
 type ConnectionStatusType = 'connected' | 'disconnected' | 'checking' | 'unknown'
+type ServiceAction =
+  | 'refresh'
+  | 'init'
+  | 'install'
+  | 'start'
+  | 'restart'
+  | 'repair'
+  | 'uninstall'
+  | 'open-settings'
+type StatusColor = 'default' | 'success' | 'warning' | 'danger'
+
+const statusDotClasses: Record<StatusColor, string> = {
+  default: 'bg-foreground-300',
+  success: 'bg-success',
+  warning: 'bg-warning',
+  danger: 'bg-danger'
+}
+
+function serviceStatusColor(status: ServiceStatusType | null): StatusColor {
+  if (status === 'running') return 'success'
+  if (
+    status === 'stopped' ||
+    status === 'paused' ||
+    status === 'need-init' ||
+    status === 'requires-approval'
+  ) {
+    return 'warning'
+  }
+  if (status === 'not-installed') return 'danger'
+  return 'default'
+}
+
+function connectionStatusColor(status: ConnectionStatusType): StatusColor {
+  if (status === 'connected') return 'success'
+  if (status === 'disconnected') return 'danger'
+  return 'default'
+}
 
 function isUserCancelledError(error: unknown): boolean {
   const errorMsg = String(error)
@@ -43,7 +80,7 @@ async function readServiceStatus(): Promise<ServiceStatusType> {
 
 const ServiceModal: React.FC<Props> = (props) => {
   const { onChange, onInit, onInstall, onUninstall, onStart, onRestart } = props
-  const [loading, setLoading] = useState(false)
+  const [activeAction, setActiveAction] = useState<ServiceAction | null>(null)
   const [status, setStatus] = useState<ServiceStatusType | null>(null)
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatusType>('checking')
 
@@ -63,10 +100,11 @@ const ServiceModal: React.FC<Props> = (props) => {
   }, [])
 
   const handleAction = async (
+    actionName: ServiceAction,
     action: () => Promise<void>,
     isStartAction = false
   ): Promise<void> => {
-    setLoading(true)
+    setActiveAction(actionName)
     try {
       await action()
 
@@ -88,7 +126,7 @@ const ServiceModal: React.FC<Props> = (props) => {
       await refreshServiceStatus()
       if (!isUserCancelledError(e)) notify(e, { variant: 'danger' })
     } finally {
-      setLoading(false)
+      setActiveAction(null)
     }
   }
 
@@ -97,11 +135,11 @@ const ServiceModal: React.FC<Props> = (props) => {
   }, [refreshServiceStatus])
 
   const handleRefresh = async (): Promise<void> => {
-    setLoading(true)
+    setActiveAction('refresh')
     try {
       await refreshServiceStatus()
     } finally {
-      setLoading(false)
+      setActiveAction(null)
     }
   }
 
@@ -138,6 +176,17 @@ const ServiceModal: React.FC<Props> = (props) => {
     }
   }
 
+  const serviceTone = serviceStatusColor(status)
+  const connectionTone = connectionStatusColor(connectionStatus)
+  const isBusy = activeAction !== null
+  const hasKnownInstalledService =
+    status !== null && status !== 'unknown' && status !== 'not-installed'
+  const requiresMacApproval = status === 'requires-approval' && platform === 'darwin'
+  const showMaintenance = systemCoreOnlyBuild
+    ? hasKnownInstalledService && status !== 'need-init'
+    : hasKnownInstalledService && !requiresMacApproval
+  const showDangerZone = !systemCoreOnlyBuild && hasKnownInstalledService && !requiresMacApproval
+
   return (
     <Modal>
       <Modal.Backdrop
@@ -152,11 +201,15 @@ const ServiceModal: React.FC<Props> = (props) => {
               <Modal.Heading>{tr('KokoroBox service management')}</Modal.Heading>
             </Modal.Header>
             <Modal.Body>
-              <div className="space-y-4">
+              <div className="space-y-5">
                 <Card variant="secondary">
-                  <Card.Content className="py-4">
-                    <div className="flex items-center justify-between mb-3">
+                  <Card.Content className="gap-0 py-1">
+                    <div className="flex min-h-11 items-center justify-between gap-3 px-1">
                       <div className="flex items-center gap-2">
+                        <span
+                          aria-hidden="true"
+                          className={`size-2 shrink-0 rounded-full ${statusDotClasses[serviceTone]}`}
+                        />
                         <span className="text-sm font-medium">{tr('Service status')}</span>
                       </div>
                       {status === null ? (
@@ -167,30 +220,18 @@ const ServiceModal: React.FC<Props> = (props) => {
                           </Chip.Label>
                         </Chip>
                       ) : (
-                        <Chip
-                          color={
-                            status === 'running'
-                              ? 'success'
-                              : status === 'stopped'
-                                ? 'warning'
-                                : status === 'not-installed'
-                                  ? 'danger'
-                                  : status === 'requires-approval'
-                                    ? 'warning'
-                                    : status === 'need-init'
-                                      ? 'warning'
-                                      : 'default'
-                          }
-                          variant="soft"
-                          size="sm"
-                        >
+                        <Chip color={serviceTone} variant="soft" size="sm">
                           {getStatusText()}
                         </Chip>
                       )}
                     </div>
-
-                    <div className="flex items-center justify-between">
+                    <Separator />
+                    <div className="flex min-h-11 items-center justify-between gap-3 px-1">
                       <div className="flex items-center gap-2">
+                        <span
+                          aria-hidden="true"
+                          className={`size-2 shrink-0 rounded-full ${statusDotClasses[connectionTone]}`}
+                        />
                         <span className="text-sm font-medium">{tr('Connection status')}</span>
                       </div>
                       {connectionStatus === 'checking' ? (
@@ -201,17 +242,7 @@ const ServiceModal: React.FC<Props> = (props) => {
                           </Chip.Label>
                         </Chip>
                       ) : (
-                        <Chip
-                          color={
-                            connectionStatus === 'connected'
-                              ? 'success'
-                              : connectionStatus === 'disconnected'
-                                ? 'danger'
-                                : 'default'
-                          }
-                          variant="soft"
-                          size="sm"
-                        >
+                        <Chip color={connectionTone} variant="soft" size="sm">
                           {getConnectionStatusText()}
                         </Chip>
                       )}
@@ -219,123 +250,186 @@ const ServiceModal: React.FC<Props> = (props) => {
                   </Card.Content>
                 </Card>
 
-                <Separator />
-
-                <div className="text-xs text-default-500 space-y-2">
-                  <div className="flex items-start gap-2">
-                    <span>
-                      {systemCoreOnlyBuild
-                        ? tr('Using system service: {0}', [systemServicePath])
-                        : tr(
-                            'Provides elevated permissions for system proxy settings and core process management'
-                          )}
-                    </span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <span>
-                      {systemCoreOnlyBuild
-                        ? tr('The service lifecycle is managed by the distribution init system')
-                        : status === 'requires-approval' && platform === 'darwin'
-                          ? tr('Allow the KokoroBox background service in System Settings')
-                          : tr('Some advanced features are unavailable until installed')}
-                    </span>
-                  </div>
+                <div className="space-y-1">
+                  <h3 className="text-sm font-semibold text-foreground">KokoroBox Service</h3>
+                  <p className="text-xs leading-5 text-foreground-500">
+                    {systemCoreOnlyBuild
+                      ? tr('Using system service: {0}', [systemServicePath])
+                      : tr(
+                          'Provides elevated permissions for system proxy settings and core process management'
+                        )}
+                  </p>
+                  <p className="text-xs leading-5 text-foreground-500">
+                    {systemCoreOnlyBuild
+                      ? tr('The service lifecycle is managed by the distribution init system')
+                      : requiresMacApproval
+                        ? tr('Allow the KokoroBox background service in System Settings')
+                        : tr('Some advanced features are unavailable until installed')}
+                  </p>
                 </div>
+
+                {showMaintenance && (
+                  <section className="space-y-2" aria-labelledby="service-maintenance-heading">
+                    <Separator />
+                    <h3
+                      id="service-maintenance-heading"
+                      className="pt-2 text-xs font-semibold text-foreground-500"
+                    >
+                      {tr('Maintenance')}
+                    </h3>
+                    <div className="flex flex-wrap gap-2">
+                      {systemCoreOnlyBuild ? (
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          isDisabled={isBusy}
+                          isPending={activeAction === 'init'}
+                          onPress={() => handleAction('init', onInit)}
+                        >
+                          {tr('Reset authentication')}
+                        </Button>
+                      ) : (
+                        <>
+                          {status !== 'need-init' && (
+                            <Button
+                              size="sm"
+                              variant="secondary"
+                              isDisabled={isBusy}
+                              isPending={activeAction === 'init'}
+                              onPress={() => handleAction('init', onInit)}
+                            >
+                              {tr('Initialize again')}
+                            </Button>
+                          )}
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            isDisabled={isBusy}
+                            isPending={activeAction === 'restart'}
+                            onPress={() => handleAction('restart', onRestart!, true)}
+                          >
+                            {tr('Restart')}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            isDisabled={isBusy}
+                            isPending={activeAction === 'repair'}
+                            onPress={() => handleAction('repair', onInstall!, true)}
+                          >
+                            {tr('Repair service')}
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                  </section>
+                )}
+
+                {showDangerZone && (
+                  <section className="space-y-2" aria-labelledby="service-danger-heading">
+                    <Separator />
+                    <h3
+                      id="service-danger-heading"
+                      className="pt-2 text-xs font-semibold text-danger"
+                    >
+                      {tr('Danger zone')}
+                    </h3>
+                    <div className="flex items-center justify-between gap-4">
+                      <p className="text-xs leading-5 text-foreground-500">
+                        {tr('Remove KokoroBox Service from this system.')}
+                      </p>
+                      <Button
+                        className="shrink-0"
+                        size="sm"
+                        variant="danger-soft"
+                        isDisabled={isBusy}
+                        isPending={activeAction === 'uninstall'}
+                        onPress={() => handleAction('uninstall', onUninstall!)}
+                      >
+                        {tr('Uninstall')}
+                      </Button>
+                    </div>
+                  </section>
+                )}
               </div>
             </Modal.Body>
-            <Modal.Footer className="flex-col gap-2 sm:flex-row sm:flex-wrap">
+            <Modal.Footer className="justify-end gap-2">
               <Button
                 size="sm"
                 variant="ghost"
                 onPress={() => onChange(false)}
-                isDisabled={loading}
-                className="sm:mr-auto"
+                isDisabled={isBusy}
               >
                 {tr('Close')}
               </Button>
 
               {systemCoreOnlyBuild ? (
-                status === null || status === 'unknown' || status === 'not-installed' ? null : (
+                status === 'need-init' ? (
                   <Button
                     size="sm"
-                    variant="secondary"
-                    onPress={() => handleAction(onInit)}
-                    isPending={loading}
+                    variant="primary"
+                    isDisabled={isBusy}
+                    isPending={activeAction === 'init'}
+                    onPress={() => handleAction('init', onInit)}
                   >
-                    {status === 'need-init' ? tr('Initialize') : tr('Reset authentication')}
+                    {tr('Initialize')}
                   </Button>
-                )
+                ) : null
               ) : status === 'unknown' ? (
-                <Button size="sm" variant="secondary" onPress={handleRefresh} isPending={loading}>
+                <Button
+                  size="sm"
+                  variant="primary"
+                  isDisabled={isBusy}
+                  isPending={activeAction === 'refresh'}
+                  onPress={handleRefresh}
+                >
                   {tr('Check again')}
                 </Button>
               ) : status === 'not-installed' ? (
                 <Button
                   size="sm"
                   variant="primary"
-                  onPress={() => handleAction(onInstall!, true)}
-                  isPending={loading}
+                  isDisabled={isBusy}
+                  isPending={activeAction === 'install'}
+                  onPress={() => handleAction('install', onInstall!, true)}
                 >
                   {tr('Install service')}
                 </Button>
               ) : status === 'requires-approval' && platform === 'darwin' ? (
                 <Button
                   size="sm"
-                  className="text-warning-700 dark:text-warning-400"
-                  variant="secondary"
-                  onPress={() => handleAction(openServiceSystemSettings)}
-                  isPending={loading}
+                  variant="primary"
+                  isDisabled={isBusy}
+                  isPending={activeAction === 'open-settings'}
+                  onPress={() => handleAction('open-settings', openServiceSystemSettings)}
                 >
                   {tr('Open System Settings')}
                 </Button>
-              ) : (
-                <>
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    onPress={() => handleAction(onInit)}
-                    isPending={loading}
-                  >
-                    {status === 'need-init' ? tr('Initialize') : tr('Initialize again')}
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    onPress={() => handleAction(onRestart!, true)}
-                    isPending={loading}
-                  >
-                    {tr('Restart')}
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    onPress={() => handleAction(onInstall!, true)}
-                    isPending={loading}
-                  >
-                    {tr('Repair service')}
-                  </Button>
-                  {status !== 'running' && status !== 'need-init' ? (
-                    <Button
-                      size="sm"
-                      className="bg-success text-success-foreground"
-                      variant="primary"
-                      onPress={() => handleAction(onStart!, true)}
-                      isPending={loading}
-                    >
-                      {tr('Start')}
-                    </Button>
-                  ) : null}
-                  <Button
-                    size="sm"
-                    variant="danger-soft"
-                    onPress={() => handleAction(onUninstall!)}
-                    isPending={loading}
-                  >
-                    {tr('Uninstall')}
-                  </Button>
-                </>
-              )}
+              ) : status === 'need-init' ? (
+                <Button
+                  size="sm"
+                  variant="primary"
+                  isDisabled={isBusy}
+                  isPending={activeAction === 'init'}
+                  onPress={() => handleAction('init', onInit)}
+                >
+                  {tr('Initialize')}
+                </Button>
+              ) : status === 'stopped' ||
+                status === 'paused' ||
+                status === 'requires-approval' ? (
+                <Button
+                  size="sm"
+                  variant="primary"
+                  isDisabled={isBusy}
+                  isPending={activeAction === 'start'}
+                  onPress={() => handleAction('start', onStart!, true)}
+                >
+                  {tr('Start')}
+                </Button>
+              ) : null}
             </Modal.Footer>
+            <Modal.CloseTrigger className="app-nodrag" />
           </Modal.Dialog>
         </Modal.Container>
       </Modal.Backdrop>
