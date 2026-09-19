@@ -4,41 +4,56 @@ import { formatLogTimestamp, parseLogMessage, type LogToken } from './log-displa
 
 const levelTone: Record<LogLevel, { badge: string; row: string }> = {
   error: {
-    badge: 'border-danger/25 bg-danger/10 text-danger',
-    row: 'border-l-danger/70'
+    badge: 'border-danger/25 bg-danger-soft/60 text-danger-soft-foreground',
+    row: 'border-l-danger/70 bg-danger-soft/20'
   },
   warning: {
-    badge: 'border-warning/30 bg-warning/10 text-warning-700 dark:text-warning-300',
-    row: 'border-l-warning/70'
+    badge: 'border-warning/30 bg-warning-soft/60 text-warning-soft-foreground',
+    row: 'border-l-warning/70 bg-warning-soft/20'
   },
   info: {
-    badge: 'border-primary/25 bg-primary/10 text-primary',
-    row: 'border-l-primary/60'
+    badge: 'border-separator/80 bg-surface-secondary text-foreground-600',
+    row: 'border-l-transparent'
   },
   debug: {
-    badge: 'border-default-300 bg-default-100 text-foreground-500',
-    row: 'border-l-default-300'
+    badge: 'border-separator/60 bg-transparent text-foreground-400',
+    row: 'border-l-transparent'
   },
   silent: {
-    badge: 'border-default-300 bg-default-100 text-foreground-500',
-    row: 'border-l-default-300'
+    badge: 'border-separator/60 bg-transparent text-foreground-400',
+    row: 'border-l-transparent'
   }
 }
 
-const tokenTone: Record<LogToken['kind'], string> = {
+const tokenTone: Record<Exclude<LogToken['kind'], 'action'>, string> = {
   text: 'text-foreground-600',
-  protocol: 'font-semibold text-primary',
+  protocol: 'font-semibold text-accent-soft-foreground',
   ip: 'font-medium text-success-600 dark:text-success-400',
-  domain: 'font-medium text-primary',
+  domain: 'font-semibold text-foreground',
   port: 'text-foreground-500',
-  process: 'rounded bg-default-100 px-1 font-medium text-foreground',
-  rule: 'rounded bg-warning/10 px-1 font-medium text-warning-700 dark:text-warning-300',
-  action: 'rounded bg-primary/10 px-1 font-semibold text-primary',
-  keyword: 'text-foreground-400'
+  process: 'rounded bg-surface-secondary px-1 font-medium text-foreground',
+  rule: 'rounded bg-warning-soft/50 px-1 font-medium text-warning-soft-foreground',
+  keyword: 'text-foreground-400',
+  error: 'font-semibold text-danger'
+}
+
+function getTokenTone(token: LogToken): string {
+  if (token.kind !== 'action') return tokenTone[token.kind]
+
+  if (/^DIRECT$/i.test(token.value)) {
+    return 'rounded bg-success-soft/55 px-1 font-semibold text-success-soft-foreground'
+  }
+  if (/^REJECT(?:-DROP)?$/i.test(token.value)) {
+    return 'rounded bg-danger-soft/55 px-1 font-semibold text-danger-soft-foreground'
+  }
+  if (/^PASS$/i.test(token.value)) {
+    return 'rounded bg-accent-soft/55 px-1 font-semibold text-accent-soft-foreground'
+  }
+  return 'font-semibold text-accent-soft-foreground'
 }
 
 export const KokoLogToken: React.FC<{ token: LogToken }> = ({ token }) => (
-  <span className={tokenTone[token.kind]}>{token.value}</span>
+  <span className={getTokenTone(token)}>{token.value}</span>
 )
 
 export const KokoLogLevelBadge: React.FC<{ type: LogLevel }> = ({ type }) => (
@@ -96,7 +111,9 @@ const LogItemComponent: React.FC<Props> = (props) => {
       data-log-level={type}
       className={`mx-2 grid grid-cols-[5.25rem_4.5rem_minmax(0,1fr)] items-start gap-2 border-b border-l-2 border-b-divider/70 px-2 py-1.5 transition-[background-color,opacity,transform] duration-300 ease-out hover:bg-content2/70 ${levelTone[type].row} ${
         entered ? 'translate-y-0 opacity-100' : 'translate-y-1 opacity-0'
-      } ${index === 0 ? 'border-t' : ''} ${animateOnMount ? 'bg-primary/5' : ''}`}
+      } ${index === 0 ? 'border-t' : ''} ${
+        animateOnMount && type !== 'warning' && type !== 'error' ? 'bg-accent-soft/20' : ''
+      }`}
     >
       <time
         className="pt-0.5 font-mono text-[11px] leading-5 text-foreground-400 tabular-nums"

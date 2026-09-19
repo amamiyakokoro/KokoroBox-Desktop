@@ -358,27 +358,30 @@ input[type='number'] {
   overflow: hidden;
   gap: 0;
   padding: 0;
-  border: 1px solid color-mix(in oklab, var(--separator) 82%, var(--accent) 18%);
+  border: 1px solid var(--separator);
   background: var(--surface);
   box-shadow: 0 1px 2px color-mix(in oklab, var(--foreground) 7%, transparent);
   transition:
     border-color 150ms ease,
     background-color 150ms ease,
     box-shadow 150ms ease,
-    transform 150ms ease;
+    opacity 150ms ease;
 }
 
-.rule-list-card[data-enabled='true'] {
-  border-color: color-mix(in oklab, var(--separator) 72%, var(--accent) 28%);
-  background: color-mix(in oklab, var(--surface) 96%, var(--accent) 4%);
+.rule-list-card[data-enabled='false'] {
+  background: var(--surface-secondary);
+  opacity: 0.68;
 }
 
 .rule-list-card:hover {
   z-index: 1;
-  border-color: color-mix(in oklab, var(--separator) 48%, var(--accent) 52%);
-  background: color-mix(in oklab, var(--surface) 92%, var(--accent) 8%);
-  box-shadow: 0 5px 14px color-mix(in oklab, var(--accent) 12%, transparent);
-  transform: translateY(-1px);
+  border-color: color-mix(in oklab, var(--separator) 65%, var(--accent) 35%);
+  background: color-mix(in oklab, var(--surface) 98%, var(--accent) 2%);
+  box-shadow: 0 3px 10px color-mix(in oklab, var(--foreground) 9%, transparent);
+}
+
+.rule-list-card[data-enabled='false']:hover {
+  opacity: 0.82;
 }
 
 .rule-list-card:has(:focus-visible) {
@@ -413,21 +416,17 @@ input[type='number'] {
 
 .rule-list-card__metric {
   display: flex;
-  min-width: calc(var(--spacing) * 16);
+  min-width: calc(var(--spacing) * 14);
   flex-direction: column;
   align-items: flex-end;
-  border-radius: var(--radius);
-  background: var(--surface-secondary);
-  padding: calc(var(--spacing) * 1) calc(var(--spacing) * 1.5);
+  background: transparent;
+  padding-block: calc(var(--spacing) * 0.5);
   color: var(--muted);
   font-variant-numeric: tabular-nums;
-  transition:
-    background-color 150ms ease,
-    color 150ms ease;
+  transition: color 150ms ease;
 }
 
 .rule-list-card__metric[data-active='true'] {
-  background: color-mix(in oklab, var(--accent) 12%, transparent);
   color: var(--accent);
 }
 
@@ -446,10 +445,6 @@ input[type='number'] {
 @media (prefers-reduced-motion: reduce) {
   .rule-list-card {
     transition-duration: 0.01ms;
-  }
-
-  .rule-list-card:hover {
-    transform: none;
   }
 }
 

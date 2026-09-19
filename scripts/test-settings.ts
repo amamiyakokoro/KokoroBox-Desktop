@@ -1027,11 +1027,20 @@ test('operational lists use compact hierarchy without changing their behavior', 
   assert.match(ruleItem, /className="rule-list-card__metric"/)
   assert.match(ruleItem, /data-active=\{hasHits\}/)
   assert.match(ruleItem, /tr\('Match rate'\)/)
-  assert.match(appOverrides, /\.rule-list-card\[data-enabled='true'\]/)
+  assert.doesNotMatch(appOverrides, /\.rule-list-card\[data-enabled='true'\]/)
+  assert.match(
+    appOverrides,
+    /\.rule-list-card\[data-enabled='false'\]\s*\{[\s\S]*?background: var\(--surface-secondary\);[\s\S]*?opacity: 0\.68/
+  )
+  assert.match(appOverrides, /\.rule-list-card\s*\{[\s\S]*?border: 1px solid var\(--separator\)/)
   assert.match(appOverrides, /\.rule-list-card:hover/)
   assert.match(appOverrides, /\.rule-list-card:has\(:focus-visible\)/)
   assert.match(appOverrides, /\.rule-list-card__status/)
-  assert.match(appOverrides, /\.rule-list-card__metric\[data-active='true'\]/)
+  assert.match(appOverrides, /\.rule-list-card__metric\s*\{[\s\S]*?background: transparent/)
+  assert.match(
+    appOverrides,
+    /\.rule-list-card__metric\[data-active='true'\]\s*\{[\s\S]*?color: var\(--accent\)/
+  )
   assert.match(ruleItem, /aria-label=\{`\$\{tr\('Enable rule'\)\}:/)
   assert.match(ruleItem, /mihomoRulesDisable/)
 
@@ -1085,6 +1094,14 @@ test('operational lists use compact hierarchy without changing their behavior', 
   assert.match(logItem, /export const KokoLogLevelBadge/)
   assert.match(logItem, /export const KokoLogToken/)
   assert.match(logItem, /message\.secondary/)
+  assert.match(logItem, /DIRECT[\s\S]*bg-success-soft/)
+  assert.match(logItem, /REJECT[\s\S]*bg-danger-soft/)
+  assert.match(logItem, /protocol: 'font-semibold text-accent-soft-foreground'/)
+  assert.match(logItem, /domain: 'font-semibold text-foreground'/)
+  assert.match(logItem, /rule: 'rounded bg-warning-soft\/50/)
+  assert.match(logItem, /process: 'rounded bg-surface-secondary/)
+  assert.match(logItem, /border-l-warning\/70 bg-warning-soft\/20/)
+  assert.match(logItem, /border-l-danger\/70 bg-danger-soft\/20/)
 })
 
 test('log timestamps stay compact for today and retain the date across days', () => {
@@ -1121,6 +1138,21 @@ test('log messages expose semantic network and routing tokens without losing con
   assert.deepEqual(
     parsed.secondary?.filter((token) => token.kind !== 'text').map((token) => token.kind),
     ['keyword', 'rule', 'keyword', 'action']
+  )
+})
+
+test('log messages recognize only explicit high-confidence error markers', () => {
+  const parsed = parseLogMessage('error: connection failed after timeout; upstream refused')
+
+  assert.deepEqual(
+    parsed.primary.filter((token) => token.kind === 'error').map((token) => token.value),
+    ['error:', 'failed', 'timeout', 'refused']
+  )
+  assert.equal(
+    parseLogMessage('failure handling remains deterministic').primary.some(
+      (token) => token.kind === 'error'
+    ),
+    false
   )
 })
 

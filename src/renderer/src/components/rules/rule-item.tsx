@@ -86,7 +86,10 @@ const RuleItem: React.FC<Props> = ({ rule, index }) => {
               <Chip size="sm" variant="soft" color="default" className="shrink-0">
                 {rule.type}
               </Chip>
-              <LuArrowRight aria-hidden="true" className="shrink-0 text-sm text-primary/60" />
+              <LuArrowRight
+                aria-hidden="true"
+                className="shrink-0 text-sm text-accent-soft-foreground/70"
+              />
               <span
                 className="truncate text-xs font-medium leading-4 text-foreground-500"
                 title={rule.proxy}

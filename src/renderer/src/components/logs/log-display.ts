@@ -1,7 +1,16 @@
 import dayjs from 'dayjs'
 
 export type LogTokenKind =
-  'text' | 'protocol' | 'ip' | 'domain' | 'port' | 'process' | 'rule' | 'action' | 'keyword'
+  | 'text'
+  | 'protocol'
+  | 'ip'
+  | 'domain'
+  | 'port'
+  | 'process'
+  | 'rule'
+  | 'action'
+  | 'keyword'
+  | 'error'
 
 export interface LogToken {
   kind: LogTokenKind
@@ -19,9 +28,10 @@ const rulePattern =
   /^(?:RuleSet|GeoIP|GeoSite|DomainSuffix|DomainKeyword|Domain|IPCIDR|MATCH)\([^)]*\)$/i
 const domainPattern = /^(?:[a-z\d](?:[a-z\d-]{0,61}[a-z\d])?\.)+[a-z\d-]{2,63}$/i
 const semanticTokenPattern =
-  /(\[(?:TCP|UDP|HTTP|HTTPS|SOCKS5|DNS)(?:\([^)]*\))?\]|(?:TCP|UDP|HTTP|HTTPS|SOCKS5|DNS)(?:\([^)]*\))?|(?:RuleSet|GeoIP|GeoSite|DomainSuffix|DomainKeyword|Domain|IPCIDR|MATCH)\([^)]*\)|\b(?:DIRECT|REJECT(?:-DROP)?|PASS)\b|\b(?:\d{1,3}\.){3}\d{1,3}\b|(?:[a-z\d](?:[a-z\d-]{0,61}[a-z\d])?\.)+[a-z\d-]{2,63}\b|:\d{1,5}\b|\([^()\s]+\)|\bmatch\b)/gi
+  /(\[(?:TCP|UDP|HTTP|HTTPS|SOCKS5|DNS)(?:\([^)]*\))?\]|(?:TCP|UDP|HTTP|HTTPS|SOCKS5|DNS)(?:\([^)]*\))?|(?:RuleSet|GeoIP|GeoSite|DomainSuffix|DomainKeyword|Domain|IPCIDR|MATCH)\([^)]*\)|\b(?:DIRECT|REJECT(?:-DROP)?|PASS)\b|\berror:|\b(?:failed|timeout|refused)\b|\b(?:\d{1,3}\.){3}\d{1,3}\b|(?:[a-z\d](?:[a-z\d-]{0,61}[a-z\d])?\.)+[a-z\d-]{2,63}\b|:\d{1,5}\b|\([^()\s]+\)|\bmatch\b)/gi
 
 function tokenKind(value: string): LogTokenKind {
+  if (/^(?:error:|failed|timeout|refused)$/i.test(value)) return 'error'
   if (protocolPattern.test(value)) return 'protocol'
   if (rulePattern.test(value)) return 'rule'
   if (/^(?:\d{1,3}\.){3}\d{1,3}$/.test(value)) return 'ip'

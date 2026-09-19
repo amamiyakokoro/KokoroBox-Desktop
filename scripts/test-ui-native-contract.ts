@@ -127,6 +127,24 @@ test('the application imports the renamed overrides stylesheet', () => {
   assert.equal(existsSync('src/renderer/src/assets/main-compatible.css'), false)
 })
 
+test('HeroUI form controls own focus appearance without a nested application outline', () => {
+  const mainCss = readFileSync('src/renderer/src/assets/main.css', 'utf8')
+  const searchField = readFileSync(
+    'src/renderer/src/components/base/koko-search-field.tsx',
+    'utf8'
+  )
+  const focusRuleStart = mainCss.indexOf(':where(\n  button,')
+  const focusRuleEnd = mainCss.indexOf('\n}', focusRuleStart)
+  const focusRule = mainCss.slice(focusRuleStart, focusRuleEnd)
+
+  assert.ok(focusRuleStart >= 0 && focusRuleEnd > focusRuleStart)
+  assert.match(focusRule, /:not\(\[data-slot\]\):focus-visible/)
+  assert.doesNotMatch(focusRule, /\b(?:input|select|textarea)\b/)
+  assert.match(focusRule, /outline: 2px solid var\(--accent\)/)
+  assert.match(searchField, /<InputGroup[\s\S]*variant="secondary"/)
+  assert.doesNotMatch(searchField, /focus-visible:/)
+})
+
 test('Koko compatibility component exports remain bounded', () => {
   const baseFiles = collectSourceFiles('src/renderer/src/components/base')
   const exports = new Set(
