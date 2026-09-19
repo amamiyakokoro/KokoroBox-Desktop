@@ -104,7 +104,7 @@ test('staged settings protect unsaved changes across navigation and window lifec
   assert.match(main, /show-unsaved-close-confirm/)
 })
 
-test('application settings keep navigation discoverable in compact desktop windows', () => {
+test('application settings keep one clear navigation hierarchy in compact desktop windows', () => {
   const settings = readFileSync('src/renderer/src/pages/settings.tsx', 'utf8')
   const styles = readFileSync('src/renderer/src/assets/app-overrides.css', 'utf8')
   const settingCard = readFileSync('src/renderer/src/components/base/base-setting-card.tsx', 'utf8')
@@ -116,9 +116,10 @@ test('application settings keep navigation discoverable in compact desktop windo
 
   assert.match(settings, /aria-current=\{active \? 'page' : undefined\}/)
   assert.match(settings, /event\.key\.toLowerCase\(\) === 'f'/)
-  assert.match(settings, /settings-content-header sticky top-0/)
+  assert.match(settings, /settings-context-header sticky top-0/)
   assert.match(settings, /scrollTo\(\{ top: 0 \}\)/)
   assert.match(settings, /settings-navigation-list/)
+  assert.match(settings, /settings-navigation-search/)
   assert.match(settings, /<ScrollShadow/)
   assert.match(settings, /orientation="horizontal"/)
   assert.match(
@@ -128,6 +129,10 @@ test('application settings keep navigation discoverable in compact desktop windo
   assert.match(settings, /<KokoTabs/)
   assert.match(settings, /variant="secondary"/)
   assert.match(settings, /onChange=\{selectPanel\}/)
+  assert.match(settings, /\{\(normalizedSearch \|\| selectedPanels\.length > 1\) && \(/)
+  assert.match(settings, /\{normalizedSearch \? \([\s\S]*?<h1[\s\S]*?tr\('Search settings'\)/)
+  assert.doesNotMatch(settings, /<h1[^>]*>[\s\S]*?selectedPanel\?\.label[\s\S]*?<\/h1>/)
+  assert.doesNotMatch(settings, /selectedPanel\?\.label \?\? selected\.label/)
   assert.match(settings, /nextParams\.set\('panel', panelKey\)/)
   assert.doesNotMatch(settings, /settings-panel-button/)
   assert.match(settings, /settings-container min-h-full/)
@@ -139,6 +144,7 @@ test('application settings keep navigation discoverable in compact desktop windo
   assert.match(styles, /@container settings \(max-width: 50rem\)/)
   assert.doesNotMatch(styles, /@media \(max-width: 1050px\)/)
   assert.match(styles, /\.settings-navigation-list \{[\s\S]*flex-direction: row/)
+  assert.match(styles, /\.settings-navigation-search \{[\s\S]*clamp\(10rem, 30cqi, 15rem\)/)
   assert.match(styles, /\.settings-navigation-list::-webkit-scrollbar/)
   assert.doesNotMatch(styles, /\.settings-content-search\s*\{[\s\S]*display:\s*block/)
   assert.doesNotMatch(styles, /\.settings-panel-button/)

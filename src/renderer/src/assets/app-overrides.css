@@ -236,6 +236,10 @@ input[type='number'] {
   grid-template-columns: 12rem minmax(0, 1fr);
 }
 
+.settings-navigation-search {
+  flex: none;
+}
+
 .feature-settings-layout__action {
   position: absolute;
   z-index: 1;
@@ -316,6 +320,9 @@ input[type='number'] {
     position: relative;
     top: auto;
     height: auto;
+    flex-direction: row;
+    align-items: center;
+    gap: calc(var(--spacing) * 2);
     border-right-width: 0;
     border-bottom: 1px solid var(--border);
     padding-block: calc(var(--spacing) * 2);
@@ -323,13 +330,24 @@ input[type='number'] {
   }
 
   .settings-navigation-list {
+    order: 1;
+    min-width: 0;
     flex-direction: row;
+    flex: 1 1 auto;
     gap: calc(var(--spacing) * 0.5);
     overflow-x: auto;
     overflow-y: hidden;
     padding-bottom: calc(var(--spacing) * 1);
     scrollbar-color: color-mix(in oklab, var(--muted) 35%, transparent) transparent;
     scrollbar-width: thin;
+  }
+
+  .settings-navigation-search {
+    order: 2;
+    min-width: 10rem;
+    flex: 0 0 clamp(10rem, 30cqi, 15rem);
+    width: clamp(10rem, 30cqi, 15rem);
+    margin-bottom: 0;
   }
 
   .settings-navigation-list::-webkit-scrollbar {

@@ -32,8 +32,9 @@ const Settings: React.FC = () => {
       : (requestedSetting?.category.key ?? 'general')
   const selected = categories.find((item) => item.key === category) ?? categories[0]
   const requestedPanel = searchParams.get('panel') ?? requestedSetting?.entry.panel
+  const selectedPanels = selected.panels ?? []
   const selectedPanel =
-    selected.panels?.find((panel) => panel.key === requestedPanel) ?? selected.panels?.[0]
+    selectedPanels.find((panel) => panel.key === requestedPanel) ?? selectedPanels[0]
   const normalizedSearch = search.trim().toLocaleLowerCase()
   const searchResults = useMemo(
     () =>
@@ -185,13 +186,21 @@ const Settings: React.FC = () => {
         <div ref={layoutRef} className="settings-layout grid min-h-full">
           <nav
             aria-label={tr('Settings categories')}
-            className="settings-navigation sticky top-0 z-10 flex h-[calc(100vh-49px)] flex-col border-r border-divider bg-background/95 p-3 backdrop-blur"
+            className="settings-navigation sticky top-0 z-10 flex h-[calc(100vh-49px)] flex-col border-r border-divider bg-background/95 p-3"
           >
+            <KokoSearchField
+              value={search}
+              aria-label={tr('Search settings')}
+              placeholder={tr('Search settings')}
+              className="settings-content-search settings-navigation-search mb-3 w-full"
+              onValueChange={setSearch}
+              onClear={() => setSearch('')}
+            />
             <ScrollShadow
               ref={categoryNavigationRef}
               orientation="horizontal"
               size={28}
-              className="settings-navigation-list flex flex-col gap-1 overflow-y-auto"
+              className="settings-navigation-list flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto"
             >
               {categories.map((item) => {
                 const Icon = item.icon
@@ -218,47 +227,32 @@ const Settings: React.FC = () => {
           </nav>
           <main className="min-w-0 px-4 pb-4">
             <div className="mx-auto w-full max-w-[960px]">
-              <header
-                className={`settings-content-header sticky top-0 z-10 bg-background/95 backdrop-blur-sm ${
-                  !normalizedSearch && selected.panels && selected.panels.length > 1
-                    ? ''
-                    : 'border-b border-divider'
-                }`}
-              >
-                <div className="flex items-center gap-4 px-3 py-2">
-                  <h1 className="min-w-0 flex-1 text-xl font-semibold tracking-tight">
-                    {normalizedSearch
-                      ? tr('Search settings')
-                      : (selectedPanel?.label ?? selected.label)}
-                  </h1>
-                  <KokoSearchField
-                    value={search}
-                    aria-label={tr('Search settings')}
-                    placeholder={tr('Search settings')}
-                    className="settings-content-search max-w-[45%]"
-                    onValueChange={setSearch}
-                    onClear={() => setSearch('')}
-                  />
-                </div>
-                {!normalizedSearch && selected.panels && selected.panels.length > 1 && (
-                  <nav
-                    aria-label={tr('Settings panels')}
-                    className="settings-panel-navigation min-w-0 px-3"
-                  >
-                    <KokoTabs
-                      ariaLabel={tr('Settings panels')}
-                      className="app-nodrag w-full"
-                      options={selected.panels.map((panel) => ({
-                        id: panel.key,
-                        label: panel.label
-                      }))}
-                      selectedKey={selectedPanel?.key ?? selected.panels[0].key}
-                      variant="secondary"
-                      onChange={selectPanel}
-                    />
-                  </nav>
-                )}
-              </header>
+              {(normalizedSearch || selectedPanels.length > 1) && (
+                <header className="settings-context-header sticky top-0 z-10 bg-background/95">
+                  {normalizedSearch ? (
+                    <h1 className="border-b border-divider px-3 py-3 text-lg font-semibold tracking-tight">
+                      {tr('Search settings')}
+                    </h1>
+                  ) : (
+                    <nav
+                      aria-label={tr('Settings panels')}
+                      className="settings-panel-navigation min-w-0 overflow-x-auto px-3"
+                    >
+                      <KokoTabs
+                        ariaLabel={tr('Settings panels')}
+                        className="app-nodrag w-full"
+                        options={selectedPanels.map((panel) => ({
+                          id: panel.key,
+                          label: panel.label
+                        }))}
+                        selectedKey={selectedPanel?.key ?? selectedPanels[0]?.key ?? ''}
+                        variant="secondary"
+                        onChange={selectPanel}
+                      />
+                    </nav>
+                  )}
+                </header>
+              )}
               {normalizedSearch ? (
                 <div className="mx-3 mt-2 border-y border-divider">
                   {searchResults.length ? (
