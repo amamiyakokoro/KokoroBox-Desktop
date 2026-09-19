@@ -75,6 +75,12 @@ const Settings: React.FC = () => {
     })
   }, [])
 
+  const resetContentScroll = (): void => {
+    requestAnimationFrame(() => {
+      layoutRef.current?.closest<HTMLElement>('.content')?.scrollTo({ top: 0, left: 0 })
+    })
+  }
+
   const selectCategory = (
     nextCategory: SettingsCategory,
     settingId?: string,
@@ -89,11 +95,7 @@ const Settings: React.FC = () => {
     if (nextPanel) nextParams.set('panel', nextPanel)
     else nextParams.delete('panel')
     setSearchParams(nextParams)
-    if (!settingId) {
-      requestAnimationFrame(() => {
-        layoutRef.current?.closest<HTMLElement>('.content')?.scrollTo({ top: 0 })
-      })
-    }
+    resetContentScroll()
   }
 
   const selectPanel = (panelKey: string): void => {
@@ -102,9 +104,7 @@ const Settings: React.FC = () => {
     nextParams.set('panel', panelKey)
     nextParams.delete('setting')
     setSearchParams(nextParams)
-    requestAnimationFrame(() => {
-      layoutRef.current?.closest<HTMLElement>('.content')?.scrollTo({ top: 0 })
-    })
+    resetContentScroll()
   }
 
   useEffect(() => {
@@ -130,7 +130,16 @@ const Settings: React.FC = () => {
     const activeCategory = navigation?.querySelector<HTMLElement>('[aria-current="page"]')
     if (!navigation || !activeCategory || navigation.scrollWidth <= navigation.clientWidth) return
 
-    activeCategory.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+    const itemStart = activeCategory.offsetLeft
+    const itemEnd = itemStart + activeCategory.offsetWidth
+    const visibleStart = navigation.scrollLeft
+    const visibleEnd = visibleStart + navigation.clientWidth
+
+    if (itemStart < visibleStart) {
+      navigation.scrollTo({ left: itemStart })
+    } else if (itemEnd > visibleEnd) {
+      navigation.scrollTo({ left: itemEnd - navigation.clientWidth })
+    }
   }, [category])
 
   useEffect(() => {
@@ -174,6 +183,7 @@ const Settings: React.FC = () => {
   return (
     <BasePage
       title={tr('Application settings')}
+      contentClassName="overflow-x-clip"
       header={
         <Button
           isIconOnly

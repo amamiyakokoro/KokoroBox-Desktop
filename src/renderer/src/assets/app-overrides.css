@@ -328,11 +328,14 @@ input[type='number'] {
 
 .settings-container {
   min-width: 0;
+  overflow-x: clip;
   container-name: settings;
   container-type: inline-size;
 }
 
 .settings-layout {
+  width: 100%;
+  min-width: 0;
   grid-template-columns: 12rem minmax(0, 1fr);
 }
 

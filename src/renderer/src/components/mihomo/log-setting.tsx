@@ -33,7 +33,7 @@ const LogSetting: React.FC = () => {
   }, [maxLogEntries])
 
   return (
-    <SettingCard header={tr('Application logs')}>
+    <SettingCard>
       <SettingItem
         contentAlign="end"
         title={tr('Save logs')}
@@ -84,7 +84,7 @@ const LogSetting: React.FC = () => {
           <Input
             size="sm"
             type="number"
-            className="w-25"
+            controlWidth="number"
             endContent={tr('days')}
             value={maxLogDaysInput.toString()}
             min={1}
@@ -130,7 +130,7 @@ const LogSetting: React.FC = () => {
           <Input
             size="sm"
             type="number"
-            className="w-25"
+            controlWidth="number"
             endContent="MB"
             value={maxLogFileSizeMBInput.toString()}
             min={1}
@@ -173,7 +173,7 @@ const LogSetting: React.FC = () => {
           <Input
             size="sm"
             type="number"
-            className="w-25"
+            controlWidth="number"
             endContent={tr('entries')}
             value={maxLogEntriesInput.toString()}
             min={1}
