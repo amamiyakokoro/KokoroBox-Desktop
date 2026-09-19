@@ -88,8 +88,9 @@ Phase 8 has established these thinner contracts:
   alignment while HeroUI owns its secondary input surface and focus behavior.
 - `KokoTabs` maps option data and selection for page or panel navigation. Labels never wrap; when
   the available width is exhausted, navigation scrolls instead of compressing text.
-- `KokoSegmentedControl` represents compact 2–4 choice settings with native primary Tabs, a stable
-  minimum option width, and non-wrapping labels. It is deliberately distinct from navigation tabs.
+- `KokoSegmentedControl` maps compact 2–4 choice settings to the native HeroUI
+  `ToggleButtonGroup`. Every mutually exclusive value remains visible, labels never wrap, and
+  native ToggleButton selection, separators, focus, and keyboard behavior remain intact.
 - `KokoSelect` owns option identity, selected-text rendering, multiple selection, label placement,
   density, and application control-width intent. Its native variant defaults to `primary`;
   consumers choose `secondary` for controls embedded in surfaces, inspectors, and toolbars.
@@ -99,6 +100,10 @@ Phase 8 has established these thinner contracts:
   trigger. It does not translate v2 colors or variants and does not restyle the native popover.
 - `KokoToolbar` and `KokoToolbarIconButton` define the 36px desktop toolbar alignment and action
   hierarchy while retaining native HeroUI Button, Tooltip, hover, press, and focus behavior.
+
+Use `KokoTabs` for page, panel, and section navigation; use `KokoSegmentedControl` for 2–4 short,
+mutually exclusive setting values that must remain visible together; use `KokoSelect` for numerous,
+long, or low-frequency choices.
 
 The former `KokoButton`, `KokoSwitch`, and `KokoTooltip` migration shims were removed in Phase 12.
 The native contract test prevents these adapters from being reintroduced.

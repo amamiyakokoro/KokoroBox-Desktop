@@ -1,4 +1,4 @@
-import { Tabs, cn } from '@heroui/react'
+import { Tabs, ToggleButton, ToggleButtonGroup, cn } from '@heroui/react'
 import type React from 'react'
 import type { SettingItemProps } from './base-setting-item'
 
@@ -19,6 +19,21 @@ interface KokoTabsProps {
   options: KokoTabOption[]
   selectedKey: string
   variant?: React.ComponentProps<typeof Tabs>['variant']
+  onChange: (key: string) => void | Promise<void>
+}
+
+export interface KokoSegmentedOption {
+  id: string
+  label: React.ReactNode
+  icon?: React.ReactNode
+  isDisabled?: boolean
+}
+
+interface KokoSegmentedControlProps {
+  ariaLabel: string
+  className?: string
+  options: KokoSegmentedOption[]
+  selectedKey: string
   onChange: (key: string) => void | Promise<void>
 }
 
@@ -56,7 +71,7 @@ export const KokoTabs: React.FC<KokoTabsProps> = ({
   )
 }
 
-export const KokoSegmentedControl: React.FC<Omit<KokoTabsProps, 'variant'>> = ({
+export const KokoSegmentedControl: React.FC<KokoSegmentedControlProps> = ({
   ariaLabel,
   className,
   options,
@@ -64,27 +79,30 @@ export const KokoSegmentedControl: React.FC<Omit<KokoTabsProps, 'variant'>> = ({
   onChange
 }) => {
   return (
-    <Tabs
-      className={cn('w-fit max-w-full shrink-0', className)}
-      selectedKey={selectedKey}
-      variant="primary"
-      onSelectionChange={(key) => void onChange(String(key))}
+    <ToggleButtonGroup
+      aria-label={ariaLabel}
+      className={cn('w-fit max-w-full shrink-0 whitespace-nowrap', className)}
+      disallowEmptySelection
+      selectedKeys={new Set([selectedKey])}
+      selectionMode="single"
+      size="sm"
+      onSelectionChange={(keys) => {
+        const key = keys.values().next().value
+        if (key !== undefined) void onChange(String(key))
+      }}
     >
-      <Tabs.ListContainer className="max-w-full">
-        <Tabs.List aria-label={ariaLabel}>
-          {options.map((option) => (
-            <Tabs.Tab
-              key={option.id}
-              id={option.id}
-              className="min-w-16 shrink-0 whitespace-nowrap px-3"
-              isDisabled={option.isDisabled}
-            >
-              <span className="whitespace-nowrap">{option.label}</span>
-              <Tabs.Indicator />
-            </Tabs.Tab>
-          ))}
-        </Tabs.List>
-      </Tabs.ListContainer>
-    </Tabs>
+      {options.map((option, index) => (
+        <ToggleButton
+          key={option.id}
+          id={option.id}
+          className="min-w-16 shrink-0 whitespace-nowrap"
+          isDisabled={option.isDisabled}
+        >
+          {index > 0 ? <ToggleButtonGroup.Separator /> : null}
+          {option.icon}
+          <span className="whitespace-nowrap">{option.label}</span>
+        </ToggleButton>
+      ))}
+    </ToggleButtonGroup>
   )
 }

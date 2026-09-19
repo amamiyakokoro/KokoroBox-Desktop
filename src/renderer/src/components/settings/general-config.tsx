@@ -17,6 +17,7 @@ import { IoIosHelpCircle } from 'react-icons/io'
 import ConfirmModal from '../base/base-confirm'
 import { notify } from '@renderer/utils/notification'
 import { KokoSegmentedControl } from '../base/base-controls'
+import { LuAppWindow, LuBell } from 'react-icons/lu'
 
 const GeneralConfig: React.FC = () => {
   const { data: autoRunStatus, mutate: mutateAutoRunStatus } = useSWR('checkAutoRun', checkAutoRun)
@@ -66,8 +67,8 @@ const GeneralConfig: React.FC = () => {
             ariaLabel={tr('Notification style')}
             selectedKey={notificationMode}
             options={[
-              { id: 'system', label: tr('System') },
-              { id: 'toast', label: tr('In-app') }
+              { id: 'system', label: tr('System'), icon: <LuBell aria-hidden="true" /> },
+              { id: 'toast', label: tr('In-app'), icon: <LuAppWindow aria-hidden="true" /> }
             ]}
             onChange={(key) => {
               patchAppConfig({ notificationMode: key as AppNotificationMode })

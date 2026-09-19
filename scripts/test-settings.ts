@@ -311,6 +311,7 @@ test('system proxy fields keep editable lists inside the settings control column
 test('settings and Mihomo forms share the KokoroBox HeroUI v3 conventions', () => {
   const form = readFileSync('src/renderer/src/components/base/koko-form.tsx', 'utf8')
   const controls = readFileSync('src/renderer/src/components/base/base-controls.tsx', 'utf8')
+  const segmentedControl = controls.slice(controls.indexOf('export const KokoSegmentedControl'))
   const systemProxy = readFileSync(
     'src/renderer/src/components/settings/network/system-proxy-settings.tsx',
     'utf8'
@@ -360,8 +361,18 @@ test('settings and Mihomo forms share the KokoroBox HeroUI v3 conventions', () =
   assert.match(systemProxy, /<Switch\.Thumb \/>/)
   assert.match(systemProxy, /controlWidth="short"/)
   assert.match(controls, /export const KokoSegmentedControl/)
-  assert.match(controls, /variant="primary"/)
-  assert.match(controls, /min-w-16 shrink-0 whitespace-nowrap px-3/)
+  assert.match(controls, /export interface KokoSegmentedOption/)
+  assert.match(controls, /icon\?: React\.ReactNode/)
+  assert.match(segmentedControl, /<ToggleButtonGroup/)
+  assert.match(segmentedControl, /selectionMode="single"/)
+  assert.match(segmentedControl, /disallowEmptySelection/)
+  assert.match(segmentedControl, /selectedKeys=\{new Set\(\[selectedKey\]\)\}/)
+  assert.match(segmentedControl, /<ToggleButton[\s\S]*id=\{option\.id\}/)
+  assert.match(segmentedControl, /isDisabled=\{option\.isDisabled\}/)
+  assert.match(segmentedControl, /<ToggleButtonGroup\.Separator \/>/)
+  assert.match(segmentedControl, /\{option\.icon\}/)
+  assert.match(segmentedControl, /min-w-16 shrink-0 whitespace-nowrap/)
+  assert.doesNotMatch(segmentedControl, /<Tabs(?:\.|\s)/)
   assert.doesNotMatch(controls, /export const SettingTabs/)
   assert.match(controls, /variant\?: React\.ComponentProps<typeof Tabs>\['variant'\]/)
   assert.match(controls, /variant=\{variant\}/)
@@ -1116,12 +1127,16 @@ test('log messages expose semantic network and routing tokens without losing con
 test('common settings choices use the shared segmented control', () => {
   const general = readFileSync('src/renderer/src/components/settings/general-config.tsx', 'utf8')
   const controls = readFileSync('src/renderer/src/components/base/base-controls.tsx', 'utf8')
+  const segmentedControl = controls.slice(controls.indexOf('export const KokoSegmentedControl'))
   const rendererFiles = collectTsxFiles('src/renderer/src')
 
   assert.match(controls, /export const KokoSegmentedControl/)
-  assert.match(controls, /variant="primary"/)
+  assert.match(segmentedControl, /<ToggleButtonGroup/)
+  assert.doesNotMatch(segmentedControl, /<Tabs(?:\.|\s)/)
   assert.match(general, /ariaLabel=\{tr\('Notification style'\)\}/)
   assert.match(general, /ariaLabel=\{tr\('Update channel'\)\}/)
+  assert.match(general, /icon: <LuBell aria-hidden="true" \/>/)
+  assert.match(general, /icon: <LuAppWindow aria-hidden="true" \/>/)
   assert.match(general, /<KokoSegmentedControl/)
   assert.match(general, /controlWidth="select"/)
   assert.doesNotMatch(general, /<Tabs/)

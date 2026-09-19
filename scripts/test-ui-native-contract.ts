@@ -163,6 +163,9 @@ test('the native-first ownership contract documents the migration boundary', () 
   assert.match(contract, /canonical `@heroui\/react` and `@heroui\/styles` packages/)
   assert.match(contract, /React Aria `I18nProvider`/)
   assert.match(contract, /zero HeroUI internal selectors/)
+  assert.match(contract, /KokoSegmentedControl[\s\S]*`ToggleButtonGroup`/)
+  assert.match(contract, /Use `KokoTabs` for page, panel, and section navigation/)
+  assert.match(contract, /use `KokoSelect` for numerous,[\s\S]*long, or low-frequency choices/)
 })
 
 test('native component appearance is not repainted by dense application surfaces', () => {
