@@ -350,6 +350,98 @@ input[type='number'] {
   }
 }
 
+/* Application routing is a compact management workspace: status reads as a strip,
+ * the add flow is one composer, groups are section headers and rules are neutral
+ * interactive surfaces. HeroUI continues to own the control anatomy. */
+.app-routing-status-strip {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: calc(var(--spacing) * 4);
+  border-block: 1px solid var(--separator);
+  background: color-mix(in oklab, var(--surface-secondary) 55%, transparent);
+  padding: calc(var(--spacing) * 2.5) calc(var(--spacing) * 3);
+}
+
+.app-routing-rule-composer {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: calc(var(--spacing) * 2.5);
+  border: 1px solid var(--separator);
+  border-radius: var(--radius-xl);
+  background: var(--surface);
+  padding: calc(var(--spacing) * 3);
+}
+
+.app-routing-rule-example {
+  margin-top: calc(var(--spacing) * 1);
+  font-size: var(--text-xs);
+  line-height: 1rem;
+  color: var(--muted);
+}
+
+.app-routing-rule-card {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid var(--separator);
+  background: var(--surface);
+  box-shadow: 0 1px 2px color-mix(in oklab, var(--foreground) 6%, transparent);
+  transition:
+    border-color 150ms ease,
+    background-color 150ms ease,
+    box-shadow 150ms ease,
+    opacity 150ms ease;
+}
+
+.app-routing-rule-card:hover {
+  border-color: color-mix(in oklab, var(--separator) 65%, var(--accent) 35%);
+  box-shadow: 0 3px 10px color-mix(in oklab, var(--foreground) 8%, transparent);
+}
+
+.app-routing-rule-card:has(:focus-visible) {
+  border-color: color-mix(in oklab, var(--separator) 50%, var(--accent) 50%);
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.app-routing-rule-card[data-enabled='false'] {
+  background: var(--surface-secondary);
+  opacity: 0.68;
+}
+
+.app-routing-rule-card[data-enabled='false']:hover,
+.app-routing-rule-card[data-enabled='false']:has(:focus-visible) {
+  opacity: 0.84;
+}
+
+.app-routing-group-header {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: calc(var(--spacing) * 2);
+  border-bottom: 1px solid var(--separator);
+  padding: calc(var(--spacing) * 2) calc(var(--spacing) * 1);
+  transition:
+    border-color 150ms ease,
+    background-color 150ms ease,
+    opacity 150ms ease;
+}
+
+.app-routing-group-header:hover {
+  border-color: color-mix(in oklab, var(--separator) 65%, var(--accent) 35%);
+  background: color-mix(in oklab, var(--surface) 98%, var(--accent) 2%);
+}
+
+.app-routing-group-header:has(:focus-visible) {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.app-routing-group-header[data-enabled='false'] {
+  opacity: 0.68;
+}
+
 /* Routing rules use a compact KokoroBox data-card contract: HeroUI supplies the
  * surface anatomy while the application owns density, state hierarchy and layout. */
 .rule-list-card {

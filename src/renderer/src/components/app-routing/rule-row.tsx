@@ -2,9 +2,16 @@ import { tr } from '../../../../shared/i18n'
 import { Card, InputGroup, Switch } from '@heroui/react'
 import { KokoActionMenu } from '../base/koko-collections'
 import { KokoSelect } from '../base/koko-form'
-import { MdArrowDownward, MdArrowUpward, MdDeleteOutline, MdMoreHoriz } from 'react-icons/md'
+import {
+  MdArrowDownward,
+  MdArrowUpward,
+  MdDeleteOutline,
+  MdEdit,
+  MdMoreHoriz
+} from 'react-icons/md'
 import defaultApplicationIcon from '../../../../../resources/app-routing-default-icon.svg?url'
 import { appRoutingExecutableName } from '../../../../shared/app-routing'
+import { useState } from 'react'
 
 const actionLabels: Record<AppRoutingAction, string> = {
   proxy: 'Proxy',
@@ -16,6 +23,12 @@ const protocolLabels: Record<AppRoutingProtocol, string> = {
   tcp: 'TCP',
   udp: 'UDP',
   both: 'TCP + UDP'
+}
+
+const actionDotClass: Record<AppRoutingAction, string> = {
+  proxy: 'bg-accent',
+  direct: 'bg-success',
+  block: 'bg-danger'
 }
 
 interface AppRoutingRuleRowProps {
@@ -39,12 +52,35 @@ export function AppRoutingRuleRow({
   onMove,
   onDelete
 }: AppRoutingRuleRowProps): React.JSX.Element {
+  const [isEditingPattern, setIsEditingPattern] = useState(false)
   const isMacRule =
     rule.identifierKind === 'macos-process-name' ||
     rule.identifierKind === 'macos-signing-identifier'
   const isLinuxRule =
     rule.identifierKind === 'linux-executable' || rule.identifierKind === 'linux-process-name'
   const hasIdentifierKindSelector = isMacRule || isLinuxRule
+  const identifierLabel =
+    rule.identifierKind === 'macos-signing-identifier'
+      ? tr('Signing identifier')
+      : rule.identifierKind === 'linux-executable'
+        ? tr('Executable path')
+        : rule.identifierKind === 'macos-process-name' ||
+            rule.identifierKind === 'linux-process-name'
+          ? tr('Process name')
+          : tr('Process pattern')
+  const actionOptions = Object.entries(actionLabels).map(([id, label]) => ({
+    id,
+    textValue: label,
+    label: (
+      <span className="flex min-w-0 items-center gap-2">
+        <span
+          aria-hidden="true"
+          className={`size-1.5 shrink-0 rounded-full ${actionDotClass[id as AppRoutingAction]}`}
+        />
+        <span className="truncate">{label}</span>
+      </span>
+    )
+  }))
   const changeIdentifierKind = (identifierKind: AppRoutingIdentifierKind): void => {
     if (identifierKind === 'linux-process-name') {
       onChange({
@@ -64,13 +100,13 @@ export function AppRoutingRuleRow({
     })
   }
   return (
-    <Card variant="secondary" className="p-3">
+    <Card className="app-routing-rule-card p-3" data-enabled={rule.enabled}>
       <Card.Content className="grid grid-cols-[2.75rem_minmax(0,1fr)] gap-x-3 gap-y-2">
-        <div className="row-span-2 flex items-center justify-center self-stretch">
+        <div className="row-span-2 flex size-11 items-center justify-center self-start overflow-hidden rounded-xl bg-surface-secondary p-1">
           <img
             src={icon || defaultApplicationIcon}
             alt=""
-            className="size-11 shrink-0 rounded-xl object-contain"
+            className="size-full shrink-0 rounded-lg object-contain"
             onError={(event) => {
               event.currentTarget.onerror = null
               event.currentTarget.src = defaultApplicationIcon
@@ -84,26 +120,58 @@ export function AppRoutingRuleRow({
               rule.sourcePath ? `${rule.processPattern}\n${rule.sourcePath}` : rule.processPattern
             }
           >
-            <InputGroup variant="secondary" className="min-h-9 min-w-0">
-              <InputGroup.Input
-                key={rule.processPattern}
-                aria-label={tr('Process pattern')}
+            {isEditingPattern ? (
+              <InputGroup variant="secondary" className="min-h-9 min-w-0">
+                <InputGroup.Input
+                  key={rule.processPattern}
+                  autoFocus
+                  aria-label={tr('Process pattern')}
+                  disabled={disabled}
+                  defaultValue={rule.processPattern}
+                  className="cursor-text truncate text-base font-semibold"
+                  onBlur={(event) => {
+                    const processPattern = event.currentTarget.value.trim()
+                    if (processPattern && processPattern !== rule.processPattern) {
+                      onChange({
+                        processPattern,
+                        ...(rule.identifierKind === 'linux-executable'
+                          ? { sourcePath: processPattern }
+                          : {})
+                      })
+                    }
+                    setIsEditingPattern(false)
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter') event.currentTarget.blur()
+                    if (event.key === 'Escape') {
+                      event.currentTarget.value = rule.processPattern
+                      event.currentTarget.blur()
+                    }
+                  }}
+                />
+              </InputGroup>
+            ) : (
+              <button
+                type="button"
+                className="group/title flex max-w-full min-w-0 items-center gap-1.5 rounded-md text-left"
                 disabled={disabled}
-                defaultValue={rule.processPattern}
-                className="cursor-text truncate text-base font-semibold"
-                onBlur={(event) => {
-                  const processPattern = event.currentTarget.value.trim()
-                  if (processPattern !== rule.processPattern) {
-                    onChange({
-                      processPattern,
-                      ...(rule.identifierKind === 'linux-executable'
-                        ? { sourcePath: processPattern }
-                        : {})
-                    })
-                  }
-                }}
-              />
-            </InputGroup>
+                title={tr('Edit')}
+                onClick={() => setIsEditingPattern(true)}
+              >
+                <span className="min-w-0">
+                  <span className="block truncate text-sm font-semibold leading-5 text-foreground">
+                    {rule.processPattern}
+                  </span>
+                  <span className="block truncate text-xs leading-4 text-foreground-500">
+                    {identifierLabel}
+                  </span>
+                </span>
+                <MdEdit
+                  aria-hidden="true"
+                  className="shrink-0 text-sm text-foreground-400 opacity-45 transition-opacity group-hover/title:opacity-100 group-focus-visible/title:opacity-100"
+                />
+              </button>
+            )}
           </div>
           <KokoActionMenu
             ariaLabel={tr('Rule actions')}
@@ -197,16 +265,23 @@ export function AppRoutingRuleRow({
             />
           </div>
           <div className="min-w-0">
-            <KokoSelect
-              aria-label={tr('Action')}
-              variant="secondary"
-              className="w-full min-w-0"
-              disallowEmptySelection
-              isDisabled={disabled}
-              options={Object.entries(actionLabels).map(([id, label]) => ({ id, label }))}
-              value={rule.action}
-              onChange={(value) => onChange({ action: value as AppRoutingAction })}
-            />
+            <div className="relative min-w-0">
+              <span
+                aria-hidden="true"
+                className={`pointer-events-none absolute start-3 top-1/2 z-10 size-1.5 -translate-y-1/2 rounded-full ${actionDotClass[rule.action]}`}
+              />
+              <KokoSelect
+                aria-label={tr('Action')}
+                variant="secondary"
+                className="w-full min-w-0"
+                valueClassName="ps-3"
+                disallowEmptySelection
+                isDisabled={disabled}
+                options={actionOptions}
+                value={rule.action}
+                onChange={(value) => onChange({ action: value as AppRoutingAction })}
+              />
+            </div>
           </div>
           <Switch
             size="sm"

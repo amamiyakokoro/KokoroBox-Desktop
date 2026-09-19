@@ -165,6 +165,7 @@ export const messages: Readonly<Record<string, string>> = {
   Retry: '重試',
   'Safely blocked': '安全封鎖中',
   'Application rules': '應用程式規則',
+  'Add application rule': '新增應用程式規則',
   'Process pattern': '程式比對',
   'Rules match from top to bottom. Use a filename or a full path containing *.':
     '規則按從上到下的順序比對；支援檔名或包含 * 的完整路徑。',

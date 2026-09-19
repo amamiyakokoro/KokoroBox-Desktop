@@ -18,7 +18,17 @@ import {
   getAppRoutingStatusLabel,
   getAppRoutingStatusMessage
 } from '@renderer/utils/app-routing-status'
-import { Button, Card, Chip, Input, Label, Separator, Switch, TextField } from '@heroui/react'
+import {
+  Button,
+  Card,
+  Chip,
+  Description,
+  Input,
+  Label,
+  Separator,
+  Switch,
+  TextField
+} from '@heroui/react'
 import { KokoActionMenu } from '@renderer/components/base/koko-collections'
 import { KokoSelect } from '@renderer/components/base/koko-form'
 import {
@@ -35,14 +45,12 @@ import {
 } from 'react-icons/md'
 import { useEffect, useRef, useState } from 'react'
 
-function statusColor(
-  status?: AppRoutingStatus
-): 'default' | 'accent' | 'success' | 'warning' | 'danger' {
-  if (status?.state === 'running') return 'success'
-  if (status?.state === 'starting') return 'accent'
-  if (status?.state === 'degraded') return 'warning'
-  if (status?.state === 'error') return 'danger'
-  return 'default'
+function statusTone(status?: AppRoutingStatus): { dot: string; label: string } {
+  if (status?.state === 'running') return { dot: 'bg-success', label: 'text-success' }
+  if (status?.state === 'starting') return { dot: 'bg-accent', label: 'text-accent' }
+  if (status?.state === 'degraded') return { dot: 'bg-warning', label: 'text-warning' }
+  if (status?.state === 'error') return { dot: 'bg-danger', label: 'text-danger' }
+  return { dot: 'bg-foreground-300', label: 'text-foreground-600' }
 }
 
 const AppRouting: React.FC = () => {
@@ -110,6 +118,7 @@ const AppRouting: React.FC = () => {
     status?.message,
     status?.protectedApplicationCount
   )
+  const currentStatusTone = statusTone(status)
   const needsMacApproval = isMac && config?.enabled && status?.needsUserApproval === true
   const needsWindowsServiceRepair =
     isWindows &&
@@ -257,21 +266,31 @@ const AppRouting: React.FC = () => {
         />
       )}
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-4 p-4">
-        <div className="flex items-start justify-between gap-4">
-          <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-2">
-              <Chip size="sm" color={statusColor(status)} variant="soft">
+        <section className="app-routing-status-strip" aria-live="polite">
+          <div className="min-w-0 flex-1">
+            <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+              <span
+                aria-hidden="true"
+                className={`size-2 shrink-0 rounded-full ${currentStatusTone.dot}`}
+              />
+              <span className={`text-sm font-semibold ${currentStatusTone.label}`}>
                 {getAppRoutingStatusLabel(status)}
-              </Chip>
-              <p className="text-sm text-foreground-500">
+              </span>
+              <span className="text-sm text-foreground-500">
                 {tr(
                   'Route selected applications through local Mihomo without system proxy or TUN.'
                 )}
-              </p>
+              </span>
             </div>
+            {config?.enabled && (
+              <p className="mt-1 pl-4 font-mono text-xs text-foreground-500">
+                {tr('Upstream')} · {displayedProxyProtocol} · 127.0.0.1:{displayedProxyPort}
+                {backendLabel ? ` · ${backendLabel}` : ''}
+              </p>
+            )}
             {currentStatusMessage && !needsMacApproval && (
               <p
-                className={`mt-2 text-sm ${status?.state === 'error' ? 'text-danger' : 'text-warning'}`}
+                className={`mt-1 pl-4 text-xs ${status?.state === 'error' ? 'text-danger' : 'text-warning'}`}
               >
                 {currentStatusMessage}
               </p>
@@ -281,7 +300,7 @@ const AppRouting: React.FC = () => {
               config?.enabled &&
               ['starting', 'error'].includes(status?.state ?? '') && (
                 <Button
-                  className="mt-2"
+                  className="mt-2 ms-4"
                   size="sm"
                   variant="secondary"
                   onPress={() => void refresh()}
@@ -291,7 +310,7 @@ const AppRouting: React.FC = () => {
               )}
             {needsWindowsServiceRepair && (
               <Button
-                className="mt-2"
+                className="mt-2 ms-4"
                 size="sm"
                 variant="secondary"
                 isPending={preparingService}
@@ -301,12 +320,6 @@ const AppRouting: React.FC = () => {
                 <MdRefresh className="text-base" />
                 {tr('Repair service')}
               </Button>
-            )}
-            {config?.enabled && (
-              <p className="mt-2 text-sm text-foreground-500">
-                {tr('Upstream')}：KokoroBox / 127.0.0.1:{displayedProxyPort} (
-                {displayedProxyProtocol}){backendLabel ? ` · ${backendLabel}` : ''}
-              </p>
             )}
           </div>
           <Switch
@@ -321,7 +334,7 @@ const AppRouting: React.FC = () => {
               </Switch.Control>
             </Switch.Content>
           </Switch>
-        </div>
+        </section>
 
         <Separator />
 
@@ -381,20 +394,13 @@ const AppRouting: React.FC = () => {
           </p>
         </div>
 
-        <div className="app-routing-rule-entry flex flex-col gap-1">
-          <p className="app-routing-rule-example px-1 text-xs text-foreground-500">
-            {isMac
-              ? macIdentifierKind === 'macos-process-name'
-                ? tr('For example: codex or Codex Helper*')
-                : tr('For example: com.openai.chat or com.openai.chat*')
-              : isLinux
-                ? linuxIdentifierKind === 'linux-process-name'
-                  ? tr('For example: codex. Every executable with that name will match.')
-                  : tr('For example: /usr/bin/firefox or /opt/example/example')
-                : tr(
-                    'For example: ChatGPT.exe, ChatGPT*.exe, or C:\\Program Files\\*\\ChatGPT.exe'
-                  )}
-          </p>
+        <section
+          className="app-routing-rule-entry app-routing-rule-composer"
+          aria-labelledby="app-routing-composer-title"
+        >
+          <h4 id="app-routing-composer-title" className="text-sm font-semibold text-foreground">
+            {tr('Add application rule')}
+          </h4>
           <div
             className={`app-routing-rule-entry-grid ${
               isMac || isLinux
@@ -466,21 +472,25 @@ const AppRouting: React.FC = () => {
                   if (event.key === 'Enter' && processPattern.trim()) void submitPattern()
                 }}
               />
+              <Description className="app-routing-rule-example">
+                {isMac
+                  ? macIdentifierKind === 'macos-process-name'
+                    ? tr('For example: codex or Codex Helper*')
+                    : tr('For example: com.openai.chat or com.openai.chat*')
+                  : isLinux
+                    ? linuxIdentifierKind === 'linux-process-name'
+                      ? tr('For example: codex. Every executable with that name will match.')
+                      : tr('For example: /usr/bin/firefox or /opt/example/example')
+                    : tr(
+                        'For example: ChatGPT.exe, ChatGPT*.exe, or C:\\Program Files\\*\\ChatGPT.exe'
+                      )}
+              </Description>
             </TextField>
           </div>
           <div className="app-routing-rule-actions">
             <Button
               className="app-routing-rule-action"
               variant="primary"
-              isDisabled={!supported || !config || saving || !processPattern.trim()}
-              onPress={() => void submitPattern()}
-            >
-              <MdAdd className="text-lg" />
-              {tr('Add pattern rule')}
-            </Button>
-            <Button
-              className="app-routing-rule-action"
-              variant="secondary"
               isDisabled={!supported || !config || saving}
               onPress={() =>
                 void addApplications(undefined, isLinux ? linuxIdentifierKind : undefined)
@@ -489,8 +499,17 @@ const AppRouting: React.FC = () => {
               <MdAdd className="text-lg" />
               {tr('Select applications')}
             </Button>
+            <Button
+              className="app-routing-rule-action"
+              variant="secondary"
+              isDisabled={!supported || !config || saving || !processPattern.trim()}
+              onPress={() => void submitPattern()}
+            >
+              <MdAdd className="text-lg" />
+              {tr('Add pattern rule')}
+            </Button>
           </div>
-        </div>
+        </section>
 
         {!supported ? (
           <Card variant="secondary">
@@ -611,7 +630,7 @@ const AppRouting: React.FC = () => {
                       const isCollapsed = collapsedGroups.has(group.id)
                       return (
                         <section key={group.id} className="flex flex-col gap-2">
-                          <div className="flex min-w-0 items-center gap-2 rounded-xl border border-default-200 bg-default-50 px-3 py-2.5 dark:bg-default-100/40">
+                          <div className="app-routing-group-header" data-enabled={group.enabled}>
                             <button
                               type="button"
                               className="flex min-w-0 flex-1 items-center gap-2 text-left"
@@ -621,7 +640,7 @@ const AppRouting: React.FC = () => {
                               <MdKeyboardArrowDown
                                 className={`shrink-0 text-xl text-foreground-500 transition-transform duration-150 ${isCollapsed ? '-rotate-90' : ''}`}
                               />
-                              <MdFolderOpen className="shrink-0 text-xl text-primary" />
+                              <MdFolderOpen className="shrink-0 text-xl text-accent-soft-foreground" />
                               <span className="min-w-0 flex-1">
                                 <span className="block truncate text-sm font-semibold">
                                   {group.name}
@@ -697,7 +716,7 @@ const AppRouting: React.FC = () => {
                           </div>
                           {!isCollapsed && (
                             <div
-                              className={`ml-4 flex flex-col gap-3 border-l-2 pl-3 transition-opacity duration-150 ${group.enabled ? 'border-primary-200' : 'border-default-200 opacity-70'}`}
+                              className={`ml-4 flex flex-col gap-3 border-l-2 pl-3 transition-opacity duration-150 ${group.enabled ? 'border-accent/25' : 'border-separator opacity-70'}`}
                             >
                               {rules.length === 0 ? (
                                 <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-dashed border-default-200 px-4 py-3 text-sm text-foreground-500">

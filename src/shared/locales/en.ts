@@ -169,6 +169,7 @@ export const messages: Readonly<Record<string, string>> = {
   Retry: 'Retry',
   'Safely blocked': 'Safely blocked',
   'Application rules': 'Application rules',
+  'Add application rule': 'Add application rule',
   'Process pattern': 'Process pattern',
   'Rules match from top to bottom. Use a filename or a full path containing *.':
     'Rules match from top to bottom. Use a filename or a full path containing *.',

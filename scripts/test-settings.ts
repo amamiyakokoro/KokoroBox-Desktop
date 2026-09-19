@@ -589,7 +589,8 @@ test('Phase 9 card-heavy surfaces use native v3 anatomy and semantic interaction
   assert.match(proxy, /<button[\s\S]*aria-pressed=\{selected\}[\s\S]*onClick=\{selectProxy\}/)
   assert.match(override, /<CollectionCard/)
   assert.match(override, /<button[\s\S]*disabled=\{disableOpen\}/)
-  assert.match(appRule, /<Card variant="secondary" className="p-3">/)
+  assert.match(appRule, /<Card className="app-routing-rule-card p-3" data-enabled={rule\.enabled}>/)
+  assert.doesNotMatch(appRule, /<Card variant="secondary"/)
   assert.match(appRule, /<InputGroup variant="secondary"/)
 })
 

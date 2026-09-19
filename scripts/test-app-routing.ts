@@ -1131,6 +1131,7 @@ test('new application rules use the configured defaults', () => {
 test('application routing rules use a two-line identity-first card layout', () => {
   const page = readFileSync('src/renderer/src/pages/app-routing.tsx', 'utf8')
   const row = readFileSync('src/renderer/src/components/app-routing/rule-row.tsx', 'utf8')
+  const styles = readFileSync('src/renderer/src/assets/app-overrides.css', 'utf8')
 
   assert.match(row, /grid-cols-\[2\.75rem_minmax\(0,1fr\)\]/)
   assert.match(row, /row-span-2/)
@@ -1157,13 +1158,22 @@ test('application routing rules use a two-line identity-first card layout', () =
   assert.match(row, /if \(id === 'move-up'\) onMove\(-1\)/)
   assert.match(row, /if \(id === 'move-down'\) onMove\(1\)/)
   assert.match(row, /if \(id === 'delete'\) onDelete\(\)/)
-  assert.match(row, /<Card variant="secondary" className="p-3">/)
+  assert.match(row, /<Card className="app-routing-rule-card p-3" data-enabled={rule\.enabled}>/)
+  assert.doesNotMatch(row, /<Card variant="secondary"/)
+  assert.match(row, /isEditingPattern \? \(/)
   assert.match(row, /<InputGroup variant="secondary"/)
+  assert.match(row, /onClick=\{\(\) => setIsEditingPattern\(true\)\}/)
+  assert.match(row, /proxy: 'bg-accent'/)
+  assert.match(row, /direct: 'bg-success'/)
+  assert.match(row, /block: 'bg-danger'/)
+  assert.match(styles, /\.app-routing-rule-card\s*\{[\s\S]*?background: var\(--surface\)/)
+  assert.match(styles, /\.app-routing-rule-card\[data-enabled='false'\]/)
 })
 
-test('application rule entry keeps match type and identifier on one desktop row', () => {
+test('application rule composer keeps helper text, controls and actions in one workflow', () => {
   const page = readFileSync('src/renderer/src/pages/app-routing.tsx', 'utf8')
   const styles = readFileSync('src/renderer/src/assets/main.css', 'utf8')
+  const overrides = readFileSync('src/renderer/src/assets/app-overrides.css', 'utf8')
 
   assert.match(
     styles,
@@ -1172,10 +1182,32 @@ test('application rule entry keeps match type and identifier on one desktop row'
   const examplePosition = page.indexOf('className="app-routing-rule-example')
   const entryGridPosition = page.indexOf('className={`app-routing-rule-entry-grid')
   const actionsPosition = page.indexOf('className="app-routing-rule-actions"')
-  assert.ok(examplePosition < entryGridPosition)
+  assert.ok(examplePosition > entryGridPosition)
   assert.ok(actionsPosition > entryGridPosition)
   assert.doesNotMatch(styles, /grid-template-columns: 10rem minmax\(11rem, 1fr\) auto/)
   assert.match(styles, /\.app-routing-rule-actions \{[\s\S]*align-self: flex-end/)
+  assert.match(overrides, /\.app-routing-rule-composer/)
+  assert.match(page, /aria-labelledby="app-routing-composer-title"/)
+  assert.match(page, /<Description className="app-routing-rule-example">/)
+  assert.match(page, /variant="primary"[\s\S]*tr\('Select applications'\)/)
+  assert.match(page, /variant="secondary"[\s\S]*tr\('Add pattern rule'\)/)
+  assert.match(page, /if \(event\.key === 'Enter' && processPattern\.trim\(\)\) void submitPattern\(\)/)
+})
+
+test('application routing status and Windows groups retain compact semantic structure', () => {
+  const page = readFileSync('src/renderer/src/pages/app-routing.tsx', 'utf8')
+  const styles = readFileSync('src/renderer/src/assets/app-overrides.css', 'utf8')
+
+  assert.match(page, /<section className="app-routing-status-strip" aria-live="polite">/)
+  assert.match(page, /getAppRoutingStatusLabel\(status\)/)
+  assert.match(page, /displayedProxyProtocol\} · 127\.0\.0\.1:\{displayedProxyPort\}/)
+  assert.match(page, /aria-label=\{tr\('Application routing'\)\}/)
+  assert.match(styles, /\.app-routing-status-strip/)
+  assert.match(page, /className="app-routing-group-header"/)
+  assert.match(page, /aria-expanded=\{!isCollapsed\}/)
+  assert.match(page, /onClick=\{\(\) => toggleGroup\(group\.id\)\}/)
+  assert.match(styles, /\.app-routing-group-header/)
+  assert.match(styles, /\.app-routing-group-header\[data-enabled='false'\]/)
 })
 
 test('Windows packaging rebuilds the architecture-matched process router payload', () => {
