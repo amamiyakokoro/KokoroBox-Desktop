@@ -1,12 +1,12 @@
-export type SiderGroup = 'quick' | 'status' | 'navigation'
+export type SiderGroup = 'quick' | 'account' | 'status' | 'navigation'
 
 export const defaultSiderOrder = [
   'sysproxy',
   'tun',
+  'kokoro',
   'app-routing',
   'dns',
   'sniff',
-  'kokoro',
   'proxy',
   'connection',
   'profile',
@@ -18,6 +18,7 @@ export const defaultSiderOrder = [
 ] as const
 
 export const quickControlKeys = new Set<string>(['sysproxy', 'tun'])
+export const accountKeys = new Set<string>(['kokoro'])
 export const currentStatusKeys = new Set<string>([
   'profile',
   'proxy',
@@ -28,7 +29,6 @@ export const currentStatusKeys = new Set<string>([
 export const navigationKeys = new Set<string>([
   'dns',
   'sniff',
-  'kokoro',
   'rule',
   'resource',
   'override',
@@ -37,6 +37,7 @@ export const navigationKeys = new Set<string>([
 
 export const groupForSiderKey = (key: string): SiderGroup | undefined => {
   if (quickControlKeys.has(key)) return 'quick'
+  if (accountKeys.has(key)) return 'account'
   if (currentStatusKeys.has(key)) return 'status'
   if (navigationKeys.has(key)) return 'navigation'
   return undefined

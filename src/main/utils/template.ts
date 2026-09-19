@@ -43,10 +43,10 @@ export const defaultConfig: AppConfig = {
   siderOrder: [
     'sysproxy',
     'tun',
+    'kokoro',
     'app-routing',
     'dns',
     'sniff',
-    'kokoro',
     'proxy',
     'connection',
     'profile',

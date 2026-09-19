@@ -32,9 +32,15 @@ interface SiderConfigEntry {
   supported?: boolean
 }
 
+interface SiderConfigGroup {
+  title: string
+  entries: SiderConfigEntry[]
+  reorderable?: boolean
+}
+
 const SiderConfig: React.FC = () => {
   const { appConfig, patchAppConfig } = useAppConfig()
-  const groups: { title: string; entries: SiderConfigEntry[] }[] = [
+  const groups: SiderConfigGroup[] = [
     {
       title: tr('Quick controls'),
       entries: [
@@ -49,6 +55,18 @@ const SiderConfig: React.FC = () => {
           key: 'tunCardStatus',
           title: tr('TUN mode'),
           defaultStatus: 'col-span-1'
+        }
+      ]
+    },
+    {
+      title: 'Kokoro',
+      reorderable: false,
+      entries: [
+        {
+          id: 'kokoro',
+          key: 'kokoroCardStatus',
+          title: tr('Kokoro account and subscription'),
+          defaultStatus: 'col-span-2'
         }
       ]
     },
@@ -97,12 +115,6 @@ const SiderConfig: React.FC = () => {
           key: 'sniffCardStatus',
           title: tr('Sniffing'),
           defaultStatus: 'col-span-1'
-        },
-        {
-          id: 'kokoro',
-          key: 'kokoroCardStatus',
-          title: tr('Kokoro account and subscription'),
-          defaultStatus: 'col-span-2'
         },
         {
           id: 'rule',
@@ -164,6 +176,7 @@ const SiderConfig: React.FC = () => {
           <SettingCard key={group.title} header={group.title}>
             {entries.map((item, index) => {
               const status = appConfig?.[item.key] ?? item.defaultStatus
+              const canReorder = group.reorderable !== false && entries.length > 1
               return (
                 <SettingItem
                   contentAlign="end"
@@ -172,36 +185,40 @@ const SiderConfig: React.FC = () => {
                   divider={index !== entries.length - 1}
                 >
                   <div className="flex items-center gap-1">
-                    <Tooltip delay={0}>
-                      <Tooltip.Trigger>
-                        <Button
-                          isIconOnly
-                          size="sm"
-                          variant="ghost"
-                          aria-label={`${tr('Move up')}: ${item.title}`}
-                          isDisabled={index === 0}
-                          onPress={() => void moveSiderItem(entries, item.id, -1)}
-                        >
-                          <LuArrowUp aria-hidden="true" />
-                        </Button>
-                      </Tooltip.Trigger>
-                      <Tooltip.Content>{`${tr('Move up')}: ${item.title}`}</Tooltip.Content>
-                    </Tooltip>
-                    <Tooltip delay={0}>
-                      <Tooltip.Trigger>
-                        <Button
-                          isIconOnly
-                          size="sm"
-                          variant="ghost"
-                          aria-label={`${tr('Move down')}: ${item.title}`}
-                          isDisabled={index === entries.length - 1}
-                          onPress={() => void moveSiderItem(entries, item.id, 1)}
-                        >
-                          <LuArrowDown aria-hidden="true" />
-                        </Button>
-                      </Tooltip.Trigger>
-                      <Tooltip.Content>{`${tr('Move down')}: ${item.title}`}</Tooltip.Content>
-                    </Tooltip>
+                    {canReorder && (
+                      <>
+                        <Tooltip delay={0}>
+                          <Tooltip.Trigger>
+                            <Button
+                              isIconOnly
+                              size="sm"
+                              variant="ghost"
+                              aria-label={`${tr('Move up')}: ${item.title}`}
+                              isDisabled={index === 0}
+                              onPress={() => void moveSiderItem(entries, item.id, -1)}
+                            >
+                              <LuArrowUp aria-hidden="true" />
+                            </Button>
+                          </Tooltip.Trigger>
+                          <Tooltip.Content>{`${tr('Move up')}: ${item.title}`}</Tooltip.Content>
+                        </Tooltip>
+                        <Tooltip delay={0}>
+                          <Tooltip.Trigger>
+                            <Button
+                              isIconOnly
+                              size="sm"
+                              variant="ghost"
+                              aria-label={`${tr('Move down')}: ${item.title}`}
+                              isDisabled={index === entries.length - 1}
+                              onPress={() => void moveSiderItem(entries, item.id, 1)}
+                            >
+                              <LuArrowDown aria-hidden="true" />
+                            </Button>
+                          </Tooltip.Trigger>
+                          <Tooltip.Content>{`${tr('Move down')}: ${item.title}`}</Tooltip.Content>
+                        </Tooltip>
+                      </>
+                    )}
                     <Switch
                       size="sm"
                       aria-label={item.title}

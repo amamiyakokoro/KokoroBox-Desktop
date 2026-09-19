@@ -23,6 +23,7 @@ import TunSwitcher from './tun-switcher'
 import AppRoutingCard from './app-routing-card'
 import { SiderSection } from './sider-surfaces'
 import {
+  accountKeys,
   currentStatusKeys,
   groupForSiderKey,
   navigationKeys,
@@ -92,6 +93,7 @@ export default function SiderCards({ iconOnly = false }: Props): React.JSX.Eleme
     [configuredOrder, supportsAppRouting]
   )
   const [order, setOrder] = useState(siderOrder)
+  const isAccountVisible = (appConfig?.kokoroCardStatus ?? 'col-span-2') !== 'hidden'
   const suppressClickRef = useRef(false)
   const suppressClickTimerRef = useRef<number | undefined>(undefined)
   const navigate = useNavigate()
@@ -168,7 +170,12 @@ export default function SiderCards({ iconOnly = false }: Props): React.JSX.Eleme
   if (iconOnly) {
     return (
       <div className="min-h-0 flex-1 overflow-y-auto no-scrollbar">
-        <div className="min-h-full w-full flex flex-col gap-2">{renderCards()}</div>
+        <div className="min-h-full w-full flex flex-col gap-2">
+          {renderCards(quickControlKeys)}
+          {renderCards(accountKeys)}
+          {renderCards(currentStatusKeys)}
+          {renderCards(navigationKeys)}
+        </div>
       </div>
     )
   }
@@ -192,6 +199,9 @@ export default function SiderCards({ iconOnly = false }: Props): React.JSX.Eleme
               {renderCards(quickControlKeys)}
             </SiderSection>
           </SortableContext>
+          {isAccountVisible && (
+            <div className="sider-account-entry">{renderCards(accountKeys)}</div>
+          )}
           <SortableContext items={orderedKeys(currentStatusKeys)}>
             <SiderSection title={tr('Current status')}>
               {renderCards(currentStatusKeys)}

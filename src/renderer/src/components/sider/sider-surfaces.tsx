@@ -3,6 +3,7 @@ import type React from 'react'
 import { LuChevronRight } from 'react-icons/lu'
 
 type SiderStatusTone = 'default' | 'success' | 'warning' | 'danger'
+type SiderItemProminence = 'navigation' | 'account'
 
 interface SiderNavItemProps {
   icon: React.ReactNode
@@ -10,6 +11,7 @@ interface SiderNavItemProps {
   description?: React.ReactNode
   status?: React.ReactNode
   statusTone?: SiderStatusTone
+  prominence?: SiderItemProminence
   active?: boolean
   trailing?: React.ReactNode
   onPress: () => void
@@ -81,16 +83,18 @@ export const SiderStatusRow: React.FC<SiderStatusRowProps> = ({
 const SiderItemIcon: React.FC<{
   active: boolean
   children: React.ReactNode
-  prominence: 'navigation' | 'status'
+  prominence: SiderItemProminence | 'status'
 }> = ({ active, children, prominence }) => (
   <span
     className={cn(
       'flex size-8 shrink-0 items-center justify-center rounded-lg transition-colors duration-150',
       prominence === 'navigation'
         ? 'bg-transparent text-base text-foreground-500 group-hover:bg-default-100/70 group-hover:text-foreground'
-        : 'bg-default-100/70 text-xl text-foreground-500 group-hover:bg-default-200/80 group-hover:text-foreground',
+        : prominence === 'account'
+          ? 'bg-accent-soft/35 text-lg text-accent-soft-foreground group-hover:bg-accent-soft/65 group-hover:text-accent-soft-foreground'
+          : 'bg-default-100/70 text-xl text-foreground-500 group-hover:bg-default-200/80 group-hover:text-foreground',
       active &&
-        (prominence === 'navigation'
+        (prominence !== 'status'
           ? 'bg-accent-soft text-accent-soft-foreground group-hover:bg-accent-soft group-hover:text-accent-soft-foreground'
           : 'bg-primary/15 text-primary group-hover:bg-primary/20 group-hover:text-primary')
     )}
@@ -189,16 +193,20 @@ export const SiderNavItem: React.FC<SiderNavItemProps> = ({
   description,
   status,
   statusTone = 'default',
+  prominence = 'navigation',
   active = false,
   trailing,
   onPress
 }) => (
   <div
+    data-prominence={prominence}
     className={cn(
       'group flex items-center rounded-xl border transition-[background-color,border-color,box-shadow,color] duration-150',
       active
         ? 'border-accent/45 bg-accent-soft/45 text-accent-soft-foreground ring-1 ring-inset ring-accent/15 hover:border-accent/55 hover:bg-accent-soft/65'
-        : 'border-separator/60 bg-surface/55 hover:border-accent/25 hover:bg-surface-secondary/70 hover:shadow-sm'
+        : prominence === 'account'
+          ? 'border-accent/20 bg-accent-soft/15 hover:border-accent/35 hover:bg-accent-soft/30 hover:shadow-sm'
+          : 'border-separator/60 bg-surface/55 hover:border-accent/25 hover:bg-surface-secondary/70 hover:shadow-sm'
     )}
   >
     <button
@@ -213,7 +221,7 @@ export const SiderNavItem: React.FC<SiderNavItemProps> = ({
       aria-current={active ? 'page' : undefined}
       onClick={onPress}
     >
-      <SiderItemIcon active={active} prominence="navigation">
+      <SiderItemIcon active={active} prominence={prominence}>
         {icon}
       </SiderItemIcon>
       <SiderItemContent

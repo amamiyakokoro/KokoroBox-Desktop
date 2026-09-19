@@ -247,8 +247,8 @@ async function migration(): Promise<void> {
     if (legacySubStoreIndex >= 0) {
       siderOrder.splice(legacySubStoreIndex, 1)
     }
-    const proxyIndex = siderOrder.indexOf('proxy')
-    siderOrder.splice(proxyIndex < 0 ? siderOrder.length : proxyIndex, 0, 'kokoro')
+    const tunIndex = siderOrder.indexOf('tun')
+    siderOrder.splice(tunIndex < 0 ? Math.min(2, siderOrder.length) : tunIndex + 1, 0, 'kokoro')
     appConfigPatch.siderOrder = siderOrder
   }
 
