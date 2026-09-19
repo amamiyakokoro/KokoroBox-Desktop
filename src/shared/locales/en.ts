@@ -810,6 +810,7 @@ export const messages: Readonly<Record<string, string>> = {
   'Current runtime configuration': 'Current runtime configuration',
   'Current selection': 'Current selection',
   'Current configuration': 'Current configuration',
+  Current: 'Current',
   'A URL scheme is required': 'A URL scheme is required',
   'Double-press or hold ': 'Double-press or hold ',
   'Failed to register shortcut': 'Failed to register shortcut',
@@ -1218,6 +1219,9 @@ export const messages: Readonly<Record<string, string>> = {
     'TUN mode creates a virtual network interface so the core can handle all traffic, including apps that do not use the system proxy.',
   'Crop tray icon': 'Crop tray icon',
   Overrides: 'Overrides',
+  'No overrides yet': 'No overrides yet',
+  'Create a YAML or JavaScript override, or import one from a URL.':
+    'Create a YAML or JavaScript override, or import one from a URL.',
   'Configuration after overrides': 'Configuration after overrides',
   'Override URL': 'Override URL',
   'Override import failed': 'Override import failed',
@@ -1239,6 +1243,10 @@ export const messages: Readonly<Record<string, string>> = {
   'Invalid subscription format: cannot parse a valid configuration\n':
     'Invalid subscription format: cannot parse a valid configuration\n',
   Subscriptions: 'Subscriptions',
+  'No subscriptions yet': 'No subscriptions yet',
+  'Paste a subscription URL or create a local profile.':
+    'Paste a subscription URL or create a local profile.',
+  'Drop to import': 'Drop to import',
   'The subscription card shows the active profile. Click it to open the subscription management page.':
     'The subscription card shows the active profile. Click it to open the subscription management page.',
   'Update subscription automatically': 'Update subscription automatically',

@@ -13,6 +13,7 @@ import { openFile } from '@renderer/utils/ipc'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import ConfirmModal from '../base/base-confirm'
 import QRCodeModal from '../base/base-qrcode-modal'
+import { CollectionCard } from '../base/management/collection-surface'
 
 interface Props {
   info: ProfileItem
@@ -206,9 +207,7 @@ const ProfileItem: React.FC<Props> = (props) => {
           }}
         />
       )}
-      <Card
-        className={`group relative h-full w-full min-w-0 gap-0 overflow-hidden p-0 transition-colors ${isCurrent ? 'bg-primary' : ''} ${selecting ? 'blur-sm' : ''}`}
-      >
+      <CollectionCard isBusy={selecting} isCurrent={isCurrent}>
         <div className="h-full w-full min-w-0 overflow-hidden">
           <button
             {...attributes}
@@ -217,7 +216,7 @@ const ProfileItem: React.FC<Props> = (props) => {
             data-card-primary-action
             aria-label={info.name}
             aria-disabled={disableSelect || switching || undefined}
-            className="absolute inset-0 z-0 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/45"
+            className="absolute inset-0 z-0 cursor-pointer outline-none"
             onClick={() => {
               if (disableSelect || switching) return
               setSelecting(true)
@@ -226,15 +225,20 @@ const ProfileItem: React.FC<Props> = (props) => {
               })
             }}
           />
-          <Card.Content className="pointer-events-none relative z-1 w-full min-w-0 gap-0 px-3 pb-1 pt-3">
-            <div className="flex justify-between h-8 gap-1">
-              <div className="flex min-w-0 items-center">
+          <Card.Content className="pointer-events-none relative z-1 w-full min-w-0 gap-0 px-3 pb-2 pt-3">
+            <div className="flex min-h-8 items-start justify-between gap-1.5">
+              <div className="flex min-w-0 flex-1 items-center gap-1.5">
                 <h3
                   title={info?.name}
-                  className={`text-ellipsis whitespace-nowrap overflow-hidden text-md font-bold leading-8 ${isCurrent ? 'text-primary-foreground' : 'text-foreground'}`}
+                  className="truncate text-sm font-semibold leading-6 text-foreground"
                 >
                   {info?.name}
                 </h3>
+                {isCurrent ? (
+                  <Chip className="shrink-0" color="accent" size="sm" variant="soft">
+                    {tr('Current')}
+                  </Chip>
+                ) : null}
               </div>
               <div className="pointer-events-auto flex shrink-0" data-no-dnd>
                 {info.type === 'remote' && (
@@ -254,7 +258,7 @@ const ProfileItem: React.FC<Props> = (props) => {
                       >
                         <IoMdRefresh
                           color="default"
-                          className={`${isCurrent ? 'text-primary-foreground' : 'text-foreground'} text-[24px] ${updating ? 'animate-spin' : ''}`}
+                          className={`text-[20px] text-foreground ${updating ? 'animate-spin' : ''}`}
                         />
                       </Button>
                     </Tooltip.Trigger>
@@ -276,23 +280,29 @@ const ProfileItem: React.FC<Props> = (props) => {
                   }))}
                   onAction={onMenuAction}
                 >
-                  <IoMdMore
-                    color="default"
-                    className={`text-[24px] ${isCurrent ? 'text-primary-foreground' : 'text-foreground'}`}
-                  />
+                  <IoMdMore color="default" className="text-[20px] text-foreground" />
                 </KokoActionMenu>
               </div>
             </div>
+            <div className="mt-0.5 flex min-w-0 items-center gap-1.5 text-xs text-muted">
+              <span>{info.type === 'remote' ? tr('Remote') : tr('Local')}</span>
+              {info.type === 'remote' ? (
+                <>
+                  <span aria-hidden="true">·</span>
+                  <span className="truncate" title={dayjs(info.updated).format('YYYY-MM-DD HH:mm')}>
+                    {dayjs(info.updated).fromNow()}
+                  </span>
+                </>
+              ) : null}
+            </div>
             {info.type === 'remote' && extra && (
-              <div
-                className={`mt-2 flex justify-between ${isCurrent ? 'text-primary-foreground' : 'text-foreground'}`}
-              >
-                <small>{`${calcTraffic(usage)}/${calcTraffic(total)}`}</small>
+              <div className="mt-3 flex items-center justify-between gap-2 text-xs text-foreground">
+                <span className="tabular-nums">{`${calcTraffic(usage)} / ${calcTraffic(total)}`}</span>
                 {profileDisplayDate === 'expire' ? (
                   <Button
                     size="sm"
                     variant="ghost"
-                    className={`pointer-events-auto h-5 p-1 m-0 ${isCurrent ? 'text-primary-foreground' : 'text-foreground'}`}
+                    className="pointer-events-auto m-0 h-6 min-w-0 px-1.5 text-xs text-muted"
                     onPress={async () => {
                       await patchAppConfig({ profileDisplayDate: 'update' })
                     }}
@@ -305,7 +315,7 @@ const ProfileItem: React.FC<Props> = (props) => {
                   <Button
                     size="sm"
                     variant="ghost"
-                    className={`pointer-events-auto h-5 p-1 m-0 ${isCurrent ? 'text-primary-foreground' : 'text-foreground'}`}
+                    className="pointer-events-auto m-0 h-6 min-w-0 px-1.5 text-xs text-muted"
                     onPress={async () => {
                       await patchAppConfig({ profileDisplayDate: 'expire' })
                     }}
@@ -316,56 +326,17 @@ const ProfileItem: React.FC<Props> = (props) => {
               </div>
             )}
           </Card.Content>
-          <Card.Footer className="pointer-events-none relative z-1 w-full min-w-0 overflow-hidden px-3 pb-3 pt-0">
-            {info.type === 'remote' && !extra && (
-              <div
-                className={`w-full mt-2 flex justify-between ${isCurrent ? 'text-primary-foreground' : 'text-foreground'}`}
-              >
-                <Chip
-                  size="sm"
-                  variant="soft"
-                  className={`${isCurrent ? 'text-primary-foreground border-primary-foreground' : 'border-primary text-primary'}`}
-                >
-                  {tr('Remote')}
-                </Chip>
-                <small>{dayjs(info.updated).fromNow()}</small>
-              </div>
-            )}
-            {info.type === 'local' && (
-              <div
-                className={`mt-2 flex justify-between ${isCurrent ? 'text-primary-foreground' : 'text-foreground'}`}
-              >
-                <Chip
-                  size="sm"
-                  variant="soft"
-                  className={`${isCurrent ? 'text-primary-foreground border-primary-foreground' : 'border-primary text-primary'}`}
-                >
-                  {tr('Local')}
-                </Chip>
-              </div>
-            )}
-            {extra && (
+          {extra ? (
+            <Card.Footer className="pointer-events-none relative z-1 w-full min-w-0 overflow-hidden px-3 pb-3 pt-0">
               <Meter aria-label={tr('Traffic usage')} maxValue={total} value={usage}>
-                <Meter.Track
-                  className={
-                    isCurrent
-                      ? 'h-2.5 bg-black/22 shadow-[inset_0_0_0_1px_rgb(255_255_255/0.35)]'
-                      : undefined
-                  }
-                >
-                  <Meter.Fill
-                    className={
-                      isCurrent
-                        ? 'bg-(--color-accent-foreground) shadow-[0_0_8px_rgb(255_255_255/0.45)]'
-                        : undefined
-                    }
-                  />
+                <Meter.Track>
+                  <Meter.Fill />
                 </Meter.Track>
               </Meter>
-            )}
-          </Card.Footer>
+            </Card.Footer>
+          ) : null}
         </div>
-      </Card>
+      </CollectionCard>
     </div>
   )
 }

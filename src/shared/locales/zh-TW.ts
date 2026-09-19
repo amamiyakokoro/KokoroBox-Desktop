@@ -783,6 +783,7 @@ export const messages: Readonly<Record<string, string>> = {
   'Current runtime configuration': '目前執行時設定',
   'Current selection': '目前選擇',
   'Current configuration': '目前設定',
+  Current: '目前',
   'A URL scheme is required': '必須包含協定頭',
   'Double-press or hold ': '快按兩次或長按 ',
   'Failed to register shortcut': '快捷鍵註冊失敗',
@@ -1183,6 +1184,9 @@ export const messages: Readonly<Record<string, string>> = {
     '虛擬網路卡，即同類軟體中常見的"Tun 模式"，對於某些不遵循系統代理的應用程式，您可以開啟虛擬網路卡以讓核心接管所有流量',
   'Crop tray icon': '裁切系統匣圖示',
   Overrides: '覆寫',
+  'No overrides yet': '還沒有覆寫',
+  'Create a YAML or JavaScript override, or import one from a URL.':
+    '建立 YAML 或 JavaScript 覆寫，或從連結匯入。',
   'Configuration after overrides': '覆寫後設定',
   'Override URL': '覆寫地址',
   'Override import failed': '覆寫匯入失敗',
@@ -1204,6 +1208,9 @@ export const messages: Readonly<Record<string, string>> = {
   'Invalid subscription format: cannot parse a valid configuration\n':
     '訂閱格式錯誤，無法解析為有效的設定檔案\n',
   Subscriptions: '訂閱管理',
+  'No subscriptions yet': '還沒有訂閱',
+  'Paste a subscription URL or create a local profile.': '貼上訂閱連結或建立本機設定。',
+  'Drop to import': '拖放以匯入',
   'The subscription card shows the active profile. Click it to open the subscription management page.':
     '訂閱管理卡片展示目前執行的訂閱設定資訊，點選進入訂閱管理頁面可以在這裡管理訂閱設定',
   'Update subscription automatically': '訂閱自動更新',

@@ -15,6 +15,7 @@ import ConfirmModal from '../base/base-confirm'
 import QRCodeModal from '../base/base-qrcode-modal'
 import { notify } from '@renderer/utils/notification'
 import { isOverrideUsedByCurrentProfile } from '@renderer/utils/override'
+import { CollectionCard } from '../base/management/collection-surface'
 
 interface Props {
   info: OverrideItem
@@ -159,7 +160,7 @@ const OverrideItem: React.FC<Props> = (props) => {
   return (
     <div
       ref={setNodeRef}
-      className="grid col-span-1 touch-sortable-card"
+      className="col-span-1 grid min-w-0 touch-sortable-card"
       style={{
         position: 'relative',
         transform: CSS.Transform.toString(transform),
@@ -197,36 +198,46 @@ const OverrideItem: React.FC<Props> = (props) => {
         />
       )}
       {openLog && <ExecLogModal id={info.id} onClose={() => setOpenLog(false)} />}
-      <Card className="h-full w-full min-w-0 overflow-hidden">
+      <CollectionCard className={isDragging ? 'opacity-70' : undefined}>
         <div className="h-full w-full min-w-0">
-          <Card.Content className="min-w-0">
+          <Card.Content className="min-w-0 px-3 py-3">
             <div className="flex min-w-0 items-start gap-2">
               <button
                 {...attributes}
                 {...listeners}
                 type="button"
                 data-card-primary-action
-                className="min-w-0 flex-1 rounded-md text-left outline-none focus-visible:ring-2 focus-visible:ring-focus"
+                className="min-w-0 flex-1 text-left outline-none"
                 disabled={disableOpen}
                 onClick={() => setOpenFileEditor(true)}
               >
                 <h3 title={info.name} className="truncate text-sm font-semibold text-foreground">
                   {info.name}
                 </h3>
-                <div className="mt-2 flex min-w-0 items-center justify-between gap-2">
-                  <div className="flex min-w-0 items-center gap-1.5">
+                <div className="mt-1 flex min-w-0 items-center gap-1.5 text-xs text-muted">
+                  <span className="shrink-0">{info.ext === 'yaml' ? 'YAML' : 'JavaScript'}</span>
+                  <span aria-hidden="true">·</span>
+                  <span className="shrink-0">
+                    {info.type === 'remote' ? tr('Remote') : tr('Local')}
+                  </span>
+                  {info.type === 'remote' ? (
+                    <>
+                      <span aria-hidden="true">·</span>
+                      <span
+                        className="truncate"
+                        title={dayjs(info.updated).format('YYYY-MM-DD HH:mm')}
+                      >
+                        {dayjs(info.updated).fromNow()}
+                      </span>
+                    </>
+                  ) : null}
+                  <div className="ml-auto flex shrink-0">
                     {info.global && (
                       <Chip size="sm" variant="soft" color="accent">
                         {tr('Global')}
                       </Chip>
                     )}
-                    <span className="truncate text-xs text-muted">
-                      {info.ext === 'yaml' ? 'YAML' : 'JavaScript'}
-                    </span>
                   </div>
-                  {info.type === 'remote' && (
-                    <small className="shrink-0 text-muted">{dayjs(info.updated).fromNow()}</small>
-                  )}
                 </div>
               </button>
               <div className="flex shrink-0" data-no-dnd>
@@ -272,7 +283,7 @@ const OverrideItem: React.FC<Props> = (props) => {
             </div>
           </Card.Content>
         </div>
-      </Card>
+      </CollectionCard>
     </div>
   )
 }

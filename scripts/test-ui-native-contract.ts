@@ -171,9 +171,12 @@ test('native component appearance is not repainted by dense application surfaces
   const denseCardFiles = [
     'src/renderer/src/components/connections/connection-item.tsx',
     'src/renderer/src/components/connections/connection-group-header.tsx',
-    'src/renderer/src/components/profiles/profile-item.tsx',
     'src/renderer/src/pages/proxies.tsx'
   ]
+  const collectionSurface = readFileSync(
+    'src/renderer/src/components/base/management/collection-surface.tsx',
+    'utf8'
+  )
   const drawerFiles = [
     'src/renderer/src/components/base/base-settings-drawer.tsx',
     'src/renderer/src/components/base/error-detail-drawer.tsx',
@@ -196,6 +199,15 @@ test('native component appearance is not repainted by dense application surfaces
     assert.doesNotMatch(cardClassName, /\brounded-(?:lg|xl|2xl|3xl)\b|\bshadow-(?:none|sm|md|lg)\b/)
     assert.match(cardClassName, /\boverflow-hidden\b/)
   }
+
+  const collectionCardClassName =
+    collectionSurface
+      .match(/<Card\b[\s\S]*?className=\{cn\(\s*'([^']*)'/)
+      ?.slice(1)
+      .find(Boolean) ?? ''
+  assert.match(collectionCardClassName, /\boverflow-hidden\b/)
+  assert.doesNotMatch(collectionCardClassName, /\brounded-(?:lg|xl|2xl|3xl)\b/)
+  assert.match(collectionSurface, /isCurrent && 'border-accent\/55 bg-accent-soft\/35'/)
 
   for (const file of drawerFiles) {
     const source = readFileSync(file, 'utf8')

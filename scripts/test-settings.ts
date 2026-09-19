@@ -431,7 +431,7 @@ test('collection and overlay primitives preserve HeroUI v3 identity and selectio
   assert.match(connections, /data-slot="connection-count"/)
   assert.doesNotMatch(connections, /\bBadge\b/)
   assert.match(profiles, /buttonClassName="[^"]*h-8[^"]*w-8[^"]*min-w-8/)
-  assert.match(profiles, /buttonVariant="primary"/)
+  assert.match(profiles, /buttonVariant="secondary"/)
   assert.doesNotMatch(profiles, /buttonColor=/)
   assert.match(profileItem, /buttonClassName="[^"]*h-8[^"]*w-8[^"]*min-w-8/)
   assert.match(tray, /<Accordion[\s\S]*allowsMultipleExpanded/)
@@ -496,8 +496,7 @@ test('migrated HeroUI v3 cards preserve layout safety without requiring v2 spaci
   for (const [label, source] of [
     ['proxy group', proxyGroups],
     ['connection', connection],
-    ['connection group', connectionGroup],
-    ['profile', profile]
+    ['connection group', connectionGroup]
   ] as const) {
     const classes = cardClassName(source, label).split(/\s+/)
     assert.ok(classes.includes('overflow-hidden'), `${label} Card must contain its content`)
@@ -506,10 +505,52 @@ test('migrated HeroUI v3 cards preserve layout safety without requiring v2 spaci
 
   assert.match(connection, /<Card\.Header className="[^"]*\bflex-row\b/)
   assert.match(profile, /className="col-span-1 grid min-w-0 touch-sortable-card"/)
+  assert.match(profile, /<CollectionCard isBusy=\{selecting\} isCurrent=\{isCurrent\}>/)
   assert.match(profile, /<Card\.Content className="[^"]*\bpx-3\b/)
   assert.match(profile, /<Card\.Footer className="[^"]*\bpx-3\b/)
-  assert.match(profilesPage, /repeat\(auto-fit,minmax\(min\(17rem,100%\),1fr\)\)/)
+  assert.match(profilesPage, /<CollectionGrid>/)
   assert.doesNotMatch(profilesPage, /sm:grid-cols-2|lg:grid-cols-3|xl:grid-cols-4/)
+})
+
+test('profile and override pages share the collection management layout contract', () => {
+  const toolbar = readFileSync(
+    'src/renderer/src/components/base/management/collection-toolbar.tsx',
+    'utf8'
+  )
+  const surface = readFileSync(
+    'src/renderer/src/components/base/management/collection-surface.tsx',
+    'utf8'
+  )
+  const profiles = readFileSync('src/renderer/src/pages/profiles.tsx', 'utf8')
+  const overrides = readFileSync('src/renderer/src/pages/override.tsx', 'utf8')
+  const profileItem = readFileSync('src/renderer/src/components/profiles/profile-item.tsx', 'utf8')
+  const overrideItem = readFileSync(
+    'src/renderer/src/components/override/override-item.tsx',
+    'utf8'
+  )
+
+  assert.match(toolbar, /export default CollectionImportToolbar/)
+  assert.match(toolbar, /variant="primary"/)
+  assert.match(toolbar, /tr\('Paste'\)/)
+  assert.match(surface, /repeat\(auto-fill,minmax\(min\(20rem,100%\),24rem\)\)/)
+  assert.match(surface, /export const CollectionCard/)
+  assert.match(surface, /border-accent\/55 bg-accent-soft\/35/)
+  assert.match(surface, /export const CollectionDropZone/)
+  assert.match(surface, /export const CollectionEmptyState/)
+
+  for (const page of [profiles, overrides]) {
+    assert.match(page, /<CollectionImportToolbar/)
+    assert.match(page, /<CollectionDropZone active=\{fileOver\}/)
+    assert.match(page, /<CollectionGrid>/)
+    assert.match(page, /<CollectionEmptyState/)
+    assert.doesNotMatch(page, /grid-cols-2|repeat\(auto-fit/)
+  }
+
+  assert.match(profileItem, /<CollectionCard isBusy=\{selecting\} isCurrent=\{isCurrent\}>/)
+  assert.match(profileItem, /tr\('Current'\)/)
+  assert.doesNotMatch(profileItem, /bg-primary|text-primary-foreground/)
+  assert.match(overrideItem, /<CollectionCard/)
+  assert.match(overrideItem, /info\.type === 'remote' \? tr\('Remote'\) : tr\('Local'\)/)
 })
 
 test('Phase 9 card-heavy surfaces use native v3 anatomy and semantic interactions', () => {
@@ -537,7 +578,7 @@ test('Phase 9 card-heavy surfaces use native v3 anatomy and semantic interaction
   assert.match(rule, /<Card\.Content/)
   assert.match(proxy, /<Card[\s\S]*variant="secondary"/)
   assert.match(proxy, /<button[\s\S]*aria-pressed=\{selected\}[\s\S]*onClick=\{selectProxy\}/)
-  assert.match(override, /<Card className="h-full w-full min-w-0 overflow-hidden">/)
+  assert.match(override, /<CollectionCard/)
   assert.match(override, /<button[\s\S]*disabled=\{disableOpen\}/)
   assert.match(appRule, /<Card variant="secondary" className="p-3">/)
   assert.match(appRule, /<InputGroup variant="secondary"/)
@@ -981,10 +1022,10 @@ test('operational lists use compact hierarchy without changing their behavior', 
   assert.doesNotMatch(ruleProvider, /SettingCard|SettingItem|<Chip|::/)
   assert.match(ruleProvider, /mihomoUpdateRuleProviders/)
 
-  assert.match(overridesPage, /m-2 grid grid-cols-2 gap-2/)
+  assert.match(overridesPage, /<CollectionGrid>/)
   assert.doesNotMatch(overridesPage, /lg:grid-cols-3|xl:grid-cols-4/)
   assert.match(overridesPage, /addOverrideItem/)
-  assert.match(overrideItem, /<Card className="h-full w-full min-w-0 overflow-hidden">/)
+  assert.match(overrideItem, /<CollectionCard/)
   assert.match(overrideItem, /<Chip size="sm" variant="soft" color="accent">/)
   assert.match(overrideItem, /<KokoActionMenu/)
   assert.match(overrideItem, /onAction=\{onMenuAction\}/)

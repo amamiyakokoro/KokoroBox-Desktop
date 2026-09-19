@@ -780,6 +780,7 @@ export const messages: Readonly<Record<string, string>> = {
   'Current runtime configuration': '当前运行时配置',
   'Current selection': '当前选择',
   'Current configuration': '当前配置',
+  Current: '当前',
   'A URL scheme is required': '必须包含协议头',
   'Double-press or hold ': '快按两次或长按 ',
   'Failed to register shortcut': '快捷键注册失败',
@@ -1180,6 +1181,9 @@ export const messages: Readonly<Record<string, string>> = {
     '虚拟网卡，即同类软件中常见的"Tun 模式"，对于某些不遵循系统代理的应用，您可以打开虚拟网卡以让内核接管所有流量',
   'Crop tray icon': '裁剪托盘图标',
   Overrides: '覆写',
+  'No overrides yet': '还没有覆写',
+  'Create a YAML or JavaScript override, or import one from a URL.':
+    '创建 YAML 或 JavaScript 覆写，或从链接导入。',
   'Configuration after overrides': '覆写后配置',
   'Override URL': '覆写地址',
   'Override import failed': '覆写导入失败',
@@ -1201,6 +1205,9 @@ export const messages: Readonly<Record<string, string>> = {
   'Invalid subscription format: cannot parse a valid configuration\n':
     '订阅格式错误，无法解析为有效的配置文件\n',
   Subscriptions: '订阅管理',
+  'No subscriptions yet': '还没有订阅',
+  'Paste a subscription URL or create a local profile.': '粘贴订阅链接或创建本地配置。',
+  'Drop to import': '拖放以导入',
   'The subscription card shows the active profile. Click it to open the subscription management page.':
     '订阅管理卡片展示当前运行的订阅配置信息，点击进入订阅管理页面可以在这里管理订阅配置',
   'Update subscription automatically': '订阅自动更新',

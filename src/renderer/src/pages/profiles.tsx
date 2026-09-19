@@ -1,15 +1,19 @@
 import { tr } from '../../../shared/i18n'
-import { Button, Checkbox, Separator } from '@heroui/react'
+import { Button, Checkbox } from '@heroui/react'
 import { KokoActionMenu } from '@renderer/components/base/koko-collections'
-import { KokoTextField } from '@renderer/components/base/koko-form'
 import BasePage from '@renderer/components/base/base-page'
+import CollectionImportToolbar from '@renderer/components/base/management/collection-toolbar'
+import {
+  CollectionDropZone,
+  CollectionEmptyState,
+  CollectionGrid
+} from '@renderer/components/base/management/collection-surface'
 import ProfileItem from '@renderer/components/profiles/profile-item'
 import EditInfoModal from '@renderer/components/profiles/edit-info-modal'
 import { useProfileConfig } from '@renderer/hooks/use-profile-config'
 import { getFilePath, readTextFile } from '@renderer/utils/ipc'
 import type { KeyboardEvent } from 'react'
 import { useEffect, useRef, useState } from 'react'
-import { MdContentPaste } from 'react-icons/md'
 import { DndContext, closestCenter, DragEndEvent } from '@dnd-kit/core'
 import { SortableContext } from '@dnd-kit/sortable'
 import { FaPlus } from 'react-icons/fa6'
@@ -19,6 +23,7 @@ import ProfileSettingDrawer from '@renderer/components/profiles/profile-setting-
 import { useCardDndSensors } from '@renderer/hooks/use-card-dnd-sensors'
 import { notify } from '@renderer/utils/notification'
 import { useNavigate } from 'react-router-dom'
+import { LuFolderOpen } from 'react-icons/lu'
 
 const emptyItems: ProfileItem[] = []
 
@@ -226,54 +231,13 @@ const Profiles: React.FC = () => {
           }}
         />
       )}
-      <div className="sticky profiles-sticky top-0 z-40">
-        <div className="flex p-2">
-          <KokoTextField
-            size="sm"
-            value={url}
-            onValueChange={setUrl}
-            onKeyUp={handleInputKeyUp}
-            endContent={
-              <>
-                <Button
-                  size="sm"
-                  isIconOnly
-                  variant="ghost"
-                  className="z-10"
-                  onPress={() => {
-                    navigator.clipboard.readText().then((text) => {
-                      setUrl(text)
-                    })
-                  }}
-                >
-                  <MdContentPaste className="text-lg" />
-                </Button>
-                <Checkbox isSelected={useProxy} onChange={setUseProxy}>
-                  <Checkbox.Content className="whitespace-nowrap">
-                    <Checkbox.Control>
-                      <Checkbox.Indicator />
-                    </Checkbox.Control>
-                    {tr('Proxy')}
-                  </Checkbox.Content>
-                </Checkbox>
-              </>
-            }
-          />
-
-          <Button
-            size="sm"
-            variant="primary"
-            className="ml-2"
-            isDisabled={isUrlEmpty}
-            isPending={importing}
-            onPress={() => handleImport(url)}
-          >
-            {tr('Import')}
-          </Button>
+      <CollectionImportToolbar
+        className="profiles-sticky"
+        createAction={
           <KokoActionMenu
             ariaLabel={tr('New configuration')}
-            buttonClassName="ml-2 h-8 w-8 min-w-8 new-profile"
-            buttonVariant="primary"
+            buttonClassName="h-8 w-8 min-w-8 new-profile"
+            buttonVariant="secondary"
             items={[
               {
                 id: 'kokoro',
@@ -344,40 +308,65 @@ const Profiles: React.FC = () => {
           >
             <FaPlus />
           </KokoActionMenu>
-        </div>
-        <Separator />
-      </div>
+        }
+        inputAriaLabel={tr('Subscription URL')}
+        inputTrailing={
+          <Checkbox isSelected={useProxy} onChange={setUseProxy}>
+            <Checkbox.Content className="whitespace-nowrap">
+              <Checkbox.Control>
+                <Checkbox.Indicator />
+              </Checkbox.Control>
+              {tr('Proxy')}
+            </Checkbox.Content>
+          </Checkbox>
+        }
+        isImportDisabled={isUrlEmpty}
+        isImporting={importing}
+        placeholder={tr('Subscription URL')}
+        value={url}
+        onImport={() => handleImport(url)}
+        onInputKeyUp={handleInputKeyUp}
+        onPaste={async () => setUrl(await navigator.clipboard.readText())}
+        onValueChange={setUrl}
+      />
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
-        <div
-          className={`${fileOver ? 'blur-sm' : ''} m-2 grid grid-cols-[repeat(auto-fit,minmax(min(17rem,100%),1fr))] items-stretch gap-2`}
-        >
-          <SortableContext
-            items={sortedItems.map((item) => {
-              return item.id
-            })}
-          >
-            {sortedItems.map((item) => (
-              <ProfileItem
-                key={item.id}
-                isCurrent={item.id === current}
-                addProfileItem={addProfileItem}
-                removeProfileItem={removeProfileItem}
-                mutateProfileConfig={mutateProfileConfig}
-                updateProfileItem={updateProfileItem}
-                info={item}
-                switching={switching}
-                onClick={async () => {
-                  setSwitching(true)
-                  await changeCurrentProfile(item.id)
-                  await new Promise((resolve) => {
-                    setTimeout(resolve, 500)
-                  })
-                  setSwitching(false)
-                }}
+        <CollectionDropZone active={fileOver} label={tr('Drop to import')}>
+          <CollectionGrid>
+            <SortableContext
+              items={sortedItems.map((item) => {
+                return item.id
+              })}
+            >
+              {sortedItems.map((item) => (
+                <ProfileItem
+                  key={item.id}
+                  isCurrent={item.id === current}
+                  addProfileItem={addProfileItem}
+                  removeProfileItem={removeProfileItem}
+                  mutateProfileConfig={mutateProfileConfig}
+                  updateProfileItem={updateProfileItem}
+                  info={item}
+                  switching={switching}
+                  onClick={async () => {
+                    setSwitching(true)
+                    await changeCurrentProfile(item.id)
+                    await new Promise((resolve) => {
+                      setTimeout(resolve, 500)
+                    })
+                    setSwitching(false)
+                  }}
+                />
+              ))}
+            </SortableContext>
+            {sortedItems.length === 0 ? (
+              <CollectionEmptyState
+                description={tr('Paste a subscription URL or create a local profile.')}
+                icon={<LuFolderOpen aria-hidden="true" />}
+                title={tr('No subscriptions yet')}
               />
-            ))}
-          </SortableContext>
-        </div>
+            ) : null}
+          </CollectionGrid>
+        </CollectionDropZone>
       </DndContext>
     </BasePage>
   )

@@ -1,11 +1,15 @@
 import { tr } from '../../../shared/i18n'
-import { Button, Separator } from '@heroui/react'
+import { Button } from '@heroui/react'
 import { KokoActionMenu } from '@renderer/components/base/koko-collections'
-import { KokoTextField } from '@renderer/components/base/koko-form'
 import BasePage from '@renderer/components/base/base-page'
+import CollectionImportToolbar from '@renderer/components/base/management/collection-toolbar'
+import {
+  CollectionDropZone,
+  CollectionEmptyState,
+  CollectionGrid
+} from '@renderer/components/base/management/collection-surface'
 import { getFilePath, readTextFile } from '@renderer/utils/ipc'
 import { useEffect, useRef, useState } from 'react'
-import { MdContentPaste } from 'react-icons/md'
 import { DndContext, closestCenter, DragEndEvent } from '@dnd-kit/core'
 import { SortableContext } from '@dnd-kit/sortable'
 import { useOverrideConfig } from '@renderer/hooks/use-override-config'
@@ -16,6 +20,7 @@ import { HiOutlineDocumentText } from 'react-icons/hi'
 import { RiArchiveLine } from 'react-icons/ri'
 import { useCardDndSensors } from '@renderer/hooks/use-card-dnd-sensors'
 import { notify } from '@renderer/utils/notification'
+import { LuFiles } from 'react-icons/lu'
 
 const emptyItems: OverrideItem[] = []
 
@@ -193,41 +198,12 @@ const Override: React.FC = () => {
         </>
       }
     >
-      <div className="sticky top-0 z-40">
-        <div className="flex p-2">
-          <KokoTextField
-            size="sm"
-            value={url}
-            onValueChange={setUrl}
-            endContent={
-              <Button
-                size="sm"
-                isIconOnly
-                variant="ghost"
-                onPress={() => {
-                  navigator.clipboard.readText().then((text) => {
-                    setUrl(text)
-                  })
-                }}
-              >
-                <MdContentPaste className="text-lg" />
-              </Button>
-            }
-          />
-          <Button
-            size="sm"
-            variant="primary"
-            className="ml-2"
-            isDisabled={url === ''}
-            isPending={importing}
-            onPress={handleImport}
-          >
-            {tr('Import')}
-          </Button>
+      <CollectionImportToolbar
+        createAction={
           <KokoActionMenu
             ariaLabel={tr('Overrides')}
-            buttonClassName="ml-2"
-            buttonVariant="primary"
+            buttonClassName="h-8 w-8 min-w-8"
+            buttonVariant="secondary"
             items={[
               {
                 id: 'open',
@@ -293,28 +269,44 @@ const Override: React.FC = () => {
           >
             <FaPlus />
           </KokoActionMenu>
-        </div>
-        <Separator />
-      </div>
+        }
+        inputAriaLabel={tr('Override URL')}
+        isImportDisabled={url.trim() === ''}
+        isImporting={importing}
+        placeholder={tr('Override URL')}
+        value={url}
+        onImport={handleImport}
+        onPaste={async () => setUrl(await navigator.clipboard.readText())}
+        onValueChange={setUrl}
+      />
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
-        <div className={`${fileOver ? 'blur-sm' : ''} m-2 grid grid-cols-2 gap-2`}>
-          <SortableContext
-            items={sortedItems.map((item) => {
-              return item.id
-            })}
-          >
-            {sortedItems.map((item) => (
-              <OverrideItem
-                key={item.id}
-                addOverrideItem={addOverrideItem}
-                removeOverrideItem={removeOverrideItem}
-                mutateOverrideConfig={mutateOverrideConfig}
-                updateOverrideItem={updateOverrideItem}
-                info={item}
+        <CollectionDropZone active={fileOver} label={tr('Drop to import')}>
+          <CollectionGrid>
+            <SortableContext
+              items={sortedItems.map((item) => {
+                return item.id
+              })}
+            >
+              {sortedItems.map((item) => (
+                <OverrideItem
+                  key={item.id}
+                  addOverrideItem={addOverrideItem}
+                  removeOverrideItem={removeOverrideItem}
+                  mutateOverrideConfig={mutateOverrideConfig}
+                  updateOverrideItem={updateOverrideItem}
+                  info={item}
+                />
+              ))}
+            </SortableContext>
+            {sortedItems.length === 0 ? (
+              <CollectionEmptyState
+                description={tr('Create a YAML or JavaScript override, or import one from a URL.')}
+                icon={<LuFiles aria-hidden="true" />}
+                title={tr('No overrides yet')}
               />
-            ))}
-          </SortableContext>
-        </div>
+            ) : null}
+          </CollectionGrid>
+        </CollectionDropZone>
       </DndContext>
       {showEditModal && editingItem && (
         <EditInfoModal
