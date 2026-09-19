@@ -345,8 +345,9 @@ export const SiderQuickControl: React.FC<SiderQuickControlProps> = ({
   onPress
 }) => (
   <div
+    data-sider-quick-control
     className={cn(
-      'group relative min-h-20 rounded-2xl border border-divider bg-content1 px-2.5 py-2 shadow-sm transition-[background-color,border-color,box-shadow] duration-150 hover:border-default-400/80 hover:bg-content2/70 hover:shadow-md',
+      'group grid min-h-[4.5rem] grid-cols-[2rem_minmax(0,1fr)_auto] items-center gap-x-2.5 rounded-2xl border border-divider bg-content1 px-2.5 py-2 shadow-sm transition-[background-color,border-color,box-shadow] duration-150 hover:border-default-400/80 hover:bg-content2/70 hover:shadow-md',
       active &&
         'border-primary/45 bg-primary/10 ring-1 ring-inset ring-primary/15 hover:bg-primary/14',
       disabled && 'opacity-60'
@@ -358,34 +359,31 @@ export const SiderQuickControl: React.FC<SiderQuickControlProps> = ({
       aria-label={title}
       aria-current={active ? 'page' : undefined}
       className={cn(
-        'flex w-full min-w-0 flex-col items-start rounded-lg text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary',
+        'col-span-2 grid min-w-0 grid-cols-[2rem_minmax(0,1fr)] grid-rows-[1.25rem_1rem] items-center gap-x-2.5 gap-y-0.5 rounded-lg text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary',
         active && 'text-primary'
       )}
       onClick={onPress}
     >
       <span
         className={cn(
-          'flex size-8 items-center justify-center text-xl text-foreground-600 transition-colors duration-150 group-hover:text-foreground',
+          'row-span-2 flex size-8 items-center justify-center self-center text-xl text-foreground-600 transition-colors duration-150 group-hover:text-foreground',
           active && 'text-primary group-hover:text-primary'
         )}
       >
         {icon}
       </span>
-      <span className="mt-1 flex w-full min-w-0 flex-col gap-0.5">
-        <span className={cn(siderItemTitleClassName, active && 'text-primary')} title={title}>
-          {title}
-        </span>
-        <span
-          className={cn(
-            'block h-4 w-full truncate whitespace-nowrap text-xs leading-4',
-            enabled ? 'text-success-600 dark:text-success-400' : 'text-foreground-500'
-          )}
-        >
-          {status}
-        </span>
+      <span className={cn(siderItemTitleClassName, active && 'text-primary')} title={title}>
+        {title}
       </span>
+      <SiderStatusRow className="w-full" tone={enabled ? 'success' : 'default'}>
+        {status}
+      </SiderStatusRow>
     </button>
-    <div className="absolute right-2.5 top-2" onPointerDown={(event) => event.stopPropagation()}>
+    <div
+      data-sider-control-slot
+      className="col-start-3 flex min-w-8 items-center justify-center self-center"
+      onPointerDown={(event) => event.stopPropagation()}
+    >
       {control}
     </div>
   </div>
