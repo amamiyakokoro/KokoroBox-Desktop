@@ -21,7 +21,6 @@ const RuleCard: React.FC<Props> = (props) => {
   const match = location.pathname.includes('/rules')
   const { rules } = useRules()
   const {
-    attributes,
     listeners,
     setNodeRef,
     transform: tf,
@@ -58,7 +57,6 @@ const RuleCard: React.FC<Props> = (props) => {
     >
       <div
         ref={setNodeRef}
-        {...attributes}
         {...listeners}
         className={isDragging && !disableAnimation ? 'scale-[0.98]' : undefined}
       >

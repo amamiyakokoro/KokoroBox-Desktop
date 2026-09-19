@@ -223,3 +223,60 @@ test('invalid fields use the native InputGroup state instead of painted geometry
     assert.doesNotMatch(source, /border-red-500|ring-red-500|border-danger ring-1 ring-danger/)
   }
 })
+
+test('interactive cards use native buttons with independent sibling actions', () => {
+  const connection = readFileSync(
+    'src/renderer/src/components/connections/connection-item.tsx',
+    'utf8'
+  )
+  const connectionGroup = readFileSync(
+    'src/renderer/src/components/connections/connection-group-header.tsx',
+    'utf8'
+  )
+  const profile = readFileSync('src/renderer/src/components/profiles/profile-item.tsx', 'utf8')
+  const proxyGroups = readFileSync('src/renderer/src/pages/proxies.tsx', 'utf8')
+
+  for (const source of [connection, connectionGroup, profile, proxyGroups]) {
+    assert.match(source, /<button[\s\S]*type="button"/)
+    assert.doesNotMatch(source, /<Card[\s\S]{0,160}?role="button"/)
+    assert.doesNotMatch(source, /event\.key !== 'Enter'|event\.key !== ' '/)
+    assert.doesNotMatch(source, /stopPropagation\(\)/)
+  }
+
+  assert.match(connection, /aria-label=\{hideProcess \? destination/)
+  assert.match(connection, /aria-label=\{info\.isActive \? tr\('Close connection'\)/)
+  assert.match(connectionGroup, /aria-expanded=\{expanded\}/)
+  assert.match(proxyGroups, /aria-expanded=\{isOpen\}/)
+  assert.match(profile, /data-card-primary-action/)
+  assert.match(profile, /aria-label=\{tr\('Refresh'\)\}/)
+})
+
+test('sortable cards keep pointer dragging without fake nested button roles', () => {
+  const sensor = readFileSync('src/renderer/src/hooks/use-card-dnd-sensors.ts', 'utf8')
+  const profile = readFileSync('src/renderer/src/components/profiles/profile-item.tsx', 'utf8')
+  const override = readFileSync('src/renderer/src/components/override/override-item.tsx', 'utf8')
+  const siderFiles = collectSourceFiles('src/renderer/src/components/sider')
+  const sidebarSettings = readFileSync(
+    'src/renderer/src/components/settings/sider-config.tsx',
+    'utf8'
+  )
+  const siderSurfaces = readFileSync('src/renderer/src/components/sider/sider-surfaces.tsx', 'utf8')
+
+  assert.match(sensor, /cardPrimaryActionSelector = '\[data-card-primary-action\]'/)
+  assert.match(sensor, /target\.closest\(cardPrimaryActionSelector\)/)
+  for (const source of [profile, override]) {
+    assert.match(source, /<button[\s\S]*\.\.\.attributes[\s\S]*\.\.\.listeners/)
+    assert.match(source, /data-card-primary-action/)
+  }
+
+  for (const file of siderFiles) {
+    assert.doesNotMatch(
+      readFileSync(file, 'utf8'),
+      /\.\.\.attributes/,
+      `${file} must not create a second keyboard target around its native button`
+    )
+  }
+  assert.equal(siderSurfaces.match(/data-card-primary-action/g)?.length, 3)
+  assert.match(sidebarSettings, /aria-label=\{`\$\{tr\('Move up'\)\}: \$\{item\.title\}`\}/)
+  assert.match(sidebarSettings, /aria-label=\{`\$\{tr\('Move down'\)\}: \$\{item\.title\}`\}/)
+})

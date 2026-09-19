@@ -19,7 +19,6 @@ const ResourceCard: React.FC<Props> = (props) => {
   const navigate = useNavigate()
   const match = location.pathname.includes('/resources')
   const {
-    attributes,
     listeners,
     setNodeRef,
     transform: tf,
@@ -56,7 +55,6 @@ const ResourceCard: React.FC<Props> = (props) => {
     >
       <div
         ref={setNodeRef}
-        {...attributes}
         {...listeners}
         className={isDragging && !disableAnimation ? 'scale-[0.98]' : undefined}
       >

@@ -198,11 +198,14 @@ const OverrideItem: React.FC<Props> = (props) => {
       )}
       {openLog && <ExecLogModal id={info.id} onClose={() => setOpenLog(false)} />}
       <Card className="h-full w-full min-w-0 overflow-hidden">
-        <div {...attributes} {...listeners} className="h-full w-full min-w-0">
+        <div className="h-full w-full min-w-0">
           <Card.Content className="min-w-0">
             <div className="flex min-w-0 items-start gap-2">
               <button
+                {...attributes}
+                {...listeners}
                 type="button"
+                data-card-primary-action
                 className="min-w-0 flex-1 rounded-md text-left outline-none focus-visible:ring-2 focus-visible:ring-focus"
                 disabled={disableOpen}
                 onClick={() => setOpenFileEditor(true)}

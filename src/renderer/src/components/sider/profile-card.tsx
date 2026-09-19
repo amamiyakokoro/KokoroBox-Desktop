@@ -36,7 +36,6 @@ const ProfileCard: React.FC<Props> = ({ iconOnly }) => {
   const { profileConfig, addProfileItem } = useProfileConfig()
   const { current, items } = profileConfig ?? {}
   const {
-    attributes,
     listeners,
     setNodeRef,
     transform: sortableTransform,
@@ -81,7 +80,6 @@ const ProfileCard: React.FC<Props> = ({ iconOnly }) => {
   return (
     <div
       ref={setNodeRef}
-      {...attributes}
       {...listeners}
       style={{
         position: 'relative',

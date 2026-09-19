@@ -687,7 +687,7 @@ test('proxy group rows stay compact while preserving semantic metadata and actio
     'utf8'
   )
 
-  assert.match(page, /<Card\.Content className="min-h-14 w-full px-3 py-2">/)
+  assert.match(page, /<Card\.Content className="[^"]*\bmin-h-14\b[^"]*\bpx-3\b[^"]*\bpy-2\b">/)
   assert.match(page, /function GroupMetadata/)
   assert.match(page, /getGroupTypeLabel\(group\.type\)/)
   assert.match(page, /→/)
@@ -733,7 +733,8 @@ test('connection rows stay dense while preserving realtime data and grouped acti
   assert.match(item, /className="size-11 bg-transparent"/)
   assert.match(item, /text-\[11px\] text-foreground-400/)
   assert.match(item, /group-hover:opacity-100 group-focus-within:opacity-100/)
-  assert.match(item, /onClick=\{\(event\) => event\.stopPropagation\(\)\}/)
+  assert.match(item, /<button[\s\S]*type="button"[\s\S]*onClick=\{handleCardPress\}/)
+  assert.doesNotMatch(item, /role="button"|event\.key !== 'Enter'|stopPropagation\(\)/)
   assert.match(item, /font-medium text-primary tabular-nums/)
   assert.match(item, /title=\{hideProcess \? destination/)
 
@@ -757,7 +758,7 @@ test('connection rows stay dense while preserving realtime data and grouped acti
   }
 
   assert.match(group, /aria-expanded=\{expanded\}/)
-  assert.match(group, /className="min-h-14 w-full p-0"/)
+  assert.match(group, /<Card\.Content className="[^"]*\bmin-h-14\b[^"]*\bp-0\b">/)
   assert.match(group, /className="mr-2 size-10 shrink-0 bg-transparent"/)
   assert.match(group, /group-hover:opacity-100 group-focus-within:opacity-100/)
   assert.match(group, /onPress=\{\(\) => onCloseAll\(groupKey\)\}/)

@@ -32,7 +32,6 @@ const DNSCard: React.FC<Props> = (props) => {
   const { dns } = controledMihomoConfig || {}
   const { enable = true } = dns || {}
   const {
-    attributes,
     listeners,
     setNodeRef,
     transform: tf,
@@ -69,7 +68,6 @@ const DNSCard: React.FC<Props> = (props) => {
     >
       <div
         ref={setNodeRef}
-        {...attributes}
         {...listeners}
         className={isDragging && !disableAnimation ? 'scale-[0.98]' : undefined}
       >

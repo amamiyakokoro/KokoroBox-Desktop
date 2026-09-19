@@ -39,7 +39,6 @@ const MihomoCoreCard: React.FC<Props> = ({ iconOnly }) => {
       location.search.includes('section=network') &&
       location.search.includes('panel=mihomo'))
   const {
-    attributes,
     listeners,
     setNodeRef,
     transform: sortableTransform,
@@ -98,7 +97,6 @@ const MihomoCoreCard: React.FC<Props> = ({ iconOnly }) => {
   return (
     <div
       ref={setNodeRef}
-      {...attributes}
       {...listeners}
       style={{
         position: 'relative',

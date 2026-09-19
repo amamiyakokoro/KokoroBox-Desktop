@@ -18,7 +18,6 @@ const KokoroSettingCard: React.FC<Props> = ({ iconOnly = false }) => {
   const navigate = useNavigate()
   const match = location.pathname.includes('/kokoro')
   const {
-    attributes,
     listeners,
     setNodeRef,
     transform: sortableTransform,
@@ -56,7 +55,6 @@ const KokoroSettingCard: React.FC<Props> = ({ iconOnly = false }) => {
     >
       <div
         ref={setNodeRef}
-        {...attributes}
         {...listeners}
         className={isDragging && !disableAnimation ? 'scale-[0.98]' : undefined}
       >

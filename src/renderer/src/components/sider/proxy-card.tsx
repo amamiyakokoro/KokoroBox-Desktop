@@ -20,7 +20,6 @@ const ProxyCard: React.FC<Props> = ({ iconOnly }) => {
   const match = location.pathname.includes('/proxies')
   const { groups = [] } = useGroups()
   const {
-    attributes,
     listeners,
     setNodeRef,
     transform: sortableTransform,
@@ -49,7 +48,6 @@ const ProxyCard: React.FC<Props> = ({ iconOnly }) => {
   return (
     <div
       ref={setNodeRef}
-      {...attributes}
       {...listeners}
       style={{
         position: 'relative',

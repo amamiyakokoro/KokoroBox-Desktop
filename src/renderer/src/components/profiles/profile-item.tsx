@@ -207,26 +207,26 @@ const ProfileItem: React.FC<Props> = (props) => {
         />
       )}
       <Card
-        role="button"
-        tabIndex={0}
-        onClick={() => {
-          if (disableSelect || switching) return
-          setSelecting(true)
-          onClick().finally(() => {
-            setSelecting(false)
-          })
-        }}
-        onKeyDown={(event) => {
-          if (event.key !== 'Enter' && event.key !== ' ') return
-          event.preventDefault()
-          if (disableSelect || switching) return
-          setSelecting(true)
-          onClick().finally(() => setSelecting(false))
-        }}
-        className={`h-full w-full min-w-0 cursor-pointer gap-0 overflow-hidden p-0 outline-none transition-colors focus-visible:ring-2 focus-visible:ring-primary/45 ${isCurrent ? 'bg-primary' : ''} ${selecting ? 'blur-sm' : ''}`}
+        className={`group relative h-full w-full min-w-0 gap-0 overflow-hidden p-0 transition-colors ${isCurrent ? 'bg-primary' : ''} ${selecting ? 'blur-sm' : ''}`}
       >
-        <div {...attributes} {...listeners} className="h-full w-full min-w-0 overflow-hidden">
-          <Card.Content className="w-full min-w-0 gap-0 px-3 pb-1 pt-3">
+        <div className="h-full w-full min-w-0 overflow-hidden">
+          <button
+            {...attributes}
+            {...listeners}
+            type="button"
+            data-card-primary-action
+            aria-label={info.name}
+            aria-disabled={disableSelect || switching || undefined}
+            className="absolute inset-0 z-0 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/45"
+            onClick={() => {
+              if (disableSelect || switching) return
+              setSelecting(true)
+              onClick().finally(() => {
+                setSelecting(false)
+              })
+            }}
+          />
+          <Card.Content className="pointer-events-none relative z-1 w-full min-w-0 gap-0 px-3 pb-1 pt-3">
             <div className="flex justify-between h-8 gap-1">
               <div className="flex min-w-0 items-center">
                 <h3
@@ -236,12 +236,7 @@ const ProfileItem: React.FC<Props> = (props) => {
                   {info?.name}
                 </h3>
               </div>
-              <div
-                className="flex shrink-0"
-                data-no-dnd
-                onClick={(e) => e.stopPropagation()}
-                onKeyDown={(e) => e.stopPropagation()}
-              >
+              <div className="pointer-events-auto flex shrink-0" data-no-dnd>
                 {info.type === 'remote' && (
                   <Tooltip delay={0}>
                     <Tooltip.Trigger>
@@ -249,6 +244,7 @@ const ProfileItem: React.FC<Props> = (props) => {
                         isIconOnly
                         size="sm"
                         variant="ghost"
+                        aria-label={tr('Refresh')}
                         isDisabled={updating}
                         onPress={async () => {
                           setUpdating(true)
@@ -296,7 +292,7 @@ const ProfileItem: React.FC<Props> = (props) => {
                   <Button
                     size="sm"
                     variant="ghost"
-                    className={`h-5 p-1 m-0 ${isCurrent ? 'text-primary-foreground' : 'text-foreground'}`}
+                    className={`pointer-events-auto h-5 p-1 m-0 ${isCurrent ? 'text-primary-foreground' : 'text-foreground'}`}
                     onPress={async () => {
                       await patchAppConfig({ profileDisplayDate: 'update' })
                     }}
@@ -309,7 +305,7 @@ const ProfileItem: React.FC<Props> = (props) => {
                   <Button
                     size="sm"
                     variant="ghost"
-                    className={`h-5 p-1 m-0 ${isCurrent ? 'text-primary-foreground' : 'text-foreground'}`}
+                    className={`pointer-events-auto h-5 p-1 m-0 ${isCurrent ? 'text-primary-foreground' : 'text-foreground'}`}
                     onPress={async () => {
                       await patchAppConfig({ profileDisplayDate: 'expire' })
                     }}
@@ -320,7 +316,7 @@ const ProfileItem: React.FC<Props> = (props) => {
               </div>
             )}
           </Card.Content>
-          <Card.Footer className="w-full min-w-0 overflow-hidden px-3 pb-3 pt-0">
+          <Card.Footer className="pointer-events-none relative z-1 w-full min-w-0 overflow-hidden px-3 pb-3 pt-0">
             {info.type === 'remote' && !extra && (
               <div
                 className={`w-full mt-2 flex justify-between ${isCurrent ? 'text-primary-foreground' : 'text-foreground'}`}

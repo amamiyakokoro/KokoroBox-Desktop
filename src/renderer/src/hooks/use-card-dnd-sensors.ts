@@ -9,11 +9,13 @@ import {
 import type { MouseEvent, TouchEvent } from 'react'
 
 const noDndSelector = 'button, input, textarea, select, a, [data-no-dnd]'
+const cardPrimaryActionSelector = '[data-card-primary-action]'
 
 function shouldHandleEvent(event: Event): boolean {
   const target = event.target
 
   if (!(target instanceof HTMLElement)) return true
+  if (target.closest(cardPrimaryActionSelector)) return true
   return !target.closest(noDndSelector)
 }
 

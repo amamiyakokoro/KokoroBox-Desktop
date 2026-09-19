@@ -96,18 +96,14 @@ const ConnectionItemComponent: React.FC<Props> = ({
 
   return (
     <div className={`px-2 pb-1.5 ${index === 0 ? 'pt-1.5' : ''}`} style={{ minHeight: 68 }}>
-      <Card
-        role="button"
-        tabIndex={0}
-        className="group w-full min-w-0 cursor-pointer gap-0 overflow-hidden p-0 outline-none focus-visible:ring-2 focus-visible:ring-primary/45"
-        onClick={handleCardPress}
-        onKeyDown={(event) => {
-          if (event.key !== 'Enter' && event.key !== ' ') return
-          event.preventDefault()
-          handleCardPress()
-        }}
-      >
-        <div className="flex w-full items-center justify-between">
+      <Card className="group relative w-full min-w-0 gap-0 overflow-hidden p-0">
+        <button
+          type="button"
+          aria-label={hideProcess ? destination : `${processName} → ${destination}`}
+          className="absolute inset-0 z-0 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/45"
+          onClick={handleCardPress}
+        />
+        <div className="pointer-events-none relative z-1 flex w-full items-center justify-between">
           {displayIcon && (
             <div className="shrink-0 pl-2">
               <Avatar size="md" className="size-11 bg-transparent">
@@ -125,26 +121,9 @@ const ConnectionItemComponent: React.FC<Props> = ({
               <small className="ml-2 whitespace-nowrap text-[11px] text-foreground-400">
                 {timeAgo}
               </small>
-              <Button
-                variant={info.isActive ? 'ghost' : 'danger-soft'}
-                isIconOnly
-                size="sm"
-                aria-label={info.isActive ? tr('Close connection') : tr('Delete record')}
-                className={`absolute right-2 transition-opacity ${
-                  info.isActive
-                    ? 'text-foreground-500 opacity-40 group-hover:opacity-100 group-focus-within:opacity-100'
-                    : ''
-                }`}
-                onClick={(event) => event.stopPropagation()}
-                onPointerDown={(event) => event.stopPropagation()}
-                onKeyDown={(event) => event.stopPropagation()}
-                onPress={handleClose}
-              >
-                {info.isActive ? <CgClose className="text-lg" /> : <CgTrash className="text-lg" />}
-              </Button>
             </Card.Header>
             <Card.Footer className="px-3 pb-2 pt-1">
-              <div className="no-scrollbar flex min-w-0 items-center gap-2 overflow-x-auto whitespace-nowrap">
+              <div className="no-scrollbar pointer-events-auto flex min-w-0 items-center gap-2 overflow-x-auto whitespace-nowrap">
                 <span
                   className={`rounded-md bg-default-100 px-1.5 py-0.5 text-[11px] ${
                     info.isActive ? 'text-foreground-500' : 'text-danger-500'
@@ -169,6 +148,20 @@ const ConnectionItemComponent: React.FC<Props> = ({
             </Card.Footer>
           </div>
         </div>
+        <Button
+          variant={info.isActive ? 'ghost' : 'danger-soft'}
+          isIconOnly
+          size="sm"
+          aria-label={info.isActive ? tr('Close connection') : tr('Delete record')}
+          className={`pointer-events-auto absolute right-2 top-2 z-2 transition-opacity ${
+            info.isActive
+              ? 'text-foreground-500 opacity-40 group-hover:opacity-100 group-focus-within:opacity-100'
+              : ''
+          }`}
+          onPress={handleClose}
+        >
+          {info.isActive ? <CgClose className="text-lg" /> : <CgTrash className="text-lg" />}
+        </Button>
       </Card>
     </div>
   )

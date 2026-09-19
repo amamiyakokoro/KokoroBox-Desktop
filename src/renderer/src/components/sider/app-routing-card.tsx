@@ -35,7 +35,6 @@ const AppRoutingCard: React.FC<Props> = ({ iconOnly = false }) => {
     { refreshInterval: 5000 }
   )
   const {
-    attributes,
     listeners,
     setNodeRef,
     transform: sortableTransform,
@@ -102,7 +101,6 @@ const AppRoutingCard: React.FC<Props> = ({ iconOnly = false }) => {
   return (
     <div
       ref={setNodeRef}
-      {...attributes}
       {...listeners}
       style={{
         position: 'relative',

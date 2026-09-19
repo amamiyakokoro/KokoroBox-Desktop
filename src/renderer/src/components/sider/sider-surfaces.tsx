@@ -115,6 +115,7 @@ export const SiderNavItem: React.FC<SiderNavItemProps> = ({
   >
     <button
       type="button"
+      data-card-primary-action
       className="flex min-w-0 flex-1 items-center gap-2.5 rounded-xl px-2.5 py-2 text-left focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-primary"
       aria-current={active ? 'page' : undefined}
       onClick={onPress}
@@ -192,6 +193,7 @@ export const SiderStatusCard: React.FC<SiderStatusCardProps> = ({
     <div className="flex min-h-14 items-center">
       <button
         type="button"
+        data-card-primary-action
         className="flex min-w-0 flex-1 items-center gap-2.5 px-2.5 py-2 text-left focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-primary"
         aria-current={active ? 'page' : undefined}
         onClick={onPress}
@@ -285,6 +287,7 @@ export const SiderQuickControl: React.FC<SiderQuickControlProps> = ({
   >
     <button
       type="button"
+      data-card-primary-action
       aria-label={title}
       aria-current={active ? 'page' : undefined}
       className={cn(

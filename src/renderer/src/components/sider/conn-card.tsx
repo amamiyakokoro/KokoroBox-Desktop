@@ -23,7 +23,6 @@ const ConnCard: React.FC<Props> = ({ iconOnly }) => {
   const [upload, setUpload] = useState(0)
   const [download, setDownload] = useState(0)
   const {
-    attributes,
     listeners,
     setNodeRef,
     transform: sortableTransform,
@@ -82,7 +81,6 @@ const ConnCard: React.FC<Props> = ({ iconOnly }) => {
   return (
     <div
       ref={setNodeRef}
-      {...attributes}
       {...listeners}
       style={{
         position: 'relative',

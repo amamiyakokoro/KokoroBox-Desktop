@@ -118,22 +118,20 @@ const GroupHeader = memo(function GroupHeader({
   return (
     <div className={`w-full px-2 pt-1.5 ${isLast && !isOpen ? 'pb-1.5' : ''}`}>
       <Card
-        aria-expanded={isOpen}
-        role="button"
-        tabIndex={0}
-        className={`w-full min-w-0 cursor-pointer gap-0 overflow-hidden border p-0 outline-none transition-colors focus-visible:ring-2 focus-visible:ring-primary/45 ${
+        className={`relative w-full min-w-0 gap-0 overflow-hidden border p-0 transition-colors ${
           isRelevant
             ? 'border-primary/25 bg-primary/8'
             : 'border-divider/80 bg-content1/90 hover:bg-default-50'
         }`}
-        onClick={() => onToggle(index, isOpen)}
-        onKeyDown={(event) => {
-          if (event.key !== 'Enter' && event.key !== ' ') return
-          event.preventDefault()
-          onToggle(index, isOpen)
-        }}
       >
-        <Card.Content className="min-h-14 w-full px-3 py-2">
+        <button
+          type="button"
+          aria-expanded={isOpen}
+          aria-label={group.name}
+          className="absolute inset-0 z-0 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/45"
+          onClick={() => onToggle(index, isOpen)}
+        />
+        <Card.Content className="pointer-events-none relative z-1 min-h-14 w-full px-3 py-2">
           <div className="flex min-h-10 items-center justify-between gap-2">
             <div className="flex min-w-0 flex-1 items-center overflow-hidden whitespace-nowrap">
               {group.icon ? (
@@ -169,32 +167,7 @@ const GroupHeader = memo(function GroupHeader({
               </div>
             </div>
             <div className="flex shrink-0 items-center gap-0.5">
-              <div
-                className="flex items-center gap-0.5"
-                onClick={(e) => e.stopPropagation()}
-                onPointerDown={(e) => e.stopPropagation()}
-                onKeyDown={(e) => e.stopPropagation()}
-              >
-                <Button
-                  variant="ghost"
-                  isPending={delaying}
-                  size="sm"
-                  isIconOnly
-                  aria-label={tr('Test group latency')}
-                  onPress={() => onGroupDelay(index)}
-                >
-                  <MdOutlineSpeed className="text-lg text-foreground-500" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  isIconOnly
-                  aria-label={tr('Show selected proxy')}
-                  onPress={() => onScrollToProxy(index)}
-                >
-                  <FaLocationCrosshairs className="text-base text-foreground-500" />
-                </Button>
-              </div>
+              <span aria-hidden="true" className="w-16 shrink-0" />
               <IoIosArrowBack
                 className={`ml-1 flex h-8 items-center text-base text-foreground-400 transition duration-200 ${
                   isOpen ? '-rotate-90' : ''
@@ -203,6 +176,27 @@ const GroupHeader = memo(function GroupHeader({
             </div>
           </div>
         </Card.Content>
+        <div className="pointer-events-auto absolute right-9 top-1/2 z-2 flex -translate-y-1/2 items-center gap-0.5">
+          <Button
+            variant="ghost"
+            isPending={delaying}
+            size="sm"
+            isIconOnly
+            aria-label={tr('Test group latency')}
+            onPress={() => onGroupDelay(index)}
+          >
+            <MdOutlineSpeed className="text-lg text-foreground-500" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            isIconOnly
+            aria-label={tr('Show selected proxy')}
+            onPress={() => onScrollToProxy(index)}
+          >
+            <FaLocationCrosshairs className="text-base text-foreground-500" />
+          </Button>
+        </div>
       </Card>
     </div>
   )

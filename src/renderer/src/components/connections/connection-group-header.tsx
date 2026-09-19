@@ -54,19 +54,15 @@ const ConnectionGroupHeaderComponent: React.FC<Props> = ({
 
   return (
     <div className={`w-full px-2 pt-1.5 ${isLast && !expanded ? 'pb-1.5' : ''}`}>
-      <Card
-        aria-expanded={expanded}
-        role="button"
-        tabIndex={0}
-        className="group w-full min-w-0 cursor-pointer gap-0 overflow-hidden p-0 outline-none focus-visible:ring-2 focus-visible:ring-primary/45"
-        onClick={() => onToggle(groupKey, expanded)}
-        onKeyDown={(event) => {
-          if (event.key !== 'Enter' && event.key !== ' ') return
-          event.preventDefault()
-          onToggle(groupKey, expanded)
-        }}
-      >
-        <Card.Content className="min-h-14 w-full p-0">
+      <Card className="group relative w-full min-w-0 gap-0 overflow-hidden p-0">
+        <button
+          type="button"
+          aria-expanded={expanded}
+          aria-label={title}
+          className="absolute inset-0 z-0 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/45"
+          onClick={() => onToggle(groupKey, expanded)}
+        />
+        <Card.Content className="pointer-events-none relative z-1 min-h-14 w-full p-0">
           <div className="flex min-h-14 items-center justify-between px-2.5">
             <div className="flex min-w-0 items-center overflow-hidden whitespace-nowrap">
               {displayIcon && (
@@ -92,30 +88,7 @@ const ConnectionGroupHeaderComponent: React.FC<Props> = ({
             </div>
             <div className="flex shrink-0 items-center gap-0.5">
               <span className="mr-1 text-xs text-foreground-500 tabular-nums">{count}</span>
-              <div
-                onClick={(e) => e.stopPropagation()}
-                onPointerDown={(e) => e.stopPropagation()}
-                onKeyDown={(e) => e.stopPropagation()}
-              >
-                <Button
-                  variant={isClosed ? 'danger-soft' : 'ghost'}
-                  size="sm"
-                  isIconOnly
-                  className={
-                    isClosed
-                      ? undefined
-                      : 'text-foreground-500 opacity-40 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100'
-                  }
-                  aria-label={
-                    isClosed
-                      ? tr('Clear all records for this process')
-                      : tr('Close all connections for this process')
-                  }
-                  onPress={() => onCloseAll(groupKey)}
-                >
-                  {isClosed ? <CgTrash className="text-lg" /> : <CgClose className="text-lg" />}
-                </Button>
-              </div>
+              <span aria-hidden="true" className="size-8 shrink-0" />
               <IoIosArrowBack
                 className={`ml-0.5 flex h-8 items-center text-base text-foreground-400 transition duration-200 ${
                   expanded ? '-rotate-90' : ''
@@ -124,6 +97,24 @@ const ConnectionGroupHeaderComponent: React.FC<Props> = ({
             </div>
           </div>
         </Card.Content>
+        <Button
+          variant={isClosed ? 'danger-soft' : 'ghost'}
+          size="sm"
+          isIconOnly
+          className={`pointer-events-auto absolute right-9 top-1/2 z-2 -translate-y-1/2 ${
+            isClosed
+              ? ''
+              : 'text-foreground-500 opacity-40 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100'
+          }`}
+          aria-label={
+            isClosed
+              ? tr('Clear all records for this process')
+              : tr('Close all connections for this process')
+          }
+          onPress={() => onCloseAll(groupKey)}
+        >
+          {isClosed ? <CgTrash className="text-lg" /> : <CgClose className="text-lg" />}
+        </Button>
       </Card>
     </div>
   )
