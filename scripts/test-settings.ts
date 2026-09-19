@@ -124,7 +124,19 @@ test('application settings keep one clear navigation hierarchy in compact deskto
   assert.match(settings, /const openSearch = useCallback/)
   assert.match(settings, /searchInputRef\.current\?\.focus\(\)/)
   assert.match(settings, /event\.key === 'Escape'/)
-  assert.match(settings, /settings-context-header sticky top-0/)
+  assert.match(
+    settings,
+    /settings-context-header sticky top-0 z-10 w-full border-b border-divider bg-background\/95/
+  )
+  assert.match(
+    settings,
+    /settings-context-inner mx-auto w-full max-w-\[960px\] px-4/
+  )
+  assert.match(
+    settings,
+    /settings-content-inner mx-auto w-full max-w-\[960px\] px-4/
+  )
+  assert.match(settings, /<main className="min-w-0 pb-4">/)
   assert.match(settings, /scrollTo\(\{ top: 0, left: 0 \}\)/)
   assert.equal(settings.match(/setSearchParams\(nextParams\)\s*resetContentScroll\(\)/g)?.length, 2)
   assert.match(settings, /settings-navigation-list/)
@@ -142,6 +154,10 @@ test('application settings keep one clear navigation hierarchy in compact deskto
   assert.match(settings, /variant="secondary"/)
   assert.match(settings, /density="toolbar"/)
   assert.match(settings, /className="app-nodrag w-max max-w-none"/)
+  assert.doesNotMatch(
+    settings,
+    /settings-panel-navigation[^"\n]*overflow-x-auto[^"\n]*px-3/
+  )
   assert.match(settings, /onChange=\{selectPanel\}/)
   assert.match(settings, /\{\(normalizedSearch \|\| selectedPanels\.length > 1\) && \(/)
   assert.match(settings, /\{normalizedSearch \? \([\s\S]*?<h1[\s\S]*?tr\('Search settings'\)/)

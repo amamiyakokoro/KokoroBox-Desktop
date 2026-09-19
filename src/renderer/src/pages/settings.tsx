@@ -265,18 +265,18 @@ const Settings: React.FC = () => {
               })}
             </ScrollShadow>
           </nav>
-          <main className="min-w-0 px-4 pb-4">
-            <div className="mx-auto w-full max-w-[960px]">
-              {(normalizedSearch || selectedPanels.length > 1) && (
-                <header className="settings-context-header sticky top-0 z-10 bg-background/95">
+          <main className="min-w-0 pb-4">
+            {(normalizedSearch || selectedPanels.length > 1) && (
+              <header className="settings-context-header sticky top-0 z-10 w-full border-b border-divider bg-background/95">
+                <div className="settings-context-inner mx-auto w-full max-w-[960px] px-4">
                   {normalizedSearch ? (
-                    <h1 className="border-b border-divider px-3 py-3 text-lg font-semibold tracking-tight">
+                    <h1 className="py-3 text-lg font-semibold tracking-tight">
                       {tr('Search settings')}
                     </h1>
                   ) : (
                     <nav
                       aria-label={tr('Settings panels')}
-                      className="settings-panel-navigation no-scrollbar min-w-0 overflow-x-auto px-3"
+                      className="settings-panel-navigation no-scrollbar min-w-0 overflow-x-auto"
                     >
                       <KokoTabs
                         ariaLabel={tr('Settings panels')}
@@ -292,8 +292,10 @@ const Settings: React.FC = () => {
                       />
                     </nav>
                   )}
-                </header>
-              )}
+                </div>
+              </header>
+            )}
+            <div className="settings-content-inner mx-auto w-full max-w-[960px] px-4">
               {normalizedSearch ? (
                 <div className="mx-3 mt-2 border-y border-divider">
                   {searchResults.length ? (
