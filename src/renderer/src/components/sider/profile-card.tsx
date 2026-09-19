@@ -1,5 +1,5 @@
 import { tr } from '../../../../shared/i18n'
-import { Button, Meter, Tooltip } from '@heroui-v3/react'
+import { Button, Meter, Tooltip } from '@heroui/react'
 import { useProfileConfig } from '@renderer/hooks/use-profile-config'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { calcTraffic } from '@renderer/utils/calc'

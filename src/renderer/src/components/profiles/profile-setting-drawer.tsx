@@ -1,5 +1,5 @@
 import { tr } from '../../../../shared/i18n'
-import { Button } from '@heroui-v3/react'
+import { Button } from '@heroui/react'
 import { LuArrowRight } from 'react-icons/lu'
 import { useNavigate } from 'react-router-dom'
 import { useAppConfig } from '@renderer/hooks/use-app-config'

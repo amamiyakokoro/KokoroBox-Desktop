@@ -1,5 +1,5 @@
 import { tr } from '../../../../shared/i18n'
-import { Card, InputGroup, Switch } from '@heroui-v3/react'
+import { Card, InputGroup, Switch } from '@heroui/react'
 import { KokoActionMenu } from '../base/koko-collections'
 import { KokoSelect } from '../base/koko-form'
 import { MdArrowDownward, MdArrowUpward, MdDeleteOutline, MdMoreHoriz } from 'react-icons/md'

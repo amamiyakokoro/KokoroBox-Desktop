@@ -1,5 +1,5 @@
 import { tr } from '../../../../shared/i18n'
-import { Button } from '@heroui-v3/react'
+import { Button } from '@heroui/react'
 import React, { type ReactNode } from 'react'
 import { SettingCardModeProvider } from './base-setting-card'
 import { SettingItemModeProvider } from './base-setting-item'

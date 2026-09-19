@@ -1,6 +1,6 @@
 import { tr } from '../../../../shared/i18n'
 import React from 'react'
-import { Separator, Tooltip } from '@heroui-v3/react'
+import { Separator, Tooltip } from '@heroui/react'
 import { KokoButton, KokoTextField } from './koko-form'
 import { MdDeleteForever } from 'react-icons/md'
 import type { ValidationResult } from '@renderer/utils/validate'

@@ -1,6 +1,6 @@
 import { tr } from '../../../../shared/i18n'
 import React, { useEffect, useState, useCallback } from 'react'
-import { Card, Chip, Modal, Separator, Spinner } from '@heroui-v3/react'
+import { Card, Chip, Modal, Separator, Spinner } from '@heroui/react'
 import { KokoButton as Button } from '../base/koko-form'
 import {
   openServiceSystemSettings,

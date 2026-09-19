@@ -1,4 +1,4 @@
-import { Button, Dropdown, cn, type ButtonProps } from '@heroui-v3/react'
+import { Button, Dropdown, cn, type ButtonProps } from '@heroui/react'
 import type React from 'react'
 
 export interface KokoActionMenuItem {

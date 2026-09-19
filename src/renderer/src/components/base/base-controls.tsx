@@ -1,4 +1,4 @@
-import { Tabs } from '@heroui-v3/react'
+import { Tabs } from '@heroui/react'
 import type React from 'react'
 import type { SettingItemProps } from './base-setting-item'
 

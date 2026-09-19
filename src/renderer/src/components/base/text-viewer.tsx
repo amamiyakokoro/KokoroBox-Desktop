@@ -1,5 +1,5 @@
 import { tr } from '../../../../shared/i18n'
-import { Button, Input } from '@heroui-v3/react'
+import { Button, Input } from '@heroui/react'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Virtuoso, VirtuosoHandle } from 'react-virtuoso'
 import { MdKeyboardArrowDown, MdKeyboardArrowUp, MdSearch } from 'react-icons/md'

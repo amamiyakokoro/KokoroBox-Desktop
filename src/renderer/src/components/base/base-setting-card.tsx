@@ -1,5 +1,5 @@
 import React, { createContext, useContext } from 'react'
-import { Disclosure, Surface } from '@heroui-v3/react'
+import { Disclosure, Surface } from '@heroui/react'
 
 interface Props {
   header?: string

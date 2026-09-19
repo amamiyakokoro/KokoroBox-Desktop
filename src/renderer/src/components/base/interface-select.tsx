@@ -1,6 +1,6 @@
 import { tr } from '../../../../shared/i18n'
 import React, { useEffect, useState } from 'react'
-import { ListBox, Select } from '@heroui-v3/react'
+import { ListBox, Select } from '@heroui/react'
 import { getInterfaces } from '@renderer/utils/ipc'
 
 const DISABLED_INTERFACE_KEY = '__disabled__'

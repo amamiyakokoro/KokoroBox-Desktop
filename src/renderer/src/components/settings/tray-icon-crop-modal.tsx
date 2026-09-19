@@ -1,5 +1,5 @@
 import { tr } from '../../../../shared/i18n'
-import { Button, FieldError, Input, Label, Modal, Slider, Tabs, TextField } from '@heroui-v3/react'
+import { Button, FieldError, Input, Label, Modal, Slider, Tabs, TextField } from '@heroui/react'
 import {
   cropImageElementToPngDataURL,
   type ImageColorPreset,

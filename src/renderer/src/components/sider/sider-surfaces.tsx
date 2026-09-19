@@ -1,4 +1,4 @@
-import { Button, cn, Tooltip, type ButtonProps } from '@heroui-v3/react'
+import { Button, cn, Tooltip, type ButtonProps } from '@heroui/react'
 import type React from 'react'
 import { LuChevronRight } from 'react-icons/lu'
 

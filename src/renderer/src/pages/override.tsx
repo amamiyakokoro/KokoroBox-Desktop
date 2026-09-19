@@ -1,6 +1,7 @@
 import { tr } from '../../../shared/i18n'
-import { Button, Divider, Input } from '@heroui/react'
+import { Button, Separator } from '@heroui/react'
 import { KokoActionMenu } from '@renderer/components/base/koko-collections'
+import { KokoTextField } from '@renderer/components/base/koko-form'
 import BasePage from '@renderer/components/base/base-page'
 import { getFilePath, readTextFile } from '@renderer/utils/ipc'
 import { useEffect, useRef, useState } from 'react'
@@ -169,7 +170,7 @@ const Override: React.FC = () => {
         <>
           <Button
             size="sm"
-            variant="light"
+            variant="ghost"
             isIconOnly
             className="app-nodrag"
             onPress={() => {
@@ -181,7 +182,7 @@ const Override: React.FC = () => {
           <Button
             className="app-nodrag"
             isIconOnly
-            variant="light"
+            variant="ghost"
             size="sm"
             onPress={() => {
               open('https://github.com/mihomo-party-org/override-hub')
@@ -194,7 +195,7 @@ const Override: React.FC = () => {
     >
       <div className="sticky top-0 z-40">
         <div className="flex p-2">
-          <Input
+          <KokoTextField
             size="sm"
             value={url}
             onValueChange={setUrl}
@@ -202,7 +203,7 @@ const Override: React.FC = () => {
               <Button
                 size="sm"
                 isIconOnly
-                variant="light"
+                variant="ghost"
                 onPress={() => {
                   navigator.clipboard.readText().then((text) => {
                     setUrl(text)
@@ -215,10 +216,10 @@ const Override: React.FC = () => {
           />
           <Button
             size="sm"
-            color="primary"
+            variant="primary"
             className="ml-2"
             isDisabled={url === ''}
-            isLoading={importing}
+            isPending={importing}
             onPress={handleImport}
           >
             {tr('Import')}
@@ -293,7 +294,7 @@ const Override: React.FC = () => {
             <FaPlus />
           </KokoActionMenu>
         </div>
-        <Divider />
+        <Separator />
       </div>
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
         <div className={`${fileOver ? 'blur-sm' : ''} m-2 grid grid-cols-2 gap-2`}>

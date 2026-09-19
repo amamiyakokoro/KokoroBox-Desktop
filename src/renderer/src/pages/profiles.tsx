@@ -1,6 +1,7 @@
 import { tr } from '../../../shared/i18n'
-import { Button, Checkbox, Divider, Input } from '@heroui/react'
+import { Button, Checkbox, Separator } from '@heroui/react'
 import { KokoActionMenu } from '@renderer/components/base/koko-collections'
+import { KokoTextField } from '@renderer/components/base/koko-form'
 import BasePage from '@renderer/components/base/base-page'
 import ProfileItem from '@renderer/components/profiles/profile-item'
 import EditInfoModal from '@renderer/components/profiles/edit-info-modal'
@@ -171,7 +172,7 @@ const Profiles: React.FC = () => {
           <Button
             size="sm"
             className="app-nodrag"
-            variant="light"
+            variant="ghost"
             isIconOnly
             onPress={async () => {
               setUpdating(true)
@@ -192,7 +193,7 @@ const Profiles: React.FC = () => {
           <Button
             size="sm"
             className="app-nodrag"
-            variant="light"
+            variant="ghost"
             isIconOnly
             onPress={() => {
               setIsSettingDrawerOpen(true)
@@ -227,7 +228,7 @@ const Profiles: React.FC = () => {
       )}
       <div className="sticky profiles-sticky top-0 z-40">
         <div className="flex p-2">
-          <Input
+          <KokoTextField
             size="sm"
             value={url}
             onValueChange={setUrl}
@@ -237,7 +238,7 @@ const Profiles: React.FC = () => {
                 <Button
                   size="sm"
                   isIconOnly
-                  variant="light"
+                  variant="ghost"
                   className="z-10"
                   onPress={() => {
                     navigator.clipboard.readText().then((text) => {
@@ -247,12 +248,13 @@ const Profiles: React.FC = () => {
                 >
                   <MdContentPaste className="text-lg" />
                 </Button>
-                <Checkbox
-                  className="whitespace-nowrap"
-                  checked={useProxy}
-                  onValueChange={setUseProxy}
-                >
-                  {tr('Proxy')}
+                <Checkbox isSelected={useProxy} onChange={setUseProxy}>
+                  <Checkbox.Content className="whitespace-nowrap">
+                    <Checkbox.Control>
+                      <Checkbox.Indicator />
+                    </Checkbox.Control>
+                    {tr('Proxy')}
+                  </Checkbox.Content>
                 </Checkbox>
               </>
             }
@@ -260,10 +262,10 @@ const Profiles: React.FC = () => {
 
           <Button
             size="sm"
-            color="primary"
+            variant="primary"
             className="ml-2"
             isDisabled={isUrlEmpty}
-            isLoading={importing}
+            isPending={importing}
             onPress={() => handleImport(url)}
           >
             {tr('Import')}
@@ -343,7 +345,7 @@ const Profiles: React.FC = () => {
             <FaPlus />
           </KokoActionMenu>
         </div>
-        <Divider />
+        <Separator />
       </div>
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
         <div

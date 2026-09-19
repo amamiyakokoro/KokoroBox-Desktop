@@ -1,5 +1,5 @@
 import { tr } from '../../../../shared/i18n'
-import { Drawer, Surface, Tabs } from '@heroui-v3/react'
+import { Drawer, Surface, Tabs } from '@heroui/react'
 import { KokoActionMenu } from '../base/koko-collections'
 import type { ReactNode } from 'react'
 import { useEffect, useId, useMemo, useRef, useState } from 'react'

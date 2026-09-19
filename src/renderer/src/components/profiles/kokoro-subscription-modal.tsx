@@ -1,6 +1,6 @@
 import { tr } from '../../../../shared/i18n'
-import { Button, Chip, Input, Switch } from '@heroui/react'
-import { KokoSelect } from '../base/koko-form'
+import { Button, Chip, Switch } from '@heroui/react'
+import { KokoSelect, KokoTextField } from '../base/koko-form'
 import BasePage from '@renderer/components/base/base-page'
 import { useProfileConfig } from '@renderer/hooks/use-profile-config'
 import { calcTraffic } from '@renderer/utils/calc'
@@ -223,17 +223,17 @@ const KokoroSettingsPage: React.FC = () => {
               </p>
               <Button
                 className="mt-6 min-w-36"
-                color="primary"
-                isLoading={loggingIn}
+                variant="primary"
+                isPending={loggingIn}
                 onPress={handleLogin}
-                startContent={!loggingIn ? <LuLogIn /> : undefined}
               >
+                {!loggingIn ? <LuLogIn /> : null}
                 {loggingIn ? tr('Waiting for authorization') : tr('Sign in with osu!')}
               </Button>
               {loggingIn && (
                 <Button
                   size="sm"
-                  variant="light"
+                  variant="ghost"
                   onPress={() => {
                     void cancelKokoroLogin().catch(() => {})
                   }}
@@ -263,7 +263,7 @@ const KokoroSettingsPage: React.FC = () => {
                       {user.username || user.osu_id}
                     </h2>
                     {user.plans.map((plan) => (
-                      <Chip key={plan} size="sm" color="primary" variant="flat" radius="sm">
+                      <Chip key={plan} size="sm" color="accent" variant="soft">
                         {plan}
                       </Chip>
                     ))}
@@ -284,11 +284,11 @@ const KokoroSettingsPage: React.FC = () => {
                 </div>
                 <Button
                   size="sm"
-                  variant="light"
+                  variant="ghost"
                   className="shrink-0 text-foreground-500 data-[hover=true]:text-danger"
                   onPress={handleLogout}
-                  startContent={<LuLogOut className="text-danger" />}
                 >
+                  <LuLogOut className="text-danger" />
                   {tr('Sign out')}
                 </Button>
               </section>
@@ -306,13 +306,12 @@ const KokoroSettingsPage: React.FC = () => {
                     footer={
                       <Button
                         size="sm"
-                        color="primary"
-                        variant="flat"
+                        variant="primary"
                         isDisabled={!canImport}
-                        isLoading={importing}
+                        isPending={importing}
                         onPress={handleImport}
-                        startContent={!importing ? <LuCloudDownload /> : undefined}
                       >
+                        {!importing ? <LuCloudDownload /> : null}
                         {tr('Fetch and add')}
                       </Button>
                     }
@@ -451,10 +450,14 @@ const KokoroSettingsPage: React.FC = () => {
                           size="sm"
                           className="ml-auto shrink-0"
                           isSelected={settings?.rule_provider_auto_update}
-                          onValueChange={(value) =>
-                            updateSettings({ rule_provider_auto_update: value })
-                          }
-                        />
+                          onChange={(value) => updateSettings({ rule_provider_auto_update: value })}
+                        >
+                          <Switch.Content>
+                            <Switch.Control>
+                              <Switch.Thumb />
+                            </Switch.Control>
+                          </Switch.Content>
+                        </Switch>
                       </div>
                       <div className="flex flex-wrap items-center justify-between gap-4 py-2 last:pb-0">
                         <div className="min-w-0">
@@ -466,7 +469,7 @@ const KokoroSettingsPage: React.FC = () => {
                           </p>
                         </div>
                         <div className="ml-auto flex shrink-0 items-center gap-3">
-                          <Input
+                          <KokoTextField
                             aria-label={tr('Update interval')}
                             type="number"
                             size="sm"
@@ -490,10 +493,14 @@ const KokoroSettingsPage: React.FC = () => {
                             aria-label={tr('Update subscription automatically')}
                             size="sm"
                             isSelected={settings?.profile_auto_update}
-                            onValueChange={(value) =>
-                              updateSettings({ profile_auto_update: value })
-                            }
-                          />
+                            onChange={(value) => updateSettings({ profile_auto_update: value })}
+                          >
+                            <Switch.Content>
+                              <Switch.Control>
+                                <Switch.Thumb />
+                              </Switch.Control>
+                            </Switch.Content>
+                          </Switch>
                         </div>
                       </div>
                     </div>

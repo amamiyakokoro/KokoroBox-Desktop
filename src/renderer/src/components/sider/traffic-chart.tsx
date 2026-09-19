@@ -74,7 +74,7 @@ const TrafficChart: React.FC<TrafficChartProps> = (props) => {
   }, [data])
 
   const gradientId = `traffic-gradient-${id.replaceAll(':', '')}`
-  const chartColor = 'hsl(var(--heroui-primary))'
+  const chartColor = 'var(--accent)'
 
   return (
     <svg

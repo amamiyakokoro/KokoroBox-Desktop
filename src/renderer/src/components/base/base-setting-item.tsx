@@ -1,4 +1,4 @@
-import { cn, Separator } from '@heroui-v3/react'
+import { cn, Separator } from '@heroui/react'
 
 import React, { createContext, useContext } from 'react'
 

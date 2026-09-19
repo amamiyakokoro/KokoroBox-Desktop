@@ -1,5 +1,5 @@
 import { tr } from '../../../../shared/i18n'
-import { Button } from '@heroui-v3/react'
+import { Button } from '@heroui/react'
 import { JSX, ReactNode } from 'react'
 import { ErrorBoundary, FallbackProps } from 'react-error-boundary'
 

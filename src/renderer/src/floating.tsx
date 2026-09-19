@@ -3,7 +3,7 @@ import './utils/locale'
 import { getLocale } from '../../shared/i18n'
 import ReactDOM from 'react-dom/client'
 import { ThemeProvider as NextThemesProvider } from 'next-themes'
-import { HeroUIProvider } from '@heroui/react'
+import { I18nProvider } from 'react-aria'
 import '@renderer/assets/floating.css'
 import FloatingApp from '@renderer/FloatingApp'
 import BaseErrorBoundary from './components/base/base-error-boundary'
@@ -12,7 +12,7 @@ import { ControledMihomoConfigProvider } from './hooks/use-controled-mihomo-conf
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
-    <HeroUIProvider locale={getLocale()}>
+    <I18nProvider locale={getLocale()}>
       <NextThemesProvider attribute="class" enableSystem defaultTheme="dark">
         <BaseErrorBoundary>
           <AppConfigProvider>
@@ -22,6 +22,6 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
           </AppConfigProvider>
         </BaseErrorBoundary>
       </NextThemesProvider>
-    </HeroUIProvider>
+    </I18nProvider>
   </React.StrictMode>
 )

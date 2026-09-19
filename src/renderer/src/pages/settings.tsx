@@ -1,5 +1,5 @@
 import { tr } from '../../../shared/i18n'
-import { Button, Input } from '@heroui/react'
+import { Button } from '@heroui/react'
 import BasePage from '@renderer/components/base/base-page'
 import { IoLogoGithub } from 'react-icons/io5'
 import {
@@ -11,6 +11,7 @@ import {
 import { SettingCardModeProvider } from '@renderer/components/base/base-setting-card'
 import { SettingItemModeProvider } from '@renderer/components/base/base-setting-item'
 import { KokoTabs } from '@renderer/components/base/base-controls'
+import { KokoTextField } from '@renderer/components/base/koko-form'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { LuChevronRight, LuSearch } from 'react-icons/lu'
@@ -163,7 +164,7 @@ const Settings: React.FC = () => {
         <Button
           isIconOnly
           size="sm"
-          variant="light"
+          variant="ghost"
           className="app-nodrag"
           aria-label="GitHub"
           onPress={() => window.open('https://github.com/amamiyakokoro/KokoroBox-Desktop')}
@@ -186,17 +187,16 @@ const Settings: React.FC = () => {
                   <Button
                     key={item.key}
                     size="sm"
-                    variant={active ? 'flat' : 'light'}
-                    color={active ? 'primary' : 'default'}
+                    variant={active ? 'secondary' : 'ghost'}
                     className="settings-category-button app-nodrag w-full shrink-0 justify-start px-3"
                     aria-label={item.label}
                     aria-current={active ? 'page' : undefined}
-                    startContent={<Icon className="text-base" />}
                     onPress={() => {
                       setSearch('')
                       selectCategory(item.key)
                     }}
                   >
+                    <Icon className="text-base" />
                     <span className="settings-category-label">{item.label}</span>
                   </Button>
                 )
@@ -218,7 +218,7 @@ const Settings: React.FC = () => {
                       ? tr('Search settings')
                       : (selectedPanel?.label ?? selected.label)}
                   </h1>
-                  <Input
+                  <KokoTextField
                     size="sm"
                     isClearable
                     value={search}

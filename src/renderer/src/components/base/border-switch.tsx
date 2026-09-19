@@ -1,5 +1,5 @@
 import React from 'react'
-import { cn, Switch, type SwitchProps } from '@heroui-v3/react'
+import { cn, Switch, type SwitchProps } from '@heroui/react'
 import './border-switch.css'
 
 interface BorderSwitchProps extends Omit<SwitchProps, 'children' | 'className' | 'onChange'> {

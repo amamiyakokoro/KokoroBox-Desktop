@@ -1,5 +1,5 @@
 import { tr } from '../../../../shared/i18n'
-import { Avatar, Button, Card } from '@heroui-v3/react'
+import { Avatar, Button, Card } from '@heroui/react'
 import { calcTraffic } from '@renderer/utils/calc'
 import React, { memo, useMemo } from 'react'
 import { CgClose, CgTrash } from 'react-icons/cg'

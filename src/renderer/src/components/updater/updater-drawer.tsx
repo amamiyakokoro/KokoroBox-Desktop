@@ -1,5 +1,5 @@
 import { tr } from '../../../../shared/i18n'
-import { Button, Drawer, Label, Link, ProgressBar } from '@heroui-v3/react'
+import { Button, Drawer, Label, Link, ProgressBar } from '@heroui/react'
 import ReactMarkdown from 'react-markdown'
 import React, { useEffect, useRef, useState } from 'react'
 import { downloadAndInstallUpdate } from '@renderer/utils/ipc'

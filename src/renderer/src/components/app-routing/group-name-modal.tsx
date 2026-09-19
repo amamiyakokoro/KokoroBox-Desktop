@@ -1,5 +1,5 @@
 import { tr } from '../../../../shared/i18n'
-import { Label, Modal } from '@heroui-v3/react'
+import { Label, Modal } from '@heroui/react'
 import { KokoButton as Button, KokoTextField as Input } from '../base/koko-form'
 import { useState } from 'react'
 

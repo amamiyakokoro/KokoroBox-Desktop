@@ -3,7 +3,7 @@ import BasePage from '@renderer/components/base/base-page'
 import { mihomoCloseConnections, mihomoCloseConnection } from '@renderer/utils/ipc'
 import React, { KeyboardEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { flushSync } from 'react-dom'
-import { Button, Divider, Input, Tooltip } from '@heroui/react'
+import { Button, InputGroup, Separator, Tooltip } from '@heroui/react'
 import { KokoTabs } from '@renderer/components/base/base-controls'
 import { KokoSelect } from '@renderer/components/base/koko-form'
 import { calcTraffic } from '@renderer/utils/calc'
@@ -893,46 +893,46 @@ const Connections: React.FC = () => {
               <span>↑ {calcTraffic(connectionsInfo?.uploadTotal ?? 0)}</span>
               <span>↓ {calcTraffic(connectionsInfo?.downloadTotal ?? 0)}</span>
             </div>
-            <Tooltip
-              placement="bottom"
-              content={
-                tab === 'active'
-                  ? tr('Close all {0} active connections', [filteredConnections.length])
-                  : tr('Clear all {0} records', [filteredConnections.length])
-              }
-            >
-              <Button
-                isIconOnly
-                size="sm"
-                variant="light"
-                aria-label={
-                  tab === 'active'
-                    ? tr('Close all {0} active connections', [filteredConnections.length])
-                    : tr('Clear all {0} records', [filteredConnections.length])
-                }
-                onPress={() => {
-                  if (filter === '') {
-                    closeAllConnections()
-                  } else {
-                    filteredConnections.forEach((conn) => {
-                      closeConnection(conn.id)
-                    })
+            <Tooltip delay={0}>
+              <Tooltip.Trigger>
+                <Button
+                  isIconOnly
+                  size="sm"
+                  variant="ghost"
+                  aria-label={
+                    tab === 'active'
+                      ? tr('Close all {0} active connections', [filteredConnections.length])
+                      : tr('Clear all {0} records', [filteredConnections.length])
                   }
-                }}
-              >
-                {tab === 'active' ? (
-                  <CgClose className="text-lg" />
-                ) : (
-                  <CgTrash className="text-lg" />
-                )}
-              </Button>
+                  onPress={() => {
+                    if (filter === '') {
+                      closeAllConnections()
+                    } else {
+                      filteredConnections.forEach((conn) => {
+                        closeConnection(conn.id)
+                      })
+                    }
+                  }}
+                >
+                  {tab === 'active' ? (
+                    <CgClose className="text-lg" />
+                  ) : (
+                    <CgTrash className="text-lg" />
+                  )}
+                </Button>
+              </Tooltip.Trigger>
+              <Tooltip.Content placement="bottom">
+                {tab === 'active'
+                  ? tr('Close all {0} active connections', [filteredConnections.length])
+                  : tr('Clear all {0} records', [filteredConnections.length])}
+              </Tooltip.Content>
             </Tooltip>
           </div>
           <Button
             size="sm"
             isIconOnly
             className="app-nodrag ml-2"
-            variant="light"
+            variant="ghost"
             aria-label={paused ? tr('Continue') : tr('Pause')}
             onPress={() =>
               setPaused((p) => {
@@ -947,7 +947,7 @@ const Connections: React.FC = () => {
             size="sm"
             isIconOnly
             className="app-nodrag"
-            variant="light"
+            variant="ghost"
             aria-label={tr('Connection settings')}
             onPress={() => {
               setIsSettingDrawerOpen(true)
@@ -1015,68 +1015,80 @@ const Connections: React.FC = () => {
             ]}
             onChange={handleTabChange}
           />
-          <Tooltip
-            content={compiledFilter.error ?? tr('Invalid format')}
-            placement="left"
-            isOpen={Boolean(compiledFilter.error)}
-            showArrow={true}
-            color="danger"
-            offset={10}
-          >
-            <div className="relative min-w-0 flex-1">
-              <Input
-                ref={filterInputRef}
-                variant="flat"
-                size="sm"
-                className={
-                  compiledFilter.error ? 'border-red-500 ring-1 ring-red-500 rounded-lg' : ''
-                }
-                classNames={{
-                  inputWrapper:
-                    'relative h-8 px-3 group-data-[focus-visible=true]:!ring-0 group-data-[focus-visible=true]:!ring-transparent group-data-[focus-visible=true]:!ring-offset-0',
-                  innerWrapper: 'overflow-hidden',
-                  input: 'font-mono text-sm tracking-normal focus-visible:!outline-none'
-                }}
-                value={filter}
-                placeholder={tr('Filter')}
-                isClearable
-                isInvalid={Boolean(compiledFilter.error)}
-                onValueChange={handleFilterValueChange}
-                onKeyDown={handleFilterKeyDown}
-                onFocus={() => {
-                  setIsFilterFocused(true)
-                  requestAnimationFrame(() => syncFilterCursor())
-                }}
-                onBlur={() => {
-                  setCompletionSession(null)
-                  requestAnimationFrame(() => {
-                    const activeElement = document.activeElement
-                    if (activeElement !== filterInputRef.current) {
-                      setIsFilterFocused(false)
-                    }
-                  })
-                }}
-                onClick={() => {
-                  setCompletionSession(null)
-                  syncFilterCursor()
-                }}
-                onKeyUp={() => syncFilterCursor()}
-                onSelect={handleFilterSelect}
-              />
-              {inlineCompletionSuffix ? (
-                <div className="pointer-events-none absolute top-1/2 left-3 right-10 z-10 flex -translate-y-1/2 items-center overflow-hidden font-mono text-sm tracking-normal">
-                  <div
-                    className="flex items-center whitespace-pre"
-                    style={{ transform: `translateX(-${filterScrollLeft}px)` }}
-                  >
-                    <span className="invisible whitespace-pre">{filter}</span>
-                    <span className="whitespace-pre text-foreground-400/55">
-                      {inlineCompletionSuffix}
-                    </span>
+          <Tooltip delay={0} isOpen={Boolean(compiledFilter.error)}>
+            <Tooltip.Trigger className="relative min-w-0 flex-1">
+              <div className="relative min-w-0 flex-1">
+                <InputGroup
+                  variant="secondary"
+                  data-invalid={Boolean(compiledFilter.error) || undefined}
+                  className={compiledFilter.error ? 'h-8 border-danger ring-1 ring-danger' : 'h-8'}
+                >
+                  <InputGroup.Input
+                    ref={filterInputRef}
+                    className="font-mono text-sm tracking-normal focus-visible:outline-none"
+                    value={filter}
+                    placeholder={tr('Filter')}
+                    aria-invalid={Boolean(compiledFilter.error) || undefined}
+                    onChange={(event) => handleFilterValueChange(event.target.value)}
+                    onKeyDown={handleFilterKeyDown}
+                    onFocus={() => {
+                      setIsFilterFocused(true)
+                      requestAnimationFrame(() => syncFilterCursor())
+                    }}
+                    onBlur={() => {
+                      setCompletionSession(null)
+                      requestAnimationFrame(() => {
+                        const activeElement = document.activeElement
+                        if (activeElement !== filterInputRef.current) {
+                          setIsFilterFocused(false)
+                        }
+                      })
+                    }}
+                    onClick={() => {
+                      setCompletionSession(null)
+                      syncFilterCursor()
+                    }}
+                    onKeyUp={() => syncFilterCursor()}
+                    onSelect={handleFilterSelect}
+                  />
+                  {filter ? (
+                    <InputGroup.Suffix>
+                      <Button
+                        aria-label={tr('Clear field')}
+                        className="size-6 min-w-6"
+                        isIconOnly
+                        size="sm"
+                        variant="ghost"
+                        onPress={() => handleFilterValueChange('')}
+                      >
+                        <CgClose />
+                      </Button>
+                    </InputGroup.Suffix>
+                  ) : null}
+                </InputGroup>
+                {inlineCompletionSuffix ? (
+                  <div className="pointer-events-none absolute top-1/2 left-3 right-10 z-10 flex -translate-y-1/2 items-center overflow-hidden font-mono text-sm tracking-normal">
+                    <div
+                      className="flex items-center whitespace-pre"
+                      style={{ transform: `translateX(-${filterScrollLeft}px)` }}
+                    >
+                      <span className="invisible whitespace-pre">{filter}</span>
+                      <span className="whitespace-pre text-foreground-400/55">
+                        {inlineCompletionSuffix}
+                      </span>
+                    </div>
                   </div>
-                </div>
-              ) : null}
-            </div>
+                ) : null}
+              </div>
+            </Tooltip.Trigger>
+            <Tooltip.Content
+              className="bg-danger text-danger-foreground"
+              placement="left"
+              showArrow
+              offset={10}
+            >
+              {compiledFilter.error ?? tr('Invalid format')}
+            </Tooltip.Content>
           </Tooltip>
 
           <KokoSelect
@@ -1110,7 +1122,7 @@ const Connections: React.FC = () => {
             )}
           </Button>
         </div>
-        <Divider />
+        <Separator />
       </div>
       <div className="h-[calc(100vh-100px)] mt-px">
         {grouped ? (

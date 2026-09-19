@@ -1,5 +1,5 @@
 import { tr } from '../../../../shared/i18n'
-import { Modal } from '@heroui-v3/react'
+import { Modal } from '@heroui/react'
 import React, { useEffect, useState } from 'react'
 import { getInterfaces } from '@renderer/utils/ipc'
 import { useAppConfig } from '@renderer/hooks/use-app-config'

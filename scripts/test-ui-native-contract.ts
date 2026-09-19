@@ -6,25 +6,6 @@ import test from 'node:test'
 const rendererRoot = 'src/renderer/src'
 const appOverridesCssPath = 'src/renderer/src/assets/app-overrides.css'
 
-const legacyV2ImportFiles = new Set([
-  'src/renderer/src/components/profiles/kokoro-default-rules.tsx',
-  'src/renderer/src/components/profiles/kokoro-subscription-modal.tsx',
-  'src/renderer/src/components/resources/geo-data.tsx',
-  'src/renderer/src/floating.tsx',
-  'src/renderer/src/main.tsx',
-  'src/renderer/src/pages/connections.tsx',
-  'src/renderer/src/pages/override.tsx',
-  'src/renderer/src/pages/profiles.tsx',
-  'src/renderer/src/pages/settings.tsx',
-  'src/renderer/src/traymenu.tsx'
-])
-
-const legacyV2StyleEntries = new Set([
-  'src/renderer/src/assets/floating.css',
-  'src/renderer/src/assets/main.css',
-  'src/renderer/src/assets/traymenu.css'
-])
-
 const allowedKokoExports = new Set([
   'KokoActionMenu',
   'KokoButton',
@@ -129,31 +110,58 @@ function extractSelectors(css: string): string[] {
   return selectors
 }
 
-test('HeroUI v2 renderer imports are a shrinking allowlist', () => {
-  const actualFiles = collectSourceFiles(rendererRoot)
-    // hero.mjs is the legacy Tailwind plugin entry and has its own bounded test below.
-    .filter((file) => relative('.', file) !== 'src/renderer/src/assets/hero.mjs')
-    .filter((file) => /['"]@heroui\/react['"]/.test(readFileSync(file, 'utf8')))
-    .map((file) => relative('.', file))
-    .sort()
-
-  for (const file of actualFiles) {
-    assert.ok(legacyV2ImportFiles.has(file), `new HeroUI v2 import added in ${file}`)
+test('HeroUI v3 uses canonical packages without migration aliases', () => {
+  const packageJson = JSON.parse(readFileSync('package.json', 'utf8')) as {
+    devDependencies: Record<string, string>
   }
-  assert.ok(actualFiles.length <= legacyV2ImportFiles.size)
+  const sourceFiles = collectSourceFiles(rendererRoot)
+
+  assert.equal(packageJson.devDependencies['@heroui/react'], '3.2.6')
+  assert.equal(packageJson.devDependencies['@heroui/styles'], '3.2.6')
+  assert.equal(packageJson.devDependencies['@heroui-v3/react'], undefined)
+  assert.equal(packageJson.devDependencies['@heroui-v3/styles'], undefined)
+  for (const file of sourceFiles) {
+    assert.doesNotMatch(readFileSync(file, 'utf8'), /@heroui-v3/, `${file} uses a migration alias`)
+  }
 })
 
-test('the HeroUI v2 Tailwind plugin is not loaded by new style entries', () => {
-  const styleFiles = collectFiles('src/renderer/src/assets')
-    .filter((file) => file.endsWith('.css'))
-    .filter((file) => /@plugin\s+['"][^'"]*hero\.mjs['"]/.test(readFileSync(file, 'utf8')))
-    .map((file) => relative('.', file))
-    .sort()
+test('HeroUI v3 styles do not load the legacy Tailwind plugin', () => {
+  const styleFiles = collectFiles('src/renderer/src/assets').filter((file) => file.endsWith('.css'))
+  const styles = styleFiles.map((file) => readFileSync(file, 'utf8')).join('\n')
 
-  for (const file of styleFiles) {
-    assert.ok(legacyV2StyleEntries.has(file), `new HeroUI v2 style entry added in ${file}`)
+  assert.doesNotMatch(styles, /@plugin\s+['"][^'"]*hero\.mjs['"]/)
+  assert.doesNotMatch(styles, /@source\s+['"][^'"]*@heroui\/theme/)
+  assert.equal(existsSync('src/renderer/src/assets/hero.mjs'), false)
+})
+
+test('renderer entrypoints preserve locale through React Aria', () => {
+  for (const file of [
+    'src/renderer/src/main.tsx',
+    'src/renderer/src/floating.tsx',
+    'src/renderer/src/traymenu.tsx'
+  ]) {
+    const source = readFileSync(file, 'utf8')
+    assert.match(source, /import \{ I18nProvider \} from 'react-aria'/)
+    assert.match(source, /<I18nProvider locale=\{getLocale\(\)\}>/)
+    assert.doesNotMatch(source, /HeroUIProvider/)
   }
-  assert.ok(styleFiles.length <= legacyV2StyleEntries.size)
+})
+
+test('renderer styles and components use native semantic tokens', () => {
+  const rendererFiles = collectFiles(rendererRoot).filter((file) =>
+    /\.(?:css|[cm]?[jt]sx?)$/.test(file)
+  )
+
+  for (const file of rendererFiles) {
+    assert.doesNotMatch(
+      readFileSync(file, 'utf8'),
+      /--heroui-|hsl\(var\(--heroui-/,
+      `${file} still consumes a legacy HeroUI token`
+    )
+  }
+
+  const legacyThemeBridge = readFileSync('src/main/resolve/theme.ts', 'utf8')
+  assert.match(legacyThemeBridge, /--heroui-primary/)
 })
 
 test('application overrides do not target HeroUI internal classes', () => {
@@ -221,6 +229,7 @@ test('the native-first ownership contract documents the migration boundary', () 
 
   assert.match(contract, /KokoroBox controls layout; HeroUI controls component appearance/)
   assert.match(contract, /Do not add selectors for HeroUI internal classes/)
-  assert.match(contract, /10 renderer files importing `@heroui\/react`/)
+  assert.match(contract, /canonical `@heroui\/react` and `@heroui\/styles` packages/)
+  assert.match(contract, /React Aria `I18nProvider`/)
   assert.match(contract, /zero HeroUI internal selectors/)
 })

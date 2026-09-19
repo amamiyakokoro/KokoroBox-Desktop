@@ -2,7 +2,7 @@ import { tr } from '../../../../shared/i18n'
 /* eslint-disable react/prop-types */
 import { useEffect, useState } from 'react'
 import { dump, load } from 'js-yaml'
-import { Button, Modal } from '@heroui-v3/react'
+import { Button, Modal } from '@heroui/react'
 import { BaseEditor } from '../base/base-editor-lazy'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { notify } from '@renderer/utils/notification'

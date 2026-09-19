@@ -21,7 +21,7 @@ import {
   setMihomoLogMaxEntries,
   subscribeMihomoLogs
 } from '@renderer/utils/mihomo-log-store'
-import { ListBox, Select, Separator } from '@heroui-v3/react'
+import { ListBox, Select, Separator } from '@heroui/react'
 import { restartMihomoLogs } from '@renderer/utils/ipc'
 import { notify } from '@renderer/utils/notification'
 

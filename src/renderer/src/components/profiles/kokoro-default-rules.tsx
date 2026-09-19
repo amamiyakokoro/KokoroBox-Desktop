@@ -1,5 +1,5 @@
 import { tr } from '../../../../shared/i18n'
-import { Button, Chip, Input, Tooltip } from '@heroui/react'
+import { Button, Chip, Input, Label, TextField, Tooltip } from '@heroui/react'
 import { KokoSelect } from '../base/koko-form'
 import { getKokoroDefaultRules, replaceKokoroDefaultRules } from '@renderer/utils/ipc'
 import { notify } from '@renderer/utils/notification'
@@ -207,7 +207,7 @@ const KokoroDefaultRules: React.FC = () => {
           <div className="flex flex-wrap items-center gap-2">
             <h3 className="font-semibold">{tr('Default rule set')}</h3>
             {ruleSet && (
-              <Chip size="sm" variant="flat" radius="sm" className="text-foreground-500">
+              <Chip size="sm" variant="soft" className="text-foreground-500">
                 rev. {ruleSet.revision}
               </Chip>
             )}
@@ -216,17 +216,20 @@ const KokoroDefaultRules: React.FC = () => {
             {tr('Edit only the default rule set used by Kokoro profiles. Rules run in this order.')}
           </p>
         </div>
-        <Tooltip content={tr('Reload')}>
-          <Button
-            size="sm"
-            isIconOnly
-            variant="light"
-            aria-label={tr('Reload')}
-            isDisabled={loading || saving}
-            onPress={() => void load()}
-          >
-            <LuRefreshCw className={loading ? 'animate-spin' : ''} />
-          </Button>
+        <Tooltip delay={0}>
+          <Tooltip.Trigger>
+            <Button
+              size="sm"
+              isIconOnly
+              variant="ghost"
+              aria-label={tr('Reload')}
+              isDisabled={loading || saving}
+              onPress={() => void load()}
+            >
+              <LuRefreshCw className={loading ? 'animate-spin' : ''} />
+            </Button>
+          </Tooltip.Trigger>
+          <Tooltip.Content>{tr('Reload')}</Tooltip.Content>
         </Tooltip>
       </header>
 
@@ -279,47 +282,56 @@ const KokoroDefaultRules: React.FC = () => {
                       onChange={(value) => updateRule(index, { target: value })}
                     />
                     <div className="flex shrink-0 items-center gap-0.5">
-                      <Tooltip content={tr('Move up')}>
-                        <Button
-                          size="sm"
-                          isIconOnly
-                          variant="light"
-                          aria-label={tr('Move up')}
-                          isDisabled={index === 0 || rule.type === 'MATCH'}
-                          onPress={() => moveRule(index, -1)}
-                        >
-                          <LuArrowUp />
-                        </Button>
+                      <Tooltip delay={0}>
+                        <Tooltip.Trigger>
+                          <Button
+                            size="sm"
+                            isIconOnly
+                            variant="ghost"
+                            aria-label={tr('Move up')}
+                            isDisabled={index === 0 || rule.type === 'MATCH'}
+                            onPress={() => moveRule(index, -1)}
+                          >
+                            <LuArrowUp />
+                          </Button>
+                        </Tooltip.Trigger>
+                        <Tooltip.Content>{tr('Move up')}</Tooltip.Content>
                       </Tooltip>
-                      <Tooltip content={tr('Move down')}>
-                        <Button
-                          size="sm"
-                          isIconOnly
-                          variant="light"
-                          aria-label={tr('Move down')}
-                          isDisabled={
-                            index === rules.length - 1 || rules[index + 1]?.type === 'MATCH'
-                          }
-                          onPress={() => moveRule(index, 1)}
-                        >
-                          <LuArrowDown />
-                        </Button>
+                      <Tooltip delay={0}>
+                        <Tooltip.Trigger>
+                          <Button
+                            size="sm"
+                            isIconOnly
+                            variant="ghost"
+                            aria-label={tr('Move down')}
+                            isDisabled={
+                              index === rules.length - 1 || rules[index + 1]?.type === 'MATCH'
+                            }
+                            onPress={() => moveRule(index, 1)}
+                          >
+                            <LuArrowDown />
+                          </Button>
+                        </Tooltip.Trigger>
+                        <Tooltip.Content>{tr('Move down')}</Tooltip.Content>
                       </Tooltip>
-                      <Tooltip content={tr('Delete')}>
-                        <Button
-                          size="sm"
-                          isIconOnly
-                          color="danger"
-                          variant="light"
-                          aria-label={tr('Delete')}
-                          onPress={() =>
-                            setRules((current) =>
-                              current.filter((_, ruleIndex) => ruleIndex !== index)
-                            )
-                          }
-                        >
-                          <LuTrash2 />
-                        </Button>
+                      <Tooltip delay={0}>
+                        <Tooltip.Trigger>
+                          <Button
+                            size="sm"
+                            isIconOnly
+                            variant="ghost"
+                            className="text-danger"
+                            aria-label={tr('Delete')}
+                            onPress={() =>
+                              setRules((current) =>
+                                current.filter((_, ruleIndex) => ruleIndex !== index)
+                              )
+                            }
+                          >
+                            <LuTrash2 />
+                          </Button>
+                        </Tooltip.Trigger>
+                        <Tooltip.Content>{tr('Delete')}</Tooltip.Content>
                       </Tooltip>
                     </div>
                   </div>
@@ -340,20 +352,25 @@ const KokoroDefaultRules: React.FC = () => {
                         onChange={(value) => updateRule(index, { payload: value })}
                       />
                     ) : (
-                      <Input
+                      <TextField
                         aria-label={tr('Rule content')}
-                        label={tr('Rule content')}
                         className="min-w-0 flex-1"
-                        size="sm"
                         isDisabled={rule.type === 'MATCH'}
-                        placeholder={
-                          rule.type === 'MATCH'
-                            ? tr('MATCH does not require rule content')
-                            : tr('Rule content')
-                        }
                         value={rule.payload || ''}
-                        onValueChange={(value) => updateRule(index, { payload: value })}
-                      />
+                        onChange={(value) => updateRule(index, { payload: value })}
+                      >
+                        <Label className="mb-1 text-xs text-foreground-500">
+                          {tr('Rule content')}
+                        </Label>
+                        <Input
+                          variant="secondary"
+                          placeholder={
+                            rule.type === 'MATCH'
+                              ? tr('MATCH does not require rule content')
+                              : tr('Rule content')
+                          }
+                        />
+                      </TextField>
                     )}
                   </div>
                 </div>
@@ -379,21 +396,21 @@ const KokoroDefaultRules: React.FC = () => {
               <div className="ml-auto flex gap-2">
                 <Button
                   size="sm"
-                  variant="flat"
+                  variant="secondary"
                   isDisabled={rules.length >= maxRules || options.rule_types.length === 0}
                   onPress={addRule}
-                  startContent={<LuPlus />}
                 >
+                  <LuPlus />
                   {tr('Add rule')}
                 </Button>
                 <Button
                   size="sm"
-                  color="primary"
+                  variant="primary"
                   isDisabled={!isDirty || Boolean(validationError)}
-                  isLoading={saving}
+                  isPending={saving}
                   onPress={() => void save()}
-                  startContent={!saving ? <LuSave /> : undefined}
                 >
+                  {!saving ? <LuSave /> : null}
                   {tr('Save rules')}
                 </Button>
               </div>
@@ -403,7 +420,7 @@ const KokoroDefaultRules: React.FC = () => {
       ) : (
         <div className="flex min-h-52 flex-col items-center justify-center gap-3 text-center">
           <p className="text-sm text-danger">{error || tr('Failed to load the Kokoro rule set')}</p>
-          <Button size="sm" variant="flat" onPress={() => void load()}>
+          <Button size="sm" variant="secondary" onPress={() => void load()}>
             {tr('Reload')}
           </Button>
         </div>

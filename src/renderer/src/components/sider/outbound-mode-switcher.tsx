@@ -1,5 +1,5 @@
 import { tr } from '../../../../shared/i18n'
-import { Tabs } from '@heroui-v3/react'
+import { Tabs } from '@heroui/react'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'
 import { useGroups } from '@renderer/hooks/use-groups'

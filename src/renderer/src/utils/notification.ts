@@ -1,5 +1,5 @@
 import { tr } from '../../../shared/i18n'
-import { toast, type ButtonProps } from '@heroui-v3/react'
+import { toast, type ButtonProps } from '@heroui/react'
 import { getAppConfig } from './ipc'
 
 type AppNotificationVariant = 'default' | 'accent' | 'success' | 'warning' | 'danger'

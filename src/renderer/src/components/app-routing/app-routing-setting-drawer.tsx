@@ -1,6 +1,6 @@
 /* eslint-disable react/prop-types */
 import { tr } from '../../../../shared/i18n'
-import { Button, ListBox, Select, Switch } from '@heroui-v3/react'
+import { Button, ListBox, Select, Switch } from '@heroui/react'
 import SettingItem from '../base/base-setting-item'
 import { settingItemProps } from '../base/base-controls'
 import PageSettingsDrawer, { PageSettingsSection } from '../base/base-settings-drawer'

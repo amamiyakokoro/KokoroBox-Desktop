@@ -1,6 +1,6 @@
 /* eslint-disable react/prop-types */
 import { tr } from '../../../../shared/i18n'
-import { Drawer } from '@heroui-v3/react'
+import { Drawer } from '@heroui/react'
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
 
 interface PageSettingsDrawerProps {

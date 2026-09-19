@@ -1,5 +1,5 @@
 import { tr } from '../../../shared/i18n'
-import { Avatar, Button, Card } from '@heroui-v3/react'
+import { Avatar, Button, Card } from '@heroui/react'
 import BasePage from '@renderer/components/base/base-page'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import {

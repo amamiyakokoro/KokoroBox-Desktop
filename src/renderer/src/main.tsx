@@ -4,7 +4,7 @@ import { getLocale } from '../../shared/i18n'
 import ReactDOM from 'react-dom/client'
 import { createHashRouter, RouterProvider } from 'react-router-dom'
 import { ThemeProvider as NextThemesProvider } from 'next-themes'
-import { HeroUIProvider } from '@heroui/react'
+import { I18nProvider } from 'react-aria'
 import { init, platform } from '@renderer/utils/init'
 import '@renderer/assets/main.css'
 import App from '@renderer/App'
@@ -79,13 +79,13 @@ init().then(() => {
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
-    <HeroUIProvider locale={getLocale()}>
+    <I18nProvider locale={getLocale()}>
       <NextThemesProvider attribute="class" enableSystem defaultTheme="dark">
         <AppNotificationProvider />
         <BaseErrorBoundary>
           <RouterProvider router={router} />
         </BaseErrorBoundary>
       </NextThemesProvider>
-    </HeroUIProvider>
+    </I18nProvider>
   </React.StrictMode>
 )

@@ -1,7 +1,8 @@
 import { tr } from '../../../../shared/i18n'
 /* eslint-disable react/prop-types */
-import { Button, Input, Switch } from '@heroui/react'
+import { Button, Switch } from '@heroui/react'
 import { KokoTabs } from '@renderer/components/base/base-controls'
+import { KokoTextField } from '@renderer/components/base/koko-form'
 import SettingCard from '@renderer/components/base/base-setting-card'
 import SettingItem from '@renderer/components/base/base-setting-item'
 import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'
@@ -31,7 +32,7 @@ const GeoUrlSetting: React.FC<Props> = (props) => {
   return (
     <SettingItem compatKey="legacy" title={title} divider>
       <div className="flex w-[70%] max-w-[40rem] min-w-0 items-center justify-end gap-2">
-        <Input
+        <KokoTextField
           size="sm"
           aria-label={title}
           title={value}
@@ -41,7 +42,7 @@ const GeoUrlSetting: React.FC<Props> = (props) => {
           onValueChange={onChange}
         />
         {value !== savedValue && (
-          <Button size="sm" color="primary" className="shrink-0" onPress={onConfirm}>
+          <Button size="sm" variant="primary" className="shrink-0" onPress={onConfirm}>
             {tr('Confirm')}
           </Button>
         )}
@@ -92,7 +93,7 @@ const GeoData: React.FC = () => {
         <Button
           size="sm"
           isIconOnly
-          variant="light"
+          variant="ghost"
           aria-label={tr('Update databases')}
           onPress={updateDatabases}
         >
@@ -156,14 +157,20 @@ const GeoData: React.FC = () => {
         <Switch
           size="sm"
           isSelected={geoAutoUpdate}
-          onValueChange={(v) => {
+          onChange={(v) => {
             patchControledMihomoConfig({ 'geo-auto-update': v })
           }}
-        />
+        >
+          <Switch.Content>
+            <Switch.Control>
+              <Switch.Thumb />
+            </Switch.Control>
+          </Switch.Content>
+        </Switch>
       </SettingItem>
       {geoAutoUpdate && (
         <SettingItem compatKey="legacy" title={tr('Update interval (hours)')}>
-          <Input
+          <KokoTextField
             size="sm"
             type="number"
             className="w-25"

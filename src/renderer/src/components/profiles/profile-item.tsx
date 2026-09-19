@@ -1,5 +1,5 @@
 import { tr } from '../../../../shared/i18n'
-import { Card, Chip, Meter } from '@heroui-v3/react'
+import { Card, Chip, Meter } from '@heroui/react'
 import { KokoButton as Button, KokoTooltip as Tooltip } from '../base/koko-form'
 import { KokoActionMenu } from '../base/koko-collections'
 import { calcTraffic } from '@renderer/utils/calc'

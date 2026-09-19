@@ -1,6 +1,6 @@
 /* eslint-disable react/prop-types */
 import { tr } from '../../../../shared/i18n'
-import { Card, Chip, Modal, Separator, Spinner } from '@heroui-v3/react'
+import { Card, Chip, Modal, Separator, Spinner } from '@heroui/react'
 import { KokoButton as Button } from '../base/koko-form'
 import {
   initService,

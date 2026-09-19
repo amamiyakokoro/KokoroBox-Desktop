@@ -1,5 +1,5 @@
 import { tr } from '../../../../shared/i18n'
-import { Button, Modal } from '@heroui-v3/react'
+import { Button, Modal } from '@heroui/react'
 import { BaseEditor } from '@renderer/components/base/base-editor-lazy'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { readTheme } from '@renderer/utils/ipc'

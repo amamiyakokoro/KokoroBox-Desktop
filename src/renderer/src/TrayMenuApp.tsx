@@ -1,6 +1,6 @@
 import { tr } from '../../shared/i18n'
 import { useEffect, useState, useMemo } from 'react'
-import { Accordion, Button, Chip, ScrollShadow } from '@heroui-v3/react'
+import { Accordion, Button, Chip, ScrollShadow } from '@heroui/react'
 import { IoRefresh, IoClose, IoCheckmarkCircle } from 'react-icons/io5'
 import { useGroups } from './hooks/use-groups'
 import { mihomoChangeProxy, mihomoGroupDelay, mihomoCloseConnections } from './utils/ipc'

@@ -18,7 +18,7 @@ import {
   getAppRoutingStatusLabel,
   getAppRoutingStatusMessage
 } from '@renderer/utils/app-routing-status'
-import { Button, Card, Chip, Input, Label, Separator, Switch, TextField } from '@heroui-v3/react'
+import { Button, Card, Chip, Input, Label, Separator, Switch, TextField } from '@heroui/react'
 import { KokoActionMenu } from '@renderer/components/base/koko-collections'
 import { KokoSelect } from '@renderer/components/base/koko-form'
 import {

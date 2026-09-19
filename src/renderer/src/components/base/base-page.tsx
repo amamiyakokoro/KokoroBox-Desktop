@@ -1,5 +1,5 @@
 import { tr } from '../../../../shared/i18n'
-import { Button, Separator } from '@heroui-v3/react'
+import { Button, Separator } from '@heroui/react'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { platform } from '@renderer/utils/init'
 import { isAlwaysOnTop, setAlwaysOnTop } from '@renderer/utils/ipc'

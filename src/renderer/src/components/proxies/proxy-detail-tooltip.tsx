@@ -1,5 +1,5 @@
 import { tr } from '../../../../shared/i18n'
-import { Chip, Separator, Surface } from '@heroui-v3/react'
+import { Chip, Separator, Surface } from '@heroui/react'
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { formatProxyType } from './proxy-display'

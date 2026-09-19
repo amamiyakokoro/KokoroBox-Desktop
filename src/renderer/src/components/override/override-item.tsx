@@ -1,5 +1,5 @@
 import { tr } from '../../../../shared/i18n'
-import { Button, Card, Chip } from '@heroui-v3/react'
+import { Button, Card, Chip } from '@heroui/react'
 import { KokoActionMenu } from '../base/koko-collections'
 import { IoMdMore, IoMdRefresh } from 'react-icons/io'
 import dayjs from 'dayjs'

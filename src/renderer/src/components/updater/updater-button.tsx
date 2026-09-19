@@ -1,5 +1,5 @@
 import { tr } from '../../../../shared/i18n'
-import { Button } from '@heroui-v3/react'
+import { Button } from '@heroui/react'
 import React, { useState, useEffect } from 'react'
 import UpdaterDrawer from './updater-drawer'
 import { GrUpgrade } from 'react-icons/gr'

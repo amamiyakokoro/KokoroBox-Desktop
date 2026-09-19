@@ -9,7 +9,7 @@ import {
   Surface,
   Switch,
   Tooltip
-} from '@heroui-v3/react'
+} from '@heroui/react'
 import { KokoActionMenu } from '../base/koko-collections'
 import type { ReactNode } from 'react'
 import React, { useState } from 'react'

@@ -45,33 +45,23 @@ The working rule is: **KokoroBox controls layout; HeroUI controls component appe
 
 Run `pnpm run test:ui-native` when changing shared UI primitives or compatibility CSS.
 
-## Phase 6 baseline
+## Phase 11 cutover baseline
 
-### HeroUI v2 imports
+### Runtime and styles
 
-There are 10 renderer files importing `@heroui/react`. This allowlist can shrink but must not grow.
+The renderer uses the canonical `@heroui/react` and `@heroui/styles` packages at HeroUI v3.
+The temporary `@heroui-v3/*` aliases and the HeroUI v2 dependency have been removed.
 
-Provider/bootstrap entries:
+HeroUI v3 does not require the former `HeroUIProvider`. The three renderer entrypoints preserve
+locale semantics with React Aria `I18nProvider` and the existing `getLocale()` source:
 
 - `src/renderer/src/main.tsx`
 - `src/renderer/src/floating.tsx`
 - `src/renderer/src/traymenu.tsx`
 
-Application entries:
-
-- `src/renderer/src/pages/connections.tsx`
-- `src/renderer/src/pages/override.tsx`
-- `src/renderer/src/pages/profiles.tsx`
-- `src/renderer/src/pages/settings.tsx`
-
-Higher-risk feature surfaces:
-
-- `src/renderer/src/components/profiles/kokoro-default-rules.tsx`
-- `src/renderer/src/components/profiles/kokoro-subscription-modal.tsx`
-- `src/renderer/src/components/resources/geo-data.tsx`
-
-The v2 Tailwind plugin remains in `hero.mjs` and is loaded by `main.css`, `floating.css`, and
-`traymenu.css`. It is removed only during final cutover after all v2 consumers are gone.
+Renderer styles now load only Tailwind and `@heroui/styles`. The legacy `hero.mjs` Tailwind plugin
+and `@source` scan of `@heroui/theme` have been removed. Legacy `--heroui-*` runtime tokens are not
+used by renderer UI; the theme resolver retains its compatibility bridge for installed user themes.
 
 ### Compatibility wrappers
 
@@ -131,7 +121,8 @@ classes—not global compatibility selectors.
 The native-first baseline remains enforced when:
 
 - the ownership contract is documented;
-- existing v2 import sites and style entry points are bounded;
+- renderer code imports canonical HeroUI v3 packages without migration aliases;
+- locale is provided by React Aria and no legacy Tailwind plugin is loaded;
 - application CSS contains zero HeroUI internal selectors and geometry-token overrides;
 - current `Koko*` wrapper exports are bounded; and
 - no visible application behavior or component appearance changes are introduced.

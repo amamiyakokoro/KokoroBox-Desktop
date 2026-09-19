@@ -214,8 +214,8 @@ test('shared settings primitives isolate HeroUI v3 compound APIs', () => {
 
   for (const file of primitiveFiles) {
     const source = readFileSync(file, 'utf8')
-    assert.doesNotMatch(source, /from '@heroui\/react'/)
-    assert.match(source, /from '@heroui-v3\/react'/)
+    assert.match(source, /from '@heroui\/react'/)
+    assert.doesNotMatch(source, /@heroui-v3/)
   }
 
   const borderSwitch = readFileSync('src/renderer/src/components/base/border-switch.tsx', 'utf8')
@@ -272,11 +272,7 @@ test('settings and Mihomo forms share the KokoroBox HeroUI v3 conventions', () =
   ]
 
   for (const file of migratedFiles) {
-    assert.doesNotMatch(
-      readFileSync(file, 'utf8'),
-      /from '@heroui\/react'/,
-      `${file} still imports HeroUI v2`
-    )
+    assert.doesNotMatch(readFileSync(file, 'utf8'), /@heroui-v3/)
   }
 
   assert.match(form, /export const KokoTextField/)
@@ -315,23 +311,6 @@ test('settings and Mihomo forms share the KokoroBox HeroUI v3 conventions', () =
 
 test('collection and overlay primitives preserve HeroUI v3 identity and selection semantics', () => {
   const rendererFiles = collectTsxFiles('src/renderer/src')
-  const legacyCollectionNames = new Set([
-    'Accordion',
-    'AccordionItem',
-    'Dropdown',
-    'DropdownItem',
-    'DropdownMenu',
-    'DropdownTrigger',
-    'Modal',
-    'ModalBody',
-    'ModalContent',
-    'ModalFooter',
-    'ModalHeader',
-    'Select',
-    'SelectItem',
-    'Tab',
-    'Tabs'
-  ])
 
   for (const file of rendererFiles) {
     const source = readFileSync(file, 'utf8')
@@ -340,16 +319,7 @@ test('collection and overlay primitives preserve HeroUI v3 identity and selectio
       /<Dropdown\.Trigger\b[\s\S]*?>\s*<(?:Button|KokoButton)\b/,
       `${file} nests a button inside the React Aria dropdown trigger`
     )
-    for (const match of source.matchAll(
-      /import\s*\{([\s\S]*?)\}\s*from\s*['"]@heroui\/react['"]/g
-    )) {
-      const names = match[1]
-        .split(',')
-        .map((name) => name.trim().split(/\s+as\s+/)[0])
-        .filter(Boolean)
-      const legacyCollections = names.filter((name) => legacyCollectionNames.has(name))
-      assert.deepEqual(legacyCollections, [], `${file} still imports HeroUI v2 collections`)
-    }
+    assert.doesNotMatch(source, /@heroui-v3/)
   }
 
   const form = readFileSync('src/renderer/src/components/base/koko-form.tsx', 'utf8')
@@ -406,7 +376,7 @@ test('collection and overlay primitives preserve HeroUI v3 identity and selectio
   assert.match(groupModal, /<Modal\.Heading>/)
 })
 
-test('renderer components never mix HeroUI v2 and v3 in one file', () => {
+test('renderer components use the canonical HeroUI v3 package', () => {
   const rendererFiles = collectTsxFiles('src/renderer/src')
   const migrationPriorityFiles = [
     'src/renderer/src/pages/logs.tsx',
@@ -427,17 +397,11 @@ test('renderer components never mix HeroUI v2 and v3 in one file', () => {
 
   for (const file of rendererFiles) {
     const source = readFileSync(file, 'utf8')
-    const importsV2 = /from '@heroui\/react'/.test(source)
-    const importsV3 = /from '@heroui-v3\/react'/.test(source)
-    assert.ok(!(importsV2 && importsV3), `${file} mixes HeroUI v2 and v3`)
+    assert.doesNotMatch(source, /@heroui-v3/, `${file} still imports the migration alias`)
   }
 
   for (const file of migrationPriorityFiles) {
-    assert.doesNotMatch(
-      readFileSync(file, 'utf8'),
-      /from '@heroui\/react'/,
-      `${file} still imports HeroUI v2`
-    )
+    assert.match(readFileSync(file, 'utf8'), /from '@heroui\/react'/)
   }
 })
 
@@ -491,8 +455,8 @@ test('Phase 9 card-heavy surfaces use native v3 anatomy and semantic interaction
 
   for (const file of files) {
     const source = readFileSync(file, 'utf8')
-    assert.doesNotMatch(source, /from '@heroui\/react'/, `${file} still imports HeroUI v2`)
-    assert.match(source, /from '@heroui-v3\/react'/, `${file} does not import HeroUI v3`)
+    assert.match(source, /from '@heroui\/react'/, `${file} does not import HeroUI v3`)
+    assert.doesNotMatch(source, /@heroui-v3/)
     assert.doesNotMatch(source, /CardBody|isPressable|shadow="(?:none|sm)"/)
   }
 
@@ -585,7 +549,7 @@ test('desktop sidebar separates controls, live status and navigation', () => {
     name.endsWith('.tsx')
   )) {
     const source = readFileSync(`src/renderer/src/components/sider/${file}`, 'utf8')
-    assert.doesNotMatch(source, /from '@heroui\/react'/, `${file} still imports HeroUI v2`)
+    assert.doesNotMatch(source, /@heroui-v3/, `${file} still imports the migration alias`)
   }
 
   assert.match(sider, /SiderSection title=\{tr\('Quick controls'\)\} columns=\{2\}/)
@@ -825,7 +789,7 @@ test('Kokoro account options and default rules use clear desktop sections and sa
   assert.match(page, /title=\{tr\('Subscription options'\)\}/)
   assert.match(page, /title=\{tr\('Update behavior'\)\}/)
   assert.match(page, /grid-cols-\[auto_minmax\(0,1fr\)_auto\]/)
-  assert.match(page, /radius="sm"/)
+  assert.match(page, /<Chip key=\{plan\} size="sm" color="accent" variant="soft">/)
   assert.match(page, /footer=\{[\s\S]*tr\('Fetch and add'\)/)
   assert.match(page, /aria-label=\{tr\('Update rule sets automatically'\)\}/)
   assert.match(page, /aria-label=\{tr\('Update subscription automatically'\)\}/)
@@ -845,8 +809,8 @@ test('Kokoro account options and default rules use clear desktop sections and sa
   assert.match(rules, /aria-live="polite"/)
   assert.match(rules, /tr\('Unsaved changes'\)/)
   assert.match(rules, /isDisabled=\{!isDirty \|\| Boolean\(validationError\)\}/)
-  assert.match(rules, /variant="flat"[\s\S]*tr\('Add rule'\)/)
-  assert.match(rules, /color="primary"[\s\S]*tr\('Save rules'\)/)
+  assert.match(rules, /variant="secondary"[\s\S]*tr\('Add rule'\)/)
+  assert.match(rules, /variant="primary"[\s\S]*tr\('Save rules'\)/)
   assert.match(rules, /replaceKokoroDefaultRules\(ruleSet\.revision, rules\)/)
 })
 

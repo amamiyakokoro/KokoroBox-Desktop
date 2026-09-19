@@ -1,5 +1,5 @@
 import { tr } from '../../../../shared/i18n'
-import { Button, Card } from '@heroui-v3/react'
+import { Button, Card } from '@heroui/react'
 import { mihomoUnfixedProxy } from '@renderer/utils/ipc'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { FaMapPin } from 'react-icons/fa6'

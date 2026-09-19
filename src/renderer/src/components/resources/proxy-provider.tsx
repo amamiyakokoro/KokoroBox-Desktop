@@ -17,7 +17,7 @@ import QRCodeModal from '../base/base-qrcode-modal'
 import dayjs from 'dayjs'
 import { calcTraffic } from '@renderer/utils/calc'
 import { getHash } from '@renderer/utils/hash'
-import { Chip, Meter, Separator } from '@heroui-v3/react'
+import { Chip, Meter, Separator } from '@heroui/react'
 import { notify } from '@renderer/utils/notification'
 
 const ProxyProvider: React.FC = () => {

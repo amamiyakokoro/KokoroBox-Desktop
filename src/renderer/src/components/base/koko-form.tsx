@@ -9,7 +9,7 @@ import {
   cn,
   type ButtonProps,
   type SelectProps
-} from '@heroui-v3/react'
+} from '@heroui/react'
 import React from 'react'
 import { LuX } from 'react-icons/lu'
 import { tr } from '../../../../shared/i18n'

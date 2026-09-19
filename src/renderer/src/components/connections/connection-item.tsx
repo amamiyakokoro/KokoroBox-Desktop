@@ -1,5 +1,5 @@
 import { tr } from '../../../../shared/i18n'
-import { Avatar, Card, Chip } from '@heroui-v3/react'
+import { Avatar, Card, Chip } from '@heroui/react'
 import { KokoButton as Button } from '../base/koko-form'
 import { calcTraffic } from '@renderer/utils/calc'
 import dayjs from 'dayjs'

@@ -1,5 +1,5 @@
 import { tr } from '../../../../shared/i18n'
-import { Card, Switch } from '@heroui-v3/react'
+import { Card, Switch } from '@heroui/react'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { mihomoRulesDisable } from '@renderer/utils/ipc'
 import RuleDetailTooltip from './rule-detail-tooltip'

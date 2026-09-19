@@ -1,6 +1,6 @@
 import { tr } from '../../../../shared/i18n'
 import React, { useEffect, useState } from 'react'
-import { Card, Chip, Modal, Separator } from '@heroui-v3/react'
+import { Card, Chip, Modal, Separator } from '@heroui/react'
 import { KokoButton as Button } from '../base/koko-form'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import {

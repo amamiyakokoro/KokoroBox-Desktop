@@ -1,5 +1,5 @@
 import { tr } from '../../../../shared/i18n'
-import { Button, InputGroup, ListBox, Select, Switch } from '@heroui-v3/react'
+import { Button, InputGroup, ListBox, Select, Switch } from '@heroui/react'
 import React, { useEffect, useState } from 'react'
 import SettingItem from '../base/base-setting-item'
 import { settingItemProps } from '../base/base-controls'
