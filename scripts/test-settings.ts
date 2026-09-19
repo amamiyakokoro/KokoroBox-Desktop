@@ -406,6 +406,48 @@ test('connection rows stay dense while preserving realtime data and grouped acti
   assert.match(group, /onPress=\{\(\) => onCloseAll\(groupKey\)\}/)
 })
 
+test('connection details use a sectioned desktop inspector without losing diagnostics', () => {
+  const detail = readFileSync(
+    'src/renderer/src/components/connections/connection-detail-modal.tsx',
+    'utf8'
+  )
+
+  assert.match(detail, /<Drawer\.Backdrop/)
+  assert.match(detail, /placement="right"/)
+  assert.doesNotMatch(detail, /<Modal\./)
+  assert.ok(detail.indexOf('<Tabs.ListContainer>') < detail.indexOf('<Drawer.Body'))
+  assert.match(detail, /const summaryRows: DetailRow\[\]/)
+  assert.match(detail, /const trafficRows: DetailRow\[\]/)
+  assert.match(detail, /const connectionRows: DetailRow\[\]/)
+  assert.match(detail, /const processRows: DetailRow\[\]/)
+  assert.match(detail, /const advancedRows: DetailRow\[\]/)
+  assert.match(detail, /<details className=/)
+  assert.match(detail, /<summary className=/)
+  assert.match(detail, /<BaseEditor value=\{rawJson\} language="json" readOnly \/>/)
+  assert.match(detail, /grid-cols-\[minmax\(104px,0\.34fr\)_minmax\(0,1fr\)_auto\]/)
+  assert.match(detail, /aria-label=\{`\$\{tr\('Copy rule'\)\}: \$\{row\.title\}`\}/)
+
+  for (const field of [
+    'Connection start time',
+    'Proxy chain',
+    'Upload speed',
+    'Download speed',
+    'Connection type',
+    'Host',
+    'Source IP',
+    'Destination IP',
+    'Process path',
+    'Source GeoIP',
+    'Destination ASN',
+    'Inbound name',
+    'Remote destination',
+    'DNS mode',
+    'Special rules'
+  ]) {
+    assert.match(detail, new RegExp(`tr\\('${field}'\\)`))
+  }
+})
+
 test('operational lists use compact hierarchy without changing their behavior', () => {
   const rulesPage = readFileSync('src/renderer/src/pages/rules.tsx', 'utf8')
   const ruleItem = readFileSync('src/renderer/src/components/rules/rule-item.tsx', 'utf8')

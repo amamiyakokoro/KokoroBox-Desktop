@@ -1,20 +1,12 @@
 import { tr } from '../../../../shared/i18n'
-import {
-  Button,
-  Description,
-  Dropdown,
-  Label,
-  Modal,
-  Separator,
-  Surface,
-  Tabs
-} from '@heroui-v3/react'
+import { Button, Drawer, Dropdown, Label, Surface, Tabs } from '@heroui-v3/react'
 import type { ReactNode } from 'react'
-import { useMemo, useState } from 'react'
+import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import { BaseEditor } from '@renderer/components/base/base-editor-lazy'
 import { calcTraffic } from '@renderer/utils/calc'
 import dayjs from 'dayjs'
 import { BiCopy } from 'react-icons/bi'
+import { HiChevronDown } from 'react-icons/hi2'
 
 interface Props {
   connection: ControllerConnectionDetail
@@ -26,17 +18,23 @@ interface CopyProps {
   value: string | string[]
   displayName?: string
   prefix?: string[]
+  technical?: boolean
 }
 
 interface StaticRow {
   kind: 'static'
   title: string
   content: ReactNode
+  technical?: boolean
 }
 
 interface CopyRow extends CopyProps {
   kind: 'copy'
 }
+
+type DetailRow = StaticRow | CopyRow
+
+const DRAWER_CLOSE_ANIMATION_MS = 220
 
 function buildCopyMenuItems(value: string | string[], displayName?: string, prefix: string[] = []) {
   const getSubDomains = (domain: string): string[] =>
@@ -108,95 +106,122 @@ function buildCopyMenuItems(value: string | string[], displayName?: string, pref
   ]
 }
 
+interface DetailSectionProps {
+  title: string
+  children: ReactNode
+}
+
+const DetailSection = ({ title, children }: DetailSectionProps) => {
+  const headingId = useId()
+
+  return (
+    <section aria-labelledby={headingId} className="pb-5 last:pb-0">
+      <h3
+        id={headingId}
+        className="mb-1 px-1 text-xs font-medium tracking-wide text-foreground-500"
+      >
+        {title}
+      </h3>
+      <div>{children}</div>
+    </section>
+  )
+}
+
 const ConnectionDetailModal = ({ connection, onClose }: Props) => {
   const [viewMode, setViewMode] = useState<'detail' | 'raw'>('detail')
+  const [isOpen, setIsOpen] = useState(true)
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const rawJson = useMemo(() => JSON.stringify(connection, null, 2), [connection])
 
-  const renderRow = (
-    title: string,
-    content: ReactNode,
-    actions?: ReactNode,
-    hasSeparator: boolean = true
-  ) => (
-    <Surface key={title} variant="transparent" className="flex flex-col">
-      <Surface
-        variant="transparent"
-        className="grid grid-cols-[120px_auto_minmax(0,1fr)] items-stretch gap-x-2"
-      >
-        <Surface variant="transparent" className="flex min-h-10 items-center py-2">
-          <Label>{title}</Label>
-        </Surface>
-        <Surface variant="transparent" className="relative min-h-10 py-2">
-          {actions ? (
-            <Surface
-              variant="transparent"
-              className="absolute top-1/2 -left-7 z-10 flex -translate-y-1/2 items-center"
+  useEffect(() => {
+    return () => {
+      if (closeTimer.current) clearTimeout(closeTimer.current)
+    }
+  }, [])
+
+  const closeWithAnimation = (): void => {
+    if (closeTimer.current) return
+    setIsOpen(false)
+    closeTimer.current = setTimeout(() => {
+      closeTimer.current = null
+      onClose()
+    }, DRAWER_CLOSE_ANIMATION_MS)
+  }
+
+  const renderRow = (row: DetailRow) => {
+    const content =
+      row.kind === 'copy'
+        ? row.displayName || (Array.isArray(row.value) ? row.value.join(', ') : row.value)
+        : row.content
+    const title = typeof content === 'string' ? content : undefined
+    const valueClassName = [
+      'min-w-0 select-text break-words text-sm leading-5 text-foreground',
+      row.technical ? 'font-mono text-[12px]' : ''
+    ]
+      .filter(Boolean)
+      .join(' ')
+
+    const action =
+      row.kind === 'copy' ? (
+        <Dropdown>
+          <Dropdown.Trigger className="rounded-lg">
+            <Button
+              aria-label={`${tr('Copy rule')}: ${row.title}`}
+              isIconOnly
+              size="sm"
+              variant="tertiary"
+              className="app-nodrag h-7 min-h-7 w-7 min-w-7 rounded-lg text-foreground-500"
             >
-              {actions}
-            </Surface>
-          ) : null}
-          <Description className="min-w-0 text-sm leading-6 text-foreground-700 select-text break-all">
-            {content}
-          </Description>
-        </Surface>
-      </Surface>
-      {hasSeparator ? <Separator variant="tertiary" className="bg-default-100/70" /> : null}
-    </Surface>
-  )
+              <BiCopy className="text-base" />
+            </Button>
+          </Dropdown.Trigger>
+          <Dropdown.Popover placement="bottom end" className="min-w-55 rounded-lg">
+            <Dropdown.Menu
+              className="p-1 text-sm"
+              onAction={(key) =>
+                navigator.clipboard.writeText(
+                  key === 'raw'
+                    ? Array.isArray(row.value)
+                      ? row.value.join(', ')
+                      : row.value
+                    : (key as string)
+                )
+              }
+            >
+              {buildCopyMenuItems(row.value, row.displayName, row.prefix)
+                .filter((item) => item !== null)
+                .map(({ key, text }) => (
+                  <Dropdown.Item
+                    id={key}
+                    key={key}
+                    textValue={text}
+                    className="min-h-8 rounded-md px-2.5 py-1.5"
+                  >
+                    <Label className="-translate-y-px text-sm leading-5">{text}</Label>
+                  </Dropdown.Item>
+                ))}
+            </Dropdown.Menu>
+          </Dropdown.Popover>
+        </Dropdown>
+      ) : null
 
-  const renderCopyableRow = (
-    { title, value, displayName, prefix = [] }: CopyProps,
-    hasSeparator: boolean
-  ) => {
-    const menuItems = buildCopyMenuItems(value, displayName, prefix)
-    const action = (
-      <Dropdown>
-        <Dropdown.Trigger className="rounded-lg">
-          <Button
-            aria-label={tr('Copy rule')}
-            isIconOnly
-            size="sm"
-            variant="tertiary"
-            className="app-nodrag h-6 min-h-6 w-6 min-w-6 rounded-lg"
-          >
-            <BiCopy className="text-base" />
-          </Button>
-        </Dropdown.Trigger>
-        <Dropdown.Popover placement="bottom end" className="min-w-55 rounded-lg">
-          <Dropdown.Menu
-            className="p-1 text-sm"
-            onAction={(key) =>
-              navigator.clipboard.writeText(
-                key === 'raw' ? (Array.isArray(value) ? value.join(', ') : value) : (key as string)
-              )
-            }
-          >
-            {menuItems
-              .filter((item) => item !== null)
-              .map(({ key, text }) => (
-                <Dropdown.Item
-                  id={key}
-                  key={key}
-                  textValue={text}
-                  className="min-h-8 rounded-md px-2.5 py-1.5"
-                >
-                  <Label className="-translate-y-px text-sm leading-5">{text}</Label>
-                </Dropdown.Item>
-              ))}
-          </Dropdown.Menu>
-        </Dropdown.Popover>
-      </Dropdown>
-    )
-
-    return renderRow(
-      title,
-      displayName || (Array.isArray(value) ? value.join(', ') : value),
-      action,
-      hasSeparator
+    return (
+      <div
+        key={row.title}
+        className="grid min-h-10 grid-cols-[minmax(104px,0.34fr)_minmax(0,1fr)_auto] items-center gap-x-3 border-t border-separator/60 px-1 py-2 first:border-t-0"
+      >
+        <div className="min-w-0 text-xs leading-5 text-foreground-500">{row.title}</div>
+        <div className={valueClassName} title={title}>
+          {content}
+        </div>
+        <div className="flex min-h-7 min-w-7 items-center justify-end">{action}</div>
+      </div>
     )
   }
 
-  const rows: Array<StaticRow | CopyRow> = [
+  const renderRows = (rows: DetailRow[]) => rows.map(renderRow)
+
+  const summaryRows: DetailRow[] = [
     {
       kind: 'static',
       title: tr('Connection start time'),
@@ -210,13 +235,18 @@ const ConnectionDetailModal = ({ connection, onClose }: Props) => {
           {connection.rule ? connection.rule : tr('No matching rule')}
           {connection.rulePayload ? `(${connection.rulePayload})` : ''}
         </>
-      )
+      ),
+      technical: true
     },
     {
       kind: 'static',
       title: tr('Proxy chain'),
-      content: [...connection.chains].reverse().join('>>')
-    },
+      content: [...connection.chains].reverse().join('>>'),
+      technical: true
+    }
+  ]
+
+  const trafficRows: DetailRow[] = [
     {
       kind: 'static',
       title: tr('Upload speed'),
@@ -228,13 +258,17 @@ const ConnectionDetailModal = ({ connection, onClose }: Props) => {
       content: `${calcTraffic(connection.downloadSpeed || 0)}/s`
     },
     { kind: 'static', title: tr('Uploaded'), content: calcTraffic(connection.upload) },
-    { kind: 'static', title: tr('Downloaded'), content: calcTraffic(connection.download) },
+    { kind: 'static', title: tr('Downloaded'), content: calcTraffic(connection.download) }
+  ]
+
+  const connectionRows: DetailRow[] = [
     {
       kind: 'copy',
       title: tr('Connection type'),
       value: [connection.metadata.type, connection.metadata.network],
       displayName: `${connection.metadata.type}(${connection.metadata.network})`,
-      prefix: ['IN-TYPE', 'NETWORK']
+      prefix: ['IN-TYPE', 'NETWORK'],
+      technical: true
     },
     ...(connection.metadata.host
       ? [
@@ -242,7 +276,8 @@ const ConnectionDetailModal = ({ connection, onClose }: Props) => {
             kind: 'copy' as const,
             title: tr('Host'),
             value: connection.metadata.host,
-            prefix: ['DOMAIN', 'DOMAIN-SUFFIX']
+            prefix: ['DOMAIN', 'DOMAIN-SUFFIX'],
+            technical: true
           }
         ]
       : []),
@@ -252,33 +287,8 @@ const ConnectionDetailModal = ({ connection, onClose }: Props) => {
             kind: 'copy' as const,
             title: tr('Sniffed host'),
             value: connection.metadata.sniffHost,
-            prefix: ['DOMAIN', 'DOMAIN-SUFFIX']
-          }
-        ]
-      : []),
-    ...(connection.metadata.process && connection.metadata.type != 'Inner'
-      ? [
-          {
-            kind: 'copy' as const,
-            title: tr('Process'),
-            value: [
-              connection.metadata.process,
-              ...(connection.metadata.uid ? [connection.metadata.uid.toString()] : [])
-            ],
-            displayName: `${connection.metadata.process}${
-              connection.metadata.uid ? `(${connection.metadata.uid})` : ''
-            }`,
-            prefix: ['PROCESS-NAME', ...(connection.metadata.uid ? ['UID'] : [])]
-          }
-        ]
-      : []),
-    ...(connection.metadata.processPath && connection.metadata.type != 'Inner'
-      ? [
-          {
-            kind: 'copy' as const,
-            title: tr('Process path'),
-            value: connection.metadata.processPath,
-            prefix: ['PROCESS-PATH']
+            prefix: ['DOMAIN', 'DOMAIN-SUFFIX'],
+            technical: true
           }
         ]
       : []),
@@ -288,57 +298,8 @@ const ConnectionDetailModal = ({ connection, onClose }: Props) => {
             kind: 'copy' as const,
             title: tr('Source IP'),
             value: connection.metadata.sourceIP,
-            prefix: ['SRC-IP-CIDR']
-          }
-        ]
-      : []),
-    ...(connection.metadata.sourceGeoIP && connection.metadata.sourceGeoIP.length > 0
-      ? [
-          {
-            kind: 'copy' as const,
-            title: tr('Source GeoIP'),
-            value: connection.metadata.sourceGeoIP,
-            prefix: ['SRC-GEOIP']
-          }
-        ]
-      : []),
-    ...(connection.metadata.sourceIPASN
-      ? [
-          {
-            kind: 'copy' as const,
-            title: tr('Source ASN'),
-            value: connection.metadata.sourceIPASN,
-            prefix: ['SRC-IP-ASN']
-          }
-        ]
-      : []),
-    ...(connection.metadata.destinationIP
-      ? [
-          {
-            kind: 'copy' as const,
-            title: tr('Destination IP'),
-            value: connection.metadata.destinationIP,
-            prefix: ['IP-CIDR']
-          }
-        ]
-      : []),
-    ...(connection.metadata.destinationGeoIP && connection.metadata.destinationGeoIP.length > 0
-      ? [
-          {
-            kind: 'copy' as const,
-            title: tr('Destination GeoIP'),
-            value: connection.metadata.destinationGeoIP,
-            prefix: ['GEOIP']
-          }
-        ]
-      : []),
-    ...(connection.metadata.destinationIPASN
-      ? [
-          {
-            kind: 'copy' as const,
-            title: tr('Destination ASN'),
-            value: connection.metadata.destinationIPASN,
-            prefix: ['IP-ASN']
+            prefix: ['SRC-IP-CIDR'],
+            technical: true
           }
         ]
       : []),
@@ -348,7 +309,19 @@ const ConnectionDetailModal = ({ connection, onClose }: Props) => {
             kind: 'copy' as const,
             title: tr('Source port'),
             value: connection.metadata.sourcePort,
-            prefix: ['SRC-PORT']
+            prefix: ['SRC-PORT'],
+            technical: true
+          }
+        ]
+      : []),
+    ...(connection.metadata.destinationIP
+      ? [
+          {
+            kind: 'copy' as const,
+            title: tr('Destination IP'),
+            value: connection.metadata.destinationIP,
+            prefix: ['IP-CIDR'],
+            technical: true
           }
         ]
       : []),
@@ -358,7 +331,91 @@ const ConnectionDetailModal = ({ connection, onClose }: Props) => {
             kind: 'copy' as const,
             title: tr('Destination port'),
             value: connection.metadata.destinationPort,
-            prefix: ['DST-PORT']
+            prefix: ['DST-PORT'],
+            technical: true
+          }
+        ]
+      : [])
+  ]
+
+  const processRows: DetailRow[] = [
+    ...(connection.metadata.process && connection.metadata.type != 'Inner'
+      ? [
+          {
+            kind: 'copy' as const,
+            title: tr('Process'),
+            value: connection.metadata.process,
+            prefix: ['PROCESS-NAME'],
+            technical: true
+          }
+        ]
+      : []),
+    ...(connection.metadata.processPath && connection.metadata.type != 'Inner'
+      ? [
+          {
+            kind: 'copy' as const,
+            title: tr('Process path'),
+            value: connection.metadata.processPath,
+            prefix: ['PROCESS-PATH'],
+            technical: true
+          }
+        ]
+      : []),
+    ...(connection.metadata.uid && connection.metadata.type != 'Inner'
+      ? [
+          {
+            kind: 'copy' as const,
+            title: 'UID',
+            value: connection.metadata.uid.toString(),
+            prefix: ['UID'],
+            technical: true
+          }
+        ]
+      : [])
+  ]
+
+  const advancedRows: DetailRow[] = [
+    ...(connection.metadata.sourceGeoIP && connection.metadata.sourceGeoIP.length > 0
+      ? [
+          {
+            kind: 'copy' as const,
+            title: tr('Source GeoIP'),
+            value: connection.metadata.sourceGeoIP,
+            prefix: ['SRC-GEOIP'],
+            technical: true
+          }
+        ]
+      : []),
+    ...(connection.metadata.sourceIPASN
+      ? [
+          {
+            kind: 'copy' as const,
+            title: tr('Source ASN'),
+            value: connection.metadata.sourceIPASN,
+            prefix: ['SRC-IP-ASN'],
+            technical: true
+          }
+        ]
+      : []),
+    ...(connection.metadata.destinationGeoIP && connection.metadata.destinationGeoIP.length > 0
+      ? [
+          {
+            kind: 'copy' as const,
+            title: tr('Destination GeoIP'),
+            value: connection.metadata.destinationGeoIP,
+            prefix: ['GEOIP'],
+            technical: true
+          }
+        ]
+      : []),
+    ...(connection.metadata.destinationIPASN
+      ? [
+          {
+            kind: 'copy' as const,
+            title: tr('Destination ASN'),
+            value: connection.metadata.destinationIPASN,
+            prefix: ['IP-ASN'],
+            technical: true
           }
         ]
       : []),
@@ -368,17 +425,19 @@ const ConnectionDetailModal = ({ connection, onClose }: Props) => {
             kind: 'copy' as const,
             title: tr('Inbound IP'),
             value: connection.metadata.inboundIP,
-            prefix: ['SRC-IP-CIDR']
+            prefix: ['SRC-IP-CIDR'],
+            technical: true
           }
         ]
       : []),
-    ...(connection.metadata.inboundPort !== '0'
+    ...(connection.metadata.inboundPort && connection.metadata.inboundPort !== '0'
       ? [
           {
             kind: 'copy' as const,
             title: tr('Inbound port'),
             value: connection.metadata.inboundPort,
-            prefix: ['SRC-PORT']
+            prefix: ['SRC-PORT'],
+            technical: true
           }
         ]
       : []),
@@ -388,7 +447,8 @@ const ConnectionDetailModal = ({ connection, onClose }: Props) => {
             kind: 'copy' as const,
             title: tr('Inbound name'),
             value: connection.metadata.inboundName,
-            prefix: ['IN-NAME']
+            prefix: ['IN-NAME'],
+            technical: true
           }
         ]
       : []),
@@ -398,7 +458,8 @@ const ConnectionDetailModal = ({ connection, onClose }: Props) => {
             kind: 'copy' as const,
             title: tr('Inbound user'),
             value: connection.metadata.inboundUser,
-            prefix: ['IN-USER']
+            prefix: ['IN-USER'],
+            technical: true
           }
         ]
       : []),
@@ -408,7 +469,8 @@ const ConnectionDetailModal = ({ connection, onClose }: Props) => {
             kind: 'copy' as const,
             title: 'DSCP',
             value: connection.metadata.dscp.toString(),
-            prefix: ['DSCP']
+            prefix: ['DSCP'],
+            technical: true
           }
         ]
       : []),
@@ -418,19 +480,28 @@ const ConnectionDetailModal = ({ connection, onClose }: Props) => {
             kind: 'copy' as const,
             title: tr('Remote destination'),
             value: connection.metadata.remoteDestination,
-            prefix: ['IP-CIDR']
+            prefix: ['IP-CIDR'],
+            technical: true
           }
         ]
       : []),
     ...(connection.metadata.dnsMode
-      ? [{ kind: 'static' as const, title: tr('DNS mode'), content: connection.metadata.dnsMode }]
+      ? [
+          {
+            kind: 'static' as const,
+            title: tr('DNS mode'),
+            content: connection.metadata.dnsMode,
+            technical: true
+          }
+        ]
       : []),
     ...(connection.metadata.specialProxy
       ? [
           {
             kind: 'static' as const,
             title: tr('Special proxies'),
-            content: connection.metadata.specialProxy
+            content: connection.metadata.specialProxy,
+            technical: true
           }
         ]
       : []),
@@ -439,77 +510,92 @@ const ConnectionDetailModal = ({ connection, onClose }: Props) => {
           {
             kind: 'static' as const,
             title: tr('Special rules'),
-            content: connection.metadata.specialRules
+            content: connection.metadata.specialRules,
+            technical: true
           }
         ]
       : [])
   ]
 
   return (
-    <Modal>
-      <Modal.Backdrop
-        isOpen={true}
-        onOpenChange={onClose}
-        variant="blur"
-        className="top-12 h-[calc(100%-48px)]"
+    <Drawer.Backdrop
+      isOpen={isOpen}
+      onOpenChange={(open) => {
+        if (!open) closeWithAnimation()
+      }}
+      variant="transparent"
+      className="page-settings-drawer-backdrop top-12 h-[calc(100%-48px)]"
+    >
+      <Drawer.Content
+        placement="right"
+        className="page-settings-drawer-content top-12 h-[calc(100%-48px)] p-2 pl-0"
       >
-        <Modal.Container scroll="inside">
-          <Modal.Dialog className="connection-detail-modal w-[min(700px,calc(100%-24px))] max-w-none pb-2 flag-emoji">
-            <Modal.Header className="app-drag pb-0">
-              <Modal.Heading>{tr('Connection details')}</Modal.Heading>
-            </Modal.Header>
-            <Tabs
-              aria-label={tr('Connection details view')}
-              className="flex min-h-0 flex-col"
-              selectedKey={viewMode}
-              onSelectionChange={(key) => setViewMode(key as 'detail' | 'raw')}
-            >
-              <Modal.Body className="min-h-0 overflow-hidden pt-4 pb-1">
-                <Tabs.Panel
-                  id="detail"
-                  className="no-scrollbar mt-0! h-[min(56vh,520px)] overflow-y-auto p-0!"
+        <Drawer.Dialog className="connection-detail-modal page-settings-drawer flag-emoji flex h-full w-[min(580px,calc(100vw-16px))] max-w-none flex-col overflow-hidden rounded-xl! border border-separator/80 bg-overlay p-0 shadow-overlay">
+          <Drawer.Header className="app-drag shrink-0 border-b border-separator/70 px-5 py-3">
+            <Drawer.Heading className="text-base font-semibold">
+              {tr('Connection details')}
+            </Drawer.Heading>
+          </Drawer.Header>
+          <Tabs
+            aria-label={tr('Connection details view')}
+            className="flex min-h-0 flex-1 flex-col"
+            selectedKey={viewMode}
+            onSelectionChange={(key) => setViewMode(key as 'detail' | 'raw')}
+          >
+            <div className="app-nodrag shrink-0 border-b border-separator/70 px-5 py-2">
+              <Tabs.ListContainer>
+                <Tabs.List aria-label={tr('Switch connection details view')}>
+                  <Tabs.Tab id="detail">
+                    {tr('Details')}
+                    <Tabs.Indicator />
+                  </Tabs.Tab>
+                  <Tabs.Tab id="raw">
+                    {tr('Raw data')}
+                    <Tabs.Indicator />
+                  </Tabs.Tab>
+                </Tabs.List>
+              </Tabs.ListContainer>
+            </div>
+            <Drawer.Body className="min-h-0 flex-1 overflow-hidden p-0">
+              <Tabs.Panel
+                id="detail"
+                className="mt-0! h-full overflow-y-auto px-5 py-4 outline-hidden"
+              >
+                <DetailSection title={tr('General')}>{renderRows(summaryRows)}</DetailSection>
+                <DetailSection title={tr('Traffic usage')}>{renderRows(trafficRows)}</DetailSection>
+                <DetailSection title={tr('Connection')}>{renderRows(connectionRows)}</DetailSection>
+                {processRows.length > 0 ? (
+                  <DetailSection title={tr('Process')}>{renderRows(processRows)}</DetailSection>
+                ) : null}
+                {advancedRows.length > 0 ? (
+                  <details className="group border-t border-separator/70 pt-4">
+                    <summary className="flex min-h-10 cursor-pointer list-none items-center justify-between rounded-lg px-1 text-xs font-medium tracking-wide text-foreground-500 outline-offset-2 transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary">
+                      <span>{tr('Advanced options')}</span>
+                      <HiChevronDown
+                        aria-hidden="true"
+                        className="text-base transition-transform group-open:rotate-180"
+                      />
+                    </summary>
+                    <div className="pt-1">{renderRows(advancedRows)}</div>
+                  </details>
+                ) : null}
+              </Tabs.Panel>
+              <Tabs.Panel id="raw" className="mt-0! h-full overflow-hidden p-3! outline-hidden">
+                <Surface
+                  variant="secondary"
+                  className="app-nodrag h-full overflow-hidden rounded-lg"
                 >
-                  <Surface variant="transparent" className="flex flex-col">
-                    {rows.map((row, index) => {
-                      const hasSeparator = index < rows.length - 1
-
-                      return row.kind === 'copy'
-                        ? renderCopyableRow(row, hasSeparator)
-                        : renderRow(row.title, row.content, undefined, hasSeparator)
-                    })}
-                  </Surface>
-                </Tabs.Panel>
-                <Tabs.Panel id="raw" className="mt-0! overflow-hidden p-0!">
-                  <Surface
-                    variant="secondary"
-                    className="app-nodrag h-[min(56vh,520px)] overflow-hidden rounded-lg"
-                  >
-                    {viewMode === 'raw' ? (
-                      <BaseEditor value={rawJson} language="json" readOnly />
-                    ) : null}
-                  </Surface>
-                </Tabs.Panel>
-              </Modal.Body>
-              <Modal.Footer className="app-nodrag mt-0! justify-start px-0! pt-0! pb-0!">
-                <Tabs.ListContainer>
-                  <Tabs.List aria-label={tr('Switch connection details view')}>
-                    <Tabs.Tab id="detail">
-                      {tr('Details')}
-                      <Tabs.Indicator />
-                    </Tabs.Tab>
-                    <Tabs.Tab id="raw">
-                      {tr('Raw data')}
-                      <Tabs.Indicator />
-                    </Tabs.Tab>
-                  </Tabs.List>
-                </Tabs.ListContainer>
-              </Modal.Footer>
-            </Tabs>
-            <Modal.CloseTrigger className="app-nodrag" />
-          </Modal.Dialog>
-        </Modal.Container>
-      </Modal.Backdrop>
-    </Modal>
+                  {viewMode === 'raw' ? (
+                    <BaseEditor value={rawJson} language="json" readOnly />
+                  ) : null}
+                </Surface>
+              </Tabs.Panel>
+            </Drawer.Body>
+          </Tabs>
+          <Drawer.CloseTrigger aria-label={tr('Close')} className="app-nodrag" />
+        </Drawer.Dialog>
+      </Drawer.Content>
+    </Drawer.Backdrop>
   )
 }
 
