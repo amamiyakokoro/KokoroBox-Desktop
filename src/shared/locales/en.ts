@@ -481,8 +481,6 @@ export const messages: Readonly<Record<string, string>> = {
   'Proxy mode': 'Proxy mode',
   'Proxy groups': 'Proxy groups',
   'Proxy group settings': 'Proxy group settings',
-  'Proxy group actions': 'Proxy group actions',
-  'Search group': 'Search group',
   'Show selected proxy': 'Show selected proxy',
   'Test group latency': 'Test group latency',
   '{0} nodes': '{0} nodes',

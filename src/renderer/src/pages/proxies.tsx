@@ -1,13 +1,5 @@
 import { tr } from '../../../shared/i18n'
-import {
-  Button,
-  Card,
-  CardBody,
-  Dropdown,
-  DropdownItem,
-  DropdownMenu,
-  DropdownTrigger
-} from '@heroui/react'
+import { Button, Card, CardBody } from '@heroui/react'
 import { Avatar } from '@heroui-v3/react'
 import BasePage from '@renderer/components/base/base-page'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
@@ -33,10 +25,8 @@ import { GroupedVirtuoso, GroupedVirtuosoHandle } from 'react-virtuoso'
 import ProxyItem from '@renderer/components/proxies/proxy-item'
 import ProxySettingDrawer from '@renderer/components/proxies/proxy-setting-drawer'
 import { IoIosArrowBack } from 'react-icons/io'
-import { MdDoubleArrow, MdMoreHoriz, MdOutlineSpeed, MdSearch, MdTune } from 'react-icons/md'
+import { MdDoubleArrow, MdOutlineSpeed, MdTune } from 'react-icons/md'
 import { useGroups } from '@renderer/hooks/use-groups'
-import CollapseInput from '@renderer/components/base/collapse-input'
-import { includesIgnoreCase } from '@renderer/utils/includes'
 import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'
 import { runDelayTestsWithConcurrency } from '@renderer/utils/delay-test'
 
@@ -107,11 +97,9 @@ interface GroupHeaderProps {
   isOpen: boolean
   isLast: boolean
   groupDisplayLayout: 'hidden' | 'single' | 'double'
-  searchValue: string
   delaying: boolean
   isRelevant: boolean
   onToggle: (index: number, currentlyOpen: boolean) => void
-  onUpdateSearch: (index: number, value: string) => void
   onScrollToProxy: (index: number) => void
   onGroupDelay: (index: number) => void
 }
@@ -122,20 +110,12 @@ const GroupHeader = memo(function GroupHeader({
   isOpen,
   isLast,
   groupDisplayLayout,
-  searchValue,
   delaying,
   isRelevant,
   onToggle,
-  onUpdateSearch,
   onScrollToProxy,
   onGroupDelay
 }: GroupHeaderProps) {
-  const [searchVisible, setSearchVisible] = useState(Boolean(searchValue))
-
-  useEffect(() => {
-    if (searchValue) setSearchVisible(true)
-  }, [searchValue])
-
   return (
     <div className={`w-full px-2 pt-1.5 ${isLast && !isOpen ? 'pb-1.5' : ''}`}>
       <Card
@@ -193,17 +173,6 @@ const GroupHeader = memo(function GroupHeader({
                 onPointerDown={(e) => e.stopPropagation()}
                 onKeyDown={(e) => e.stopPropagation()}
               >
-                {searchVisible && (
-                  <CollapseInput
-                    autoFocus
-                    aria-label={tr('Search group')}
-                    value={searchValue}
-                    onBlur={() => {
-                      if (!searchValue) setSearchVisible(false)
-                    }}
-                    onValueChange={(v) => onUpdateSearch(index, v)}
-                  />
-                )}
                 <Button
                   variant="light"
                   isLoading={delaying}
@@ -214,32 +183,15 @@ const GroupHeader = memo(function GroupHeader({
                 >
                   <MdOutlineSpeed className="text-lg text-foreground-500" />
                 </Button>
-                <Dropdown placement="bottom-end">
-                  <DropdownTrigger>
-                    <Button
-                      variant="light"
-                      size="sm"
-                      isIconOnly
-                      aria-label={tr('Proxy group actions')}
-                    >
-                      <MdMoreHoriz className="text-lg text-foreground-500" />
-                    </Button>
-                  </DropdownTrigger>
-                  <DropdownMenu
-                    aria-label={tr('Proxy group actions')}
-                    onAction={(key) => {
-                      if (key === 'search') setSearchVisible(true)
-                      if (key === 'current') onScrollToProxy(index)
-                    }}
-                  >
-                    <DropdownItem key="search" startContent={<MdSearch />}>
-                      {tr('Search group')}
-                    </DropdownItem>
-                    <DropdownItem key="current" startContent={<FaLocationCrosshairs />}>
-                      {tr('Show selected proxy')}
-                    </DropdownItem>
-                  </DropdownMenu>
-                </Dropdown>
+                <Button
+                  variant="light"
+                  size="sm"
+                  isIconOnly
+                  aria-label={tr('Show selected proxy')}
+                  onPress={() => onScrollToProxy(index)}
+                >
+                  <FaLocationCrosshairs className="text-base text-foreground-500" />
+                </Button>
               </div>
               <IoIosArrowBack
                 className={`ml-1 flex h-8 items-center text-base text-foreground-400 transition duration-200 ${
@@ -256,13 +208,11 @@ const GroupHeader = memo(function GroupHeader({
 
 interface ProxyGroupPageCache {
   isOpen: Record<string, boolean>
-  searchValue: Record<string, string>
   scrollTop: number
 }
 
 const proxyGroupPageCache: ProxyGroupPageCache = {
   isOpen: {},
-  searchValue: {},
   scrollTop: 0
 }
 
@@ -300,16 +250,6 @@ const Proxies: React.FC = () => {
   const isOpenContentRef = useRef<boolean[]>(isOpen)
   isOpenContentRef.current = isOpenContent
   const [delaying, setDelaying] = useState(Array(groups.length).fill(false))
-  const [searchValue, setSearchValue] = useState<string[]>(() => {
-    if (
-      rememberProxyGroupOpenState &&
-      groups.length > 0 &&
-      Object.keys(proxyGroupPageCache.searchValue).length > 0
-    ) {
-      return groups.map((group) => proxyGroupPageCache.searchValue[group.name] ?? '')
-    }
-    return Array(groups.length).fill('')
-  })
   const [isSettingDrawerOpen, setIsSettingDrawerOpen] = useState(false)
   const [settingDrawerReopenSignal, setSettingDrawerReopenSignal] = useState(0)
   const [initialScrollTop] = useState(() =>
@@ -366,13 +306,6 @@ const Proxies: React.FC = () => {
         : false
     setIsOpen((prev) => remapByGroupName(prev, getOpenFallback))
     setIsOpenContent((prev) => remapByGroupName(prev, getOpenFallback))
-    setSearchValue((prev) =>
-      remapByGroupName(prev, (group) =>
-        rememberProxyGroupOpenStateRef.current
-          ? (proxyGroupPageCache.searchValue[group.name] ?? '')
-          : ''
-      )
-    )
     setDelaying((prev) => remapByGroupName(prev, () => false))
   }, [groups])
 
@@ -381,10 +314,7 @@ const Proxies: React.FC = () => {
     const allProxies: ProxyLike[][] = []
     groups.forEach((group, index) => {
       if (isOpenContent[index]) {
-        const searchText = searchValue[index] || ''
-        let groupProxies = searchText
-          ? group.all.filter((proxy) => proxy && includesIgnoreCase(proxy.name, searchText))
-          : (group.all as ProxyLike[])
+        let groupProxies = group.all as ProxyLike[]
 
         if (proxyDisplayOrder === 'delay') {
           groupProxies = [...groupProxies].sort(compareProxyDelay)
@@ -401,7 +331,7 @@ const Proxies: React.FC = () => {
       }
     })
     return { groupCounts, allProxies }
-  }, [groups, isOpenContent, proxyDisplayOrder, cols, searchValue])
+  }, [groups, isOpenContent, proxyDisplayOrder, cols])
 
   const onChangeProxy = useCallback(
     async (group: string, proxy: string): Promise<void> => {
@@ -542,38 +472,6 @@ const Proxies: React.FC = () => {
     }
   }, [])
 
-  const updateSearchValue = useCallback((index: number, value: string) => {
-    if (rememberProxyGroupOpenStateRef.current) {
-      const groupName = groupsRef.current[index]?.name
-      if (groupName) proxyGroupPageCache.searchValue[groupName] = value
-    }
-    setSearchValue((prev) => {
-      const newSearchValue = [...prev]
-      newSearchValue[index] = value
-      return newSearchValue
-    })
-    if (value) {
-      setIsOpen((prev) => {
-        if (prev[index]) return prev
-        if (rememberProxyGroupOpenStateRef.current) {
-          const groupName = groupsRef.current[index]?.name
-          if (groupName) proxyGroupPageCache.isOpen[groupName] = true
-        }
-        const newOpen = [...prev]
-        newOpen[index] = true
-        return newOpen
-      })
-      setTimeout(() => {
-        setIsOpenContent((prev) => {
-          if (prev[index]) return prev
-          const newOpen = [...prev]
-          newOpen[index] = true
-          return newOpen
-        })
-      }, 0)
-    }
-  }, [])
-
   const doScrollToCurrentProxy = useCallback(
     (index: number) => {
       let i = 0
@@ -639,8 +537,6 @@ const Proxies: React.FC = () => {
   groupsRef.current = groups
   const groupDisplayLayoutRef = useRef(groupDisplayLayout)
   groupDisplayLayoutRef.current = groupDisplayLayout
-  const searchValueRef = useRef(searchValue)
-  searchValueRef.current = searchValue
   const delayingRef = useRef(delaying)
   delayingRef.current = delaying
   const groupCountsRef = useRef(groupCounts)
@@ -665,8 +561,6 @@ const Proxies: React.FC = () => {
   proxyCols2Ref.current = proxyCols
   const toggleOpenRef = useRef(toggleOpen)
   toggleOpenRef.current = toggleOpen
-  const updateSearchValueRef = useRef(updateSearchValue)
-  updateSearchValueRef.current = updateSearchValue
 
   useEffect(() => {
     groups.forEach((group) => {
@@ -704,11 +598,9 @@ const Proxies: React.FC = () => {
           isOpen={isOpen[index]}
           isLast={index === g.length - 1}
           groupDisplayLayout={groupDisplayLayoutRef.current}
-          searchValue={searchValueRef.current[index]}
           delaying={delayingRef.current[index]}
           isRelevant={mode === 'global' && g[index].name.toUpperCase() === 'GLOBAL'}
           onToggle={toggleOpenRef.current}
-          onUpdateSearch={updateSearchValueRef.current}
           onScrollToProxy={scrollToCurrentProxyStable}
           onGroupDelay={onGroupDelayStable}
         />

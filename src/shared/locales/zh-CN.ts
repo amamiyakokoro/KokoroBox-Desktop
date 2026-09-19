@@ -455,8 +455,6 @@ export const messages: Readonly<Record<string, string>> = {
   'Proxy mode': '代理模式',
   'Proxy groups': '代理组',
   'Proxy group settings': '代理组设置',
-  'Proxy group actions': '代理组操作',
-  'Search group': '搜索代理组',
   'Show selected proxy': '显示当前代理',
   'Test group latency': '测试代理组延迟',
   '{0} nodes': '{0} 个节点',
