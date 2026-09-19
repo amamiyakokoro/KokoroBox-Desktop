@@ -1177,15 +1177,28 @@ test('application rule composer keeps helper text, controls and actions in one w
 
   assert.match(
     styles,
-    /@container app-routing-rule-entry \(min-width: 30rem\)[\s\S]*grid-template-columns: 10rem minmax\(11rem, 1fr\)/
+    /@container app-routing-rule-entry \(min-width: 30rem\)[\s\S]*grid-template-columns: minmax\(10rem, 12rem\) minmax\(0, 1fr\)/
   )
   const examplePosition = page.indexOf('className="app-routing-rule-example')
   const entryGridPosition = page.indexOf('className={`app-routing-rule-entry-grid')
   const actionsPosition = page.indexOf('className="app-routing-rule-actions"')
+  const entryGridEndPosition = page.indexOf('</section>', entryGridPosition)
   assert.ok(examplePosition > entryGridPosition)
   assert.ok(actionsPosition > entryGridPosition)
-  assert.doesNotMatch(styles, /grid-template-columns: 10rem minmax\(11rem, 1fr\) auto/)
-  assert.match(styles, /\.app-routing-rule-actions \{[\s\S]*align-self: flex-end/)
+  assert.ok(actionsPosition < entryGridEndPosition)
+  assert.match(styles, /\.app-routing-rule-entry-grid \{[^}]*align-items: start/)
+  assert.match(styles, /\.app-routing-composer-field \{[\s\S]*flex-direction: column/)
+  assert.match(styles, /\.app-routing-composer-label \{[\s\S]*line-height: 1rem/)
+  assert.match(
+    styles,
+    /\.app-routing-rule-entry-grid-with-kind > \.app-routing-rule-actions \{\s*grid-column: 2;/
+  )
+  assert.match(
+    styles,
+    /\.app-routing-rule-entry-grid-without-kind > \.app-routing-rule-actions \{\s*grid-column: 1;/
+  )
+  assert.doesNotMatch(styles, /\.app-routing-rule-entry-grid \{[^}]*align-items: center/)
+  assert.doesNotMatch(page, /app-routing-composer-field[^>]*\b(?:mt-|translate-y-)/)
   assert.match(overrides, /\.app-routing-rule-composer/)
   assert.match(page, /aria-labelledby="app-routing-composer-title"/)
   assert.match(page, /<Description className="app-routing-rule-example">/)

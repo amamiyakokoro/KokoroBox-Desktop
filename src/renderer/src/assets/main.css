@@ -120,8 +120,21 @@
 .app-routing-rule-entry-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  align-items: center;
+  align-items: start;
   gap: 0.5rem;
+}
+
+.app-routing-composer-field {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.app-routing-composer-label {
+  font-size: var(--text-xs);
+  line-height: 1rem;
+  color: var(--muted);
 }
 
 .app-routing-rule-actions {
@@ -139,7 +152,7 @@
 
 @container app-routing-rule-entry (min-width: 30rem) {
   .app-routing-rule-entry-grid-with-kind {
-    grid-template-columns: 10rem minmax(11rem, 1fr);
+    grid-template-columns: minmax(10rem, 12rem) minmax(0, 1fr);
   }
 
   .app-routing-rule-entry-grid-without-kind {
@@ -148,8 +161,16 @@
 
   .app-routing-rule-actions {
     width: auto;
-    align-self: flex-end;
+    justify-self: end;
     justify-content: flex-end;
+  }
+
+  .app-routing-rule-entry-grid-with-kind > .app-routing-rule-actions {
+    grid-column: 2;
+  }
+
+  .app-routing-rule-entry-grid-without-kind > .app-routing-rule-actions {
+    grid-column: 1;
   }
 
   .app-routing-rule-action {

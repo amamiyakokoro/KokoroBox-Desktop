@@ -24,7 +24,6 @@ import {
   Chip,
   Description,
   Input,
-  Label,
   Separator,
   Switch,
   TextField
@@ -408,44 +407,35 @@ const AppRouting: React.FC = () => {
                 : 'app-routing-rule-entry-grid-without-kind'
             }`}
           >
-            {isMac && (
-              <KokoSelect
-                aria-label={tr('Match by')}
-                variant="secondary"
-                label={tr('Match by')}
-                disallowEmptySelection
-                isDisabled={!supported || !config || saving}
-                options={[
-                  { id: 'macos-process-name', label: tr('Process name') },
-                  { id: 'macos-signing-identifier', label: tr('Signing identifier') }
-                ]}
-                value={macIdentifierKind}
-                onChange={(value) => setMacIdentifierKind(value as AppRoutingIdentifierKind)}
-              />
+            {(isMac || isLinux) && (
+              <div className="app-routing-composer-field">
+                <span className="app-routing-composer-label">{tr('Match by')}</span>
+                <KokoSelect
+                  aria-label={tr('Match by')}
+                  variant="secondary"
+                  disallowEmptySelection
+                  isDisabled={!supported || !config || saving}
+                  options={
+                    isMac
+                      ? [
+                          { id: 'macos-process-name', label: tr('Process name') },
+                          { id: 'macos-signing-identifier', label: tr('Signing identifier') }
+                        ]
+                      : [
+                          { id: 'linux-executable', label: tr('Executable path') },
+                          { id: 'linux-process-name', label: tr('Process name') }
+                        ]
+                  }
+                  value={isMac ? macIdentifierKind : linuxIdentifierKind}
+                  onChange={(value) => {
+                    if (isMac) setMacIdentifierKind(value as AppRoutingIdentifierKind)
+                    else setLinuxIdentifierKind(value as AppRoutingIdentifierKind)
+                  }}
+                />
+              </div>
             )}
-            {isLinux && (
-              <KokoSelect
-                aria-label={tr('Match by')}
-                variant="secondary"
-                label={tr('Match by')}
-                disallowEmptySelection
-                isDisabled={!supported || !config || saving}
-                options={[
-                  { id: 'linux-executable', label: tr('Executable path') },
-                  { id: 'linux-process-name', label: tr('Process name') }
-                ]}
-                value={linuxIdentifierKind}
-                onChange={(value) => setLinuxIdentifierKind(value as AppRoutingIdentifierKind)}
-              />
-            )}
-            <TextField
-              className="min-w-0"
-              variant="secondary"
-              value={processPattern}
-              isDisabled={!supported || !config || saving}
-              onChange={setProcessPattern}
-            >
-              <Label>
+            <div className="app-routing-composer-field">
+              <span className="app-routing-composer-label">
                 {isMac
                   ? macIdentifierKind === 'macos-process-name'
                     ? tr('Process name')
@@ -455,59 +445,78 @@ const AppRouting: React.FC = () => {
                       ? tr('Process name')
                       : tr('Executable path')
                     : tr('Process pattern')}
-              </Label>
-              <Input
-                placeholder={
+              </span>
+              <TextField
+                aria-label={
                   isMac
                     ? macIdentifierKind === 'macos-process-name'
-                      ? 'codex'
-                      : 'com.example.app'
+                      ? tr('Process name')
+                      : tr('Signing identifier')
                     : isLinux
                       ? linuxIdentifierKind === 'linux-process-name'
-                        ? 'codex'
-                        : '/usr/bin/example'
-                      : 'example.exe'
+                        ? tr('Process name')
+                        : tr('Executable path')
+                      : tr('Process pattern')
                 }
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter' && processPattern.trim()) void submitPattern()
-                }}
-              />
-              <Description className="app-routing-rule-example">
-                {isMac
-                  ? macIdentifierKind === 'macos-process-name'
-                    ? tr('For example: codex or Codex Helper*')
-                    : tr('For example: com.openai.chat or com.openai.chat*')
-                  : isLinux
-                    ? linuxIdentifierKind === 'linux-process-name'
-                      ? tr('For example: codex. Every executable with that name will match.')
-                      : tr('For example: /usr/bin/firefox or /opt/example/example')
-                    : tr(
-                        'For example: ChatGPT.exe, ChatGPT*.exe, or C:\\Program Files\\*\\ChatGPT.exe'
-                      )}
-              </Description>
-            </TextField>
-          </div>
-          <div className="app-routing-rule-actions">
-            <Button
-              className="app-routing-rule-action"
-              variant="primary"
-              isDisabled={!supported || !config || saving}
-              onPress={() =>
-                void addApplications(undefined, isLinux ? linuxIdentifierKind : undefined)
-              }
-            >
-              <MdAdd className="text-lg" />
-              {tr('Select applications')}
-            </Button>
-            <Button
-              className="app-routing-rule-action"
-              variant="secondary"
-              isDisabled={!supported || !config || saving || !processPattern.trim()}
-              onPress={() => void submitPattern()}
-            >
-              <MdAdd className="text-lg" />
-              {tr('Add pattern rule')}
-            </Button>
+                className="min-w-0"
+                variant="secondary"
+                value={processPattern}
+                isDisabled={!supported || !config || saving}
+                onChange={setProcessPattern}
+              >
+                <Input
+                  placeholder={
+                    isMac
+                      ? macIdentifierKind === 'macos-process-name'
+                        ? 'codex'
+                        : 'com.example.app'
+                      : isLinux
+                        ? linuxIdentifierKind === 'linux-process-name'
+                          ? 'codex'
+                          : '/usr/bin/example'
+                        : 'example.exe'
+                  }
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' && processPattern.trim()) void submitPattern()
+                  }}
+                />
+                <Description className="app-routing-rule-example">
+                  {isMac
+                    ? macIdentifierKind === 'macos-process-name'
+                      ? tr('For example: codex or Codex Helper*')
+                      : tr('For example: com.openai.chat or com.openai.chat*')
+                    : isLinux
+                      ? linuxIdentifierKind === 'linux-process-name'
+                        ? tr('For example: codex. Every executable with that name will match.')
+                        : tr('For example: /usr/bin/firefox or /opt/example/example')
+                      : tr(
+                          'For example: ChatGPT.exe, ChatGPT*.exe, or C:\\Program Files\\*\\ChatGPT.exe'
+                        )}
+                </Description>
+              </TextField>
+            </div>
+            <div className="app-routing-rule-actions">
+              <Button
+                className="app-routing-rule-action"
+                variant="primary"
+                isDisabled={!supported || !config || saving}
+                onPress={() =>
+                  void addApplications(undefined, isLinux ? linuxIdentifierKind : undefined)
+                }
+              >
+                <MdAdd className="text-lg" />
+                {tr('Select applications')}
+              </Button>
+              <Button
+                className="app-routing-rule-action"
+                variant="secondary"
+                isDisabled={!supported || !config || saving || !processPattern.trim()}
+                onPress={() => void submitPattern()}
+              >
+                <MdAdd className="text-lg" />
+                {tr('Add pattern rule')}
+              </Button>
+            </div>
           </div>
         </section>
 
