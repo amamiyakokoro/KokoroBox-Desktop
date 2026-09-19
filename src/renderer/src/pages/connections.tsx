@@ -973,13 +973,13 @@ const Connections: React.FC = () => {
           <KokoTabs
             ariaLabel={tr('Connection status')}
             selectedKey={tab}
-            className="w-fit h-8"
+            className="h-8 w-max shrink-0"
             variant="secondary"
             options={[
               {
                 id: 'active',
                 label: (
-                  <span className="flex items-center gap-1.5 px-1">
+                  <span className="flex items-center gap-1.5 whitespace-nowrap px-1">
                     <span>{tr('Active')}</span>
                     <span
                       data-slot="connection-count"
@@ -997,7 +997,7 @@ const Connections: React.FC = () => {
               {
                 id: 'closed',
                 label: (
-                  <span className="flex items-center gap-1.5 px-1">
+                  <span className="flex items-center gap-1.5 whitespace-nowrap px-1">
                     <span>{tr('Off')}</span>
                     <span
                       data-slot="connection-count"
@@ -1097,6 +1097,7 @@ const Connections: React.FC = () => {
             density="compact"
             disallowEmptySelection
             variant="secondary"
+            valueClassName="text-center"
             options={[
               { id: 'upload', label: tr('Uploaded') },
               { id: 'download', label: tr('Downloaded') },

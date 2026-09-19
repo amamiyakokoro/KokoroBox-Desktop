@@ -283,10 +283,13 @@ test('settings and Mihomo forms share the KokoroBox HeroUI v3 conventions', () =
   assert.match(form, /selectedText/)
   assert.match(form, /density\?: 'normal' \| 'compact'/)
   assert.match(form, /density = 'normal'/)
+  assert.match(form, /valueClassName\?: string/)
+  assert.match(form, /<Select\.Value className=\{cn\('min-w-0 truncate', valueClassName\)\}>/)
   assert.match(form, /variant\?: SelectProps<object>\['variant'\]/)
   assert.match(form, /variant = 'primary'/)
   assert.match(form, /variant=\{variant\}/)
   assert.match(form, /density === 'compact'/)
+  assert.match(form, /h-8 min-h-8 items-center py-0/)
   assert.match(form, /min-h-8 px-2 py-1/)
   assert.doesNotMatch(form, /koko-select__popover|shadow-overlay/)
   assert.doesNotMatch(form, /min-h-8 px-2\.5 py-1\.5/)
@@ -360,6 +363,8 @@ test('collection and overlay primitives preserve HeroUI v3 identity and selectio
   assert.match(tabs, /onSelectionChange=\{\(key\) => void onChange\(String\(key\)\)\}/)
   assert.match(tabs, /<Tabs\.Tab[\s\S]*id=\{option\.id\}/)
   assert.match(connections, /<KokoTabs[\s\S]*variant="secondary"/)
+  assert.match(connections, /className="h-8 w-max shrink-0"/)
+  assert.equal(connections.match(/whitespace-nowrap px-1/g)?.length, 2)
   assert.match(connections, /data-slot="connection-count"/)
   assert.doesNotMatch(connections, /\bBadge\b/)
   assert.match(profiles, /buttonClassName="[^"]*h-8[^"]*w-8[^"]*min-w-8/)
@@ -710,6 +715,7 @@ test('connection rows stay dense while preserving realtime data and grouped acti
   assert.match(page, /mihomoCloseConnections\(\)/)
   assert.match(page, /connectionInterval = 500/)
   assert.match(page, /aria-label=\{tr\('Sort field'\)\}[\s\S]*density="compact"/)
+  assert.match(page, /density="compact"[\s\S]*valueClassName="text-center"/)
   for (const sortOption of [
     "id: 'upload'",
     "id: 'download'",

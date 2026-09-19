@@ -113,6 +113,7 @@ interface KokoSelectBaseProps {
   labelPlacement?: 'inside' | 'outside'
   options: KokoSelectOption[]
   placeholder?: string
+  valueClassName?: string
   variant?: SelectProps<object>['variant']
 }
 
@@ -136,7 +137,8 @@ const KokoSelectContent: React.FC<{
   labelPlacement: 'inside' | 'outside'
   options: KokoSelectOption[]
   placeholder?: string
-}> = ({ density, label, labelPlacement, options, placeholder }) => (
+  valueClassName?: string
+}> = ({ density, label, labelPlacement, options, placeholder, valueClassName }) => (
   <>
     {label ? (
       <Label
@@ -153,10 +155,10 @@ const KokoSelectContent: React.FC<{
     <Select.Trigger
       className={cn(
         labelPlacement === 'inside' && 'h-12 min-h-12 items-end pb-1.5 pt-5',
-        labelPlacement === 'outside' && density === 'compact' && 'h-8 min-h-8 py-0'
+        labelPlacement === 'outside' && density === 'compact' && 'h-8 min-h-8 items-center py-0'
       )}
     >
-      <Select.Value className="min-w-0 truncate">
+      <Select.Value className={cn('min-w-0 truncate', valueClassName)}>
         {({ defaultChildren, isPlaceholder, selectedText }) =>
           isPlaceholder ? (placeholder ?? defaultChildren) : selectedText
         }
@@ -205,6 +207,7 @@ export const KokoSelect: React.FC<KokoSelectProps> = (props) => {
     labelPlacement = 'outside',
     options,
     placeholder,
+    valueClassName,
     variant = 'primary'
   } = props
 
@@ -228,6 +231,7 @@ export const KokoSelect: React.FC<KokoSelectProps> = (props) => {
           labelPlacement={labelPlacement}
           options={options}
           placeholder={placeholder}
+          valueClassName={valueClassName}
         />
       </Select>
     )
@@ -252,6 +256,7 @@ export const KokoSelect: React.FC<KokoSelectProps> = (props) => {
         labelPlacement={labelPlacement}
         options={options}
         placeholder={placeholder}
+        valueClassName={valueClassName}
       />
     </Select>
   )
