@@ -1,4 +1,4 @@
-import { Tabs } from '@heroui/react'
+import { Tabs, cn } from '@heroui/react'
 import type React from 'react'
 import type { SettingItemProps } from './base-setting-item'
 
@@ -32,15 +32,20 @@ export const KokoTabs: React.FC<KokoTabsProps> = ({
 }) => {
   return (
     <Tabs
-      className={className}
+      className={cn('max-w-full shrink-0', className)}
       selectedKey={selectedKey}
       variant={variant}
       onSelectionChange={(key) => void onChange(String(key))}
     >
-      <Tabs.ListContainer>
+      <Tabs.ListContainer className="max-w-full">
         <Tabs.List aria-label={ariaLabel}>
           {options.map((option) => (
-            <Tabs.Tab key={option.id} id={option.id} isDisabled={option.isDisabled}>
+            <Tabs.Tab
+              key={option.id}
+              id={option.id}
+              className="min-w-max whitespace-nowrap"
+              isDisabled={option.isDisabled}
+            >
               {option.label}
               <Tabs.Indicator />
             </Tabs.Tab>

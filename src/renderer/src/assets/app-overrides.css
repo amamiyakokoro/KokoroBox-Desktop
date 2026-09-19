@@ -236,10 +236,6 @@ input[type='number'] {
   grid-template-columns: 12rem minmax(0, 1fr);
 }
 
-.settings-content-search {
-  display: block;
-}
-
 .feature-settings-layout__action {
   position: absolute;
   z-index: 1;

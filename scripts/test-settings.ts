@@ -112,6 +112,12 @@ test('application settings keep navigation discoverable in compact desktop windo
   assert.match(settings, /settings-content-header sticky top-0/)
   assert.match(settings, /scrollTo\(\{ top: 0 \}\)/)
   assert.match(settings, /settings-navigation-list/)
+  assert.match(settings, /<ScrollShadow/)
+  assert.match(settings, /orientation="horizontal"/)
+  assert.match(
+    settings,
+    /activeCategory\.scrollIntoView\(\{ block: 'nearest', inline: 'nearest' \}\)/
+  )
   assert.match(settings, /<KokoTabs/)
   assert.match(settings, /variant="secondary"/)
   assert.match(settings, /onChange=\{selectPanel\}/)
@@ -127,6 +133,7 @@ test('application settings keep navigation discoverable in compact desktop windo
   assert.doesNotMatch(styles, /@media \(max-width: 1050px\)/)
   assert.match(styles, /\.settings-navigation-list \{[\s\S]*flex-direction: row/)
   assert.match(styles, /\.settings-navigation-list::-webkit-scrollbar/)
+  assert.doesNotMatch(styles, /\.settings-content-search\s*\{[\s\S]*display:\s*block/)
   assert.doesNotMatch(styles, /\.settings-panel-button/)
   assert.doesNotMatch(styles, /\.settings-category-label \{[\s\S]*display: none/)
   assert.match(settingCard, /settings-section__heading/)
@@ -391,6 +398,8 @@ test('collection and overlay primitives preserve HeroUI v3 identity and selectio
   assert.match(tabs, /variant=\{variant\}/)
   assert.match(tabs, /onSelectionChange=\{\(key\) => void onChange\(String\(key\)\)\}/)
   assert.match(tabs, /<Tabs\.Tab[\s\S]*id=\{option\.id\}/)
+  assert.match(tabs, /className="min-w-max whitespace-nowrap"/)
+  assert.match(tabs, /className=\{cn\('max-w-full shrink-0', className\)\}/)
   assert.match(connections, /<KokoTabs[\s\S]*variant="secondary"/)
   assert.match(connections, /className="h-8 w-max shrink-0"/)
   assert.equal(connections.match(/whitespace-nowrap px-1/g)?.length, 2)

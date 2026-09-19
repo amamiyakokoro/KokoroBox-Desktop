@@ -1,5 +1,5 @@
 import { tr } from '../../../shared/i18n'
-import { Button } from '@heroui/react'
+import { Button, ScrollShadow } from '@heroui/react'
 import BasePage from '@renderer/components/base/base-page'
 import { IoLogoGithub } from 'react-icons/io5'
 import {
@@ -19,6 +19,7 @@ const Settings: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams()
   const [search, setSearch] = useState('')
   const layoutRef = useRef<HTMLDivElement>(null)
+  const categoryNavigationRef = useRef<HTMLDivElement>(null)
   const categories = useMemo(() => getSettingsCategories(), [])
   const requestedCategory = searchParams.get('section')
   const requestedSetting = findSettingsEntry(categories, searchParams.get('setting'))
@@ -119,6 +120,14 @@ const Settings: React.FC = () => {
   }, [search])
 
   useEffect(() => {
+    const navigation = categoryNavigationRef.current
+    const activeCategory = navigation?.querySelector<HTMLElement>('[aria-current="page"]')
+    if (!navigation || !activeCategory || navigation.scrollWidth <= navigation.clientWidth) return
+
+    activeCategory.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+  }, [category])
+
+  useEffect(() => {
     if (!requestedSetting || requestedSetting.category.key !== category || normalizedSearch) return
 
     let animationFrame = 0
@@ -178,7 +187,12 @@ const Settings: React.FC = () => {
             aria-label={tr('Settings categories')}
             className="settings-navigation sticky top-0 z-10 flex h-[calc(100vh-49px)] flex-col border-r border-divider bg-background/95 p-3 backdrop-blur"
           >
-            <div className="settings-navigation-list flex flex-col gap-1 overflow-y-auto">
+            <ScrollShadow
+              ref={categoryNavigationRef}
+              orientation="horizontal"
+              size={28}
+              className="settings-navigation-list flex flex-col gap-1 overflow-y-auto"
+            >
               {categories.map((item) => {
                 const Icon = item.icon
                 const active = category === item.key && !normalizedSearch
@@ -200,7 +214,7 @@ const Settings: React.FC = () => {
                   </Button>
                 )
               })}
-            </div>
+            </ScrollShadow>
           </nav>
           <main className="min-w-0 px-4 pb-4">
             <div className="mx-auto w-full max-w-[960px]">
@@ -224,7 +238,7 @@ const Settings: React.FC = () => {
                     aria-label={tr('Search settings')}
                     placeholder={tr('Search settings')}
                     startContent={<LuSearch className="shrink-0 text-foreground-400" />}
-                    className="settings-content-search w-60 shrink-0"
+                    className="settings-content-search w-60 max-w-[45%] shrink-0"
                     onValueChange={setSearch}
                     onClear={() => setSearch('')}
                   />
