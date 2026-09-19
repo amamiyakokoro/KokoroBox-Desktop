@@ -140,11 +140,6 @@ const ProxyItem: React.FC<Props> = (props) => {
     document.addEventListener('mousemove', handleMouseMove)
     return () => document.removeEventListener('mousemove', handleMouseMove)
   }, [showTooltip])
-  function delayColor(delay: number): 'default' | 'danger' {
-    if (delay === 0) return 'danger'
-    return 'default'
-  }
-
   function delayText(delay: number): string {
     if (delay === -1) return tr('Test')
     if (delay === 0) return tr('Timeout')
@@ -180,119 +175,83 @@ const ProxyItem: React.FC<Props> = (props) => {
     >
       <Card
         variant="secondary"
-        className={`w-full min-w-0 border p-2 ${
-          fixed
-            ? 'border-secondary/30 bg-secondary/12'
-            : selected
-              ? 'border-primary/35 bg-primary/12'
-              : 'border-divider/70'
+        className={`group/proxy-node w-full min-w-0 gap-0 overflow-hidden border p-0 transition-[background-color,border-color] duration-150 ${
+          selected
+            ? 'border-accent/45 bg-accent-soft/40'
+            : fixed
+              ? 'border-secondary/30 bg-secondary/10'
+              : 'border-separator/60 bg-surface-secondary/40 hover:border-accent/25 hover:bg-accent-soft/15'
         }`}
+        data-selected={selected || undefined}
       >
-        <Card.Content>
-          <div
-            className={`flex min-w-0 items-center ${proxyDisplayLayout === 'double' ? 'gap-1' : 'justify-between'}`}
-          >
-            {proxyDisplayLayout === 'double' ? (
-              <>
-                <button
-                  type="button"
-                  className="flex min-w-0 flex-1 flex-col rounded-md text-left outline-none focus-visible:ring-2 focus-visible:ring-focus"
-                  aria-pressed={selected}
-                  onClick={selectProxy}
-                >
-                  <div className="text-ellipsis overflow-hidden whitespace-nowrap">
-                    <div className="flag-emoji inline">{proxy.name}</div>
-                  </div>
-                  <div className="text-[12px] text-foreground-500 leading-snug mt-0.5 overflow-hidden whitespace-nowrap text-ellipsis">
-                    <span>{formatProxyType(proxy.type)}</span>
-                    {proxy.udp !== undefined && !shouldShowGroupSelectedProxy && (
-                      <span className="ml-1 opacity-60"> UDP</span>
-                    )}
-                    {shouldShowGroupSelectedProxy && (
-                      <>
-                        <span className="mx-1">→</span>
-                        <span className="flag-emoji">{proxy.now}</span>
-                      </>
-                    )}
-                  </div>
-                </button>
-                <div className="flex items-center justify-center gap-0.5 shrink-0">
-                  {fixed && (
-                    <Button
-                      isIconOnly
-                      aria-label={`${tr('Cancel')}: ${tr('Fixed selection')}`}
-                      onPress={async () => {
-                        await mihomoUnfixedProxy(group.name)
-                        mutateProxies()
-                      }}
-                      variant="ghost"
-                      className="h-6 w-6 min-w-6 p-0 text-xs text-danger"
-                    >
-                      <FaMapPin className="text-xs le" />
-                    </Button>
-                  )}
-                  <Button
-                    isPending={loading}
-                    onPress={onDelay}
-                    variant={delayColor(delay) === 'danger' ? 'danger-soft' : 'ghost'}
-                    className="h-8 min-w-12 px-1.5 text-xs tabular-nums"
-                  >
-                    {delayText(delay)}
-                  </Button>
-                </div>
-              </>
-            ) : (
-              <>
-                <button
-                  type="button"
-                  className="min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap rounded-md text-left outline-none focus-visible:ring-2 focus-visible:ring-focus"
-                  aria-pressed={selected}
-                  onClick={selectProxy}
-                >
-                  <div className="flag-emoji inline">{proxy.name}</div>
-                  {proxyDisplayLayout === 'single' && (
+        <Card.Content className="p-2">
+          <div className="flex min-w-0 items-center gap-1.5">
+            <button
+              type="button"
+              className={`min-w-0 flex-1 rounded-md text-left outline-none focus-visible:ring-2 focus-visible:ring-focus ${
+                proxyDisplayLayout === 'double' ? 'flex flex-col' : 'flex items-center'
+              }`}
+              aria-pressed={selected}
+              onClick={selectProxy}
+            >
+              <span className="flex min-w-0 items-center">
+                <span
+                  aria-hidden="true"
+                  className={`mr-2 size-1.5 shrink-0 rounded-full ${
+                    selected ? 'bg-accent' : 'bg-transparent'
+                  }`}
+                />
+                <span className="flag-emoji min-w-0 truncate text-sm font-medium text-foreground">
+                  {proxy.name}
+                </span>
+                {proxyDisplayLayout === 'single' ? (
+                  <span className="ml-2 min-w-0 truncate text-xs text-foreground-500">
+                    {formatProxyType(proxy.type)}
+                    {shouldShowGroupSelectedProxy ? ` → ${proxy.now}` : ''}
+                  </span>
+                ) : null}
+              </span>
+              {proxyDisplayLayout === 'double' ? (
+                <span className="ml-3.5 mt-0.5 min-w-0 truncate text-xs leading-4 text-foreground-500">
+                  {formatProxyType(proxy.type)}
+                  {proxy.udp !== undefined && !shouldShowGroupSelectedProxy ? (
+                    <span className="ml-1 opacity-70">· UDP</span>
+                  ) : null}
+                  {shouldShowGroupSelectedProxy ? (
                     <>
-                      <div className="inline ml-2 text-foreground-500">
-                        {formatProxyType(proxy.type)}
-                      </div>
-                      {shouldShowGroupSelectedProxy && (
-                        <div className="inline ml-2 text-foreground-500 flag-emoji">
-                          → {proxy.now}
-                        </div>
-                      )}
+                      <span className="mx-1 text-accent-soft-foreground/70">→</span>
+                      <span className="flag-emoji">{proxy.now}</span>
                     </>
-                  )}
-                </button>
-                <div className="flex items-center gap-0.5 shrink-0">
-                  {fixed && (
-                    <div className="flex items-center">
-                      <Button
-                        isIconOnly
-                        aria-label={`${tr('Cancel')}: ${tr('Fixed selection')}`}
-                        onPress={async () => {
-                          await mihomoUnfixedProxy(group.name)
-                          mutateProxies()
-                        }}
-                        variant="ghost"
-                        className="h-6 w-6 min-w-6 p-0 text-xs text-danger"
-                      >
-                        <FaMapPin className="text-xs le" />
-                      </Button>
-                    </div>
-                  )}
-                  <div className="flex items-center">
-                    <Button
-                      isPending={loading}
-                      onPress={onDelay}
-                      variant={delayColor(delay) === 'danger' ? 'danger-soft' : 'ghost'}
-                      className="h-8 min-w-12 px-1.5 text-xs tabular-nums"
-                    >
-                      {delayText(delay)}
-                    </Button>
-                  </div>
-                </div>
-              </>
-            )}
+                  ) : null}
+                </span>
+              ) : null}
+            </button>
+            <div className="flex shrink-0 items-center gap-0.5">
+              {fixed ? (
+                <Button
+                  aria-label={`${tr('Cancel')}: ${tr('Fixed selection')}`}
+                  className="h-7 w-7 min-w-7 p-0 text-xs text-danger"
+                  isIconOnly
+                  variant="ghost"
+                  onPress={async () => {
+                    await mihomoUnfixedProxy(group.name)
+                    mutateProxies()
+                  }}
+                >
+                  <FaMapPin className="text-xs" />
+                </Button>
+              ) : null}
+              <Button
+                className={`h-7 min-w-12 px-1.5 text-xs tabular-nums transition-opacity group-hover/proxy-node:opacity-100 group-focus-within/proxy-node:opacity-100 ${
+                  delay === 0 ? '' : 'text-foreground-500 opacity-75'
+                }`}
+                isPending={loading}
+                variant={delay === 0 ? 'danger-soft' : 'ghost'}
+                onPress={onDelay}
+              >
+                {delayText(delay)}
+              </Button>
+            </div>
           </div>
         </Card.Content>
       </Card>

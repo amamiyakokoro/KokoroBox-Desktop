@@ -474,7 +474,6 @@ test('renderer components use the canonical HeroUI v3 package', () => {
 })
 
 test('migrated HeroUI v3 cards preserve layout safety without requiring v2 spacing', () => {
-  const proxyGroups = readFileSync('src/renderer/src/pages/proxies.tsx', 'utf8')
   const connection = readFileSync(
     'src/renderer/src/components/connections/connection-item.tsx',
     'utf8'
@@ -494,7 +493,6 @@ test('migrated HeroUI v3 cards preserve layout safety without requiring v2 spaci
   }
 
   for (const [label, source] of [
-    ['proxy group', proxyGroups],
     ['connection', connection],
     ['connection group', connectionGroup]
   ] as const) {
@@ -773,20 +771,28 @@ test('desktop sidebar separates controls, live status and navigation', () => {
 test('proxy group rows stay compact while preserving semantic metadata and actions', () => {
   const page = readFileSync('src/renderer/src/pages/proxies.tsx', 'utf8')
   const item = readFileSync('src/renderer/src/components/proxies/proxy-item.tsx', 'utf8')
+  const header = readFileSync('src/renderer/src/components/proxies/proxy-group-header.tsx', 'utf8')
+  const settings = readFileSync(
+    'src/renderer/src/components/proxies/proxy-setting-drawer.tsx',
+    'utf8'
+  )
   const tooltip = readFileSync(
     'src/renderer/src/components/proxies/proxy-detail-tooltip.tsx',
     'utf8'
   )
 
-  assert.match(page, /<Card\.Content className="[^"]*\bmin-h-14\b[^"]*\bpx-3\b[^"]*\bpy-2\b">/)
-  assert.match(page, /function GroupMetadata/)
-  assert.match(page, /getGroupTypeLabel\(group\.type\)/)
-  assert.match(page, /→/)
-  assert.match(page, /tr\('\{0\} nodes', \[group\.all\.length\]\)/)
-  assert.doesNotMatch(page, /<Chip/)
-  assert.match(page, /aria-label=\{tr\('Test group latency'\)\}/)
-  assert.match(page, /aria-label=\{tr\('Show selected proxy'\)\}/)
-  assert.match(page, /onPress=\{\(\) => onScrollToProxy\(index\)\}/)
+  assert.match(page, /<ProxyGroupHeader/)
+  assert.match(header, /min-h-14/)
+  assert.match(header, /const GroupMetadata/)
+  assert.match(header, /getGroupTypeLabel\(group\.type\)/)
+  assert.match(header, /→/)
+  assert.match(header, /tr\('\{0\} nodes', \[group\.all\.length\]\)/)
+  assert.match(header, /tr\('Current'\)/)
+  assert.match(header, /data-expanded=\{isOpen \|\| undefined\}/)
+  assert.match(header, /<LuChevronRight/)
+  assert.match(header, /aria-label=\{tr\('Test group latency'\)\}/)
+  assert.match(header, /aria-label=\{tr\('Show selected proxy'\)\}/)
+  assert.match(header, /onPress=\{\(\) => onScrollToProxy\(index\)\}/)
   assert.doesNotMatch(page, /searchVisible|searchValue|onUpdateSearch|CollapseInput/)
   assert.doesNotMatch(page, /Search group|Proxy group actions/)
   assert.match(page, /let groupProxies = group\.all as ProxyLike\[\]/)
@@ -794,17 +800,27 @@ test('proxy group rows stay compact while preserving semantic metadata and actio
   assert.match(page, /proxyDisplayOrder === 'name'/)
   assert.match(page, /proxyGroupPageCache\.isOpen/)
   assert.match(page, /<GroupedVirtuoso/)
+  assert.match(page, /new ResizeObserver/)
+  assert.match(page, /setCols\(getAutoProxyColumns\(width\)\)/)
+  assert.match(page, /updateColumns\(entry\.contentRect\.width\)/)
+  assert.doesNotMatch(page, /window\.matchMedia/)
   assert.match(page, /mode === 'global' && g\[index\]\.name\.toUpperCase\(\) === 'GLOBAL'/)
-  assert.match(page, /title=\{group\.name\}/)
-  assert.match(page, /title=\{group\.now\}/)
-  assert.match(page, /onGroupDelay\(index\)/)
-  assert.doesNotMatch(page, /\brounded-xl\b|\bshadow-none\b/)
-  assert.match(page, /gap-2 pt-2 mx-3/)
+  assert.match(page, /onGroupDelay=\{onGroupDelayStable\}/)
+  assert.match(header, /onPress=\{\(\) => onGroupDelay\(index\)\}/)
+  assert.match(page, /border-l-2 border-accent\/20 bg-accent-soft\/15/)
+  assert.match(page, /gridTemplateColumns: `repeat\(\$\{pCols === 'auto' \? c : pCols\}/)
   assert.match(item, /return `\$\{delay\} ms`/)
   assert.match(item, /variant="secondary"/)
   assert.match(item, /aria-pressed=\{selected\}/)
+  assert.match(item, /data-selected=\{selected \|\| undefined\}/)
+  assert.match(item, /selected \? 'bg-accent' : 'bg-transparent'/)
+  assert.match(item, /delay === 0 \? 'danger-soft' : 'ghost'/)
   assert.doesNotMatch(item, /isPressable|CardBody/)
   assert.doesNotMatch(item, /delay < 500/)
+  assert.equal(settings.match(/<KokoSegmentedControl/g)?.length, 1)
+  assert.ok((settings.match(/<KokoSelect/g)?.length ?? 0) >= 5)
+  assert.match(settings, /delayTestUrlScope === 'global'/)
+  assert.match(settings, /<KokoTextField[\s\S]*tr\('Latency test URL'\)/)
   assert.match(tooltip, /return `\$\{delay\} ms`/)
   assert.doesNotMatch(tooltip, /delay < 500/)
   assert.equal(formatProxyType('Socks5'), 'SOCKS')

@@ -1,5 +1,5 @@
 import { tr } from '../../../shared/i18n'
-import { Avatar, Button, Card } from '@heroui/react'
+import { Button } from '@heroui/react'
 import BasePage from '@renderer/components/base/base-page'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import {
@@ -9,9 +9,7 @@ import {
   mihomoGroupDelay,
   mihomoProxyDelay
 } from '@renderer/utils/ipc'
-import { FaLocationCrosshairs } from 'react-icons/fa6'
 import {
-  memo,
   useCallback,
   useEffect,
   useLayoutEffect,
@@ -23,8 +21,8 @@ import {
 import { GroupedVirtuoso, GroupedVirtuosoHandle } from 'react-virtuoso'
 import ProxyItem from '@renderer/components/proxies/proxy-item'
 import ProxySettingDrawer from '@renderer/components/proxies/proxy-setting-drawer'
-import { IoIosArrowBack } from 'react-icons/io'
-import { MdDoubleArrow, MdOutlineSpeed, MdTune } from 'react-icons/md'
+import ProxyGroupHeader from '@renderer/components/proxies/proxy-group-header'
+import { MdDoubleArrow, MdTune } from 'react-icons/md'
 import { useGroups } from '@renderer/hooks/use-groups'
 import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'
 import { runDelayTestsWithConcurrency } from '@renderer/utils/delay-test'
@@ -51,157 +49,6 @@ function getProviderName(proxy: ProxyLike): string | undefined {
   return 'provider-name' in proxy ? proxy['provider-name'] : undefined
 }
 
-function getGroupTypeLabel(type: MihomoProxyType): string {
-  const labels: Partial<Record<MihomoProxyType, string>> = {
-    Selector: tr('Selector'),
-    Fallback: tr('Fallback'),
-    URLTest: tr('URL test'),
-    LoadBalance: tr('Load balance'),
-    Relay: tr('Relay')
-  }
-  return labels[type] ?? type
-}
-
-function GroupMetadata({
-  group,
-  className = ''
-}: {
-  group: ControllerMixedGroup
-  className?: string
-}) {
-  const showsSelectedTarget =
-    Boolean(group.now) && ['Selector', 'Fallback', 'URLTest'].includes(group.type)
-
-  return (
-    <span className={`flex min-w-0 items-center gap-1 text-xs text-foreground-500 ${className}`}>
-      <span className="shrink-0">{getGroupTypeLabel(group.type)}</span>
-      {showsSelectedTarget && (
-        <>
-          <span aria-hidden="true" className="shrink-0">
-            →
-          </span>
-          <span className="flag-emoji min-w-0 truncate" title={group.now}>
-            {group.now}
-          </span>
-        </>
-      )}
-      <span className="shrink-0">· {tr('{0} nodes', [group.all.length])}</span>
-    </span>
-  )
-}
-
-interface GroupHeaderProps {
-  index: number
-  group: ControllerMixedGroup
-  isOpen: boolean
-  isLast: boolean
-  groupDisplayLayout: 'hidden' | 'single' | 'double'
-  delaying: boolean
-  isRelevant: boolean
-  onToggle: (index: number, currentlyOpen: boolean) => void
-  onScrollToProxy: (index: number) => void
-  onGroupDelay: (index: number) => void
-}
-
-const GroupHeader = memo(function GroupHeader({
-  index,
-  group,
-  isOpen,
-  isLast,
-  groupDisplayLayout,
-  delaying,
-  isRelevant,
-  onToggle,
-  onScrollToProxy,
-  onGroupDelay
-}: GroupHeaderProps) {
-  return (
-    <div className={`w-full px-2 pt-1.5 ${isLast && !isOpen ? 'pb-1.5' : ''}`}>
-      <Card
-        className={`relative w-full min-w-0 gap-0 overflow-hidden border p-0 transition-colors ${
-          isRelevant
-            ? 'border-primary/25 bg-primary/8'
-            : 'border-divider/80 bg-content1/90 hover:bg-default-50'
-        }`}
-      >
-        <button
-          type="button"
-          aria-expanded={isOpen}
-          aria-label={group.name}
-          className="absolute inset-0 z-0 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/45"
-          onClick={() => onToggle(index, isOpen)}
-        />
-        <Card.Content className="pointer-events-none relative z-1 min-h-14 w-full px-3 py-2">
-          <div className="flex min-h-10 items-center justify-between gap-2">
-            <div className="flex min-w-0 flex-1 items-center overflow-hidden whitespace-nowrap">
-              {group.icon ? (
-                <Avatar
-                  className="mr-2 size-8 shrink-0 overflow-visible! rounded-none! bg-transparent"
-                  size="sm"
-                >
-                  <Avatar.Image
-                    className="object-contain"
-                    src={
-                      group.icon.startsWith('<svg')
-                        ? `data:image/svg+xml;utf8,${group.icon}`
-                        : localStorage.getItem(group.icon) || group.icon
-                    }
-                  />
-                </Avatar>
-              ) : null}
-              <div
-                className={`flex min-w-0 flex-1 flex-col ${groupDisplayLayout === 'double' ? 'gap-0.5' : 'justify-center'}`}
-              >
-                <div className="flex min-w-0 items-center leading-tight">
-                  <span
-                    className="flag-emoji min-w-0 truncate text-sm font-semibold"
-                    title={group.name}
-                  >
-                    {group.name}
-                  </span>
-                  {groupDisplayLayout === 'single' && (
-                    <GroupMetadata group={group} className="ml-2 max-w-[60%]" />
-                  )}
-                </div>
-                {groupDisplayLayout === 'double' && <GroupMetadata group={group} />}
-              </div>
-            </div>
-            <div className="flex shrink-0 items-center gap-0.5">
-              <span aria-hidden="true" className="w-16 shrink-0" />
-              <IoIosArrowBack
-                className={`ml-1 flex h-8 items-center text-base text-foreground-400 transition duration-200 ${
-                  isOpen ? '-rotate-90' : ''
-                }`}
-              />
-            </div>
-          </div>
-        </Card.Content>
-        <div className="pointer-events-auto absolute right-9 top-1/2 z-2 flex -translate-y-1/2 items-center gap-0.5">
-          <Button
-            variant="ghost"
-            isPending={delaying}
-            size="sm"
-            isIconOnly
-            aria-label={tr('Test group latency')}
-            onPress={() => onGroupDelay(index)}
-          >
-            <MdOutlineSpeed className="text-lg text-foreground-500" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            isIconOnly
-            aria-label={tr('Show selected proxy')}
-            onPress={() => onScrollToProxy(index)}
-          >
-            <FaLocationCrosshairs className="text-base text-foreground-500" />
-          </Button>
-        </div>
-      </Card>
-    </div>
-  )
-})
-
 interface ProxyGroupPageCache {
   isOpen: Record<string, boolean>
   scrollTop: number
@@ -210,6 +57,14 @@ interface ProxyGroupPageCache {
 const proxyGroupPageCache: ProxyGroupPageCache = {
   isOpen: {},
   scrollTop: 0
+}
+
+export function getAutoProxyColumns(width: number): number {
+  if (width >= 1600) return 5
+  if (width >= 1300) return 4
+  if (width >= 1000) return 3
+  if (width >= 700) return 2
+  return 1
 }
 
 const Proxies: React.FC = () => {
@@ -253,6 +108,7 @@ const Proxies: React.FC = () => {
   )
   const virtuosoRef = useRef<GroupedVirtuosoHandle>(null)
   const pendingScrollRef = useRef<number | null>(null)
+  const proxyListRef = useRef<HTMLDivElement>(null)
   const scrollerElRef = useRef<HTMLElement | null>(null)
   const rememberProxyGroupOpenStateRef = useRef(rememberProxyGroupOpenState)
   rememberProxyGroupOpenStateRef.current = rememberProxyGroupOpenState
@@ -428,18 +284,6 @@ const Proxies: React.FC = () => {
     ]
   )
 
-  const calcCols = useCallback((): number => {
-    if (window.matchMedia('(min-width: 1536px)').matches) {
-      return 5
-    } else if (window.matchMedia('(min-width: 1280px)').matches) {
-      return 4
-    } else if (window.matchMedia('(min-width: 1024px)').matches) {
-      return 3
-    } else {
-      return 2
-    }
-  }, [])
-
   const toggleOpen = useCallback((index: number, currentlyOpen: boolean) => {
     const newVal = !currentlyOpen
     if (rememberProxyGroupOpenStateRef.current) {
@@ -574,21 +418,25 @@ const Proxies: React.FC = () => {
       setCols(parseInt(proxyCols))
       return
     }
-    setCols(calcCols())
-    const handleResize = (): void => {
-      setCols(calcCols())
-    }
-    window.addEventListener('resize', handleResize)
-    return (): void => {
-      window.removeEventListener('resize', handleResize)
-    }
-  }, [proxyCols, calcCols])
+    const container = proxyListRef.current
+    if (!container) return
+
+    const updateColumns = (width: number): void => setCols(getAutoProxyColumns(width))
+    updateColumns(container.clientWidth)
+
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries[0]
+      if (entry) updateColumns(entry.contentRect.width)
+    })
+    observer.observe(container)
+    return (): void => observer.disconnect()
+  }, [mode, proxyCols])
 
   const groupContent = useCallback(
     (index: number) => {
       const g = groupsRef.current
       return g[index] ? (
-        <GroupHeader
+        <ProxyGroupHeader
           index={index}
           group={g[index]}
           isOpen={isOpen[index]}
@@ -644,15 +492,11 @@ const Proxies: React.FC = () => {
       <div
         style={{
           animation: 'proxy-row-in 0.15s ease both',
-          ...(pCols !== 'auto' ? { gridTemplateColumns: `repeat(${pCols}, minmax(0, 1fr))` } : {})
+          gridTemplateColumns: `repeat(${pCols === 'auto' ? c : pCols}, minmax(0, 1fr))`
         }}
-        className={`grid ${
-          pCols === 'auto'
-            ? 'sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5'
-            : ''
-        } ${
-          groupIndex === gc.length - 1 && innerIndex === gc[groupIndex] - 1 ? 'pb-2' : ''
-        } gap-2 pt-2 mx-3`}
+        className={`mx-3 grid gap-2 border-l-2 border-accent/20 bg-accent-soft/15 px-2 pt-2 ${
+          innerIndex === gc[groupIndex] - 1 ? 'pb-2' : ''
+        }`}
       >
         {items}
       </div>
@@ -694,7 +538,7 @@ const Proxies: React.FC = () => {
           </div>
         </div>
       ) : (
-        <div className="h-[calc(100vh-50px)]">
+        <div ref={proxyListRef} className="h-[calc(100vh-50px)] min-w-0">
           <GroupedVirtuoso
             ref={virtuosoRef}
             scrollerRef={scrollerRef}
@@ -702,7 +546,7 @@ const Proxies: React.FC = () => {
             groupCounts={groupCounts}
             groupContent={groupContent}
             itemContent={itemContent}
-            defaultItemHeight={72}
+            defaultItemHeight={64}
             overscan={200}
           />
         </div>

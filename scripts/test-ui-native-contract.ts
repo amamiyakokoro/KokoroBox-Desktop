@@ -171,7 +171,7 @@ test('native component appearance is not repainted by dense application surfaces
   const denseCardFiles = [
     'src/renderer/src/components/connections/connection-item.tsx',
     'src/renderer/src/components/connections/connection-group-header.tsx',
-    'src/renderer/src/pages/proxies.tsx'
+    'src/renderer/src/components/proxies/proxy-item.tsx'
   ]
   const collectionSurface = readFileSync(
     'src/renderer/src/components/base/management/collection-surface.tsx',
@@ -255,9 +255,12 @@ test('interactive cards use native buttons with independent sibling actions', ()
     'utf8'
   )
   const profile = readFileSync('src/renderer/src/components/profiles/profile-item.tsx', 'utf8')
-  const proxyGroups = readFileSync('src/renderer/src/pages/proxies.tsx', 'utf8')
+  const proxyGroup = readFileSync(
+    'src/renderer/src/components/proxies/proxy-group-header.tsx',
+    'utf8'
+  )
 
-  for (const source of [connection, connectionGroup, profile, proxyGroups]) {
+  for (const source of [connection, connectionGroup, profile, proxyGroup]) {
     assert.match(source, /<button[\s\S]*type="button"/)
     assert.doesNotMatch(source, /<Card[\s\S]{0,160}?role="button"/)
     assert.doesNotMatch(source, /event\.key !== 'Enter'|event\.key !== ' '/)
@@ -267,7 +270,7 @@ test('interactive cards use native buttons with independent sibling actions', ()
   assert.match(connection, /aria-label=\{hideProcess \? destination/)
   assert.match(connection, /aria-label=\{info\.isActive \? tr\('Close connection'\)/)
   assert.match(connectionGroup, /aria-expanded=\{expanded\}/)
-  assert.match(proxyGroups, /aria-expanded=\{isOpen\}/)
+  assert.match(proxyGroup, /aria-expanded=\{isOpen\}/)
   assert.match(profile, /data-card-primary-action/)
   assert.match(profile, /aria-label=\{tr\('Refresh'\)\}/)
 })

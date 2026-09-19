@@ -1,5 +1,5 @@
 import { tr } from '../../../../shared/i18n'
-import { Input, InputGroup, ListBox, Select, Switch } from '@heroui/react'
+import { InputGroup, Switch } from '@heroui/react'
 import React, { useState, useEffect, useRef } from 'react'
 import SettingItem from '../base/base-setting-item'
 import { KokoSegmentedControl, settingItemProps } from '../base/base-controls'
@@ -12,6 +12,7 @@ import {
   MIN_DELAY_TEST_CONCURRENCY,
   normalizeDelayTestConcurrency
 } from '@renderer/utils/delay-test'
+import { KokoSelect, KokoTextField } from '../base/koko-form'
 
 interface Props {
   onClose: () => void
@@ -60,48 +61,25 @@ const ProxySettingDrawer: React.FC<Props> = (props) => {
     >
       <PageSettingsSection title={tr('Display')}>
         <SettingItem title={tr('Proxy columns')} {...settingItemProps} divider>
-          <Select
+          <KokoSelect
             aria-label={tr('Proxy columns')}
+            controlWidth="select"
+            options={[
+              { id: 'auto', label: tr('Automatic') },
+              { id: '1', label: tr('1 column') },
+              { id: '2', label: tr('2 columns') },
+              { id: '3', label: tr('3 columns') },
+              { id: '4', label: tr('4 columns') }
+            ]}
             value={proxyCols}
             variant="secondary"
             onChange={async (value) => {
-              if (Array.isArray(value) || value == null) return
               if (value === proxyCols) return
-
               await patchAppConfig({
                 proxyCols: value as 'auto' | '1' | '2' | '3' | '4'
               })
             }}
-          >
-            <Select.Trigger>
-              <Select.Value />
-              <Select.Indicator />
-            </Select.Trigger>
-            <Select.Popover>
-              <ListBox>
-                <ListBox.Item id="auto" textValue={tr('Automatic')}>
-                  {tr('Automatic')}
-                  <ListBox.ItemIndicator />
-                </ListBox.Item>
-                <ListBox.Item id="1" textValue={tr('1 column')}>
-                  {tr('1 column')}
-                  <ListBox.ItemIndicator />
-                </ListBox.Item>
-                <ListBox.Item id="2" textValue={tr('2 columns')}>
-                  {tr('2 columns')}
-                  <ListBox.ItemIndicator />
-                </ListBox.Item>
-                <ListBox.Item id="3" textValue={tr('3 columns')}>
-                  {tr('3 columns')}
-                  <ListBox.ItemIndicator />
-                </ListBox.Item>
-                <ListBox.Item id="4" textValue={tr('4 columns')}>
-                  {tr('4 columns')}
-                  <ListBox.ItemIndicator />
-                </ListBox.Item>
-              </ListBox>
-            </Select.Popover>
-          </Select>
+          />
         </SettingItem>
         <SettingItem title={tr('Proxy sort order')} {...settingItemProps} divider>
           <KokoSegmentedControl
@@ -120,14 +98,16 @@ const ProxySettingDrawer: React.FC<Props> = (props) => {
           />
         </SettingItem>
         <SettingItem title={tr('Extra proxy group information')} {...settingItemProps} divider>
-          <KokoSegmentedControl
-            ariaLabel={tr('Extra proxy group information')}
-            selectedKey={groupDisplayLayout}
+          <KokoSelect
+            aria-label={tr('Extra proxy group information')}
+            controlWidth="select"
             options={[
               { id: 'hidden', label: tr('Hide') },
               { id: 'single', label: tr('Single line') },
               { id: 'double', label: tr('Two lines') }
             ]}
+            value={groupDisplayLayout}
+            variant="secondary"
             onChange={async (v) => {
               await patchAppConfig({
                 groupDisplayLayout: v as 'hidden' | 'single' | 'double'
@@ -136,14 +116,16 @@ const ProxySettingDrawer: React.FC<Props> = (props) => {
           />
         </SettingItem>
         <SettingItem title={tr('Extra proxy information')} {...settingItemProps} divider>
-          <KokoSegmentedControl
-            ariaLabel={tr('Extra proxy information')}
-            selectedKey={proxyDisplayLayout}
+          <KokoSelect
+            aria-label={tr('Extra proxy information')}
+            controlWidth="select"
             options={[
               { id: 'hidden', label: tr('Hide') },
               { id: 'single', label: tr('Single line') },
               { id: 'double', label: tr('Two lines') }
             ]}
+            value={proxyDisplayLayout}
+            variant="secondary"
             onChange={async (v) => {
               await patchAppConfig({
                 proxyDisplayLayout: v as 'hidden' | 'single' | 'double'
@@ -224,13 +206,15 @@ const ProxySettingDrawer: React.FC<Props> = (props) => {
         </SettingItem>
         {autoCloseConnection && (
           <SettingItem title={tr('Interrupt mode')} {...settingItemProps}>
-            <KokoSegmentedControl
-              ariaLabel={tr('Interrupt mode')}
-              selectedKey={closeMode}
+            <KokoSelect
+              aria-label={tr('Interrupt mode')}
+              controlWidth="select"
               options={[
                 { id: 'all', label: tr('All connections') },
                 { id: 'group', label: tr('Current group only') }
               ]}
+              value={closeMode}
+              variant="secondary"
               onChange={async (v) => {
                 await patchAppConfig({
                   closeMode: v as 'all' | 'group'
@@ -242,28 +226,16 @@ const ProxySettingDrawer: React.FC<Props> = (props) => {
       </PageSettingsSection>
 
       <PageSettingsSection title={tr('Latency testing')}>
-        <SettingItem title={tr('Latency test URL')} {...settingItemProps} divider>
-          <Input
-            aria-label={tr('Latency test URL')}
-            data-setting-input="url"
-            value={url}
-            placeholder={tr('Default: https://www.gstatic.com/generate_204')}
-            variant="secondary"
-            onChange={(event) => {
-              const v = event.target.value
-              setUrl(v)
-              setUrlDebounce(v)
-            }}
-          />
-        </SettingItem>
         <SettingItem title={tr('Test URL source')} {...settingItemProps} divider>
-          <KokoSegmentedControl
-            ariaLabel={tr('Test URL source')}
-            selectedKey={delayTestUrlScope}
+          <KokoSelect
+            aria-label={tr('Test URL source')}
+            controlWidth="select"
             options={[
               { id: 'group', label: tr('Use group configuration') },
               { id: 'global', label: tr('Use a shared URL') }
             ]}
+            value={delayTestUrlScope}
+            variant="secondary"
             onChange={async (v) => {
               await patchAppConfig({
                 delayTestUrlScope: v as 'group' | 'global'
@@ -271,6 +243,21 @@ const ProxySettingDrawer: React.FC<Props> = (props) => {
             }}
           />
         </SettingItem>
+        {delayTestUrlScope === 'global' ? (
+          <SettingItem title={tr('Latency test URL')} {...settingItemProps} divider>
+            <KokoTextField
+              aria-label={tr('Latency test URL')}
+              controlWidth="url"
+              data-setting-input="url"
+              value={url}
+              placeholder={tr('Default: https://www.gstatic.com/generate_204')}
+              onValueChange={(v) => {
+                setUrl(v)
+                setUrlDebounce(v)
+              }}
+            />
+          </SettingItem>
+        ) : null}
         <SettingItem
           title={tr('Test latency with the proxy group API')}
           {...settingItemProps}
