@@ -39,9 +39,36 @@ const navigationStatusIndicatorClasses: Record<SiderStatusTone, string> = {
   danger: 'bg-danger-500'
 }
 
-const siderItemTitleClassName = 'block truncate text-sm font-semibold leading-5 text-foreground'
+const siderItemTitleClassName =
+  'block h-5 truncate text-sm font-semibold leading-5 text-foreground'
 const siderItemSubtitleClassName =
   'flex h-4 min-w-0 items-center gap-1 overflow-hidden text-xs leading-4'
+
+interface SiderStatusRowProps {
+  children: React.ReactNode
+  className?: string
+  tone?: SiderStatusTone
+}
+
+export const SiderStatusRow: React.FC<SiderStatusRowProps> = ({
+  children,
+  className,
+  tone = 'default'
+}) => (
+  <span
+    className={cn(
+      'inline-flex h-4 min-w-0 items-center gap-1.5 text-xs leading-4 text-foreground-500',
+      className
+    )}
+    data-status-tone={tone}
+  >
+    <span
+      aria-hidden="true"
+      className={cn('size-1.5 shrink-0 rounded-full', navigationStatusIndicatorClasses[tone])}
+    />
+    <span className="min-w-0 truncate">{children}</span>
+  </span>
+)
 
 const SiderItemIcon: React.FC<{
   active: boolean
@@ -64,7 +91,10 @@ const SiderItemContent: React.FC<{
   subtitle?: React.ReactNode
   title: string
 }> = ({ active, subtitle, title }) => (
-  <span className="flex min-h-[2.375rem] min-w-0 flex-1 flex-col justify-center gap-0.5">
+  <span
+    className="flex h-[2.375rem] min-w-0 flex-1 flex-col justify-center gap-0.5"
+    data-sider-text-stack
+  >
     <span className={cn(siderItemTitleClassName, active && 'text-primary')} title={title}>
       {title}
     </span>
@@ -161,7 +191,12 @@ export const SiderNavItem: React.FC<SiderNavItemProps> = ({
     <button
       type="button"
       data-card-primary-action
-      className="flex min-w-0 flex-1 items-center gap-2.5 rounded-xl px-2.5 py-2 text-left focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-primary"
+      className={cn(
+        'grid min-w-0 flex-1 items-center gap-x-2.5 rounded-xl px-2.5 py-2 text-left focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-primary',
+        trailing
+          ? 'grid-cols-[2rem_minmax(0,1fr)]'
+          : 'grid-cols-[2rem_minmax(0,1fr)_2rem]'
+      )}
       aria-current={active ? 'page' : undefined}
       onClick={onPress}
     >
@@ -177,16 +212,9 @@ export const SiderNavItem: React.FC<SiderNavItemProps> = ({
               {description && <span className="truncate text-foreground-500">{description}</span>}
               {description && status && <span className="text-foreground-300">·</span>}
               {status && (
-                <span className="inline-flex shrink-0 items-center gap-1 text-foreground-500">
-                  <span
-                    aria-hidden="true"
-                    className={cn(
-                      'size-1.5 rounded-full',
-                      navigationStatusIndicatorClasses[statusTone]
-                    )}
-                  />
+                <SiderStatusRow className="shrink-0" tone={statusTone}>
                   {status}
-                </span>
+                </SiderStatusRow>
               )}
             </>
           ) : undefined
