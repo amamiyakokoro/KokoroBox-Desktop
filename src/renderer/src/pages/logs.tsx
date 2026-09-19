@@ -1,10 +1,12 @@
 import { tr } from '../../../shared/i18n'
 import BasePage from '@renderer/components/base/base-page'
 import LogItem from '@renderer/components/logs/log-item'
+import { KokoSearchField } from '@renderer/components/base/koko-search-field'
+import { KokoToolbar, KokoToolbarIconButton } from '@renderer/components/base/koko-toolbar'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'
 import { startTransition, useEffect, useMemo, useRef, useState } from 'react'
-import { KokoSelect, KokoTextField as Input } from '@renderer/components/base/koko-form'
+import { KokoSelect } from '@renderer/components/base/koko-form'
 import { Virtuoso } from 'react-virtuoso'
 import { IoLocationSharp } from 'react-icons/io5'
 import { CgTrash } from 'react-icons/cg'
@@ -17,7 +19,7 @@ import {
   setMihomoLogMaxEntries,
   subscribeMihomoLogs
 } from '@renderer/utils/mihomo-log-store'
-import { Button, Separator, Tooltip } from '@heroui/react'
+import { Separator } from '@heroui/react'
 import { restartMihomoLogs } from '@renderer/utils/ipc'
 import { notify } from '@renderer/utils/notification'
 
@@ -140,19 +142,19 @@ const Logs: React.FC = () => {
   return (
     <BasePage title={tr('Live logs')} contentClassName="overflow-y-hidden">
       <div className="flex h-full min-h-0 flex-col">
-        <div className="sticky top-0 z-40">
-          <div className="flex w-full items-center gap-2 p-2">
-            <Input
-              size="sm"
+        <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm">
+          <KokoToolbar aria-label={tr('Live logs')}>
+            <KokoSearchField
+              className="min-w-40 flex-1"
               value={filter}
+              aria-label={tr('Filter')}
               placeholder={tr('Filter')}
-              isClearable
               onValueChange={setFilter}
             />
             <KokoSelect
               aria-label={tr('Filter by log level')}
               className="w-24 shrink-0"
-              density="compact"
+              density="toolbar"
               options={[
                 { id: 'silent', label: tr('Silent') },
                 { id: 'error', label: tr('Error') },
@@ -173,42 +175,25 @@ const Logs: React.FC = () => {
                 }
               }}
             />
-            <Tooltip delay={0}>
-              <Tooltip.Trigger>
-                <Button
-                  size="sm"
-                  isIconOnly
-                  variant={trace ? 'primary' : 'outline'}
-                  aria-label={trace ? tr('Stop following new logs') : tr('Follow new logs')}
-                  onPress={() => {
-                    setTrace((prev) => !prev)
-                  }}
-                >
-                  <IoLocationSharp className="text-lg" />
-                </Button>
-              </Tooltip.Trigger>
-              <Tooltip.Content>
-                {trace ? tr('Stop following new logs') : tr('Follow new logs')}
-              </Tooltip.Content>
-            </Tooltip>
-            <Tooltip delay={0}>
-              <Tooltip.Trigger>
-                <Button
-                  size="sm"
-                  isIconOnly
-                  variant="ghost"
-                  className="text-danger"
-                  aria-label={tr('Clear logs')}
-                  onPress={() => {
-                    clearMihomoLogs()
-                  }}
-                >
-                  <CgTrash className="text-lg" />
-                </Button>
-              </Tooltip.Trigger>
-              <Tooltip.Content>{tr('Clear logs')}</Tooltip.Content>
-            </Tooltip>
-          </div>
+            <KokoToolbarIconButton
+              isActive={trace}
+              label={trace ? tr('Stop following new logs') : tr('Follow new logs')}
+              onPress={() => {
+                setTrace((prev) => !prev)
+              }}
+            >
+              <IoLocationSharp className="text-lg" />
+            </KokoToolbarIconButton>
+            <KokoToolbarIconButton
+              label={tr('Clear logs')}
+              tone="danger"
+              onPress={() => {
+                clearMihomoLogs()
+              }}
+            >
+              <CgTrash className="text-lg" />
+            </KokoToolbarIconButton>
+          </KokoToolbar>
           <Separator />
         </div>
         <div className="min-h-0 flex-1 py-1">

@@ -12,7 +12,9 @@ const allowedKokoExports = new Set([
   'KokoSegmentedControl',
   'KokoSelect',
   'KokoTabs',
-  'KokoTextField'
+  'KokoTextField',
+  'KokoToolbar',
+  'KokoToolbarIconButton'
 ])
 
 const internalClassPattern =
@@ -179,7 +181,7 @@ test('native component appearance is not repainted by dense application surfaces
     'src/renderer/src/components/updater/updater-drawer.tsx'
   ]
 
-  assert.match(logs, /<KokoSelect[\s\S]*density="compact"/)
+  assert.match(logs, /<KokoSelect[\s\S]*density="toolbar"/)
   assert.doesNotMatch(logs, /<Select\.Trigger|<Select\.Popover|<ListBox/)
   assert.match(settingCard, /<Surface[\s\S]*variant="secondary"/)
   assert.doesNotMatch(settingCard, /<Surface[\s\S]*rounded-xl[\s\S]*<\/Surface>/)

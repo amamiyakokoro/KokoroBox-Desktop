@@ -75,6 +75,8 @@ appearance. Current `Koko*` exports are bounded to:
 - `KokoTabs`
 - `KokoSegmentedControl`
 - `KokoActionMenu`
+- `KokoToolbar`
+- `KokoToolbarIconButton`
 
 Behavior worth preserving includes value normalization, concise selected-value rendering,
 application option models, clear actions, and accessible menu identities. Native HeroUI Button,
@@ -95,6 +97,8 @@ Phase 8 has established these thinner contracts:
   short text (288px), select (224px), URL (480px maximum), or full width.
 - `KokoActionMenu` maps application actions to native Dropdown items and uses a native v3 Button
   trigger. It does not translate v2 colors or variants and does not restyle the native popover.
+- `KokoToolbar` and `KokoToolbarIconButton` define the 36px desktop toolbar alignment and action
+  hierarchy while retaining native HeroUI Button, Tooltip, hover, press, and focus behavior.
 
 The former `KokoButton`, `KokoSwitch`, and `KokoTooltip` migration shims were removed in Phase 12.
 The native contract test prevents these adapters from being reintroduced.

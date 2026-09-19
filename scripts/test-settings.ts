@@ -7,7 +7,10 @@ import {
   normalizeSiderOrder
 } from '../src/renderer/src/components/sider/sider-order.ts'
 import { normalizeCoreVersion } from '../src/renderer/src/components/sider/core-version.ts'
-import { formatLogTimestamp } from '../src/renderer/src/components/logs/log-display.ts'
+import {
+  formatLogTimestamp,
+  parseLogMessage
+} from '../src/renderer/src/components/logs/log-display.ts'
 import { formatProxyType } from '../src/renderer/src/components/proxies/proxy-display.ts'
 
 function collectTsxFiles(directory: string): string[] {
@@ -334,7 +337,7 @@ test('settings and Mihomo forms share the KokoroBox HeroUI v3 conventions', () =
   assert.match(form, /<Select\.Trigger/)
   assert.match(form, /<Select\.Value className=/)
   assert.match(form, /selectedText/)
-  assert.match(form, /density\?: 'normal' \| 'compact'/)
+  assert.match(form, /density\?: 'normal' \| 'compact' \| 'toolbar'/)
   assert.match(form, /density = 'normal'/)
   assert.match(form, /valueClassName\?: string/)
   assert.match(form, /<Select\.Value className=\{cn\('min-w-0 truncate', valueClassName\)\}>/)
@@ -343,6 +346,7 @@ test('settings and Mihomo forms share the KokoroBox HeroUI v3 conventions', () =
   assert.match(form, /variant=\{variant\}/)
   assert.match(form, /density === 'compact'/)
   assert.match(form, /h-8 min-h-8 items-center py-0/)
+  assert.match(form, /h-9 min-h-9 items-center py-0/)
   assert.match(form, /min-h-8 px-2 py-1/)
   assert.doesNotMatch(form, /koko-select__popover|shadow-overlay/)
   assert.doesNotMatch(form, /min-h-8 px-2\.5 py-1\.5/)
@@ -939,15 +943,22 @@ test('operational lists use compact hierarchy without changing their behavior', 
   assert.match(overrideItem, /onAction=\{onMenuAction\}/)
 
   assert.match(logsPage, /<Virtuoso/)
-  assert.match(logsPage, /<KokoSelect[\s\S]*density="compact"/)
+  assert.match(logsPage, /<KokoSearchField/)
+  assert.match(logsPage, /<KokoToolbar aria-label=\{tr\('Live logs'\)\}>/)
+  assert.match(logsPage, /<KokoSelect[\s\S]*density="toolbar"/)
+  assert.match(logsPage, /<KokoToolbarIconButton[\s\S]*isActive=\{trace\}/)
+  assert.match(logsPage, /<KokoToolbarIconButton[\s\S]*tone="danger"/)
   assert.doesNotMatch(logsPage, /<Select\.Trigger|<Select\.Popover|<ListBox/)
   assert.match(logsPage, /followOutput=\{trace\}/)
   assert.match(logsPage, /clearMihomoLogs\(\)/)
   assert.match(logsPage, /restartMihomoLogs\(\)/)
   assert.doesNotMatch(logItem, /<Card/)
   assert.match(logItem, /grid-cols-\[5\.25rem_4\.5rem_minmax\(0,1fr\)\]/)
-  assert.match(logItem, /border-b border-divider\/70/)
-  assert.match(logItem, /whitespace-pre-wrap break-words font-mono/)
+  assert.match(logItem, /data-log-level=\{type\}/)
+  assert.match(logItem, /border-b border-l-2 border-b-divider\/70/)
+  assert.match(logItem, /export const KokoLogLevelBadge/)
+  assert.match(logItem, /export const KokoLogToken/)
+  assert.match(logItem, /message\.secondary/)
 })
 
 test('log timestamps stay compact for today and retain the date across days', () => {
@@ -962,6 +973,29 @@ test('log timestamps stay compact for today and retain the date across days', ()
     '2026-09-18 03:07:55'
   )
   assert.equal(formatLogTimestamp('unparsed timestamp', reference), 'unparsed timestamp')
+})
+
+test('log messages expose semantic network and routing tokens without losing content', () => {
+  const payload =
+    '[TCP] 127.0.0.1:51390(firefox) --> chatgpt.com:443 match RuleSet(openai) using Direct-Special.anytls'
+  const parsed = parseLogMessage(payload)
+
+  assert.equal(
+    parsed.primary.map((token) => token.value).join(''),
+    '[TCP] 127.0.0.1:51390(firefox) --> chatgpt.com:443'
+  )
+  assert.equal(
+    parsed.secondary?.map((token) => token.value).join(''),
+    'match RuleSet(openai) using Direct-Special.anytls'
+  )
+  assert.deepEqual(
+    parsed.primary.filter((token) => token.kind !== 'text').map((token) => token.kind),
+    ['protocol', 'ip', 'port', 'process', 'domain', 'port']
+  )
+  assert.deepEqual(
+    parsed.secondary?.filter((token) => token.kind !== 'text').map((token) => token.kind),
+    ['keyword', 'rule', 'keyword', 'action']
+  )
 })
 
 test('common settings choices use the shared segmented control', () => {

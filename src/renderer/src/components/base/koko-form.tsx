@@ -108,7 +108,7 @@ interface KokoSelectBaseProps {
   'aria-label': string
   className?: string
   controlWidth?: KokoControlWidth
-  density?: 'normal' | 'compact'
+  density?: 'normal' | 'compact' | 'toolbar'
   disallowEmptySelection?: boolean
   isDisabled?: boolean
   label?: React.ReactNode
@@ -134,7 +134,7 @@ interface KokoMultipleSelectProps extends KokoSelectBaseProps {
 export type KokoSelectProps = KokoSingleSelectProps | KokoMultipleSelectProps
 
 const KokoSelectContent: React.FC<{
-  density: 'normal' | 'compact'
+  density: 'normal' | 'compact' | 'toolbar'
   label?: React.ReactNode
   labelPlacement: 'inside' | 'outside'
   options: KokoSelectOption[]
@@ -157,7 +157,8 @@ const KokoSelectContent: React.FC<{
     <Select.Trigger
       className={cn(
         labelPlacement === 'inside' && 'h-12 min-h-12 items-end pb-1.5 pt-5',
-        labelPlacement === 'outside' && density === 'compact' && 'h-8 min-h-8 items-center py-0'
+        labelPlacement === 'outside' && density === 'compact' && 'h-8 min-h-8 items-center py-0',
+        labelPlacement === 'outside' && density === 'toolbar' && 'h-9 min-h-9 items-center py-0'
       )}
     >
       <Select.Value className={cn('min-w-0 truncate', valueClassName)}>
@@ -169,7 +170,9 @@ const KokoSelectContent: React.FC<{
     </Select.Trigger>
     <Select.Popover
       className={cn(
-        density === 'compact' ? 'w-max max-w-72' : 'max-w-[min(24rem,calc(100vw-2rem))]'
+        density === 'compact' || density === 'toolbar'
+          ? 'w-max max-w-72'
+          : 'max-w-[min(24rem,calc(100vw-2rem))]'
       )}
     >
       <ListBox>
@@ -177,7 +180,7 @@ const KokoSelectContent: React.FC<{
           <ListBox.Item
             id={option.id}
             key={option.id}
-            className={cn(density === 'compact' && 'min-h-8 px-2 py-1')}
+            className={cn((density === 'compact' || density === 'toolbar') && 'min-h-8 px-2 py-1')}
             isDisabled={option.isDisabled}
             textValue={
               option.textValue ?? (typeof option.label === 'string' ? option.label : option.id)
