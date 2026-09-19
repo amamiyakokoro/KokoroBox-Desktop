@@ -1,6 +1,5 @@
 import { tr } from '../../../../shared/i18n'
-import { Button, Label, Modal, Switch } from '@heroui-v3/react'
-import { Spinner } from '@heroui/react'
+import { Button, Label, Modal, Spinner, Switch } from '@heroui-v3/react'
 import React, { useEffect, useState } from 'react'
 import { BaseEditor } from '../base/base-editor-lazy'
 import { getOverride, restartCore, setOverride } from '@renderer/utils/ipc'

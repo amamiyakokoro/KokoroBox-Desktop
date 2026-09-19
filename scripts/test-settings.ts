@@ -268,6 +268,41 @@ test('settings and Mihomo forms share the KokoroBox HeroUI v3 conventions', () =
   assert.match(controls, /<Tabs\.Indicator \/>/)
 })
 
+test('renderer components never mix HeroUI v2 and v3 in one file', () => {
+  const rendererFiles = collectTsxFiles('src/renderer/src')
+  const migrationPriorityFiles = [
+    'src/renderer/src/pages/logs.tsx',
+    'src/renderer/src/pages/proxies.tsx',
+    'src/renderer/src/components/resources/viewer.tsx',
+    'src/renderer/src/components/sider/profile-card.tsx',
+    'src/renderer/src/components/mihomo/service-modal.tsx',
+    'src/renderer/src/components/profiles/profile-item.tsx',
+    'src/renderer/src/components/mihomo/interface-modal.tsx',
+    'src/renderer/src/components/mihomo/permission-modal.tsx',
+    'src/renderer/src/components/override/edit-file-modal.tsx',
+    'src/renderer/src/components/resources/proxy-provider.tsx',
+    'src/renderer/src/components/profiles/edit-file-modal.tsx',
+    'src/renderer/src/components/mihomo/macos-service-setup.tsx',
+    'src/renderer/src/components/connections/connection-item.tsx',
+    'src/renderer/src/components/connections/connection-group-header.tsx'
+  ]
+
+  for (const file of rendererFiles) {
+    const source = readFileSync(file, 'utf8')
+    const importsV2 = /from '@heroui\/react'/.test(source)
+    const importsV3 = /from '@heroui-v3\/react'/.test(source)
+    assert.ok(!(importsV2 && importsV3), `${file} mixes HeroUI v2 and v3`)
+  }
+
+  for (const file of migrationPriorityFiles) {
+    assert.doesNotMatch(
+      readFileSync(file, 'utf8'),
+      /from '@heroui\/react'/,
+      `${file} still imports HeroUI v2`
+    )
+  }
+})
+
 test('page settings drawers use the shared compact inspector behavior', () => {
   const drawer = readFileSync('src/renderer/src/components/base/base-settings-drawer.tsx', 'utf8')
   const settingItem = readFileSync('src/renderer/src/components/base/base-setting-item.tsx', 'utf8')
@@ -447,7 +482,7 @@ test('proxy group rows stay compact while preserving semantic metadata and actio
     'utf8'
   )
 
-  assert.match(page, /<CardBody className="min-h-14 w-full px-3 py-2">/)
+  assert.match(page, /<Card\.Content className="min-h-14 w-full px-3 py-2">/)
   assert.match(page, /function GroupMetadata/)
   assert.match(page, /getGroupTypeLabel\(group\.type\)/)
   assert.match(page, /→/)
@@ -467,7 +502,7 @@ test('proxy group rows stay compact while preserving semantic metadata and actio
   assert.match(page, /title=\{group\.name\}/)
   assert.match(page, /title=\{group\.now\}/)
   assert.match(page, /onGroupDelay\(index\)/)
-  assert.match(page, /shadow="none"/)
+  assert.match(page, /shadow-none/)
   assert.match(page, /gap-2 pt-2 mx-3/)
   assert.match(item, /return `\$\{delay\} ms`/)
   assert.match(item, /shadow="none"/)

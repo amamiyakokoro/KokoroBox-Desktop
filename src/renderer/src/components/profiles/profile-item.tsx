@@ -1,17 +1,6 @@
 import { tr } from '../../../../shared/i18n'
-import {
-  Button,
-  Card,
-  CardBody,
-  CardFooter,
-  Chip,
-  Dropdown,
-  DropdownItem,
-  DropdownMenu,
-  DropdownTrigger,
-  Tooltip
-} from '@heroui/react'
-import { Meter } from '@heroui-v3/react'
+import { Card, Chip, Dropdown, Meter } from '@heroui-v3/react'
+import { KokoButton as Button, KokoTooltip as Tooltip } from '../base/koko-form'
 import { calcTraffic } from '@renderer/utils/calc'
 import { IoMdMore, IoMdRefresh } from 'react-icons/io'
 import dayjs from 'dayjs'
@@ -218,20 +207,26 @@ const ProfileItem: React.FC<Props> = (props) => {
         />
       )}
       <Card
-        as="div"
-        fullWidth
-        isPressable
-        onPress={() => {
+        role="button"
+        tabIndex={0}
+        onClick={() => {
           if (disableSelect || switching) return
           setSelecting(true)
           onClick().finally(() => {
             setSelecting(false)
           })
         }}
-        className={`${isCurrent ? 'bg-primary' : ''} ${selecting ? 'blur-sm' : ''}`}
+        onKeyDown={(event) => {
+          if (event.key !== 'Enter' && event.key !== ' ') return
+          event.preventDefault()
+          if (disableSelect || switching) return
+          setSelecting(true)
+          onClick().finally(() => setSelecting(false))
+        }}
+        className={`w-full cursor-pointer outline-none transition-colors focus-visible:ring-2 focus-visible:ring-primary/45 ${isCurrent ? 'bg-primary' : ''} ${selecting ? 'blur-sm' : ''}`}
       >
         <div {...attributes} {...listeners} className="w-full h-full">
-          <CardBody className="pb-1">
+          <Card.Content className="pb-1">
             <div className="flex justify-between h-8 gap-1">
               <div className="flex min-w-0 items-center">
                 <h3
@@ -241,7 +236,12 @@ const ProfileItem: React.FC<Props> = (props) => {
                   {info?.name}
                 </h3>
               </div>
-              <div className="flex shrink-0" data-no-dnd onClick={(e) => e.stopPropagation()}>
+              <div
+                className="flex shrink-0"
+                data-no-dnd
+                onClick={(e) => e.stopPropagation()}
+                onKeyDown={(e) => e.stopPropagation()}
+              >
                 {info.type === 'remote' && (
                   <Tooltip placement="left" content={dayjs(info.updated).fromNow()}>
                     <Button
@@ -249,7 +249,7 @@ const ProfileItem: React.FC<Props> = (props) => {
                       size="sm"
                       variant="light"
                       color="default"
-                      disabled={updating}
+                      isDisabled={updating}
                       onPress={async () => {
                         setUpdating(true)
                         await addProfileItem(info)
@@ -265,26 +265,28 @@ const ProfileItem: React.FC<Props> = (props) => {
                 )}
 
                 <Dropdown>
-                  <DropdownTrigger>
+                  <Dropdown.Trigger className="rounded-lg">
                     <Button isIconOnly size="sm" variant="light" color="default">
                       <IoMdMore
                         color="default"
                         className={`text-[24px] ${isCurrent ? 'text-primary-foreground' : 'text-foreground'}`}
                       />
                     </Button>
-                  </DropdownTrigger>
-                  <DropdownMenu onAction={onMenuAction}>
-                    {menuItems.map((item) => (
-                      <DropdownItem
-                        showDivider={item.showDivider}
-                        key={item.key}
-                        color={item.color}
-                        className={item.className}
-                      >
-                        {item.label}
-                      </DropdownItem>
-                    ))}
-                  </DropdownMenu>
+                  </Dropdown.Trigger>
+                  <Dropdown.Popover placement="bottom end" className="min-w-40 rounded-lg">
+                    <Dropdown.Menu className="p-1 text-sm" onAction={onMenuAction}>
+                      {menuItems.map((item) => (
+                        <Dropdown.Item
+                          id={item.key}
+                          key={item.key}
+                          textValue={item.label}
+                          className={`min-h-8 rounded-md px-2.5 py-1.5 ${item.showDivider ? 'border-b border-divider' : ''} ${item.color === 'danger' ? 'text-danger' : item.className}`}
+                        >
+                          {item.label}
+                        </Dropdown.Item>
+                      ))}
+                    </Dropdown.Menu>
+                  </Dropdown.Popover>
                 </Dropdown>
               </div>
             </div>
@@ -320,15 +322,15 @@ const ProfileItem: React.FC<Props> = (props) => {
                 )}
               </div>
             )}
-          </CardBody>
-          <CardFooter className="pt-0">
+          </Card.Content>
+          <Card.Footer className="pt-0">
             {info.type === 'remote' && !extra && (
               <div
                 className={`w-full mt-2 flex justify-between ${isCurrent ? 'text-primary-foreground' : 'text-foreground'}`}
               >
                 <Chip
                   size="sm"
-                  variant="bordered"
+                  variant="soft"
                   className={`${isCurrent ? 'text-primary-foreground border-primary-foreground' : 'border-primary text-primary'}`}
                 >
                   {tr('Remote')}
@@ -342,7 +344,7 @@ const ProfileItem: React.FC<Props> = (props) => {
               >
                 <Chip
                   size="sm"
-                  variant="bordered"
+                  variant="soft"
                   className={`${isCurrent ? 'text-primary-foreground border-primary-foreground' : 'border-primary text-primary'}`}
                 >
                   {tr('Local')}
@@ -368,7 +370,7 @@ const ProfileItem: React.FC<Props> = (props) => {
                 </Meter.Track>
               </Meter>
             )}
-          </CardFooter>
+          </Card.Footer>
         </div>
       </Card>
     </div>

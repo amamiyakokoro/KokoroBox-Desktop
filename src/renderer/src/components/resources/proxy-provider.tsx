@@ -9,7 +9,7 @@ import Viewer from './viewer'
 import useSWR from 'swr'
 import SettingCard from '../base/base-setting-card'
 import SettingItem from '../base/base-setting-item'
-import { Button, Chip, Divider } from '@heroui/react'
+import { KokoButton as Button } from '../base/koko-form'
 import { IoMdRefresh } from 'react-icons/io'
 import { CgLoadbarDoc } from 'react-icons/cg'
 import { MdEditDocument, MdQrCode2 } from 'react-icons/md'
@@ -17,7 +17,7 @@ import QRCodeModal from '../base/base-qrcode-modal'
 import dayjs from 'dayjs'
 import { calcTraffic } from '@renderer/utils/calc'
 import { getHash } from '@renderer/utils/hash'
-import { Meter } from '@heroui-v3/react'
+import { Chip, Meter, Separator } from '@heroui-v3/react'
 import { notify } from '@renderer/utils/notification'
 
 const ProxyProvider: React.FC = () => {
@@ -233,7 +233,7 @@ const ProxyProvider: React.FC = () => {
                   <Meter.Fill />
                 </Meter.Track>
               </Meter>
-              {index !== providers.length - 1 && <Divider className="my-2" />}
+              {index !== providers.length - 1 && <Separator className="my-2" variant="tertiary" />}
             </>
           )}
         </Fragment>

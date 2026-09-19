@@ -1,6 +1,5 @@
 import { tr } from '../../../../shared/i18n'
-import { Button, Modal } from '@heroui-v3/react'
-import { Spinner } from '@heroui/react'
+import { Button, Modal, Spinner } from '@heroui-v3/react'
 import React, { useEffect, useState } from 'react'
 import { BaseEditor } from '../base/base-editor-lazy'
 import { TextViewer } from '../base/text-viewer'

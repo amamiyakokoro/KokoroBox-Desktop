@@ -4,7 +4,11 @@ import LogItem from '@renderer/components/logs/log-item'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'
 import { startTransition, useEffect, useMemo, useRef, useState } from 'react'
-import { Button, Divider, Input, Tooltip } from '@heroui/react'
+import {
+  KokoButton as Button,
+  KokoTextField as Input,
+  KokoTooltip as Tooltip
+} from '@renderer/components/base/koko-form'
 import { Virtuoso } from 'react-virtuoso'
 import { IoLocationSharp } from 'react-icons/io5'
 import { CgTrash } from 'react-icons/cg'
@@ -17,7 +21,7 @@ import {
   setMihomoLogMaxEntries,
   subscribeMihomoLogs
 } from '@renderer/utils/mihomo-log-store'
-import { ListBox, Select } from '@heroui-v3/react'
+import { ListBox, Select, Separator } from '@heroui-v3/react'
 import { restartMihomoLogs } from '@renderer/utils/ipc'
 import { notify } from '@renderer/utils/notification'
 
@@ -244,7 +248,7 @@ const Logs: React.FC = () => {
               </Button>
             </Tooltip>
           </div>
-          <Divider />
+          <Separator />
         </div>
         <div className="min-h-0 flex-1 py-1">
           <Virtuoso

@@ -25,6 +25,7 @@ interface KokoTextFieldProps extends Omit<
   classNames?: KokoTextFieldClassNames
   endContent?: React.ReactNode
   isDisabled?: boolean
+  isClearable?: boolean
   isInvalid?: boolean
   onClear?: () => void
   onValueChange?: (value: string) => void
@@ -38,6 +39,7 @@ export const KokoTextField: React.FC<KokoTextFieldProps> = ({
   classNames,
   endContent,
   isDisabled,
+  isClearable,
   isInvalid,
   onClear,
   onValueChange,
@@ -68,17 +70,20 @@ export const KokoTextField: React.FC<KokoTextFieldProps> = ({
       value={value}
       onChange={(event) => onValueChange?.(event.target.value)}
     />
-    {(endContent || (onClear && value)) && (
+    {(endContent || ((isClearable || onClear) && value)) && (
       <InputGroup.Suffix className="gap-1">
         {endContent}
-        {onClear && value ? (
+        {(isClearable || onClear) && value ? (
           <Button
             aria-label={tr('Clear field')}
             className="h-6 w-6 min-w-6"
             isIconOnly
             size="sm"
             variant="ghost"
-            onPress={onClear}
+            onPress={() => {
+              onClear?.()
+              if (!onClear) onValueChange?.('')
+            }}
           >
             <LuX />
           </Button>

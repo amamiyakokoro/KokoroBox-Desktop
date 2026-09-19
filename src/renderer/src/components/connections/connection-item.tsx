@@ -1,6 +1,6 @@
 import { tr } from '../../../../shared/i18n'
-import { Button, Card, CardFooter, CardHeader, Chip } from '@heroui/react'
-import { Avatar } from '@heroui-v3/react'
+import { Avatar, Card, Chip } from '@heroui-v3/react'
+import { KokoButton as Button } from '../base/koko-form'
 import { calcTraffic } from '@renderer/utils/calc'
 import dayjs from 'dayjs'
 import React, { memo, useCallback, useEffect, useMemo, useState } from 'react'
@@ -97,7 +97,17 @@ const ConnectionItemComponent: React.FC<Props> = ({
 
   return (
     <div className={`px-2 pb-1.5 ${index === 0 ? 'pt-1.5' : ''}`} style={{ minHeight: 68 }}>
-      <Card as="div" isPressable className="group w-full" onPress={handleCardPress}>
+      <Card
+        role="button"
+        tabIndex={0}
+        className="group w-full cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary/45"
+        onClick={handleCardPress}
+        onKeyDown={(event) => {
+          if (event.key !== 'Enter' && event.key !== ' ') return
+          event.preventDefault()
+          handleCardPress()
+        }}
+      >
         <div className="flex w-full items-center justify-between">
           {displayIcon && (
             <div className="shrink-0 pl-2">
@@ -107,7 +117,7 @@ const ConnectionItemComponent: React.FC<Props> = ({
             </div>
           )}
           <div className="relative flex min-w-0 flex-1 flex-col justify-start">
-            <CardHeader className="relative flex min-h-8 items-center gap-1 px-3 pb-0 pt-2 pr-12">
+            <Card.Header className="relative flex min-h-8 items-center gap-1 px-3 pb-0 pt-2 pr-12">
               <div className="min-w-0 flex-1 truncate text-left text-sm font-medium">
                 <span title={hideProcess ? destination : `${processName} → ${destination}`}>
                   {hideProcess ? destination : `${processName} → ${destination}`}
@@ -129,12 +139,13 @@ const ConnectionItemComponent: React.FC<Props> = ({
                 }`}
                 onClick={(event) => event.stopPropagation()}
                 onPointerDown={(event) => event.stopPropagation()}
+                onKeyDown={(event) => event.stopPropagation()}
                 onPress={handleClose}
               >
                 {info.isActive ? <CgClose className="text-lg" /> : <CgTrash className="text-lg" />}
               </Button>
-            </CardHeader>
-            <CardFooter className="px-3 pb-2 pt-1">
+            </Card.Header>
+            <Card.Footer className="px-3 pb-2 pt-1">
               <div className="no-scrollbar flex min-w-0 items-center gap-2 overflow-x-auto whitespace-nowrap">
                 <span
                   className={`rounded-md bg-default-100 px-1.5 py-0.5 text-[11px] ${
@@ -143,7 +154,7 @@ const ConnectionItemComponent: React.FC<Props> = ({
                 >
                   {info.metadata.type}({info.metadata.network.toUpperCase()})
                 </span>
-                <Chip className="flag-emoji max-w-52 shrink-0" size="sm" radius="sm" variant="flat">
+                <Chip className="flag-emoji max-w-52 shrink-0" size="sm" variant="soft">
                   <span className="truncate" title={info.chains[0]}>
                     {info.chains[0]}
                   </span>
@@ -157,7 +168,7 @@ const ConnectionItemComponent: React.FC<Props> = ({
                   </span>
                 )}
               </div>
-            </CardFooter>
+            </Card.Footer>
           </div>
         </div>
       </Card>

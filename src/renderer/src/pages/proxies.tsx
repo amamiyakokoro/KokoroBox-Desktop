@@ -1,7 +1,7 @@
 import { tr } from '../../../shared/i18n'
-import { Button, Card, CardBody } from '@heroui/react'
-import { Avatar } from '@heroui-v3/react'
+import { Avatar, Card } from '@heroui-v3/react'
 import BasePage from '@renderer/components/base/base-page'
+import { KokoButton as Button } from '@renderer/components/base/koko-form'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import {
   getImageDataURL,
@@ -119,19 +119,22 @@ const GroupHeader = memo(function GroupHeader({
   return (
     <div className={`w-full px-2 pt-1.5 ${isLast && !isOpen ? 'pb-1.5' : ''}`}>
       <Card
-        as="div"
-        isPressable
-        fullWidth
         aria-expanded={isOpen}
-        shadow="none"
-        className={`border ${
+        role="button"
+        tabIndex={0}
+        className={`w-full cursor-pointer border shadow-none outline-none transition-colors focus-visible:ring-2 focus-visible:ring-primary/45 ${
           isRelevant
             ? 'border-primary/25 bg-primary/8'
             : 'border-divider/80 bg-content1/90 hover:bg-default-50'
         }`}
-        onPress={() => onToggle(index, isOpen)}
+        onClick={() => onToggle(index, isOpen)}
+        onKeyDown={(event) => {
+          if (event.key !== 'Enter' && event.key !== ' ') return
+          event.preventDefault()
+          onToggle(index, isOpen)
+        }}
       >
-        <CardBody className="min-h-14 w-full px-3 py-2">
+        <Card.Content className="min-h-14 w-full px-3 py-2">
           <div className="flex min-h-10 items-center justify-between gap-2">
             <div className="flex min-w-0 flex-1 items-center overflow-hidden whitespace-nowrap">
               {group.icon ? (
@@ -200,7 +203,7 @@ const GroupHeader = memo(function GroupHeader({
               />
             </div>
           </div>
-        </CardBody>
+        </Card.Content>
       </Card>
     </div>
   )

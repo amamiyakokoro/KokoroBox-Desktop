@@ -1,6 +1,6 @@
 import { tr } from '../../../../shared/i18n'
-import { Button, Card, CardBody } from '@heroui/react'
-import { Avatar } from '@heroui-v3/react'
+import { Avatar, Card } from '@heroui-v3/react'
+import { KokoButton as Button } from '../base/koko-form'
 import { calcTraffic } from '@renderer/utils/calc'
 import React, { memo, useMemo } from 'react'
 import { CgClose, CgTrash } from 'react-icons/cg'
@@ -56,14 +56,18 @@ const ConnectionGroupHeaderComponent: React.FC<Props> = ({
   return (
     <div className={`w-full px-2 pt-1.5 ${isLast && !expanded ? 'pb-1.5' : ''}`}>
       <Card
-        as="div"
-        isPressable
-        fullWidth
         aria-expanded={expanded}
-        className="group"
-        onPress={() => onToggle(groupKey, expanded)}
+        role="button"
+        tabIndex={0}
+        className="group w-full cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary/45"
+        onClick={() => onToggle(groupKey, expanded)}
+        onKeyDown={(event) => {
+          if (event.key !== 'Enter' && event.key !== ' ') return
+          event.preventDefault()
+          onToggle(groupKey, expanded)
+        }}
       >
-        <CardBody className="min-h-14 w-full p-0">
+        <Card.Content className="min-h-14 w-full p-0">
           <div className="flex min-h-14 items-center justify-between px-2.5">
             <div className="flex min-w-0 items-center overflow-hidden whitespace-nowrap">
               {displayIcon && (
@@ -121,7 +125,7 @@ const ConnectionGroupHeaderComponent: React.FC<Props> = ({
               />
             </div>
           </div>
-        </CardBody>
+        </Card.Content>
       </Card>
     </div>
   )
