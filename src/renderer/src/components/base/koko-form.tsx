@@ -105,6 +105,7 @@ export interface KokoSelectOption {
 interface KokoSelectBaseProps {
   'aria-label': string
   className?: string
+  density?: 'normal' | 'compact'
   disallowEmptySelection?: boolean
   isDisabled?: boolean
   label?: React.ReactNode
@@ -129,12 +130,13 @@ interface KokoMultipleSelectProps extends KokoSelectBaseProps {
 export type KokoSelectProps = KokoSingleSelectProps | KokoMultipleSelectProps
 
 const KokoSelectContent: React.FC<{
+  density: 'normal' | 'compact'
   label?: React.ReactNode
   labelPlacement: 'inside' | 'outside'
   options: KokoSelectOption[]
   placeholder?: string
   triggerClassName?: string
-}> = ({ label, labelPlacement, options, placeholder, triggerClassName }) => (
+}> = ({ density, label, labelPlacement, options, placeholder, triggerClassName }) => (
   <>
     {label ? (
       <Label
@@ -161,12 +163,28 @@ const KokoSelectContent: React.FC<{
       </Select.Value>
       <Select.Indicator />
     </Select.Trigger>
-    <Select.Popover>
-      <ListBox>
+    <Select.Popover
+      className={cn(
+        'koko-select__popover shadow-overlay',
+        density === 'compact'
+          ? 'w-max max-w-72 rounded-md'
+          : 'max-w-[min(24rem,calc(100vw-2rem))] rounded-lg'
+      )}
+    >
+      <ListBox
+        className={cn(
+          'overflow-hidden p-1 text-sm',
+          density === 'compact' ? 'rounded-md' : 'rounded-lg'
+        )}
+      >
         {options.map((option) => (
           <ListBox.Item
             id={option.id}
             key={option.id}
+            className={cn(
+              'rounded-md text-sm',
+              density === 'compact' ? 'min-h-8 px-2 py-1' : 'min-h-8 px-2.5 py-1.5'
+            )}
             isDisabled={option.isDisabled}
             textValue={
               option.textValue ?? (typeof option.label === 'string' ? option.label : option.id)
@@ -180,7 +198,7 @@ const KokoSelectContent: React.FC<{
                 </span>
               ) : null}
             </span>
-            <ListBox.ItemIndicator />
+            <ListBox.ItemIndicator className="size-3.5" />
           </ListBox.Item>
         ))}
       </ListBox>
@@ -191,6 +209,7 @@ const KokoSelectContent: React.FC<{
 export const KokoSelect: React.FC<KokoSelectProps> = (props) => {
   const {
     className,
+    density = 'normal',
     disallowEmptySelection = false,
     isDisabled,
     label,
@@ -215,6 +234,7 @@ export const KokoSelect: React.FC<KokoSelectProps> = (props) => {
         }}
       >
         <KokoSelectContent
+          density={density}
           label={label}
           labelPlacement={labelPlacement}
           options={options}
@@ -239,6 +259,7 @@ export const KokoSelect: React.FC<KokoSelectProps> = (props) => {
       }}
     >
       <KokoSelectContent
+        density={density}
         label={label}
         labelPlacement={labelPlacement}
         options={options}

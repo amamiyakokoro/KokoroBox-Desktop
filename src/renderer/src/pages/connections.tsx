@@ -1084,6 +1084,7 @@ const Connections: React.FC = () => {
           <KokoSelect
             aria-label={tr('Sort field')}
             className="w-34 min-w-24 shrink-0"
+            density="compact"
             disallowEmptySelection
             options={[
               { id: 'upload', label: tr('Uploaded') },

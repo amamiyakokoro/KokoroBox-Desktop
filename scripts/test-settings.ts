@@ -112,7 +112,11 @@ test('application settings keep navigation discoverable in compact desktop windo
   assert.match(settings, /settings-content-header sticky top-0/)
   assert.match(settings, /scrollTo\(\{ top: 0 \}\)/)
   assert.match(settings, /settings-navigation-list/)
-  assert.match(settings, /settings-panel-button--active/)
+  assert.match(settings, /<KokoTabs/)
+  assert.match(settings, /variant="secondary"/)
+  assert.match(settings, /onChange=\{selectPanel\}/)
+  assert.match(settings, /nextParams\.set\('panel', panelKey\)/)
+  assert.doesNotMatch(settings, /settings-panel-button/)
   assert.match(settings, /settings-container min-h-full/)
   assert.match(settings, /max-w-\[960px\]/)
   assert.match(settings, /entry\.fallbackLabel/)
@@ -123,7 +127,7 @@ test('application settings keep navigation discoverable in compact desktop windo
   assert.doesNotMatch(styles, /@media \(max-width: 1050px\)/)
   assert.match(styles, /\.settings-navigation-list \{[\s\S]*flex-direction: row/)
   assert.match(styles, /\.settings-navigation-list::-webkit-scrollbar/)
-  assert.match(styles, /\.settings-panel-button--active::after/)
+  assert.doesNotMatch(styles, /\.settings-panel-button/)
   assert.doesNotMatch(styles, /\.settings-category-label \{[\s\S]*display: none/)
   assert.match(settingCard, /settings-section__heading/)
   assert.match(settingCard, /text-base font-semibold leading-6 text-foreground/)
@@ -281,9 +285,15 @@ test('settings and Mihomo forms share the KokoroBox HeroUI v3 conventions', () =
   assert.match(form, /<Select\.Trigger/)
   assert.match(form, /<Select\.Value className=/)
   assert.match(form, /selectedText/)
+  assert.match(form, /density\?: 'normal' \| 'compact'/)
+  assert.match(form, /density = 'normal'/)
+  assert.match(form, /koko-select__popover/)
+  assert.match(form, /density === 'compact'/)
+  assert.match(form, /min-h-8 px-2 py-1/)
+  assert.match(form, /min-h-8 px-2\.5 py-1\.5/)
   assert.match(form, /labelPlacement\?: 'inside' \| 'outside'/)
   assert.match(form, /<Select\.Indicator \/>/)
-  assert.match(form, /<Select\.Popover>/)
+  assert.match(form, /<Select\.Popover/)
   assert.match(form, /<ListBox\.Item/)
   assert.match(form, /export const KokoSwitch/)
   assert.match(form, /<Switch\.Content>/)
@@ -351,6 +361,8 @@ test('collection and overlay primitives preserve HeroUI v3 identity and selectio
   assert.match(form, /textValue=/)
   assert.match(form, /option\.description/)
   assert.match(form, /isPlaceholder \? \(placeholder \?\? defaultChildren\) : selectedText/)
+  assert.match(form, /density\?: 'normal' \| 'compact'/)
+  assert.match(form, /density = 'normal'/)
   assert.match(form, /selectionMode="multiple"/)
   assert.match(form, /value=\{props\.value\}/)
   assert.match(menus, /<Dropdown\.Item[\s\S]*id=\{item\.id\}/)
@@ -691,6 +703,17 @@ test('connection rows stay dense while preserving realtime data and grouped acti
   assert.match(page, /defaultItemHeight=\{68\}/)
   assert.match(page, /mihomoCloseConnections\(\)/)
   assert.match(page, /connectionInterval = 500/)
+  assert.match(page, /aria-label=\{tr\('Sort field'\)\}[\s\S]*density="compact"/)
+  for (const sortOption of [
+    "id: 'upload'",
+    "id: 'download'",
+    "id: 'uploadSpeed'",
+    "id: 'downloadSpeed'",
+    "id: 'time'",
+    "id: 'process'"
+  ]) {
+    assert.match(page, new RegExp(sortOption))
+  }
 
   assert.match(group, /aria-expanded=\{expanded\}/)
   assert.match(group, /className="min-h-14 w-full p-0"/)

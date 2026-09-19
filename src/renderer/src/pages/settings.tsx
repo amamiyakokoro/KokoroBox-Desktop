@@ -10,6 +10,7 @@ import {
 } from '@renderer/components/settings/settings-registry'
 import { SettingCardModeProvider } from '@renderer/components/base/base-setting-card'
 import { SettingItemModeProvider } from '@renderer/components/base/base-setting-item'
+import { KokoTabs } from '@renderer/components/base/base-controls'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { LuChevronRight, LuSearch } from 'react-icons/lu'
@@ -204,7 +205,13 @@ const Settings: React.FC = () => {
           </nav>
           <main className="min-w-0 px-4 pb-4">
             <div className="mx-auto w-full max-w-[960px]">
-              <header className="settings-content-header sticky top-0 z-10 border-b border-divider bg-background/95 backdrop-blur-sm">
+              <header
+                className={`settings-content-header sticky top-0 z-10 bg-background/95 backdrop-blur-sm ${
+                  !normalizedSearch && selected.panels && selected.panels.length > 1
+                    ? ''
+                    : 'border-b border-divider'
+                }`}
+              >
                 <div className="flex items-center gap-4 px-3 py-2">
                   <h1 className="min-w-0 flex-1 text-xl font-semibold tracking-tight">
                     {normalizedSearch
@@ -226,24 +233,21 @@ const Settings: React.FC = () => {
                 {!normalizedSearch && selected.panels && selected.panels.length > 1 && (
                   <nav
                     aria-label={tr('Settings panels')}
-                    className="settings-panel-navigation no-scrollbar flex gap-1 overflow-x-auto px-3 pb-2"
+                    className="settings-panel-navigation min-w-0 px-3"
                   >
-                    {selected.panels.map((panel) => {
-                      const active = panel.key === selectedPanel?.key
-                      return (
-                        <Button
-                          key={panel.key}
-                          size="sm"
-                          variant="light"
-                          color="default"
-                          className={`settings-panel-button app-nodrag shrink-0 ${active ? 'settings-panel-button--active' : ''}`}
-                          aria-current={active ? 'page' : undefined}
-                          onPress={() => selectPanel(panel.key)}
-                        >
-                          {panel.label}
-                        </Button>
-                      )
-                    })}
+                    <KokoTabs
+                      ariaLabel={tr('Settings panels')}
+                      className="app-nodrag w-full"
+                      listContainerClassName="w-full"
+                      options={selected.panels.map((panel) => ({
+                        id: panel.key,
+                        label: panel.label
+                      }))}
+                      selectedKey={selectedPanel?.key ?? selected.panels[0].key}
+                      tabClassName="shrink-0 px-3"
+                      variant="secondary"
+                      onChange={selectPanel}
+                    />
                   </nav>
                 )}
               </header>
