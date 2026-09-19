@@ -1,7 +1,7 @@
 import { tr } from '../../../../../shared/i18n'
 import { Button, Switch, Tooltip } from '@heroui/react'
 import { KokoTextField as Input } from '@renderer/components/base/koko-form'
-import { SettingTabs } from '@renderer/components/base/base-controls'
+import { KokoSegmentedControl } from '@renderer/components/base/base-controls'
 import BasePage from '@renderer/components/base/base-page'
 import SettingItem from '@renderer/components/base/base-setting-item'
 import FeatureSettingsLayout, {
@@ -211,7 +211,7 @@ const Sysproxy: React.FC<Props> = ({ embedded = false }) => {
           >
             <Input
               size="sm"
-              className="w-full max-w-72"
+              controlWidth="short"
               value={values.host}
               placeholder="127.0.0.1"
               onValueChange={(v) => {
@@ -220,7 +220,7 @@ const Sysproxy: React.FC<Props> = ({ embedded = false }) => {
             />
           </SettingItem>
           <SettingItem title={tr('Proxy mode')} divider={values.mode === 'auto'}>
-            <SettingTabs
+            <KokoSegmentedControl
               ariaLabel={tr('Proxy mode')}
               selectedKey={values.mode}
               options={[
@@ -257,7 +257,7 @@ const Sysproxy: React.FC<Props> = ({ embedded = false }) => {
             title={tr('Configuration method')}
             divider={platform === 'linux' || values.settingMode === 'service'}
           >
-            <SettingTabs
+            <KokoSegmentedControl
               ariaLabel={tr('Configuration method')}
               selectedKey={values.settingMode}
               options={[

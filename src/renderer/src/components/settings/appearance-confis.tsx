@@ -4,7 +4,7 @@ import { Button, Switch, Tooltip } from '@heroui/react'
 import SettingCard from '../base/base-setting-card'
 import SettingItem from '../base/base-setting-item'
 import { KokoSelect } from '../base/koko-form'
-import { SettingTabs } from '../base/base-controls'
+import { KokoSegmentedControl } from '../base/base-controls'
 import { BiSolidFileImport } from 'react-icons/bi'
 import {
   applyTheme,
@@ -270,7 +270,7 @@ const AppearanceConfig: React.FC = () => {
             </SettingItem>
             {proxyInTray && (
               <SettingItem contentAlign="end" title={tr('Tray menu latency layout')} divider>
-                <SettingTabs
+                <KokoSegmentedControl
                   ariaLabel={tr('Tray menu latency layout')}
                   selectedKey={trayProxyDelayLayout}
                   options={[
@@ -402,7 +402,7 @@ const AppearanceConfig: React.FC = () => {
           </Switch>
         </SettingItem>
         <SettingItem contentAlign="end" title={tr('Background color')} divider>
-          <SettingTabs
+          <KokoSegmentedControl
             ariaLabel={tr('Background color')}
             selectedKey={appTheme}
             options={[

@@ -63,13 +63,17 @@ Renderer styles now load only Tailwind and `@heroui/styles`. The legacy `hero.mj
 and `@source` scan of `@heroui/theme` have been removed. Legacy `--heroui-*` runtime tokens are not
 used by renderer UI; the theme resolver retains its compatibility bridge for installed user themes.
 
-### Compatibility wrappers
+### KokoroBox desktop primitives
 
-Current `Koko*` exports are frozen to:
+HeroUI v3 is the component engine. KokoroBox-owned primitives define stable desktop product
+contracts such as density, alignment, overflow, and data mapping without repainting HeroUI's
+appearance. Current `Koko*` exports are bounded to:
 
 - `KokoTextField`
+- `KokoSearchField`
 - `KokoSelect`
 - `KokoTabs`
+- `KokoSegmentedControl`
 - `KokoActionMenu`
 
 Behavior worth preserving includes value normalization, concise selected-value rendering,
@@ -78,11 +82,17 @@ Switch, and Tooltip APIs are used directly instead of preserving v2 vocabulary t
 
 Phase 8 has established these thinner contracts:
 
-- `KokoTabs` only maps option data, selection, and the native `primary` / `secondary` variant. It
-  does not accept indicator or internal spacing classes.
+- `KokoSearchField` is the single-line 36px desktop search control. It owns icon/value/clear-action
+  alignment while HeroUI owns its secondary input surface and focus behavior.
+- `KokoTabs` maps option data and selection for page or panel navigation. Labels never wrap; when
+  the available width is exhausted, navigation scrolls instead of compressing text.
+- `KokoSegmentedControl` represents compact 2–4 choice settings with native primary Tabs, a stable
+  minimum option width, and non-wrapping labels. It is deliberately distinct from navigation tabs.
 - `KokoSelect` owns option identity, selected-text rendering, multiple selection, label placement,
-  and density. Its native variant defaults to `primary`; consumers choose `secondary` for controls
-  embedded in surfaces, inspectors, and toolbars.
+  density, and application control-width intent. Its native variant defaults to `primary`;
+  consumers choose `secondary` for controls embedded in surfaces, inspectors, and toolbars.
+- `KokoTextField` shares the same optional application control-width vocabulary: number (128px),
+  short text (288px), select (224px), URL (480px maximum), or full width.
 - `KokoActionMenu` maps application actions to native Dropdown items and uses a native v3 Button
   trigger. It does not translate v2 colors or variants and does not restyle the native popover.
 

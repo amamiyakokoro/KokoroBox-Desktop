@@ -1,7 +1,7 @@
 import { tr } from '../../../../shared/i18n'
 /* eslint-disable react/prop-types */
 import { Button, Switch } from '@heroui/react'
-import { KokoTabs } from '@renderer/components/base/base-controls'
+import { KokoSegmentedControl } from '@renderer/components/base/base-controls'
 import { KokoTextField } from '@renderer/components/base/koko-form'
 import SettingCard from '@renderer/components/base/base-setting-card'
 import SettingItem from '@renderer/components/base/base-setting-item'
@@ -137,7 +137,7 @@ const GeoData: React.FC = () => {
         }}
       />
       <SettingItem contentAlign="end" title={tr('GeoIP mode')} divider>
-        <KokoTabs
+        <KokoSegmentedControl
           ariaLabel={tr('GeoIP mode')}
           selectedKey={geoMode ? 'dat' : 'db'}
           options={[

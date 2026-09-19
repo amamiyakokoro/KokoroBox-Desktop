@@ -16,7 +16,7 @@ import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { IoIosHelpCircle } from 'react-icons/io'
 import ConfirmModal from '../base/base-confirm'
 import { notify } from '@renderer/utils/notification'
-import { SettingTabs } from '../base/base-controls'
+import { KokoSegmentedControl } from '../base/base-controls'
 
 const GeneralConfig: React.FC = () => {
   const { data: autoRunStatus, mutate: mutateAutoRunStatus } = useSWR('checkAutoRun', checkAutoRun)
@@ -39,7 +39,7 @@ const GeneralConfig: React.FC = () => {
             <KokoSelect
               aria-label={tr('Interface language')}
               variant="secondary"
-              className="w-44"
+              controlWidth="select"
               value={language}
               options={[
                 { id: 'system', label: tr('System default') },
@@ -62,7 +62,7 @@ const GeneralConfig: React.FC = () => {
           </div>
         </SettingItem>
         <SettingItem contentAlign="end" title={tr('Notification style')}>
-          <SettingTabs
+          <KokoSegmentedControl
             ariaLabel={tr('Notification style')}
             selectedKey={notificationMode}
             options={[
@@ -154,7 +154,7 @@ const GeneralConfig: React.FC = () => {
           </Switch>
         </SettingItem>
         <SettingItem contentAlign="end" title={tr('Update channel')}>
-          <SettingTabs
+          <KokoSegmentedControl
             ariaLabel={tr('Update channel')}
             selectedKey={updateChannel}
             options={[

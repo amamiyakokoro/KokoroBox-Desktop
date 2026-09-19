@@ -2,7 +2,7 @@ import { tr } from '../../../../shared/i18n'
 import { Input, InputGroup, ListBox, Select, Switch } from '@heroui/react'
 import React, { useState, useEffect, useRef } from 'react'
 import SettingItem from '../base/base-setting-item'
-import { SettingTabs, settingItemProps } from '../base/base-controls'
+import { KokoSegmentedControl, settingItemProps } from '../base/base-controls'
 import PageSettingsDrawer, { PageSettingsSection } from '../base/base-settings-drawer'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import debounce from '@renderer/utils/debounce'
@@ -104,7 +104,7 @@ const ProxySettingDrawer: React.FC<Props> = (props) => {
           </Select>
         </SettingItem>
         <SettingItem title={tr('Proxy sort order')} {...settingItemProps} divider>
-          <SettingTabs
+          <KokoSegmentedControl
             ariaLabel={tr('Proxy sort order')}
             selectedKey={proxyDisplayOrder}
             options={[
@@ -120,7 +120,7 @@ const ProxySettingDrawer: React.FC<Props> = (props) => {
           />
         </SettingItem>
         <SettingItem title={tr('Extra proxy group information')} {...settingItemProps} divider>
-          <SettingTabs
+          <KokoSegmentedControl
             ariaLabel={tr('Extra proxy group information')}
             selectedKey={groupDisplayLayout}
             options={[
@@ -136,7 +136,7 @@ const ProxySettingDrawer: React.FC<Props> = (props) => {
           />
         </SettingItem>
         <SettingItem title={tr('Extra proxy information')} {...settingItemProps} divider>
-          <SettingTabs
+          <KokoSegmentedControl
             ariaLabel={tr('Extra proxy information')}
             selectedKey={proxyDisplayLayout}
             options={[
@@ -224,7 +224,7 @@ const ProxySettingDrawer: React.FC<Props> = (props) => {
         </SettingItem>
         {autoCloseConnection && (
           <SettingItem title={tr('Interrupt mode')} {...settingItemProps}>
-            <SettingTabs
+            <KokoSegmentedControl
               ariaLabel={tr('Interrupt mode')}
               selectedKey={closeMode}
               options={[
@@ -257,7 +257,7 @@ const ProxySettingDrawer: React.FC<Props> = (props) => {
           />
         </SettingItem>
         <SettingItem title={tr('Test URL source')} {...settingItemProps} divider>
-          <SettingTabs
+          <KokoSegmentedControl
             ariaLabel={tr('Test URL source')}
             selectedKey={delayTestUrlScope}
             options={[

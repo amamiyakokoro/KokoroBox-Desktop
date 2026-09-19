@@ -1,10 +1,11 @@
 import { tr } from '../../../../shared/i18n'
+/* eslint-disable react/prop-types */
 import { Button } from '@heroui/react'
 import { LuArrowRight } from 'react-icons/lu'
 import { useNavigate } from 'react-router-dom'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import SettingItem from '../base/base-setting-item'
-import { SettingTabs, settingItemProps } from '../base/base-controls'
+import { KokoSegmentedControl, settingItemProps } from '../base/base-controls'
 import PageSettingsDrawer, { PageSettingsSection } from '../base/base-settings-drawer'
 
 interface Props {
@@ -24,7 +25,7 @@ const ProfileSettingDrawer: React.FC<Props> = ({ onClose, reopenSignal }) => {
     >
       <PageSettingsSection title={tr('Display')}>
         <SettingItem title={tr('Show date')} {...settingItemProps}>
-          <SettingTabs
+          <KokoSegmentedControl
             ariaLabel={tr('Show date')}
             selectedKey={profileDisplayDate}
             options={[

@@ -1,7 +1,7 @@
 import { tr } from '../../../../shared/i18n'
 import { Button } from '@heroui/react'
 import { KokoSelect } from '../base/koko-form'
-import { SettingTabs } from '../base/base-controls'
+import { KokoSegmentedControl } from '../base/base-controls'
 import SettingCard from '../base/base-setting-card'
 import SettingItem from '../base/base-setting-item'
 import PermissionModal from '../mihomo/permission-modal'
@@ -258,7 +258,7 @@ const CoreRuntimeConfig: React.FC<Props> = ({ sections = ['runtime', 'service'] 
             />
           </SettingItem>
           <SettingItem contentAlign="end" title={tr('Run mode')} divider>
-            <SettingTabs
+            <KokoSegmentedControl
               ariaLabel={tr('Run mode')}
               selectedKey={corePermissionMode}
               options={[
@@ -270,7 +270,7 @@ const CoreRuntimeConfig: React.FC<Props> = ({ sections = ['runtime', 'service'] 
           </SettingItem>
           {platform === 'linux' && corePermissionMode === 'service' && (
             <SettingItem contentAlign="end" title={tr('Service core execution mode')} divider>
-              <SettingTabs
+              <KokoSegmentedControl
                 ariaLabel={tr('Service core execution mode')}
                 selectedKey={serviceRunMode}
                 options={[
@@ -284,7 +284,7 @@ const CoreRuntimeConfig: React.FC<Props> = ({ sections = ['runtime', 'service'] 
           )}
           {corePermissionMode !== 'service' && platform !== 'win32' && (
             <SettingItem contentAlign="end" title={tr('Startup detection method')} divider>
-              <SettingTabs
+              <KokoSegmentedControl
                 ariaLabel={tr('Startup detection method')}
                 selectedKey={coreStartupMode}
                 options={[

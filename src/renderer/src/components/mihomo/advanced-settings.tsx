@@ -4,7 +4,7 @@ import SettingCard from '../base/base-setting-card'
 import SettingItem from '../base/base-setting-item'
 import InterfaceSelect from '../base/interface-select'
 import { KokoTextField as Input } from '../base/koko-form'
-import { SettingTabs } from '../base/base-controls'
+import { KokoSegmentedControl } from '../base/base-controls'
 import { IoIosHelpCircle } from 'react-icons/io'
 import React from 'react'
 
@@ -31,7 +31,7 @@ const AdvancedSetting: React.FC<AdvancedSettingProps> = ({ config, onChange }) =
   return (
     <SettingCard header={tr('Advanced settings')}>
       <SettingItem title={tr('Find process')} divider>
-        <SettingTabs
+        <KokoSegmentedControl
           ariaLabel={tr('Find process')}
           selectedKey={findProcessMode}
           options={[

@@ -105,6 +105,10 @@ test('application settings keep navigation discoverable in compact desktop windo
   const settings = readFileSync('src/renderer/src/pages/settings.tsx', 'utf8')
   const styles = readFileSync('src/renderer/src/assets/app-overrides.css', 'utf8')
   const settingCard = readFileSync('src/renderer/src/components/base/base-setting-card.tsx', 'utf8')
+  const searchField = readFileSync(
+    'src/renderer/src/components/base/koko-search-field.tsx',
+    'utf8'
+  )
   const general = readFileSync('src/renderer/src/components/settings/general-config.tsx', 'utf8')
 
   assert.match(settings, /aria-current=\{active \? 'page' : undefined\}/)
@@ -136,6 +140,13 @@ test('application settings keep navigation discoverable in compact desktop windo
   assert.doesNotMatch(styles, /\.settings-content-search\s*\{[\s\S]*display:\s*block/)
   assert.doesNotMatch(styles, /\.settings-panel-button/)
   assert.doesNotMatch(styles, /\.settings-category-label \{[\s\S]*display: none/)
+  assert.match(settings, /<KokoSearchField/)
+  assert.doesNotMatch(settings, /<KokoTextField|<LuSearch/)
+  assert.match(searchField, /<InputGroup/)
+  assert.match(searchField, /variant="secondary"/)
+  assert.match(searchField, /h-9 min-h-9/)
+  assert.match(searchField, /className="h-9 py-0"/)
+  assert.match(searchField, /aria-label=\{tr\('Clear field'\)\}/)
   assert.match(settingCard, /settings-section__heading/)
   assert.match(settingCard, /text-base font-semibold leading-6 text-foreground/)
   assert.match(settingCard, /settings-section__content border-t border-divider/)
@@ -282,7 +293,7 @@ test('system proxy fields keep editable lists inside the settings control column
   )
 
   assert.match(proxy, /description=\{tr\('Leave empty to use 127\.0\.0\.1'\)\}/)
-  assert.match(proxy, /className="w-full max-w-72"/)
+  assert.match(proxy, /controlWidth="short"/)
   assert.match(proxy, /placeholder="127\.0\.0\.1"/)
   assert.doesNotMatch(
     proxy,
@@ -312,6 +323,12 @@ test('settings and Mihomo forms share the KokoroBox HeroUI v3 conventions', () =
   }
 
   assert.match(form, /export const KokoTextField/)
+  assert.match(form, /export type KokoControlWidth = 'number' \| 'short' \| 'select' \| 'url' \| 'full'/)
+  assert.match(form, /number: 'w-32 max-w-full'/)
+  assert.match(form, /short: 'w-full max-w-72'/)
+  assert.match(form, /select: 'w-56 max-w-full'/)
+  assert.match(form, /url: 'w-full max-w-120'/)
+  assert.match(form, /controlWidth\?: KokoControlWidth/)
   assert.match(form, /<InputGroup\.Input/)
   assert.match(form, /export const KokoSelect/)
   assert.match(form, /<Select\.Trigger/)
@@ -337,7 +354,11 @@ test('settings and Mihomo forms share the KokoroBox HeroUI v3 conventions', () =
   assert.match(systemProxy, /<Switch\.Content>/)
   assert.match(systemProxy, /<Switch\.Control>/)
   assert.match(systemProxy, /<Switch\.Thumb \/>/)
-  assert.match(controls, /export const SettingTabs/)
+  assert.match(systemProxy, /controlWidth="short"/)
+  assert.match(controls, /export const KokoSegmentedControl/)
+  assert.match(controls, /variant="primary"/)
+  assert.match(controls, /min-w-16 shrink-0 whitespace-nowrap px-3/)
+  assert.doesNotMatch(controls, /export const SettingTabs/)
   assert.match(controls, /variant\?: React\.ComponentProps<typeof Tabs>\['variant'\]/)
   assert.match(controls, /variant=\{variant\}/)
   assert.match(controls, /<Tabs\.List/)
@@ -930,11 +951,18 @@ test('log timestamps stay compact for today and retain the date across days', ()
 test('common settings choices use the shared segmented control', () => {
   const general = readFileSync('src/renderer/src/components/settings/general-config.tsx', 'utf8')
   const controls = readFileSync('src/renderer/src/components/base/base-controls.tsx', 'utf8')
+  const rendererFiles = collectTsxFiles('src/renderer/src')
 
-  assert.match(controls, /export const SettingTabs/)
+  assert.match(controls, /export const KokoSegmentedControl/)
+  assert.match(controls, /variant="primary"/)
   assert.match(general, /ariaLabel=\{tr\('Notification style'\)\}/)
   assert.match(general, /ariaLabel=\{tr\('Update channel'\)\}/)
+  assert.match(general, /<KokoSegmentedControl/)
+  assert.match(general, /controlWidth="select"/)
   assert.doesNotMatch(general, /<Tabs/)
+  for (const file of rendererFiles) {
+    assert.doesNotMatch(readFileSync(file, 'utf8'), /\bSettingTabs\b/)
+  }
 })
 
 test('core settings separate runtime, service and environment concerns', () => {

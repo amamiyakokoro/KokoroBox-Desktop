@@ -1,7 +1,7 @@
 import { tr } from '../../../../../shared/i18n'
 import { Button, Switch } from '@heroui/react'
 import { KokoTextField as Input } from '@renderer/components/base/koko-form'
-import { SettingTabs } from '@renderer/components/base/base-controls'
+import { KokoSegmentedControl } from '@renderer/components/base/base-controls'
 import BasePage from '@renderer/components/base/base-page'
 import SettingItem from '@renderer/components/base/base-setting-item'
 import FeatureSettingsLayout, {
@@ -141,7 +141,7 @@ const Tun: React.FC<Props> = ({ embedded = false }) => {
             )}
             {platform === 'darwin' && (
               <SettingItem title={tr('Configure system DNS automatically')}>
-                <SettingTabs
+                <KokoSegmentedControl
                   ariaLabel={tr('Configure system DNS automatically')}
                   selectedKey={autoSetDNSMode}
                   options={[
@@ -160,7 +160,7 @@ const Tun: React.FC<Props> = ({ embedded = false }) => {
 
         <FeatureSettingsSection title={tr('TUN routing')}>
           <SettingItem title={tr('TUN network stack')} divider>
-            <SettingTabs
+            <KokoSegmentedControl
               ariaLabel={tr('TUN network stack')}
               selectedKey={values.stack}
               options={[

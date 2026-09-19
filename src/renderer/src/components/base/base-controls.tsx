@@ -27,7 +27,7 @@ export const KokoTabs: React.FC<KokoTabsProps> = ({
   className,
   options,
   selectedKey,
-  variant,
+  variant = 'secondary',
   onChange
 }) => {
   return (
@@ -46,7 +46,7 @@ export const KokoTabs: React.FC<KokoTabsProps> = ({
               className="min-w-max whitespace-nowrap"
               isDisabled={option.isDisabled}
             >
-              {option.label}
+              <span className="whitespace-nowrap">{option.label}</span>
               <Tabs.Indicator />
             </Tabs.Tab>
           ))}
@@ -56,4 +56,35 @@ export const KokoTabs: React.FC<KokoTabsProps> = ({
   )
 }
 
-export const SettingTabs = KokoTabs
+export const KokoSegmentedControl: React.FC<Omit<KokoTabsProps, 'variant'>> = ({
+  ariaLabel,
+  className,
+  options,
+  selectedKey,
+  onChange
+}) => {
+  return (
+    <Tabs
+      className={cn('w-fit max-w-full shrink-0', className)}
+      selectedKey={selectedKey}
+      variant="primary"
+      onSelectionChange={(key) => void onChange(String(key))}
+    >
+      <Tabs.ListContainer className="max-w-full">
+        <Tabs.List aria-label={ariaLabel}>
+          {options.map((option) => (
+            <Tabs.Tab
+              key={option.id}
+              id={option.id}
+              className="min-w-16 shrink-0 whitespace-nowrap px-3"
+              isDisabled={option.isDisabled}
+            >
+              <span className="whitespace-nowrap">{option.label}</span>
+              <Tabs.Indicator />
+            </Tabs.Tab>
+          ))}
+        </Tabs.List>
+      </Tabs.ListContainer>
+    </Tabs>
+  )
+}

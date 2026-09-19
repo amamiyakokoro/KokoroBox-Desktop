@@ -4,7 +4,7 @@ import { Button, Switch, Tooltip } from '@heroui/react'
 import SettingCard from '../base/base-setting-card'
 import SettingItem from '../base/base-setting-item'
 import { KokoSelect, KokoTextField as Input } from '../base/koko-form'
-import { SettingTabs } from '../base/base-controls'
+import { KokoSegmentedControl } from '../base/base-controls'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { copyEnv, startNetworkDetection, stopNetworkDetection } from '@renderer/utils/ipc'
 import { platform } from '@renderer/utils/init'
@@ -190,7 +190,7 @@ const BehaviorSettings: React.FC<Props> = ({
           {autoLightweight && (
             <>
               <SettingItem contentAlign="end" title={tr('Lightweight mode behavior')} divider>
-                <SettingTabs
+                <KokoSegmentedControl
                   ariaLabel={tr('Lightweight mode behavior')}
                   selectedKey={autoLightweightMode}
                   options={[

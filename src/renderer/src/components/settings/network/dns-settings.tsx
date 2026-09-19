@@ -1,7 +1,7 @@
 import { tr } from '../../../../../shared/i18n'
 import { Switch, Tooltip } from '@heroui/react'
 import { KokoTextField as Input } from '@renderer/components/base/koko-form'
-import { SettingTabs } from '@renderer/components/base/base-controls'
+import { KokoSegmentedControl } from '@renderer/components/base/base-controls'
 import BasePage from '@renderer/components/base/base-page'
 import SettingItem from '@renderer/components/base/base-setting-item'
 import FeatureSettingsLayout, {
@@ -302,7 +302,7 @@ const DNS: React.FC<Props> = ({ embedded = false }) => {
             </Switch>
           </SettingItem>
           <SettingItem title={tr('DNS policy')} divider>
-            <SettingTabs
+            <KokoSegmentedControl
               ariaLabel={tr('DNS policy')}
               selectedKey={isAntiPollutionPreset ? 'anti-pollution' : 'custom'}
               options={[
@@ -325,7 +325,7 @@ const DNS: React.FC<Props> = ({ embedded = false }) => {
             />
           </SettingItem>
           <SettingItem title={tr('Domain mapping mode')}>
-            <SettingTabs
+            <KokoSegmentedControl
               ariaLabel={tr('Domain mapping mode')}
               selectedKey={values.enhancedMode}
               options={[
@@ -395,7 +395,7 @@ const DNS: React.FC<Props> = ({ embedded = false }) => {
               </SettingItem>
             )}
             <SettingItem title={tr('Fake-IP filter mode')} divider>
-              <SettingTabs
+              <KokoSegmentedControl
                 ariaLabel={tr('Fake-IP filter mode')}
                 selectedKey={values.fakeIPFilterMode}
                 options={[

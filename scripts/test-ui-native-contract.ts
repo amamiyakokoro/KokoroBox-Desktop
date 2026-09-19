@@ -6,7 +6,14 @@ import test from 'node:test'
 const rendererRoot = 'src/renderer/src'
 const appOverridesCssPath = 'src/renderer/src/assets/app-overrides.css'
 
-const allowedKokoExports = new Set(['KokoActionMenu', 'KokoSelect', 'KokoTabs', 'KokoTextField'])
+const allowedKokoExports = new Set([
+  'KokoActionMenu',
+  'KokoSearchField',
+  'KokoSegmentedControl',
+  'KokoSelect',
+  'KokoTabs',
+  'KokoTextField'
+])
 
 const internalClassPattern =
   /\.(?:button|close-button|switch|tabs|select|list-box(?:-item)?|input(?:-group)?|modal|drawer|tooltip|card|toast|slider|meter|progress-bar)(?:(?:__|--)[\w-]+)?(?=[\s.:#>+~,\u005b]|$)/g

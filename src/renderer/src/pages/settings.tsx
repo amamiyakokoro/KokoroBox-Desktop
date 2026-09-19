@@ -10,10 +10,10 @@ import {
 } from '@renderer/components/settings/settings-registry'
 import { SettingCardModeProvider } from '@renderer/components/base/base-setting-card'
 import { KokoTabs } from '@renderer/components/base/base-controls'
-import { KokoTextField } from '@renderer/components/base/koko-form'
+import { KokoSearchField } from '@renderer/components/base/koko-search-field'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { LuChevronRight, LuSearch } from 'react-icons/lu'
+import { LuChevronRight } from 'react-icons/lu'
 
 const Settings: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -231,14 +231,11 @@ const Settings: React.FC = () => {
                       ? tr('Search settings')
                       : (selectedPanel?.label ?? selected.label)}
                   </h1>
-                  <KokoTextField
-                    size="sm"
-                    isClearable
+                  <KokoSearchField
                     value={search}
                     aria-label={tr('Search settings')}
                     placeholder={tr('Search settings')}
-                    startContent={<LuSearch className="shrink-0 text-foreground-400" />}
-                    className="settings-content-search w-60 max-w-[45%] shrink-0"
+                    className="settings-content-search max-w-[45%]"
                     onValueChange={setSearch}
                     onClear={() => setSearch('')}
                   />

@@ -8,12 +8,23 @@ type KokoTextFieldClassNames = {
   inputWrapper?: string
 }
 
+export type KokoControlWidth = 'number' | 'short' | 'select' | 'url' | 'full'
+
+const controlWidthClassNames: Record<KokoControlWidth, string> = {
+  number: 'w-32 max-w-full',
+  short: 'w-full max-w-72',
+  select: 'w-56 max-w-full',
+  url: 'w-full max-w-120',
+  full: 'w-full'
+}
+
 interface KokoTextFieldProps extends Omit<
   React.ComponentProps<typeof InputGroup.Input>,
   'className' | 'disabled' | 'onChange' | 'size'
 > {
   className?: string
   classNames?: KokoTextFieldClassNames
+  controlWidth?: KokoControlWidth
   endContent?: React.ReactNode
   isDisabled?: boolean
   isClearable?: boolean
@@ -28,6 +39,7 @@ interface KokoTextFieldProps extends Omit<
 export const KokoTextField: React.FC<KokoTextFieldProps> = ({
   className,
   classNames,
+  controlWidth,
   endContent,
   isDisabled,
   isClearable,
@@ -44,6 +56,7 @@ export const KokoTextField: React.FC<KokoTextFieldProps> = ({
     className={cn(
       size === 'sm' && 'min-h-8',
       size === 'lg' && 'min-h-10',
+      controlWidth && controlWidthClassNames[controlWidth],
       classNames?.inputWrapper,
       className
     )}
@@ -94,6 +107,7 @@ export interface KokoSelectOption {
 interface KokoSelectBaseProps {
   'aria-label': string
   className?: string
+  controlWidth?: KokoControlWidth
   density?: 'normal' | 'compact'
   disallowEmptySelection?: boolean
   isDisabled?: boolean
@@ -188,6 +202,7 @@ const KokoSelectContent: React.FC<{
 export const KokoSelect: React.FC<KokoSelectProps> = (props) => {
   const {
     className,
+    controlWidth,
     density = 'normal',
     disallowEmptySelection = false,
     isDisabled,
@@ -203,7 +218,11 @@ export const KokoSelect: React.FC<KokoSelectProps> = (props) => {
     return (
       <Select<object, 'multiple'>
         aria-label={props['aria-label']}
-        className={cn(labelPlacement === 'inside' && 'relative', className)}
+        className={cn(
+          labelPlacement === 'inside' && 'relative',
+          controlWidth && controlWidthClassNames[controlWidth],
+          className
+        )}
         isDisabled={isDisabled}
         selectionMode="multiple"
         value={props.value}
@@ -228,7 +247,11 @@ export const KokoSelect: React.FC<KokoSelectProps> = (props) => {
   return (
     <Select
       aria-label={props['aria-label']}
-      className={cn(labelPlacement === 'inside' && 'relative', className)}
+      className={cn(
+        labelPlacement === 'inside' && 'relative',
+        controlWidth && controlWidthClassNames[controlWidth],
+        className
+      )}
       isDisabled={isDisabled}
       value={props.value}
       variant={variant}
