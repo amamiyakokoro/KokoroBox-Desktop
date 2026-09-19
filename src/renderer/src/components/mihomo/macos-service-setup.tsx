@@ -1,7 +1,6 @@
 /* eslint-disable react/prop-types */
 import { tr } from '../../../../shared/i18n'
-import { Card, Chip, Modal, Separator, Spinner } from '@heroui/react'
-import { KokoButton as Button } from '../base/koko-form'
+import { Button, Card, Chip, Modal, Separator, Spinner } from '@heroui/react'
 import {
   initService,
   installService,
@@ -101,20 +100,28 @@ const MacOSServiceSetup: React.FC<Props> = ({ onChange }) => {
       ? {
           label: tr('Open System Settings'),
           run: openServiceSystemSettings,
-          color: 'warning' as const
+          variant: 'primary' as const,
+          className: 'bg-warning text-warning-foreground'
         }
       : status === 'need-init' || status === 'running'
         ? {
             label: tr('Initialize secure connection'),
             run: initService,
-            color: 'primary' as const
+            variant: 'primary' as const,
+            className: undefined
           }
         : status === 'stopped' || status === 'paused'
-          ? { label: tr('Start system service'), run: startService, color: 'primary' as const }
+          ? {
+              label: tr('Start system service'),
+              run: startService,
+              variant: 'primary' as const,
+              className: undefined
+            }
           : {
               label: tr('Set up system service'),
               run: installService,
-              color: 'primary' as const
+              variant: 'primary' as const,
+              className: undefined
             }
 
   return (
@@ -177,7 +184,7 @@ const MacOSServiceSetup: React.FC<Props> = ({ onChange }) => {
             <Modal.Footer>
               <Button
                 size="sm"
-                variant="light"
+                variant="ghost"
                 className="mr-auto"
                 isDisabled={loading}
                 onPress={() => onChange(false)}
@@ -186,7 +193,7 @@ const MacOSServiceSetup: React.FC<Props> = ({ onChange }) => {
               </Button>
               <Button
                 size="sm"
-                variant="flat"
+                variant="secondary"
                 isDisabled={loading}
                 onPress={() => void runAction(refresh)}
               >
@@ -194,8 +201,9 @@ const MacOSServiceSetup: React.FC<Props> = ({ onChange }) => {
               </Button>
               <Button
                 size="sm"
-                color={primaryAction.color}
-                isLoading={loading}
+                className={primaryAction.className}
+                variant={primaryAction.variant}
+                isPending={loading}
                 onPress={() => void runAction(primaryAction.run)}
               >
                 {primaryAction.label}

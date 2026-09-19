@@ -1,7 +1,6 @@
 import { tr } from '../../../../shared/i18n'
 import React, { useEffect, useState, useCallback } from 'react'
-import { Card, Chip, Modal, Separator, Spinner } from '@heroui/react'
-import { KokoButton as Button } from '../base/koko-form'
+import { Button, Card, Chip, Modal, Separator, Spinner } from '@heroui/react'
 import {
   openServiceSystemSettings,
   serviceStatus,
@@ -247,7 +246,7 @@ const ServiceModal: React.FC<Props> = (props) => {
             <Modal.Footer className="flex-col gap-2 sm:flex-row sm:flex-wrap">
               <Button
                 size="sm"
-                variant="light"
+                variant="ghost"
                 onPress={() => onChange(false)}
                 isDisabled={loading}
                 className="sm:mr-auto"
@@ -259,41 +258,33 @@ const ServiceModal: React.FC<Props> = (props) => {
                 status === null || status === 'unknown' || status === 'not-installed' ? null : (
                   <Button
                     size="sm"
-                    color="primary"
-                    variant="flat"
+                    variant="secondary"
                     onPress={() => handleAction(onInit)}
-                    isLoading={loading}
+                    isPending={loading}
                   >
                     {status === 'need-init' ? tr('Initialize') : tr('Reset authentication')}
                   </Button>
                 )
               ) : status === 'unknown' ? (
-                <Button
-                  size="sm"
-                  color="primary"
-                  variant="flat"
-                  onPress={handleRefresh}
-                  isLoading={loading}
-                >
+                <Button size="sm" variant="secondary" onPress={handleRefresh} isPending={loading}>
                   {tr('Check again')}
                 </Button>
               ) : status === 'not-installed' ? (
                 <Button
                   size="sm"
-                  color="primary"
-                  variant="shadow"
+                  variant="primary"
                   onPress={() => handleAction(onInstall!, true)}
-                  isLoading={loading}
+                  isPending={loading}
                 >
                   {tr('Install service')}
                 </Button>
               ) : status === 'requires-approval' && platform === 'darwin' ? (
                 <Button
                   size="sm"
-                  color="warning"
-                  variant="flat"
+                  className="text-warning-700 dark:text-warning-400"
+                  variant="secondary"
                   onPress={() => handleAction(openServiceSystemSettings)}
-                  isLoading={loading}
+                  isPending={loading}
                 >
                   {tr('Open System Settings')}
                 </Button>
@@ -301,48 +292,44 @@ const ServiceModal: React.FC<Props> = (props) => {
                 <>
                   <Button
                     size="sm"
-                    color="primary"
-                    variant="flat"
+                    variant="secondary"
                     onPress={() => handleAction(onInit)}
-                    isLoading={loading}
+                    isPending={loading}
                   >
                     {status === 'need-init' ? tr('Initialize') : tr('Initialize again')}
                   </Button>
                   <Button
                     size="sm"
-                    color="primary"
-                    variant="flat"
+                    variant="secondary"
                     onPress={() => handleAction(onRestart!, true)}
-                    isLoading={loading}
+                    isPending={loading}
                   >
                     {tr('Restart')}
                   </Button>
                   <Button
                     size="sm"
-                    color="primary"
-                    variant="flat"
+                    variant="secondary"
                     onPress={() => handleAction(onInstall!, true)}
-                    isLoading={loading}
+                    isPending={loading}
                   >
                     {tr('Repair service')}
                   </Button>
                   {status !== 'running' && status !== 'need-init' ? (
                     <Button
                       size="sm"
-                      color="success"
-                      variant="shadow"
+                      className="bg-success text-success-foreground"
+                      variant="primary"
                       onPress={() => handleAction(onStart!, true)}
-                      isLoading={loading}
+                      isPending={loading}
                     >
                       {tr('Start')}
                     </Button>
                   ) : null}
                   <Button
                     size="sm"
-                    color="danger"
-                    variant="flat"
+                    variant="danger-soft"
                     onPress={() => handleAction(onUninstall!)}
-                    isLoading={loading}
+                    isPending={loading}
                   >
                     {tr('Uninstall')}
                   </Button>

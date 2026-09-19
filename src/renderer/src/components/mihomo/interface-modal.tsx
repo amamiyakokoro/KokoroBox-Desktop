@@ -1,9 +1,8 @@
 import { tr } from '../../../../shared/i18n'
-import { Modal } from '@heroui/react'
+import { Button, Modal } from '@heroui/react'
 import React, { useEffect, useState } from 'react'
 import { getInterfaces } from '@renderer/utils/ipc'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
-import { KokoButton as Button } from '../base/koko-form'
 import { LuCopy } from 'react-icons/lu'
 
 interface Props {
@@ -54,7 +53,7 @@ const InterfaceModal: React.FC<Props> = (props) => {
                                 className="h-6 w-6 min-w-6"
                                 isIconOnly
                                 size="sm"
-                                variant="light"
+                                variant="ghost"
                                 onPress={() => void navigator.clipboard.writeText(v.address)}
                               >
                                 <LuCopy />

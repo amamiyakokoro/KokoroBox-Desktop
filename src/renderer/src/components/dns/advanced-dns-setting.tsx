@@ -1,14 +1,10 @@
 import { tr } from '../../../../shared/i18n'
 import React, { useState } from 'react'
+import { Switch, Tooltip } from '@heroui/react'
 import SettingCard from '../base/base-setting-card'
 import SettingItem from '../base/base-setting-item'
 import EditableList from '../base/base-list-editor'
-import {
-  KokoSelect,
-  KokoSwitch as Switch,
-  KokoTextField as Input,
-  KokoTooltip as Tooltip
-} from '../base/koko-form'
+import { KokoSelect, KokoTextField as Input } from '../base/koko-form'
 import { MdHelpOutline } from 'react-icons/md'
 import { isValidDnsServer, isValidDomainWildcard } from '@renderer/utils/validate'
 import DnsServerList from './dns-server-list'
@@ -110,8 +106,14 @@ const AdvancedDnsSetting: React.FC<AdvancedDnsSettingProps> = ({
           size="sm"
           isSelected={respectRules}
           isDisabled={proxyServerNameserver.length === 0}
-          onValueChange={onRespectRulesChange}
-        />
+          onChange={onRespectRulesChange}
+        >
+          <Switch.Content>
+            <Switch.Control>
+              <Switch.Thumb />
+            </Switch.Control>
+          </Switch.Content>
+        </Switch>
       </SettingItem>
       <DnsServerList
         title={tr('Direct-connection DNS servers')}
@@ -124,17 +126,20 @@ const AdvancedDnsSetting: React.FC<AdvancedDnsSettingProps> = ({
       <SettingItem
         title={tr('Apply domain DNS policy to direct DNS')}
         actions={
-          <Tooltip
-            content={tr(
-              'When enabled, direct traffic still checks the domain DNS policy before using Direct DNS. When disabled, it always uses Direct DNS.'
-            )}
-          >
-            <span
-              className="ml-1 inline-flex cursor-help text-foreground-400"
-              aria-label={tr('Description')}
-            >
-              <MdHelpOutline />
-            </span>
+          <Tooltip delay={0}>
+            <Tooltip.Trigger>
+              <span
+                className="ml-1 inline-flex cursor-help text-foreground-400"
+                aria-label={tr('Description')}
+              >
+                <MdHelpOutline />
+              </span>
+            </Tooltip.Trigger>
+            <Tooltip.Content>
+              {tr(
+                'When enabled, direct traffic still checks the domain DNS policy before using Direct DNS. When disabled, it always uses Direct DNS.'
+              )}
+            </Tooltip.Content>
           </Tooltip>
         }
         divider
@@ -143,8 +148,14 @@ const AdvancedDnsSetting: React.FC<AdvancedDnsSettingProps> = ({
           size="sm"
           isSelected={directNameserverFollowPolicy}
           isDisabled={directNameserver.length === 0}
-          onValueChange={onDirectNameserverFollowPolicyChange}
-        />
+          onChange={onDirectNameserverFollowPolicyChange}
+        >
+          <Switch.Content>
+            <Switch.Control>
+              <Switch.Thumb />
+            </Switch.Control>
+          </Switch.Content>
+        </Switch>
       </SettingItem>
       <DnsServerList
         title={tr('Proxy DNS servers')}
@@ -292,8 +303,14 @@ const AdvancedDnsSetting: React.FC<AdvancedDnsSettingProps> = ({
             <Switch
               size="sm"
               isSelected={fallbackFilter.geoip !== false}
-              onValueChange={(geoip) => onFallbackFilterChange({ ...fallbackFilter, geoip })}
-            />
+              onChange={(geoip) => onFallbackFilterChange({ ...fallbackFilter, geoip })}
+            >
+              <Switch.Content>
+                <Switch.Control>
+                  <Switch.Thumb />
+                </Switch.Control>
+              </Switch.Content>
+            </Switch>
           </SettingItem>
           <SettingItem title={tr('Fallback GeoIP country')} divider>
             <Input
@@ -307,16 +324,24 @@ const AdvancedDnsSetting: React.FC<AdvancedDnsSettingProps> = ({
             />
           </SettingItem>
           <SettingItem title={tr('Query fallback DNS lazily')} divider>
-            <Switch
-              size="sm"
-              isSelected={fallbackLazyQuery}
-              onValueChange={onFallbackLazyQueryChange}
-            />
+            <Switch size="sm" isSelected={fallbackLazyQuery} onChange={onFallbackLazyQueryChange}>
+              <Switch.Content>
+                <Switch.Control>
+                  <Switch.Thumb />
+                </Switch.Control>
+              </Switch.Content>
+            </Switch>
           </SettingItem>
         </>
       )}
       <SettingItem title={tr('Prefer HTTP/3')} divider>
-        <Switch size="sm" isSelected={preferH3} onValueChange={onPreferH3Change} />
+        <Switch size="sm" isSelected={preferH3} onChange={onPreferH3Change}>
+          <Switch.Content>
+            <Switch.Control>
+              <Switch.Thumb />
+            </Switch.Control>
+          </Switch.Content>
+        </Switch>
       </SettingItem>
       <SettingItem title={tr('DNS cache algorithm')} divider>
         <KokoSelect
@@ -333,10 +358,22 @@ const AdvancedDnsSetting: React.FC<AdvancedDnsSettingProps> = ({
         />
       </SettingItem>
       <SettingItem title={tr('Use system hosts')} divider>
-        <Switch size="sm" isSelected={useSystemHosts} onValueChange={onUseSystemHostsChange} />
+        <Switch size="sm" isSelected={useSystemHosts} onChange={onUseSystemHostsChange}>
+          <Switch.Content>
+            <Switch.Control>
+              <Switch.Thumb />
+            </Switch.Control>
+          </Switch.Content>
+        </Switch>
       </SettingItem>
       <SettingItem title={tr('Custom hosts')}>
-        <Switch size="sm" isSelected={useHosts} onValueChange={onUseHostsChange} />
+        <Switch size="sm" isSelected={useHosts} onChange={onUseHostsChange}>
+          <Switch.Content>
+            <Switch.Control>
+              <Switch.Thumb />
+            </Switch.Control>
+          </Switch.Content>
+        </Switch>
       </SettingItem>
       {useHosts && (
         <EditableList

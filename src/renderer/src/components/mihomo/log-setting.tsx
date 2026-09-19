@@ -1,11 +1,7 @@
 import { tr } from '../../../../shared/i18n'
 import { useEffect, useState } from 'react'
-import {
-  KokoButton as Button,
-  KokoSwitch as Switch,
-  KokoTextField as Input,
-  KokoTooltip as Tooltip
-} from '../base/koko-form'
+import { Button, Switch, Tooltip } from '@heroui/react'
+import { KokoTextField as Input } from '../base/koko-form'
 import { IoIosHelpCircle } from 'react-icons/io'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import SettingCard from '../base/base-setting-card'
@@ -42,14 +38,17 @@ const LogSetting: React.FC = () => {
         compatKey="legacy"
         title={tr('Save logs')}
         actions={
-          <Tooltip
-            content={tr(
-              'When disabled, logs are no longer written to local files. The live log view still shows the current session'
-            )}
-          >
-            <Button isIconOnly size="sm" variant="light">
-              <IoIosHelpCircle className="text-lg" />
-            </Button>
+          <Tooltip delay={0}>
+            <Tooltip.Trigger>
+              <Button isIconOnly size="sm" variant="ghost">
+                <IoIosHelpCircle className="text-lg" />
+              </Button>
+            </Tooltip.Trigger>
+            <Tooltip.Content>
+              {tr(
+                'When disabled, logs are no longer written to local files. The live log view still shows the current session'
+              )}
+            </Tooltip.Content>
           </Tooltip>
         }
         divider
@@ -57,17 +56,23 @@ const LogSetting: React.FC = () => {
         <Switch
           size="sm"
           isSelected={saveLogs}
-          onValueChange={(value) => {
+          onChange={(value) => {
             patchAppConfig({ saveLogs: value })
           }}
-        />
+        >
+          <Switch.Content>
+            <Switch.Control>
+              <Switch.Thumb />
+            </Switch.Control>
+          </Switch.Content>
+        </Switch>
       </SettingItem>
       <SettingItem compatKey="legacy" title={tr('Log retention days')} divider>
         <div className="flex">
           {saveLogs && maxLogDaysInput !== maxLogDays && (
             <Button
               size="sm"
-              color="primary"
+              variant="primary"
               className="mr-2"
               onPress={() => {
                 patchAppConfig({ maxLogDays: maxLogDaysInput })
@@ -94,14 +99,17 @@ const LogSetting: React.FC = () => {
         compatKey="legacy"
         title={tr('Log file size limit')}
         actions={
-          <Tooltip
-            content={tr(
-              'Only affects local log files. The oldest lines are removed when the size limit is exceeded'
-            )}
-          >
-            <Button isIconOnly size="sm" variant="light">
-              <IoIosHelpCircle className="text-lg" />
-            </Button>
+          <Tooltip delay={0}>
+            <Tooltip.Trigger>
+              <Button isIconOnly size="sm" variant="ghost">
+                <IoIosHelpCircle className="text-lg" />
+              </Button>
+            </Tooltip.Trigger>
+            <Tooltip.Content>
+              {tr(
+                'Only affects local log files. The oldest lines are removed when the size limit is exceeded'
+              )}
+            </Tooltip.Content>
           </Tooltip>
         }
         divider
@@ -110,7 +118,7 @@ const LogSetting: React.FC = () => {
           {saveLogs && maxLogFileSizeMBInput !== maxLogFileSizeMB && (
             <Button
               size="sm"
-              color="primary"
+              variant="primary"
               className="mr-2"
               onPress={() => {
                 patchAppConfig({ maxLogFileSizeMB: maxLogFileSizeMBInput })
@@ -137,12 +145,15 @@ const LogSetting: React.FC = () => {
         compatKey="legacy"
         title={tr('Live log entry limit')}
         actions={
-          <Tooltip
-            content={tr('Only affects entries retained in the live log view, not local log files')}
-          >
-            <Button isIconOnly size="sm" variant="light">
-              <IoIosHelpCircle className="text-lg" />
-            </Button>
+          <Tooltip delay={0}>
+            <Tooltip.Trigger>
+              <Button isIconOnly size="sm" variant="ghost">
+                <IoIosHelpCircle className="text-lg" />
+              </Button>
+            </Tooltip.Trigger>
+            <Tooltip.Content>
+              {tr('Only affects entries retained in the live log view, not local log files')}
+            </Tooltip.Content>
           </Tooltip>
         }
       >
@@ -150,7 +161,7 @@ const LogSetting: React.FC = () => {
           {maxLogEntriesInput !== maxLogEntries && (
             <Button
               size="sm"
-              color="primary"
+              variant="primary"
               className="mr-2"
               onPress={() => {
                 patchAppConfig({ maxLogEntries: maxLogEntriesInput })

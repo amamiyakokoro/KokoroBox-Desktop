@@ -69,15 +69,12 @@ Current `Koko*` exports are frozen to:
 
 - `KokoTextField`
 - `KokoSelect`
-- `KokoSwitch`
-- `KokoButton`
-- `KokoTooltip`
 - `KokoTabs`
 - `KokoActionMenu`
 
 Behavior worth preserving includes value normalization, concise selected-value rendering,
-application option models, clear actions, and accessible menu identities. Legacy color/variant
-mapping and internal appearance classes are migration debt to remove in Phase 8.
+application option models, clear actions, and accessible menu identities. Native HeroUI Button,
+Switch, and Tooltip APIs are used directly instead of preserving v2 vocabulary through adapters.
 
 Phase 8 has established these thinner contracts:
 
@@ -89,9 +86,8 @@ Phase 8 has established these thinner contracts:
 - `KokoActionMenu` maps application actions to native Dropdown items and uses a native v3 Button
   trigger. It does not translate v2 colors or variants and does not restyle the native popover.
 
-`KokoButton`, `KokoSwitch`, and `KokoTooltip` remain temporary migration shims. Their consumer
-counts are now bounded at 27, 16, and 15 renderer files respectively. These allowlists may shrink
-in later phases; new consumers are not permitted.
+The former `KokoButton`, `KokoSwitch`, and `KokoTooltip` migration shims were removed in Phase 12.
+The native contract test prevents these adapters from being reintroduced.
 
 Phase 9 moves card-heavy management surfaces to native v3 Card anatomy. Dense rule and proxy rows
 may choose compact application-level padding, while Card surface, radius, elevation, and focus

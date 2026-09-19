@@ -1,13 +1,9 @@
 import { tr } from '../../../../shared/i18n'
 import { appRoutingSupported } from '../../../../shared/app-routing'
 import React from 'react'
+import { Button, Switch, Tooltip } from '@heroui/react'
 import SettingCard from '../base/base-setting-card'
 import SettingItem from '../base/base-setting-item'
-import {
-  KokoButton as Button,
-  KokoSwitch as Switch,
-  KokoTooltip as Tooltip
-} from '../base/koko-form'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { LuArrowDown, LuArrowUp } from 'react-icons/lu'
 import { normalizeSiderOrder } from '../sider/sider-order'
@@ -176,40 +172,52 @@ const SiderConfig: React.FC = () => {
                   divider={index !== entries.length - 1}
                 >
                   <div className="flex items-center gap-1">
-                    <Tooltip content={`${tr('Move up')}: ${item.title}`}>
-                      <Button
-                        isIconOnly
-                        size="sm"
-                        variant="light"
-                        aria-label={`${tr('Move up')}: ${item.title}`}
-                        isDisabled={index === 0}
-                        onPress={() => void moveSiderItem(entries, item.id, -1)}
-                      >
-                        <LuArrowUp aria-hidden="true" />
-                      </Button>
+                    <Tooltip delay={0}>
+                      <Tooltip.Trigger>
+                        <Button
+                          isIconOnly
+                          size="sm"
+                          variant="ghost"
+                          aria-label={`${tr('Move up')}: ${item.title}`}
+                          isDisabled={index === 0}
+                          onPress={() => void moveSiderItem(entries, item.id, -1)}
+                        >
+                          <LuArrowUp aria-hidden="true" />
+                        </Button>
+                      </Tooltip.Trigger>
+                      <Tooltip.Content>{`${tr('Move up')}: ${item.title}`}</Tooltip.Content>
                     </Tooltip>
-                    <Tooltip content={`${tr('Move down')}: ${item.title}`}>
-                      <Button
-                        isIconOnly
-                        size="sm"
-                        variant="light"
-                        aria-label={`${tr('Move down')}: ${item.title}`}
-                        isDisabled={index === entries.length - 1}
-                        onPress={() => void moveSiderItem(entries, item.id, 1)}
-                      >
-                        <LuArrowDown aria-hidden="true" />
-                      </Button>
+                    <Tooltip delay={0}>
+                      <Tooltip.Trigger>
+                        <Button
+                          isIconOnly
+                          size="sm"
+                          variant="ghost"
+                          aria-label={`${tr('Move down')}: ${item.title}`}
+                          isDisabled={index === entries.length - 1}
+                          onPress={() => void moveSiderItem(entries, item.id, 1)}
+                        >
+                          <LuArrowDown aria-hidden="true" />
+                        </Button>
+                      </Tooltip.Trigger>
+                      <Tooltip.Content>{`${tr('Move down')}: ${item.title}`}</Tooltip.Content>
                     </Tooltip>
                     <Switch
                       size="sm"
                       aria-label={item.title}
                       isSelected={status !== 'hidden'}
-                      onValueChange={(visible) => {
+                      onChange={(visible) => {
                         void patchAppConfig({
                           [item.key]: visible ? item.defaultStatus : 'hidden'
                         })
                       }}
-                    />
+                    >
+                      <Switch.Content>
+                        <Switch.Control>
+                          <Switch.Thumb />
+                        </Switch.Control>
+                      </Switch.Content>
+                    </Switch>
                   </div>
                 </SettingItem>
               )

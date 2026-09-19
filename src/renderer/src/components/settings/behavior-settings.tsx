@@ -1,14 +1,9 @@
 import { tr } from '../../../../shared/i18n'
 import React, { useState, useEffect } from 'react'
+import { Button, Switch, Tooltip } from '@heroui/react'
 import SettingCard from '../base/base-setting-card'
 import SettingItem from '../base/base-setting-item'
-import {
-  KokoButton as Button,
-  KokoSelect,
-  KokoSwitch as Switch,
-  KokoTextField as Input,
-  KokoTooltip as Tooltip
-} from '../base/koko-form'
+import { KokoSelect, KokoTextField as Input } from '../base/koko-form'
 import { SettingTabs } from '../base/base-controls'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { copyEnv, startNetworkDetection, stopNetworkDetection } from '@renderer/utils/ipc'
@@ -63,14 +58,17 @@ const BehaviorSettings: React.FC<Props> = ({
               compatKey="legacy"
               title="GitHub API Token"
               actions={
-                <Tooltip
-                  content={tr(
-                    'Used for GitHub update checks, downloads and Gist sync. Leave empty for anonymous requests'
-                  )}
-                >
-                  <Button aria-label={tr('Description')} isIconOnly size="sm" variant="light">
-                    <IoIosHelpCircle className="text-lg" />
-                  </Button>
+                <Tooltip delay={0}>
+                  <Tooltip.Trigger>
+                    <Button aria-label={tr('Description')} isIconOnly size="sm" variant="ghost">
+                      <IoIosHelpCircle className="text-lg" />
+                    </Button>
+                  </Tooltip.Trigger>
+                  <Tooltip.Content>
+                    {tr(
+                      'Used for GitHub update checks, downloads and Gist sync. Leave empty for anonymous requests'
+                    )}
+                  </Tooltip.Content>
                 </Tooltip>
               }
               divider
@@ -91,7 +89,7 @@ const BehaviorSettings: React.FC<Props> = ({
                     }
                     isIconOnly
                     size="sm"
-                    variant="light"
+                    variant="ghost"
                     onPress={() => setGithubTokenVisible((visible) => !visible)}
                   >
                     {githubTokenVisible ? (
@@ -109,16 +107,20 @@ const BehaviorSettings: React.FC<Props> = ({
               compatKey="legacy"
               title={tr('Copy environment variable format')}
               actions={envType.map((type) => (
-                <Button
-                  key={type}
-                  title={type}
-                  isIconOnly
-                  size="sm"
-                  variant="light"
-                  onPress={() => copyEnv(type)}
-                >
-                  <BiCopy className="text-lg" />
-                </Button>
+                <Tooltip delay={0} key={type}>
+                  <Tooltip.Trigger>
+                    <Button
+                      aria-label={type}
+                      isIconOnly
+                      size="sm"
+                      variant="ghost"
+                      onPress={() => copyEnv(type)}
+                    >
+                      <BiCopy className="text-lg" />
+                    </Button>
+                  </Tooltip.Trigger>
+                  <Tooltip.Content>{type}</Tooltip.Content>
+                </Tooltip>
               ))}
               divider
             >
@@ -156,14 +158,17 @@ const BehaviorSettings: React.FC<Props> = ({
             compatKey="legacy"
             title={tr('Automatic lightweight mode')}
             actions={
-              <Tooltip
-                content={tr(
-                  'Enter lightweight mode after the window has been closed for the specified time'
-                )}
-              >
-                <Button isIconOnly size="sm" variant="light">
-                  <IoIosHelpCircle className="text-lg" />
-                </Button>
+              <Tooltip delay={0}>
+                <Tooltip.Trigger>
+                  <Button isIconOnly size="sm" variant="ghost">
+                    <IoIosHelpCircle className="text-lg" />
+                  </Button>
+                </Tooltip.Trigger>
+                <Tooltip.Content>
+                  {tr(
+                    'Enter lightweight mode after the window has been closed for the specified time'
+                  )}
+                </Tooltip.Content>
               </Tooltip>
             }
             divider
@@ -171,10 +176,16 @@ const BehaviorSettings: React.FC<Props> = ({
             <Switch
               size="sm"
               isSelected={autoLightweight}
-              onValueChange={(v) => {
+              onChange={(v) => {
                 patchAppConfig({ autoLightweight: v })
               }}
-            />
+            >
+              <Switch.Content>
+                <Switch.Control>
+                  <Switch.Thumb />
+                </Switch.Control>
+              </Switch.Content>
+            </Switch>
           </SettingItem>
           {autoLightweight && (
             <>
@@ -220,14 +231,17 @@ const BehaviorSettings: React.FC<Props> = ({
             compatKey="legacy"
             title={tr('Stop core when offline')}
             actions={
-              <Tooltip
-                content={tr(
-                  'Stop the core when the network disconnects and restart it when connectivity returns'
-                )}
-              >
-                <Button isIconOnly size="sm" variant="light">
-                  <IoIosHelpCircle className="text-lg" />
-                </Button>
+              <Tooltip delay={0}>
+                <Tooltip.Trigger>
+                  <Button isIconOnly size="sm" variant="ghost">
+                    <IoIosHelpCircle className="text-lg" />
+                  </Button>
+                </Tooltip.Trigger>
+                <Tooltip.Content>
+                  {tr(
+                    'Stop the core when the network disconnects and restart it when connectivity returns'
+                  )}
+                </Tooltip.Content>
               </Tooltip>
             }
             divider
@@ -235,7 +249,7 @@ const BehaviorSettings: React.FC<Props> = ({
             <Switch
               size="sm"
               isSelected={networkDetection}
-              onValueChange={(v) => {
+              onChange={(v) => {
                 patchAppConfig({ networkDetection: v })
                 if (v) {
                   startNetworkDetection()
@@ -243,7 +257,13 @@ const BehaviorSettings: React.FC<Props> = ({
                   stopNetworkDetection()
                 }
               }}
-            />
+            >
+              <Switch.Content>
+                <Switch.Control>
+                  <Switch.Thumb />
+                </Switch.Control>
+              </Switch.Content>
+            </Switch>
           </SettingItem>
           {networkDetection && (
             <>
@@ -252,7 +272,7 @@ const BehaviorSettings: React.FC<Props> = ({
                   {interval !== networkDetectionInterval && (
                     <Button
                       size="sm"
-                      color="primary"
+                      variant="primary"
                       className="mr-2"
                       onPress={async () => {
                         await patchAppConfig({ networkDetectionInterval: interval })
@@ -279,7 +299,7 @@ const BehaviorSettings: React.FC<Props> = ({
                 {bypass.length != networkDetectionBypass.length && (
                   <Button
                     size="sm"
-                    color="primary"
+                    variant="primary"
                     onPress={async () => {
                       await patchAppConfig({ networkDetectionBypass: bypass })
                       await startNetworkDetection()
@@ -299,7 +319,7 @@ const BehaviorSettings: React.FC<Props> = ({
             {pauseSSIDInput.join('') !== pauseSSIDArray.join('') && (
               <Button
                 size="sm"
-                color="primary"
+                variant="primary"
                 onPress={() => {
                   patchAppConfig({ pauseSSID: pauseSSIDInput })
                 }}

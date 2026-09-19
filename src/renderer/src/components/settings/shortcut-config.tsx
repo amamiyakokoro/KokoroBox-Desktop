@@ -1,5 +1,6 @@
 import { tr } from '../../../../shared/i18n'
-import { KokoButton as Button, KokoTextField as Input } from '../base/koko-form'
+import { Button } from '@heroui/react'
+import { KokoTextField as Input } from '../base/koko-form'
 import SettingCard from '../base/base-setting-card'
 import SettingItem from '../base/base-setting-item'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
@@ -207,7 +208,7 @@ const ShortcutInput: React.FC<{
     <>
       {inputValue !== value && (
         <Button
-          color="primary"
+          variant="primary"
           className="mr-2"
           size="sm"
           onPress={async () => {

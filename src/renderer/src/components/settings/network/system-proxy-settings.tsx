@@ -1,10 +1,6 @@
 import { tr } from '../../../../../shared/i18n'
-import {
-  KokoButton as Button,
-  KokoSwitch as Switch,
-  KokoTextField as Input,
-  KokoTooltip as Tooltip
-} from '@renderer/components/base/koko-form'
+import { Button, Switch, Tooltip } from '@heroui/react'
+import { KokoTextField as Input } from '@renderer/components/base/koko-form'
 import { SettingTabs } from '@renderer/components/base/base-controls'
 import BasePage from '@renderer/components/base/base-page'
 import SettingItem from '@renderer/components/base/base-setting-item'
@@ -236,7 +232,7 @@ const Sysproxy: React.FC<Props> = ({ embedded = false }) => {
           </SettingItem>
           {values.mode === 'auto' && (
             <SettingItem title={tr('PAC script')}>
-              <Button size="sm" onPress={() => setOpenPacEditor(true)}>
+              <Button size="sm" variant="secondary" onPress={() => setOpenPacEditor(true)}>
                 {tr('Edit')}
               </Button>
             </SettingItem>
@@ -248,6 +244,7 @@ const Sysproxy: React.FC<Props> = ({ embedded = false }) => {
             <SettingItem title={tr('UWP tool')} divider>
               <Button
                 size="sm"
+                variant="secondary"
                 onPress={async () => {
                   await openUWPTool()
                 }}
@@ -282,36 +279,48 @@ const Sysproxy: React.FC<Props> = ({ embedded = false }) => {
             <SettingItem
               title={tr('Terminal proxy')}
               actions={
-                <Tooltip
-                  content={
+                <Tooltip delay={0}>
+                  <Tooltip.Trigger>
+                    <Button isIconOnly size="sm" variant="ghost" aria-label={tr('Description')}>
+                      <IoIosHelpCircle className="text-lg" />
+                    </Button>
+                  </Tooltip.Trigger>
+                  <Tooltip.Content>
                     <div>
                       {tr(
                         'Existing terminals do not update automatically after enabling or disabling this setting. Fully close and reopen the terminal; some desktop environments may require signing in again.'
                       )}
                     </div>
-                  }
-                >
-                  <Button isIconOnly size="sm" variant="light">
-                    <IoIosHelpCircle className="text-lg" />
-                  </Button>
+                  </Tooltip.Content>
                 </Tooltip>
               }
             >
               <Switch
                 size="sm"
                 isSelected={values.terminalProxy}
-                onValueChange={(v) => {
+                onChange={(v) => {
                   setValues({ ...values, terminalProxy: v })
                 }}
-              />
+              >
+                <Switch.Content>
+                  <Switch.Control>
+                    <Switch.Thumb />
+                  </Switch.Control>
+                </Switch.Content>
+              </Switch>
             </SettingItem>
           )}
           {platform !== 'linux' && values.settingMode === 'service' && (
             <SettingItem
               title={tr('Active interfaces only')}
               actions={
-                <Tooltip
-                  content={
+                <Tooltip delay={0}>
+                  <Tooltip.Trigger>
+                    <Button isIconOnly size="sm" variant="ghost" aria-label={tr('Description')}>
+                      <IoIosHelpCircle className="text-lg" />
+                    </Button>
+                  </Tooltip.Trigger>
+                  <Tooltip.Content>
                     <>
                       <div>
                         {tr(
@@ -319,11 +328,7 @@ const Sysproxy: React.FC<Props> = ({ embedded = false }) => {
                         )}
                       </div>
                     </>
-                  }
-                >
-                  <Button isIconOnly size="sm" variant="light">
-                    <IoIosHelpCircle className="text-lg" />
-                  </Button>
+                  </Tooltip.Content>
                 </Tooltip>
               }
             >
@@ -331,10 +336,16 @@ const Sysproxy: React.FC<Props> = ({ embedded = false }) => {
                 size="sm"
                 isSelected={onlyActiveDevice}
                 isDisabled={!values.settingMode || values.settingMode !== 'service'}
-                onValueChange={(v) => {
+                onChange={(v) => {
                   patchAppConfig({ onlyActiveDevice: v })
                 }}
-              />
+              >
+                <Switch.Content>
+                  <Switch.Control>
+                    <Switch.Thumb />
+                  </Switch.Control>
+                </Switch.Content>
+              </Switch>
             </SettingItem>
           )}
         </FeatureSettingsSection>
@@ -345,18 +356,19 @@ const Sysproxy: React.FC<Props> = ({ embedded = false }) => {
               <SettingItem
                 title={tr('System proxy watchdog')}
                 actions={
-                  <Tooltip
-                    content={
+                  <Tooltip delay={0}>
+                    <Tooltip.Trigger>
+                      <Button isIconOnly size="sm" variant="ghost" aria-label={tr('Description')}>
+                        <IoIosHelpCircle className="text-lg" />
+                      </Button>
+                    </Tooltip.Trigger>
+                    <Tooltip.Content>
                       <div>
                         {tr(
                           'Restore the system proxy automatically if it is changed. Requires service mode'
                         )}
                       </div>
-                    }
-                  >
-                    <Button isIconOnly size="sm" variant="light">
-                      <IoIosHelpCircle className="text-lg" />
-                    </Button>
+                    </Tooltip.Content>
                   </Tooltip>
                 }
                 divider={values.guard || values.mode === 'manual'}
@@ -364,24 +376,31 @@ const Sysproxy: React.FC<Props> = ({ embedded = false }) => {
                 <Switch
                   size="sm"
                   isSelected={values.guard}
-                  onValueChange={(v) => {
+                  onChange={(v) => {
                     setValues({ ...values, guard: v, guardNotify: v ? values.guardNotify : false })
                   }}
-                />
+                >
+                  <Switch.Content>
+                    <Switch.Control>
+                      <Switch.Thumb />
+                    </Switch.Control>
+                  </Switch.Content>
+                </Switch>
               </SettingItem>
             )}
             {values.settingMode === 'service' && values.guard && (
               <SettingItem
                 title={tr('Watchdog notifications')}
                 actions={
-                  <Tooltip
-                    content={
+                  <Tooltip delay={0}>
+                    <Tooltip.Trigger>
+                      <Button isIconOnly size="sm" variant="ghost" aria-label={tr('Description')}>
+                        <IoIosHelpCircle className="text-lg" />
+                      </Button>
+                    </Tooltip.Trigger>
+                    <Tooltip.Content>
                       <div>{tr('Notify when system proxy restoration succeeds or fails')}</div>
-                    }
-                  >
-                    <Button isIconOnly size="sm" variant="light">
-                      <IoIosHelpCircle className="text-lg" />
-                    </Button>
+                    </Tooltip.Content>
                   </Tooltip>
                 }
                 divider={values.mode === 'manual'}
@@ -390,10 +409,16 @@ const Sysproxy: React.FC<Props> = ({ embedded = false }) => {
                   size="sm"
                   isSelected={values.guardNotify}
                   isDisabled={!values.guard}
-                  onValueChange={(v) => {
+                  onChange={(v) => {
                     setValues({ ...values, guardNotify: v })
                   }}
-                />
+                >
+                  <Switch.Content>
+                    <Switch.Control>
+                      <Switch.Thumb />
+                    </Switch.Control>
+                  </Switch.Content>
+                </Switch>
               </SettingItem>
             )}
             {values.mode === 'manual' && (
@@ -401,6 +426,7 @@ const Sysproxy: React.FC<Props> = ({ embedded = false }) => {
                 <SettingItem title={tr('Add default proxy bypasses')} divider>
                   <Button
                     size="sm"
+                    variant="secondary"
                     onPress={() => {
                       setValues({
                         ...values,
@@ -416,6 +442,7 @@ const Sysproxy: React.FC<Props> = ({ embedded = false }) => {
                     <div className="flex justify-end">
                       <Button
                         size="sm"
+                        variant="secondary"
                         onPress={async () => {
                           setOpenEditor(true)
                         }}

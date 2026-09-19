@@ -1,5 +1,6 @@
 import { tr } from '../../../../../shared/i18n'
-import { KokoSwitch as Switch, KokoTextField as Input } from '@renderer/components/base/koko-form'
+import { Switch } from '@heroui/react'
+import { KokoTextField as Input } from '@renderer/components/base/koko-form'
 import BasePage from '@renderer/components/base/base-page'
 import SettingItem from '@renderer/components/base/base-setting-item'
 import FeatureSettingsLayout, {
@@ -138,7 +139,7 @@ const Sniffer: React.FC<Props> = ({ embedded = false }) => {
             <Switch
               size="sm"
               isSelected={controlSniff}
-              onValueChange={async (value) => {
+              onChange={async (value) => {
                 try {
                   await patchAppConfig({ controlSniff: value })
                   await patchControledMihomoConfig({})
@@ -147,13 +148,19 @@ const Sniffer: React.FC<Props> = ({ embedded = false }) => {
                   notify(e, { variant: 'danger' })
                 }
               }}
-            />
+            >
+              <Switch.Content>
+                <Switch.Control>
+                  <Switch.Thumb />
+                </Switch.Control>
+              </Switch.Content>
+            </Switch>
           </SettingItem>
           <SettingItem title={tr('Override connection address')} divider>
             <Switch
               size="sm"
               isSelected={values.overrideDestination}
-              onValueChange={(v) => {
+              onChange={(v) => {
                 setValues({
                   ...values,
                   overrideDestination: v,
@@ -167,25 +174,43 @@ const Sniffer: React.FC<Props> = ({ embedded = false }) => {
                   }
                 })
               }}
-            />
+            >
+              <Switch.Content>
+                <Switch.Control>
+                  <Switch.Thumb />
+                </Switch.Control>
+              </Switch.Content>
+            </Switch>
           </SettingItem>
           <SettingItem title={tr('Sniff real IP mappings')} divider>
             <Switch
               size="sm"
               isSelected={values.forceDNSMapping}
-              onValueChange={(v) => {
+              onChange={(v) => {
                 setValues({ ...values, forceDNSMapping: v })
               }}
-            />
+            >
+              <Switch.Content>
+                <Switch.Control>
+                  <Switch.Thumb />
+                </Switch.Control>
+              </Switch.Content>
+            </Switch>
           </SettingItem>
           <SettingItem title={tr('Sniff unmapped IP addresses')}>
             <Switch
               size="sm"
               isSelected={values.parsePureIP}
-              onValueChange={(v) => {
+              onChange={(v) => {
                 setValues({ ...values, parsePureIP: v })
               }}
-            />
+            >
+              <Switch.Content>
+                <Switch.Control>
+                  <Switch.Thumb />
+                </Switch.Control>
+              </Switch.Content>
+            </Switch>
           </SettingItem>
         </FeatureSettingsSection>
 

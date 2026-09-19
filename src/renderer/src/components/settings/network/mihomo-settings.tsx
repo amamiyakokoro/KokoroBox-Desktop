@@ -1,5 +1,5 @@
 import { tr } from '../../../../../shared/i18n'
-import { KokoSwitch as Switch } from '@renderer/components/base/koko-form'
+import { Switch } from '@heroui/react'
 import BasePage from '@renderer/components/base/base-page'
 import SettingItem from '@renderer/components/base/base-setting-item'
 import FeatureSettingsLayout, {
@@ -107,11 +107,13 @@ const Mihomo: React.FC<Props> = ({ embedded = false }) => {
       <FeatureSettingsLayout action={embedded ? saveButton : undefined}>
         <FeatureSettingsSection title={tr('Core network')}>
           <SettingItem title="IPv6">
-            <Switch
-              size="sm"
-              isSelected={ipv6}
-              onValueChange={(value) => stageChange({ ipv6: value })}
-            />
+            <Switch size="sm" isSelected={ipv6} onChange={(value) => stageChange({ ipv6: value })}>
+              <Switch.Content>
+                <Switch.Control>
+                  <Switch.Thumb />
+                </Switch.Control>
+              </Switch.Content>
+            </Switch>
           </SettingItem>
         </FeatureSettingsSection>
         <PortSetting

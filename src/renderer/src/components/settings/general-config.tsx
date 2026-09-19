@@ -1,13 +1,9 @@
 import { tr } from '../../../../shared/i18n'
 import React, { useState } from 'react'
+import { Button, Switch, Tooltip } from '@heroui/react'
 import SettingCard from '../base/base-setting-card'
 import SettingItem from '../base/base-setting-item'
-import {
-  KokoButton as Button,
-  KokoSelect,
-  KokoSwitch as Switch,
-  KokoTooltip as Tooltip
-} from '../base/koko-form'
+import { KokoSelect } from '../base/koko-form'
 import useSWR from 'swr'
 import {
   checkAutoRun,
@@ -59,7 +55,7 @@ const GeneralConfig: React.FC = () => {
               }}
             />
             {languageChanged && (
-              <Button size="sm" color="primary" onPress={() => relaunchApp()}>
+              <Button size="sm" variant="primary" onPress={() => relaunchApp()}>
                 {tr('Restart to apply language')}
               </Button>
             )}
@@ -84,31 +80,32 @@ const GeneralConfig: React.FC = () => {
         <SettingItem compatKey="legacy" title={tr('Launch at startup')} divider>
           <div className="flex items-center gap-2">
             {autoRunStatus?.requiresApproval && (
-              <Tooltip
-                content={tr(
-                  'Allow KokoroBox in System Settings → General → Login Items & Extensions.'
-                )}
-              >
-                <Button
-                  size="sm"
-                  color="warning"
-                  variant="flat"
-                  onPress={async () => {
-                    try {
-                      await openAutoRunSystemSettings()
-                    } catch (e) {
-                      notify(e, { variant: 'danger' })
-                    }
-                  }}
-                >
-                  {tr('Awaiting system approval')}
-                </Button>
+              <Tooltip delay={0}>
+                <Tooltip.Trigger>
+                  <Button
+                    size="sm"
+                    className="text-warning-700 dark:text-warning-400"
+                    variant="secondary"
+                    onPress={async () => {
+                      try {
+                        await openAutoRunSystemSettings()
+                      } catch (e) {
+                        notify(e, { variant: 'danger' })
+                      }
+                    }}
+                  >
+                    {tr('Awaiting system approval')}
+                  </Button>
+                </Tooltip.Trigger>
+                <Tooltip.Content>
+                  {tr('Allow KokoroBox in System Settings → General → Login Items & Extensions.')}
+                </Tooltip.Content>
               </Tooltip>
             )}
             <Switch
               size="sm"
               isSelected={autoRunStatus?.enabled ?? false}
-              onValueChange={async (v) => {
+              onChange={async (v) => {
                 try {
                   const status = v ? await enableAutoRun() : await disableAutoRun()
                   await mutateAutoRunStatus(status, { revalidate: false })
@@ -117,26 +114,44 @@ const GeneralConfig: React.FC = () => {
                   await mutateAutoRunStatus()
                 }
               }}
-            />
+            >
+              <Switch.Content>
+                <Switch.Control>
+                  <Switch.Thumb />
+                </Switch.Control>
+              </Switch.Content>
+            </Switch>
           </div>
         </SettingItem>
         <SettingItem compatKey="legacy" title={tr('Start minimized')} divider>
           <Switch
             size="sm"
             isSelected={silentStart}
-            onValueChange={(v) => {
+            onChange={(v) => {
               patchAppConfig({ silentStart: v })
             }}
-          />
+          >
+            <Switch.Content>
+              <Switch.Control>
+                <Switch.Thumb />
+              </Switch.Control>
+            </Switch.Content>
+          </Switch>
         </SettingItem>
         <SettingItem compatKey="legacy" title={tr('Check for updates automatically')} divider>
           <Switch
             size="sm"
             isSelected={autoCheckUpdate}
-            onValueChange={(v) => {
+            onChange={(v) => {
               patchAppConfig({ autoCheckUpdate: v })
             }}
-          />
+          >
+            <Switch.Content>
+              <Switch.Control>
+                <Switch.Thumb />
+              </Switch.Control>
+            </Switch.Content>
+          </Switch>
         </SettingItem>
         <SettingItem compatKey="legacy" title={tr('Update channel')}>
           <SettingTabs
@@ -194,14 +209,15 @@ export const PerformanceConfig: React.FC = () => {
           compatKey="legacy"
           title={tr('Disable GPU acceleration')}
           actions={
-            <Tooltip
-              content={tr(
-                'Disable GPU acceleration. This may improve stability but reduce performance'
-              )}
-            >
-              <Button isIconOnly size="sm" variant="light">
-                <IoIosHelpCircle className="text-lg" />
-              </Button>
+            <Tooltip delay={0}>
+              <Tooltip.Trigger>
+                <Button isIconOnly size="sm" variant="ghost">
+                  <IoIosHelpCircle className="text-lg" />
+                </Button>
+              </Tooltip.Trigger>
+              <Tooltip.Content>
+                {tr('Disable GPU acceleration. This may improve stability but reduce performance')}
+              </Tooltip.Content>
             </Tooltip>
           }
           divider
@@ -209,30 +225,47 @@ export const PerformanceConfig: React.FC = () => {
           <Switch
             size="sm"
             isSelected={pendingDisableGPU}
-            onValueChange={(v) => {
+            onChange={(v) => {
               setPendingDisableGPU(v)
               setShowRestartConfirm(true)
             }}
-          />
+          >
+            <Switch.Content>
+              <Switch.Control>
+                <Switch.Thumb />
+              </Switch.Control>
+            </Switch.Content>
+          </Switch>
         </SettingItem>
         <SettingItem
           compatKey="legacy"
           title={tr('Reduce animations')}
           actions={
-            <Tooltip content={tr('Reduce most animations, which may improve performance')}>
-              <Button isIconOnly size="sm" variant="light">
-                <IoIosHelpCircle className="text-lg" />
-              </Button>
+            <Tooltip delay={0}>
+              <Tooltip.Trigger>
+                <Button isIconOnly size="sm" variant="ghost">
+                  <IoIosHelpCircle className="text-lg" />
+                </Button>
+              </Tooltip.Trigger>
+              <Tooltip.Content>
+                {tr('Reduce most animations, which may improve performance')}
+              </Tooltip.Content>
             </Tooltip>
           }
         >
           <Switch
             size="sm"
             isSelected={disableAnimation}
-            onValueChange={(v) => {
+            onChange={(v) => {
               patchAppConfig({ disableAnimation: v })
             }}
-          />
+          >
+            <Switch.Content>
+              <Switch.Control>
+                <Switch.Thumb />
+              </Switch.Control>
+            </Switch.Content>
+          </Switch>
         </SettingItem>
       </SettingCard>
     </>

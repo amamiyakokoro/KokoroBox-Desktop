@@ -1,5 +1,5 @@
 import { tr } from '../../../../shared/i18n'
-import { KokoButton as Button, KokoTooltip as Tooltip } from '../base/koko-form'
+import { Button, Tooltip } from '@heroui/react'
 import SettingCard from '../base/base-setting-card'
 import SettingItem from '../base/base-setting-item'
 import {
@@ -129,12 +129,17 @@ const Actions: React.FC<Props> = ({
       {sections.includes('application') && (
         <SettingCard header={tr('Application actions')}>
           <SettingItem compatKey="legacy" title={tr('Open guided tour')} divider>
-            <Button size="sm" variant="flat" onPress={() => startTour(navigate)}>
+            <Button size="sm" variant="secondary" onPress={() => startTour(navigate)}>
               {tr('Open guided tour')}
             </Button>
           </SettingItem>
           <SettingItem compatKey="legacy" title={tr('Check for updates')}>
-            <Button size="sm" variant="flat" isLoading={checkingUpdate} onPress={handleCheckUpdate}>
+            <Button
+              size="sm"
+              variant="secondary"
+              isPending={checkingUpdate}
+              onPress={handleCheckUpdate}
+            >
               {tr('Check for updates')}
             </Button>
           </SettingItem>
@@ -147,15 +152,18 @@ const Actions: React.FC<Props> = ({
             compatKey="legacy"
             title={tr('Clear cache')}
             actions={
-              <Tooltip content={tr('Clear the app renderer cache')}>
-                <Button isIconOnly size="sm" variant="light">
-                  <IoIosHelpCircle className="text-lg" />
-                </Button>
+              <Tooltip delay={0}>
+                <Tooltip.Trigger>
+                  <Button isIconOnly size="sm" variant="ghost">
+                    <IoIosHelpCircle className="text-lg" />
+                  </Button>
+                </Tooltip.Trigger>
+                <Tooltip.Content>{tr('Clear the app renderer cache')}</Tooltip.Content>
               </Tooltip>
             }
             divider
           >
-            <Button size="sm" variant="flat" onPress={() => localStorage.clear()}>
+            <Button size="sm" variant="secondary" onPress={() => localStorage.clear()}>
               {tr('Clear cache')}
             </Button>
           </SettingItem>
@@ -163,16 +171,19 @@ const Actions: React.FC<Props> = ({
             compatKey="legacy"
             title={tr('Create heap snapshot')}
             actions={
-              <Tooltip
-                content={tr('Create a main-process heap snapshot to diagnose memory issues')}
-              >
-                <Button isIconOnly size="sm" variant="light">
-                  <IoIosHelpCircle className="text-lg" />
-                </Button>
+              <Tooltip delay={0}>
+                <Tooltip.Trigger>
+                  <Button isIconOnly size="sm" variant="ghost">
+                    <IoIosHelpCircle className="text-lg" />
+                  </Button>
+                </Tooltip.Trigger>
+                <Tooltip.Content>
+                  {tr('Create a main-process heap snapshot to diagnose memory issues')}
+                </Tooltip.Content>
               </Tooltip>
             }
           >
-            <Button size="sm" variant="flat" onPress={handleCreateHeapSnapshot}>
+            <Button size="sm" variant="secondary" onPress={handleCreateHeapSnapshot}>
               {tr('Create heap snapshot')}
             </Button>
           </SettingItem>
@@ -193,15 +204,20 @@ const Actions: React.FC<Props> = ({
             compatKey="legacy"
             title={tr('Reset app')}
             actions={
-              <Tooltip content={tr('Delete all configuration and reset the app')}>
-                <Button isIconOnly size="sm" variant="light">
-                  <IoIosHelpCircle className="text-lg" />
-                </Button>
+              <Tooltip delay={0}>
+                <Tooltip.Trigger>
+                  <Button isIconOnly size="sm" variant="ghost">
+                    <IoIosHelpCircle className="text-lg" />
+                  </Button>
+                </Tooltip.Trigger>
+                <Tooltip.Content>
+                  {tr('Delete all configuration and reset the app')}
+                </Tooltip.Content>
               </Tooltip>
             }
             divider
           >
-            <Button size="sm" color="danger" variant="flat" onPress={() => setConfirmOpen(true)}>
+            <Button size="sm" variant="danger-soft" onPress={() => setConfirmOpen(true)}>
               {tr('Reset app')}
             </Button>
           </SettingItem>
@@ -209,22 +225,25 @@ const Actions: React.FC<Props> = ({
             compatKey="legacy"
             title={tr('Quit and keep core running')}
             actions={
-              <Tooltip
-                content={tr('Quit the app completely, leaving only the core process running')}
-              >
-                <Button isIconOnly size="sm" variant="light">
-                  <IoIosHelpCircle className="text-lg" />
-                </Button>
+              <Tooltip delay={0}>
+                <Tooltip.Trigger>
+                  <Button isIconOnly size="sm" variant="ghost">
+                    <IoIosHelpCircle className="text-lg" />
+                  </Button>
+                </Tooltip.Trigger>
+                <Tooltip.Content>
+                  {tr('Quit the app completely, leaving only the core process running')}
+                </Tooltip.Content>
               </Tooltip>
             }
             divider
           >
-            <Button size="sm" variant="flat" onPress={quitWithoutCore}>
+            <Button size="sm" variant="secondary" onPress={quitWithoutCore}>
               {tr('Quit')}
             </Button>
           </SettingItem>
           <SettingItem compatKey="legacy" title={tr('Quit app')}>
-            <Button size="sm" color="danger" variant="flat" onPress={quitApp}>
+            <Button size="sm" variant="danger-soft" onPress={quitApp}>
               {tr('Quit app')}
             </Button>
           </SettingItem>

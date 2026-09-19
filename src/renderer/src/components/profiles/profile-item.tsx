@@ -1,6 +1,5 @@
 import { tr } from '../../../../shared/i18n'
-import { Card, Chip, Meter } from '@heroui/react'
-import { KokoButton as Button, KokoTooltip as Tooltip } from '../base/koko-form'
+import { Button, Card, Chip, Meter, Tooltip } from '@heroui/react'
 import { KokoActionMenu } from '../base/koko-collections'
 import { calcTraffic } from '@renderer/utils/calc'
 import { IoMdMore, IoMdRefresh } from 'react-icons/io'
@@ -244,24 +243,28 @@ const ProfileItem: React.FC<Props> = (props) => {
                 onKeyDown={(e) => e.stopPropagation()}
               >
                 {info.type === 'remote' && (
-                  <Tooltip placement="left" content={dayjs(info.updated).fromNow()}>
-                    <Button
-                      isIconOnly
-                      size="sm"
-                      variant="light"
-                      color="default"
-                      isDisabled={updating}
-                      onPress={async () => {
-                        setUpdating(true)
-                        await addProfileItem(info)
-                        setUpdating(false)
-                      }}
-                    >
-                      <IoMdRefresh
-                        color="default"
-                        className={`${isCurrent ? 'text-primary-foreground' : 'text-foreground'} text-[24px] ${updating ? 'animate-spin' : ''}`}
-                      />
-                    </Button>
+                  <Tooltip delay={0}>
+                    <Tooltip.Trigger>
+                      <Button
+                        isIconOnly
+                        size="sm"
+                        variant="ghost"
+                        isDisabled={updating}
+                        onPress={async () => {
+                          setUpdating(true)
+                          await addProfileItem(info)
+                          setUpdating(false)
+                        }}
+                      >
+                        <IoMdRefresh
+                          color="default"
+                          className={`${isCurrent ? 'text-primary-foreground' : 'text-foreground'} text-[24px] ${updating ? 'animate-spin' : ''}`}
+                        />
+                      </Button>
+                    </Tooltip.Trigger>
+                    <Tooltip.Content placement="left">
+                      {dayjs(info.updated).fromNow()}
+                    </Tooltip.Content>
                   </Tooltip>
                 )}
 
@@ -292,7 +295,7 @@ const ProfileItem: React.FC<Props> = (props) => {
                 {profileDisplayDate === 'expire' ? (
                   <Button
                     size="sm"
-                    variant="light"
+                    variant="ghost"
                     className={`h-5 p-1 m-0 ${isCurrent ? 'text-primary-foreground' : 'text-foreground'}`}
                     onPress={async () => {
                       await patchAppConfig({ profileDisplayDate: 'update' })
@@ -305,7 +308,7 @@ const ProfileItem: React.FC<Props> = (props) => {
                 ) : (
                   <Button
                     size="sm"
-                    variant="light"
+                    variant="ghost"
                     className={`h-5 p-1 m-0 ${isCurrent ? 'text-primary-foreground' : 'text-foreground'}`}
                     onPress={async () => {
                       await patchAppConfig({ profileDisplayDate: 'expire' })

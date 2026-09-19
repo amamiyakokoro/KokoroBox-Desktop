@@ -1,7 +1,7 @@
 import { tr } from '../../../../shared/i18n'
 import React from 'react'
-import { Separator, Tooltip } from '@heroui/react'
-import { KokoButton, KokoTextField } from './koko-form'
+import { Button, Separator, Tooltip } from '@heroui/react'
+import { KokoTextField } from './koko-form'
 import { MdDeleteForever } from 'react-icons/md'
 import type { ValidationResult } from '@renderer/utils/validate'
 
@@ -234,7 +234,7 @@ const EditableList: React.FC<EditableListProps> = ({
                 />
               )}
               {idx < processedItems.length && !disabled && (
-                <KokoButton
+                <Button
                   aria-label={tr('Delete')}
                   className="h-8 min-h-8 w-8 min-w-8 shrink-0 rounded-lg text-danger hover:bg-danger/10 focus-visible:bg-danger/10"
                   isIconOnly
@@ -243,7 +243,7 @@ const EditableList: React.FC<EditableListProps> = ({
                   onPress={() => handleUpdate(idx, '', '')}
                 >
                   <MdDeleteForever className="text-lg" />
-                </KokoButton>
+                </Button>
               )}
             </div>
           )

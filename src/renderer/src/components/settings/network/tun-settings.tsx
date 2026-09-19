@@ -1,9 +1,6 @@
 import { tr } from '../../../../../shared/i18n'
-import {
-  KokoButton as Button,
-  KokoSwitch as Switch,
-  KokoTextField as Input
-} from '@renderer/components/base/koko-form'
+import { Button, Switch } from '@heroui/react'
+import { KokoTextField as Input } from '@renderer/components/base/koko-form'
 import { SettingTabs } from '@renderer/components/base/base-controls'
 import BasePage from '@renderer/components/base/base-page'
 import SettingItem from '@renderer/components/base/base-setting-item'
@@ -123,8 +120,8 @@ const Tun: React.FC<Props> = ({ embedded = false }) => {
               <SettingItem title={tr('Reset firewall')}>
                 <Button
                   size="sm"
-                  color="primary"
-                  isLoading={loading}
+                  variant="primary"
+                  isPending={loading}
                   onPress={async () => {
                     setLoading(true)
                     try {
@@ -191,10 +188,16 @@ const Tun: React.FC<Props> = ({ embedded = false }) => {
                 <Switch
                   size="sm"
                   isSelected={values.strictRoute}
-                  onValueChange={(v) => {
+                  onChange={(v) => {
                     setValues({ ...values, strictRoute: v })
                   }}
-                />
+                >
+                  <Switch.Content>
+                    <Switch.Control>
+                      <Switch.Thumb />
+                    </Switch.Control>
+                  </Switch.Content>
+                </Switch>
               </SettingItem>
             </>
           )}
@@ -202,30 +205,48 @@ const Tun: React.FC<Props> = ({ embedded = false }) => {
             <Switch
               size="sm"
               isSelected={values.autoRoute}
-              onValueChange={(v) => {
+              onChange={(v) => {
                 setValues({ ...values, autoRoute: v })
               }}
-            />
+            >
+              <Switch.Content>
+                <Switch.Control>
+                  <Switch.Thumb />
+                </Switch.Control>
+              </Switch.Content>
+            </Switch>
           </SettingItem>
           {platform === 'linux' && (
             <SettingItem title={tr('Configure TCP redirection automatically')} divider>
               <Switch
                 size="sm"
                 isSelected={values.autoRedirect}
-                onValueChange={(v) => {
+                onChange={(v) => {
                   setValues({ ...values, autoRedirect: v })
                 }}
-              />
+              >
+                <Switch.Content>
+                  <Switch.Control>
+                    <Switch.Thumb />
+                  </Switch.Control>
+                </Switch.Content>
+              </Switch>
             </SettingItem>
           )}
           <SettingItem title={tr('Select outbound interface automatically')}>
             <Switch
               size="sm"
               isSelected={values.autoDetectInterface}
-              onValueChange={(v) => {
+              onChange={(v) => {
                 setValues({ ...values, autoDetectInterface: v })
               }}
-            />
+            >
+              <Switch.Content>
+                <Switch.Control>
+                  <Switch.Thumb />
+                </Switch.Control>
+              </Switch.Content>
+            </Switch>
           </SettingItem>
         </FeatureSettingsSection>
 
@@ -234,10 +255,16 @@ const Tun: React.FC<Props> = ({ embedded = false }) => {
             <Switch
               size="sm"
               isSelected={!values.disableIcmpForwarding}
-              onValueChange={(v) => {
+              onChange={(v) => {
                 setValues({ ...values, disableIcmpForwarding: !v })
               }}
-            />
+            >
+              <Switch.Content>
+                <Switch.Control>
+                  <Switch.Thumb />
+                </Switch.Control>
+              </Switch.Content>
+            </Switch>
           </SettingItem>
           <SettingItem title="MTU" divider>
             <Input

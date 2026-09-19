@@ -1,15 +1,12 @@
 import { tr } from '../../../../shared/i18n'
 import React, { useEffect, useState } from 'react'
+import { Button, Switch } from '@heroui/react'
 import SettingCard from '../base/base-setting-card'
 import SettingItem from '../base/base-setting-item'
 import EditableList from '../base/base-list-editor'
 
 import { platform } from '@renderer/utils/init'
-import {
-  KokoButton as Button,
-  KokoSwitch as Switch,
-  KokoTextField as Input
-} from '../base/koko-form'
+import { KokoTextField as Input } from '../base/koko-form'
 import { FaNetworkWired } from 'react-icons/fa'
 import InterfaceModal from '@renderer/components/mihomo/interface-modal'
 
@@ -177,7 +174,7 @@ const PortSetting: React.FC<PortSettingProps> = ({ config, onChange, onValidatio
             <Button
               size="sm"
               isIconOnly
-              variant="light"
+              variant="ghost"
               onPress={() => {
                 setLanOpen(true)
               }}
@@ -190,10 +187,16 @@ const PortSetting: React.FC<PortSettingProps> = ({ config, onChange, onValidatio
           <Switch
             size="sm"
             isSelected={allowLan}
-            onValueChange={(v) => {
+            onChange={(v) => {
               onChange({ 'allow-lan': v })
             }}
-          />
+          >
+            <Switch.Content>
+              <Switch.Control>
+                <Switch.Thumb />
+              </Switch.Control>
+            </Switch.Content>
+          </Switch>
         </SettingItem>
         {allowLan && (
           <>

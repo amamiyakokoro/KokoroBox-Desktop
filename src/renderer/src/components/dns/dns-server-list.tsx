@@ -5,12 +5,8 @@ import {
   type DnsServerEndpoint
 } from '../../../../shared/dns-server'
 import { isValidDnsServer, type ValidationResult } from '@renderer/utils/validate'
-import {
-  KokoButton as Button,
-  KokoSelect,
-  KokoTextField as Input,
-  KokoTooltip as Tooltip
-} from '../base/koko-form'
+import { Button, Tooltip } from '@heroui/react'
+import { KokoSelect, KokoTextField as Input } from '../base/koko-form'
 import React from 'react'
 import { MdDeleteForever } from 'react-icons/md'
 
@@ -83,24 +79,27 @@ const DnsServerList: React.FC<DnsServerListProps> = ({
               key={`${index}-${items[index] ?? 'new'}`}
               className="flex flex-wrap items-center gap-2"
             >
-              <Tooltip
-                content={validation.error ?? tr('Invalid format')}
-                placement="left"
-                isOpen={!validation.ok}
-                showArrow
-                color="danger"
-              >
-                <Input
-                  aria-label={tr('DNS server')}
-                  size="sm"
-                  className="min-w-52 flex-1"
-                  classNames={{
-                    inputWrapper: validation.ok ? '' : 'border-danger ring-1 ring-danger'
-                  }}
-                  placeholder={placeholder}
-                  value={endpoint.address}
-                  onValueChange={(address) => update(index, { ...endpoint, address })}
-                />
+              <Tooltip delay={0} isOpen={!validation.ok}>
+                <Tooltip.Trigger className="inline-flex min-w-0 flex-1">
+                  <Input
+                    aria-label={tr('DNS server')}
+                    size="sm"
+                    className="min-w-52 flex-1"
+                    classNames={{
+                      inputWrapper: validation.ok ? '' : 'border-danger ring-1 ring-danger'
+                    }}
+                    placeholder={placeholder}
+                    value={endpoint.address}
+                    onValueChange={(address) => update(index, { ...endpoint, address })}
+                  />
+                </Tooltip.Trigger>
+                <Tooltip.Content
+                  className="bg-danger text-danger-foreground"
+                  placement="left"
+                  showArrow
+                >
+                  {validation.error ?? tr('Invalid format')}
+                </Tooltip.Content>
               </Tooltip>
               {!ipOnly && !followRoutingRules && (
                 <>
@@ -125,8 +124,8 @@ const DnsServerList: React.FC<DnsServerListProps> = ({
                 <Button
                   isIconOnly
                   size="sm"
-                  variant="flat"
-                  color="warning"
+                  className="text-warning-700 dark:text-warning-400"
+                  variant="secondary"
                   aria-label={tr('Delete')}
                   onPress={() => update(index, { ...endpoint, address: '' })}
                 >

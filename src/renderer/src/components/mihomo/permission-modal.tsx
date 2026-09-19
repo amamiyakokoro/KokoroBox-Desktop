@@ -1,7 +1,6 @@
 import { tr } from '../../../../shared/i18n'
 import React, { useEffect, useState } from 'react'
-import { Card, Chip, Modal, Separator } from '@heroui/react'
-import { KokoButton as Button } from '../base/koko-form'
+import { Button, Card, Chip, Modal, Separator } from '@heroui/react'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import {
   checkCorePermission,
@@ -193,10 +192,10 @@ const PermissionModal: React.FC<Props> = (props) => {
                           {typeof hasPermission !== 'boolean' && hasPermission?.mihomo ? (
                             <Button
                               size="sm"
-                              color="warning"
-                              variant="flat"
+                              className="text-warning-700 dark:text-warning-400"
+                              variant="secondary"
                               onPress={() => handleCoreAction('mihomo', false)}
-                              isLoading={loading.mihomo}
+                              isPending={loading.mihomo}
                               fullWidth
                             >
                               {tr('Revoke authorization')}
@@ -204,10 +203,9 @@ const PermissionModal: React.FC<Props> = (props) => {
                           ) : (
                             <Button
                               size="sm"
-                              color="primary"
-                              variant="shadow"
+                              variant="primary"
                               onPress={() => handleCoreAction('mihomo', true)}
-                              isLoading={loading.mihomo}
+                              isPending={loading.mihomo}
                               fullWidth
                             >
                               {tr('Authorize core')}
@@ -241,10 +239,10 @@ const PermissionModal: React.FC<Props> = (props) => {
                           {typeof hasPermission !== 'boolean' && hasPermission?.['mihomo-alpha'] ? (
                             <Button
                               size="sm"
-                              color="warning"
-                              variant="flat"
+                              className="text-warning-700 dark:text-warning-400"
+                              variant="secondary"
                               onPress={() => handleCoreAction('mihomo-alpha', false)}
-                              isLoading={loading['mihomo-alpha']}
+                              isPending={loading['mihomo-alpha']}
                               fullWidth
                             >
                               {tr('Revoke authorization')}
@@ -252,10 +250,9 @@ const PermissionModal: React.FC<Props> = (props) => {
                           ) : (
                             <Button
                               size="sm"
-                              color="primary"
-                              variant="shadow"
+                              variant="primary"
                               onPress={() => handleCoreAction('mihomo-alpha', true)}
-                              isLoading={loading['mihomo-alpha']}
+                              isPending={loading['mihomo-alpha']}
                               fullWidth
                             >
                               {tr('Authorize core')}
@@ -281,17 +278,17 @@ const PermissionModal: React.FC<Props> = (props) => {
               {isWindows && typeof hasPermission === 'boolean' ? (
                 <Button
                   size="sm"
-                  color={hasPermission ? 'warning' : 'primary'}
-                  variant={hasPermission ? 'flat' : 'shadow'}
+                  className={hasPermission ? 'text-warning-700 dark:text-warning-400' : undefined}
+                  variant={hasPermission ? 'secondary' : 'primary'}
                   onPress={() => handleWindowsAction(!hasPermission)}
-                  isLoading={windowsLoading}
+                  isPending={windowsLoading}
                 >
                   {hasPermission ? tr('Restart as standard user') : tr('Restart as administrator')}
                 </Button>
               ) : null}
               <Button
                 size="sm"
-                variant="light"
+                variant="ghost"
                 onPress={() => onChange(false)}
                 isDisabled={windowsLoading || Object.values(loading).some((v) => v)}
               >

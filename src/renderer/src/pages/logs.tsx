@@ -4,11 +4,7 @@ import LogItem from '@renderer/components/logs/log-item'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'
 import { startTransition, useEffect, useMemo, useRef, useState } from 'react'
-import {
-  KokoButton as Button,
-  KokoTextField as Input,
-  KokoTooltip as Tooltip
-} from '@renderer/components/base/koko-form'
+import { KokoTextField as Input } from '@renderer/components/base/koko-form'
 import { Virtuoso } from 'react-virtuoso'
 import { IoLocationSharp } from 'react-icons/io5'
 import { CgTrash } from 'react-icons/cg'
@@ -21,7 +17,7 @@ import {
   setMihomoLogMaxEntries,
   subscribeMihomoLogs
 } from '@renderer/utils/mihomo-log-store'
-import { ListBox, Select, Separator } from '@heroui/react'
+import { Button, ListBox, Select, Separator, Tooltip } from '@heroui/react'
 import { restartMihomoLogs } from '@renderer/utils/ipc'
 import { notify } from '@renderer/utils/notification'
 
@@ -219,33 +215,40 @@ const Logs: React.FC = () => {
                 </ListBox>
               </Select.Popover>
             </Select>
-            <Tooltip content={trace ? tr('Stop following new logs') : tr('Follow new logs')}>
-              <Button
-                size="sm"
-                isIconOnly
-                color={trace ? 'primary' : 'default'}
-                variant={trace ? 'solid' : 'bordered'}
-                aria-label={trace ? tr('Stop following new logs') : tr('Follow new logs')}
-                onPress={() => {
-                  setTrace((prev) => !prev)
-                }}
-              >
-                <IoLocationSharp className="text-lg" />
-              </Button>
+            <Tooltip delay={0}>
+              <Tooltip.Trigger>
+                <Button
+                  size="sm"
+                  isIconOnly
+                  variant={trace ? 'primary' : 'outline'}
+                  aria-label={trace ? tr('Stop following new logs') : tr('Follow new logs')}
+                  onPress={() => {
+                    setTrace((prev) => !prev)
+                  }}
+                >
+                  <IoLocationSharp className="text-lg" />
+                </Button>
+              </Tooltip.Trigger>
+              <Tooltip.Content>
+                {trace ? tr('Stop following new logs') : tr('Follow new logs')}
+              </Tooltip.Content>
             </Tooltip>
-            <Tooltip content={tr('Clear logs')}>
-              <Button
-                size="sm"
-                isIconOnly
-                variant="light"
-                color="danger"
-                aria-label={tr('Clear logs')}
-                onPress={() => {
-                  clearMihomoLogs()
-                }}
-              >
-                <CgTrash className="text-lg" />
-              </Button>
+            <Tooltip delay={0}>
+              <Tooltip.Trigger>
+                <Button
+                  size="sm"
+                  isIconOnly
+                  variant="ghost"
+                  className="text-danger"
+                  aria-label={tr('Clear logs')}
+                  onPress={() => {
+                    clearMihomoLogs()
+                  }}
+                >
+                  <CgTrash className="text-lg" />
+                </Button>
+              </Tooltip.Trigger>
+              <Tooltip.Content>{tr('Clear logs')}</Tooltip.Content>
             </Tooltip>
           </div>
           <Separator />

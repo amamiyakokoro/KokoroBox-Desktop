@@ -1,8 +1,8 @@
 import { tr } from '../../../../shared/i18n'
 import React, { useState } from 'react'
+import { Button, Switch } from '@heroui/react'
 import SettingCard from '../base/base-setting-card'
 import SettingItem from '../base/base-setting-item'
-import { KokoButton as Button, KokoSwitch as Switch } from '../base/koko-form'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { restartCore } from '@renderer/utils/ipc'
 import EditableList from '../base/base-list-editor'
@@ -37,45 +37,69 @@ const EnvSetting: React.FC = () => {
         <Switch
           size="sm"
           isSelected={disableSystemCA}
-          onValueChange={(v) => {
+          onChange={(v) => {
             handleConfigChangeWithRestart('disableSystemCA', v)
           }}
-        />
+        >
+          <Switch.Content>
+            <Switch.Control>
+              <Switch.Thumb />
+            </Switch.Control>
+          </Switch.Content>
+        </Switch>
       </SettingItem>
       <SettingItem compatKey="legacy" title={tr('Disable built-in CAs')} divider>
         <Switch
           size="sm"
           isSelected={disableEmbedCA}
-          onValueChange={(v) => {
+          onChange={(v) => {
             handleConfigChangeWithRestart('disableEmbedCA', v)
           }}
-        />
+        >
+          <Switch.Content>
+            <Switch.Control>
+              <Switch.Thumb />
+            </Switch.Control>
+          </Switch.Content>
+        </Switch>
       </SettingItem>
       <SettingItem compatKey="legacy" title={tr('Disable loopback detection')} divider>
         <Switch
           size="sm"
           isSelected={disableLoopbackDetector}
-          onValueChange={(v) => {
+          onChange={(v) => {
             handleConfigChangeWithRestart('disableLoopbackDetector', v)
           }}
-        />
+        >
+          <Switch.Content>
+            <Switch.Control>
+              <Switch.Thumb />
+            </Switch.Control>
+          </Switch.Content>
+        </Switch>
       </SettingItem>
       {platform == 'linux' && (
         <SettingItem compatKey="legacy" title={tr('Disable nftables')} divider>
           <Switch
             size="sm"
             isSelected={disableNftables}
-            onValueChange={(v) => {
+            onChange={(v) => {
               handleConfigChangeWithRestart('disableNftables', v)
             }}
-          />
+          >
+            <Switch.Content>
+              <Switch.Control>
+                <Switch.Thumb />
+              </Switch.Control>
+            </Switch.Content>
+          </Switch>
         </SettingItem>
       )}
       <SettingItem compatKey="legacy" title={tr('Trusted path')}>
         {safePathsInput.join('') != safePaths.join('') && (
           <Button
             size="sm"
-            color="primary"
+            variant="primary"
             onPress={() => {
               handleConfigChangeWithRestart('safePaths', safePathsInput)
             }}

@@ -235,7 +235,7 @@ test('shared settings primitives isolate HeroUI v3 compound APIs', () => {
   assert.match(settingCard, /<Surface/)
   assert.match(listEditor, /<Tooltip\.Content/)
   assert.match(listEditor, /<KokoTextField/)
-  assert.match(listEditor, /<KokoButton/)
+  assert.match(listEditor, /<Button/)
   assert.match(listEditor, /aria-label=\{tr\('Delete'\)\}/)
   assert.match(listEditor, /variant="ghost"/)
   assert.doesNotMatch(listEditor, /variant="danger-soft"/)
@@ -265,6 +265,10 @@ test('system proxy fields keep editable lists inside the settings control column
 test('settings and Mihomo forms share the KokoroBox HeroUI v3 conventions', () => {
   const form = readFileSync('src/renderer/src/components/base/koko-form.tsx', 'utf8')
   const controls = readFileSync('src/renderer/src/components/base/base-controls.tsx', 'utf8')
+  const systemProxy = readFileSync(
+    'src/renderer/src/components/settings/network/system-proxy-settings.tsx',
+    'utf8'
+  )
   const migratedFiles = [
     ...collectTsxFiles('src/renderer/src/components/settings'),
     ...collectTsxFiles('src/renderer/src/components/mihomo'),
@@ -297,10 +301,10 @@ test('settings and Mihomo forms share the KokoroBox HeroUI v3 conventions', () =
   assert.match(form, /<Select\.Indicator \/>/)
   assert.match(form, /<Select\.Popover/)
   assert.match(form, /<ListBox\.Item/)
-  assert.match(form, /export const KokoSwitch/)
-  assert.match(form, /<Switch\.Content>/)
-  assert.match(form, /<Switch\.Control>/)
-  assert.match(form, /<Switch\.Thumb \/>/)
+  assert.doesNotMatch(form, /KokoButton|KokoSwitch|KokoTooltip|resolveKokoButtonVariant/)
+  assert.match(systemProxy, /<Switch\.Content>/)
+  assert.match(systemProxy, /<Switch\.Control>/)
+  assert.match(systemProxy, /<Switch\.Thumb \/>/)
   assert.match(controls, /export const SettingTabs/)
   assert.match(controls, /variant\?: React\.ComponentProps<typeof Tabs>\['variant'\]/)
   assert.match(controls, /variant=\{variant\}/)
@@ -319,7 +323,7 @@ test('collection and overlay primitives preserve HeroUI v3 identity and selectio
     const source = readFileSync(file, 'utf8')
     assert.doesNotMatch(
       source,
-      /<Dropdown\.Trigger\b[\s\S]*?>\s*<(?:Button|KokoButton)\b/,
+      /<Dropdown\.Trigger\b[\s\S]*?>\s*<Button\b/,
       `${file} nests a button inside the React Aria dropdown trigger`
     )
     assert.doesNotMatch(source, /@heroui-v3/)

@@ -1,6 +1,6 @@
 import { tr } from '../../../../shared/i18n'
-import { Label, Modal } from '@heroui/react'
-import { KokoButton as Button, KokoTextField as Input } from '../base/koko-form'
+import { Button, Label, Modal } from '@heroui/react'
+import { KokoTextField as Input } from '../base/koko-form'
 import { useState } from 'react'
 
 interface AppRoutingGroupNameModalProps {
@@ -65,12 +65,12 @@ export function AppRoutingGroupNameModal({
               </p>
             </Modal.Body>
             <Modal.Footer>
-              <Button variant="flat" isDisabled={saving} onPress={onClose}>
+              <Button variant="secondary" isDisabled={saving} onPress={onClose}>
                 {tr('Cancel')}
               </Button>
               <Button
-                color="primary"
-                isLoading={saving}
+                variant="primary"
+                isPending={saving}
                 isDisabled={!name.trim()}
                 onPress={() => void submit()}
               >

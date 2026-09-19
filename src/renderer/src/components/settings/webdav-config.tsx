@@ -1,8 +1,9 @@
 import { tr } from '../../../../shared/i18n'
 import React, { useState } from 'react'
+import { Button } from '@heroui/react'
 import SettingCard from '../base/base-setting-card'
 import SettingItem from '../base/base-setting-item'
-import { KokoButton as Button, KokoTextField as Input } from '../base/koko-form'
+import { KokoTextField as Input } from '../base/koko-form'
 import { listWebdavBackups, webdavBackup } from '@renderer/utils/ipc'
 import WebdavRestoreModal from './webdav-restore-modal'
 import debounce from '@renderer/utils/debounce'
@@ -104,13 +105,21 @@ const WebdavConfig: React.FC = () => {
           />
         </SettingItem>
         <div className="flex justify0between">
-          <Button isLoading={backuping} fullWidth size="sm" className="mr-1" onPress={handleBackup}>
+          <Button
+            isPending={backuping}
+            fullWidth
+            size="sm"
+            variant="secondary"
+            className="mr-1"
+            onPress={handleBackup}
+          >
             {tr('Back up')}
           </Button>
           <Button
-            isLoading={restoring}
+            isPending={restoring}
             fullWidth
             size="sm"
+            variant="secondary"
             className="ml-1"
             onPress={handleRestore}
           >

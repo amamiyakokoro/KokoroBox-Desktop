@@ -1,9 +1,6 @@
 import { tr } from '../../../../../shared/i18n'
-import {
-  KokoSwitch as Switch,
-  KokoTextField as Input,
-  KokoTooltip as Tooltip
-} from '@renderer/components/base/koko-form'
+import { Switch, Tooltip } from '@heroui/react'
+import { KokoTextField as Input } from '@renderer/components/base/koko-form'
 import { SettingTabs } from '@renderer/components/base/base-controls'
 import BasePage from '@renderer/components/base/base-page'
 import SettingItem from '@renderer/components/base/base-setting-item'
@@ -272,7 +269,7 @@ const DNS: React.FC<Props> = ({ embedded = false }) => {
             <Switch
               size="sm"
               isSelected={controlDns}
-              onValueChange={async (value) => {
+              onChange={async (value) => {
                 try {
                   await patchAppConfig({ controlDns: value })
                   await patchControledMihomoConfig({})
@@ -281,16 +278,28 @@ const DNS: React.FC<Props> = ({ embedded = false }) => {
                   notify(e, { variant: 'danger' })
                 }
               }}
-            />
+            >
+              <Switch.Content>
+                <Switch.Control>
+                  <Switch.Thumb />
+                </Switch.Control>
+              </Switch.Content>
+            </Switch>
           </SettingItem>
           <SettingItem title="IPv6" divider>
             <Switch
               size="sm"
               isSelected={values.ipv6}
-              onValueChange={(v) => {
+              onChange={(v) => {
                 setValues({ ...values, ipv6: v })
               }}
-            />
+            >
+              <Switch.Content>
+                <Switch.Control>
+                  <Switch.Thumb />
+                </Switch.Control>
+              </Switch.Content>
+            </Switch>
           </SettingItem>
           <SettingItem title={tr('DNS policy')} divider>
             <SettingTabs
@@ -332,54 +341,60 @@ const DNS: React.FC<Props> = ({ embedded = false }) => {
         {values.enhancedMode === 'fake-ip' && (
           <FeatureSettingsSection title={tr('Fake IP settings')}>
             <SettingItem title={tr('Fake IP range (IPv4)')} divider>
-              <Tooltip
-                content={fakeIPRangeError}
-                placement="right"
-                isOpen={!!fakeIPRangeError}
-                showArrow={true}
-                color="danger"
-                offset={15}
-              >
-                <Input
-                  size="sm"
-                  className={
-                    `w-[40%] ` +
-                    (fakeIPRangeError ? 'border-red-500 ring-1 ring-red-500 rounded-lg' : '')
-                  }
-                  placeholder={tr('Example: 198.18.0.1/16')}
-                  value={values.fakeIPRange}
-                  onValueChange={(v) => {
-                    setValues({ ...values, fakeIPRange: v })
-                    const r = isValidIPv4Cidr(v)
-                    setFakeIPRangeError(r.ok ? null : (r.error ?? tr('Invalid format')))
-                  }}
-                />
+              <Tooltip delay={0} isOpen={!!fakeIPRangeError}>
+                <Tooltip.Trigger className="inline-flex w-[40%]">
+                  <Input
+                    size="sm"
+                    className={
+                      `w-full ` +
+                      (fakeIPRangeError ? 'border-red-500 ring-1 ring-red-500 rounded-lg' : '')
+                    }
+                    placeholder={tr('Example: 198.18.0.1/16')}
+                    value={values.fakeIPRange}
+                    onValueChange={(v) => {
+                      setValues({ ...values, fakeIPRange: v })
+                      const r = isValidIPv4Cidr(v)
+                      setFakeIPRangeError(r.ok ? null : (r.error ?? tr('Invalid format')))
+                    }}
+                  />
+                </Tooltip.Trigger>
+                <Tooltip.Content
+                  className="bg-danger text-danger-foreground"
+                  placement="right"
+                  showArrow
+                  offset={15}
+                >
+                  {fakeIPRangeError}
+                </Tooltip.Content>
               </Tooltip>
             </SettingItem>
             {values.ipv6 && (
               <SettingItem title={tr('Fake IP range (IPv6)')} divider>
-                <Tooltip
-                  content={fakeIPRange6Error}
-                  placement="right"
-                  isOpen={!!fakeIPRange6Error}
-                  showArrow={true}
-                  color="danger"
-                  offset={10}
-                >
-                  <Input
-                    size="sm"
-                    className={
-                      `w-[40%] ` +
-                      (fakeIPRange6Error ? 'border-red-500 ring-1 ring-red-500 rounded-lg' : '')
-                    }
-                    placeholder={tr('Example: fc00::/18')}
-                    value={values.fakeIPRange6}
-                    onValueChange={(v) => {
-                      setValues({ ...values, fakeIPRange6: v })
-                      const r = isValidIPv6Cidr(v)
-                      setFakeIPRange6Error(r.ok ? null : (r.error ?? tr('Invalid format')))
-                    }}
-                  />
+                <Tooltip delay={0} isOpen={!!fakeIPRange6Error}>
+                  <Tooltip.Trigger className="inline-flex w-[40%]">
+                    <Input
+                      size="sm"
+                      className={
+                        `w-full ` +
+                        (fakeIPRange6Error ? 'border-red-500 ring-1 ring-red-500 rounded-lg' : '')
+                      }
+                      placeholder={tr('Example: fc00::/18')}
+                      value={values.fakeIPRange6}
+                      onValueChange={(v) => {
+                        setValues({ ...values, fakeIPRange6: v })
+                        const r = isValidIPv6Cidr(v)
+                        setFakeIPRange6Error(r.ok ? null : (r.error ?? tr('Invalid format')))
+                      }}
+                    />
+                  </Tooltip.Trigger>
+                  <Tooltip.Content
+                    className="bg-danger text-danger-foreground"
+                    placement="right"
+                    showArrow
+                    offset={10}
+                  >
+                    {fakeIPRange6Error}
+                  </Tooltip.Content>
                 </Tooltip>
               </SettingItem>
             )}

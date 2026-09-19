@@ -9,7 +9,6 @@ import Viewer from './viewer'
 import useSWR from 'swr'
 import SettingCard from '../base/base-setting-card'
 import SettingItem from '../base/base-setting-item'
-import { KokoButton as Button } from '../base/koko-form'
 import { IoMdRefresh } from 'react-icons/io'
 import { CgLoadbarDoc } from 'react-icons/cg'
 import { MdEditDocument, MdQrCode2 } from 'react-icons/md'
@@ -17,7 +16,7 @@ import QRCodeModal from '../base/base-qrcode-modal'
 import dayjs from 'dayjs'
 import { calcTraffic } from '@renderer/utils/calc'
 import { getHash } from '@renderer/utils/hash'
-import { Chip, Meter, Separator } from '@heroui/react'
+import { Button, Chip, Meter, Separator } from '@heroui/react'
 import { notify } from '@renderer/utils/notification'
 
 const ProxyProvider: React.FC = () => {
@@ -138,7 +137,7 @@ const ProxyProvider: React.FC = () => {
       <SettingItem compatKey="legacy" title={tr('Proxy providers')} divider>
         <Button
           size="sm"
-          color="primary"
+          variant="primary"
           onPress={() => {
             providers.forEach((provider, index) => {
               onUpdate(provider.name, index)
@@ -167,6 +166,7 @@ const ProxyProvider: React.FC = () => {
                   isIconOnly
                   className="ml-2"
                   size="sm"
+                  variant="secondary"
                   onPress={() => onShowQrCode(provider.name)}
                 >
                   <MdQrCode2 className="text-lg" />
@@ -176,6 +176,7 @@ const ProxyProvider: React.FC = () => {
                 isIconOnly
                 className="ml-2"
                 size="sm"
+                variant="secondary"
                 onPress={() => {
                   setShowDetails({
                     show: false,
@@ -197,6 +198,7 @@ const ProxyProvider: React.FC = () => {
                 isIconOnly
                 className="ml-2"
                 size="sm"
+                variant="secondary"
                 onPress={() => {
                   onUpdate(provider.name, index)
                 }}

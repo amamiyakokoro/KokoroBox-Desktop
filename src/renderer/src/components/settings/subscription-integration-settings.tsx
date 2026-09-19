@@ -1,10 +1,6 @@
 import { tr } from '../../../../shared/i18n'
-import {
-  KokoButton as Button,
-  KokoSwitch as Switch,
-  KokoTextField as Input,
-  KokoTooltip as Tooltip
-} from '../base/koko-form'
+import { Button, Switch, Tooltip } from '@heroui/react'
+import { KokoTextField as Input } from '../base/koko-form'
 import React, { useEffect, useRef, useState } from 'react'
 import { BiCopy, BiHide, BiShow } from 'react-icons/bi'
 import { IoIosHelpCircle } from 'react-icons/io'
@@ -102,14 +98,17 @@ const SubscriptionIntegrationSettings: React.FC<Props> = ({
             compatKey="legacy"
             title={tr('Use a separate working directory for each profile')}
             actions={
-              <Tooltip
-                content={tr(
-                  'Save proxy selections separately when different profiles contain groups with the same name'
-                )}
-              >
-                <Button aria-label={tr('Description')} isIconOnly size="sm" variant="light">
-                  <IoIosHelpCircle className="text-lg" />
-                </Button>
+              <Tooltip delay={0}>
+                <Tooltip.Trigger>
+                  <Button aria-label={tr('Description')} isIconOnly size="sm" variant="ghost">
+                    <IoIosHelpCircle className="text-lg" />
+                  </Button>
+                </Tooltip.Trigger>
+                <Tooltip.Content>
+                  {tr(
+                    'Save proxy selections separately when different profiles contain groups with the same name'
+                  )}
+                </Tooltip.Content>
               </Tooltip>
             }
             divider
@@ -118,10 +117,16 @@ const SubscriptionIntegrationSettings: React.FC<Props> = ({
               size="sm"
               aria-label={tr('Use a separate working directory for each profile')}
               isSelected={diffWorkDir}
-              onValueChange={(value) => {
+              onChange={(value) => {
                 patchAppConfig({ diffWorkDir: value })
               }}
-            />
+            >
+              <Switch.Content>
+                <Switch.Control>
+                  <Switch.Thumb />
+                </Switch.Control>
+              </Switch.Content>
+            </Switch>
           </SettingItem>
           <SettingItem compatKey="legacy" title={tr('Subscription user agent')}>
             <Input
@@ -150,7 +155,7 @@ const SubscriptionIntegrationSettings: React.FC<Props> = ({
                   aria-label={tr('Copy Gist URL')}
                   isIconOnly
                   size="sm"
-                  variant="light"
+                  variant="ghost"
                   onPress={async () => {
                     try {
                       const url = await getGistRawUrl()
@@ -172,10 +177,16 @@ const SubscriptionIntegrationSettings: React.FC<Props> = ({
               size="sm"
               aria-label={tr('Sync runtime configuration to Gist')}
               isSelected={gistSyncEnabled}
-              onValueChange={(value) => {
+              onChange={(value) => {
                 patchAppConfig({ gistSyncEnabled: value })
               }}
-            />
+            >
+              <Switch.Content>
+                <Switch.Control>
+                  <Switch.Thumb />
+                </Switch.Control>
+              </Switch.Content>
+            </Switch>
           </SettingItem>
           {gistSyncEnabled && (
             <SettingItem
@@ -187,10 +198,16 @@ const SubscriptionIntegrationSettings: React.FC<Props> = ({
                 size="sm"
                 aria-label={tr('Encrypt Gist configuration')}
                 isSelected={gistEncrypted}
-                onValueChange={(value) => {
+                onChange={(value) => {
                   patchAppConfig({ gistEncrypted: value })
                 }}
-              />
+              >
+                <Switch.Content>
+                  <Switch.Control>
+                    <Switch.Thumb />
+                  </Switch.Control>
+                </Switch.Content>
+              </Switch>
             </SettingItem>
           )}
           {gistSyncEnabled && gistEncrypted && (
@@ -206,22 +223,25 @@ const SubscriptionIntegrationSettings: React.FC<Props> = ({
                 }}
                 endContent={
                   <div className="flex items-center gap-1">
-                    <Tooltip content={tr('Derive public key from private key')}>
-                      <Button
-                        aria-label={tr('Derive a public key from the Gist age private key')}
-                        isIconOnly
-                        size="sm"
-                        variant="light"
-                        onPress={handleDeriveGistAgeRecipient}
-                      >
-                        <LuArrowRight className="text-lg" />
-                      </Button>
+                    <Tooltip delay={0}>
+                      <Tooltip.Trigger>
+                        <Button
+                          aria-label={tr('Derive a public key from the Gist age private key')}
+                          isIconOnly
+                          size="sm"
+                          variant="ghost"
+                          onPress={handleDeriveGistAgeRecipient}
+                        >
+                          <LuArrowRight className="text-lg" />
+                        </Button>
+                      </Tooltip.Trigger>
+                      <Tooltip.Content>{tr('Derive public key from private key')}</Tooltip.Content>
                     </Tooltip>
                     <Button
                       aria-label={tr('Copy Gist age public key')}
                       isIconOnly
                       size="sm"
-                      variant="light"
+                      variant="ghost"
                       onPress={() => copyValue(gistAgeRecipient, tr('age public key copied'))}
                     >
                       <BiCopy className="text-lg" />
@@ -249,7 +269,7 @@ const SubscriptionIntegrationSettings: React.FC<Props> = ({
                       aria-label={tr('Generate Gist age private key')}
                       isIconOnly
                       size="sm"
-                      variant="light"
+                      variant="ghost"
                       onPress={handleGenerateGistAgeKeyPair}
                     >
                       <LuRefreshCw className="text-lg" />
@@ -258,7 +278,7 @@ const SubscriptionIntegrationSettings: React.FC<Props> = ({
                       aria-label={tr('Copy Gist age private key')}
                       isIconOnly
                       size="sm"
-                      variant="light"
+                      variant="ghost"
                       onPress={() => copyValue(gistAgeIdentity, tr('age private key copied'))}
                     >
                       <BiCopy className="text-lg" />
@@ -271,7 +291,7 @@ const SubscriptionIntegrationSettings: React.FC<Props> = ({
                       }
                       isIconOnly
                       size="sm"
-                      variant="light"
+                      variant="ghost"
                       onPress={() => setGistAgeIdentityVisible((visible) => !visible)}
                     >
                       {gistAgeIdentityVisible ? (

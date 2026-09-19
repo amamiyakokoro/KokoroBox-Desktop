@@ -1,13 +1,9 @@
 import { tr } from '../../../../shared/i18n'
+import { Button, Switch, Tooltip } from '@heroui/react'
 import SettingCard from '../base/base-setting-card'
 import SettingItem from '../base/base-setting-item'
 import InterfaceSelect from '../base/interface-select'
-import {
-  KokoButton as Button,
-  KokoSwitch as Switch,
-  KokoTextField as Input,
-  KokoTooltip as Tooltip
-} from '../base/koko-form'
+import { KokoTextField as Input } from '../base/koko-form'
 import { SettingTabs } from '../base/base-controls'
 import { IoIosHelpCircle } from 'react-icons/io'
 import React from 'react'
@@ -52,31 +48,44 @@ const AdvancedSetting: React.FC<AdvancedSettingProps> = ({ config, onChange }) =
         <Switch
           size="sm"
           isSelected={storeSelected}
-          onValueChange={(v) => {
+          onChange={(v) => {
             onChange({ profile: { 'store-selected': v } })
           }}
-        />
+        >
+          <Switch.Content>
+            <Switch.Control>
+              <Switch.Thumb />
+            </Switch.Control>
+          </Switch.Content>
+        </Switch>
       </SettingItem>
       <SettingItem title={tr('Persist FakeIP mappings')} divider>
         <Switch
           size="sm"
           isSelected={storeFakeIp}
-          onValueChange={(v) => {
+          onChange={(v) => {
             onChange({ profile: { 'store-fake-ip': v } })
           }}
-        />
+        >
+          <Switch.Content>
+            <Switch.Control>
+              <Switch.Thumb />
+            </Switch.Control>
+          </Switch.Content>
+        </Switch>
       </SettingItem>
       <SettingItem
         title={tr('Use RTT latency tests')}
         actions={
-          <Tooltip
-            content={tr(
-              'Use a unified latency test to eliminate differences in proxy handshake times'
-            )}
-          >
-            <Button isIconOnly size="sm" variant="light">
-              <IoIosHelpCircle className="text-lg" />
-            </Button>
+          <Tooltip delay={0}>
+            <Tooltip.Trigger>
+              <Button isIconOnly size="sm" variant="ghost">
+                <IoIosHelpCircle className="text-lg" />
+              </Button>
+            </Tooltip.Trigger>
+            <Tooltip.Content>
+              {tr('Use a unified latency test to eliminate differences in proxy handshake times')}
+            </Tooltip.Content>
           </Tooltip>
         }
         divider
@@ -84,22 +93,31 @@ const AdvancedSetting: React.FC<AdvancedSettingProps> = ({ config, onChange }) =
         <Switch
           size="sm"
           isSelected={unifiedDelay}
-          onValueChange={(v) => {
+          onChange={(v) => {
             onChange({ 'unified-delay': v })
           }}
-        />
+        >
+          <Switch.Content>
+            <Switch.Control>
+              <Switch.Thumb />
+            </Switch.Control>
+          </Switch.Content>
+        </Switch>
       </SettingItem>
       <SettingItem
         title={tr('Concurrent TCP connections')}
         actions={
-          <Tooltip
-            content={tr(
-              'Connect concurrently to IP addresses returned by DNS and use the connection with the fastest handshake'
-            )}
-          >
-            <Button isIconOnly size="sm" variant="light">
-              <IoIosHelpCircle className="text-lg" />
-            </Button>
+          <Tooltip delay={0}>
+            <Tooltip.Trigger>
+              <Button isIconOnly size="sm" variant="ghost">
+                <IoIosHelpCircle className="text-lg" />
+              </Button>
+            </Tooltip.Trigger>
+            <Tooltip.Content>
+              {tr(
+                'Connect concurrently to IP addresses returned by DNS and use the connection with the fastest handshake'
+              )}
+            </Tooltip.Content>
           </Tooltip>
         }
         divider
@@ -107,19 +125,31 @@ const AdvancedSetting: React.FC<AdvancedSettingProps> = ({ config, onChange }) =
         <Switch
           size="sm"
           isSelected={tcpConcurrent}
-          onValueChange={(v) => {
+          onChange={(v) => {
             onChange({ 'tcp-concurrent': v })
           }}
-        />
+        >
+          <Switch.Content>
+            <Switch.Control>
+              <Switch.Thumb />
+            </Switch.Control>
+          </Switch.Content>
+        </Switch>
       </SettingItem>
       <SettingItem title={tr('Disable TCP keep-alive')} divider>
         <Switch
           size="sm"
           isSelected={disableKeepAlive}
-          onValueChange={(v) => {
+          onChange={(v) => {
             onChange({ 'disable-keep-alive': v })
           }}
-        />
+        >
+          <Switch.Content>
+            <Switch.Control>
+              <Switch.Thumb />
+            </Switch.Control>
+          </Switch.Content>
+        </Switch>
       </SettingItem>
       <SettingItem title={tr('TCP keep-alive interval')} divider>
         <Input

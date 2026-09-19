@@ -1,6 +1,5 @@
 import { tr } from '../../../../shared/i18n'
-import { Avatar, Card, Chip } from '@heroui/react'
-import { KokoButton as Button } from '../base/koko-form'
+import { Avatar, Button, Card, Chip } from '@heroui/react'
 import { calcTraffic } from '@renderer/utils/calc'
 import dayjs from 'dayjs'
 import React, { memo, useCallback, useEffect, useMemo, useState } from 'react'
@@ -127,8 +126,7 @@ const ConnectionItemComponent: React.FC<Props> = ({
                 {timeAgo}
               </small>
               <Button
-                color={info.isActive ? 'default' : 'danger'}
-                variant="light"
+                variant={info.isActive ? 'ghost' : 'danger-soft'}
                 isIconOnly
                 size="sm"
                 aria-label={info.isActive ? tr('Close connection') : tr('Delete record')}

@@ -1,14 +1,9 @@
 import { tr } from '../../../../shared/i18n'
 import React, { useEffect, useState } from 'react'
+import { Button, Switch, Tooltip } from '@heroui/react'
 import SettingCard from '../base/base-setting-card'
 import SettingItem from '../base/base-setting-item'
-import {
-  KokoButton as Button,
-  KokoSelect,
-  KokoSwitch as Switch,
-  KokoTextField as Input,
-  KokoTooltip as Tooltip
-} from '../base/koko-form'
+import { KokoSelect, KokoTextField as Input } from '../base/koko-form'
 import { mihomoUpgradeUI } from '@renderer/utils/ipc'
 import EditableList from '../base/base-list-editor'
 import { IoMdCloudDownload, IoMdRefresh } from 'react-icons/io'
@@ -91,26 +86,29 @@ const ControllerSetting: React.FC<ControllerSettingProps> = ({
   return (
     <SettingCard header={tr('External controller')}>
       <SettingItem title={tr('Listen address')} divider={externalController !== ''}>
-        <Tooltip
-          content={externalControllerError}
-          placement="right"
-          isOpen={!!externalControllerError}
-          showArrow={true}
-          color="danger"
-          offset={10}
-        >
-          <Input
-            size="sm"
-            className={`w-50 ${externalControllerError ? 'border-red-500 ring-1 ring-red-500 rounded-lg' : ''}`}
-            value={externalControllerInput}
-            onValueChange={(v) => {
-              setExternalControllerInput(v)
-              const result = isValidListenAddress(v)
-              const error = result.ok ? null : (result.error ?? tr('Invalid format'))
-              setExternalControllerError(error)
-              if (!error) onChange({ 'external-controller': v })
-            }}
-          />
+        <Tooltip delay={0} isOpen={!!externalControllerError}>
+          <Tooltip.Trigger className="inline-flex min-w-0">
+            <Input
+              size="sm"
+              className={`w-50 ${externalControllerError ? 'border-red-500 ring-1 ring-red-500 rounded-lg' : ''}`}
+              value={externalControllerInput}
+              onValueChange={(v) => {
+                setExternalControllerInput(v)
+                const result = isValidListenAddress(v)
+                const error = result.ok ? null : (result.error ?? tr('Invalid format'))
+                setExternalControllerError(error)
+                if (!error) onChange({ 'external-controller': v })
+              }}
+            />
+          </Tooltip.Trigger>
+          <Tooltip.Content
+            className="bg-danger text-danger-foreground"
+            placement="right"
+            showArrow
+            offset={10}
+          >
+            {externalControllerError}
+          </Tooltip.Content>
         </Tooltip>
       </SettingItem>
       {externalController && externalController !== '' && (
@@ -121,7 +119,7 @@ const ControllerSetting: React.FC<ControllerSettingProps> = ({
               <Button
                 size="sm"
                 isIconOnly
-                variant="light"
+                variant="ghost"
                 onPress={() => {
                   const value = generateRandomString(32)
                   setSecretInput(value)
@@ -161,13 +159,19 @@ const ControllerSetting: React.FC<ControllerSettingProps> = ({
             <Switch
               size="sm"
               isSelected={enableExternalUi}
-              onValueChange={(v) => {
+              onChange={(v) => {
                 setEnableExternalUi(v)
                 onChange({
                   'external-ui': v ? 'ui' : undefined
                 })
               }}
-            />
+            >
+              <Switch.Content>
+                <Switch.Control>
+                  <Switch.Thumb />
+                </Switch.Control>
+              </Switch.Content>
+            </Switch>
           </SettingItem>
           {enableExternalUi && (
             <SettingItem
@@ -177,8 +181,8 @@ const ControllerSetting: React.FC<ControllerSettingProps> = ({
                   <Button
                     size="sm"
                     isIconOnly
-                    variant="light"
-                    isLoading={upgrading}
+                    variant="ghost"
+                    isPending={upgrading}
                     onPress={upgradeUI}
                   >
                     <IoMdCloudDownload className="text-lg" />
@@ -187,7 +191,7 @@ const ControllerSetting: React.FC<ControllerSettingProps> = ({
                     isIconOnly
                     size="sm"
                     className="app-nodrag"
-                    variant="light"
+                    variant="ghost"
                     onPress={() => {
                       const controller = externalController.startsWith(':')
                         ? `127.0.0.1${externalController}`
@@ -264,7 +268,7 @@ const ControllerSetting: React.FC<ControllerSettingProps> = ({
             <Switch
               size="sm"
               isSelected={allowPrivateNetwork}
-              onValueChange={(v) => {
+              onChange={(v) => {
                 onChange({
                   'external-controller-cors': {
                     ...externalControllerCors,
@@ -272,7 +276,13 @@ const ControllerSetting: React.FC<ControllerSettingProps> = ({
                   }
                 })
               }}
-            />
+            >
+              <Switch.Content>
+                <Switch.Control>
+                  <Switch.Thumb />
+                </Switch.Control>
+              </Switch.Content>
+            </Switch>
           </SettingItem>
           <div className="mt-1"></div>
           <SettingItem title={tr('Allowed origins')} />

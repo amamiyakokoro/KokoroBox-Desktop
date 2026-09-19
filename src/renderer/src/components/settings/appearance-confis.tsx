@@ -1,13 +1,9 @@
 import { tr } from '../../../../shared/i18n'
 import React, { useEffect, useState, useRef } from 'react'
+import { Button, Switch, Tooltip } from '@heroui/react'
 import SettingCard from '../base/base-setting-card'
 import SettingItem from '../base/base-setting-item'
-import {
-  KokoButton as Button,
-  KokoSelect,
-  KokoSwitch as Switch,
-  KokoTooltip as Tooltip
-} from '../base/koko-form'
+import { KokoSelect } from '../base/koko-form'
 import { SettingTabs } from '../base/base-controls'
 import { BiSolidFileImport } from 'react-icons/bi'
 import {
@@ -106,14 +102,15 @@ const AppearanceConfig: React.FC = () => {
           compatKey="legacy"
           title={tr('Show floating window')}
           actions={
-            <Tooltip
-              content={tr(
-                'The floating window may crash the app unless GPU acceleration is disabled'
-              )}
-            >
-              <Button isIconOnly size="sm" variant="light">
-                <IoIosHelpCircle className="text-lg" />
-              </Button>
+            <Tooltip delay={0}>
+              <Tooltip.Trigger>
+                <Button isIconOnly size="sm" variant="ghost">
+                  <IoIosHelpCircle className="text-lg" />
+                </Button>
+              </Tooltip.Trigger>
+              <Tooltip.Content>
+                {tr('The floating window may crash the app unless GPU acceleration is disabled')}
+              </Tooltip.Content>
             </Tooltip>
           }
           divider
@@ -121,7 +118,7 @@ const AppearanceConfig: React.FC = () => {
           <Switch
             size="sm"
             isSelected={localShowFloating}
-            onValueChange={async (v) => {
+            onChange={async (v) => {
               if (timeoutRef.current) {
                 clearTimeout(timeoutRef.current)
                 timeoutRef.current = null
@@ -139,7 +136,13 @@ const AppearanceConfig: React.FC = () => {
                 await closeFloatingWindow()
               }
             }}
-          />
+          >
+            <Switch.Content>
+              <Switch.Control>
+                <Switch.Thumb />
+              </Switch.Control>
+            </Switch.Content>
+          </Switch>
         </SettingItem>
         {localShowFloating && (
           <>
@@ -151,17 +154,23 @@ const AppearanceConfig: React.FC = () => {
               <Switch
                 size="sm"
                 isSelected={spinFloatingIcon}
-                onValueChange={async (v) => {
+                onChange={async (v) => {
                   await patchAppConfig({ spinFloatingIcon: v })
                   window.electron.ipcRenderer.send('updateFloatingWindow')
                 }}
-              />
+              >
+                <Switch.Content>
+                  <Switch.Control>
+                    <Switch.Thumb />
+                  </Switch.Control>
+                </Switch.Content>
+              </Switch>
             </SettingItem>
             <SettingItem compatKey="legacy" title={tr('Disable tray icon')} divider>
               <Switch
                 size="sm"
                 isSelected={disableTray}
-                onValueChange={async (v) => {
+                onChange={async (v) => {
                   await patchAppConfig({ disableTray: v })
                   if (v) {
                     closeTrayIcon()
@@ -169,7 +178,13 @@ const AppearanceConfig: React.FC = () => {
                     showTrayIcon()
                   }
                 }}
-              />
+              >
+                <Switch.Content>
+                  <Switch.Control>
+                    <Switch.Thumb />
+                  </Switch.Control>
+                </Switch.Content>
+              </Switch>
             </SettingItem>
           </>
         )}
@@ -178,14 +193,17 @@ const AppearanceConfig: React.FC = () => {
             compatKey="legacy"
             title={tr('Custom tray icon')}
             actions={
-              <Tooltip
-                content={tr(
-                  'Use this icon in the tray. PNG, JPG and WebP images are cropped before saving.'
-                )}
-              >
-                <Button isIconOnly size="sm" variant="light">
-                  <IoIosHelpCircle className="text-lg" />
-                </Button>
+              <Tooltip delay={0}>
+                <Tooltip.Trigger>
+                  <Button isIconOnly size="sm" variant="ghost">
+                    <IoIosHelpCircle className="text-lg" />
+                  </Button>
+                </Tooltip.Trigger>
+                <Tooltip.Content>
+                  {tr(
+                    'Use this icon in the tray. PNG, JPG and WebP images are cropped before saving.'
+                  )}
+                </Tooltip.Content>
               </Tooltip>
             }
             divider
@@ -200,7 +218,7 @@ const AppearanceConfig: React.FC = () => {
               )}
               <Button
                 size="sm"
-                variant="flat"
+                variant="secondary"
                 onPress={async () => {
                   const files = await getFilePath(
                     ['png', 'jpg', 'jpeg', 'webp', 'ico', 'icns'],
@@ -221,7 +239,7 @@ const AppearanceConfig: React.FC = () => {
               {customTrayIcon && (
                 <Button
                   size="sm"
-                  variant="light"
+                  variant="ghost"
                   onPress={async () => {
                     await patchAppConfig({ customTrayIcon: '' })
                     await updateTrayIcon()
@@ -239,10 +257,16 @@ const AppearanceConfig: React.FC = () => {
               <Switch
                 size="sm"
                 isSelected={proxyInTray}
-                onValueChange={async (v) => {
+                onChange={async (v) => {
                   await patchAppConfig({ proxyInTray: v })
                 }}
-              />
+              >
+                <Switch.Content>
+                  <Switch.Control>
+                    <Switch.Thumb />
+                  </Switch.Control>
+                </Switch.Content>
+              </Switch>
             </SettingItem>
             {proxyInTray && (
               <SettingItem compatKey="legacy" title={tr('Tray menu latency layout')} divider>
@@ -278,11 +302,17 @@ const AppearanceConfig: React.FC = () => {
           <Switch
             size="sm"
             isSelected={showTraffic}
-            onValueChange={async (v) => {
+            onChange={async (v) => {
               await patchAppConfig({ showTraffic: v })
               await startMonitor()
             }}
-          />
+          >
+            <Switch.Content>
+              <Switch.Control>
+                <Switch.Thumb />
+              </Switch.Control>
+            </Switch.Content>
+          </Switch>
         </SettingItem>
         {platform === 'darwin' && (
           <>
@@ -290,11 +320,17 @@ const AppearanceConfig: React.FC = () => {
               <Switch
                 size="sm"
                 isSelected={useDockIcon}
-                onValueChange={async (v) => {
+                onChange={async (v) => {
                   await patchAppConfig({ useDockIcon: v })
                   setDockVisible(v)
                 }}
-              />
+              >
+                <Switch.Content>
+                  <Switch.Control>
+                    <Switch.Thumb />
+                  </Switch.Control>
+                </Switch.Content>
+              </Switch>
             </SettingItem>
           </>
         )}
@@ -302,25 +338,34 @@ const AppearanceConfig: React.FC = () => {
           <Switch
             size="sm"
             isSelected={useWindowFrame}
-            onValueChange={async (v) => {
+            onChange={async (v) => {
               await patchAppConfig({ useWindowFrame: v })
               await relaunchApp()
             }}
-          />
+          >
+            <Switch.Content>
+              <Switch.Control>
+                <Switch.Thumb />
+              </Switch.Control>
+            </Switch.Content>
+          </Switch>
         </SettingItem>
         {useWindowFrame && (
           <SettingItem
             compatKey="legacy"
             title={tr('Enable window drag area')}
             actions={
-              <Tooltip
-                content={tr(
-                  'Drag the window using empty areas in page headers. Useful when the system does not provide a draggable title bar.'
-                )}
-              >
-                <Button isIconOnly size="sm" variant="light">
-                  <IoIosHelpCircle className="text-lg" />
-                </Button>
+              <Tooltip delay={0}>
+                <Tooltip.Trigger>
+                  <Button isIconOnly size="sm" variant="ghost">
+                    <IoIosHelpCircle className="text-lg" />
+                  </Button>
+                </Tooltip.Trigger>
+                <Tooltip.Content>
+                  {tr(
+                    'Drag the window using empty areas in page headers. Useful when the system does not provide a draggable title bar.'
+                  )}
+                </Tooltip.Content>
               </Tooltip>
             }
             divider
@@ -328,21 +373,33 @@ const AppearanceConfig: React.FC = () => {
             <Switch
               size="sm"
               isSelected={enableWindowDrag}
-              onValueChange={async (v) => {
+              onChange={async (v) => {
                 await patchAppConfig({ enableWindowDrag: v })
                 await relaunchApp()
               }}
-            />
+            >
+              <Switch.Content>
+                <Switch.Control>
+                  <Switch.Thumb />
+                </Switch.Control>
+              </Switch.Content>
+            </Switch>
           </SettingItem>
         )}
         <SettingItem compatKey="legacy" title={tr('Show update button')} divider>
           <Switch
             size="sm"
             isSelected={showUpdateButtonAfterNotification}
-            onValueChange={(v) => {
+            onChange={(v) => {
               patchAppConfig({ showUpdateButtonAfterNotification: v })
             }}
-          />
+          >
+            <Switch.Content>
+              <Switch.Control>
+                <Switch.Thumb />
+              </Switch.Control>
+            </Switch.Content>
+          </Switch>
         </SettingItem>
         <SettingItem compatKey="legacy" title={tr('Background color')} divider>
           <SettingTabs
@@ -366,9 +423,9 @@ const AppearanceConfig: React.FC = () => {
             <>
               <Button
                 size="sm"
-                isLoading={fetching}
+                isPending={fetching}
                 isIconOnly
-                variant="light"
+                variant="ghost"
                 onPress={async () => {
                   setFetching(true)
                   try {
@@ -386,7 +443,7 @@ const AppearanceConfig: React.FC = () => {
               <Button
                 size="sm"
                 isIconOnly
-                variant="light"
+                variant="ghost"
                 onPress={async () => {
                   const files = await getFilePath(['css'])
                   if (!files) return
@@ -403,7 +460,7 @@ const AppearanceConfig: React.FC = () => {
               <Button
                 size="sm"
                 isIconOnly
-                variant="light"
+                variant="ghost"
                 onPress={async () => {
                   setOpenCSSEditor(true)
                 }}

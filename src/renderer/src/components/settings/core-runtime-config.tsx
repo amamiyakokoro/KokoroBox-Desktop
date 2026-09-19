@@ -1,5 +1,6 @@
 import { tr } from '../../../../shared/i18n'
-import { KokoButton as Button, KokoSelect } from '../base/koko-form'
+import { Button } from '@heroui/react'
+import { KokoSelect } from '../base/koko-form'
 import { SettingTabs } from '../base/base-controls'
 import SettingCard from '../base/base-setting-card'
 import SettingItem from '../base/base-setting-item'
@@ -184,8 +185,8 @@ const CoreRuntimeConfig: React.FC<Props> = ({ sections = ['runtime', 'service'] 
                 <Button
                   size="sm"
                   isIconOnly
-                  variant="light"
-                  isLoading={upgrading}
+                  variant="ghost"
+                  isPending={upgrading}
                   onPress={handleCoreUpgrade}
                 >
                   <IoMdCloudDownload className="text-lg" />
@@ -300,7 +301,7 @@ const CoreRuntimeConfig: React.FC<Props> = ({ sections = ['runtime', 'service'] 
         <SettingCard header={tr('Service management')}>
           {!systemCoreOnlyBuild && platform !== 'darwin' && (
             <SettingItem compatKey="legacy" title={tr('Elevation status')} divider>
-              <Button size="sm" variant="flat" onPress={() => setShowPermissionModal(true)}>
+              <Button size="sm" variant="secondary" onPress={() => setShowPermissionModal(true)}>
                 {tr('Manage')}
               </Button>
             </SettingItem>
@@ -308,8 +309,8 @@ const CoreRuntimeConfig: React.FC<Props> = ({ sections = ['runtime', 'service'] 
           <SettingItem compatKey="legacy" title={tr('Service status')}>
             <Button
               size="sm"
-              color="primary"
-              variant="flat"
+              className="text-primary"
+              variant="secondary"
               onPress={() => setShowServiceModal(true)}
             >
               {tr('Manage')}
