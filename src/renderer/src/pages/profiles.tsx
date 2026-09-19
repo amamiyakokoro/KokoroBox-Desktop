@@ -1,14 +1,6 @@
 import { tr } from '../../../shared/i18n'
-import {
-  Button,
-  Checkbox,
-  Divider,
-  Dropdown,
-  DropdownItem,
-  DropdownMenu,
-  DropdownTrigger,
-  Input
-} from '@heroui/react'
+import { Button, Checkbox, Divider, Input } from '@heroui/react'
+import { KokoActionMenu } from '@renderer/components/base/koko-collections'
 import BasePage from '@renderer/components/base/base-page'
 import ProfileItem from '@renderer/components/profiles/profile-item'
 import EditInfoModal from '@renderer/components/profiles/edit-info-modal'
@@ -276,66 +268,81 @@ const Profiles: React.FC = () => {
           >
             {tr('Import')}
           </Button>
-          <Dropdown>
-            <DropdownTrigger>
-              <Button className="ml-2 new-profile" size="sm" isIconOnly color="primary">
-                <FaPlus />
-              </Button>
-            </DropdownTrigger>
-            <DropdownMenu
-              onAction={async (key) => {
-                switch (key) {
-                  case 'open': {
-                    try {
-                      const files = await getFilePath(['yml', 'yaml'])
-                      if (files?.length) {
-                        const content = await readTextFile(files[0])
-                        const fileName = files[0].split('/').pop()?.split('\\').pop()
-                        await addProfileItem({ name: fileName, type: 'local', file: content })
-                      }
-                    } catch (e) {
-                      notify(e, { variant: 'danger' })
+          <KokoActionMenu
+            ariaLabel={tr('New configuration')}
+            buttonClassName="ml-2 new-profile"
+            buttonColor="primary"
+            buttonVariant="solid"
+            items={[
+              {
+                id: 'kokoro',
+                label: tr('Sign in to Kokoro for subscriptions'),
+                textValue: tr('Sign in to Kokoro for subscriptions'),
+                dividerAfter: true
+              },
+              {
+                id: 'open',
+                label: tr('Open local configuration'),
+                textValue: tr('Open local configuration')
+              },
+              {
+                id: 'new',
+                label: tr('New local configuration'),
+                textValue: tr('New local configuration')
+              },
+              {
+                id: 'import',
+                label: tr('Import remote configuration'),
+                textValue: tr('Import remote configuration')
+              }
+            ]}
+            onAction={async (id) => {
+              switch (id) {
+                case 'open': {
+                  try {
+                    const files = await getFilePath(['yml', 'yaml'])
+                    if (files?.length) {
+                      const content = await readTextFile(files[0])
+                      const fileName = files[0].split('/').pop()?.split('\\').pop()
+                      await addProfileItem({ name: fileName, type: 'local', file: content })
                     }
-                    break
+                  } catch (e) {
+                    notify(e, { variant: 'danger' })
                   }
-                  case 'new': {
-                    {
-                      await addProfileItem({
-                        name: tr('New configuration'),
-                        type: 'local',
-                        file: 'proxies: []\nproxy-groups: []\nrules: []'
-                      })
-                    }
-                    break
-                  }
-                  case 'import': {
-                    const newRemoteProfile: ProfileItem = {
-                      id: '',
-                      name: '',
-                      type: 'remote',
-                      url: '',
-                      useProxy: false,
-                      autoUpdate: true
-                    }
-                    setEditingItem(newRemoteProfile)
-                    setShowEditModal(true)
-                    break
-                  }
-                  case 'kokoro': {
-                    navigate('/kokoro')
-                    break
-                  }
+                  break
                 }
-              }}
-            >
-              <DropdownItem key="kokoro" showDivider>
-                {tr('Sign in to Kokoro for subscriptions')}
-              </DropdownItem>
-              <DropdownItem key="open">{tr('Open local configuration')}</DropdownItem>
-              <DropdownItem key="new">{tr('New local configuration')}</DropdownItem>
-              <DropdownItem key="import">{tr('Import remote configuration')}</DropdownItem>
-            </DropdownMenu>
-          </Dropdown>
+                case 'new': {
+                  {
+                    await addProfileItem({
+                      name: tr('New configuration'),
+                      type: 'local',
+                      file: 'proxies: []\nproxy-groups: []\nrules: []'
+                    })
+                  }
+                  break
+                }
+                case 'import': {
+                  const newRemoteProfile: ProfileItem = {
+                    id: '',
+                    name: '',
+                    type: 'remote',
+                    url: '',
+                    useProxy: false,
+                    autoUpdate: true
+                  }
+                  setEditingItem(newRemoteProfile)
+                  setShowEditModal(true)
+                  break
+                }
+                case 'kokoro': {
+                  navigate('/kokoro')
+                  break
+                }
+              }
+            }}
+          >
+            <FaPlus />
+          </KokoActionMenu>
         </div>
         <Divider />
       </div>

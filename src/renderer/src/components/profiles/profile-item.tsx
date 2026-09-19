@@ -1,10 +1,11 @@
 import { tr } from '../../../../shared/i18n'
-import { Card, Chip, Dropdown, Meter } from '@heroui-v3/react'
+import { Card, Chip, Meter } from '@heroui-v3/react'
 import { KokoButton as Button, KokoTooltip as Tooltip } from '../base/koko-form'
+import { KokoActionMenu } from '../base/koko-collections'
 import { calcTraffic } from '@renderer/utils/calc'
 import { IoMdMore, IoMdRefresh } from 'react-icons/io'
 import dayjs from 'dayjs'
-import React, { Key, useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import EditFileModal from './edit-file-modal'
 import EditInfoModal from './edit-info-modal'
 import { useSortable } from '@dnd-kit/sortable'
@@ -122,8 +123,8 @@ const ProfileItem: React.FC<Props> = (props) => {
     return list
   }, [info])
 
-  const onMenuAction = async (key: Key): Promise<void> => {
-    switch (key) {
+  const onMenuAction = async (id: string): Promise<void> => {
+    switch (id) {
       case 'edit-info': {
         setOpenInfoEditor(true)
         break
@@ -264,30 +265,22 @@ const ProfileItem: React.FC<Props> = (props) => {
                   </Tooltip>
                 )}
 
-                <Dropdown>
-                  <Dropdown.Trigger className="rounded-lg">
-                    <Button isIconOnly size="sm" variant="light" color="default">
-                      <IoMdMore
-                        color="default"
-                        className={`text-[24px] ${isCurrent ? 'text-primary-foreground' : 'text-foreground'}`}
-                      />
-                    </Button>
-                  </Dropdown.Trigger>
-                  <Dropdown.Popover placement="bottom end" className="min-w-40 rounded-lg">
-                    <Dropdown.Menu className="p-1 text-sm" onAction={onMenuAction}>
-                      {menuItems.map((item) => (
-                        <Dropdown.Item
-                          id={item.key}
-                          key={item.key}
-                          textValue={item.label}
-                          className={`min-h-8 rounded-md px-2.5 py-1.5 ${item.showDivider ? 'border-b border-divider' : ''} ${item.color === 'danger' ? 'text-danger' : item.className}`}
-                        >
-                          {item.label}
-                        </Dropdown.Item>
-                      ))}
-                    </Dropdown.Menu>
-                  </Dropdown.Popover>
-                </Dropdown>
+                <KokoActionMenu
+                  ariaLabel={tr('Edit details')}
+                  items={menuItems.map((item) => ({
+                    id: item.key,
+                    label: item.label,
+                    textValue: item.label,
+                    dividerAfter: item.showDivider,
+                    tone: item.color === 'danger' ? 'danger' : 'default'
+                  }))}
+                  onAction={onMenuAction}
+                >
+                  <IoMdMore
+                    color="default"
+                    className={`text-[24px] ${isCurrent ? 'text-primary-foreground' : 'text-foreground'}`}
+                  />
+                </KokoActionMenu>
               </div>
             </div>
             {info.type === 'remote' && extra && (

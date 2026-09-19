@@ -1,5 +1,6 @@
 import { tr } from '../../../../shared/i18n'
-import { Button, Chip, Input, Select, SelectItem, Switch } from '@heroui/react'
+import { Button, Chip, Input, Switch } from '@heroui/react'
+import { KokoSelect } from '../base/koko-form'
 import BasePage from '@renderer/components/base/base-page'
 import { useProfileConfig } from '@renderer/hooks/use-profile-config'
 import { calcTraffic } from '@renderer/utils/calc'
@@ -317,54 +318,54 @@ const KokoroSettingsPage: React.FC = () => {
                     }
                   >
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                      <Select
+                      <KokoSelect
+                        aria-label={tr('Plan')}
                         label={tr('Plan')}
-                        size="sm"
-                        selectedKeys={settings?.plan ? new Set([settings.plan]) : new Set()}
                         isDisabled={options.plans.length === 0}
                         disallowEmptySelection
-                        onSelectionChange={(value) =>
-                          updateSettings({ plan: String(value.currentKey), isp: null })
-                        }
-                      >
-                        {options.plans.map((plan) => (
-                          <SelectItem key={plan.name} description={plan.description || undefined}>
-                            {plan.name}
-                          </SelectItem>
-                        ))}
-                      </Select>
-                      <Select
+                        options={options.plans.map((plan) => ({
+                          id: plan.name,
+                          label: plan.name,
+                          description: plan.description || undefined,
+                          textValue: plan.name
+                        }))}
+                        value={settings?.plan ?? ''}
+                        onChange={(value) => updateSettings({ plan: value, isp: null })}
+                      />
+                      <KokoSelect
+                        aria-label={tr('Internet provider')}
                         label={tr('Internet provider')}
-                        size="sm"
-                        selectedKeys={new Set([settings?.isp || ''])}
                         disallowEmptySelection
-                        onSelectionChange={(value) =>
+                        options={isps.map((isp) => ({
+                          id: isp.value,
+                          label: isp.label,
+                          textValue: isp.label
+                        }))}
+                        value={settings?.isp ?? ''}
+                        onChange={(value) =>
                           updateSettings({
-                            isp: (String(value.currentKey) || null) as KokoroISP | null
+                            isp: (value || null) as KokoroISP | null
                           })
                         }
-                      >
-                        {isps.map((isp) => (
-                          <SelectItem key={isp.value}>{isp.label}</SelectItem>
-                        ))}
-                      </Select>
-                      <Select
+                      />
+                      <KokoSelect
+                        aria-label={tr('Protocol')}
                         label={tr('Protocol')}
-                        size="sm"
-                        selectedKeys={settings ? new Set([settings.protocol]) : new Set()}
                         disallowEmptySelection
-                        onSelectionChange={(value) => {
-                          const protocol = String(value.currentKey) as KokoroProtocol
+                        options={protocols.map((protocol) => ({
+                          id: protocol.value,
+                          label: protocol.label,
+                          textValue: protocol.label
+                        }))}
+                        value={settings?.protocol ?? ''}
+                        onChange={(value) => {
+                          const protocol = value as KokoroProtocol
                           updateSettings({
                             protocol,
                             mode: protocol === 'vmess' ? 'relay' : settings?.mode || 'relay'
                           })
                         }}
-                      >
-                        {protocols.map((protocol) => (
-                          <SelectItem key={protocol.value}>{protocol.label}</SelectItem>
-                        ))}
-                      </Select>
+                      />
                       {!supportsDirect ? (
                         <div className="flex min-h-12 flex-col justify-center rounded-lg border border-default-100 bg-default-50 px-3 py-1.5">
                           <span className="text-xs text-foreground-500">
@@ -377,53 +378,48 @@ const KokoroSettingsPage: React.FC = () => {
                           </span>
                         </div>
                       ) : (
-                        <Select
+                        <KokoSelect
+                          aria-label={tr('Connection mode')}
                           label={tr('Connection mode')}
-                          size="sm"
-                          selectedKeys={settings ? new Set([settings.mode]) : new Set()}
                           disallowEmptySelection
-                          onSelectionChange={(value) =>
-                            updateSettings({ mode: String(value.currentKey) as KokoroMode })
-                          }
-                        >
-                          <SelectItem key="relay">{tr('Relay')}</SelectItem>
-                          <SelectItem key="direct">{tr('Direct')}</SelectItem>
-                        </Select>
+                          options={[
+                            { id: 'relay', label: tr('Relay') },
+                            { id: 'direct', label: tr('Direct') }
+                          ]}
+                          value={settings?.mode ?? ''}
+                          onChange={(value) => updateSettings({ mode: value as KokoroMode })}
+                        />
                       )}
-                      <Select
+                      <KokoSelect
+                        aria-label={tr('Rule source')}
                         label={tr('Rule source')}
-                        size="sm"
-                        selectedKeys={settings ? new Set([settings.rule_source]) : new Set()}
                         disallowEmptySelection
-                        onSelectionChange={(value) =>
+                        options={options.rule_sources.map((source) => ({
+                          id: source,
+                          label: source === 'origin' ? tr('Original source') : tr('Mirror')
+                        }))}
+                        value={settings?.rule_source ?? ''}
+                        onChange={(value) =>
                           updateSettings({
-                            rule_source: String(value.currentKey) as KokoroRuleSource
+                            rule_source: value as KokoroRuleSource
                           })
                         }
-                      >
-                        {options.rule_sources.map((source) => (
-                          <SelectItem key={source}>
-                            {source === 'origin' ? tr('Original source') : tr('Mirror')}
-                          </SelectItem>
-                        ))}
-                      </Select>
-                      <Select
+                      />
+                      <KokoSelect
+                        aria-label={tr('Unmatched traffic')}
                         label={tr('Unmatched traffic')}
-                        size="sm"
-                        selectedKeys={settings ? new Set([settings.final_route]) : new Set()}
                         disallowEmptySelection
-                        onSelectionChange={(value) =>
+                        options={options.final_routes.map((route) => ({
+                          id: route,
+                          label: route === 'proxy' ? tr('Proxy') : tr('Direct')
+                        }))}
+                        value={settings?.final_route ?? ''}
+                        onChange={(value) =>
                           updateSettings({
-                            final_route: String(value.currentKey) as KokoroFinalRoute
+                            final_route: value as KokoroFinalRoute
                           })
                         }
-                      >
-                        {options.final_routes.map((route) => (
-                          <SelectItem key={route}>
-                            {route === 'proxy' ? tr('Proxy') : tr('Direct')}
-                          </SelectItem>
-                        ))}
-                      </Select>
+                      />
                     </div>
                   </KokoroOptionSection>
 

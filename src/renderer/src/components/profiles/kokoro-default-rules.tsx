@@ -1,5 +1,6 @@
 import { tr } from '../../../../shared/i18n'
-import { Button, Chip, Input, Select, SelectItem, Tooltip } from '@heroui/react'
+import { Button, Chip, Input, Tooltip } from '@heroui/react'
+import { KokoSelect } from '../base/koko-form'
 import { getKokoroDefaultRules, replaceKokoroDefaultRules } from '@renderer/utils/ipc'
 import { notify } from '@renderer/utils/notification'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
@@ -251,41 +252,28 @@ const KokoroDefaultRules: React.FC = () => {
                   className="rounded-lg border border-default-100 bg-default-50/50 p-2"
                 >
                   <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] items-center gap-2">
-                    <Select
+                    <KokoSelect
                       aria-label={tr('Rule type')}
                       label={tr('Rule type')}
                       className="min-w-0"
-                      size="sm"
-                      selectedKeys={new Set([rule.type])}
                       disallowEmptySelection
-                      onSelectionChange={(value) =>
-                        changeRuleType(index, String(value.currentKey) as KokoroCustomRuleType)
-                      }
-                    >
-                      {options.rule_types.map((type) => (
-                        <SelectItem
-                          key={type}
-                          isDisabled={type === 'MATCH' && hasMatch && rule.type !== 'MATCH'}
-                        >
-                          {type}
-                        </SelectItem>
-                      ))}
-                    </Select>
-                    <Select
+                      options={options.rule_types.map((type) => ({
+                        id: type,
+                        label: type,
+                        isDisabled: type === 'MATCH' && hasMatch && rule.type !== 'MATCH'
+                      }))}
+                      value={rule.type}
+                      onChange={(value) => changeRuleType(index, value as KokoroCustomRuleType)}
+                    />
+                    <KokoSelect
                       aria-label={tr('Rule target')}
                       label={tr('Rule target')}
                       className="min-w-0"
-                      size="sm"
-                      selectedKeys={new Set([rule.target])}
                       disallowEmptySelection
-                      onSelectionChange={(value) =>
-                        updateRule(index, { target: String(value.currentKey) })
-                      }
-                    >
-                      {targetOptions.map((target) => (
-                        <SelectItem key={target}>{target}</SelectItem>
-                      ))}
-                    </Select>
+                      options={targetOptions.map((target) => ({ id: target, label: target }))}
+                      value={rule.target}
+                      onChange={(value) => updateRule(index, { target: value })}
+                    />
                     <div className="flex shrink-0 items-center gap-0.5">
                       <Tooltip content={tr('Move up')}>
                         <Button
@@ -333,21 +321,18 @@ const KokoroDefaultRules: React.FC = () => {
                   </div>
                   <div className="mt-2">
                     {rule.type === 'RULE-SET' ? (
-                      <Select
+                      <KokoSelect
                         aria-label={tr('Rule content')}
                         label={tr('Rule content')}
                         className="min-w-0 flex-1"
-                        size="sm"
                         placeholder={tr('Select a RULE-SET provider')}
-                        selectedKeys={rule.payload ? new Set([rule.payload]) : new Set()}
-                        onSelectionChange={(value) =>
-                          updateRule(index, { payload: String(value.currentKey) })
-                        }
-                      >
-                        {domainProviders.map((provider) => (
-                          <SelectItem key={provider.name}>{provider.name}</SelectItem>
-                        ))}
-                      </Select>
+                        options={domainProviders.map((provider) => ({
+                          id: provider.name,
+                          label: provider.name
+                        }))}
+                        value={rule.payload ?? ''}
+                        onChange={(value) => updateRule(index, { payload: value })}
+                      />
                     ) : (
                       <Input
                         aria-label={tr('Rule content')}

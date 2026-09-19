@@ -1,7 +1,6 @@
 import { tr } from '../../../../shared/i18n'
 import {
   Button,
-  Dropdown,
   Input,
   InputGroup,
   Label,
@@ -11,6 +10,7 @@ import {
   Switch,
   Tooltip
 } from '@heroui-v3/react'
+import { KokoActionMenu } from '../base/koko-collections'
 import type { ReactNode } from 'react'
 import React, { useState } from 'react'
 import { useOverrideConfig } from '@renderer/hooks/use-override-config'
@@ -186,6 +186,9 @@ const EditInfoModal: React.FC<Props> = (props) => {
   })
 
   const overrideRows = [...globalOverrideRows, ...localOverrideRows]
+  const selectableOverrides = overrideItems.filter(
+    (item) => !values.override?.includes(item.id) && !item.global
+  )
 
   const overrideContent = (
     <Surface
@@ -194,52 +197,40 @@ const EditInfoModal: React.FC<Props> = (props) => {
     >
       {overrideRows}
       <Surface variant="transparent" className="px-1.5 py-0.75">
-        <Dropdown>
-          <Dropdown.Trigger className="block rounded-md">
-            <Button fullWidth size="sm" variant="secondary" className="h-6.5 min-h-6.5 rounded-md">
-              <FaPlus className="text-[13px]" />
-            </Button>
-          </Dropdown.Trigger>
-          <Dropdown.Popover placement="top" className="no-scrollbar overflow-y-auto rounded-lg">
-            <Dropdown.Menu
-              className="no-scrollbar p-1 text-sm"
-              onAction={(key) => {
-                setValues({
-                  ...values,
-                  override: Array.from(values.override || []).concat(key.toString())
-                })
-              }}
-            >
-              {overrideItems.filter((i) => !values.override?.includes(i.id) && !i.global).length >
-              0 ? (
-                overrideItems
-                  .filter((i) => !values.override?.includes(i.id) && !i.global)
-                  .map((i) => (
-                    <Dropdown.Item
-                      id={i.id}
-                      key={i.id}
-                      textValue={i.name}
-                      className="min-h-8 rounded-md px-2.5 py-1.5"
-                    >
-                      <Label className="-translate-y-px text-sm leading-5">{i.name}</Label>
-                    </Dropdown.Item>
-                  ))
-              ) : (
-                <Dropdown.Item
-                  id="empty"
-                  key="empty"
-                  textValue={tr('No overrides available')}
-                  isDisabled
-                  className="min-h-8 rounded-md px-2.5 py-1.5"
-                >
-                  <Label className="-translate-y-px text-sm leading-5">
-                    {tr('No overrides available')}
-                  </Label>
-                </Dropdown.Item>
-              )}
-            </Dropdown.Menu>
-          </Dropdown.Popover>
-        </Dropdown>
+        <KokoActionMenu
+          ariaLabel={tr('Overrides')}
+          buttonClassName="h-6.5 min-h-6.5 rounded-md"
+          buttonFullWidth
+          buttonVariant="secondary"
+          isIconOnly={false}
+          items={
+            selectableOverrides.length > 0
+              ? selectableOverrides.map((item) => ({
+                  id: item.id,
+                  label: item.name,
+                  textValue: item.name
+                }))
+              : [
+                  {
+                    id: 'empty',
+                    label: tr('No overrides available'),
+                    textValue: tr('No overrides available'),
+                    isDisabled: true
+                  }
+                ]
+          }
+          placement="top"
+          popoverClassName="no-scrollbar overflow-y-auto"
+          onAction={(id) => {
+            if (id === 'empty') return
+            setValues({
+              ...values,
+              override: Array.from(values.override || []).concat(id)
+            })
+          }}
+        >
+          <FaPlus className="text-[13px]" />
+        </KokoActionMenu>
       </Surface>
     </Surface>
   )

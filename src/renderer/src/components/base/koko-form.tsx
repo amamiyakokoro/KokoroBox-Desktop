@@ -1,6 +1,7 @@
 import {
   Button,
   InputGroup,
+  Label,
   ListBox,
   Select,
   Switch,
@@ -96,6 +97,7 @@ export const KokoTextField: React.FC<KokoTextFieldProps> = ({
 export interface KokoSelectOption {
   id: string
   label: React.ReactNode
+  description?: React.ReactNode
   textValue?: string
   isDisabled?: boolean
 }
@@ -105,7 +107,9 @@ interface KokoSelectBaseProps {
   className?: string
   disallowEmptySelection?: boolean
   isDisabled?: boolean
+  label?: React.ReactNode
   options: KokoSelectOption[]
+  placeholder?: string
   triggerClassName?: string
 }
 
@@ -124,12 +128,21 @@ interface KokoMultipleSelectProps extends KokoSelectBaseProps {
 export type KokoSelectProps = KokoSingleSelectProps | KokoMultipleSelectProps
 
 const KokoSelectContent: React.FC<{
+  label?: React.ReactNode
   options: KokoSelectOption[]
+  placeholder?: string
   triggerClassName?: string
-}> = ({ options, triggerClassName }) => (
+}> = ({ label, options, placeholder, triggerClassName }) => (
   <>
+    {label ? <Label className="mb-1 text-xs text-foreground-500">{label}</Label> : null}
     <Select.Trigger className={cn('h-8 min-h-8 py-0', triggerClassName)}>
-      <Select.Value />
+      {placeholder ? (
+        <Select.Value>
+          {({ defaultChildren, isPlaceholder }) => (isPlaceholder ? placeholder : defaultChildren)}
+        </Select.Value>
+      ) : (
+        <Select.Value />
+      )}
       <Select.Indicator />
     </Select.Trigger>
     <Select.Popover>
@@ -143,7 +156,14 @@ const KokoSelectContent: React.FC<{
               option.textValue ?? (typeof option.label === 'string' ? option.label : option.id)
             }
           >
-            {option.label}
+            <span className="min-w-0 flex-1">
+              <span className="block truncate">{option.label}</span>
+              {option.description ? (
+                <span className="mt-0.5 block truncate text-xs text-foreground-500">
+                  {option.description}
+                </span>
+              ) : null}
+            </span>
             <ListBox.ItemIndicator />
           </ListBox.Item>
         ))}
@@ -153,7 +173,15 @@ const KokoSelectContent: React.FC<{
 )
 
 export const KokoSelect: React.FC<KokoSelectProps> = (props) => {
-  const { className, disallowEmptySelection = false, isDisabled, options, triggerClassName } = props
+  const {
+    className,
+    disallowEmptySelection = false,
+    isDisabled,
+    label,
+    options,
+    placeholder,
+    triggerClassName
+  } = props
 
   if (props.multiple) {
     return (
@@ -169,7 +197,12 @@ export const KokoSelect: React.FC<KokoSelectProps> = (props) => {
           void props.onChange(value.map(String))
         }}
       >
-        <KokoSelectContent options={options} triggerClassName={triggerClassName} />
+        <KokoSelectContent
+          label={label}
+          options={options}
+          placeholder={placeholder}
+          triggerClassName={triggerClassName}
+        />
       </Select>
     )
   }
@@ -187,7 +220,12 @@ export const KokoSelect: React.FC<KokoSelectProps> = (props) => {
         void props.onChange(String(value))
       }}
     >
-      <KokoSelectContent options={options} triggerClassName={triggerClassName} />
+      <KokoSelectContent
+        label={label}
+        options={options}
+        placeholder={placeholder}
+        triggerClassName={triggerClassName}
+      />
     </Select>
   )
 }
@@ -219,14 +257,14 @@ export const KokoSwitch: React.FC<KokoSwitchProps> = ({
 type LegacyButtonColor = 'default' | 'primary' | 'secondary' | 'success' | 'warning' | 'danger'
 type LegacyButtonVariant = 'solid' | 'light' | 'flat' | 'bordered' | 'shadow'
 
-interface KokoButtonProps extends Omit<ButtonProps, 'variant'> {
+export interface KokoButtonProps extends Omit<ButtonProps, 'variant'> {
   color?: LegacyButtonColor
   isLoading?: boolean
   title?: string
   variant?: ButtonProps['variant'] | LegacyButtonVariant
 }
 
-function resolveButtonVariant(
+export function resolveKokoButtonVariant(
   color: LegacyButtonColor | undefined,
   variant: KokoButtonProps['variant']
 ): ButtonProps['variant'] {
@@ -271,7 +309,7 @@ export const KokoButton: React.FC<KokoButtonProps> = ({
       className
     )}
     isPending={isLoading ?? isPending}
-    variant={resolveButtonVariant(color, variant)}
+    variant={resolveKokoButtonVariant(color, variant)}
   />
 )
 

@@ -1,18 +1,7 @@
 import { tr } from '../../../../shared/i18n'
-import {
-  Button,
-  Card,
-  CardBody,
-  Dropdown,
-  DropdownItem,
-  DropdownMenu,
-  DropdownTrigger,
-  Input,
-  Select,
-  SelectItem,
-  Switch,
-  Tooltip
-} from '@heroui/react'
+import { Card, CardBody, Input, Switch, Tooltip } from '@heroui/react'
+import { KokoActionMenu } from '../base/koko-collections'
+import { KokoSelect } from '../base/koko-form'
 import { MdArrowDownward, MdArrowUpward, MdDeleteOutline, MdMoreHoriz } from 'react-icons/md'
 import defaultApplicationIcon from '../../../../../resources/app-routing-default-icon.svg?url'
 import { appRoutingExecutableName } from '../../../../shared/app-routing'
@@ -126,46 +115,40 @@ export function AppRoutingRuleRow({
               />
             </div>
           </Tooltip>
-          <Dropdown placement="bottom-end">
-            <DropdownTrigger>
-              <Button
-                isIconOnly
-                size="sm"
-                variant="light"
-                aria-label={tr('Rule actions')}
-                isDisabled={disabled}
-              >
-                <MdMoreHoriz className="text-lg" />
-              </Button>
-            </DropdownTrigger>
-            <DropdownMenu
-              aria-label={tr('Rule actions')}
-              disabledKeys={[
-                ...(index === 0 ? ['move-up'] : []),
-                ...(index === count - 1 ? ['move-down'] : [])
-              ]}
-              onAction={(key) => {
-                if (key === 'move-up') onMove(-1)
-                if (key === 'move-down') onMove(1)
-                if (key === 'delete') onDelete()
-              }}
-            >
-              <DropdownItem key="move-up" startContent={<MdArrowUpward />}>
-                {tr('Move up')}
-              </DropdownItem>
-              <DropdownItem key="move-down" startContent={<MdArrowDownward />}>
-                {tr('Move down')}
-              </DropdownItem>
-              <DropdownItem
-                key="delete"
-                color="danger"
-                className="text-danger"
-                startContent={<MdDeleteOutline />}
-              >
-                {tr('Delete')}
-              </DropdownItem>
-            </DropdownMenu>
-          </Dropdown>
+          <KokoActionMenu
+            ariaLabel={tr('Rule actions')}
+            isDisabled={disabled}
+            items={[
+              {
+                id: 'move-up',
+                label: tr('Move up'),
+                textValue: tr('Move up'),
+                startContent: <MdArrowUpward />,
+                isDisabled: index === 0
+              },
+              {
+                id: 'move-down',
+                label: tr('Move down'),
+                textValue: tr('Move down'),
+                startContent: <MdArrowDownward />,
+                isDisabled: index === count - 1
+              },
+              {
+                id: 'delete',
+                label: tr('Delete'),
+                textValue: tr('Delete'),
+                startContent: <MdDeleteOutline />,
+                tone: 'danger'
+              }
+            ]}
+            onAction={(id) => {
+              if (id === 'move-up') onMove(-1)
+              if (id === 'move-down') onMove(1)
+              if (id === 'delete') onDelete()
+            }}
+          >
+            <MdMoreHoriz className="text-lg" />
+          </KokoActionMenu>
         </div>
         <div
           className={`grid min-w-0 items-center gap-2 ${
@@ -177,73 +160,59 @@ export function AppRoutingRuleRow({
           {hasIdentifierKindSelector && (
             <div className="min-w-0">
               {isMacRule ? (
-                <Select
+                <KokoSelect
                   aria-label={tr('Match by')}
-                  size="sm"
                   className="w-full min-w-0"
                   disallowEmptySelection
                   isDisabled={disabled}
-                  selectedKeys={new Set([rule.identifierKind!])}
-                  onSelectionChange={(keys) =>
-                    changeIdentifierKind(keys.currentKey as AppRoutingIdentifierKind)
-                  }
-                >
-                  <SelectItem key="macos-process-name">{tr('Process name')}</SelectItem>
-                  <SelectItem key="macos-signing-identifier">{tr('Signing identifier')}</SelectItem>
-                </Select>
+                  options={[
+                    { id: 'macos-process-name', label: tr('Process name') },
+                    { id: 'macos-signing-identifier', label: tr('Signing identifier') }
+                  ]}
+                  value={rule.identifierKind!}
+                  onChange={(value) => changeIdentifierKind(value as AppRoutingIdentifierKind)}
+                />
               ) : (
-                <Select
+                <KokoSelect
                   aria-label={tr('Match by')}
-                  size="sm"
                   className="w-full min-w-0"
                   disallowEmptySelection
                   isDisabled={disabled}
-                  selectedKeys={new Set([rule.identifierKind!])}
-                  onSelectionChange={(keys) =>
-                    changeIdentifierKind(keys.currentKey as AppRoutingIdentifierKind)
-                  }
-                >
-                  <SelectItem key="linux-executable" isDisabled={!rule.sourcePath}>
-                    {tr('Executable path')}
-                  </SelectItem>
-                  <SelectItem key="linux-process-name">{tr('Process name')}</SelectItem>
-                </Select>
+                  options={[
+                    {
+                      id: 'linux-executable',
+                      label: tr('Executable path'),
+                      isDisabled: !rule.sourcePath
+                    },
+                    { id: 'linux-process-name', label: tr('Process name') }
+                  ]}
+                  value={rule.identifierKind!}
+                  onChange={(value) => changeIdentifierKind(value as AppRoutingIdentifierKind)}
+                />
               )}
             </div>
           )}
           <div className="min-w-0">
-            <Select
+            <KokoSelect
               aria-label={tr('Protocol')}
-              size="sm"
               className="w-full min-w-0"
               disallowEmptySelection
               isDisabled={disabled}
-              selectedKeys={new Set([rule.protocol])}
-              onSelectionChange={(keys) =>
-                onChange({ protocol: keys.currentKey as AppRoutingProtocol })
-              }
-            >
-              {Object.entries(protocolLabels).map(([key, label]) => (
-                <SelectItem key={key}>{label}</SelectItem>
-              ))}
-            </Select>
+              options={Object.entries(protocolLabels).map(([id, label]) => ({ id, label }))}
+              value={rule.protocol}
+              onChange={(value) => onChange({ protocol: value as AppRoutingProtocol })}
+            />
           </div>
           <div className="min-w-0">
-            <Select
+            <KokoSelect
               aria-label={tr('Action')}
-              size="sm"
               className="w-full min-w-0"
               disallowEmptySelection
               isDisabled={disabled}
-              selectedKeys={new Set([rule.action])}
-              onSelectionChange={(keys) =>
-                onChange({ action: keys.currentKey as AppRoutingAction })
-              }
-            >
-              {Object.entries(actionLabels).map(([key, label]) => (
-                <SelectItem key={key}>{label}</SelectItem>
-              ))}
-            </Select>
+              options={Object.entries(actionLabels).map(([id, label]) => ({ id, label }))}
+              value={rule.action}
+              onChange={(value) => onChange({ action: value as AppRoutingAction })}
+            />
           </div>
           <Switch
             size="sm"

@@ -204,7 +204,8 @@ test('shared settings primitives isolate HeroUI v3 compound APIs', () => {
     'src/renderer/src/components/base/base-list-editor.tsx',
     'src/renderer/src/components/base/interface-select.tsx',
     'src/renderer/src/components/base/base-controls.tsx',
-    'src/renderer/src/components/base/koko-form.tsx'
+    'src/renderer/src/components/base/koko-form.tsx',
+    'src/renderer/src/components/base/koko-collections.tsx'
   ]
 
   for (const file of primitiveFiles) {
@@ -265,7 +266,77 @@ test('settings and Mihomo forms share the KokoroBox HeroUI v3 conventions', () =
   assert.match(form, /<Switch\.Thumb \/>/)
   assert.match(controls, /export const SettingTabs/)
   assert.match(controls, /<Tabs\.List/)
-  assert.match(controls, /<Tabs\.Indicator \/>/)
+  assert.match(controls, /<Tabs\.Indicator/)
+})
+
+test('collection and overlay primitives preserve HeroUI v3 identity and selection semantics', () => {
+  const rendererFiles = collectTsxFiles('src/renderer/src')
+  const legacyCollectionNames = new Set([
+    'Accordion',
+    'AccordionItem',
+    'Dropdown',
+    'DropdownItem',
+    'DropdownMenu',
+    'DropdownTrigger',
+    'Modal',
+    'ModalBody',
+    'ModalContent',
+    'ModalFooter',
+    'ModalHeader',
+    'Select',
+    'SelectItem',
+    'Tab',
+    'Tabs'
+  ])
+
+  for (const file of rendererFiles) {
+    const source = readFileSync(file, 'utf8')
+    assert.doesNotMatch(
+      source,
+      /<Dropdown\.Trigger\b[\s\S]*?>\s*<(?:Button|KokoButton)\b/,
+      `${file} nests a button inside the React Aria dropdown trigger`
+    )
+    for (const match of source.matchAll(
+      /import\s*\{([\s\S]*?)\}\s*from\s*['"]@heroui\/react['"]/g
+    )) {
+      const names = match[1]
+        .split(',')
+        .map((name) => name.trim().split(/\s+as\s+/)[0])
+        .filter(Boolean)
+      const legacyCollections = names.filter((name) => legacyCollectionNames.has(name))
+      assert.deepEqual(legacyCollections, [], `${file} still imports HeroUI v2 collections`)
+    }
+  }
+
+  const form = readFileSync('src/renderer/src/components/base/koko-form.tsx', 'utf8')
+  const menus = readFileSync('src/renderer/src/components/base/koko-collections.tsx', 'utf8')
+  const tabs = readFileSync('src/renderer/src/components/base/base-controls.tsx', 'utf8')
+  const tray = readFileSync('src/renderer/src/TrayMenuApp.tsx', 'utf8')
+  const groupModal = readFileSync(
+    'src/renderer/src/components/app-routing/group-name-modal.tsx',
+    'utf8'
+  )
+
+  assert.match(form, /<ListBox\.Item[\s\S]*id=\{option\.id\}/)
+  assert.match(form, /textValue=/)
+  assert.match(form, /selectionMode="multiple"/)
+  assert.match(form, /value=\{props\.value\}/)
+  assert.match(menus, /<Dropdown\.Item[\s\S]*id=\{item\.id\}/)
+  assert.match(menus, /textValue=\{item\.textValue\}/)
+  assert.match(menus, /onAction=\{\(key\) => void onAction\(String\(key\)\)\}/)
+  assert.match(menus, /buttonVariants\(/)
+  assert.doesNotMatch(menus, /<Dropdown\.Trigger[\s\S]*<KokoButton/)
+  assert.match(tabs, /selectedKey=\{selectedKey\}/)
+  assert.match(tabs, /onSelectionChange=\{\(key\) => void onChange\(String\(key\)\)\}/)
+  assert.match(tabs, /<Tabs\.Tab[\s\S]*id=\{option\.id\}/)
+  assert.match(tray, /<Accordion[\s\S]*allowsMultipleExpanded/)
+  assert.match(tray, /<Accordion\.Item[\s\S]*id=\{group\.name\}/)
+  assert.match(tray, /<Accordion\.Trigger/)
+  assert.match(tray, /<Accordion\.Panel>/)
+  assert.match(groupModal, /<Modal\.Backdrop\b/)
+  assert.match(groupModal, /<Modal\.Container>/)
+  assert.match(groupModal, /<Modal\.Dialog\b/)
+  assert.match(groupModal, /<Modal\.Heading>/)
 })
 
 test('renderer components never mix HeroUI v2 and v3 in one file', () => {
@@ -563,7 +634,7 @@ test('connection details use a sectioned desktop inspector without losing diagno
   assert.match(detail, /<summary className=/)
   assert.match(detail, /<BaseEditor value=\{rawJson\} language="json" readOnly \/>/)
   assert.match(detail, /grid-cols-\[minmax\(104px,0\.34fr\)_minmax\(0,1fr\)_auto\]/)
-  assert.match(detail, /aria-label=\{`\$\{tr\('Copy rule'\)\}: \$\{row\.title\}`\}/)
+  assert.match(detail, /ariaLabel=\{`\$\{tr\('Copy rule'\)\}: \$\{row\.title\}`\}/)
 
   for (const field of [
     'Connection start time',
@@ -661,7 +732,8 @@ test('operational lists use compact hierarchy without changing their behavior', 
   assert.match(overridesPage, /addOverrideItem/)
   assert.match(overrideItem, /<CardBody className="p-3">/)
   assert.match(overrideItem, /bg-default-100 px-1\.5 py-0\.5 text-\[11px\]/)
-  assert.match(overrideItem, /<DropdownMenu onAction=\{onMenuAction\}>/)
+  assert.match(overrideItem, /<KokoActionMenu/)
+  assert.match(overrideItem, /onAction=\{onMenuAction\}/)
 
   assert.match(logsPage, /<Virtuoso/)
   assert.match(logsPage, /followOutput=\{trace\}/)

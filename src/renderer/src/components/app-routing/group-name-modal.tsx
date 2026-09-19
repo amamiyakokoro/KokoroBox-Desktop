@@ -1,13 +1,6 @@
 import { tr } from '../../../../shared/i18n'
-import {
-  Button,
-  Input,
-  Modal,
-  ModalBody,
-  ModalContent,
-  ModalFooter,
-  ModalHeader
-} from '@heroui/react'
+import { Label, Modal } from '@heroui-v3/react'
+import { KokoButton as Button, KokoTextField as Input } from '../base/koko-form'
 import { useState } from 'react'
 
 interface AppRoutingGroupNameModalProps {
@@ -36,40 +29,57 @@ export function AppRoutingGroupNameModal({
   }
 
   return (
-    <Modal isOpen placement="center" onOpenChange={(open) => !open && onClose()}>
-      <ModalContent>
-        <ModalHeader>{isRenaming ? tr('Rename rule group') : tr('New rule group')}</ModalHeader>
-        <ModalBody>
-          <Input
-            autoFocus
-            label={tr('Rule group name')}
-            placeholder={tr('For example: Games')}
-            value={name}
-            maxLength={80}
-            isDisabled={saving}
-            onValueChange={setName}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter') void submit()
-            }}
-          />
-          <p className="text-xs text-foreground-500">
-            {tr('After creating the group, use its menu to add applications or scan a folder.')}
-          </p>
-        </ModalBody>
-        <ModalFooter>
-          <Button variant="flat" isDisabled={saving} onPress={onClose}>
-            {tr('Cancel')}
-          </Button>
-          <Button
-            color="primary"
-            isLoading={saving}
-            isDisabled={!name.trim()}
-            onPress={() => void submit()}
-          >
-            {isRenaming ? tr('Save') : tr('Create')}
-          </Button>
-        </ModalFooter>
-      </ModalContent>
+    <Modal>
+      <Modal.Backdrop
+        isOpen
+        variant="blur"
+        onOpenChange={(open) => {
+          if (!open) onClose()
+        }}
+      >
+        <Modal.Container>
+          <Modal.Dialog className="w-[min(420px,calc(100%-24px))] max-w-none">
+            <Modal.Header>
+              <Modal.Heading>
+                {isRenaming ? tr('Rename rule group') : tr('New rule group')}
+              </Modal.Heading>
+            </Modal.Header>
+            <Modal.Body>
+              <div className="flex flex-col gap-1.5">
+                <Label className="text-sm font-medium">{tr('Rule group name')}</Label>
+                <Input
+                  autoFocus
+                  aria-label={tr('Rule group name')}
+                  placeholder={tr('For example: Games')}
+                  value={name}
+                  maxLength={80}
+                  isDisabled={saving}
+                  onValueChange={setName}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter') void submit()
+                  }}
+                />
+              </div>
+              <p className="text-xs text-foreground-500">
+                {tr('After creating the group, use its menu to add applications or scan a folder.')}
+              </p>
+            </Modal.Body>
+            <Modal.Footer>
+              <Button variant="flat" isDisabled={saving} onPress={onClose}>
+                {tr('Cancel')}
+              </Button>
+              <Button
+                color="primary"
+                isLoading={saving}
+                isDisabled={!name.trim()}
+                onPress={() => void submit()}
+              >
+                {isRenaming ? tr('Save') : tr('Create')}
+              </Button>
+            </Modal.Footer>
+          </Modal.Dialog>
+        </Modal.Container>
+      </Modal.Backdrop>
     </Modal>
   )
 }

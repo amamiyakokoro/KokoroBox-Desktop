@@ -1,5 +1,6 @@
 import { tr } from '../../../../shared/i18n'
-import { Button, Drawer, Dropdown, Label, Surface, Tabs } from '@heroui-v3/react'
+import { Drawer, Surface, Tabs } from '@heroui-v3/react'
+import { KokoActionMenu } from '../base/koko-collections'
 import type { ReactNode } from 'react'
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import { BaseEditor } from '@renderer/components/base/base-editor-lazy'
@@ -163,46 +164,22 @@ const ConnectionDetailModal = ({ connection, onClose }: Props) => {
 
     const action =
       row.kind === 'copy' ? (
-        <Dropdown>
-          <Dropdown.Trigger className="rounded-lg">
-            <Button
-              aria-label={`${tr('Copy rule')}: ${row.title}`}
-              isIconOnly
-              size="sm"
-              variant="tertiary"
-              className="app-nodrag h-7 min-h-7 w-7 min-w-7 rounded-lg text-foreground-500"
-            >
-              <BiCopy className="text-base" />
-            </Button>
-          </Dropdown.Trigger>
-          <Dropdown.Popover placement="bottom end" className="min-w-55 rounded-lg">
-            <Dropdown.Menu
-              className="p-1 text-sm"
-              onAction={(key) =>
-                navigator.clipboard.writeText(
-                  key === 'raw'
-                    ? Array.isArray(row.value)
-                      ? row.value.join(', ')
-                      : row.value
-                    : (key as string)
-                )
-              }
-            >
-              {buildCopyMenuItems(row.value, row.displayName, row.prefix)
-                .filter((item) => item !== null)
-                .map(({ key, text }) => (
-                  <Dropdown.Item
-                    id={key}
-                    key={key}
-                    textValue={text}
-                    className="min-h-8 rounded-md px-2.5 py-1.5"
-                  >
-                    <Label className="-translate-y-px text-sm leading-5">{text}</Label>
-                  </Dropdown.Item>
-                ))}
-            </Dropdown.Menu>
-          </Dropdown.Popover>
-        </Dropdown>
+        <KokoActionMenu
+          ariaLabel={`${tr('Copy rule')}: ${row.title}`}
+          buttonClassName="app-nodrag h-7 min-h-7 w-7 min-w-7 rounded-lg text-foreground-500"
+          buttonVariant="tertiary"
+          items={buildCopyMenuItems(row.value, row.displayName, row.prefix)
+            .filter((item) => item !== null)
+            .map(({ key, text }) => ({ id: key, label: text, textValue: text }))}
+          popoverClassName="min-w-55"
+          onAction={(id) =>
+            navigator.clipboard.writeText(
+              id === 'raw' ? (Array.isArray(row.value) ? row.value.join(', ') : row.value) : id
+            )
+          }
+        >
+          <BiCopy className="text-base" />
+        </KokoActionMenu>
       ) : null
 
     return (

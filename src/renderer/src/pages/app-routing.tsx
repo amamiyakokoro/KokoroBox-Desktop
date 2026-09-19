@@ -18,21 +18,9 @@ import {
   getAppRoutingStatusLabel,
   getAppRoutingStatusMessage
 } from '@renderer/utils/app-routing-status'
-import {
-  Button,
-  Card,
-  CardBody,
-  Chip,
-  Divider,
-  Dropdown,
-  DropdownItem,
-  DropdownMenu,
-  DropdownTrigger,
-  Input,
-  Select,
-  SelectItem,
-  Switch
-} from '@heroui/react'
+import { Button, Card, CardBody, Chip, Divider, Input, Switch } from '@heroui/react'
+import { KokoActionMenu } from '@renderer/components/base/koko-collections'
+import { KokoSelect } from '@renderer/components/base/koko-form'
 import {
   MdAdd,
   MdCreateNewFolder,
@@ -412,34 +400,32 @@ const AppRouting: React.FC = () => {
             }`}
           >
             {isMac && (
-              <Select
-                size="sm"
+              <KokoSelect
+                aria-label={tr('Match by')}
                 label={tr('Match by')}
                 disallowEmptySelection
                 isDisabled={!supported || !config || saving}
-                selectedKeys={new Set([macIdentifierKind])}
-                onSelectionChange={(keys) =>
-                  setMacIdentifierKind(keys.currentKey as AppRoutingIdentifierKind)
-                }
-              >
-                <SelectItem key="macos-process-name">{tr('Process name')}</SelectItem>
-                <SelectItem key="macos-signing-identifier">{tr('Signing identifier')}</SelectItem>
-              </Select>
+                options={[
+                  { id: 'macos-process-name', label: tr('Process name') },
+                  { id: 'macos-signing-identifier', label: tr('Signing identifier') }
+                ]}
+                value={macIdentifierKind}
+                onChange={(value) => setMacIdentifierKind(value as AppRoutingIdentifierKind)}
+              />
             )}
             {isLinux && (
-              <Select
-                size="sm"
+              <KokoSelect
+                aria-label={tr('Match by')}
                 label={tr('Match by')}
                 disallowEmptySelection
                 isDisabled={!supported || !config || saving}
-                selectedKeys={new Set([linuxIdentifierKind])}
-                onSelectionChange={(keys) =>
-                  setLinuxIdentifierKind(keys.currentKey as AppRoutingIdentifierKind)
-                }
-              >
-                <SelectItem key="linux-executable">{tr('Executable path')}</SelectItem>
-                <SelectItem key="linux-process-name">{tr('Process name')}</SelectItem>
-              </Select>
+                options={[
+                  { id: 'linux-executable', label: tr('Executable path') },
+                  { id: 'linux-process-name', label: tr('Process name') }
+                ]}
+                value={linuxIdentifierKind}
+                onChange={(value) => setLinuxIdentifierKind(value as AppRoutingIdentifierKind)}
+              />
             )}
             <Input
               size="sm"
@@ -642,50 +628,50 @@ const AppRouting: React.FC = () => {
                                 {tr('{0} applications', [rules.length])}
                               </Chip>
                             </button>
-                            <Dropdown placement="bottom-end">
-                              <DropdownTrigger>
-                                <Button
-                                  isIconOnly
-                                  size="sm"
-                                  variant="light"
-                                  aria-label={tr('Rule group actions')}
-                                  isDisabled={saving}
-                                >
-                                  <MdMoreHoriz className="text-lg" />
-                                </Button>
-                              </DropdownTrigger>
-                              <DropdownMenu
-                                aria-label={tr('Rule group actions')}
-                                onAction={(key) => {
-                                  if (key === 'add') void addApplications(group.id)
-                                  if (key === 'scan') void scanDirectory(group.id)
-                                  if (key === 'rename')
-                                    setGroupEditor({ id: group.id, name: group.name })
-                                  if (key === 'delete') setDeletingGroupId(group.id)
-                                }}
-                              >
-                                <DropdownItem key="add" startContent={<MdAdd />}>
-                                  {tr('Add applications')}
-                                </DropdownItem>
-                                <DropdownItem key="scan" startContent={<MdRefresh />}>
-                                  {group.sourceDirectory ? tr('Rescan folder') : tr('Scan folder')}
-                                </DropdownItem>
-                                <DropdownItem
-                                  key="rename"
-                                  startContent={<MdDriveFileRenameOutline />}
-                                >
-                                  {tr('Rename rule group')}
-                                </DropdownItem>
-                                <DropdownItem
-                                  key="delete"
-                                  color="danger"
-                                  className="text-danger"
-                                  startContent={<MdDeleteOutline />}
-                                >
-                                  {tr('Delete rule group')}
-                                </DropdownItem>
-                              </DropdownMenu>
-                            </Dropdown>
+                            <KokoActionMenu
+                              ariaLabel={tr('Rule group actions')}
+                              isDisabled={saving}
+                              items={[
+                                {
+                                  id: 'add',
+                                  label: tr('Add applications'),
+                                  textValue: tr('Add applications'),
+                                  startContent: <MdAdd />
+                                },
+                                {
+                                  id: 'scan',
+                                  label: group.sourceDirectory
+                                    ? tr('Rescan folder')
+                                    : tr('Scan folder'),
+                                  textValue: group.sourceDirectory
+                                    ? tr('Rescan folder')
+                                    : tr('Scan folder'),
+                                  startContent: <MdRefresh />
+                                },
+                                {
+                                  id: 'rename',
+                                  label: tr('Rename rule group'),
+                                  textValue: tr('Rename rule group'),
+                                  startContent: <MdDriveFileRenameOutline />
+                                },
+                                {
+                                  id: 'delete',
+                                  label: tr('Delete rule group'),
+                                  textValue: tr('Delete rule group'),
+                                  startContent: <MdDeleteOutline />,
+                                  tone: 'danger'
+                                }
+                              ]}
+                              onAction={(id) => {
+                                if (id === 'add') void addApplications(group.id)
+                                if (id === 'scan') void scanDirectory(group.id)
+                                if (id === 'rename')
+                                  setGroupEditor({ id: group.id, name: group.name })
+                                if (id === 'delete') setDeletingGroupId(group.id)
+                              }}
+                            >
+                              <MdMoreHoriz className="text-lg" />
+                            </KokoActionMenu>
                             <Switch
                               size="sm"
                               aria-label={tr('Enable rule group')}

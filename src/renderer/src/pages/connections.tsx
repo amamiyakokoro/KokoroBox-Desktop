@@ -1,19 +1,11 @@
 import { tr } from '../../../shared/i18n'
 import BasePage from '@renderer/components/base/base-page'
 import { mihomoCloseConnections, mihomoCloseConnection } from '@renderer/utils/ipc'
-import React, { Key, KeyboardEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import React, { KeyboardEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { flushSync } from 'react-dom'
-import {
-  Badge,
-  Button,
-  Divider,
-  Input,
-  Select,
-  SelectItem,
-  Tab,
-  Tabs,
-  Tooltip
-} from '@heroui/react'
+import { Badge, Button, Divider, Input, Tooltip } from '@heroui/react'
+import { KokoTabs } from '@renderer/components/base/base-controls'
+import { KokoSelect } from '@renderer/components/base/koko-form'
 import { calcTraffic } from '@renderer/utils/calc'
 import ConnectionItem from '@renderer/components/connections/connection-item'
 import { Virtuoso, GroupedVirtuoso } from 'react-virtuoso'
@@ -587,14 +579,14 @@ const Connections: React.FC = () => {
     }
   }, [activeConnections, closedConnections, displayIcon, displayAppName, findProcessMode])
 
-  const handleTabChange = useCallback((key: Key) => {
-    setTab(key as string)
+  const handleTabChange = useCallback((key: string) => {
+    setTab(key)
   }, [])
 
   const handleOrderByChange = useCallback(
-    async (v: unknown) => {
+    async (value: string) => {
       await patchAppConfig({
-        connectionOrderBy: (v as { currentKey: string }).currentKey as
+        connectionOrderBy: value as
           'time' | 'upload' | 'download' | 'uploadSpeed' | 'downloadSpeed' | 'process'
       })
     },
@@ -978,45 +970,46 @@ const Connections: React.FC = () => {
       )}
       <div className="overflow-x-auto sticky top-0 z-40">
         <div className="flex p-2 gap-2">
-          <Tabs
-            size="sm"
-            color={tab === 'active' ? 'primary' : 'danger'}
+          <KokoTabs
+            ariaLabel={tr('Connection status')}
             selectedKey={tab}
-            variant="underlined"
             className="w-fit h-8"
-            onSelectionChange={handleTabChange}
-          >
-            <Tab
-              key="active"
-              title={
-                <Badge
-                  color={tab === 'active' ? 'primary' : 'default'}
-                  size="sm"
-                  shape="circle"
-                  variant="flat"
-                  content={activeConnections.length}
-                  showOutline={false}
-                >
-                  <span className="p-1">{tr('Active')}</span>
-                </Badge>
+            options={[
+              {
+                id: 'active',
+                indicatorClassName: 'bg-primary',
+                label: (
+                  <Badge
+                    color={tab === 'active' ? 'primary' : 'default'}
+                    size="sm"
+                    shape="circle"
+                    variant="flat"
+                    content={activeConnections.length}
+                    showOutline={false}
+                  >
+                    <span className="p-1">{tr('Active')}</span>
+                  </Badge>
+                )
+              },
+              {
+                id: 'closed',
+                indicatorClassName: 'bg-danger',
+                label: (
+                  <Badge
+                    color={tab === 'closed' ? 'danger' : 'default'}
+                    size="sm"
+                    shape="circle"
+                    variant="flat"
+                    content={closedConnections.length}
+                    showOutline={false}
+                  >
+                    <span className="p-1">{tr('Off')}</span>
+                  </Badge>
+                )
               }
-            />
-            <Tab
-              key="closed"
-              title={
-                <Badge
-                  color={tab === 'closed' ? 'danger' : 'default'}
-                  size="sm"
-                  shape="circle"
-                  variant="flat"
-                  content={closedConnections.length}
-                  showOutline={false}
-                >
-                  <span className="p-1">{tr('Off')}</span>
-                </Badge>
-              }
-            />
-          </Tabs>
+            ]}
+            onChange={handleTabChange}
+          />
           <Tooltip
             content={compiledFilter.error ?? tr('Invalid format')}
             placement="left"
@@ -1081,22 +1074,22 @@ const Connections: React.FC = () => {
             </div>
           </Tooltip>
 
-          <Select
+          <KokoSelect
             aria-label={tr('Sort field')}
-            classNames={{ trigger: 'data-[hover=true]:bg-default-200' }}
-            size="sm"
             className="w-34 min-w-24 shrink-0"
-            selectedKeys={new Set([connectionOrderBy])}
-            disallowEmptySelection={true}
-            onSelectionChange={handleOrderByChange}
-          >
-            <SelectItem key="upload">{tr('Uploaded')}</SelectItem>
-            <SelectItem key="download">{tr('Downloaded')}</SelectItem>
-            <SelectItem key="uploadSpeed">{tr('Upload speed')}</SelectItem>
-            <SelectItem key="downloadSpeed">{tr('Download speed')}</SelectItem>
-            <SelectItem key="time">{tr('Time')}</SelectItem>
-            <SelectItem key="process">{tr('Process name')}</SelectItem>
-          </Select>
+            disallowEmptySelection
+            options={[
+              { id: 'upload', label: tr('Uploaded') },
+              { id: 'download', label: tr('Downloaded') },
+              { id: 'uploadSpeed', label: tr('Upload speed') },
+              { id: 'downloadSpeed', label: tr('Download speed') },
+              { id: 'time', label: tr('Time') },
+              { id: 'process', label: tr('Process name') }
+            ]}
+            triggerClassName="data-[hover=true]:bg-default-200"
+            value={connectionOrderBy}
+            onChange={handleOrderByChange}
+          />
           <Button
             size="sm"
             isIconOnly

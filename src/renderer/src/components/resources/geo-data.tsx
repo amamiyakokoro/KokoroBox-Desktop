@@ -1,6 +1,7 @@
 import { tr } from '../../../../shared/i18n'
 /* eslint-disable react/prop-types */
-import { Button, Input, Switch, Tab, Tabs } from '@heroui/react'
+import { Button, Input, Switch } from '@heroui/react'
+import { KokoTabs } from '@renderer/components/base/base-controls'
 import SettingCard from '@renderer/components/base/base-setting-card'
 import SettingItem from '@renderer/components/base/base-setting-item'
 import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'
@@ -135,17 +136,17 @@ const GeoData: React.FC = () => {
         }}
       />
       <SettingItem compatKey="legacy" title={tr('GeoIP mode')} divider>
-        <Tabs
-          size="sm"
-          color="primary"
+        <KokoTabs
+          ariaLabel={tr('GeoIP mode')}
           selectedKey={geoMode ? 'dat' : 'db'}
-          onSelectionChange={(key) => {
+          options={[
+            { id: 'db', label: 'db' },
+            { id: 'dat', label: 'dat' }
+          ]}
+          onChange={(key) => {
             patchControledMihomoConfig({ 'geodata-mode': key === 'dat' })
           }}
-        >
-          <Tab key="db" title="db" />
-          <Tab key="dat" title="dat" />
-        </Tabs>
+        />
       </SettingItem>
       <SettingItem
         compatKey="legacy"

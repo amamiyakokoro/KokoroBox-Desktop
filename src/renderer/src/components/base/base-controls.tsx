@@ -7,29 +7,53 @@ export const settingItemProps = {
   contentAlign: 'end'
 } satisfies Pick<SettingItemProps, 'variant' | 'contentAlign'>
 
-interface SettingTabOption {
+export interface KokoTabOption {
   id: string
-  label: string
+  label: React.ReactNode
+  indicatorClassName?: string
+  isDisabled?: boolean
 }
 
-interface SettingTabsProps {
+interface KokoTabsProps {
   ariaLabel: string
+  className?: string
+  indicatorClassName?: string
+  listClassName?: string
+  listContainerClassName?: string
+  options: KokoTabOption[]
   selectedKey: string
-  options: SettingTabOption[]
+  tabClassName?: string
   onChange: (key: string) => void | Promise<void>
 }
 
-export const SettingTabs: React.FC<SettingTabsProps> = (props) => {
-  const { ariaLabel, selectedKey, options, onChange } = props
-
+export const KokoTabs: React.FC<KokoTabsProps> = ({
+  ariaLabel,
+  className,
+  indicatorClassName,
+  listClassName,
+  listContainerClassName,
+  options,
+  selectedKey,
+  tabClassName,
+  onChange
+}) => {
   return (
-    <Tabs selectedKey={selectedKey} onSelectionChange={(key) => void onChange(String(key))}>
-      <Tabs.ListContainer>
-        <Tabs.List aria-label={ariaLabel}>
+    <Tabs
+      className={className}
+      selectedKey={selectedKey}
+      onSelectionChange={(key) => void onChange(String(key))}
+    >
+      <Tabs.ListContainer className={listContainerClassName}>
+        <Tabs.List aria-label={ariaLabel} className={listClassName}>
           {options.map((option) => (
-            <Tabs.Tab key={option.id} id={option.id}>
+            <Tabs.Tab
+              key={option.id}
+              id={option.id}
+              className={tabClassName}
+              isDisabled={option.isDisabled}
+            >
               {option.label}
-              <Tabs.Indicator />
+              <Tabs.Indicator className={option.indicatorClassName ?? indicatorClassName} />
             </Tabs.Tab>
           ))}
         </Tabs.List>
@@ -37,3 +61,5 @@ export const SettingTabs: React.FC<SettingTabsProps> = (props) => {
     </Tabs>
   )
 }
+
+export const SettingTabs = KokoTabs

@@ -1,13 +1,6 @@
 import { tr } from '../../../shared/i18n'
-import {
-  Button,
-  Divider,
-  Dropdown,
-  DropdownItem,
-  DropdownMenu,
-  DropdownTrigger,
-  Input
-} from '@heroui/react'
+import { Button, Divider, Input } from '@heroui/react'
+import { KokoActionMenu } from '@renderer/components/base/koko-collections'
 import BasePage from '@renderer/components/base/base-page'
 import { getFilePath, readTextFile } from '@renderer/utils/ipc'
 import { useEffect, useRef, useState } from 'react'
@@ -230,64 +223,76 @@ const Override: React.FC = () => {
           >
             {tr('Import')}
           </Button>
-          <Dropdown>
-            <DropdownTrigger>
-              <Button className="ml-2" size="sm" isIconOnly color="primary">
-                <FaPlus />
-              </Button>
-            </DropdownTrigger>
-            <DropdownMenu
-              onAction={async (key) => {
-                if (key === 'open') {
-                  try {
-                    const files = await getFilePath(['js', 'yaml'])
-                    if (files?.length) {
-                      const content = await readTextFile(files[0])
-                      const fileName = files[0].split('/').pop()?.split('\\').pop()
-                      await addOverrideItem({
-                        name: fileName,
-                        type: 'local',
-                        file: content,
-                        ext: fileName?.endsWith('.js') ? 'js' : 'yaml'
-                      })
-                    }
-                  } catch (e) {
-                    notify(e, { variant: 'danger' })
+          <KokoActionMenu
+            ariaLabel={tr('Overrides')}
+            buttonClassName="ml-2"
+            buttonColor="primary"
+            buttonVariant="solid"
+            items={[
+              {
+                id: 'open',
+                label: tr('Open local override'),
+                textValue: tr('Open local override')
+              },
+              {
+                id: 'import',
+                label: tr('Import remote override'),
+                textValue: tr('Import remote override')
+              },
+              { id: 'new-yaml', label: tr('New YAML'), textValue: tr('New YAML') },
+              {
+                id: 'new-js',
+                label: tr('New JavaScript'),
+                textValue: tr('New JavaScript')
+              }
+            ]}
+            onAction={async (id) => {
+              if (id === 'open') {
+                try {
+                  const files = await getFilePath(['js', 'yaml'])
+                  if (files?.length) {
+                    const content = await readTextFile(files[0])
+                    const fileName = files[0].split('/').pop()?.split('\\').pop()
+                    await addOverrideItem({
+                      name: fileName,
+                      type: 'local',
+                      file: content,
+                      ext: fileName?.endsWith('.js') ? 'js' : 'yaml'
+                    })
                   }
-                } else if (key === 'new-yaml') {
-                  await addOverrideItem({
-                    name: tr('New YAML'),
-                    type: 'local',
-                    file: '# https://mihomo.party/docs/guide/override/yaml',
-                    ext: 'yaml'
-                  })
-                } else if (key === 'new-js') {
-                  await addOverrideItem({
-                    name: tr('New JS'),
-                    type: 'local',
-                    file: '// https://mihomo.party/docs/guide/override/javascript\nfunction main(config) {\n  return config\n}',
-                    ext: 'js'
-                  })
-                } else if (key === 'import') {
-                  const newRemoteOverride: OverrideItem = {
-                    id: '',
-                    name: '',
-                    type: 'remote',
-                    url: '',
-                    ext: 'yaml',
-                    updated: Date.now()
-                  }
-                  setEditingItem(newRemoteOverride)
-                  setShowEditModal(true)
+                } catch (e) {
+                  notify(e, { variant: 'danger' })
                 }
-              }}
-            >
-              <DropdownItem key="open">{tr('Open local override')}</DropdownItem>
-              <DropdownItem key="import">{tr('Import remote override')}</DropdownItem>
-              <DropdownItem key="new-yaml">{tr('New YAML')}</DropdownItem>
-              <DropdownItem key="new-js">{tr('New JavaScript')}</DropdownItem>
-            </DropdownMenu>
-          </Dropdown>
+              } else if (id === 'new-yaml') {
+                await addOverrideItem({
+                  name: tr('New YAML'),
+                  type: 'local',
+                  file: '# https://mihomo.party/docs/guide/override/yaml',
+                  ext: 'yaml'
+                })
+              } else if (id === 'new-js') {
+                await addOverrideItem({
+                  name: tr('New JS'),
+                  type: 'local',
+                  file: '// https://mihomo.party/docs/guide/override/javascript\nfunction main(config) {\n  return config\n}',
+                  ext: 'js'
+                })
+              } else if (id === 'import') {
+                const newRemoteOverride: OverrideItem = {
+                  id: '',
+                  name: '',
+                  type: 'remote',
+                  url: '',
+                  ext: 'yaml',
+                  updated: Date.now()
+                }
+                setEditingItem(newRemoteOverride)
+                setShowEditModal(true)
+              }
+            }}
+          >
+            <FaPlus />
+          </KokoActionMenu>
         </div>
         <Divider />
       </div>

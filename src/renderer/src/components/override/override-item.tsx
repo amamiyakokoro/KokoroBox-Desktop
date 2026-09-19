@@ -1,17 +1,9 @@
 import { tr } from '../../../../shared/i18n'
-import {
-  Button,
-  Card,
-  CardBody,
-  Chip,
-  Dropdown,
-  DropdownItem,
-  DropdownMenu,
-  DropdownTrigger
-} from '@heroui/react'
+import { Button, Card, CardBody, Chip } from '@heroui/react'
+import { KokoActionMenu } from '../base/koko-collections'
 import { IoMdMore, IoMdRefresh } from 'react-icons/io'
 import dayjs from 'dayjs'
-import React, { Key, useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import EditFileModal from './edit-file-modal'
 import EditInfoModal from './edit-info-modal'
 import { useSortable } from '@dnd-kit/sortable'
@@ -122,8 +114,8 @@ const OverrideItem: React.FC<Props> = (props) => {
     }
     return list
   }, [info])
-  const onMenuAction = (key: Key): void => {
-    switch (key) {
+  const onMenuAction = (id: string): void => {
+    switch (id) {
       case 'edit-info': {
         setOpenInfoEditor(true)
         break
@@ -255,31 +247,19 @@ const OverrideItem: React.FC<Props> = (props) => {
                   </Button>
                 )}
 
-                <Dropdown>
-                  <DropdownTrigger>
-                    <Button
-                      isIconOnly
-                      size="sm"
-                      variant="light"
-                      color="default"
-                      aria-label={tr('Edit details')}
-                    >
-                      <IoMdMore color="default" className={`text-[24px]`} />
-                    </Button>
-                  </DropdownTrigger>
-                  <DropdownMenu onAction={onMenuAction}>
-                    {menuItems.map((item) => (
-                      <DropdownItem
-                        showDivider={item.showDivider}
-                        key={item.key}
-                        color={item.color}
-                        className={item.className}
-                      >
-                        {item.label}
-                      </DropdownItem>
-                    ))}
-                  </DropdownMenu>
-                </Dropdown>
+                <KokoActionMenu
+                  ariaLabel={tr('Edit details')}
+                  items={menuItems.map((item) => ({
+                    id: item.key,
+                    label: item.label,
+                    textValue: item.label,
+                    dividerAfter: item.showDivider,
+                    tone: item.color === 'danger' ? 'danger' : 'default'
+                  }))}
+                  onAction={onMenuAction}
+                >
+                  <IoMdMore color="default" className="text-[24px]" />
+                </KokoActionMenu>
               </div>
             </div>
             <div className="flex justify-between">
