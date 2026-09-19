@@ -3,13 +3,12 @@ import { tr } from '../../../../shared/i18n'
 import { Button, Switch } from '@heroui/react'
 import { KokoSegmentedControl } from '@renderer/components/base/base-controls'
 import { KokoTextField } from '@renderer/components/base/koko-form'
-import SettingCard from '@renderer/components/base/base-setting-card'
-import SettingItem from '@renderer/components/base/base-setting-item'
 import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'
 import { mihomoUpgradeGeo } from '@renderer/utils/ipc'
 import { useState, useEffect, useMemo } from 'react'
 import { IoMdRefresh } from 'react-icons/io'
 import { notify } from '@renderer/utils/notification'
+import { ResourceSection, ResourceSettingRow } from './resource-surfaces'
 
 const defaultGeoxUrl = {
   geoip: 'https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geoip.dat',
@@ -30,24 +29,26 @@ const GeoUrlSetting: React.FC<Props> = (props) => {
   const { title, value, savedValue, onChange, onConfirm } = props
 
   return (
-    <SettingItem contentAlign="end" title={title} divider>
-      <div className="flex w-[70%] max-w-[40rem] min-w-0 items-center justify-end gap-2">
-        <KokoTextField
-          size="sm"
-          aria-label={title}
-          title={value}
-          value={value}
-          className="min-w-0 flex-1"
-          classNames={{ input: 'truncate font-mono text-xs' }}
-          onValueChange={onChange}
-        />
-        {value !== savedValue && (
-          <Button size="sm" variant="primary" className="shrink-0" onPress={onConfirm}>
+    <ResourceSettingRow
+      label={title}
+      actions={
+        value !== savedValue ? (
+          <Button size="sm" variant="primary" onPress={onConfirm}>
             {tr('Confirm')}
           </Button>
-        )}
-      </div>
-    </SettingItem>
+        ) : undefined
+      }
+    >
+      <KokoTextField
+        size="sm"
+        aria-label={title}
+        title={value}
+        value={value}
+        controlWidth="full"
+        classNames={{ input: 'truncate font-mono text-xs' }}
+        onValueChange={onChange}
+      />
+    </ResourceSettingRow>
   )
 }
 
@@ -88,100 +89,100 @@ const GeoData: React.FC = () => {
   }, [geoxUrl])
 
   return (
-    <SettingCard>
-      <SettingItem contentAlign="end" title={tr('Geo databases')} divider>
-        <Button
-          size="sm"
-          isIconOnly
-          variant="ghost"
-          aria-label={tr('Update databases')}
-          onPress={updateDatabases}
-        >
-          <IoMdRefresh className={`text-lg ${updating ? 'animate-spin' : ''}`} />
-        </Button>
-      </SettingItem>
-      <GeoUrlSetting
-        title={tr('GeoIP-DAT database')}
-        value={geoipInput}
-        savedValue={geoxUrl.geoip}
-        onChange={setGeoIpInput}
-        onConfirm={() => {
-          patchControledMihomoConfig({ 'geox-url': { ...geoxUrl, geoip: geoipInput } })
-        }}
-      />
-      <GeoUrlSetting
-        title={tr('GeoIP-MMDB database')}
-        value={mmdbInput}
-        savedValue={geoxUrl.mmdb}
-        onChange={setMmdbInput}
-        onConfirm={() => {
-          patchControledMihomoConfig({ 'geox-url': { ...geoxUrl, mmdb: mmdbInput } })
-        }}
-      />
-      <GeoUrlSetting
-        title={tr('GeoSite database')}
-        value={geositeInput}
-        savedValue={geoxUrl.geosite}
-        onChange={setGeositeInput}
-        onConfirm={() => {
-          patchControledMihomoConfig({ 'geox-url': { ...geoxUrl, geosite: geositeInput } })
-        }}
-      />
-      <GeoUrlSetting
-        title={tr('IP-ASN database')}
-        value={asnInput}
-        savedValue={geoxUrl.asn}
-        onChange={setAsnInput}
-        onConfirm={() => {
-          patchControledMihomoConfig({ 'geox-url': { ...geoxUrl, asn: asnInput } })
-        }}
-      />
-      <SettingItem contentAlign="end" title={tr('GeoIP mode')} divider>
-        <KokoSegmentedControl
-          ariaLabel={tr('GeoIP mode')}
-          selectedKey={geoMode ? 'dat' : 'db'}
-          options={[
-            { id: 'db', label: 'db' },
-            { id: 'dat', label: 'dat' }
-          ]}
-          onChange={(key) => {
-            patchControledMihomoConfig({ 'geodata-mode': key === 'dat' })
+    <>
+      <ResourceSection
+        title={tr('Geo databases')}
+        action={
+          <Button size="sm" variant="ghost" onPress={updateDatabases}>
+            <IoMdRefresh className={`text-base ${updating ? 'animate-spin' : ''}`} />
+            {tr('Update databases')}
+          </Button>
+        }
+      >
+        <GeoUrlSetting
+          title={tr('GeoIP-DAT database')}
+          value={geoipInput}
+          savedValue={geoxUrl.geoip}
+          onChange={setGeoIpInput}
+          onConfirm={() => {
+            patchControledMihomoConfig({ 'geox-url': { ...geoxUrl, geoip: geoipInput } })
           }}
         />
-      </SettingItem>
-      <SettingItem
-        contentAlign="end"
-        title={tr('Update databases automatically')}
-        divider={geoAutoUpdate}
-      >
-        <Switch
-          size="sm"
-          isSelected={geoAutoUpdate}
-          onChange={(v) => {
-            patchControledMihomoConfig({ 'geo-auto-update': v })
+        <GeoUrlSetting
+          title={tr('GeoIP-MMDB database')}
+          value={mmdbInput}
+          savedValue={geoxUrl.mmdb}
+          onChange={setMmdbInput}
+          onConfirm={() => {
+            patchControledMihomoConfig({ 'geox-url': { ...geoxUrl, mmdb: mmdbInput } })
           }}
-        >
-          <Switch.Content>
-            <Switch.Control>
-              <Switch.Thumb />
-            </Switch.Control>
-          </Switch.Content>
-        </Switch>
-      </SettingItem>
-      {geoAutoUpdate && (
-        <SettingItem contentAlign="end" title={tr('Update interval (hours)')}>
-          <KokoTextField
-            size="sm"
-            type="number"
-            className="w-25"
-            value={geoUpdateInterval.toString()}
-            onValueChange={(v) => {
-              patchControledMihomoConfig({ 'geo-update-interval': parseInt(v) })
+        />
+        <GeoUrlSetting
+          title={tr('GeoSite database')}
+          value={geositeInput}
+          savedValue={geoxUrl.geosite}
+          onChange={setGeositeInput}
+          onConfirm={() => {
+            patchControledMihomoConfig({ 'geox-url': { ...geoxUrl, geosite: geositeInput } })
+          }}
+        />
+        <GeoUrlSetting
+          title={tr('IP-ASN database')}
+          value={asnInput}
+          savedValue={geoxUrl.asn}
+          onChange={setAsnInput}
+          onConfirm={() => {
+            patchControledMihomoConfig({ 'geox-url': { ...geoxUrl, asn: asnInput } })
+          }}
+        />
+      </ResourceSection>
+
+      <ResourceSection title={tr('Update behavior')}>
+        <ResourceSettingRow label={tr('GeoIP mode')} contentAlign="end">
+          <KokoSegmentedControl
+            ariaLabel={tr('GeoIP mode')}
+            selectedKey={geoMode ? 'dat' : 'db'}
+            options={[
+              { id: 'db', label: 'db' },
+              { id: 'dat', label: 'dat' }
+            ]}
+            onChange={(key) => {
+              patchControledMihomoConfig({ 'geodata-mode': key === 'dat' })
             }}
           />
-        </SettingItem>
-      )}
-    </SettingCard>
+        </ResourceSettingRow>
+        <ResourceSettingRow label={tr('Update databases automatically')} contentAlign="end">
+          <Switch
+            size="sm"
+            aria-label={tr('Update databases automatically')}
+            isSelected={geoAutoUpdate}
+            onChange={(v) => {
+              patchControledMihomoConfig({ 'geo-auto-update': v })
+            }}
+          >
+            <Switch.Content>
+              <Switch.Control>
+                <Switch.Thumb />
+              </Switch.Control>
+            </Switch.Content>
+          </Switch>
+        </ResourceSettingRow>
+        {geoAutoUpdate && (
+          <ResourceSettingRow label={tr('Update interval (hours)')} contentAlign="end">
+            <KokoTextField
+              size="sm"
+              type="number"
+              aria-label={tr('Update interval (hours)')}
+              controlWidth="number"
+              value={geoUpdateInterval.toString()}
+              onValueChange={(v) => {
+                patchControledMihomoConfig({ 'geo-update-interval': parseInt(v) })
+              }}
+            />
+          </ResourceSettingRow>
+        )}
+      </ResourceSection>
+    </>
   )
 }
 

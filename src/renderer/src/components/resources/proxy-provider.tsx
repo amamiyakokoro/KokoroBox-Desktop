@@ -4,11 +4,9 @@ import {
   mihomoUpdateProxyProviders,
   getRuntimeConfig
 } from '@renderer/utils/ipc'
-import { Fragment, useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Viewer from './viewer'
 import useSWR from 'swr'
-import SettingCard from '../base/base-setting-card'
-import SettingItem from '../base/base-setting-item'
 import { IoMdRefresh } from 'react-icons/io'
 import { CgLoadbarDoc } from 'react-icons/cg'
 import { MdEditDocument, MdQrCode2 } from 'react-icons/md'
@@ -16,8 +14,9 @@ import QRCodeModal from '../base/base-qrcode-modal'
 import dayjs from 'dayjs'
 import { calcTraffic } from '@renderer/utils/calc'
 import { getHash } from '@renderer/utils/hash'
-import { Button, Chip, Meter, Separator } from '@heroui/react'
+import { Button, Meter } from '@heroui/react'
 import { notify } from '@renderer/utils/notification'
+import { ResourceProviderRow, ResourceSection } from './resource-surfaces'
 
 const ProxyProvider: React.FC = () => {
   const [showDetails, setShowDetails] = useState({
@@ -111,7 +110,7 @@ const ProxyProvider: React.FC = () => {
   }
 
   return (
-    <SettingCard>
+    <>
       {qrCode && (
         <QRCodeModal title={qrCode.name} url={qrCode.url} onClose={() => setQrCode(null)} />
       )}
@@ -134,113 +133,114 @@ const ProxyProvider: React.FC = () => {
           }
         />
       )}
-      <SettingItem contentAlign="end" title={tr('Proxy providers')} divider>
-        <Button
-          size="sm"
-          variant="primary"
-          onPress={() => {
-            providers.forEach((provider, index) => {
-              onUpdate(provider.name, index)
-            })
-          }}
-        >
-          {tr('Update all')}
-        </Button>
-      </SettingItem>
-      {providers.map((provider, index) => (
-        <Fragment key={provider.name}>
-          <SettingItem
-            contentAlign="end"
-            title={provider.name}
-            actions={
-              <Chip className="ml-2" size="sm">
-                {provider.proxies?.length || 0}
-              </Chip>
-            }
-            divider={!provider.subscriptionInfo && index !== providers.length - 1}
+      <ResourceSection
+        title={tr('Proxy providers')}
+        action={
+          <Button
+            size="sm"
+            variant="ghost"
+            onPress={() => {
+              providers.forEach((provider, index) => {
+                onUpdate(provider.name, index)
+              })
+            }}
           >
-            <div className="flex h-8 leading-8 text-foreground-500">
-              <div>{dayjs(provider.updatedAt).fromNow()}</div>
-              {provider.vehicleType === 'HTTP' && (
-                <Button
-                  isIconOnly
-                  className="ml-2"
-                  size="sm"
-                  variant="secondary"
-                  onPress={() => onShowQrCode(provider.name)}
-                >
-                  <MdQrCode2 className="text-lg" />
-                </Button>
-              )}
-              <Button
-                isIconOnly
-                className="ml-2"
-                size="sm"
-                variant="secondary"
-                onPress={() => {
-                  setShowDetails({
-                    show: false,
-                    providerType: 'proxy-providers',
-                    path: provider.name,
-                    type: provider.vehicleType,
-                    title: provider.name,
-                    ageSecretKey: ''
-                  })
-                }}
-              >
-                {provider.vehicleType == 'File' ? (
-                  <MdEditDocument className={`text-lg`} />
-                ) : (
-                  <CgLoadbarDoc className={`text-lg`} />
-                )}
-              </Button>
-              <Button
-                isIconOnly
-                className="ml-2"
-                size="sm"
-                variant="secondary"
-                onPress={() => {
-                  onUpdate(provider.name, index)
-                }}
-              >
-                <IoMdRefresh className={`text-lg ${updating[index] ? 'animate-spin' : ''}`} />
-              </Button>
-            </div>
-          </SettingItem>
-          {provider.subscriptionInfo && (
-            <>
-              <SettingItem
-                contentAlign="end"
-                title={
-                  <div className="text-foreground-500">
-                    {`${calcTraffic(
-                      provider.subscriptionInfo.Upload + provider.subscriptionInfo.Download
-                    )} / ${calcTraffic(provider.subscriptionInfo.Total)}`}
+            <IoMdRefresh className={`text-base ${updating.some(Boolean) ? 'animate-spin' : ''}`} />
+            {tr('Update all')}
+          </Button>
+        }
+      >
+        {providers.map((provider, index) => {
+          const metadata = `${provider.vehicleType} · ${dayjs(provider.updatedAt).fromNow()}`
+
+          return (
+            <ResourceProviderRow
+              key={provider.name}
+              name={provider.name}
+              count={tr('{0} proxies', [provider.proxies?.length || 0])}
+              metadata={metadata}
+              metadataTitle={metadata}
+              actions={
+                <>
+                  {provider.vehicleType === 'HTTP' && (
+                    <Button
+                      isIconOnly
+                      size="sm"
+                      variant="ghost"
+                      aria-label={`${tr('QR code')}: ${provider.name}`}
+                      onPress={() => onShowQrCode(provider.name)}
+                    >
+                      <MdQrCode2 className="text-lg" />
+                    </Button>
+                  )}
+                  <Button
+                    isIconOnly
+                    size="sm"
+                    variant="ghost"
+                    aria-label={`${tr('View details')}: ${provider.name}`}
+                    onPress={() => {
+                      setShowDetails({
+                        show: false,
+                        providerType: 'proxy-providers',
+                        path: provider.name,
+                        type: provider.vehicleType,
+                        title: provider.name,
+                        ageSecretKey: ''
+                      })
+                    }}
+                  >
+                    {provider.vehicleType == 'File' ? (
+                      <MdEditDocument className="text-lg" />
+                    ) : (
+                      <CgLoadbarDoc className="text-lg" />
+                    )}
+                  </Button>
+                  <Button
+                    isIconOnly
+                    size="sm"
+                    variant="ghost"
+                    aria-label={`${tr('Refresh')}: ${provider.name}`}
+                    onPress={() => {
+                      onUpdate(provider.name, index)
+                    }}
+                  >
+                    <IoMdRefresh className={`text-lg ${updating[index] ? 'animate-spin' : ''}`} />
+                  </Button>
+                </>
+              }
+              details={
+                provider.subscriptionInfo ? (
+                  <div className="space-y-1.5 pt-1">
+                    <div className="flex items-center justify-between gap-4 text-xs leading-4 text-foreground-500">
+                      <span className="tabular-nums">
+                        {`${calcTraffic(
+                          provider.subscriptionInfo.Upload + provider.subscriptionInfo.Download
+                        )} / ${calcTraffic(provider.subscriptionInfo.Total)}`}
+                      </span>
+                      <span className="shrink-0 tabular-nums">
+                        {provider.subscriptionInfo.Expire
+                          ? dayjs.unix(provider.subscriptionInfo.Expire).format('YYYY-MM-DD')
+                          : tr('No expiration')}
+                      </span>
+                    </div>
+                    <Meter
+                      aria-label={tr('{0} traffic usage', [provider.name])}
+                      className="w-full"
+                      maxValue={provider.subscriptionInfo.Total}
+                      value={provider.subscriptionInfo.Upload + provider.subscriptionInfo.Download}
+                    >
+                      <Meter.Track>
+                        <Meter.Fill />
+                      </Meter.Track>
+                    </Meter>
                   </div>
-                }
-              >
-                <div className="h-8 leading-8 text-foreground-500">
-                  {provider.subscriptionInfo.Expire
-                    ? dayjs.unix(provider.subscriptionInfo.Expire).format('YYYY-MM-DD')
-                    : tr('No expiration')}
-                </div>
-              </SettingItem>
-              <Meter
-                aria-label={tr('{0} traffic usage', [provider.name])}
-                className="w-full"
-                maxValue={provider.subscriptionInfo.Total}
-                value={provider.subscriptionInfo.Upload + provider.subscriptionInfo.Download}
-              >
-                <Meter.Track>
-                  <Meter.Fill />
-                </Meter.Track>
-              </Meter>
-              {index !== providers.length - 1 && <Separator className="my-2" variant="tertiary" />}
-            </>
-          )}
-        </Fragment>
-      ))}
-    </SettingCard>
+                ) : undefined
+              }
+            />
+          )
+        })}
+      </ResourceSection>
+    </>
   )
 }
 

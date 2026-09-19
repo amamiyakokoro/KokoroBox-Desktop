@@ -144,6 +144,7 @@ export const messages: Readonly<Record<string, string>> = {
     'Create an empty rule group or scan a folder to add its applications automatically.',
   'No applications in this rule group': 'No applications in this rule group',
   '{0} applications': '{0} applications',
+  '{0} proxies': '{0} proxies',
   '{0} rules': '{0} rules',
   '{0} groups': '{0} groups',
   'Quick controls': 'Quick controls',

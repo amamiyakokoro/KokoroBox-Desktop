@@ -903,11 +903,21 @@ test('Kokoro account options and default rules use clear desktop sections and sa
 test('operational lists use compact hierarchy without changing their behavior', () => {
   const rulesPage = readFileSync('src/renderer/src/pages/rules.tsx', 'utf8')
   const ruleItem = readFileSync('src/renderer/src/components/rules/rule-item.tsx', 'utf8')
+  const resourcesPage = readFileSync('src/renderer/src/pages/resources.tsx', 'utf8')
   const geoData = readFileSync('src/renderer/src/components/resources/geo-data.tsx', 'utf8')
+  const proxyProvider = readFileSync(
+    'src/renderer/src/components/resources/proxy-provider.tsx',
+    'utf8'
+  )
   const ruleProvider = readFileSync(
     'src/renderer/src/components/resources/rule-provider.tsx',
     'utf8'
   )
+  const resourceSurfaces = readFileSync(
+    'src/renderer/src/components/resources/resource-surfaces.tsx',
+    'utf8'
+  )
+  const appOverrides = readFileSync('src/renderer/src/assets/app-overrides.css', 'utf8')
   const overridesPage = readFileSync('src/renderer/src/pages/override.tsx', 'utf8')
   const overrideItem = readFileSync(
     'src/renderer/src/components/override/override-item.tsx',
@@ -924,14 +934,29 @@ test('operational lists use compact hierarchy without changing their behavior', 
   assert.match(ruleItem, /aria-label=\{`\$\{tr\('Enable rule'\)\}:/)
   assert.match(ruleItem, /mihomoRulesDisable/)
 
-  assert.match(geoData, /title=\{tr\('Geo databases'\)\}/)
-  assert.match(geoData, /max-w-\[40rem\]/)
+  assert.match(resourcesPage, /className="resource-page[^"]*max-w-\[68rem\]/)
+  assert.match(geoData, /<ResourceSection[\s\S]*title=\{tr\('Geo databases'\)\}/)
+  assert.match(geoData, /<ResourceSection title=\{tr\('Update behavior'\)\}>/)
+  assert.match(geoData, /<ResourceSettingRow/)
+  assert.doesNotMatch(geoData, /SettingCard|SettingItem|w-\[70%\]/)
+  assert.match(geoData, /controlWidth="full"/)
   assert.match(geoData, /title=\{value\}/)
   assert.match(geoData, /mihomoUpgradeGeo\(\)/)
-  assert.match(ruleProvider, /flex min-h-14 items-center gap-3 px-1 py-2/)
+  assert.match(resourceSurfaces, /export const ResourceSection/)
+  assert.match(resourceSurfaces, /export const ResourceSettingRow/)
+  assert.match(resourceSurfaces, /export const ResourceProviderRow/)
+  assert.match(appOverrides, /container-name: resources/)
+  assert.match(appOverrides, /grid-template-columns: minmax\(10rem, 12rem\) minmax\(0, 1fr\) auto/)
+  assert.match(appOverrides, /@container resources \(max-width: 42rem\)/)
+  assert.match(proxyProvider, /<ResourceProviderRow/)
+  assert.match(proxyProvider, /tr\('\{0\} proxies', \[provider\.proxies\?\.length \|\| 0\]\)/)
+  assert.match(proxyProvider, /variant="ghost"[\s\S]*tr\('Update all'\)/)
+  assert.doesNotMatch(proxyProvider, /SettingCard|SettingItem|<Chip/)
+  assert.match(ruleProvider, /<ResourceProviderRow/)
   assert.match(ruleProvider, /tr\('\{0\} rules', \[provider\.ruleCount\]\)/)
-  assert.match(ruleProvider, /provider\.vehicleType\}::\{provider\.behavior/)
-  assert.doesNotMatch(ruleProvider, /<Chip/)
+  assert.match(ruleProvider, /provider\.vehicleType\} · \$\{provider\.behavior\}/)
+  assert.match(ruleProvider, /variant="ghost"[\s\S]*tr\('Update all'\)/)
+  assert.doesNotMatch(ruleProvider, /SettingCard|SettingItem|<Chip|::/)
   assert.match(ruleProvider, /mihomoUpdateRuleProviders/)
 
   assert.match(overridesPage, /m-2 grid grid-cols-2 gap-2/)

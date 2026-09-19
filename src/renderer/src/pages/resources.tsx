@@ -6,9 +6,11 @@ import RuleProvider from '@renderer/components/resources/rule-provider'
 const Resources: React.FC = () => {
   return (
     <BasePage title={tr('External resources')}>
-      <GeoData />
-      <ProxyProvider />
-      <RuleProvider />
+      <main className="resource-page mx-auto w-full max-w-[68rem] px-5 py-4">
+        <GeoData />
+        <ProxyProvider />
+        <RuleProvider />
+      </main>
     </BasePage>
   )
 }

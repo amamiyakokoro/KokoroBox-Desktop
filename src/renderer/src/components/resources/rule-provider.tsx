@@ -8,14 +8,13 @@ import { getHash } from '@renderer/utils/hash'
 import Viewer from './viewer'
 import { useEffect, useMemo, useState } from 'react'
 import useSWR from 'swr'
-import SettingCard from '../base/base-setting-card'
-import SettingItem from '../base/base-setting-item'
 import { Button } from '@heroui/react'
 import { IoMdRefresh } from 'react-icons/io'
 import { CgLoadbarDoc } from 'react-icons/cg'
 import { MdEditDocument } from 'react-icons/md'
 import dayjs from 'dayjs'
 import { notify } from '@renderer/utils/notification'
+import { ResourceProviderRow, ResourceSection } from './resource-surfaces'
 
 const RuleProvider: React.FC = () => {
   const [showDetails, setShowDetails] = useState({
@@ -112,7 +111,7 @@ const RuleProvider: React.FC = () => {
   }
 
   return (
-    <SettingCard>
+    <>
       {showDetails.show && (
         <Viewer
           path={showDetails.path}
@@ -132,74 +131,68 @@ const RuleProvider: React.FC = () => {
           }
         />
       )}
-      <SettingItem contentAlign="end" title={tr('Rule providers')} divider>
-        <Button
-          size="sm"
-          variant="primary"
-          onPress={() => {
-            providers.forEach((provider, index) => {
-              onUpdate(provider.name, index)
-            })
-          }}
-        >
-          {tr('Update all')}
-        </Button>
-      </SettingItem>
-      {providers.map((provider, index) => (
-        <div
-          key={provider.name}
-          className={`flex min-h-14 items-center gap-3 px-1 py-2 ${
-            index !== providers.length - 1 ? 'border-b border-divider' : ''
-          }`}
-        >
-          <div className="min-w-0 flex-1">
-            <div className="flex min-w-0 items-baseline gap-2">
-              <span className="truncate text-sm font-medium text-foreground" title={provider.name}>
-                {provider.name}
-              </span>
-              <span className="shrink-0 text-xs font-medium text-foreground-600 tabular-nums">
-                {tr('{0} rules', [provider.ruleCount])}
-              </span>
-            </div>
-            <div
-              className="mt-0.5 truncate text-xs text-foreground-500"
-              title={`${provider.vehicleType}::${provider.behavior} · ${provider.format || 'InlineRule'} · ${dayjs(provider.updatedAt).fromNow()}`}
-            >
-              {provider.vehicleType}::{provider.behavior} · {provider.format || 'InlineRule'} ·{' '}
-              {dayjs(provider.updatedAt).fromNow()}
-            </div>
-          </div>
-          <div className="flex shrink-0 items-center gap-1">
-            {provider.vehicleType !== 'Inline' && (
-              <Button
-                isIconOnly
-                variant="ghost"
-                size="sm"
-                aria-label={`${tr('View details')}: ${provider.name}`}
-                onPress={() => openProviderDetails(provider)}
-              >
-                {provider.vehicleType == 'File' ? (
-                  <MdEditDocument className="text-lg" />
-                ) : (
-                  <CgLoadbarDoc className="text-lg" />
-                )}
-              </Button>
-            )}
-            <Button
-              isIconOnly
-              variant="ghost"
-              size="sm"
-              aria-label={`${tr('Refresh')}: ${provider.name}`}
-              onPress={() => {
+      <ResourceSection
+        title={tr('Rule providers')}
+        action={
+          <Button
+            size="sm"
+            variant="ghost"
+            onPress={() => {
+              providers.forEach((provider, index) => {
                 onUpdate(provider.name, index)
-              }}
-            >
-              <IoMdRefresh className={`text-lg ${updating[index] ? 'animate-spin' : ''}`} />
-            </Button>
-          </div>
-        </div>
-      ))}
-    </SettingCard>
+              })
+            }}
+          >
+            <IoMdRefresh className={`text-base ${updating.some(Boolean) ? 'animate-spin' : ''}`} />
+            {tr('Update all')}
+          </Button>
+        }
+      >
+        {providers.map((provider, index) => {
+          const metadata = `${provider.vehicleType} · ${provider.behavior} · ${provider.format || 'InlineRule'} · ${dayjs(provider.updatedAt).fromNow()}`
+
+          return (
+            <ResourceProviderRow
+              key={provider.name}
+              name={provider.name}
+              count={tr('{0} rules', [provider.ruleCount])}
+              metadata={metadata}
+              metadataTitle={metadata}
+              actions={
+                <>
+                  {provider.vehicleType !== 'Inline' && (
+                    <Button
+                      isIconOnly
+                      variant="ghost"
+                      size="sm"
+                      aria-label={`${tr('View details')}: ${provider.name}`}
+                      onPress={() => openProviderDetails(provider)}
+                    >
+                      {provider.vehicleType == 'File' ? (
+                        <MdEditDocument className="text-lg" />
+                      ) : (
+                        <CgLoadbarDoc className="text-lg" />
+                      )}
+                    </Button>
+                  )}
+                  <Button
+                    isIconOnly
+                    variant="ghost"
+                    size="sm"
+                    aria-label={`${tr('Refresh')}: ${provider.name}`}
+                    onPress={() => {
+                      onUpdate(provider.name, index)
+                    }}
+                  >
+                    <IoMdRefresh className={`text-lg ${updating[index] ? 'animate-spin' : ''}`} />
+                  </Button>
+                </>
+              }
+            />
+          )
+        })}
+      </ResourceSection>
+    </>
   )
 }
 
