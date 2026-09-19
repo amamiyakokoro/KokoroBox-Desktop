@@ -122,7 +122,7 @@ const GroupHeader = memo(function GroupHeader({
         aria-expanded={isOpen}
         role="button"
         tabIndex={0}
-        className={`w-full cursor-pointer border shadow-none outline-none transition-colors focus-visible:ring-2 focus-visible:ring-primary/45 ${
+        className={`w-full min-w-0 cursor-pointer gap-0 overflow-hidden rounded-xl border p-0 shadow-none outline-none transition-colors focus-visible:ring-2 focus-visible:ring-primary/45 ${
           isRelevant
             ? 'border-primary/25 bg-primary/8'
             : 'border-divider/80 bg-content1/90 hover:bg-default-50'

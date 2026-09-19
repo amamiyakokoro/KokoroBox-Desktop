@@ -169,7 +169,7 @@ const ProfileItem: React.FC<Props> = (props) => {
   return (
     <div
       ref={setNodeRef}
-      className="grid col-span-1 touch-sortable-card"
+      className="col-span-1 grid min-w-0 touch-sortable-card"
       style={{
         position: 'relative',
         transform: CSS.Transform.toString(transform),
@@ -224,10 +224,10 @@ const ProfileItem: React.FC<Props> = (props) => {
           setSelecting(true)
           onClick().finally(() => setSelecting(false))
         }}
-        className={`w-full cursor-pointer outline-none transition-colors focus-visible:ring-2 focus-visible:ring-primary/45 ${isCurrent ? 'bg-primary' : ''} ${selecting ? 'blur-sm' : ''}`}
+        className={`h-full w-full min-w-0 cursor-pointer gap-0 overflow-hidden rounded-xl p-0 shadow-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-primary/45 ${isCurrent ? 'bg-primary' : ''} ${selecting ? 'blur-sm' : ''}`}
       >
-        <div {...attributes} {...listeners} className="w-full h-full">
-          <Card.Content className="pb-1">
+        <div {...attributes} {...listeners} className="h-full w-full min-w-0 overflow-hidden">
+          <Card.Content className="w-full min-w-0 gap-0 px-3 pb-1 pt-3">
             <div className="flex justify-between h-8 gap-1">
               <div className="flex min-w-0 items-center">
                 <h3
@@ -316,7 +316,7 @@ const ProfileItem: React.FC<Props> = (props) => {
               </div>
             )}
           </Card.Content>
-          <Card.Footer className="pt-0">
+          <Card.Footer className="w-full min-w-0 overflow-hidden px-3 pb-3 pt-0">
             {info.type === 'remote' && !extra && (
               <div
                 className={`w-full mt-2 flex justify-between ${isCurrent ? 'text-primary-foreground' : 'text-foreground'}`}

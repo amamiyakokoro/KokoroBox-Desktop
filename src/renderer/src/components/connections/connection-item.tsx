@@ -100,7 +100,7 @@ const ConnectionItemComponent: React.FC<Props> = ({
       <Card
         role="button"
         tabIndex={0}
-        className="group w-full cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary/45"
+        className="group w-full min-w-0 cursor-pointer gap-0 overflow-hidden rounded-xl p-0 shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-primary/45"
         onClick={handleCardPress}
         onKeyDown={(event) => {
           if (event.key !== 'Enter' && event.key !== ' ') return
@@ -117,7 +117,7 @@ const ConnectionItemComponent: React.FC<Props> = ({
             </div>
           )}
           <div className="relative flex min-w-0 flex-1 flex-col justify-start">
-            <Card.Header className="relative flex min-h-8 items-center gap-1 px-3 pb-0 pt-2 pr-12">
+            <Card.Header className="relative flex min-h-8 w-full min-w-0 flex-row items-center gap-1 px-3 pb-0 pt-2 pr-12">
               <div className="min-w-0 flex-1 truncate text-left text-sm font-medium">
                 <span title={hideProcess ? destination : `${processName} → ${destination}`}>
                   {hideProcess ? destination : `${processName} → ${destination}`}

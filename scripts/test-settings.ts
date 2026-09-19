@@ -374,6 +374,46 @@ test('renderer components never mix HeroUI v2 and v3 in one file', () => {
   }
 })
 
+test('Phase 4 HeroUI v3 cards preserve the compact pre-migration layout contract', () => {
+  const proxyGroups = readFileSync('src/renderer/src/pages/proxies.tsx', 'utf8')
+  const connection = readFileSync(
+    'src/renderer/src/components/connections/connection-item.tsx',
+    'utf8'
+  )
+  const connectionGroup = readFileSync(
+    'src/renderer/src/components/connections/connection-group-header.tsx',
+    'utf8'
+  )
+  const profile = readFileSync('src/renderer/src/components/profiles/profile-item.tsx', 'utf8')
+  const profilesPage = readFileSync('src/renderer/src/pages/profiles.tsx', 'utf8')
+
+  const cardClassName = (source: string, label: string): string => {
+    const match = source.match(/<Card\b[\s\S]*?className=(?:"([^"]*)"|\{`([^`]*)`\})/)
+    const className = match?.[1] ?? match?.[2]
+    assert.ok(className, `${label} must give its v3 Card explicit root classes`)
+    return className
+  }
+
+  for (const [label, source] of [
+    ['proxy group', proxyGroups],
+    ['connection', connection],
+    ['connection group', connectionGroup],
+    ['profile', profile]
+  ] as const) {
+    const classes = cardClassName(source, label).split(/\s+/)
+    for (const token of ['p-0', 'gap-0', 'overflow-hidden', 'min-w-0']) {
+      assert.ok(classes.includes(token), `${label} Card must explicitly include ${token}`)
+    }
+  }
+
+  assert.match(connection, /<Card\.Header className="[^"]*\bflex-row\b/)
+  assert.match(profile, /className="col-span-1 grid min-w-0 touch-sortable-card"/)
+  assert.match(profile, /<Card\.Content className="[^"]*\bpx-3\b/)
+  assert.match(profile, /<Card\.Footer className="[^"]*\bpx-3\b/)
+  assert.match(profilesPage, /repeat\(auto-fit,minmax\(min\(17rem,100%\),1fr\)\)/)
+  assert.doesNotMatch(profilesPage, /sm:grid-cols-2|lg:grid-cols-3|xl:grid-cols-4/)
+})
+
 test('page settings drawers use the shared compact inspector behavior', () => {
   const drawer = readFileSync('src/renderer/src/components/base/base-settings-drawer.tsx', 'utf8')
   const settingItem = readFileSync('src/renderer/src/components/base/base-setting-item.tsx', 'utf8')

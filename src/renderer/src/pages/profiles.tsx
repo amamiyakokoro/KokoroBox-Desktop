@@ -348,7 +348,7 @@ const Profiles: React.FC = () => {
       </div>
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
         <div
-          className={`${fileOver ? 'blur-sm' : ''} grid sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 m-2`}
+          className={`${fileOver ? 'blur-sm' : ''} m-2 grid grid-cols-[repeat(auto-fit,minmax(min(17rem,100%),1fr))] items-stretch gap-2`}
         >
           <SortableContext
             items={sortedItems.map((item) => {
