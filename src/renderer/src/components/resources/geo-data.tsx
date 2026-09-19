@@ -30,7 +30,7 @@ const GeoUrlSetting: React.FC<Props> = (props) => {
   const { title, value, savedValue, onChange, onConfirm } = props
 
   return (
-    <SettingItem compatKey="legacy" title={title} divider>
+    <SettingItem contentAlign="end" title={title} divider>
       <div className="flex w-[70%] max-w-[40rem] min-w-0 items-center justify-end gap-2">
         <KokoTextField
           size="sm"
@@ -89,7 +89,7 @@ const GeoData: React.FC = () => {
 
   return (
     <SettingCard>
-      <SettingItem compatKey="legacy" title={tr('Geo databases')} divider>
+      <SettingItem contentAlign="end" title={tr('Geo databases')} divider>
         <Button
           size="sm"
           isIconOnly
@@ -136,7 +136,7 @@ const GeoData: React.FC = () => {
           patchControledMihomoConfig({ 'geox-url': { ...geoxUrl, asn: asnInput } })
         }}
       />
-      <SettingItem compatKey="legacy" title={tr('GeoIP mode')} divider>
+      <SettingItem contentAlign="end" title={tr('GeoIP mode')} divider>
         <KokoTabs
           ariaLabel={tr('GeoIP mode')}
           selectedKey={geoMode ? 'dat' : 'db'}
@@ -150,7 +150,7 @@ const GeoData: React.FC = () => {
         />
       </SettingItem>
       <SettingItem
-        compatKey="legacy"
+        contentAlign="end"
         title={tr('Update databases automatically')}
         divider={geoAutoUpdate}
       >
@@ -169,7 +169,7 @@ const GeoData: React.FC = () => {
         </Switch>
       </SettingItem>
       {geoAutoUpdate && (
-        <SettingItem compatKey="legacy" title={tr('Update interval (hours)')}>
+        <SettingItem contentAlign="end" title={tr('Update interval (hours)')}>
           <KokoTextField
             size="sm"
             type="number"

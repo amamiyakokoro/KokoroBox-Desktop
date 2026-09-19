@@ -2,7 +2,6 @@ import { tr } from '../../../../shared/i18n'
 import { Button } from '@heroui/react'
 import React, { type ReactNode } from 'react'
 import { SettingCardModeProvider } from './base-setting-card'
-import { SettingItemModeProvider } from './base-setting-item'
 
 interface FeatureSettingsLayoutProps {
   children: ReactNode
@@ -63,14 +62,12 @@ export const FeatureSettingsSection: React.FC<FeatureSettingsSectionProps> = ({
 
 const FeatureSettingsLayout: React.FC<FeatureSettingsLayoutProps> = ({ children, action }) => (
   <SettingCardModeProvider value={false}>
-    <SettingItemModeProvider value={false}>
-      <div
-        className={`feature-settings-layout relative mx-auto w-full max-w-[960px] pb-4 pt-1 ${action ? 'feature-settings-layout--has-action' : ''}`}
-      >
-        {action && <div className="feature-settings-layout__action">{action}</div>}
-        {children}
-      </div>
-    </SettingItemModeProvider>
+    <div
+      className={`feature-settings-layout relative mx-auto w-full max-w-[960px] pb-4 pt-1 ${action ? 'feature-settings-layout--has-action' : ''}`}
+    >
+      {action && <div className="feature-settings-layout__action">{action}</div>}
+      {children}
+    </div>
   </SettingCardModeProvider>
 )
 

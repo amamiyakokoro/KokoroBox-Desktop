@@ -121,34 +121,9 @@
   line-height: 1.5;
 }
 
-:root:lang(en) .setting-item--compact,
-:root:lang(en) .setting-item-legacy {
+:root:lang(en) .setting-item--compact {
   height: auto;
   min-height: calc(var(--spacing) * 8);
-}
-
-:root:lang(en) .setting-item-legacy {
-  flex-wrap: wrap;
-  align-items: center;
-  gap: calc(var(--spacing) * 2) calc(var(--spacing) * 3);
-}
-
-:root:lang(en) .setting-item-legacy > :first-child {
-  height: auto;
-  min-width: 0;
-  max-width: 100%;
-}
-
-:root:lang(en) .setting-item-legacy h4 {
-  height: auto;
-  white-space: normal;
-  overflow-wrap: anywhere;
-  line-height: 1.5;
-}
-
-:root:lang(en) .setting-item-legacy > :last-child:not(:first-child) {
-  max-width: 100%;
-  margin-inline-start: auto;
 }
 
 .setting-item--content-end .setting-item__content {

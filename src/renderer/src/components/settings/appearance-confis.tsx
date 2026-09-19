@@ -99,7 +99,7 @@ const AppearanceConfig: React.FC = () => {
       )}
       <SettingCard header={tr('Appearance')}>
         <SettingItem
-          compatKey="legacy"
+          contentAlign="end"
           title={tr('Show floating window')}
           actions={
             <Tooltip delay={0}>
@@ -147,7 +147,7 @@ const AppearanceConfig: React.FC = () => {
         {localShowFloating && (
           <>
             <SettingItem
-              compatKey="legacy"
+              contentAlign="end"
               title={tr('Rotate floating icon based on network speed')}
               divider
             >
@@ -166,7 +166,7 @@ const AppearanceConfig: React.FC = () => {
                 </Switch.Content>
               </Switch>
             </SettingItem>
-            <SettingItem compatKey="legacy" title={tr('Disable tray icon')} divider>
+            <SettingItem contentAlign="end" title={tr('Disable tray icon')} divider>
               <Switch
                 size="sm"
                 isSelected={disableTray}
@@ -190,7 +190,7 @@ const AppearanceConfig: React.FC = () => {
         )}
         {!disableTray && (
           <SettingItem
-            compatKey="legacy"
+            contentAlign="end"
             title={tr('Custom tray icon')}
             actions={
               <Tooltip delay={0}>
@@ -253,7 +253,7 @@ const AppearanceConfig: React.FC = () => {
         )}
         {platform !== 'linux' && (
           <>
-            <SettingItem compatKey="legacy" title={tr('Show proxy details in tray menu')} divider>
+            <SettingItem contentAlign="end" title={tr('Show proxy details in tray menu')} divider>
               <Switch
                 size="sm"
                 isSelected={proxyInTray}
@@ -269,7 +269,7 @@ const AppearanceConfig: React.FC = () => {
               </Switch>
             </SettingItem>
             {proxyInTray && (
-              <SettingItem compatKey="legacy" title={tr('Tray menu latency layout')} divider>
+              <SettingItem contentAlign="end" title={tr('Tray menu latency layout')} divider>
                 <SettingTabs
                   ariaLabel={tr('Tray menu latency layout')}
                   selectedKey={trayProxyDelayLayout}
@@ -289,7 +289,7 @@ const AppearanceConfig: React.FC = () => {
           </>
         )}
         <SettingItem
-          compatKey="legacy"
+          contentAlign="end"
           title={tr('Show network speed in the {0}', [
             platform === 'win32'
               ? tr('Taskbar')
@@ -316,7 +316,7 @@ const AppearanceConfig: React.FC = () => {
         </SettingItem>
         {platform === 'darwin' && (
           <>
-            <SettingItem compatKey="legacy" title={tr('Show Dock icon')} divider>
+            <SettingItem contentAlign="end" title={tr('Show Dock icon')} divider>
               <Switch
                 size="sm"
                 isSelected={useDockIcon}
@@ -334,7 +334,7 @@ const AppearanceConfig: React.FC = () => {
             </SettingItem>
           </>
         )}
-        <SettingItem compatKey="legacy" title={tr('Use system title bar')} divider>
+        <SettingItem contentAlign="end" title={tr('Use system title bar')} divider>
           <Switch
             size="sm"
             isSelected={useWindowFrame}
@@ -352,7 +352,7 @@ const AppearanceConfig: React.FC = () => {
         </SettingItem>
         {useWindowFrame && (
           <SettingItem
-            compatKey="legacy"
+            contentAlign="end"
             title={tr('Enable window drag area')}
             actions={
               <Tooltip delay={0}>
@@ -386,7 +386,7 @@ const AppearanceConfig: React.FC = () => {
             </Switch>
           </SettingItem>
         )}
-        <SettingItem compatKey="legacy" title={tr('Show update button')} divider>
+        <SettingItem contentAlign="end" title={tr('Show update button')} divider>
           <Switch
             size="sm"
             isSelected={showUpdateButtonAfterNotification}
@@ -401,7 +401,7 @@ const AppearanceConfig: React.FC = () => {
             </Switch.Content>
           </Switch>
         </SettingItem>
-        <SettingItem compatKey="legacy" title={tr('Background color')} divider>
+        <SettingItem contentAlign="end" title={tr('Background color')} divider>
           <SettingTabs
             ariaLabel={tr('Background color')}
             selectedKey={appTheme}
@@ -417,7 +417,7 @@ const AppearanceConfig: React.FC = () => {
           />
         </SettingItem>
         <SettingItem
-          compatKey="legacy"
+          contentAlign="end"
           title={tr('Theme')}
           actions={
             <>

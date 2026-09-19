@@ -55,7 +55,7 @@ const BehaviorSettings: React.FC<Props> = ({
         <>
           <SettingCard header={tr('Developer integration')}>
             <SettingItem
-              compatKey="legacy"
+              contentAlign="end"
               title="GitHub API Token"
               actions={
                 <Tooltip delay={0}>
@@ -104,7 +104,7 @@ const BehaviorSettings: React.FC<Props> = ({
           </SettingCard>
           <SettingCard header={tr('Environment integration')}>
             <SettingItem
-              compatKey="legacy"
+              contentAlign="end"
               title={tr('Copy environment variable format')}
               actions={envType.map((type) => (
                 <Tooltip delay={0} key={type}>
@@ -155,7 +155,7 @@ const BehaviorSettings: React.FC<Props> = ({
       {sections.includes('background') && (
         <SettingCard header={tr('Background behavior')}>
           <SettingItem
-            compatKey="legacy"
+            contentAlign="end"
             title={tr('Automatic lightweight mode')}
             actions={
               <Tooltip delay={0}>
@@ -189,7 +189,7 @@ const BehaviorSettings: React.FC<Props> = ({
           </SettingItem>
           {autoLightweight && (
             <>
-              <SettingItem compatKey="legacy" title={tr('Lightweight mode behavior')} divider>
+              <SettingItem contentAlign="end" title={tr('Lightweight mode behavior')} divider>
                 <SettingTabs
                   ariaLabel={tr('Lightweight mode behavior')}
                   selectedKey={autoLightweightMode}
@@ -205,7 +205,7 @@ const BehaviorSettings: React.FC<Props> = ({
                   }}
                 />
               </SettingItem>
-              <SettingItem compatKey="legacy" title={tr('Lightweight mode delay')} divider>
+              <SettingItem contentAlign="end" title={tr('Lightweight mode delay')} divider>
                 <Input
                   size="sm"
                   className="w-25"
@@ -228,7 +228,7 @@ const BehaviorSettings: React.FC<Props> = ({
       {sections.includes('network') && (
         <SettingCard header={tr('Network behavior')}>
           <SettingItem
-            compatKey="legacy"
+            contentAlign="end"
             title={tr('Stop core when offline')}
             actions={
               <Tooltip delay={0}>
@@ -267,7 +267,7 @@ const BehaviorSettings: React.FC<Props> = ({
           </SettingItem>
           {networkDetection && (
             <>
-              <SettingItem compatKey="legacy" title={tr('Connectivity check interval')} divider>
+              <SettingItem contentAlign="end" title={tr('Connectivity check interval')} divider>
                 <div className="flex">
                   {interval !== networkDetectionInterval && (
                     <Button
@@ -295,7 +295,7 @@ const BehaviorSettings: React.FC<Props> = ({
                   />
                 </div>
               </SettingItem>
-              <SettingItem compatKey="legacy" title={tr('Interfaces excluded from detection')}>
+              <SettingItem contentAlign="end" title={tr('Interfaces excluded from detection')}>
                 {bypass.length != networkDetectionBypass.length && (
                   <Button
                     size="sm"
@@ -313,7 +313,7 @@ const BehaviorSettings: React.FC<Props> = ({
             </>
           )}
           <SettingItem
-            compatKey="legacy"
+            contentAlign="end"
             title={tr('Use direct connections on specified Wi-Fi SSIDs')}
           >
             {pauseSSIDInput.join('') !== pauseSSIDArray.join('') && (

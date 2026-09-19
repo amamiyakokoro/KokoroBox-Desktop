@@ -128,12 +128,12 @@ const Actions: React.FC<Props> = ({
 
       {sections.includes('application') && (
         <SettingCard header={tr('Application actions')}>
-          <SettingItem compatKey="legacy" title={tr('Open guided tour')} divider>
+          <SettingItem contentAlign="end" title={tr('Open guided tour')} divider>
             <Button size="sm" variant="secondary" onPress={() => startTour(navigate)}>
               {tr('Open guided tour')}
             </Button>
           </SettingItem>
-          <SettingItem compatKey="legacy" title={tr('Check for updates')}>
+          <SettingItem contentAlign="end" title={tr('Check for updates')}>
             <Button
               size="sm"
               variant="secondary"
@@ -149,7 +149,7 @@ const Actions: React.FC<Props> = ({
       {sections.includes('diagnostics') && (
         <SettingCard header={tr('Diagnostics')}>
           <SettingItem
-            compatKey="legacy"
+            contentAlign="end"
             title={tr('Clear cache')}
             actions={
               <Tooltip delay={0}>
@@ -168,7 +168,7 @@ const Actions: React.FC<Props> = ({
             </Button>
           </SettingItem>
           <SettingItem
-            compatKey="legacy"
+            contentAlign="end"
             title={tr('Create heap snapshot')}
             actions={
               <Tooltip delay={0}>
@@ -192,7 +192,7 @@ const Actions: React.FC<Props> = ({
 
       {sections.includes('version') && (
         <SettingCard header={tr('Version information')}>
-          <SettingItem compatKey="legacy" title={tr('App version')}>
+          <SettingItem contentAlign="end" title={tr('App version')}>
             <div className="text-sm tabular-nums text-foreground-500">v{version}</div>
           </SettingItem>
         </SettingCard>
@@ -201,7 +201,7 @@ const Actions: React.FC<Props> = ({
       {sections.includes('danger') && (
         <SettingCard header={tr('Danger zone')}>
           <SettingItem
-            compatKey="legacy"
+            contentAlign="end"
             title={tr('Reset app')}
             actions={
               <Tooltip delay={0}>
@@ -222,7 +222,7 @@ const Actions: React.FC<Props> = ({
             </Button>
           </SettingItem>
           <SettingItem
-            compatKey="legacy"
+            contentAlign="end"
             title={tr('Quit and keep core running')}
             actions={
               <Tooltip delay={0}>
@@ -242,7 +242,7 @@ const Actions: React.FC<Props> = ({
               {tr('Quit')}
             </Button>
           </SettingItem>
-          <SettingItem compatKey="legacy" title={tr('Quit app')}>
+          <SettingItem contentAlign="end" title={tr('Quit app')}>
             <Button size="sm" variant="danger-soft" onPress={quitApp}>
               {tr('Quit app')}
             </Button>

@@ -243,6 +243,31 @@ test('shared settings primitives isolate HeroUI v3 compound APIs', () => {
   assert.match(interfaceSelect, /<ListBox\.Item/)
 })
 
+test('SettingItem has one canonical layout without legacy compatibility paths', () => {
+  const settingItem = readFileSync('src/renderer/src/components/base/base-setting-item.tsx', 'utf8')
+  const featureLayout = readFileSync(
+    'src/renderer/src/components/base/base-feature-settings.tsx',
+    'utf8'
+  )
+  const settingsPage = readFileSync('src/renderer/src/pages/settings.tsx', 'utf8')
+  const styles = readFileSync('src/renderer/src/assets/app-overrides.css', 'utf8')
+
+  for (const file of collectTsxFiles('src/renderer/src')) {
+    assert.doesNotMatch(readFileSync(file, 'utf8'), /compatKey=["']legacy["']/, file)
+  }
+
+  assert.doesNotMatch(settingItem, /compatKey|SettingItemLegacyContext|useContext/)
+  assert.doesNotMatch(featureLayout, /SettingItemModeProvider/)
+  assert.doesNotMatch(settingsPage, /SettingItemModeProvider/)
+  assert.doesNotMatch(styles, /setting-item-legacy/)
+  assert.equal(settingItem.match(/setting-item select-text/g)?.length, 1)
+  assert.match(settingItem, /data-setting-label=\{searchableLabel\}/)
+  assert.match(settingItem, /setting-item__description/)
+  assert.match(settingItem, /\{actions\}/)
+  assert.match(styles, /:root:lang\(en\) \.setting-item:not\(\.setting-item--titleless\)/)
+  assert.match(styles, /:root:lang\(en\) \.setting-item__title[\s\S]*overflow-wrap: anywhere/)
+})
+
 test('system proxy fields keep editable lists inside the settings control column', () => {
   const proxy = readFileSync(
     'src/renderer/src/components/settings/network/system-proxy-settings.tsx',

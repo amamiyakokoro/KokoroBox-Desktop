@@ -34,7 +34,7 @@ const GeneralConfig: React.FC = () => {
   return (
     <>
       <SettingCard header={tr('Language and notifications')}>
-        <SettingItem compatKey="legacy" title={tr('Interface language')} divider>
+        <SettingItem contentAlign="end" title={tr('Interface language')} divider>
           <div className="flex max-w-full flex-wrap items-center justify-end gap-2">
             <KokoSelect
               aria-label={tr('Interface language')}
@@ -61,7 +61,7 @@ const GeneralConfig: React.FC = () => {
             )}
           </div>
         </SettingItem>
-        <SettingItem compatKey="legacy" title={tr('Notification style')}>
+        <SettingItem contentAlign="end" title={tr('Notification style')}>
           <SettingTabs
             ariaLabel={tr('Notification style')}
             selectedKey={notificationMode}
@@ -77,7 +77,7 @@ const GeneralConfig: React.FC = () => {
       </SettingCard>
 
       <SettingCard header={tr('Startup and updates')}>
-        <SettingItem compatKey="legacy" title={tr('Launch at startup')} divider>
+        <SettingItem contentAlign="end" title={tr('Launch at startup')} divider>
           <div className="flex items-center gap-2">
             {autoRunStatus?.requiresApproval && (
               <Tooltip delay={0}>
@@ -123,7 +123,7 @@ const GeneralConfig: React.FC = () => {
             </Switch>
           </div>
         </SettingItem>
-        <SettingItem compatKey="legacy" title={tr('Start minimized')} divider>
+        <SettingItem contentAlign="end" title={tr('Start minimized')} divider>
           <Switch
             size="sm"
             isSelected={silentStart}
@@ -138,7 +138,7 @@ const GeneralConfig: React.FC = () => {
             </Switch.Content>
           </Switch>
         </SettingItem>
-        <SettingItem compatKey="legacy" title={tr('Check for updates automatically')} divider>
+        <SettingItem contentAlign="end" title={tr('Check for updates automatically')} divider>
           <Switch
             size="sm"
             isSelected={autoCheckUpdate}
@@ -153,7 +153,7 @@ const GeneralConfig: React.FC = () => {
             </Switch.Content>
           </Switch>
         </SettingItem>
-        <SettingItem compatKey="legacy" title={tr('Update channel')}>
+        <SettingItem contentAlign="end" title={tr('Update channel')}>
           <SettingTabs
             ariaLabel={tr('Update channel')}
             selectedKey={updateChannel}
@@ -206,7 +206,7 @@ export const PerformanceConfig: React.FC = () => {
       )}
       <SettingCard header={tr('Performance')}>
         <SettingItem
-          compatKey="legacy"
+          contentAlign="end"
           title={tr('Disable GPU acceleration')}
           actions={
             <Tooltip delay={0}>
@@ -238,7 +238,7 @@ export const PerformanceConfig: React.FC = () => {
           </Switch>
         </SettingItem>
         <SettingItem
-          compatKey="legacy"
+          contentAlign="end"
           title={tr('Reduce animations')}
           actions={
             <Tooltip delay={0}>

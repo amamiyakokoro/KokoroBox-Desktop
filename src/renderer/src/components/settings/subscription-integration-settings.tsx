@@ -95,7 +95,7 @@ const SubscriptionIntegrationSettings: React.FC<Props> = ({
       {hasSubscriptionSection && (
         <SettingCard header={tr('Subscription data')}>
           <SettingItem
-            compatKey="legacy"
+            contentAlign="end"
             title={tr('Use a separate working directory for each profile')}
             actions={
               <Tooltip delay={0}>
@@ -128,7 +128,7 @@ const SubscriptionIntegrationSettings: React.FC<Props> = ({
               </Switch.Content>
             </Switch>
           </SettingItem>
-          <SettingItem compatKey="legacy" title={tr('Subscription user agent')}>
+          <SettingItem contentAlign="end" title={tr('Subscription user agent')}>
             <Input
               size="sm"
               aria-label={tr('Subscription user agent')}
@@ -147,7 +147,7 @@ const SubscriptionIntegrationSettings: React.FC<Props> = ({
       {hasGistSection && (
         <SettingCard header={tr('Gist synchronization')}>
           <SettingItem
-            compatKey="legacy"
+            contentAlign="end"
             title={tr('Sync runtime configuration to Gist')}
             actions={
               gistSyncEnabled && (
@@ -190,7 +190,7 @@ const SubscriptionIntegrationSettings: React.FC<Props> = ({
           </SettingItem>
           {gistSyncEnabled && (
             <SettingItem
-              compatKey="legacy"
+              contentAlign="end"
               title={tr('Encrypt Gist configuration')}
               divider={gistEncrypted}
             >
@@ -211,7 +211,7 @@ const SubscriptionIntegrationSettings: React.FC<Props> = ({
             </SettingItem>
           )}
           {gistSyncEnabled && gistEncrypted && (
-            <SettingItem compatKey="legacy" title={tr('Gist age public key')} divider>
+            <SettingItem contentAlign="end" title={tr('Gist age public key')} divider>
               <Input
                 size="sm"
                 aria-label={tr('Gist age public key')}
@@ -252,7 +252,7 @@ const SubscriptionIntegrationSettings: React.FC<Props> = ({
             </SettingItem>
           )}
           {gistSyncEnabled && gistEncrypted && (
-            <SettingItem compatKey="legacy" title={tr('Gist age private key')}>
+            <SettingItem contentAlign="end" title={tr('Gist age private key')}>
               <Input
                 size="sm"
                 aria-label={tr('Gist age private key')}

@@ -132,7 +132,7 @@ const RuleProvider: React.FC = () => {
           }
         />
       )}
-      <SettingItem compatKey="legacy" title={tr('Rule providers')} divider>
+      <SettingItem contentAlign="end" title={tr('Rule providers')} divider>
         <Button
           size="sm"
           variant="primary"

@@ -58,7 +58,7 @@ const ShortcutConfig: React.FC = () => {
 
   return (
     <SettingCard header={tr('Keyboard shortcuts')}>
-      <SettingItem compatKey="legacy" title={tr('Toggle window')} divider>
+      <SettingItem contentAlign="end" title={tr('Toggle window')} divider>
         <div className="flex justify-end w-[60%]">
           <ShortcutInput
             value={showWindowShortcut}
@@ -67,7 +67,7 @@ const ShortcutConfig: React.FC = () => {
           />
         </div>
       </SettingItem>
-      <SettingItem compatKey="legacy" title={tr('Toggle floating window')} divider>
+      <SettingItem contentAlign="end" title={tr('Toggle floating window')} divider>
         <div className="flex justify-end w-[60%]">
           <ShortcutInput
             value={showFloatingWindowShortcut}
@@ -76,7 +76,7 @@ const ShortcutConfig: React.FC = () => {
           />
         </div>
       </SettingItem>
-      <SettingItem compatKey="legacy" title={tr('Toggle system proxy')} divider>
+      <SettingItem contentAlign="end" title={tr('Toggle system proxy')} divider>
         <div className="flex justify-end w-[60%]">
           <ShortcutInput
             value={triggerSysProxyShortcut}
@@ -85,7 +85,7 @@ const ShortcutConfig: React.FC = () => {
           />
         </div>
       </SettingItem>
-      <SettingItem compatKey="legacy" title={tr('Toggle TUN mode')} divider>
+      <SettingItem contentAlign="end" title={tr('Toggle TUN mode')} divider>
         <div className="flex justify-end w-[60%]">
           <ShortcutInput
             value={triggerTunShortcut}
@@ -94,7 +94,7 @@ const ShortcutConfig: React.FC = () => {
           />
         </div>
       </SettingItem>
-      <SettingItem compatKey="legacy" title={tr('Switch to rule mode')} divider>
+      <SettingItem contentAlign="end" title={tr('Switch to rule mode')} divider>
         <div className="flex justify-end w-[60%]">
           <ShortcutInput
             value={ruleModeShortcut}
@@ -103,7 +103,7 @@ const ShortcutConfig: React.FC = () => {
           />
         </div>
       </SettingItem>
-      <SettingItem compatKey="legacy" title={tr('Switch to global mode')} divider>
+      <SettingItem contentAlign="end" title={tr('Switch to global mode')} divider>
         <div className="flex justify-end w-[60%]">
           <ShortcutInput
             value={globalModeShortcut}
@@ -112,7 +112,7 @@ const ShortcutConfig: React.FC = () => {
           />
         </div>
       </SettingItem>
-      <SettingItem compatKey="legacy" title={tr('Switch to direct mode')} divider>
+      <SettingItem contentAlign="end" title={tr('Switch to direct mode')} divider>
         <div className="flex justify-end w-[60%]">
           <ShortcutInput
             value={directModeShortcut}
@@ -121,7 +121,7 @@ const ShortcutConfig: React.FC = () => {
           />
         </div>
       </SettingItem>
-      <SettingItem compatKey="legacy" title={tr('Quit and keep core running')} divider>
+      <SettingItem contentAlign="end" title={tr('Quit and keep core running')} divider>
         <div className="flex justify-end w-[60%]">
           <ShortcutInput
             value={quitWithoutCoreShortcut}
@@ -130,7 +130,7 @@ const ShortcutConfig: React.FC = () => {
           />
         </div>
       </SettingItem>
-      <SettingItem compatKey="legacy" title={tr('Restart app')}>
+      <SettingItem contentAlign="end" title={tr('Restart app')}>
         <div className="flex justify-end w-[60%]">
           <ShortcutInput
             value={restartAppShortcut}

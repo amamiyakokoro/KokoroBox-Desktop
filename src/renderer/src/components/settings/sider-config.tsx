@@ -166,7 +166,7 @@ const SiderConfig: React.FC = () => {
               const status = appConfig?.[item.key] ?? item.defaultStatus
               return (
                 <SettingItem
-                  compatKey="legacy"
+                  contentAlign="end"
                   title={item.title}
                   key={item.key}
                   divider={index !== entries.length - 1}

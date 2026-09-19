@@ -299,7 +299,7 @@ test('core feature settings pages use the shared desktop layout', () => {
   const styles = readFileSync('src/renderer/src/assets/app-overrides.css', 'utf8')
 
   assert.match(layout, /<SettingCardModeProvider value=\{false\}>/)
-  assert.match(layout, /<SettingItemModeProvider value=\{false\}>/)
+  assert.doesNotMatch(layout, /SettingItemModeProvider/)
   assert.match(
     styles,
     /\.feature-settings-layout \.setting-item__content\s*\{[^}]*justify-content: flex-end/s

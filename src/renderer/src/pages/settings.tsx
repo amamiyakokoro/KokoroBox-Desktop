@@ -9,7 +9,6 @@ import {
   type SettingsCategory
 } from '@renderer/components/settings/settings-registry'
 import { SettingCardModeProvider } from '@renderer/components/base/base-setting-card'
-import { SettingItemModeProvider } from '@renderer/components/base/base-setting-item'
 import { KokoTabs } from '@renderer/components/base/base-controls'
 import { KokoTextField } from '@renderer/components/base/koko-form'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
@@ -281,9 +280,7 @@ const Settings: React.FC = () => {
                 </div>
               ) : (
                 <SettingCardModeProvider value={false}>
-                  <SettingItemModeProvider value={false}>
-                    {selectedPanel?.content() ?? selected.content?.()}
-                  </SettingItemModeProvider>
+                  {selectedPanel?.content() ?? selected.content?.()}
                 </SettingCardModeProvider>
               )}
             </div>

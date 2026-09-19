@@ -178,7 +178,7 @@ const CoreRuntimeConfig: React.FC<Props> = ({ sections = ['runtime', 'service'] 
       {sections.includes('runtime') && (
         <SettingCard header={tr('Core runtime')}>
           <SettingItem
-            compatKey="legacy"
+            contentAlign="end"
             title={tr('Core version')}
             actions={
               !systemCoreOnlyBuild && (core === 'mihomo' || core === 'mihomo-alpha') ? (
@@ -216,7 +216,7 @@ const CoreRuntimeConfig: React.FC<Props> = ({ sections = ['runtime', 'service'] 
             )}
           </SettingItem>
           {core === 'system' && (
-            <SettingItem compatKey="legacy" title={tr('Choose system core path')} divider>
+            <SettingItem contentAlign="end" title={tr('Choose system core path')} divider>
               <KokoSelect
                 aria-label={tr('System core path')}
                 variant="secondary"
@@ -237,7 +237,7 @@ const CoreRuntimeConfig: React.FC<Props> = ({ sections = ['runtime', 'service'] 
               />
             </SettingItem>
           )}
-          <SettingItem compatKey="legacy" title={tr('Core process priority')} divider>
+          <SettingItem contentAlign="end" title={tr('Core process priority')} divider>
             <KokoSelect
               aria-label={tr('Core process priority')}
               variant="secondary"
@@ -257,7 +257,7 @@ const CoreRuntimeConfig: React.FC<Props> = ({ sections = ['runtime', 'service'] 
               }
             />
           </SettingItem>
-          <SettingItem compatKey="legacy" title={tr('Run mode')} divider>
+          <SettingItem contentAlign="end" title={tr('Run mode')} divider>
             <SettingTabs
               ariaLabel={tr('Run mode')}
               selectedKey={corePermissionMode}
@@ -269,7 +269,7 @@ const CoreRuntimeConfig: React.FC<Props> = ({ sections = ['runtime', 'service'] 
             />
           </SettingItem>
           {platform === 'linux' && corePermissionMode === 'service' && (
-            <SettingItem compatKey="legacy" title={tr('Service core execution mode')} divider>
+            <SettingItem contentAlign="end" title={tr('Service core execution mode')} divider>
               <SettingTabs
                 ariaLabel={tr('Service core execution mode')}
                 selectedKey={serviceRunMode}
@@ -283,7 +283,7 @@ const CoreRuntimeConfig: React.FC<Props> = ({ sections = ['runtime', 'service'] 
             </SettingItem>
           )}
           {corePermissionMode !== 'service' && platform !== 'win32' && (
-            <SettingItem compatKey="legacy" title={tr('Startup detection method')} divider>
+            <SettingItem contentAlign="end" title={tr('Startup detection method')} divider>
               <SettingTabs
                 ariaLabel={tr('Startup detection method')}
                 selectedKey={coreStartupMode}
@@ -300,13 +300,13 @@ const CoreRuntimeConfig: React.FC<Props> = ({ sections = ['runtime', 'service'] 
       {sections.includes('service') && (
         <SettingCard header={tr('Service management')}>
           {!systemCoreOnlyBuild && platform !== 'darwin' && (
-            <SettingItem compatKey="legacy" title={tr('Elevation status')} divider>
+            <SettingItem contentAlign="end" title={tr('Elevation status')} divider>
               <Button size="sm" variant="secondary" onPress={() => setShowPermissionModal(true)}>
                 {tr('Manage')}
               </Button>
             </SettingItem>
           )}
-          <SettingItem compatKey="legacy" title={tr('Service status')}>
+          <SettingItem contentAlign="end" title={tr('Service status')}>
             <Button
               size="sm"
               className="text-primary"

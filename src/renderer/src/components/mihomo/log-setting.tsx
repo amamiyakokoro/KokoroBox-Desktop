@@ -35,7 +35,7 @@ const LogSetting: React.FC = () => {
   return (
     <SettingCard header={tr('Application logs')}>
       <SettingItem
-        compatKey="legacy"
+        contentAlign="end"
         title={tr('Save logs')}
         actions={
           <Tooltip delay={0}>
@@ -67,7 +67,7 @@ const LogSetting: React.FC = () => {
           </Switch.Content>
         </Switch>
       </SettingItem>
-      <SettingItem compatKey="legacy" title={tr('Log retention days')} divider>
+      <SettingItem contentAlign="end" title={tr('Log retention days')} divider>
         <div className="flex">
           {saveLogs && maxLogDaysInput !== maxLogDays && (
             <Button
@@ -96,7 +96,7 @@ const LogSetting: React.FC = () => {
         </div>
       </SettingItem>
       <SettingItem
-        compatKey="legacy"
+        contentAlign="end"
         title={tr('Log file size limit')}
         actions={
           <Tooltip delay={0}>
@@ -142,7 +142,7 @@ const LogSetting: React.FC = () => {
         </div>
       </SettingItem>
       <SettingItem
-        compatKey="legacy"
+        contentAlign="end"
         title={tr('Live log entry limit')}
         actions={
           <Tooltip delay={0}>
