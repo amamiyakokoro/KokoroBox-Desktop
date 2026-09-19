@@ -310,6 +310,8 @@ export const messages: Readonly<Record<string, string>> = {
   'Kokoro subscription added': 'Kokoro 订阅已添加',
   'Kokoro settings': 'Kokoro 设置',
   'Kokoro account and subscription': 'Kokoro 账号与订阅',
+  'Subscription options': '订阅选项',
+  'Update behavior': '更新行为',
   'Account, plan and profile import': '账号、方案与配置文件导入',
   'Kokoro request failed': 'Kokoro 请求失败',
   'Kokoro authorization failed. Please sign in again': 'Kokoro 授权失败，请重新登录',

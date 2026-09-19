@@ -12,7 +12,7 @@ import {
 } from '@renderer/utils/ipc'
 import { notify } from '@renderer/utils/notification'
 import dayjs from 'dayjs'
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useId, useMemo, useState, type ReactNode } from 'react'
 import { LuCloudDownload, LuLogIn, LuLogOut, LuRefreshCw } from 'react-icons/lu'
 import KokoroDefaultRules from './kokoro-default-rules'
 
@@ -24,6 +24,35 @@ function isKokoroProtocol(value: string): value is KokoroProtocol {
 
 function utcDate(value: string): dayjs.Dayjs {
   return dayjs(/[zZ]|[+-]\d\d:\d\d$/.test(value) ? value : `${value}Z`)
+}
+
+interface KokoroOptionSectionProps {
+  title: string
+  children: ReactNode
+  footer?: ReactNode
+}
+
+const KokoroOptionSection = ({ title, children, footer }: KokoroOptionSectionProps) => {
+  const headingId = useId()
+
+  return (
+    <section
+      aria-labelledby={headingId}
+      className="rounded-xl border border-default-100 bg-content1/70"
+    >
+      <header className="border-b border-default-100 px-4 py-3">
+        <h3 id={headingId} className="text-sm font-semibold">
+          {title}
+        </h3>
+      </header>
+      <div className="p-4">{children}</div>
+      {footer ? (
+        <footer className="flex items-center justify-end border-t border-default-100 px-4 py-3">
+          {footer}
+        </footer>
+      ) : null}
+    </section>
+  )
 }
 
 const KokoroSettingsPage: React.FC = () => {
@@ -213,25 +242,27 @@ const KokoroSettingsPage: React.FC = () => {
               )}
             </div>
           ) : (
-            <div className="flex flex-col gap-5">
-              <section className="flex items-start gap-3 border-b border-default-100 pb-5">
+            <div className="flex flex-col gap-4">
+              <section className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 border-b border-default-100 pb-4">
                 {user.avatar_url ? (
                   <img
                     src={user.avatar_url}
                     alt=""
                     referrerPolicy="no-referrer"
-                    className="size-11 shrink-0 rounded-full bg-default-100 object-cover"
+                    className="size-12 shrink-0 rounded-full bg-default-100 object-cover"
                   />
                 ) : (
-                  <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-primary/10 font-semibold text-primary">
+                  <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-primary/10 font-semibold text-primary">
                     {(user.username || user.osu_id).slice(0, 1).toUpperCase()}
                   </div>
                 )}
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <h3 className="truncate font-semibold">{user.username || user.osu_id}</h3>
+                    <h2 className="truncate text-base font-semibold">
+                      {user.username || user.osu_id}
+                    </h2>
                     {user.plans.map((plan) => (
-                      <Chip key={plan} size="sm" color="primary" variant="flat">
+                      <Chip key={plan} size="sm" color="primary" variant="flat" radius="sm">
                         {plan}
                       </Chip>
                     ))}
@@ -253,205 +284,218 @@ const KokoroSettingsPage: React.FC = () => {
                 <Button
                   size="sm"
                   variant="light"
-                  color="danger"
-                  className="shrink-0"
+                  className="shrink-0 text-foreground-500 data-[hover=true]:text-danger"
                   onPress={handleLogout}
-                  startContent={<LuLogOut />}
+                  startContent={<LuLogOut className="text-danger" />}
                 >
                   {tr('Sign out')}
                 </Button>
               </section>
 
-              <div className="grid min-h-0 grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(420px,1.08fr)]">
-                <div className="flex min-w-0 flex-col gap-5">
+              <div className="grid min-h-0 grid-cols-1 items-start gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(420px,1.08fr)]">
+                <div className="flex min-w-0 flex-col gap-4">
                   {!mihomoAvailable && (
                     <p className="rounded-lg bg-danger-50 px-3 py-2 text-sm text-danger">
                       {tr('Mihomo format is not available for this Kokoro account.')}
                     </p>
                   )}
 
-                  <section className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <Select
-                      label={tr('Plan')}
-                      size="sm"
-                      selectedKeys={settings?.plan ? new Set([settings.plan]) : new Set()}
-                      isDisabled={options.plans.length === 0}
-                      disallowEmptySelection
-                      onSelectionChange={(value) =>
-                        updateSettings({ plan: String(value.currentKey), isp: null })
-                      }
-                    >
-                      {options.plans.map((plan) => (
-                        <SelectItem key={plan.name} description={plan.description || undefined}>
-                          {plan.name}
-                        </SelectItem>
-                      ))}
-                    </Select>
-                    <Select
-                      label={tr('Internet provider')}
-                      size="sm"
-                      selectedKeys={new Set([settings?.isp || ''])}
-                      disallowEmptySelection
-                      onSelectionChange={(value) =>
-                        updateSettings({
-                          isp: (String(value.currentKey) || null) as KokoroISP | null
-                        })
-                      }
-                    >
-                      {isps.map((isp) => (
-                        <SelectItem key={isp.value}>{isp.label}</SelectItem>
-                      ))}
-                    </Select>
-                    <Select
-                      label={tr('Protocol')}
-                      size="sm"
-                      selectedKeys={settings ? new Set([settings.protocol]) : new Set()}
-                      disallowEmptySelection
-                      onSelectionChange={(value) => {
-                        const protocol = String(value.currentKey) as KokoroProtocol
-                        updateSettings({
-                          protocol,
-                          mode: protocol === 'vmess' ? 'relay' : settings?.mode || 'relay'
-                        })
-                      }}
-                    >
-                      {protocols.map((protocol) => (
-                        <SelectItem key={protocol.value}>{protocol.label}</SelectItem>
-                      ))}
-                    </Select>
-                    {!supportsDirect ? (
-                      <div className="flex min-h-12 items-center rounded-lg bg-default-100 px-3 text-sm text-foreground-500">
-                        {settings?.protocol === 'vmess'
-                          ? tr('VMess always uses relay mode')
-                          : tr('This protocol currently supports relay mode only')}
-                      </div>
-                    ) : (
-                      <Select
-                        label={tr('Connection mode')}
+                  <KokoroOptionSection
+                    title={tr('Subscription options')}
+                    footer={
+                      <Button
                         size="sm"
-                        selectedKeys={settings ? new Set([settings.mode]) : new Set()}
+                        color="primary"
+                        variant="flat"
+                        isDisabled={!canImport}
+                        isLoading={importing}
+                        onPress={handleImport}
+                        startContent={!importing ? <LuCloudDownload /> : undefined}
+                      >
+                        {tr('Fetch and add')}
+                      </Button>
+                    }
+                  >
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                      <Select
+                        label={tr('Plan')}
+                        size="sm"
+                        selectedKeys={settings?.plan ? new Set([settings.plan]) : new Set()}
+                        isDisabled={options.plans.length === 0}
                         disallowEmptySelection
                         onSelectionChange={(value) =>
-                          updateSettings({ mode: String(value.currentKey) as KokoroMode })
+                          updateSettings({ plan: String(value.currentKey), isp: null })
                         }
                       >
-                        <SelectItem key="relay">{tr('Relay')}</SelectItem>
-                        <SelectItem key="direct">{tr('Direct')}</SelectItem>
+                        {options.plans.map((plan) => (
+                          <SelectItem key={plan.name} description={plan.description || undefined}>
+                            {plan.name}
+                          </SelectItem>
+                        ))}
                       </Select>
-                    )}
-                    <Select
-                      label={tr('Rule source')}
-                      size="sm"
-                      selectedKeys={settings ? new Set([settings.rule_source]) : new Set()}
-                      disallowEmptySelection
-                      onSelectionChange={(value) =>
-                        updateSettings({
-                          rule_source: String(value.currentKey) as KokoroRuleSource
-                        })
-                      }
-                    >
-                      {options.rule_sources.map((source) => (
-                        <SelectItem key={source}>
-                          {source === 'origin' ? tr('Original source') : tr('Mirror')}
-                        </SelectItem>
-                      ))}
-                    </Select>
-                    <Select
-                      label={tr('Unmatched traffic')}
-                      size="sm"
-                      selectedKeys={settings ? new Set([settings.final_route]) : new Set()}
-                      disallowEmptySelection
-                      onSelectionChange={(value) =>
-                        updateSettings({
-                          final_route: String(value.currentKey) as KokoroFinalRoute
-                        })
-                      }
-                    >
-                      {options.final_routes.map((route) => (
-                        <SelectItem key={route}>
-                          {route === 'proxy' ? tr('Proxy') : tr('Direct')}
-                        </SelectItem>
-                      ))}
-                    </Select>
-                  </section>
-
-                  <section className="divide-y divide-default-100 border-y border-default-100">
-                    <div className="flex flex-wrap items-center justify-between gap-4 py-3">
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium">
-                          {tr('Update rule sets automatically')}
-                        </p>
-                        <p className="mt-0.5 text-xs text-foreground-500">
-                          {tr('Update remote rule providers')}
-                        </p>
-                      </div>
-                      <Switch
+                      <Select
+                        label={tr('Internet provider')}
                         size="sm"
-                        className="ml-auto shrink-0"
-                        isSelected={settings?.rule_provider_auto_update}
-                        onValueChange={(value) =>
-                          updateSettings({ rule_provider_auto_update: value })
+                        selectedKeys={new Set([settings?.isp || ''])}
+                        disallowEmptySelection
+                        onSelectionChange={(value) =>
+                          updateSettings({
+                            isp: (String(value.currentKey) || null) as KokoroISP | null
+                          })
                         }
-                      />
-                    </div>
-                    <div className="flex flex-wrap items-center justify-between gap-4 py-3">
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium">
-                          {tr('Update subscription automatically')}
-                        </p>
-                        <p className="mt-0.5 text-xs text-foreground-500">
-                          {tr('Keep the last working configuration if an update fails')}
-                        </p>
-                      </div>
-                      <div className="ml-auto flex shrink-0 items-center gap-3">
-                        <Input
-                          aria-label={tr('Update interval')}
-                          type="number"
+                      >
+                        {isps.map((isp) => (
+                          <SelectItem key={isp.value}>{isp.label}</SelectItem>
+                        ))}
+                      </Select>
+                      <Select
+                        label={tr('Protocol')}
+                        size="sm"
+                        selectedKeys={settings ? new Set([settings.protocol]) : new Set()}
+                        disallowEmptySelection
+                        onSelectionChange={(value) => {
+                          const protocol = String(value.currentKey) as KokoroProtocol
+                          updateSettings({
+                            protocol,
+                            mode: protocol === 'vmess' ? 'relay' : settings?.mode || 'relay'
+                          })
+                        }}
+                      >
+                        {protocols.map((protocol) => (
+                          <SelectItem key={protocol.value}>{protocol.label}</SelectItem>
+                        ))}
+                      </Select>
+                      {!supportsDirect ? (
+                        <div className="flex min-h-12 flex-col justify-center rounded-lg border border-default-100 bg-default-50 px-3 py-1.5">
+                          <span className="text-xs text-foreground-500">
+                            {tr('Connection mode')}
+                          </span>
+                          <span className="truncate text-sm text-foreground-500">
+                            {settings?.protocol === 'vmess'
+                              ? tr('VMess always uses relay mode')
+                              : tr('This protocol currently supports relay mode only')}
+                          </span>
+                        </div>
+                      ) : (
+                        <Select
+                          label={tr('Connection mode')}
                           size="sm"
-                          className="w-32 shrink-0"
-                          min={options.profile_update.min_hours}
-                          max={options.profile_update.max_hours}
-                          endContent={
-                            <span className="shrink-0 whitespace-nowrap">{tr('hours')}</span>
+                          selectedKeys={settings ? new Set([settings.mode]) : new Set()}
+                          disallowEmptySelection
+                          onSelectionChange={(value) =>
+                            updateSettings({ mode: String(value.currentKey) as KokoroMode })
                           }
-                          value={String(settings?.profile_update_hours || '')}
-                          onValueChange={(value) =>
-                            updateSettings({
-                              profile_update_hours: Math.min(
-                                options.profile_update.max_hours,
-                                Math.max(options.profile_update.min_hours, Number(value) || 0)
-                              )
-                            })
-                          }
-                        />
+                        >
+                          <SelectItem key="relay">{tr('Relay')}</SelectItem>
+                          <SelectItem key="direct">{tr('Direct')}</SelectItem>
+                        </Select>
+                      )}
+                      <Select
+                        label={tr('Rule source')}
+                        size="sm"
+                        selectedKeys={settings ? new Set([settings.rule_source]) : new Set()}
+                        disallowEmptySelection
+                        onSelectionChange={(value) =>
+                          updateSettings({
+                            rule_source: String(value.currentKey) as KokoroRuleSource
+                          })
+                        }
+                      >
+                        {options.rule_sources.map((source) => (
+                          <SelectItem key={source}>
+                            {source === 'origin' ? tr('Original source') : tr('Mirror')}
+                          </SelectItem>
+                        ))}
+                      </Select>
+                      <Select
+                        label={tr('Unmatched traffic')}
+                        size="sm"
+                        selectedKeys={settings ? new Set([settings.final_route]) : new Set()}
+                        disallowEmptySelection
+                        onSelectionChange={(value) =>
+                          updateSettings({
+                            final_route: String(value.currentKey) as KokoroFinalRoute
+                          })
+                        }
+                      >
+                        {options.final_routes.map((route) => (
+                          <SelectItem key={route}>
+                            {route === 'proxy' ? tr('Proxy') : tr('Direct')}
+                          </SelectItem>
+                        ))}
+                      </Select>
+                    </div>
+                  </KokoroOptionSection>
+
+                  <KokoroOptionSection title={tr('Update behavior')}>
+                    <div className="divide-y divide-default-100">
+                      <div className="flex flex-wrap items-center justify-between gap-4 py-2 first:pt-0">
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium">
+                            {tr('Update rule sets automatically')}
+                          </p>
+                          <p className="mt-0.5 text-xs text-foreground-500">
+                            {tr('Update remote rule providers')}
+                          </p>
+                        </div>
                         <Switch
+                          aria-label={tr('Update rule sets automatically')}
                           size="sm"
-                          isSelected={settings?.profile_auto_update}
-                          onValueChange={(value) => updateSettings({ profile_auto_update: value })}
+                          className="ml-auto shrink-0"
+                          isSelected={settings?.rule_provider_auto_update}
+                          onValueChange={(value) =>
+                            updateSettings({ rule_provider_auto_update: value })
+                          }
                         />
                       </div>
+                      <div className="flex flex-wrap items-center justify-between gap-4 py-2 last:pb-0">
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium">
+                            {tr('Update subscription automatically')}
+                          </p>
+                          <p className="mt-0.5 text-xs text-foreground-500">
+                            {tr('Keep the last working configuration if an update fails')}
+                          </p>
+                        </div>
+                        <div className="ml-auto flex shrink-0 items-center gap-3">
+                          <Input
+                            aria-label={tr('Update interval')}
+                            type="number"
+                            size="sm"
+                            className="w-32 shrink-0"
+                            min={options.profile_update.min_hours}
+                            max={options.profile_update.max_hours}
+                            endContent={
+                              <span className="shrink-0 whitespace-nowrap">{tr('hours')}</span>
+                            }
+                            value={String(settings?.profile_update_hours || '')}
+                            onValueChange={(value) =>
+                              updateSettings({
+                                profile_update_hours: Math.min(
+                                  options.profile_update.max_hours,
+                                  Math.max(options.profile_update.min_hours, Number(value) || 0)
+                                )
+                              })
+                            }
+                          />
+                          <Switch
+                            aria-label={tr('Update subscription automatically')}
+                            size="sm"
+                            isSelected={settings?.profile_auto_update}
+                            onValueChange={(value) =>
+                              updateSettings({ profile_auto_update: value })
+                            }
+                          />
+                        </div>
+                      </div>
                     </div>
-                  </section>
+                  </KokoroOptionSection>
                 </div>
                 <KokoroDefaultRules />
               </div>
             </div>
           )}
         </div>
-        {session?.authenticated && user && options && !loading ? (
-          <footer className="mt-5 flex justify-end border-t border-default-100 pt-4">
-            <Button
-              size="sm"
-              color="primary"
-              isDisabled={!canImport}
-              isLoading={importing}
-              onPress={handleImport}
-              startContent={!importing ? <LuCloudDownload /> : undefined}
-            >
-              {tr('Fetch and add')}
-            </Button>
-          </footer>
-        ) : null}
       </div>
     </BasePage>
   )

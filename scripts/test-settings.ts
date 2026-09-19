@@ -454,6 +454,43 @@ test('connection details use a sectioned desktop inspector without losing diagno
   }
 })
 
+test('Kokoro account options and default rules use clear desktop sections and save state', () => {
+  const page = readFileSync(
+    'src/renderer/src/components/profiles/kokoro-subscription-modal.tsx',
+    'utf8'
+  )
+  const rules = readFileSync(
+    'src/renderer/src/components/profiles/kokoro-default-rules.tsx',
+    'utf8'
+  )
+
+  assert.match(page, /function KokoroOptionSection|const KokoroOptionSection/)
+  assert.match(page, /title=\{tr\('Subscription options'\)\}/)
+  assert.match(page, /title=\{tr\('Update behavior'\)\}/)
+  assert.match(page, /grid-cols-\[auto_minmax\(0,1fr\)_auto\]/)
+  assert.match(page, /radius="sm"/)
+  assert.match(page, /footer=\{[\s\S]*tr\('Fetch and add'\)/)
+  assert.match(page, /aria-label=\{tr\('Update rule sets automatically'\)\}/)
+  assert.match(page, /aria-label=\{tr\('Update subscription automatically'\)\}/)
+
+  assert.match(rules, /<header className=/)
+  assert.match(rules, /rev\. \{ruleSet\.revision\}/)
+  assert.match(rules, /aria-label=\{tr\('Reload'\)\}/)
+  assert.match(rules, /grid-cols-\[minmax\(0,1fr\)_minmax\(0,1fr\)_auto\]/)
+  assert.match(rules, /label=\{tr\('Rule type'\)\}/)
+  assert.match(rules, /label=\{tr\('Rule target'\)\}/)
+  assert.match(rules, /label=\{tr\('Rule content'\)\}/)
+  assert.match(rules, /aria-label=\{tr\('Move up'\)\}/)
+  assert.match(rules, /aria-label=\{tr\('Move down'\)\}/)
+  assert.match(rules, /aria-label=\{tr\('Delete'\)\}/)
+  assert.match(rules, /aria-live="polite"/)
+  assert.match(rules, /tr\('Unsaved changes'\)/)
+  assert.match(rules, /isDisabled=\{!isDirty \|\| Boolean\(validationError\)\}/)
+  assert.match(rules, /variant="flat"[\s\S]*tr\('Add rule'\)/)
+  assert.match(rules, /color="primary"[\s\S]*tr\('Save rules'\)/)
+  assert.match(rules, /replaceKokoroDefaultRules\(ruleSet\.revision, rules\)/)
+})
+
 test('operational lists use compact hierarchy without changing their behavior', () => {
   const rulesPage = readFileSync('src/renderer/src/pages/rules.tsx', 'utf8')
   const ruleItem = readFileSync('src/renderer/src/components/rules/rule-item.tsx', 'utf8')

@@ -200,13 +200,13 @@ const KokoroDefaultRules: React.FC = () => {
   }
 
   return (
-    <section className="flex min-w-0 flex-col rounded-xl border border-default-100 bg-default-50/40 p-4">
-      <div className="flex items-start justify-between gap-3 border-b border-default-100 pb-3">
+    <section className="flex min-w-0 flex-col overflow-hidden rounded-xl border border-default-100 bg-content1/70">
+      <header className="flex items-start justify-between gap-3 border-b border-default-100 px-4 py-3">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <h3 className="font-semibold">{tr('Default rule set')}</h3>
             {ruleSet && (
-              <Chip size="sm" variant="flat">
+              <Chip size="sm" variant="flat" radius="sm" className="text-foreground-500">
                 rev. {ruleSet.revision}
               </Chip>
             )}
@@ -220,13 +220,14 @@ const KokoroDefaultRules: React.FC = () => {
             size="sm"
             isIconOnly
             variant="light"
+            aria-label={tr('Reload')}
             isDisabled={loading || saving}
             onPress={() => void load()}
           >
             <LuRefreshCw className={loading ? 'animate-spin' : ''} />
           </Button>
         </Tooltip>
-      </div>
+      </header>
 
       {loading ? (
         <div className="flex min-h-52 items-center justify-center">
@@ -234,7 +235,7 @@ const KokoroDefaultRules: React.FC = () => {
         </div>
       ) : options && ruleSet ? (
         <>
-          <div className="mt-3 flex max-h-[48vh] min-h-36 flex-col gap-2 overflow-y-auto pr-1 no-scrollbar">
+          <div className="no-scrollbar flex max-h-[48vh] min-h-36 flex-col gap-2 overflow-y-auto px-3 py-3">
             {rules.length === 0 && (
               <div className="flex min-h-28 items-center justify-center rounded-lg border border-dashed border-default-200 text-sm text-foreground-400">
                 {tr('The default rule set is empty')}
@@ -245,10 +246,15 @@ const KokoroDefaultRules: React.FC = () => {
                 (target) => rule.type !== 'MATCH' || target !== 'REJECT'
               )
               return (
-                <div key={index} className="rounded-lg bg-content1 p-2 shadow-sm">
-                  <div className="grid grid-cols-2 gap-2">
+                <div
+                  key={index}
+                  className="rounded-lg border border-default-100 bg-default-50/50 p-2"
+                >
+                  <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] items-center gap-2">
                     <Select
                       aria-label={tr('Rule type')}
+                      label={tr('Rule type')}
+                      className="min-w-0"
                       size="sm"
                       selectedKeys={new Set([rule.type])}
                       disallowEmptySelection
@@ -267,6 +273,8 @@ const KokoroDefaultRules: React.FC = () => {
                     </Select>
                     <Select
                       aria-label={tr('Rule target')}
+                      label={tr('Rule target')}
+                      className="min-w-0"
                       size="sm"
                       selectedKeys={new Set([rule.target])}
                       disallowEmptySelection
@@ -278,11 +286,56 @@ const KokoroDefaultRules: React.FC = () => {
                         <SelectItem key={target}>{target}</SelectItem>
                       ))}
                     </Select>
+                    <div className="flex shrink-0 items-center gap-0.5">
+                      <Tooltip content={tr('Move up')}>
+                        <Button
+                          size="sm"
+                          isIconOnly
+                          variant="light"
+                          aria-label={tr('Move up')}
+                          isDisabled={index === 0 || rule.type === 'MATCH'}
+                          onPress={() => moveRule(index, -1)}
+                        >
+                          <LuArrowUp />
+                        </Button>
+                      </Tooltip>
+                      <Tooltip content={tr('Move down')}>
+                        <Button
+                          size="sm"
+                          isIconOnly
+                          variant="light"
+                          aria-label={tr('Move down')}
+                          isDisabled={
+                            index === rules.length - 1 || rules[index + 1]?.type === 'MATCH'
+                          }
+                          onPress={() => moveRule(index, 1)}
+                        >
+                          <LuArrowDown />
+                        </Button>
+                      </Tooltip>
+                      <Tooltip content={tr('Delete')}>
+                        <Button
+                          size="sm"
+                          isIconOnly
+                          color="danger"
+                          variant="light"
+                          aria-label={tr('Delete')}
+                          onPress={() =>
+                            setRules((current) =>
+                              current.filter((_, ruleIndex) => ruleIndex !== index)
+                            )
+                          }
+                        >
+                          <LuTrash2 />
+                        </Button>
+                      </Tooltip>
+                    </div>
                   </div>
-                  <div className="mt-2 flex items-center gap-1">
+                  <div className="mt-2">
                     {rule.type === 'RULE-SET' ? (
                       <Select
                         aria-label={tr('Rule content')}
+                        label={tr('Rule content')}
                         className="min-w-0 flex-1"
                         size="sm"
                         placeholder={tr('Select a RULE-SET provider')}
@@ -298,6 +351,7 @@ const KokoroDefaultRules: React.FC = () => {
                     ) : (
                       <Input
                         aria-label={tr('Rule content')}
+                        label={tr('Rule content')}
                         className="min-w-0 flex-1"
                         size="sm"
                         isDisabled={rule.type === 'MATCH'}
@@ -310,60 +364,28 @@ const KokoroDefaultRules: React.FC = () => {
                         onValueChange={(value) => updateRule(index, { payload: value })}
                       />
                     )}
-                    <Tooltip content={tr('Move up')}>
-                      <Button
-                        size="sm"
-                        isIconOnly
-                        variant="light"
-                        isDisabled={index === 0 || rule.type === 'MATCH'}
-                        onPress={() => moveRule(index, -1)}
-                      >
-                        <LuArrowUp />
-                      </Button>
-                    </Tooltip>
-                    <Tooltip content={tr('Move down')}>
-                      <Button
-                        size="sm"
-                        isIconOnly
-                        variant="light"
-                        isDisabled={
-                          index === rules.length - 1 || rules[index + 1]?.type === 'MATCH'
-                        }
-                        onPress={() => moveRule(index, 1)}
-                      >
-                        <LuArrowDown />
-                      </Button>
-                    </Tooltip>
-                    <Tooltip content={tr('Delete')}>
-                      <Button
-                        size="sm"
-                        isIconOnly
-                        color="danger"
-                        variant="light"
-                        onPress={() =>
-                          setRules((current) =>
-                            current.filter((_, ruleIndex) => ruleIndex !== index)
-                          )
-                        }
-                      >
-                        <LuTrash2 />
-                      </Button>
-                    </Tooltip>
                   </div>
                 </div>
               )
             })}
           </div>
 
-          <div className="mt-3 border-t border-default-100 pt-3">
+          <footer className="border-t border-default-100 px-4 py-3">
             {(validationError || error) && (
               <p className="mb-2 text-xs leading-5 text-danger">{validationError || error}</p>
             )}
-            <div className="flex items-center justify-between gap-2">
-              <span className="text-xs text-foreground-400">
-                {rules.length} / {maxRules}
-              </span>
-              <div className="flex gap-2">
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex min-w-0 items-center gap-2" aria-live="polite">
+                <span className="text-xs tabular-nums text-foreground-400">
+                  {rules.length} / {maxRules}
+                </span>
+                {isDirty ? (
+                  <span className="text-xs font-medium text-warning-600">
+                    {tr('Unsaved changes')}
+                  </span>
+                ) : null}
+              </div>
+              <div className="ml-auto flex gap-2">
                 <Button
                   size="sm"
                   variant="flat"
@@ -385,7 +407,7 @@ const KokoroDefaultRules: React.FC = () => {
                 </Button>
               </div>
             </div>
-          </div>
+          </footer>
         </>
       ) : (
         <div className="flex min-h-52 flex-col items-center justify-center gap-3 text-center">
