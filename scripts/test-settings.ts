@@ -721,6 +721,10 @@ test('desktop sidebar separates controls, live status and navigation', () => {
     'src/renderer/src/components/sider/outbound-mode-switcher.tsx',
     'utf8'
   )
+  const navItem = surfaces.slice(
+    surfaces.indexOf('export const SiderNavItem'),
+    surfaces.indexOf('export const SiderStatusCard')
+  )
   const quickControl = surfaces.slice(surfaces.indexOf('export const SiderQuickControl'))
 
   for (const file of readdirSync('src/renderer/src/components/sider').filter((name) =>
@@ -766,9 +770,21 @@ test('desktop sidebar separates controls, live status and navigation', () => {
   assert.match(surfaces, /columns === 2 \? 'grid grid-cols-2 gap-1\.5' : 'flex flex-col gap-1\.5'/)
   assert.match(surfaces, /aria-current=\{active \? 'page' : undefined\}/)
   assert.match(surfaces, /navigationStatusIndicatorClasses/)
-  assert.match(surfaces, /hover:border-default-300/)
+  assert.match(surfaces, /success: 'bg-success'/)
+  assert.match(surfaces, /warning: 'bg-warning'/)
+  assert.match(surfaces, /danger: 'bg-danger'/)
+  assert.doesNotMatch(surfaces, /bg-(?:success|warning|danger)-500/)
+  assert.match(surfaces, /navigationStatusTextClasses\[tone\]/)
+  assert.match(
+    surfaces,
+    /const navigationStatusTextClasses[\s\S]*success: 'text-foreground-500'[\s\S]*warning: 'text-warning'[\s\S]*danger: 'text-danger'/
+  )
+  assert.match(navItem, /border-separator\/60 bg-surface\/55/)
+  assert.match(navItem, /hover:border-accent\/25 hover:bg-surface-secondary\/70 hover:shadow-sm/)
+  assert.match(navItem, /border-accent\/45 bg-accent-soft\/45/)
+  assert.doesNotMatch(navItem, /border-transparent/)
+  assert.match(surfaces, /prominence === 'navigation'[\s\S]*bg-transparent text-base/)
   assert.match(surfaces, /hover:border-default-400\/80/)
-  assert.match(surfaces, /border-primary\/40 bg-primary\/12/)
   assert.match(surfaces, /border-primary\/45 bg-primary\/10/)
   assert.match(surfaces, /focus-visible:outline-primary/)
   assert.match(surfaces, /group-focus-within:text-primary/)
@@ -833,6 +849,7 @@ test('desktop sidebar separates controls, live status and navigation', () => {
   assert.match(kokoro, /<SiderNavItem/)
   assert.doesNotMatch(kokoro, /Account, plan and profile import/)
   assert.match(rules, /description=\{String\(rules\?\.rules\?\.length \?\? 0\)\}/)
+  assert.doesNotMatch(rules, /status=|statusTone=/)
   assert.doesNotMatch(rules, /tr\('\{0\} rules'/)
   assert.match(profile, /<SiderStatusCard/)
   assert.match(profile, /label=\{tr\('Runtime configuration'\)\}/)

@@ -34,9 +34,16 @@ const statusToneClasses: Record<SiderStatusTone, string> = {
 
 const navigationStatusIndicatorClasses: Record<SiderStatusTone, string> = {
   default: 'bg-foreground-300',
-  success: 'bg-success-500',
-  warning: 'bg-warning-500',
-  danger: 'bg-danger-500'
+  success: 'bg-success',
+  warning: 'bg-warning',
+  danger: 'bg-danger'
+}
+
+const navigationStatusTextClasses: Record<SiderStatusTone, string> = {
+  default: 'text-foreground-500',
+  success: 'text-foreground-500',
+  warning: 'text-warning',
+  danger: 'text-danger'
 }
 
 const siderItemTitleClassName =
@@ -57,7 +64,8 @@ export const SiderStatusRow: React.FC<SiderStatusRowProps> = ({
 }) => (
   <span
     className={cn(
-      'inline-flex h-4 min-w-0 items-center gap-1.5 text-xs leading-4 text-foreground-500',
+      'inline-flex h-4 min-w-0 items-center gap-1.5 text-xs leading-4',
+      navigationStatusTextClasses[tone],
       className
     )}
     data-status-tone={tone}
@@ -77,9 +85,14 @@ const SiderItemIcon: React.FC<{
 }> = ({ active, children, prominence }) => (
   <span
     className={cn(
-      'flex size-8 shrink-0 items-center justify-center rounded-lg bg-default-100/70 text-foreground-500 transition-colors duration-150 group-hover:bg-default-200/80 group-hover:text-foreground',
-      prominence === 'navigation' ? 'text-base' : 'text-xl',
-      active && 'bg-primary/15 text-primary group-hover:bg-primary/20 group-hover:text-primary'
+      'flex size-8 shrink-0 items-center justify-center rounded-lg transition-colors duration-150',
+      prominence === 'navigation'
+        ? 'bg-transparent text-base text-foreground-500 group-hover:bg-default-100/70 group-hover:text-foreground'
+        : 'bg-default-100/70 text-xl text-foreground-500 group-hover:bg-default-200/80 group-hover:text-foreground',
+      active &&
+        (prominence === 'navigation'
+          ? 'bg-accent-soft text-accent-soft-foreground group-hover:bg-accent-soft group-hover:text-accent-soft-foreground'
+          : 'bg-primary/15 text-primary group-hover:bg-primary/20 group-hover:text-primary')
     )}
   >
     {children}
@@ -184,8 +197,8 @@ export const SiderNavItem: React.FC<SiderNavItemProps> = ({
     className={cn(
       'group flex items-center rounded-xl border transition-[background-color,border-color,box-shadow,color] duration-150',
       active
-        ? 'border-primary/40 bg-primary/12 text-primary ring-1 ring-inset ring-primary/15 hover:bg-primary/16'
-        : 'border-transparent hover:border-default-300 hover:bg-content2/80'
+        ? 'border-accent/45 bg-accent-soft/45 text-accent-soft-foreground ring-1 ring-inset ring-accent/15 hover:border-accent/55 hover:bg-accent-soft/65'
+        : 'border-separator/60 bg-surface/55 hover:border-accent/25 hover:bg-surface-secondary/70 hover:shadow-sm'
     )}
   >
     <button
