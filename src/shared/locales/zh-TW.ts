@@ -456,6 +456,7 @@ export const messages: Readonly<Record<string, string>> = {
   'Derive public key from private key': '從私鑰生成公鑰',
   Proxy: '代理',
   'Proxy host': '代理主機',
+  'Leave empty to use 127.0.0.1': '留空時使用 127.0.0.1',
   'Proxy mode': '代理模式',
   'Proxy groups': '代理組',
   'Proxy group settings': '代理組設定',

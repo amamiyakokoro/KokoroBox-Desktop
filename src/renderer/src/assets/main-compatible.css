@@ -244,22 +244,19 @@
 }
 
 .setting-item .tabs,
-.tray-icon-crop-modal .tabs,
-.connection-detail-modal .tabs {
+.tray-icon-crop-modal .tabs {
   --segment: var(--accent);
   --segment-foreground: var(--accent-foreground);
 }
 
 .setting-item .tabs__list-container,
-.tray-icon-crop-modal .tabs__list-container,
-.connection-detail-modal .tabs__list-container {
+.tray-icon-crop-modal .tabs__list-container {
   overflow: hidden;
   border-radius: var(--radius-lg);
 }
 
 .setting-item .tabs__list,
-.tray-icon-crop-modal .tabs__list,
-.connection-detail-modal .tabs__list {
+.tray-icon-crop-modal .tabs__list {
   width: fit-content;
   gap: calc(var(--spacing) * 0.5);
 }
@@ -271,8 +268,7 @@
 }
 
 .setting-item .tabs__tab,
-.tray-icon-crop-modal .tabs__tab,
-.connection-detail-modal .tabs__tab {
+.tray-icon-crop-modal .tabs__tab {
   height: calc(var(--spacing) * 7);
   width: fit-content;
   min-width: fit-content;
@@ -330,14 +326,12 @@
 }
 
 .setting-item .tabs__tab[data-selected='true'],
-.tray-icon-crop-modal .tabs__tab[data-selected='true'],
-.connection-detail-modal .tabs__tab[data-selected='true'] {
+.tray-icon-crop-modal .tabs__tab[data-selected='true'] {
   color: var(--accent-foreground);
 }
 
 .setting-item .tabs__indicator,
-.tray-icon-crop-modal .tabs__indicator,
-.connection-detail-modal .tabs__indicator {
+.tray-icon-crop-modal .tabs__indicator {
   border-radius: var(--radius-md);
   background-color: var(--accent);
   box-shadow: none;

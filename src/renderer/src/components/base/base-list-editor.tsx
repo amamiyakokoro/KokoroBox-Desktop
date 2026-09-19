@@ -1,6 +1,7 @@
 import { tr } from '../../../../shared/i18n'
 import React from 'react'
-import { Button, Input, Separator, Tooltip } from '@heroui-v3/react'
+import { Separator, Tooltip } from '@heroui-v3/react'
+import { KokoButton, KokoTextField } from './koko-form'
 import { MdDeleteForever } from 'react-icons/md'
 import type { ValidationResult } from '@renderer/utils/validate'
 
@@ -23,15 +24,14 @@ const ValidatedInput: React.FC<ValidatedInputProps> = ({
 }) => (
   <Tooltip delay={0} isOpen={!isValid}>
     <Tooltip.Trigger className="block min-w-0 w-full">
-      <Input
-        aria-invalid={!isValid}
-        className={isValid ? 'h-8' : 'h-8 ring-1 ring-danger'}
-        disabled={disabled}
-        fullWidth
+      <KokoTextField
+        className="w-full"
+        isDisabled={disabled}
+        isInvalid={!isValid}
         placeholder={placeholder}
+        size="sm"
         value={value}
-        variant="secondary"
-        onChange={(event) => onChange(event.target.value)}
+        onValueChange={onChange}
       />
     </Tooltip.Trigger>
     <Tooltip.Content
@@ -198,10 +198,10 @@ const EditableList: React.FC<EditableListProps> = ({
           const part2Error = validatePart2 ? validation2.error : validation.error
 
           return (
-            <div key={idx} className="flex items-center space-x-2">
+            <div key={idx} className="flex min-w-0 items-center gap-2">
               {isDual || objectMode ? (
                 <>
-                  <div className="w-1/3">
+                  <div className="min-w-0 w-1/3">
                     <ValidatedInput
                       disabled={disabled}
                       error={part1Error}
@@ -212,7 +212,7 @@ const EditableList: React.FC<EditableListProps> = ({
                     />
                   </div>
                   <span className="mx-1">:</span>
-                  <div className="flex-1">
+                  <div className="min-w-0 flex-1">
                     <ValidatedInput
                       disabled={disabled}
                       error={part2Error}
@@ -234,15 +234,16 @@ const EditableList: React.FC<EditableListProps> = ({
                 />
               )}
               {idx < processedItems.length && !disabled && (
-                <Button
+                <KokoButton
                   aria-label={tr('Delete')}
+                  className="h-8 min-h-8 w-8 min-w-8 shrink-0 rounded-lg text-danger hover:bg-danger/10 focus-visible:bg-danger/10"
                   isIconOnly
                   size="sm"
-                  variant="danger-soft"
+                  variant="ghost"
                   onPress={() => handleUpdate(idx, '', '')}
                 >
                   <MdDeleteForever className="text-lg" />
-                </Button>
+                </KokoButton>
               )}
             </div>
           )

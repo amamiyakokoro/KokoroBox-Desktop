@@ -230,9 +230,32 @@ test('shared settings primitives isolate HeroUI v3 compound APIs', () => {
   assert.match(settingCard, /<Disclosure>/)
   assert.match(settingCard, /<Surface/)
   assert.match(listEditor, /<Tooltip\.Content/)
-  assert.match(listEditor, /variant="danger-soft"/)
+  assert.match(listEditor, /<KokoTextField/)
+  assert.match(listEditor, /<KokoButton/)
+  assert.match(listEditor, /aria-label=\{tr\('Delete'\)\}/)
+  assert.match(listEditor, /variant="ghost"/)
+  assert.doesNotMatch(listEditor, /variant="danger-soft"/)
   assert.match(interfaceSelect, /<Select\.Trigger/)
   assert.match(interfaceSelect, /<ListBox\.Item/)
+})
+
+test('system proxy fields keep editable lists inside the settings control column', () => {
+  const proxy = readFileSync(
+    'src/renderer/src/components/settings/network/system-proxy-settings.tsx',
+    'utf8'
+  )
+
+  assert.match(proxy, /description=\{tr\('Leave empty to use 127\.0\.0\.1'\)\}/)
+  assert.match(proxy, /className="w-full max-w-72"/)
+  assert.match(proxy, /placeholder="127\.0\.0\.1"/)
+  assert.doesNotMatch(
+    proxy,
+    /placeholder=\{tr\('Default: 127\.0\.0\.1\. Change only if needed'\)\}/
+  )
+  assert.match(
+    proxy,
+    /<SettingItem title=\{tr\('Proxy bypass list'\)\} align="start">[\s\S]*?<EditableList[\s\S]*?<\/SettingItem>/
+  )
 })
 
 test('settings and Mihomo forms share the KokoroBox HeroUI v3 conventions', () => {
@@ -681,10 +704,13 @@ test('connection details use a sectioned desktop inspector without losing diagno
     'src/renderer/src/components/connections/connection-detail-modal.tsx',
     'utf8'
   )
+  const styles = readFileSync('src/renderer/src/assets/main-compatible.css', 'utf8')
 
   assert.match(detail, /<Drawer\.Backdrop/)
   assert.match(detail, /placement="right"/)
   assert.doesNotMatch(detail, /<Modal\./)
+  assert.match(detail, /variant="secondary"/)
+  assert.doesNotMatch(styles, /\.connection-detail-modal \.tabs/)
   assert.ok(detail.indexOf('<Tabs.ListContainer>') < detail.indexOf('<Drawer.Body'))
   assert.match(detail, /const summaryRows: DetailRow\[\]/)
   assert.match(detail, /const trafficRows: DetailRow\[\]/)
@@ -696,6 +722,8 @@ test('connection details use a sectioned desktop inspector without losing diagno
   assert.match(detail, /<BaseEditor value=\{rawJson\} language="json" readOnly \/>/)
   assert.match(detail, /grid-cols-\[minmax\(104px,0\.34fr\)_minmax\(0,1fr\)_auto\]/)
   assert.match(detail, /ariaLabel=\{`\$\{tr\('Copy rule'\)\}: \$\{row\.title\}`\}/)
+  assert.match(detail, /buttonVariant="ghost"/)
+  assert.match(detail, /min-h-9/)
 
   for (const field of [
     'Connection start time',

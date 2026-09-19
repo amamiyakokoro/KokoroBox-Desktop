@@ -208,12 +208,16 @@ const Sysproxy: React.FC<Props> = ({ embedded = false }) => {
       )}
       <FeatureSettingsLayout action={embedded ? saveButton : undefined}>
         <FeatureSettingsSection title={tr('Proxy configuration')}>
-          <SettingItem title={tr('Proxy host')} divider>
+          <SettingItem
+            title={tr('Proxy host')}
+            description={tr('Leave empty to use 127.0.0.1')}
+            divider
+          >
             <Input
               size="sm"
-              className="w-[50%]"
+              className="w-full max-w-72"
               value={values.host}
-              placeholder={tr('Default: 127.0.0.1. Change only if needed')}
+              placeholder="127.0.0.1"
               onValueChange={(v) => {
                 setValues({ ...values, host: v })
               }}
@@ -407,22 +411,26 @@ const Sysproxy: React.FC<Props> = ({ embedded = false }) => {
                     {tr('Add default proxy bypasses')}
                   </Button>
                 </SettingItem>
-                <SettingItem title={tr('Proxy bypass list')}>
-                  <Button
-                    size="sm"
-                    onPress={async () => {
-                      setOpenEditor(true)
-                    }}
-                  >
-                    {tr('Edit')}
-                  </Button>
+                <SettingItem title={tr('Proxy bypass list')} align="start">
+                  <div className="flex w-full min-w-0 flex-col gap-2">
+                    <div className="flex justify-end">
+                      <Button
+                        size="sm"
+                        onPress={async () => {
+                          setOpenEditor(true)
+                        }}
+                      >
+                        {tr('Edit')}
+                      </Button>
+                    </div>
+                    <EditableList
+                      items={values.bypass}
+                      onChange={(list) => setValues({ ...values, bypass: list as string[] })}
+                      placeholder={tr('Example: *.baidu.com')}
+                      divider={false}
+                    />
+                  </div>
                 </SettingItem>
-                <EditableList
-                  items={values.bypass}
-                  onChange={(list) => setValues({ ...values, bypass: list as string[] })}
-                  placeholder={tr('Example: *.baidu.com')}
-                  divider={false}
-                />
               </>
             )}
           </FeatureSettingsSection>

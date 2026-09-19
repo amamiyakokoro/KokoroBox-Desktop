@@ -480,6 +480,7 @@ export const messages: Readonly<Record<string, string>> = {
   'Derive public key from private key': 'Derive public key from private key',
   Proxy: 'Proxy',
   'Proxy host': 'Proxy host',
+  'Leave empty to use 127.0.0.1': 'Leave empty to use 127.0.0.1',
   'Proxy mode': 'Proxy mode',
   'Proxy groups': 'Proxy groups',
   'Proxy group settings': 'Proxy group settings',

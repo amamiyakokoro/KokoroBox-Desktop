@@ -116,7 +116,7 @@ const DetailSection = ({ title, children }: DetailSectionProps) => {
   const headingId = useId()
 
   return (
-    <section aria-labelledby={headingId} className="pb-5 last:pb-0">
+    <section aria-labelledby={headingId} className="pb-3 last:pb-0">
       <h3
         id={headingId}
         className="mb-1 px-1 text-xs font-medium tracking-wide text-foreground-500"
@@ -166,8 +166,8 @@ const ConnectionDetailModal = ({ connection, onClose }: Props) => {
       row.kind === 'copy' ? (
         <KokoActionMenu
           ariaLabel={`${tr('Copy rule')}: ${row.title}`}
-          buttonClassName="app-nodrag h-7 min-h-7 w-7 min-w-7 rounded-lg text-foreground-500"
-          buttonVariant="tertiary"
+          buttonClassName="app-nodrag h-7 min-h-7 w-7 min-w-7 rounded-md text-foreground-400 hover:bg-default/40 hover:text-foreground focus-visible:text-foreground"
+          buttonVariant="ghost"
           items={buildCopyMenuItems(row.value, row.displayName, row.prefix)
             .filter((item) => item !== null)
             .map(({ key, text }) => ({ id: key, label: text, textValue: text }))}
@@ -185,7 +185,7 @@ const ConnectionDetailModal = ({ connection, onClose }: Props) => {
     return (
       <div
         key={row.title}
-        className="grid min-h-10 grid-cols-[minmax(104px,0.34fr)_minmax(0,1fr)_auto] items-center gap-x-3 border-t border-separator/60 px-1 py-2 first:border-t-0"
+        className="grid min-h-9 grid-cols-[minmax(104px,0.34fr)_minmax(0,1fr)_auto] items-center gap-x-3 border-t border-separator/60 px-1 py-1.5 first:border-t-0"
       >
         <div className="min-w-0 text-xs leading-5 text-foreground-500">{row.title}</div>
         <div className={valueClassName} title={title}>
@@ -517,6 +517,7 @@ const ConnectionDetailModal = ({ connection, onClose }: Props) => {
             aria-label={tr('Connection details view')}
             className="flex min-h-0 flex-1 flex-col"
             selectedKey={viewMode}
+            variant="secondary"
             onSelectionChange={(key) => setViewMode(key as 'detail' | 'raw')}
           >
             <div className="app-nodrag shrink-0 border-b border-separator/70 px-5 py-2">
@@ -536,7 +537,7 @@ const ConnectionDetailModal = ({ connection, onClose }: Props) => {
             <Drawer.Body className="min-h-0 flex-1 overflow-hidden p-0">
               <Tabs.Panel
                 id="detail"
-                className="mt-0! h-full overflow-y-auto px-5 py-4 outline-hidden"
+                className="mt-0! h-full overflow-y-auto px-5 py-3 outline-hidden"
               >
                 <DetailSection title={tr('General')}>{renderRows(summaryRows)}</DetailSection>
                 <DetailSection title={tr('Traffic usage')}>{renderRows(trafficRows)}</DetailSection>
@@ -545,8 +546,8 @@ const ConnectionDetailModal = ({ connection, onClose }: Props) => {
                   <DetailSection title={tr('Process')}>{renderRows(processRows)}</DetailSection>
                 ) : null}
                 {advancedRows.length > 0 ? (
-                  <details className="group border-t border-separator/70 pt-4">
-                    <summary className="flex min-h-10 cursor-pointer list-none items-center justify-between rounded-lg px-1 text-xs font-medium tracking-wide text-foreground-500 outline-offset-2 transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary">
+                  <details className="group border-t border-separator/70 pt-2">
+                    <summary className="flex min-h-9 cursor-pointer list-none items-center justify-between rounded-lg px-1 text-xs font-medium tracking-wide text-foreground-500 outline-offset-2 transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary">
                       <span>{tr('Advanced options')}</span>
                       <HiChevronDown
                         aria-hidden="true"
