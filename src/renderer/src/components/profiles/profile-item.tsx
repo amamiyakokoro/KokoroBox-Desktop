@@ -1,8 +1,16 @@
 import { tr } from '../../../../shared/i18n'
 import { Button, Card, Chip, Meter, Tooltip } from '@heroui/react'
-import { KokoActionMenu } from '../base/koko-collections'
+import { KokoActionMenu, type KokoActionMenuItem } from '../base/koko-collections'
 import { calcTraffic } from '@renderer/utils/calc'
 import { IoMdMore, IoMdRefresh } from 'react-icons/io'
+import {
+  MdDeleteOutline,
+  MdEdit,
+  MdEditDocument,
+  MdHome,
+  MdOpenInNew,
+  MdQrCode2
+} from 'react-icons/md'
 import dayjs from 'dayjs'
 import React, { useEffect, useMemo, useState } from 'react'
 import EditFileModal from './edit-file-modal'
@@ -24,14 +32,6 @@ interface Props {
   mutateProfileConfig: () => void
   onClick: () => Promise<void>
   switching: boolean
-}
-
-interface MenuItem {
-  key: string
-  label: string
-  showDivider: boolean
-  color: 'default' | 'danger'
-  className: string
 }
 
 const ProfileItem: React.FC<Props> = (props) => {
@@ -69,58 +69,58 @@ const ProfileItem: React.FC<Props> = (props) => {
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [showQrCode, setShowQrCode] = useState(false)
 
-  const menuItems: MenuItem[] = useMemo(() => {
-    const list = [
+  const menuItems = useMemo<KokoActionMenuItem[]>(() => {
+    const items: KokoActionMenuItem[] = [
       {
-        key: 'edit-info',
+        id: 'edit-info',
         label: tr('Edit details'),
-        showDivider: false,
-        color: 'default',
-        className: ''
-      } as MenuItem,
+        textValue: tr('Edit details'),
+        startContent: <MdEdit />
+      },
       {
-        key: 'edit-file',
+        id: 'edit-file',
         label: tr('Edit file'),
-        showDivider: false,
-        color: 'default',
-        className: ''
-      } as MenuItem,
+        textValue: tr('Edit file'),
+        startContent: <MdEditDocument />
+      },
       {
-        key: 'open-file',
+        id: 'open-file',
         label: tr('Open file'),
-        showDivider: !(info.type === 'remote' && info.url),
-        color: 'default',
-        className: ''
-      } as MenuItem,
+        textValue: tr('Open file'),
+        startContent: <MdOpenInNew />
+      },
       ...(info.type === 'remote' && info.url
         ? [
             {
-              key: 'qrcode',
+              id: 'qrcode',
               label: tr('QR code'),
-              showDivider: true,
-              color: 'default',
-              className: ''
-            } as MenuItem
+              textValue: tr('QR code'),
+              startContent: <MdQrCode2 />
+            }
           ]
-        : []),
-      {
-        key: 'delete',
-        label: tr('Delete'),
-        showDivider: false,
-        color: 'danger',
-        className: 'text-danger'
-      } as MenuItem
+        : [])
     ]
+
     if (info.home) {
-      list.unshift({
-        key: 'home',
+      const lastItem = items.at(-1)
+      if (lastItem) lastItem.dividerAfter = true
+      items.push({
+        id: 'home',
         label: tr('Home'),
-        showDivider: false,
-        color: 'default',
-        className: ''
-      } as MenuItem)
+        textValue: tr('Home'),
+        startContent: <MdHome />
+      })
     }
-    return list
+
+    items.push({
+      id: 'delete',
+      label: tr('Delete'),
+      textValue: tr('Delete'),
+      startContent: <MdDeleteOutline />,
+      tone: 'danger'
+    })
+
+    return items
   }, [info])
 
   const onMenuAction = async (id: string): Promise<void> => {
@@ -271,13 +271,7 @@ const ProfileItem: React.FC<Props> = (props) => {
                 <KokoActionMenu
                   ariaLabel={tr('Edit details')}
                   buttonClassName="h-8 w-8 min-w-8"
-                  items={menuItems.map((item) => ({
-                    id: item.key,
-                    label: item.label,
-                    textValue: item.label,
-                    dividerAfter: item.showDivider,
-                    tone: item.color === 'danger' ? 'danger' : 'default'
-                  }))}
+                  items={menuItems}
                   onAction={onMenuAction}
                 >
                   <IoMdMore color="default" className="text-[20px] text-foreground" />

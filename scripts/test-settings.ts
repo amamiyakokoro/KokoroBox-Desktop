@@ -426,6 +426,18 @@ test('collection and overlay primitives preserve HeroUI v3 identity and selectio
   assert.match(menus, /<Dropdown\.Item[\s\S]*id=\{item\.id\}/)
   assert.match(menus, /textValue=\{item\.textValue\}/)
   assert.match(menus, /onAction=\{\(key\) => void onAction\(String\(key\)\)\}/)
+  assert.match(menus, /<Dropdown\.Section>/)
+  assert.match(menus, /<Label className="block truncate">\{item\.label\}<\/Label>/)
+  assert.match(
+    menus,
+    /<Description className="block truncate">\{item\.description\}<\/Description>/
+  )
+  assert.match(menus, /variant=\{item\.tone === 'danger' \? 'danger' : 'default'\}/)
+  assert.match(menus, /changesDangerGroup/)
+  assert.match(menus, /if \(currentSection\.length > 0\) sections\.push\(currentSection\)/)
+  assert.match(menus, /\{sectionIndex > 0 \? <Separator \/> : null\}/)
+  assert.equal(menus.match(/<Separator \/>/g)?.length, 1)
+  assert.doesNotMatch(menus, /border-b border-divider/)
   assert.match(menus, /<Dropdown>\s*<Button/)
   assert.match(menus, /className=\{buttonClassName\}/)
   assert.match(menus, /fullWidth=\{buttonFullWidth\}/)
@@ -455,6 +467,17 @@ test('collection and overlay primitives preserve HeroUI v3 identity and selectio
   assert.match(profiles, /buttonVariant="secondary"/)
   assert.doesNotMatch(profiles, /buttonColor=/)
   assert.match(profileItem, /buttonClassName="[^"]*h-8[^"]*w-8[^"]*min-w-8/)
+  assert.match(profileItem, /items=\{menuItems\}/)
+  assert.match(
+    profileItem,
+    /id: 'delete'[\s\S]*startContent: <MdDeleteOutline \/>[\s\S]*tone: 'danger'/
+  )
+  assert.match(profileItem, /startContent: <MdEdit \/>/)
+  assert.match(profileItem, /startContent: <MdEditDocument \/>/)
+  assert.match(profileItem, /startContent: <MdOpenInNew \/>/)
+  assert.match(profileItem, /startContent: <MdQrCode2 \/>/)
+  assert.match(profileItem, /startContent: <MdHome \/>/)
+  assert.doesNotMatch(profileItem, /showDivider|className: 'text-danger'/)
   assert.match(tray, /<Accordion[\s\S]*allowsMultipleExpanded/)
   assert.match(tray, /<Accordion\.Item[\s\S]*id=\{group\.name\}/)
   assert.match(tray, /<Accordion\.Trigger/)
