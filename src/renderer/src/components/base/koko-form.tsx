@@ -7,7 +7,8 @@ import {
   Switch,
   Tooltip,
   cn,
-  type ButtonProps
+  type ButtonProps,
+  type SelectProps
 } from '@heroui-v3/react'
 import React from 'react'
 import { LuX } from 'react-icons/lu'
@@ -112,7 +113,7 @@ interface KokoSelectBaseProps {
   labelPlacement?: 'inside' | 'outside'
   options: KokoSelectOption[]
   placeholder?: string
-  triggerClassName?: string
+  variant?: SelectProps<object>['variant']
 }
 
 interface KokoSingleSelectProps extends KokoSelectBaseProps {
@@ -135,8 +136,7 @@ const KokoSelectContent: React.FC<{
   labelPlacement: 'inside' | 'outside'
   options: KokoSelectOption[]
   placeholder?: string
-  triggerClassName?: string
-}> = ({ density, label, labelPlacement, options, placeholder, triggerClassName }) => (
+}> = ({ density, label, labelPlacement, options, placeholder }) => (
   <>
     {label ? (
       <Label
@@ -152,8 +152,8 @@ const KokoSelectContent: React.FC<{
     ) : null}
     <Select.Trigger
       className={cn(
-        labelPlacement === 'inside' ? 'h-12 min-h-12 items-end pb-1.5 pt-5' : 'h-8 min-h-8 py-0',
-        triggerClassName
+        labelPlacement === 'inside' && 'h-12 min-h-12 items-end pb-1.5 pt-5',
+        labelPlacement === 'outside' && density === 'compact' && 'h-8 min-h-8 py-0'
       )}
     >
       <Select.Value className="min-w-0 truncate">
@@ -165,26 +165,15 @@ const KokoSelectContent: React.FC<{
     </Select.Trigger>
     <Select.Popover
       className={cn(
-        'koko-select__popover shadow-overlay',
-        density === 'compact'
-          ? 'w-max max-w-72 rounded-md'
-          : 'max-w-[min(24rem,calc(100vw-2rem))] rounded-lg'
+        density === 'compact' ? 'w-max max-w-72' : 'max-w-[min(24rem,calc(100vw-2rem))]'
       )}
     >
-      <ListBox
-        className={cn(
-          'overflow-hidden p-1 text-sm',
-          density === 'compact' ? 'rounded-md' : 'rounded-lg'
-        )}
-      >
+      <ListBox>
         {options.map((option) => (
           <ListBox.Item
             id={option.id}
             key={option.id}
-            className={cn(
-              'rounded-md text-sm',
-              density === 'compact' ? 'min-h-8 px-2 py-1' : 'min-h-8 px-2.5 py-1.5'
-            )}
+            className={cn(density === 'compact' && 'min-h-8 px-2 py-1')}
             isDisabled={option.isDisabled}
             textValue={
               option.textValue ?? (typeof option.label === 'string' ? option.label : option.id)
@@ -198,7 +187,7 @@ const KokoSelectContent: React.FC<{
                 </span>
               ) : null}
             </span>
-            <ListBox.ItemIndicator className="size-3.5" />
+            <ListBox.ItemIndicator />
           </ListBox.Item>
         ))}
       </ListBox>
@@ -216,7 +205,7 @@ export const KokoSelect: React.FC<KokoSelectProps> = (props) => {
     labelPlacement = 'outside',
     options,
     placeholder,
-    triggerClassName
+    variant = 'primary'
   } = props
 
   if (props.multiple) {
@@ -227,7 +216,7 @@ export const KokoSelect: React.FC<KokoSelectProps> = (props) => {
         isDisabled={isDisabled}
         selectionMode="multiple"
         value={props.value}
-        variant="secondary"
+        variant={variant}
         onChange={(value) => {
           if (disallowEmptySelection && value.length === 0) return
           void props.onChange(value.map(String))
@@ -239,7 +228,6 @@ export const KokoSelect: React.FC<KokoSelectProps> = (props) => {
           labelPlacement={labelPlacement}
           options={options}
           placeholder={placeholder}
-          triggerClassName={triggerClassName}
         />
       </Select>
     )
@@ -251,7 +239,7 @@ export const KokoSelect: React.FC<KokoSelectProps> = (props) => {
       className={cn(labelPlacement === 'inside' && 'relative', className)}
       isDisabled={isDisabled}
       value={props.value}
-      variant="secondary"
+      variant={variant}
       onChange={(value) => {
         if (value == null || Array.isArray(value)) return
         if (disallowEmptySelection && value === '') return
@@ -264,7 +252,6 @@ export const KokoSelect: React.FC<KokoSelectProps> = (props) => {
         labelPlacement={labelPlacement}
         options={options}
         placeholder={placeholder}
-        triggerClassName={triggerClassName}
       />
     </Select>
   )

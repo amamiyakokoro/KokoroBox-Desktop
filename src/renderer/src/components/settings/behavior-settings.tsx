@@ -124,6 +124,7 @@ const BehaviorSettings: React.FC<Props> = ({
             >
               <KokoSelect
                 aria-label={tr('Environment variable type')}
+                variant="secondary"
                 className="w-37.5"
                 multiple
                 value={envType}

@@ -1,6 +1,5 @@
-import { Dropdown, cn } from '@heroui-v3/react'
+import { Button, Dropdown, cn, type ButtonProps } from '@heroui-v3/react'
 import type React from 'react'
-import { KokoButton, type KokoButtonProps } from './koko-form'
 
 export interface KokoActionMenuItem {
   id: string
@@ -16,9 +15,8 @@ export interface KokoActionMenuItem {
 interface KokoActionMenuProps {
   ariaLabel: string
   buttonClassName?: string
-  buttonColor?: KokoButtonProps['color']
   buttonFullWidth?: boolean
-  buttonVariant?: KokoButtonProps['variant']
+  buttonVariant?: ButtonProps['variant']
   children: React.ReactNode
   isDisabled?: boolean
   isIconOnly?: boolean
@@ -26,16 +24,14 @@ interface KokoActionMenuProps {
   onAction: (id: string) => void | Promise<void>
   placement?: React.ComponentProps<typeof Dropdown.Popover>['placement']
   popoverClassName?: string
-  size?: KokoButtonProps['size']
-  triggerClassName?: string
+  size?: ButtonProps['size']
 }
 
 export const KokoActionMenu: React.FC<KokoActionMenuProps> = ({
   ariaLabel,
   buttonClassName,
-  buttonColor = 'default',
   buttonFullWidth = false,
-  buttonVariant = 'light',
+  buttonVariant = 'ghost',
   children,
   isDisabled,
   isIconOnly = true,
@@ -43,15 +39,13 @@ export const KokoActionMenu: React.FC<KokoActionMenuProps> = ({
   onAction,
   placement = 'bottom end',
   popoverClassName,
-  size = 'sm',
-  triggerClassName
+  size = 'sm'
 }) => {
   return (
     <Dropdown>
-      <KokoButton
+      <Button
         aria-label={ariaLabel}
-        className={cn(buttonClassName, triggerClassName)}
-        color={buttonColor}
+        className={buttonClassName}
         fullWidth={buttonFullWidth}
         isDisabled={isDisabled}
         isIconOnly={isIconOnly}
@@ -59,16 +53,9 @@ export const KokoActionMenu: React.FC<KokoActionMenuProps> = ({
         variant={buttonVariant}
       >
         {children}
-      </KokoButton>
-      <Dropdown.Popover
-        placement={placement}
-        className={cn('min-w-40 rounded-lg', popoverClassName)}
-      >
-        <Dropdown.Menu
-          aria-label={ariaLabel}
-          className="p-1 text-sm"
-          onAction={(key) => void onAction(String(key))}
-        >
+      </Button>
+      <Dropdown.Popover placement={placement} className={popoverClassName}>
+        <Dropdown.Menu aria-label={ariaLabel} onAction={(key) => void onAction(String(key))}>
           {items.map((item) => (
             <Dropdown.Item
               id={item.id}
@@ -76,10 +63,7 @@ export const KokoActionMenu: React.FC<KokoActionMenuProps> = ({
               isDisabled={item.isDisabled}
               textValue={item.textValue}
               variant={item.tone === 'danger' ? 'danger' : 'default'}
-              className={cn(
-                'min-h-8 rounded-md px-2.5 py-1.5',
-                item.dividerAfter && 'border-b border-divider'
-              )}
+              className={cn(item.dividerAfter && 'border-b border-divider')}
             >
               <span className="flex min-w-0 items-center gap-2">
                 {item.startContent ? <span className="shrink-0">{item.startContent}</span> : null}

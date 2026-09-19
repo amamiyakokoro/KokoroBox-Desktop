@@ -17,6 +17,7 @@ const CoreLogSetting: React.FC<CoreLogSettingProps> = ({ config, onChange }) => 
       <SettingItem title={tr('Log level')}>
         <KokoSelect
           aria-label={tr('Log level')}
+          variant="secondary"
           className="w-25"
           value={logLevel}
           options={['silent', 'error', 'warning', 'info', 'debug'].map((id) => ({

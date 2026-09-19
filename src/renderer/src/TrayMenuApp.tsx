@@ -1,7 +1,6 @@
 import { tr } from '../../shared/i18n'
 import { useEffect, useState, useMemo } from 'react'
-import { Accordion, Chip, ScrollShadow } from '@heroui-v3/react'
-import { KokoButton as Button } from './components/base/koko-form'
+import { Accordion, Button, Chip, ScrollShadow } from '@heroui-v3/react'
 import { IoRefresh, IoClose, IoCheckmarkCircle } from 'react-icons/io5'
 import { useGroups } from './hooks/use-groups'
 import { mihomoChangeProxy, mihomoGroupDelay, mihomoCloseConnections } from './utils/ipc'
@@ -106,7 +105,7 @@ const TrayMenuApp: React.FC = () => {
         <div className="flex items-center gap-1">
           <Button
             size="sm"
-            variant="light"
+            variant="ghost"
             isIconOnly
             aria-label={tr('Refresh')}
             onPress={handleRefresh}
@@ -116,7 +115,7 @@ const TrayMenuApp: React.FC = () => {
           </Button>
           <Button
             size="sm"
-            variant="light"
+            variant="ghost"
             isIconOnly
             aria-label={tr('Close')}
             onPress={handleClose}
@@ -174,9 +173,9 @@ const TrayMenuApp: React.FC = () => {
                   </Accordion.Trigger>
                   <Button
                     size="sm"
-                    variant="light"
+                    variant="ghost"
                     isIconOnly
-                    isLoading={testingGroup === group.name}
+                    isPending={testingGroup === group.name}
                     aria-label={tr('Test group latency')}
                     className="h-5 w-5 min-w-5"
                     onPress={() => handleTestDelay(group.name, group.testUrl)}

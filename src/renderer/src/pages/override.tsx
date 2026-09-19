@@ -226,8 +226,7 @@ const Override: React.FC = () => {
           <KokoActionMenu
             ariaLabel={tr('Overrides')}
             buttonClassName="ml-2"
-            buttonColor="primary"
-            buttonVariant="solid"
+            buttonVariant="primary"
             items={[
               {
                 id: 'open',

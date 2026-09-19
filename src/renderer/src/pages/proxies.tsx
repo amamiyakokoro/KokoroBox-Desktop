@@ -1,7 +1,6 @@
 import { tr } from '../../../shared/i18n'
-import { Avatar, Card } from '@heroui-v3/react'
+import { Avatar, Button, Card } from '@heroui-v3/react'
 import BasePage from '@renderer/components/base/base-page'
-import { KokoButton as Button } from '@renderer/components/base/koko-form'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import {
   getImageDataURL,
@@ -177,8 +176,8 @@ const GroupHeader = memo(function GroupHeader({
                 onKeyDown={(e) => e.stopPropagation()}
               >
                 <Button
-                  variant="light"
-                  isLoading={delaying}
+                  variant="ghost"
+                  isPending={delaying}
                   size="sm"
                   isIconOnly
                   aria-label={tr('Test group latency')}
@@ -187,7 +186,7 @@ const GroupHeader = memo(function GroupHeader({
                   <MdOutlineSpeed className="text-lg text-foreground-500" />
                 </Button>
                 <Button
-                  variant="light"
+                  variant="ghost"
                   size="sm"
                   isIconOnly
                   aria-label={tr('Show selected proxy')}
@@ -675,7 +674,7 @@ const Proxies: React.FC = () => {
         <Button
           size="sm"
           isIconOnly
-          variant="light"
+          variant="ghost"
           className="app-nodrag"
           aria-label={tr('Proxy group settings')}
           onPress={() => {

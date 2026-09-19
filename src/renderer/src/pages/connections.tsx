@@ -978,7 +978,6 @@ const Connections: React.FC = () => {
             options={[
               {
                 id: 'active',
-                indicatorClassName: 'bg-primary',
                 label: (
                   <span className="flex items-center gap-1.5 px-1">
                     <span>{tr('Active')}</span>
@@ -997,7 +996,6 @@ const Connections: React.FC = () => {
               },
               {
                 id: 'closed',
-                indicatorClassName: 'bg-danger',
                 label: (
                   <span className="flex items-center gap-1.5 px-1">
                     <span>{tr('Off')}</span>
@@ -1086,6 +1084,7 @@ const Connections: React.FC = () => {
             className="w-34 min-w-24 shrink-0"
             density="compact"
             disallowEmptySelection
+            variant="secondary"
             options={[
               { id: 'upload', label: tr('Uploaded') },
               { id: 'download', label: tr('Downloaded') },
@@ -1094,7 +1093,6 @@ const Connections: React.FC = () => {
               { id: 'time', label: tr('Time') },
               { id: 'process', label: tr('Process name') }
             ]}
-            triggerClassName="data-[hover=true]:bg-default-200"
             value={connectionOrderBy}
             onChange={handleOrderByChange}
           />

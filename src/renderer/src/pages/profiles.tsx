@@ -271,8 +271,7 @@ const Profiles: React.FC = () => {
           <KokoActionMenu
             ariaLabel={tr('New configuration')}
             buttonClassName="ml-2 h-8 w-8 min-w-8 new-profile"
-            buttonColor="primary"
-            buttonVariant="solid"
+            buttonVariant="primary"
             items={[
               {
                 id: 'kokoro',

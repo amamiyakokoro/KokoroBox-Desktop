@@ -416,6 +416,7 @@ const AppearanceConfig: React.FC = () => {
           {customThemes && (
             <KokoSelect
               aria-label={tr('Custom theme')}
+              variant="secondary"
               className="w-[60%]"
               value={customTheme}
               options={customThemes.map((theme) => ({ id: theme.key, label: theme.label }))}

@@ -10,19 +10,14 @@ export const settingItemProps = {
 export interface KokoTabOption {
   id: string
   label: React.ReactNode
-  indicatorClassName?: string
   isDisabled?: boolean
 }
 
 interface KokoTabsProps {
   ariaLabel: string
   className?: string
-  indicatorClassName?: string
-  listClassName?: string
-  listContainerClassName?: string
   options: KokoTabOption[]
   selectedKey: string
-  tabClassName?: string
   variant?: React.ComponentProps<typeof Tabs>['variant']
   onChange: (key: string) => void | Promise<void>
 }
@@ -30,12 +25,8 @@ interface KokoTabsProps {
 export const KokoTabs: React.FC<KokoTabsProps> = ({
   ariaLabel,
   className,
-  indicatorClassName,
-  listClassName,
-  listContainerClassName,
   options,
   selectedKey,
-  tabClassName,
   variant,
   onChange
 }) => {
@@ -46,17 +37,12 @@ export const KokoTabs: React.FC<KokoTabsProps> = ({
       variant={variant}
       onSelectionChange={(key) => void onChange(String(key))}
     >
-      <Tabs.ListContainer className={listContainerClassName}>
-        <Tabs.List aria-label={ariaLabel} className={listClassName}>
+      <Tabs.ListContainer>
+        <Tabs.List aria-label={ariaLabel}>
           {options.map((option) => (
-            <Tabs.Tab
-              key={option.id}
-              id={option.id}
-              className={tabClassName}
-              isDisabled={option.isDisabled}
-            >
+            <Tabs.Tab key={option.id} id={option.id} isDisabled={option.isDisabled}>
               {option.label}
-              <Tabs.Indicator className={option.indicatorClassName ?? indicatorClassName} />
+              <Tabs.Indicator />
             </Tabs.Tab>
           ))}
         </Tabs.List>

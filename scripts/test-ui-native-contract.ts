@@ -88,6 +88,73 @@ const allowedRadiusTokens = new Set([
   'radius-xl'
 ])
 
+const temporaryKokoShimConsumers = {
+  KokoButton: new Set([
+    'src/renderer/src/components/app-routing/group-name-modal.tsx',
+    'src/renderer/src/components/base/base-list-editor.tsx',
+    'src/renderer/src/components/connections/connection-item.tsx',
+    'src/renderer/src/components/dns/dns-server-list.tsx',
+    'src/renderer/src/components/mihomo/advanced-settings.tsx',
+    'src/renderer/src/components/mihomo/controller-setting.tsx',
+    'src/renderer/src/components/mihomo/env-setting.tsx',
+    'src/renderer/src/components/mihomo/interface-modal.tsx',
+    'src/renderer/src/components/mihomo/log-setting.tsx',
+    'src/renderer/src/components/mihomo/macos-service-setup.tsx',
+    'src/renderer/src/components/mihomo/permission-modal.tsx',
+    'src/renderer/src/components/mihomo/port-setting.tsx',
+    'src/renderer/src/components/mihomo/service-modal.tsx',
+    'src/renderer/src/components/profiles/profile-item.tsx',
+    'src/renderer/src/components/resources/proxy-provider.tsx',
+    'src/renderer/src/components/settings/actions.tsx',
+    'src/renderer/src/components/settings/appearance-confis.tsx',
+    'src/renderer/src/components/settings/behavior-settings.tsx',
+    'src/renderer/src/components/settings/core-runtime-config.tsx',
+    'src/renderer/src/components/settings/general-config.tsx',
+    'src/renderer/src/components/settings/network/system-proxy-settings.tsx',
+    'src/renderer/src/components/settings/network/tun-settings.tsx',
+    'src/renderer/src/components/settings/shortcut-config.tsx',
+    'src/renderer/src/components/settings/sider-config.tsx',
+    'src/renderer/src/components/settings/subscription-integration-settings.tsx',
+    'src/renderer/src/components/settings/webdav-config.tsx',
+    'src/renderer/src/pages/logs.tsx'
+  ]),
+  KokoSwitch: new Set([
+    'src/renderer/src/components/dns/advanced-dns-setting.tsx',
+    'src/renderer/src/components/mihomo/advanced-settings.tsx',
+    'src/renderer/src/components/mihomo/controller-setting.tsx',
+    'src/renderer/src/components/mihomo/env-setting.tsx',
+    'src/renderer/src/components/mihomo/log-setting.tsx',
+    'src/renderer/src/components/mihomo/port-setting.tsx',
+    'src/renderer/src/components/settings/appearance-confis.tsx',
+    'src/renderer/src/components/settings/behavior-settings.tsx',
+    'src/renderer/src/components/settings/general-config.tsx',
+    'src/renderer/src/components/settings/network/dns-settings.tsx',
+    'src/renderer/src/components/settings/network/mihomo-settings.tsx',
+    'src/renderer/src/components/settings/network/sniffer-settings.tsx',
+    'src/renderer/src/components/settings/network/system-proxy-settings.tsx',
+    'src/renderer/src/components/settings/network/tun-settings.tsx',
+    'src/renderer/src/components/settings/sider-config.tsx',
+    'src/renderer/src/components/settings/subscription-integration-settings.tsx'
+  ]),
+  KokoTooltip: new Set([
+    'src/renderer/src/components/dns/advanced-dns-setting.tsx',
+    'src/renderer/src/components/dns/dns-server-list.tsx',
+    'src/renderer/src/components/mihomo/advanced-settings.tsx',
+    'src/renderer/src/components/mihomo/controller-setting.tsx',
+    'src/renderer/src/components/mihomo/log-setting.tsx',
+    'src/renderer/src/components/profiles/profile-item.tsx',
+    'src/renderer/src/components/settings/actions.tsx',
+    'src/renderer/src/components/settings/appearance-confis.tsx',
+    'src/renderer/src/components/settings/behavior-settings.tsx',
+    'src/renderer/src/components/settings/general-config.tsx',
+    'src/renderer/src/components/settings/network/dns-settings.tsx',
+    'src/renderer/src/components/settings/network/system-proxy-settings.tsx',
+    'src/renderer/src/components/settings/sider-config.tsx',
+    'src/renderer/src/components/settings/subscription-integration-settings.tsx',
+    'src/renderer/src/pages/logs.tsx'
+  ])
+}
+
 const internalClassPattern =
   /\.(?:button|close-button|switch|tabs|select|list-box(?:-item)?|input(?:-group)?|modal|drawer|tooltip|card|toast|slider|meter|progress-bar)(?:(?:__|--)[\w-]+)?(?=[\s.:#>+~,\u005b]|$)/g
 
@@ -191,6 +258,23 @@ test('Koko compatibility component exports remain bounded', () => {
     assert.ok(allowedKokoExports.has(name), `new Koko compatibility wrapper: ${name}`)
   }
   assert.ok(exports.size <= allowedKokoExports.size)
+})
+
+test('temporary Koko migration shims cannot gain new consumers', () => {
+  const sourceFiles = collectSourceFiles(rendererRoot).filter(
+    (file) => relative('.', file) !== 'src/renderer/src/components/base/koko-form.tsx'
+  )
+
+  for (const [shim, allowedConsumers] of Object.entries(temporaryKokoShimConsumers)) {
+    const actualConsumers = sourceFiles
+      .filter((file) => new RegExp(`\\b${shim}\\b`).test(readFileSync(file, 'utf8')))
+      .map((file) => relative('.', file))
+
+    for (const file of actualConsumers) {
+      assert.ok(allowedConsumers.has(file), `new ${shim} consumer added in ${file}`)
+    }
+    assert.ok(actualConsumers.length <= allowedConsumers.size)
+  }
 })
 
 test('the native-first ownership contract documents the migration boundary', () => {

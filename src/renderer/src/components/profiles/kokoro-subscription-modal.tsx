@@ -320,6 +320,7 @@ const KokoroSettingsPage: React.FC = () => {
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                       <KokoSelect
                         aria-label={tr('Plan')}
+                        variant="secondary"
                         label={tr('Plan')}
                         labelPlacement="inside"
                         isDisabled={options.plans.length === 0}
@@ -335,6 +336,7 @@ const KokoroSettingsPage: React.FC = () => {
                       />
                       <KokoSelect
                         aria-label={tr('Internet provider')}
+                        variant="secondary"
                         label={tr('Internet provider')}
                         labelPlacement="inside"
                         disallowEmptySelection
@@ -352,6 +354,7 @@ const KokoroSettingsPage: React.FC = () => {
                       />
                       <KokoSelect
                         aria-label={tr('Protocol')}
+                        variant="secondary"
                         label={tr('Protocol')}
                         labelPlacement="inside"
                         disallowEmptySelection
@@ -383,6 +386,7 @@ const KokoroSettingsPage: React.FC = () => {
                       ) : (
                         <KokoSelect
                           aria-label={tr('Connection mode')}
+                          variant="secondary"
                           label={tr('Connection mode')}
                           labelPlacement="inside"
                           disallowEmptySelection
@@ -396,6 +400,7 @@ const KokoroSettingsPage: React.FC = () => {
                       )}
                       <KokoSelect
                         aria-label={tr('Rule source')}
+                        variant="secondary"
                         label={tr('Rule source')}
                         labelPlacement="inside"
                         disallowEmptySelection
@@ -412,6 +417,7 @@ const KokoroSettingsPage: React.FC = () => {
                       />
                       <KokoSelect
                         aria-label={tr('Unmatched traffic')}
+                        variant="secondary"
                         label={tr('Unmatched traffic')}
                         labelPlacement="inside"
                         disallowEmptySelection

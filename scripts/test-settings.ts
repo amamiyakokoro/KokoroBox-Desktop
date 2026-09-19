@@ -287,10 +287,13 @@ test('settings and Mihomo forms share the KokoroBox HeroUI v3 conventions', () =
   assert.match(form, /selectedText/)
   assert.match(form, /density\?: 'normal' \| 'compact'/)
   assert.match(form, /density = 'normal'/)
-  assert.match(form, /koko-select__popover/)
+  assert.match(form, /variant\?: SelectProps<object>\['variant'\]/)
+  assert.match(form, /variant = 'primary'/)
+  assert.match(form, /variant=\{variant\}/)
   assert.match(form, /density === 'compact'/)
   assert.match(form, /min-h-8 px-2 py-1/)
-  assert.match(form, /min-h-8 px-2\.5 py-1\.5/)
+  assert.doesNotMatch(form, /koko-select__popover|shadow-overlay/)
+  assert.doesNotMatch(form, /min-h-8 px-2\.5 py-1\.5/)
   assert.match(form, /labelPlacement\?: 'inside' \| 'outside'/)
   assert.match(form, /<Select\.Indicator \/>/)
   assert.match(form, /<Select\.Popover/)
@@ -303,7 +306,11 @@ test('settings and Mihomo forms share the KokoroBox HeroUI v3 conventions', () =
   assert.match(controls, /variant\?: React\.ComponentProps<typeof Tabs>\['variant'\]/)
   assert.match(controls, /variant=\{variant\}/)
   assert.match(controls, /<Tabs\.List/)
-  assert.match(controls, /<Tabs\.Indicator/)
+  assert.match(controls, /<Tabs\.Indicator \/>/)
+  assert.doesNotMatch(
+    controls,
+    /indicatorClassName|listClassName|listContainerClassName|tabClassName/
+  )
 })
 
 test('collection and overlay primitives preserve HeroUI v3 identity and selection semantics', () => {
@@ -368,14 +375,16 @@ test('collection and overlay primitives preserve HeroUI v3 identity and selectio
   assert.match(menus, /<Dropdown\.Item[\s\S]*id=\{item\.id\}/)
   assert.match(menus, /textValue=\{item\.textValue\}/)
   assert.match(menus, /onAction=\{\(key\) => void onAction\(String\(key\)\)\}/)
-  assert.match(menus, /<Dropdown>\s*<KokoButton/)
-  assert.match(menus, /className=\{cn\(buttonClassName, triggerClassName\)\}/)
-  assert.match(menus, /color=\{buttonColor\}/)
+  assert.match(menus, /<Dropdown>\s*<Button/)
+  assert.match(menus, /className=\{buttonClassName\}/)
   assert.match(menus, /fullWidth=\{buttonFullWidth\}/)
   assert.match(menus, /isIconOnly=\{isIconOnly\}/)
   assert.match(menus, /size=\{size\}/)
   assert.match(menus, /variant=\{buttonVariant\}/)
-  assert.doesNotMatch(menus, /buttonVariants|resolveKokoButtonVariant/)
+  assert.doesNotMatch(
+    menus,
+    /KokoButton|KokoButtonProps|buttonColor|buttonVariants|resolveKokoButtonVariant/
+  )
   assert.match(tabs, /selectedKey=\{selectedKey\}/)
   assert.match(tabs, /variant=\{variant\}/)
   assert.match(tabs, /onSelectionChange=\{\(key\) => void onChange\(String\(key\)\)\}/)
@@ -384,6 +393,8 @@ test('collection and overlay primitives preserve HeroUI v3 identity and selectio
   assert.match(connections, /data-slot="connection-count"/)
   assert.doesNotMatch(connections, /\bBadge\b/)
   assert.match(profiles, /buttonClassName="[^"]*h-8[^"]*w-8[^"]*min-w-8/)
+  assert.match(profiles, /buttonVariant="primary"/)
+  assert.doesNotMatch(profiles, /buttonColor=/)
   assert.match(profileItem, /buttonClassName="[^"]*h-8[^"]*w-8[^"]*min-w-8/)
   assert.match(tray, /<Accordion[\s\S]*allowsMultipleExpanded/)
   assert.match(tray, /<Accordion\.Item[\s\S]*id=\{group\.name\}/)

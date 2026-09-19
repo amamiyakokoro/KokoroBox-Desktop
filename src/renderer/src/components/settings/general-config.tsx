@@ -42,6 +42,7 @@ const GeneralConfig: React.FC = () => {
           <div className="flex max-w-full flex-wrap items-center justify-end gap-2">
             <KokoSelect
               aria-label={tr('Interface language')}
+              variant="secondary"
               className="w-44"
               value={language}
               options={[

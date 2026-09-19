@@ -321,6 +321,7 @@ const AdvancedDnsSetting: React.FC<AdvancedDnsSettingProps> = ({
       <SettingItem title={tr('DNS cache algorithm')} divider>
         <KokoSelect
           aria-label={tr('DNS cache algorithm')}
+          variant="secondary"
           className="w-28"
           value={cacheAlgorithm}
           options={[

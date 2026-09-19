@@ -1,6 +1,5 @@
 import { tr } from '../../../../shared/i18n'
-import { Avatar, Card } from '@heroui-v3/react'
-import { KokoButton as Button } from '../base/koko-form'
+import { Avatar, Button, Card } from '@heroui-v3/react'
 import { calcTraffic } from '@renderer/utils/calc'
 import React, { memo, useMemo } from 'react'
 import { CgClose, CgTrash } from 'react-icons/cg'
@@ -99,10 +98,9 @@ const ConnectionGroupHeaderComponent: React.FC<Props> = ({
                 onKeyDown={(e) => e.stopPropagation()}
               >
                 <Button
-                  variant="light"
+                  variant={isClosed ? 'danger-soft' : 'ghost'}
                   size="sm"
                   isIconOnly
-                  color={isClosed ? 'danger' : 'default'}
                   className={
                     isClosed
                       ? undefined

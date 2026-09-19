@@ -199,6 +199,7 @@ const CoreRuntimeConfig: React.FC<Props> = ({ sections = ['runtime', 'service'] 
             ) : (
               <KokoSelect
                 aria-label={tr('Core version')}
+                variant="secondary"
                 className="w-37.5"
                 value={core}
                 options={[
@@ -217,6 +218,7 @@ const CoreRuntimeConfig: React.FC<Props> = ({ sections = ['runtime', 'service'] 
             <SettingItem compatKey="legacy" title={tr('Choose system core path')} divider>
               <KokoSelect
                 aria-label={tr('System core path')}
+                variant="secondary"
                 className="w-87.5"
                 value={appConfig?.systemCorePath || ''}
                 options={
@@ -237,6 +239,7 @@ const CoreRuntimeConfig: React.FC<Props> = ({ sections = ['runtime', 'service'] 
           <SettingItem compatKey="legacy" title={tr('Core process priority')} divider>
             <KokoSelect
               aria-label={tr('Core process priority')}
+              variant="secondary"
               className="w-37.5"
               value={mihomoCpuPriority}
               options={[

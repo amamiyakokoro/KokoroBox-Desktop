@@ -238,13 +238,11 @@ const Settings: React.FC = () => {
                     <KokoTabs
                       ariaLabel={tr('Settings panels')}
                       className="app-nodrag w-full"
-                      listContainerClassName="w-full"
                       options={selected.panels.map((panel) => ({
                         id: panel.key,
                         label: panel.label
                       }))}
                       selectedKey={selectedPanel?.key ?? selected.panels[0].key}
-                      tabClassName="shrink-0 px-3"
                       variant="secondary"
                       onChange={selectPanel}
                     />

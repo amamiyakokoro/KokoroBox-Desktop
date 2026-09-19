@@ -106,6 +106,7 @@ const DnsServerList: React.FC<DnsServerListProps> = ({
                 <>
                   <KokoSelect
                     aria-label={tr('Connection')}
+                    variant="secondary"
                     className="w-30"
                     value={endpoint.connection === 'proxy' ? 'direct' : endpoint.connection}
                     options={connectionChoices.map(({ key, label }) => ({ id: key, label }))}

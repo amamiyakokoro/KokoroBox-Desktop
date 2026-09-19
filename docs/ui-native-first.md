@@ -94,6 +94,20 @@ Behavior worth preserving includes value normalization, concise selected-value r
 application option models, clear actions, and accessible menu identities. Legacy color/variant
 mapping and internal appearance classes are migration debt to remove in Phase 8.
 
+Phase 8 has established these thinner contracts:
+
+- `KokoTabs` only maps option data, selection, and the native `primary` / `secondary` variant. It
+  does not accept indicator or internal spacing classes.
+- `KokoSelect` owns option identity, selected-text rendering, multiple selection, label placement,
+  and density. Its native variant defaults to `primary`; consumers choose `secondary` for controls
+  embedded in surfaces, inspectors, and toolbars.
+- `KokoActionMenu` maps application actions to native Dropdown items and uses a native v3 Button
+  trigger. It does not translate v2 colors or variants and does not restyle the native popover.
+
+`KokoButton`, `KokoSwitch`, and `KokoTooltip` remain temporary migration shims. Their consumer
+counts are now bounded at 27, 16, and 15 renderer files respectively. These allowlists may shrink
+in later phases; new consumers are not permitted.
+
 ### Compatibility CSS classification
 
 | Area                                                | Classification                | Planned action                                          |

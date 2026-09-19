@@ -402,6 +402,7 @@ const AppRouting: React.FC = () => {
             {isMac && (
               <KokoSelect
                 aria-label={tr('Match by')}
+                variant="secondary"
                 label={tr('Match by')}
                 disallowEmptySelection
                 isDisabled={!supported || !config || saving}
@@ -416,6 +417,7 @@ const AppRouting: React.FC = () => {
             {isLinux && (
               <KokoSelect
                 aria-label={tr('Match by')}
+                variant="secondary"
                 label={tr('Match by')}
                 disallowEmptySelection
                 isDisabled={!supported || !config || saving}

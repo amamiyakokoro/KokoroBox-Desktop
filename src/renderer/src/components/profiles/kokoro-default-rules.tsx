@@ -254,6 +254,7 @@ const KokoroDefaultRules: React.FC = () => {
                   <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] items-center gap-2">
                     <KokoSelect
                       aria-label={tr('Rule type')}
+                      variant="secondary"
                       label={tr('Rule type')}
                       labelPlacement="inside"
                       className="min-w-0"
@@ -268,6 +269,7 @@ const KokoroDefaultRules: React.FC = () => {
                     />
                     <KokoSelect
                       aria-label={tr('Rule target')}
+                      variant="secondary"
                       label={tr('Rule target')}
                       labelPlacement="inside"
                       className="min-w-0"
@@ -325,6 +327,7 @@ const KokoroDefaultRules: React.FC = () => {
                     {rule.type === 'RULE-SET' ? (
                       <KokoSelect
                         aria-label={tr('Rule content')}
+                        variant="secondary"
                         label={tr('Rule content')}
                         labelPlacement="inside"
                         className="min-w-0 flex-1"

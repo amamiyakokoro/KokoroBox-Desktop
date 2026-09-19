@@ -162,6 +162,7 @@ export function AppRoutingRuleRow({
               {isMacRule ? (
                 <KokoSelect
                   aria-label={tr('Match by')}
+                  variant="secondary"
                   className="w-full min-w-0"
                   disallowEmptySelection
                   isDisabled={disabled}
@@ -175,6 +176,7 @@ export function AppRoutingRuleRow({
               ) : (
                 <KokoSelect
                   aria-label={tr('Match by')}
+                  variant="secondary"
                   className="w-full min-w-0"
                   disallowEmptySelection
                   isDisabled={disabled}
@@ -195,6 +197,7 @@ export function AppRoutingRuleRow({
           <div className="min-w-0">
             <KokoSelect
               aria-label={tr('Protocol')}
+              variant="secondary"
               className="w-full min-w-0"
               disallowEmptySelection
               isDisabled={disabled}
@@ -206,6 +209,7 @@ export function AppRoutingRuleRow({
           <div className="min-w-0">
             <KokoSelect
               aria-label={tr('Action')}
+              variant="secondary"
               className="w-full min-w-0"
               disallowEmptySelection
               isDisabled={disabled}
