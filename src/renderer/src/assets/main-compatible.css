@@ -1,3 +1,10 @@
+/*
+ * Legacy HeroUI compatibility baseline.
+ *
+ * Do not add new HeroUI internal selectors or component-geometry tokens here.
+ * KokoroBox owns layout; HeroUI v3 owns component appearance. See
+ * docs/ui-native-first.md and run `pnpm run test:ui-native` when changing this file.
+ */
 :root,
 :host,
 .light,

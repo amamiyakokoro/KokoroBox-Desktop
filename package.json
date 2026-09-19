@@ -24,6 +24,7 @@
     "test:app-routing": "tsx --test scripts/test-app-routing.ts",
     "test:dns": "tsx --test scripts/test-dns.ts",
     "test:settings": "tsx --test scripts/test-settings.ts",
+    "test:ui-native": "tsx --test scripts/test-ui-native-contract.ts",
     "test:service-auth": "tsx --test scripts/test-service-auth.ts",
     "test:native-migrations": "tsx --test scripts/test-native-migrations.ts",
     "test:traffic-presenter": "tsx --test scripts/test-traffic-presenter.ts",
