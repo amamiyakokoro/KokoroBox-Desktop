@@ -707,7 +707,7 @@ test('proxy group rows stay compact while preserving semantic metadata and actio
   assert.match(page, /title=\{group\.name\}/)
   assert.match(page, /title=\{group\.now\}/)
   assert.match(page, /onGroupDelay\(index\)/)
-  assert.match(page, /shadow-none/)
+  assert.doesNotMatch(page, /\brounded-xl\b|\bshadow-none\b/)
   assert.match(page, /gap-2 pt-2 mx-3/)
   assert.match(item, /return `\$\{delay\} ms`/)
   assert.match(item, /variant="secondary"/)
@@ -892,6 +892,8 @@ test('operational lists use compact hierarchy without changing their behavior', 
   assert.match(overrideItem, /onAction=\{onMenuAction\}/)
 
   assert.match(logsPage, /<Virtuoso/)
+  assert.match(logsPage, /<KokoSelect[\s\S]*density="compact"/)
+  assert.doesNotMatch(logsPage, /<Select\.Trigger|<Select\.Popover|<ListBox/)
   assert.match(logsPage, /followOutput=\{trace\}/)
   assert.match(logsPage, /clearMihomoLogs\(\)/)
   assert.match(logsPage, /restartMihomoLogs\(\)/)

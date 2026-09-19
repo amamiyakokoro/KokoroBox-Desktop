@@ -155,3 +155,71 @@ test('the native-first ownership contract documents the migration boundary', () 
   assert.match(contract, /React Aria `I18nProvider`/)
   assert.match(contract, /zero HeroUI internal selectors/)
 })
+
+test('native component appearance is not repainted by dense application surfaces', () => {
+  const logs = readFileSync('src/renderer/src/pages/logs.tsx', 'utf8')
+  const settingCard = readFileSync('src/renderer/src/components/base/base-setting-card.tsx', 'utf8')
+  const denseCardFiles = [
+    'src/renderer/src/components/connections/connection-item.tsx',
+    'src/renderer/src/components/connections/connection-group-header.tsx',
+    'src/renderer/src/components/profiles/profile-item.tsx',
+    'src/renderer/src/pages/proxies.tsx'
+  ]
+  const drawerFiles = [
+    'src/renderer/src/components/base/base-settings-drawer.tsx',
+    'src/renderer/src/components/base/error-detail-drawer.tsx',
+    'src/renderer/src/components/connections/connection-detail-modal.tsx',
+    'src/renderer/src/components/updater/updater-drawer.tsx'
+  ]
+
+  assert.match(logs, /<KokoSelect[\s\S]*density="compact"/)
+  assert.doesNotMatch(logs, /<Select\.Trigger|<Select\.Popover|<ListBox/)
+  assert.match(settingCard, /<Surface[\s\S]*variant="secondary"/)
+  assert.doesNotMatch(settingCard, /<Surface[\s\S]*rounded-xl[\s\S]*<\/Surface>/)
+
+  for (const file of denseCardFiles) {
+    const source = readFileSync(file, 'utf8')
+    const cardClassName =
+      source
+        .match(/<Card\b[\s\S]*?className=(?:"([^"]*)"|\{`([^`]*)`\})/)
+        ?.slice(1)
+        .find(Boolean) ?? ''
+    assert.doesNotMatch(cardClassName, /\brounded-(?:lg|xl|2xl|3xl)\b|\bshadow-(?:none|sm|md|lg)\b/)
+    assert.match(cardClassName, /\boverflow-hidden\b/)
+  }
+
+  for (const file of drawerFiles) {
+    const source = readFileSync(file, 'utf8')
+    const dialog = source.match(/<Drawer\.Dialog\b[\s\S]*?>/)?.[0] ?? ''
+    assert.doesNotMatch(dialog, /\bbg-overlay\b|\bshadow-overlay\b|\brounded-(?:xl|2xl)!?\b/)
+  }
+})
+
+test('status cards use native semantic variants instead of painted surfaces', () => {
+  for (const file of [
+    'src/renderer/src/components/mihomo/macos-service-setup.tsx',
+    'src/renderer/src/components/mihomo/permission-modal.tsx',
+    'src/renderer/src/components/mihomo/service-modal.tsx'
+  ]) {
+    const source = readFileSync(file, 'utf8')
+    assert.match(source, /<Card variant="secondary">/)
+    assert.doesNotMatch(source, /border-none bg-(?:default|linear)/)
+  }
+})
+
+test('invalid fields use the native InputGroup state instead of painted geometry', () => {
+  const form = readFileSync('src/renderer/src/components/base/koko-form.tsx', 'utf8')
+  const consumers = [
+    'src/renderer/src/pages/connections.tsx',
+    'src/renderer/src/components/mihomo/controller-setting.tsx',
+    'src/renderer/src/components/settings/network/dns-settings.tsx'
+  ]
+
+  assert.match(form, /data-invalid=\{isInvalid \|\| undefined\}/)
+  assert.doesNotMatch(form, /isInvalid && 'ring-1 ring-danger'/)
+
+  for (const file of consumers) {
+    const source = readFileSync(file, 'utf8')
+    assert.doesNotMatch(source, /border-red-500|ring-red-500|border-danger ring-1 ring-danger/)
+  }
+})

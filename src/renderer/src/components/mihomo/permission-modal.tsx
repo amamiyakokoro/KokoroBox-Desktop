@@ -114,7 +114,7 @@ const PermissionModal: React.FC<Props> = (props) => {
               <div className="space-y-4">
                 {isWindows ? (
                   <>
-                    <Card className="border-none bg-linear-to-br from-default-50 to-default-100">
+                    <Card variant="secondary">
                       <Card.Content className="py-4">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
@@ -169,7 +169,7 @@ const PermissionModal: React.FC<Props> = (props) => {
                 ) : (
                   <>
                     <div className="space-y-3">
-                      <Card className="border-none">
+                      <Card>
                         <Card.Header className="pb-0 pt-4 px-4 flex-col items-start">
                           <div className="flex items-center justify-between w-full">
                             <div className="flex items-center gap-2">
@@ -214,7 +214,7 @@ const PermissionModal: React.FC<Props> = (props) => {
                         </Card.Content>
                       </Card>
 
-                      <Card className="border-none">
+                      <Card>
                         <Card.Header className="pb-0 pt-4 px-4 flex-col items-start">
                           <div className="flex items-center justify-between w-full">
                             <div className="flex items-center gap-2">

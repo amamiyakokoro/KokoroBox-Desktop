@@ -89,10 +89,10 @@ const PageSettingsDrawer: React.FC<PageSettingsDrawerProps> = ({
     >
       <Drawer.Content
         placement="right"
-        className="page-settings-drawer-content top-12 h-[calc(100%-48px)] p-2 pl-0"
+        className="page-settings-drawer-content top-12 h-[calc(100%-48px)]"
       >
         <Drawer.Dialog
-          className={`page-settings-drawer flag-emoji flex h-full ${widthClass} max-w-none flex-col overflow-hidden rounded-xl! border border-separator/80 bg-overlay p-0 shadow-overlay`}
+          className={`page-settings-drawer flag-emoji flex h-full ${widthClass} max-w-none flex-col overflow-hidden p-0`}
         >
           <Drawer.Header className="border-b border-separator/70 px-4 py-3">
             <Drawer.Heading className="text-base font-semibold">{title}</Drawer.Heading>

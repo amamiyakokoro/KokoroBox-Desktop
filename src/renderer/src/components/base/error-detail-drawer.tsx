@@ -34,8 +34,8 @@ const ErrorDetailDrawer: React.FC<Props> = (props) => {
       variant="blur"
       className="top-12 h-[calc(100%-48px)]"
     >
-      <Drawer.Content placement="right" className="top-12 h-[calc(100%-48px)] p-3 pl-0">
-        <Drawer.Dialog className="flex h-full w-[min(520px,calc(100vw-32px))] max-w-none flex-col overflow-hidden rounded-2xl! border border-separator/70 bg-overlay p-0 shadow-overlay">
+      <Drawer.Content placement="right" className="top-12 h-[calc(100%-48px)]">
+        <Drawer.Dialog className="flex h-full w-[min(520px,calc(100vw-32px))] max-w-none flex-col overflow-hidden p-0">
           <Drawer.Header className="border-b border-separator/70 px-5 py-4">
             <Drawer.Heading className="text-base font-semibold">
               {tr('Error details')}

@@ -44,7 +44,6 @@ export const KokoTextField: React.FC<KokoTextFieldProps> = ({
     className={cn(
       size === 'sm' && 'min-h-8',
       size === 'lg' && 'min-h-10',
-      isInvalid && 'ring-1 ring-danger',
       classNames?.inputWrapper,
       className
     )}

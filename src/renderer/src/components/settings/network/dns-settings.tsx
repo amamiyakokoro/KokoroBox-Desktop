@@ -345,10 +345,8 @@ const DNS: React.FC<Props> = ({ embedded = false }) => {
                 <Tooltip.Trigger className="inline-flex w-[40%]">
                   <Input
                     size="sm"
-                    className={
-                      `w-full ` +
-                      (fakeIPRangeError ? 'border-red-500 ring-1 ring-red-500 rounded-lg' : '')
-                    }
+                    className="w-full"
+                    isInvalid={Boolean(fakeIPRangeError)}
                     placeholder={tr('Example: 198.18.0.1/16')}
                     value={values.fakeIPRange}
                     onValueChange={(v) => {
@@ -374,10 +372,8 @@ const DNS: React.FC<Props> = ({ embedded = false }) => {
                   <Tooltip.Trigger className="inline-flex w-[40%]">
                     <Input
                       size="sm"
-                      className={
-                        `w-full ` +
-                        (fakeIPRange6Error ? 'border-red-500 ring-1 ring-red-500 rounded-lg' : '')
-                      }
+                      className="w-full"
+                      isInvalid={Boolean(fakeIPRange6Error)}
                       placeholder={tr('Example: fc00::/18')}
                       value={values.fakeIPRange6}
                       onValueChange={(v) => {

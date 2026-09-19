@@ -90,7 +90,8 @@ const ControllerSetting: React.FC<ControllerSettingProps> = ({
           <Tooltip.Trigger className="inline-flex min-w-0">
             <Input
               size="sm"
-              className={`w-50 ${externalControllerError ? 'border-red-500 ring-1 ring-red-500 rounded-lg' : ''}`}
+              className="w-50"
+              isInvalid={Boolean(externalControllerError)}
               value={externalControllerInput}
               onValueChange={(v) => {
                 setExternalControllerInput(v)

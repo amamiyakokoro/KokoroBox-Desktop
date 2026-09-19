@@ -223,7 +223,7 @@ const ProfileItem: React.FC<Props> = (props) => {
           setSelecting(true)
           onClick().finally(() => setSelecting(false))
         }}
-        className={`h-full w-full min-w-0 cursor-pointer gap-0 overflow-hidden rounded-xl p-0 shadow-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-primary/45 ${isCurrent ? 'bg-primary' : ''} ${selecting ? 'blur-sm' : ''}`}
+        className={`h-full w-full min-w-0 cursor-pointer gap-0 overflow-hidden p-0 outline-none transition-colors focus-visible:ring-2 focus-visible:ring-primary/45 ${isCurrent ? 'bg-primary' : ''} ${selecting ? 'blur-sm' : ''}`}
       >
         <div {...attributes} {...listeners} className="h-full w-full min-w-0 overflow-hidden">
           <Card.Content className="w-full min-w-0 gap-0 px-3 pb-1 pt-3">

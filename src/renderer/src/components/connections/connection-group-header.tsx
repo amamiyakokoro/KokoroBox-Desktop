@@ -58,7 +58,7 @@ const ConnectionGroupHeaderComponent: React.FC<Props> = ({
         aria-expanded={expanded}
         role="button"
         tabIndex={0}
-        className="group w-full min-w-0 cursor-pointer gap-0 overflow-hidden rounded-xl p-0 shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-primary/45"
+        className="group w-full min-w-0 cursor-pointer gap-0 overflow-hidden p-0 outline-none focus-visible:ring-2 focus-visible:ring-primary/45"
         onClick={() => onToggle(groupKey, expanded)}
         onKeyDown={(event) => {
           if (event.key !== 'Enter' && event.key !== ' ') return

@@ -143,7 +143,7 @@ const MacOSServiceSetup: React.FC<Props> = ({ onChange }) => {
               </p>
             </Modal.Header>
             <Modal.Body className="gap-4">
-              <Card className="border-none bg-default-50">
+              <Card variant="secondary">
                 <Card.Content className="flex-row items-center justify-between py-4">
                   <span className="text-sm font-medium">{tr('Current step')}</span>
                   <Chip

@@ -35,10 +35,7 @@ const SettingCard: React.FC<Props> = (props) => {
   }
 
   return !header ? (
-    <Surface
-      variant="default"
-      className={`${className || ''} m-2 rounded-xl border border-separator/70 p-3`}
-    >
+    <Surface variant="secondary" className={`${className || ''} m-2 p-3`}>
       {children}
     </Surface>
   ) : (

@@ -4,7 +4,7 @@ import LogItem from '@renderer/components/logs/log-item'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'
 import { startTransition, useEffect, useMemo, useRef, useState } from 'react'
-import { KokoTextField as Input } from '@renderer/components/base/koko-form'
+import { KokoSelect, KokoTextField as Input } from '@renderer/components/base/koko-form'
 import { Virtuoso } from 'react-virtuoso'
 import { IoLocationSharp } from 'react-icons/io5'
 import { CgTrash } from 'react-icons/cg'
@@ -17,7 +17,7 @@ import {
   setMihomoLogMaxEntries,
   subscribeMihomoLogs
 } from '@renderer/utils/mihomo-log-store'
-import { Button, ListBox, Select, Separator, Tooltip } from '@heroui/react'
+import { Button, Separator, Tooltip } from '@heroui/react'
 import { restartMihomoLogs } from '@renderer/utils/ipc'
 import { notify } from '@renderer/utils/notification'
 
@@ -149,13 +149,20 @@ const Logs: React.FC = () => {
               isClearable
               onValueChange={setFilter}
             />
-            <Select
+            <KokoSelect
               aria-label={tr('Filter by log level')}
               className="w-24 shrink-0"
+              density="compact"
+              options={[
+                { id: 'silent', label: tr('Silent') },
+                { id: 'error', label: tr('Error') },
+                { id: 'warning', label: tr('Warning') },
+                { id: 'info', label: tr('Info') },
+                { id: 'debug', label: tr('Debug') }
+              ]}
               value={activeLogLevelFilter}
               variant="secondary"
               onChange={async (value) => {
-                if (Array.isArray(value) || value == null) return
                 if (value === activeLogLevelFilter) return
 
                 try {
@@ -165,56 +172,7 @@ const Logs: React.FC = () => {
                   notify(error, { variant: 'danger' })
                 }
               }}
-            >
-              <Select.Trigger className="h-8 min-h-8 rounded-lg px-3 text-sm">
-                <Select.Value className="-translate-y-px" />
-                <Select.Indicator className="size-4" />
-              </Select.Trigger>
-              <Select.Popover className="min-w-0 rounded-lg">
-                <ListBox className="w-24 rounded-lg p-1 text-sm">
-                  <ListBox.Item
-                    id="silent"
-                    textValue={tr('Silent')}
-                    className="min-h-8 rounded-md px-2.5 py-1.5 text-sm"
-                  >
-                    {tr('Silent')}
-                    <ListBox.ItemIndicator className="size-3.5" />
-                  </ListBox.Item>
-                  <ListBox.Item
-                    id="error"
-                    textValue={tr('Error')}
-                    className="min-h-8 rounded-md px-2.5 py-1.5 text-sm"
-                  >
-                    {tr('Error')}
-                    <ListBox.ItemIndicator className="size-3.5" />
-                  </ListBox.Item>
-                  <ListBox.Item
-                    id="warning"
-                    textValue={tr('Warning')}
-                    className="min-h-8 rounded-md px-2.5 py-1.5 text-sm"
-                  >
-                    {tr('Warning')}
-                    <ListBox.ItemIndicator className="size-3.5" />
-                  </ListBox.Item>
-                  <ListBox.Item
-                    id="info"
-                    textValue={tr('Info')}
-                    className="min-h-8 rounded-md px-2.5 py-1.5 text-sm"
-                  >
-                    {tr('Info')}
-                    <ListBox.ItemIndicator className="size-3.5" />
-                  </ListBox.Item>
-                  <ListBox.Item
-                    id="debug"
-                    textValue={tr('Debug')}
-                    className="min-h-8 rounded-md px-2.5 py-1.5 text-sm"
-                  >
-                    {tr('Debug')}
-                    <ListBox.ItemIndicator className="size-3.5" />
-                  </ListBox.Item>
-                </ListBox>
-              </Select.Popover>
-            </Select>
+            />
             <Tooltip delay={0}>
               <Tooltip.Trigger>
                 <Button

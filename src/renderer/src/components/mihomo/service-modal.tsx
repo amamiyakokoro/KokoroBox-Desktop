@@ -153,7 +153,7 @@ const ServiceModal: React.FC<Props> = (props) => {
             </Modal.Header>
             <Modal.Body>
               <div className="space-y-4">
-                <Card className="border-none bg-linear-to-br from-default-50 to-default-100">
+                <Card variant="secondary">
                   <Card.Content className="py-4">
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-2">

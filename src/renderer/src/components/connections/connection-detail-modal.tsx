@@ -505,9 +505,9 @@ const ConnectionDetailModal = ({ connection, onClose }: Props) => {
     >
       <Drawer.Content
         placement="right"
-        className="page-settings-drawer-content top-12 h-[calc(100%-48px)] p-2 pl-0"
+        className="page-settings-drawer-content top-12 h-[calc(100%-48px)]"
       >
-        <Drawer.Dialog className="connection-detail-modal page-settings-drawer flag-emoji flex h-full w-[min(580px,calc(100vw-16px))] max-w-none flex-col overflow-hidden rounded-xl! border border-separator/80 bg-overlay p-0 shadow-overlay">
+        <Drawer.Dialog className="connection-detail-modal page-settings-drawer flag-emoji flex h-full w-[min(580px,calc(100vw-16px))] max-w-none flex-col overflow-hidden p-0">
           <Drawer.Header className="app-drag shrink-0 border-b border-separator/70 px-5 py-3">
             <Drawer.Heading className="text-base font-semibold">
               {tr('Connection details')}

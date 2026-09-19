@@ -1021,7 +1021,7 @@ const Connections: React.FC = () => {
                 <InputGroup
                   variant="secondary"
                   data-invalid={Boolean(compiledFilter.error) || undefined}
-                  className={compiledFilter.error ? 'h-8 border-danger ring-1 ring-danger' : 'h-8'}
+                  className="h-8"
                 >
                   <InputGroup.Input
                     ref={filterInputRef}

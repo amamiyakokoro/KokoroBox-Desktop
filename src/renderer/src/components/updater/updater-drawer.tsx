@@ -99,8 +99,8 @@ const UpdaterDrawer: React.FC<Props> = (props) => {
       isDismissable={!isDownloading}
       className="top-12 h-[calc(100%-48px)]"
     >
-      <Drawer.Content placement="right" className="top-12 h-[calc(100%-48px)] p-3 pl-0">
-        <Drawer.Dialog className="updater-drawer h-full w-[min(460px,calc(100vw-32px))] max-w-none overflow-hidden rounded-2xl! border border-separator/70 bg-overlay p-0 shadow-overlay">
+      <Drawer.Content placement="right" className="top-12 h-[calc(100%-48px)]">
+        <Drawer.Dialog className="updater-drawer h-full w-[min(460px,calc(100vw-32px))] max-w-none overflow-hidden p-0">
           <Drawer.Header className="relative border-b border-separator/70 px-5 py-4 pr-14">
             <div className="flex min-w-0 flex-1 items-start gap-3">
               <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent-soft-foreground">
