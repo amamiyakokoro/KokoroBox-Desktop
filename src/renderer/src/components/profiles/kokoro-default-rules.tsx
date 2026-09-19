@@ -5,6 +5,7 @@ import { getKokoroDefaultRules, replaceKokoroDefaultRules } from '@renderer/util
 import { notify } from '@renderer/utils/notification'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { LuArrowDown, LuArrowUp, LuPlus, LuRefreshCw, LuSave, LuTrash2 } from 'react-icons/lu'
+import KokoroSectionHeading from './kokoro-section-heading'
 
 function editableRules(ruleSet: KokoroRuleSet): KokoroCustomRuleInput[] {
   return ruleSet.rules.map(({ type, payload, target }) => ({ type, payload, target }))
@@ -201,17 +202,19 @@ const KokoroDefaultRules: React.FC = () => {
   }
 
   return (
-    <section className="flex min-w-0 flex-col overflow-hidden rounded-xl border border-default-100 bg-content1/70">
-      <header className="flex items-start justify-between gap-3 border-b border-default-100 px-4 py-3">
+    <section className="flex min-w-0 flex-col overflow-hidden rounded-xl border border-separator/70 bg-surface transition-colors focus-within:border-accent/35">
+      <header className="flex items-start justify-between gap-3 border-b border-separator/70 px-4 py-3">
         <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <h3 className="font-semibold">{tr('Default rule set')}</h3>
-            {ruleSet && (
-              <Chip size="sm" variant="soft" className="text-foreground-500">
-                rev. {ruleSet.revision}
-              </Chip>
-            )}
-          </div>
+          <KokoroSectionHeading
+            title={tr('Default rule set')}
+            trailing={
+              ruleSet ? (
+                <Chip size="sm" color="accent" variant="soft">
+                  rev. {ruleSet.revision}
+                </Chip>
+              ) : undefined
+            }
+          />
           <p className="mt-1 text-xs leading-5 text-foreground-500">
             {tr('Edit only the default rule set used by Kokoro profiles. Rules run in this order.')}
           </p>
@@ -235,13 +238,13 @@ const KokoroDefaultRules: React.FC = () => {
 
       {loading ? (
         <div className="flex min-h-52 items-center justify-center">
-          <LuRefreshCw className="animate-spin text-xl text-primary" />
+          <LuRefreshCw className="animate-spin text-xl text-accent-soft-foreground" />
         </div>
       ) : options && ruleSet ? (
         <>
           <div className="no-scrollbar flex max-h-[48vh] min-h-36 flex-col gap-2 overflow-y-auto px-3 py-3">
             {rules.length === 0 && (
-              <div className="flex min-h-28 items-center justify-center rounded-lg border border-dashed border-default-200 text-sm text-foreground-400">
+              <div className="flex min-h-28 items-center justify-center rounded-lg border border-dashed border-separator text-sm text-muted">
                 {tr('The default rule set is empty')}
               </div>
             )}
@@ -252,7 +255,7 @@ const KokoroDefaultRules: React.FC = () => {
               return (
                 <div
                   key={index}
-                  className="rounded-lg border border-default-100 bg-default-50/50 p-2"
+                  className="rounded-lg border border-separator/70 bg-surface-secondary/50 p-2 transition-colors focus-within:border-accent/50 focus-within:bg-accent-soft/35"
                 >
                   <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] items-center gap-2">
                     <KokoSelect
@@ -378,7 +381,7 @@ const KokoroDefaultRules: React.FC = () => {
             })}
           </div>
 
-          <footer className="border-t border-default-100 px-4 py-3">
+          <footer className="border-t border-separator/70 px-4 py-3">
             {(validationError || error) && (
               <p className="mb-2 text-xs leading-5 text-danger">{validationError || error}</p>
             )}
@@ -388,7 +391,7 @@ const KokoroDefaultRules: React.FC = () => {
                   {rules.length} / {maxRules}
                 </span>
                 {isDirty ? (
-                  <span className="text-xs font-medium text-warning-600">
+                  <span className="text-xs font-medium text-warning-soft-foreground">
                     {tr('Unsaved changes')}
                   </span>
                 ) : null}

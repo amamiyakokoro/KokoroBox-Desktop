@@ -870,19 +870,33 @@ test('Kokoro account options and default rules use clear desktop sections and sa
     'src/renderer/src/components/profiles/kokoro-default-rules.tsx',
     'utf8'
   )
+  const heading = readFileSync(
+    'src/renderer/src/components/profiles/kokoro-section-heading.tsx',
+    'utf8'
+  )
 
   assert.match(page, /function KokoroOptionSection|const KokoroOptionSection/)
+  assert.match(page, /<KokoroSectionHeading id=\{headingId\} title=\{title\} \/>/)
   assert.match(page, /title=\{tr\('Subscription options'\)\}/)
   assert.match(page, /title=\{tr\('Update behavior'\)\}/)
   assert.match(page, /grid-cols-\[auto_minmax\(0,1fr\)_auto\]/)
   assert.match(page, /<Chip key=\{plan\} size="sm" color="accent" variant="soft">/)
+  assert.match(page, /bg-accent-soft font-semibold text-accent-soft-foreground/)
+  assert.match(page, /bg-surface transition-colors focus-within:border-accent\/35/)
+  assert.doesNotMatch(page, /(?:bg|text)-primary(?:\/|\b)/)
   assert.match(page, /footer=\{[\s\S]*tr\('Fetch and add'\)/)
   assert.match(page, /aria-label=\{tr\('Update rule sets automatically'\)\}/)
   assert.match(page, /aria-label=\{tr\('Update subscription automatically'\)\}/)
   assert.equal(page.match(/labelPlacement="inside"/g)?.length, 6)
 
   assert.match(rules, /<header className=/)
+  assert.match(rules, /<KokoroSectionHeading/)
+  assert.match(rules, /<Chip size="sm" color="accent" variant="soft">/)
   assert.match(rules, /rev\. \{ruleSet\.revision\}/)
+  assert.match(rules, /focus-within:border-accent\/50 focus-within:bg-accent-soft\/35/)
+  assert.match(rules, /text-warning-soft-foreground/)
+  assert.doesNotMatch(rules, /(?:bg|text)-primary(?:\/|\b)/)
+  assert.match(heading, /rounded-full bg-accent/)
   assert.match(rules, /aria-label=\{tr\('Reload'\)\}/)
   assert.match(rules, /grid-cols-\[minmax\(0,1fr\)_minmax\(0,1fr\)_auto\]/)
   assert.match(rules, /label=\{tr\('Rule type'\)\}/)

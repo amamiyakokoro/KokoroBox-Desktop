@@ -16,6 +16,7 @@ import dayjs from 'dayjs'
 import React, { useEffect, useId, useMemo, useState, type ReactNode } from 'react'
 import { LuCloudDownload, LuLogIn, LuLogOut, LuRefreshCw } from 'react-icons/lu'
 import KokoroDefaultRules from './kokoro-default-rules'
+import KokoroSectionHeading from './kokoro-section-heading'
 
 const supportedProtocols = new Set<KokoroProtocol>(['vmess', 'anytls', 'hysteria2'])
 
@@ -39,16 +40,14 @@ const KokoroOptionSection = ({ title, children, footer }: KokoroOptionSectionPro
   return (
     <section
       aria-labelledby={headingId}
-      className="rounded-xl border border-default-100 bg-content1/70"
+      className="rounded-xl border border-separator/70 bg-surface transition-colors focus-within:border-accent/35"
     >
-      <header className="border-b border-default-100 px-4 py-3">
-        <h3 id={headingId} className="text-sm font-semibold">
-          {title}
-        </h3>
+      <header className="border-b border-separator/70 px-4 py-3">
+        <KokoroSectionHeading id={headingId} title={title} />
       </header>
       <div className="p-4">{children}</div>
       {footer ? (
-        <footer className="flex items-center justify-end border-t border-default-100 px-4 py-3">
+        <footer className="flex items-center justify-end border-t border-separator/70 px-4 py-3">
           {footer}
         </footer>
       ) : null}
@@ -198,7 +197,7 @@ const KokoroSettingsPage: React.FC = () => {
     <BasePage title={tr('Kokoro account and subscription')} contentClassName="no-scrollbar">
       <div className="kokoro-settings-guide mx-auto flex min-h-full w-full max-w-[1120px] flex-col px-4 py-5">
         {!session?.authenticated && (
-          <header className="mb-5 border-b border-default-100 pb-4">
+          <header className="mb-5 border-b border-separator/70 pb-4">
             <h2 className="text-lg font-semibold">{tr('Kokoro subscription')}</h2>
             <p className="mt-1 text-xs text-foreground-500">
               {tr('Sign in with osu! to securely fetch a Mihomo profile from Kokoro')}
@@ -208,11 +207,11 @@ const KokoroSettingsPage: React.FC = () => {
         <div className="min-h-0 flex-1">
           {loading ? (
             <div className="flex min-h-56 items-center justify-center">
-              <LuRefreshCw className="animate-spin text-xl text-primary" />
+              <LuRefreshCw className="animate-spin text-xl text-accent-soft-foreground" />
             </div>
           ) : !session?.authenticated || !user || !options ? (
             <div className="flex min-h-64 flex-col items-center justify-center px-8 text-center">
-              <div className="mb-5 flex size-14 items-center justify-center rounded-full bg-primary/10 text-primary">
+              <div className="mb-5 flex size-14 items-center justify-center rounded-full bg-accent-soft text-accent-soft-foreground">
                 <LuLogIn className="text-2xl" />
               </div>
               <h3 className="text-base font-semibold">{tr('Sign in to Kokoro')}</h3>
@@ -244,16 +243,16 @@ const KokoroSettingsPage: React.FC = () => {
             </div>
           ) : (
             <div className="flex flex-col gap-4">
-              <section className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 border-b border-default-100 pb-4">
+              <section className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 border-b border-separator/70 pb-4">
                 {user.avatar_url ? (
                   <img
                     src={user.avatar_url}
                     alt=""
                     referrerPolicy="no-referrer"
-                    className="size-12 shrink-0 rounded-full bg-default-100 object-cover"
+                    className="size-12 shrink-0 rounded-full bg-surface-secondary object-cover"
                   />
                 ) : (
-                  <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-primary/10 font-semibold text-primary">
+                  <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-accent-soft font-semibold text-accent-soft-foreground">
                     {(user.username || user.osu_id).slice(0, 1).toUpperCase()}
                   </div>
                 )}
@@ -296,7 +295,7 @@ const KokoroSettingsPage: React.FC = () => {
               <div className="grid min-h-0 grid-cols-1 items-start gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(420px,1.08fr)]">
                 <div className="flex min-w-0 flex-col gap-4">
                   {!mihomoAvailable && (
-                    <p className="rounded-lg bg-danger-50 px-3 py-2 text-sm text-danger">
+                    <p className="rounded-lg bg-danger-soft px-3 py-2 text-sm text-danger-soft-foreground">
                       {tr('Mihomo format is not available for this Kokoro account.')}
                     </p>
                   )}
@@ -372,7 +371,7 @@ const KokoroSettingsPage: React.FC = () => {
                         }}
                       />
                       {!supportsDirect ? (
-                        <div className="flex min-h-12 flex-col justify-center rounded-lg border border-default-100 bg-default-50 px-3 py-1.5">
+                        <div className="flex min-h-12 flex-col justify-center rounded-lg border border-separator/70 bg-surface-secondary px-3 py-1.5">
                           <span className="text-xs text-foreground-500">
                             {tr('Connection mode')}
                           </span>
@@ -435,7 +434,7 @@ const KokoroSettingsPage: React.FC = () => {
                   </KokoroOptionSection>
 
                   <KokoroOptionSection title={tr('Update behavior')}>
-                    <div className="divide-y divide-default-100">
+                    <div className="divide-y divide-separator/70">
                       <div className="flex flex-wrap items-center justify-between gap-4 py-2 first:pt-0">
                         <div className="min-w-0">
                           <p className="text-sm font-medium">
