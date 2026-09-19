@@ -49,13 +49,19 @@ export const KokoTabs: React.FC<KokoTabsProps> = ({
 }) => {
   return (
     <Tabs
-      className={cn('max-w-full shrink-0', density === 'toolbar' && 'h-9 w-max', className)}
+      className={cn(
+        'shrink-0',
+        density === 'toolbar' ? 'h-9 w-max max-w-none' : 'max-w-full',
+        className
+      )}
       selectedKey={selectedKey}
       variant={variant}
       onSelectionChange={(key) => void onChange(String(key))}
     >
-      <Tabs.ListContainer className={cn('max-w-full', density === 'toolbar' && 'h-9')}>
-        <Tabs.List aria-label={ariaLabel} className={cn(density === 'toolbar' && 'h-9')}>
+      <Tabs.ListContainer
+        className={cn(density === 'toolbar' ? 'h-9 w-max max-w-none' : 'max-w-full')}
+      >
+        <Tabs.List aria-label={ariaLabel} className={cn(density === 'toolbar' && 'h-9 w-max')}>
           {options.map((option) => (
             <Tabs.Tab
               key={option.id}

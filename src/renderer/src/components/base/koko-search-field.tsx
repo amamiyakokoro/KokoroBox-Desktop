@@ -8,6 +8,7 @@ interface KokoSearchFieldProps extends Omit<
   'className' | 'disabled' | 'onChange' | 'size'
 > {
   className?: string
+  inputRef?: React.Ref<HTMLInputElement>
   isDisabled?: boolean
   onClear?: () => void
   onValueChange: (value: string) => void
@@ -15,6 +16,7 @@ interface KokoSearchFieldProps extends Omit<
 
 export const KokoSearchField: React.FC<KokoSearchFieldProps> = ({
   className,
+  inputRef,
   isDisabled,
   onClear,
   onValueChange,
@@ -30,6 +32,7 @@ export const KokoSearchField: React.FC<KokoSearchFieldProps> = ({
     </InputGroup.Prefix>
     <InputGroup.Input
       {...inputProps}
+      ref={inputRef}
       className="h-9 py-0"
       disabled={isDisabled}
       value={value}

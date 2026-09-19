@@ -238,6 +238,7 @@ input[type='number'] {
 
 .settings-navigation-search {
   flex: none;
+  width: 100%;
 }
 
 .feature-settings-layout__action {
@@ -344,10 +345,15 @@ input[type='number'] {
 
   .settings-navigation-search {
     order: 2;
-    min-width: 10rem;
-    flex: 0 0 clamp(10rem, 30cqi, 15rem);
-    width: clamp(10rem, 30cqi, 15rem);
+    min-width: 0;
+    flex: 0 0 auto;
+    width: auto;
     margin-bottom: 0;
+  }
+
+  .settings-navigation-search-field {
+    width: 12rem;
+    max-width: min(12rem, 45cqi);
   }
 
   .settings-navigation-list::-webkit-scrollbar {

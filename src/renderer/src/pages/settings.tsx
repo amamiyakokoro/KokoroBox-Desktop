@@ -1,5 +1,5 @@
 import { tr } from '../../../shared/i18n'
-import { Button, ScrollShadow } from '@heroui/react'
+import { Button, ScrollShadow, Tooltip } from '@heroui/react'
 import BasePage from '@renderer/components/base/base-page'
 import { IoLogoGithub } from 'react-icons/io5'
 import {
@@ -11,15 +11,17 @@ import {
 import { SettingCardModeProvider } from '@renderer/components/base/base-setting-card'
 import { KokoTabs } from '@renderer/components/base/base-controls'
 import { KokoSearchField } from '@renderer/components/base/koko-search-field'
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { LuChevronRight } from 'react-icons/lu'
+import { LuChevronRight, LuSearch } from 'react-icons/lu'
 
 const Settings: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams()
   const [search, setSearch] = useState('')
+  const [searchExpanded, setSearchExpanded] = useState(false)
   const layoutRef = useRef<HTMLDivElement>(null)
   const categoryNavigationRef = useRef<HTMLDivElement>(null)
+  const searchInputRef = useRef<HTMLInputElement>(null)
   const categories = useMemo(() => getSettingsCategories(), [])
   const requestedCategory = searchParams.get('section')
   const requestedSetting = findSettingsEntry(categories, searchParams.get('setting'))
@@ -65,6 +67,14 @@ const Settings: React.FC = () => {
     [categories, normalizedSearch]
   )
 
+  const openSearch = useCallback((): void => {
+    setSearchExpanded(true)
+    requestAnimationFrame(() => {
+      searchInputRef.current?.focus()
+      searchInputRef.current?.select()
+    })
+  }, [])
+
   const selectCategory = (
     nextCategory: SettingsCategory,
     settingId?: string,
@@ -100,25 +110,20 @@ const Settings: React.FC = () => {
   useEffect(() => {
     const handleSearchShortcut = (event: KeyboardEvent): void => {
       if ((event.metaKey || event.ctrlKey) && !event.altKey && event.key.toLowerCase() === 'f') {
-        const searchInputs = document.querySelectorAll<HTMLInputElement>(
-          '.settings-content-search input'
-        )
-        const visibleSearch = Array.from(searchInputs).find((input) => input.offsetParent !== null)
-        if (!visibleSearch) return
         event.preventDefault()
-        visibleSearch.focus()
-        visibleSearch.select()
+        openSearch()
         return
       }
-      if (event.key === 'Escape' && search) {
+      if (event.key === 'Escape' && (searchExpanded || search)) {
         event.preventDefault()
         setSearch('')
+        setSearchExpanded(false)
       }
     }
 
     window.addEventListener('keydown', handleSearchShortcut)
     return () => window.removeEventListener('keydown', handleSearchShortcut)
-  }, [search])
+  }, [openSearch, search, searchExpanded])
 
   useEffect(() => {
     const navigation = categoryNavigationRef.current
@@ -188,14 +193,38 @@ const Settings: React.FC = () => {
             aria-label={tr('Settings categories')}
             className="settings-navigation sticky top-0 z-10 flex h-[calc(100vh-49px)] flex-col border-r border-divider bg-background/95 p-3"
           >
-            <KokoSearchField
-              value={search}
-              aria-label={tr('Search settings')}
-              placeholder={tr('Search settings')}
-              className="settings-content-search settings-navigation-search mb-3 w-full"
-              onValueChange={setSearch}
-              onClear={() => setSearch('')}
-            />
+            <div className="settings-navigation-search mb-3 flex justify-end">
+              {searchExpanded || normalizedSearch ? (
+                <KokoSearchField
+                  inputRef={searchInputRef}
+                  value={search}
+                  aria-label={tr('Search settings')}
+                  placeholder={tr('Search settings')}
+                  className="settings-content-search settings-navigation-search-field w-full"
+                  onBlur={(event) => {
+                    if (!event.currentTarget.value.trim()) setSearchExpanded(false)
+                  }}
+                  onValueChange={setSearch}
+                  onClear={() => setSearch('')}
+                />
+              ) : (
+                <Tooltip delay={400}>
+                  <Tooltip.Trigger>
+                    <Button
+                      isIconOnly
+                      size="sm"
+                      variant="ghost"
+                      className="settings-search-trigger app-nodrag h-9 w-9 min-w-9"
+                      aria-label={tr('Search settings')}
+                      onPress={openSearch}
+                    >
+                      <LuSearch aria-hidden="true" />
+                    </Button>
+                  </Tooltip.Trigger>
+                  <Tooltip.Content>{tr('Search settings')}</Tooltip.Content>
+                </Tooltip>
+              )}
+            </div>
             <ScrollShadow
               ref={categoryNavigationRef}
               orientation="horizontal"
@@ -215,6 +244,7 @@ const Settings: React.FC = () => {
                     aria-current={active ? 'page' : undefined}
                     onPress={() => {
                       setSearch('')
+                      setSearchExpanded(false)
                       selectCategory(item.key)
                     }}
                   >
@@ -236,11 +266,12 @@ const Settings: React.FC = () => {
                   ) : (
                     <nav
                       aria-label={tr('Settings panels')}
-                      className="settings-panel-navigation min-w-0 overflow-x-auto px-3"
+                      className="settings-panel-navigation no-scrollbar min-w-0 overflow-x-auto px-3"
                     >
                       <KokoTabs
                         ariaLabel={tr('Settings panels')}
-                        className="app-nodrag w-full"
+                        className="app-nodrag w-max max-w-none"
+                        density="toolbar"
                         options={selectedPanels.map((panel) => ({
                           id: panel.key,
                           label: panel.label
@@ -264,6 +295,7 @@ const Settings: React.FC = () => {
                         onClick={() => {
                           selectCategory(resultCategory.key, entry.id, entry.panel)
                           setSearch('')
+                          setSearchExpanded(false)
                         }}
                       >
                         <resultCategory.icon className="shrink-0 text-lg text-foreground-400" />
