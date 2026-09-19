@@ -749,6 +749,7 @@ export const messages: Readonly<Record<string, string>> = {
   Stopped: 'Stopped',
   'Custom icon saved': 'Custom icon saved',
   Off: 'Off',
+  Closed: 'Closed',
   'Switched to global mode': 'Switched to global mode',
   'Switched to direct mode': 'Switched to direct mode',
   'Switched to rule mode': 'Switched to rule mode',

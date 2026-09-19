@@ -16,6 +16,7 @@ export interface KokoTabOption {
 interface KokoTabsProps {
   ariaLabel: string
   className?: string
+  density?: 'normal' | 'toolbar'
   options: KokoTabOption[]
   selectedKey: string
   variant?: React.ComponentProps<typeof Tabs>['variant']
@@ -40,6 +41,7 @@ interface KokoSegmentedControlProps {
 export const KokoTabs: React.FC<KokoTabsProps> = ({
   ariaLabel,
   className,
+  density = 'normal',
   options,
   selectedKey,
   variant = 'secondary',
@@ -47,18 +49,18 @@ export const KokoTabs: React.FC<KokoTabsProps> = ({
 }) => {
   return (
     <Tabs
-      className={cn('max-w-full shrink-0', className)}
+      className={cn('max-w-full shrink-0', density === 'toolbar' && 'h-9 w-max', className)}
       selectedKey={selectedKey}
       variant={variant}
       onSelectionChange={(key) => void onChange(String(key))}
     >
-      <Tabs.ListContainer className="max-w-full">
-        <Tabs.List aria-label={ariaLabel}>
+      <Tabs.ListContainer className={cn('max-w-full', density === 'toolbar' && 'h-9')}>
+        <Tabs.List aria-label={ariaLabel} className={cn(density === 'toolbar' && 'h-9')}>
           {options.map((option) => (
             <Tabs.Tab
               key={option.id}
               id={option.id}
-              className="min-w-max whitespace-nowrap"
+              className={cn('min-w-max whitespace-nowrap', density === 'toolbar' && 'h-9 px-2.5')}
               isDisabled={option.isDisabled}
             >
               <span className="whitespace-nowrap">{option.label}</span>

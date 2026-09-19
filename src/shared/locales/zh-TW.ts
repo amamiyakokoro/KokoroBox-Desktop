@@ -722,6 +722,7 @@ export const messages: Readonly<Record<string, string>> = {
   Stopped: '已停止',
   'Custom icon saved': '已儲存自訂圖示',
   Off: '已關閉',
+  Closed: '已關閉',
   'Switched to global mode': '已切換至全域模式',
   'Switched to direct mode': '已切換至直連模式',
   'Switched to rule mode': '已切換至規則模式',

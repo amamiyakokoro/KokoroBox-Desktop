@@ -31,7 +31,9 @@ import { platform } from '@renderer/utils/init'
 import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'
 import { MdTune } from 'react-icons/md'
 import { IoPause, IoPlay } from 'react-icons/io5'
+import { LuSearch } from 'react-icons/lu'
 import { compileAdvancedFilter } from '@renderer/utils/advanced-filter'
+import { KokoToolbar, KokoToolbarIconButton } from '@renderer/components/base/koko-toolbar'
 import {
   ConnectionFilterCompletionSession,
   buildConnectionFilterSuggestionResult,
@@ -968,26 +970,22 @@ const Connections: React.FC = () => {
           onClose={() => setIsSettingDrawerOpen(false)}
         />
       )}
-      <div className="overflow-x-auto sticky top-0 z-40">
-        <div className="flex p-2 gap-2">
+      <div className="sticky top-0 z-40 overflow-x-auto">
+        <KokoToolbar aria-label={tr('Connections')}>
           <KokoTabs
             ariaLabel={tr('Connection status')}
             selectedKey={tab}
-            className="h-8 w-max shrink-0"
+            density="toolbar"
             variant="secondary"
             options={[
               {
                 id: 'active',
                 label: (
-                  <span className="flex items-center gap-1.5 whitespace-nowrap px-1">
+                  <span className="flex items-center gap-1.5 whitespace-nowrap">
                     <span>{tr('Active')}</span>
                     <span
                       data-slot="connection-count"
-                      className={`min-w-5 rounded-full px-1.5 text-center text-[10px] font-medium leading-4 tabular-nums ${
-                        tab === 'active'
-                          ? 'bg-primary/12 text-primary'
-                          : 'bg-default-100 text-foreground-500'
-                      }`}
+                      className={`min-w-4 text-center text-xs font-semibold leading-4 tabular-nums ${tab === 'active' ? 'text-accent' : 'text-foreground-400'}`}
                     >
                       {activeConnections.length}
                     </span>
@@ -997,15 +995,11 @@ const Connections: React.FC = () => {
               {
                 id: 'closed',
                 label: (
-                  <span className="flex items-center gap-1.5 whitespace-nowrap px-1">
-                    <span>{tr('Off')}</span>
+                  <span className="flex items-center gap-1.5 whitespace-nowrap">
+                    <span>{tr('Closed')}</span>
                     <span
                       data-slot="connection-count"
-                      className={`min-w-5 rounded-full px-1.5 text-center text-[10px] font-medium leading-4 tabular-nums ${
-                        tab === 'closed'
-                          ? 'bg-danger/12 text-danger'
-                          : 'bg-default-100 text-foreground-500'
-                      }`}
+                      className={`min-w-4 text-center text-xs font-semibold leading-4 tabular-nums ${tab === 'closed' ? 'text-accent' : 'text-foreground-400'}`}
                     >
                       {closedConnections.length}
                     </span>
@@ -1016,16 +1010,19 @@ const Connections: React.FC = () => {
             onChange={handleTabChange}
           />
           <Tooltip delay={0} isOpen={Boolean(compiledFilter.error)}>
-            <Tooltip.Trigger className="relative min-w-0 flex-1">
+            <Tooltip.Trigger className="relative min-w-36 flex-1">
               <div className="relative min-w-0 flex-1">
                 <InputGroup
                   variant="secondary"
                   data-invalid={Boolean(compiledFilter.error) || undefined}
-                  className="h-8"
+                  className="h-9 min-h-9"
                 >
+                  <InputGroup.Prefix className="h-full items-center">
+                    <LuSearch aria-hidden="true" className="shrink-0 text-foreground-400" />
+                  </InputGroup.Prefix>
                   <InputGroup.Input
                     ref={filterInputRef}
-                    className="font-mono text-sm tracking-normal focus-visible:outline-none"
+                    className="h-9 py-0 font-mono text-sm tracking-normal focus-visible:outline-none"
                     value={filter}
                     placeholder={tr('Filter')}
                     aria-invalid={Boolean(compiledFilter.error) || undefined}
@@ -1067,7 +1064,7 @@ const Connections: React.FC = () => {
                   ) : null}
                 </InputGroup>
                 {inlineCompletionSuffix ? (
-                  <div className="pointer-events-none absolute top-1/2 left-3 right-10 z-10 flex -translate-y-1/2 items-center overflow-hidden font-mono text-sm tracking-normal">
+                  <div className="pointer-events-none absolute top-1/2 left-10 right-10 z-10 flex -translate-y-1/2 items-center overflow-hidden font-mono text-sm tracking-normal">
                     <div
                       className="flex items-center whitespace-pre"
                       style={{ transform: `translateX(-${filterScrollLeft}px)` }}
@@ -1094,7 +1091,7 @@ const Connections: React.FC = () => {
           <KokoSelect
             aria-label={tr('Sort field')}
             className="w-34 min-w-24 shrink-0"
-            density="compact"
+            density="toolbar"
             disallowEmptySelection
             variant="secondary"
             valueClassName="text-center"
@@ -1109,11 +1106,8 @@ const Connections: React.FC = () => {
             value={connectionOrderBy}
             onChange={handleOrderByChange}
           />
-          <Button
-            size="sm"
-            isIconOnly
-            className="bg-content2"
-            aria-label={connectionDirection === 'asc' ? tr('Ascending') : tr('Descending')}
+          <KokoToolbarIconButton
+            label={connectionDirection === 'asc' ? tr('Ascending') : tr('Descending')}
             onPress={handleDirectionToggle}
           >
             {connectionDirection === 'asc' ? (
@@ -1121,8 +1115,8 @@ const Connections: React.FC = () => {
             ) : (
               <HiSortDescending className="text-lg" />
             )}
-          </Button>
-        </div>
+          </KokoToolbarIconButton>
+        </KokoToolbar>
         <Separator />
       </div>
       <div className="h-[calc(100vh-100px)] mt-px">
