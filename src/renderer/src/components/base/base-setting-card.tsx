@@ -1,5 +1,5 @@
 import React, { createContext, useContext } from 'react'
-import { Accordion, AccordionItem, Card, CardBody } from '@heroui/react'
+import { Disclosure, Surface } from '@heroui-v3/react'
 
 interface Props {
   header?: string
@@ -35,44 +35,30 @@ const SettingCard: React.FC<Props> = (props) => {
   }
 
   return !header ? (
-    <Card className={`${className || ''} m-2`}>
-      <CardBody>{children}</CardBody>
-    </Card>
+    <Surface
+      variant="default"
+      className={`${className || ''} m-2 rounded-xl border border-separator/70 p-3`}
+    >
+      {children}
+    </Surface>
   ) : (
-    <Accordion
-      isCompact
-      className={`${className || ''} my-2`}
-      variant="splitted"
+    <div
+      className={`${className || ''} mx-2 my-2 overflow-hidden rounded-xl border border-separator/70 bg-surface`}
       data-setting-label={header}
       tabIndex={header ? -1 : undefined}
     >
-      <AccordionItem
-        aria-label={header}
-        className="data-[open=true]:pb-2"
-        keepContentMounted
-        title={<span>{header}</span>}
-        indicator={({ isOpen }) => (
-          <svg
-            className={`transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
-            width="16"
-            height="16"
-            viewBox="0 0 16 16"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M4 6L8 10L12 6"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        )}
-      >
-        {children}
-      </AccordionItem>
-    </Accordion>
+      <Disclosure>
+        <Disclosure.Heading>
+          <Disclosure.Trigger className="flex min-h-11 w-full items-center gap-3 px-3 py-2 text-left text-base font-medium text-foreground">
+            <span className="min-w-0 flex-1 truncate">{header}</span>
+            <Disclosure.Indicator className="text-foreground-500" />
+          </Disclosure.Trigger>
+        </Disclosure.Heading>
+        <Disclosure.Content>
+          <div className="border-t border-separator/70 px-3 py-2">{children}</div>
+        </Disclosure.Content>
+      </Disclosure>
+    </div>
   )
 }
 

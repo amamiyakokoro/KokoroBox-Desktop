@@ -1,4 +1,5 @@
-import { Button, Divider } from '@heroui/react'
+import { tr } from '../../../../shared/i18n'
+import { Button, Separator } from '@heroui-v3/react'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { platform } from '@renderer/utils/init'
 import { isAlwaysOnTop, setAlwaysOnTop } from '@renderer/utils/ipc'
@@ -58,24 +59,24 @@ const BasePage = forwardRef<HTMLDivElement, Props>((props, ref) => {
               size="sm"
               className="app-nodrag relative"
               isIconOnly
-              variant="light"
-              color={onTop ? 'primary' : 'default'}
+              variant={onTop ? 'primary' : 'ghost'}
+              aria-label={tr('Always on top')}
+              aria-pressed={onTop}
               onPress={async () => {
                 await setAlwaysOnTop(!onTop)
                 await updateAlwaysOnTop()
               }}
-              startContent={
-                onTop ? (
-                  <RiPushpin2Fill className="text-lg" />
-                ) : (
-                  <RiPushpin2Line className="text-lg" />
-                )
-              }
-            />
+            >
+              {onTop ? (
+                <RiPushpin2Fill className="text-lg" />
+              ) : (
+                <RiPushpin2Line className="text-lg" />
+              )}
+            </Button>
           </div>
         </div>
 
-        <Divider />
+        <Separator />
       </div>
       <div
         className={`content h-[calc(100vh-49px)] overflow-y-auto custom-scrollbar ${props.contentClassName ?? ''}`}

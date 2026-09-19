@@ -1,5 +1,5 @@
 import { tr } from '../../../../shared/i18n'
-import { Button } from '@heroui/react'
+import { Button } from '@heroui-v3/react'
 import React, { type ReactNode } from 'react'
 import { SettingCardModeProvider } from './base-setting-card'
 import { SettingItemModeProvider } from './base-setting-item'
@@ -34,10 +34,9 @@ export const FeatureSettingsSaveButton: React.FC<FeatureSettingsSaveButtonProps>
     <Button
       size="sm"
       className="app-nodrag min-w-16"
-      color="primary"
-      variant="solid"
+      variant="primary"
       isDisabled={isDisabled || isSaving}
-      isLoading={isSaving}
+      isPending={isSaving}
       aria-label={tr('Save')}
       onPress={onPress}
     >

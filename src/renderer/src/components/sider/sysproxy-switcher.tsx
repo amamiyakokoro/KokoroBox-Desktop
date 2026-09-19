@@ -1,6 +1,6 @@
 import { tr } from '../../../../shared/i18n'
 import { Button, Tooltip } from '@heroui/react'
-import BorderSwitch from '@renderer/components/base/border-swtich'
+import BorderSwitch from '@renderer/components/base/border-switch'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'

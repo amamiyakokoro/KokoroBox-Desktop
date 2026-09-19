@@ -1,7 +1,9 @@
 import { tr } from '../../../../shared/i18n'
 import React, { useEffect, useState } from 'react'
-import { Select, SelectItem } from '@heroui/react'
+import { ListBox, Select } from '@heroui-v3/react'
 import { getInterfaces } from '@renderer/utils/ipc'
+
+const DISABLED_INTERFACE_KEY = '__disabled__'
 
 const InterfaceSelect: React.FC<{
   value: string
@@ -20,18 +22,32 @@ const InterfaceSelect: React.FC<{
   return (
     <Select
       aria-label={tr('Network interface')}
-      size="sm"
       className="w-75"
-      selectedKeys={new Set([value])}
-      disallowEmptySelection={true}
-      onSelectionChange={(v) => onChange(v.currentKey as string)}
+      value={value || DISABLED_INTERFACE_KEY}
+      variant="secondary"
+      onChange={(key) => {
+        if (Array.isArray(key) || key == null) return
+        onChange(key === DISABLED_INTERFACE_KEY ? '' : String(key))
+      }}
     >
-      <SelectItem key="">{tr('Disable')}</SelectItem>
-      <>
-        {ifaces.map((name) => (
-          <SelectItem key={name}>{name}</SelectItem>
-        ))}
-      </>
+      <Select.Trigger className="h-8 min-h-8 py-0">
+        <Select.Value />
+        <Select.Indicator />
+      </Select.Trigger>
+      <Select.Popover>
+        <ListBox>
+          <ListBox.Item id={DISABLED_INTERFACE_KEY} textValue={tr('Disable')}>
+            {tr('Disable')}
+            <ListBox.ItemIndicator />
+          </ListBox.Item>
+          {ifaces.map((name) => (
+            <ListBox.Item id={name} key={name} textValue={name}>
+              {name}
+              <ListBox.ItemIndicator />
+            </ListBox.Item>
+          ))}
+        </ListBox>
+      </Select.Popover>
     </Select>
   )
 }

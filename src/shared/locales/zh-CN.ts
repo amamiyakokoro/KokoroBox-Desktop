@@ -505,6 +505,7 @@ export const messages: Readonly<Record<string, string>> = {
   Info: '信息',
   'Restart the app to apply GPU acceleration changes': '修改 GPU 加速设置需要重启应用才能生效',
   'Allow LAN connections': '允许局域网连接',
+  'Always on top': '保持置顶',
   'Allowed origins': '允许的来源',
   'Allow private network access': '允许私有网络访问',
   'IP ranges exempt from authentication': '允许跳过验证的 IP 段',

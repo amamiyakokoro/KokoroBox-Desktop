@@ -532,6 +532,7 @@ export const messages: Readonly<Record<string, string>> = {
   'Restart the app to apply GPU acceleration changes':
     'Restart the app to apply GPU acceleration changes',
   'Allow LAN connections': 'Allow LAN connections',
+  'Always on top': 'Always on top',
   'Allowed origins': 'Allowed origins',
   'Allow private network access': 'Allow private network access',
   'IP ranges exempt from authentication': 'IP ranges exempt from authentication',

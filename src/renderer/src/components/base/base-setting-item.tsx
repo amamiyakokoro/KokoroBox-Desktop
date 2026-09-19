@@ -1,4 +1,4 @@
-import { cn, Divider } from '@heroui/react'
+import { cn, Separator } from '@heroui-v3/react'
 
 import React, { createContext, useContext } from 'react'
 
@@ -80,7 +80,7 @@ const SettingItem: React.FC<SettingItemProps> = (props) => {
           <div className="setting-item__content">{children}</div>
         </div>
       )}
-      {divider && <Divider className="setting-item__divider my-2" />}
+      {divider && <Separator className="setting-item__divider my-2" variant="tertiary" />}
     </>
   )
 }

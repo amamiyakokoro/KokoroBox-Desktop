@@ -1,7 +1,7 @@
 import { tr } from '../../../../shared/i18n'
 import { Button, Tooltip } from '@heroui/react'
 import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'
-import BorderSwitch from '@renderer/components/base/border-swtich'
+import BorderSwitch from '@renderer/components/base/border-switch'
 import { TbDeviceIpadHorizontalBolt } from 'react-icons/tb'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { restartCore } from '@renderer/utils/ipc'

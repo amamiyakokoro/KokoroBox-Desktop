@@ -1,8 +1,49 @@
 import { tr } from '../../../../shared/i18n'
 import React from 'react'
-import { Button, Divider, Input, Tooltip } from '@heroui/react'
+import { Button, Input, Separator, Tooltip } from '@heroui-v3/react'
 import { MdDeleteForever } from 'react-icons/md'
 import type { ValidationResult } from '@renderer/utils/validate'
+
+interface ValidatedInputProps {
+  disabled?: boolean
+  error?: string
+  isValid: boolean
+  onChange: (value: string) => void
+  placeholder: string
+  value: string
+}
+
+const ValidatedInput: React.FC<ValidatedInputProps> = ({
+  disabled,
+  error,
+  isValid,
+  onChange,
+  placeholder,
+  value
+}) => (
+  <Tooltip delay={0} isOpen={!isValid}>
+    <Tooltip.Trigger className="block min-w-0 w-full">
+      <Input
+        aria-invalid={!isValid}
+        className={isValid ? 'h-8' : 'h-8 ring-1 ring-danger'}
+        disabled={disabled}
+        fullWidth
+        placeholder={placeholder}
+        value={value}
+        variant="secondary"
+        onChange={(event) => onChange(event.target.value)}
+      />
+    </Tooltip.Trigger>
+    <Tooltip.Content
+      className="max-w-72 bg-danger text-danger-foreground"
+      offset={10}
+      placement="left"
+      showArrow
+    >
+      {error ?? tr('Invalid format')}
+    </Tooltip.Content>
+  </Tooltip>
+)
 
 interface EditableListProps {
   title?: string
@@ -161,76 +202,43 @@ const EditableList: React.FC<EditableListProps> = ({
               {isDual || objectMode ? (
                 <>
                   <div className="w-1/3">
-                    <Tooltip
-                      content={part1Error ?? tr('Invalid format')}
-                      placement="left"
-                      isOpen={!part1Valid}
-                      showArrow={true}
-                      color="danger"
-                      offset={10}
-                    >
-                      <Input
-                        size="sm"
-                        fullWidth
-                        className={
-                          part1Valid ? '' : 'border-red-500 ring-1 ring-red-500 rounded-lg'
-                        }
-                        disabled={disabled}
-                        placeholder={placeholder}
-                        value={entry.part1}
-                        onValueChange={(v) => handleUpdate(idx, v, entry.part2)}
-                      />
-                    </Tooltip>
+                    <ValidatedInput
+                      disabled={disabled}
+                      error={part1Error}
+                      isValid={part1Valid}
+                      placeholder={placeholder}
+                      value={entry.part1}
+                      onChange={(value) => handleUpdate(idx, value, entry.part2)}
+                    />
                   </div>
                   <span className="mx-1">:</span>
                   <div className="flex-1">
-                    <Tooltip
-                      content={part2Error ?? tr('Invalid format')}
-                      placement="left"
-                      isOpen={!part2Valid}
-                      showArrow={true}
-                      color="danger"
-                      offset={10}
-                    >
-                      <Input
-                        size="sm"
-                        fullWidth
-                        className={
-                          part2Valid ? '' : 'border-red-500 ring-1 ring-red-500 rounded-lg'
-                        }
-                        disabled={disabled}
-                        placeholder={part2Placeholder}
-                        value={entry.part2 || ''}
-                        onValueChange={(v) => handleUpdate(idx, entry.part1, v)}
-                      />
-                    </Tooltip>
+                    <ValidatedInput
+                      disabled={disabled}
+                      error={part2Error}
+                      isValid={part2Valid}
+                      placeholder={part2Placeholder}
+                      value={entry.part2 || ''}
+                      onChange={(value) => handleUpdate(idx, entry.part1, value)}
+                    />
                   </div>
                 </>
               ) : (
-                <Tooltip
-                  content={part1Error ?? tr('Invalid format')}
-                  placement="left"
-                  isOpen={!part1Valid}
-                  showArrow={true}
-                  color="danger"
-                  offset={10}
-                >
-                  <Input
-                    size="sm"
-                    fullWidth
-                    className={part1Valid ? '' : 'border-red-500 ring-1 ring-red-500 rounded-lg'}
-                    disabled={disabled}
-                    placeholder={placeholder}
-                    value={entry.part1}
-                    onValueChange={(v) => handleUpdate(idx, v)}
-                  />
-                </Tooltip>
+                <ValidatedInput
+                  disabled={disabled}
+                  error={part1Error}
+                  isValid={part1Valid}
+                  placeholder={placeholder}
+                  value={entry.part1}
+                  onChange={(value) => handleUpdate(idx, value)}
+                />
               )}
               {idx < processedItems.length && !disabled && (
                 <Button
+                  aria-label={tr('Delete')}
+                  isIconOnly
                   size="sm"
-                  variant="flat"
-                  color="warning"
+                  variant="danger-soft"
                   onPress={() => handleUpdate(idx, '', '')}
                 >
                   <MdDeleteForever className="text-lg" />
@@ -240,7 +248,7 @@ const EditableList: React.FC<EditableListProps> = ({
           )
         })}
       </div>
-      {divider && <Divider className="mt-2 mb-2" />}
+      {divider && <Separator className="mt-2 mb-2" variant="tertiary" />}
     </>
   )
 }

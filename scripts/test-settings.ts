@@ -186,6 +186,45 @@ test('feature settings only surface save actions for dirty embedded panels', () 
   }
 })
 
+test('shared settings primitives isolate HeroUI v3 compound APIs', () => {
+  const primitiveFiles = [
+    'src/renderer/src/components/base/base-page.tsx',
+    'src/renderer/src/components/base/base-setting-item.tsx',
+    'src/renderer/src/components/base/base-setting-card.tsx',
+    'src/renderer/src/components/base/base-feature-settings.tsx',
+    'src/renderer/src/components/base/border-switch.tsx',
+    'src/renderer/src/components/base/base-list-editor.tsx',
+    'src/renderer/src/components/base/interface-select.tsx',
+    'src/renderer/src/components/base/base-controls.tsx'
+  ]
+
+  for (const file of primitiveFiles) {
+    const source = readFileSync(file, 'utf8')
+    assert.doesNotMatch(source, /from '@heroui\/react'/)
+    assert.match(source, /from '@heroui-v3\/react'/)
+  }
+
+  const borderSwitch = readFileSync('src/renderer/src/components/base/border-switch.tsx', 'utf8')
+  const settingCard = readFileSync('src/renderer/src/components/base/base-setting-card.tsx', 'utf8')
+  const listEditor = readFileSync('src/renderer/src/components/base/base-list-editor.tsx', 'utf8')
+  const interfaceSelect = readFileSync(
+    'src/renderer/src/components/base/interface-select.tsx',
+    'utf8'
+  )
+
+  assert.match(borderSwitch, /<Switch\.Content>/)
+  assert.match(borderSwitch, /<Switch\.Control/)
+  assert.match(borderSwitch, /<Switch\.Thumb \/>/)
+  assert.match(borderSwitch, /onChange=\{onChange \?\? onValueChange\}/)
+  assert.doesNotMatch(borderSwitch, /classNames=/)
+  assert.match(settingCard, /<Disclosure>/)
+  assert.match(settingCard, /<Surface/)
+  assert.match(listEditor, /<Tooltip\.Content/)
+  assert.match(listEditor, /variant="danger-soft"/)
+  assert.match(interfaceSelect, /<Select\.Trigger/)
+  assert.match(interfaceSelect, /<ListBox\.Item/)
+})
+
 test('page settings drawers use the shared compact inspector behavior', () => {
   const drawer = readFileSync('src/renderer/src/components/base/base-settings-drawer.tsx', 'utf8')
   const settingItem = readFileSync('src/renderer/src/components/base/base-setting-item.tsx', 'utf8')
