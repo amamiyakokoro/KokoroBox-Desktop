@@ -1050,7 +1050,7 @@ test('macOS approval guidance returns promptly and remains visible across app re
     settingsCommand.indexOf('KBOpenSystemSettings(error)') <
       settingsCommand.indexOf('KBActivateExtension(')
   )
-  assert.match(page, /isLoading=\{openingSettings\}/)
+  assert.match(page, /isPending=\{openingSettings\}/)
   assert.match(page, /notify\(error, \{ variant: 'danger' \}\)/)
   assert.match(bridge, /needsUserApproval = KBUserApprovalPending\(\)/)
   assert.match(
@@ -1157,8 +1157,8 @@ test('application routing rules use a two-line identity-first card layout', () =
   assert.match(row, /if \(id === 'move-up'\) onMove\(-1\)/)
   assert.match(row, /if \(id === 'move-down'\) onMove\(1\)/)
   assert.match(row, /if \(id === 'delete'\) onDelete\(\)/)
-  assert.match(row, /hover:border-default-200/)
-  assert.match(row, /focus-within:border-primary\/40/)
+  assert.match(row, /<Card variant="secondary" className="p-3">/)
+  assert.match(row, /<InputGroup variant="secondary"/)
 })
 
 test('application rule entry keeps match type and identifier on one desktop row', () => {

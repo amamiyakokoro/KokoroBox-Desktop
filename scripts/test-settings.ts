@@ -441,7 +441,7 @@ test('renderer components never mix HeroUI v2 and v3 in one file', () => {
   }
 })
 
-test('Phase 4 HeroUI v3 cards preserve the compact pre-migration layout contract', () => {
+test('migrated HeroUI v3 cards preserve layout safety without requiring v2 spacing', () => {
   const proxyGroups = readFileSync('src/renderer/src/pages/proxies.tsx', 'utf8')
   const connection = readFileSync(
     'src/renderer/src/components/connections/connection-item.tsx',
@@ -468,9 +468,8 @@ test('Phase 4 HeroUI v3 cards preserve the compact pre-migration layout contract
     ['profile', profile]
   ] as const) {
     const classes = cardClassName(source, label).split(/\s+/)
-    for (const token of ['p-0', 'gap-0', 'overflow-hidden', 'min-w-0']) {
-      assert.ok(classes.includes(token), `${label} Card must explicitly include ${token}`)
-    }
+    assert.ok(classes.includes('overflow-hidden'), `${label} Card must contain its content`)
+    assert.ok(classes.includes('min-w-0'), `${label} Card must be allowed to shrink`)
   }
 
   assert.match(connection, /<Card\.Header className="[^"]*\bflex-row\b/)
@@ -479,6 +478,37 @@ test('Phase 4 HeroUI v3 cards preserve the compact pre-migration layout contract
   assert.match(profile, /<Card\.Footer className="[^"]*\bpx-3\b/)
   assert.match(profilesPage, /repeat\(auto-fit,minmax\(min\(17rem,100%\),1fr\)\)/)
   assert.doesNotMatch(profilesPage, /sm:grid-cols-2|lg:grid-cols-3|xl:grid-cols-4/)
+})
+
+test('Phase 9 card-heavy surfaces use native v3 anatomy and semantic interactions', () => {
+  const files = [
+    'src/renderer/src/components/rules/rule-item.tsx',
+    'src/renderer/src/components/proxies/proxy-item.tsx',
+    'src/renderer/src/components/override/override-item.tsx',
+    'src/renderer/src/components/app-routing/rule-row.tsx',
+    'src/renderer/src/pages/app-routing.tsx'
+  ]
+
+  for (const file of files) {
+    const source = readFileSync(file, 'utf8')
+    assert.doesNotMatch(source, /from '@heroui\/react'/, `${file} still imports HeroUI v2`)
+    assert.match(source, /from '@heroui-v3\/react'/, `${file} does not import HeroUI v3`)
+    assert.doesNotMatch(source, /CardBody|isPressable|shadow="(?:none|sm)"/)
+  }
+
+  const rule = readFileSync('src/renderer/src/components/rules/rule-item.tsx', 'utf8')
+  const proxy = readFileSync('src/renderer/src/components/proxies/proxy-item.tsx', 'utf8')
+  const override = readFileSync('src/renderer/src/components/override/override-item.tsx', 'utf8')
+  const appRule = readFileSync('src/renderer/src/components/app-routing/rule-row.tsx', 'utf8')
+
+  assert.match(rule, /<Card variant="secondary" className="w-full p-3">/)
+  assert.match(rule, /<Card\.Content/)
+  assert.match(proxy, /<Card[\s\S]*variant="secondary"/)
+  assert.match(proxy, /<button[\s\S]*aria-pressed=\{selected\}[\s\S]*onClick=\{selectProxy\}/)
+  assert.match(override, /<Card className="h-full w-full min-w-0 overflow-hidden">/)
+  assert.match(override, /<button[\s\S]*disabled=\{disableOpen\}/)
+  assert.match(appRule, /<Card variant="secondary" className="p-3">/)
+  assert.match(appRule, /<InputGroup variant="secondary"/)
 })
 
 test('page settings drawers use the shared compact inspector behavior', () => {
@@ -683,7 +713,9 @@ test('proxy group rows stay compact while preserving semantic metadata and actio
   assert.match(page, /shadow-none/)
   assert.match(page, /gap-2 pt-2 mx-3/)
   assert.match(item, /return `\$\{delay\} ms`/)
-  assert.match(item, /shadow="none"/)
+  assert.match(item, /variant="secondary"/)
+  assert.match(item, /aria-pressed=\{selected\}/)
+  assert.doesNotMatch(item, /isPressable|CardBody/)
   assert.doesNotMatch(item, /delay < 500/)
   assert.match(tooltip, /return `\$\{delay\} ms`/)
   assert.doesNotMatch(tooltip, /delay < 500/)
@@ -836,7 +868,8 @@ test('operational lists use compact hierarchy without changing their behavior', 
   const logItem = readFileSync('src/renderer/src/components/logs/log-item.tsx', 'utf8')
 
   assert.match(rulesPage, /<Virtuoso/)
-  assert.match(ruleItem, /<CardBody className="w-full px-3 py-2">/)
+  assert.match(ruleItem, /<Card variant="secondary" className="w-full p-3">/)
+  assert.match(ruleItem, /<Card\.Content className="w-full">/)
   assert.match(ruleItem, /hasHits \? 'bg-primary\/10 font-medium text-primary'/)
   assert.match(ruleItem, /aria-hidden="true"[\s\S]*→/)
   assert.match(ruleItem, /aria-label=\{`\$\{tr\('Enable rule'\)\}:/)
@@ -855,8 +888,8 @@ test('operational lists use compact hierarchy without changing their behavior', 
   assert.match(overridesPage, /m-2 grid grid-cols-2 gap-2/)
   assert.doesNotMatch(overridesPage, /lg:grid-cols-3|xl:grid-cols-4/)
   assert.match(overridesPage, /addOverrideItem/)
-  assert.match(overrideItem, /<CardBody className="p-3">/)
-  assert.match(overrideItem, /bg-default-100 px-1\.5 py-0\.5 text-\[11px\]/)
+  assert.match(overrideItem, /<Card className="h-full w-full min-w-0 overflow-hidden">/)
+  assert.match(overrideItem, /<Chip size="sm" variant="soft" color="accent">/)
   assert.match(overrideItem, /<KokoActionMenu/)
   assert.match(overrideItem, /onAction=\{onMenuAction\}/)
 

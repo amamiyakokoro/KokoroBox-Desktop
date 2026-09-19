@@ -1,5 +1,5 @@
 import { tr } from '../../../../shared/i18n'
-import { Card, CardBody, Switch } from '@heroui/react'
+import { Card, Switch } from '@heroui-v3/react'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { mihomoRulesDisable } from '@renderer/utils/ipc'
 import RuleDetailTooltip from './rule-detail-tooltip'
@@ -73,8 +73,8 @@ const RuleItem: React.FC<Props> = ({ rule, index }) => {
 
   return (
     <div className={`w-full px-2 pb-1.5 ${index === 0 ? 'pt-1.5' : ''}`}>
-      <Card>
-        <CardBody className="w-full px-3 py-2">
+      <Card variant="secondary" className="w-full p-3">
+        <Card.Content className="w-full">
           <div className="flex min-h-10 items-center gap-3">
             <div className="min-w-0 flex-1">
               <div
@@ -109,10 +109,16 @@ const RuleItem: React.FC<Props> = ({ rule, index }) => {
               size="sm"
               aria-label={`${tr('Enable rule')}: ${rule.payload || rule.type}`}
               isSelected={isEnabled}
-              onValueChange={handleToggle}
-            />
+              onChange={handleToggle}
+            >
+              <Switch.Content>
+                <Switch.Control>
+                  <Switch.Thumb />
+                </Switch.Control>
+              </Switch.Content>
+            </Switch>
           </div>
-        </CardBody>
+        </Card.Content>
       </Card>
       <RuleDetailTooltip
         rule={rule}

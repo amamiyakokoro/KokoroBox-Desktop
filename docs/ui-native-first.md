@@ -49,7 +49,7 @@ Run `pnpm run test:ui-native` when changing shared UI primitives or compatibilit
 
 ### HeroUI v2 imports
 
-There are 15 renderer files importing `@heroui/react`. This allowlist can shrink but must not grow.
+There are 10 renderer files importing `@heroui/react`. This allowlist can shrink but must not grow.
 
 Provider/bootstrap entries:
 
@@ -66,11 +66,6 @@ Application entries:
 
 Higher-risk feature surfaces:
 
-- `src/renderer/src/pages/app-routing.tsx`
-- `src/renderer/src/components/app-routing/rule-row.tsx`
-- `src/renderer/src/components/proxies/proxy-item.tsx`
-- `src/renderer/src/components/rules/rule-item.tsx`
-- `src/renderer/src/components/override/override-item.tsx`
 - `src/renderer/src/components/profiles/kokoro-default-rules.tsx`
 - `src/renderer/src/components/profiles/kokoro-subscription-modal.tsx`
 - `src/renderer/src/components/resources/geo-data.tsx`
@@ -107,6 +102,11 @@ Phase 8 has established these thinner contracts:
 `KokoButton`, `KokoSwitch`, and `KokoTooltip` remain temporary migration shims. Their consumer
 counts are now bounded at 27, 16, and 15 renderer files respectively. These allowlists may shrink
 in later phases; new consumers are not permitted.
+
+Phase 9 moves card-heavy management surfaces to native v3 Card anatomy. Dense rule and proxy rows
+may choose compact application-level padding, while Card surface, radius, elevation, and focus
+appearance remain native. Interactive cards expose an internal semantic button instead of
+recreating the removed v2 `isPressable` behavior on the Card root.
 
 ### Compatibility CSS classification
 

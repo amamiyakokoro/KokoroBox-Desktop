@@ -1,5 +1,5 @@
 import { tr } from '../../../../shared/i18n'
-import { Card, CardBody, Input, Switch, Tooltip } from '@heroui/react'
+import { Card, InputGroup, Switch } from '@heroui-v3/react'
 import { KokoActionMenu } from '../base/koko-collections'
 import { KokoSelect } from '../base/koko-form'
 import { MdArrowDownward, MdArrowUpward, MdDeleteOutline, MdMoreHoriz } from 'react-icons/md'
@@ -64,8 +64,8 @@ export function AppRoutingRuleRow({
     })
   }
   return (
-    <Card shadow="sm">
-      <CardBody className="grid grid-cols-[2.75rem_minmax(0,1fr)] gap-x-3 gap-y-2 p-3.5">
+    <Card variant="secondary" className="p-3">
+      <Card.Content className="grid grid-cols-[2.75rem_minmax(0,1fr)] gap-x-3 gap-y-2">
         <div className="row-span-2 flex items-center justify-center self-stretch">
           <img
             src={icon || defaultApplicationIcon}
@@ -78,29 +78,19 @@ export function AppRoutingRuleRow({
           />
         </div>
         <div className="flex min-w-0 items-center gap-1">
-          <Tooltip
-            content={
-              <div className="max-w-sm break-all">
-                {rule.processPattern}
-                {rule.sourcePath && <p className="mt-1 text-xs">{rule.sourcePath}</p>}
-              </div>
+          <div
+            className="min-w-0 flex-1"
+            title={
+              rule.sourcePath ? `${rule.processPattern}\n${rule.sourcePath}` : rule.processPattern
             }
-            placement="top-start"
           >
-            <div className="min-w-0 flex-1">
-              <Input
+            <InputGroup variant="secondary" className="min-h-9 min-w-0">
+              <InputGroup.Input
                 key={rule.processPattern}
                 aria-label={tr('Process pattern')}
-                size="sm"
-                variant="flat"
-                isDisabled={disabled}
+                disabled={disabled}
                 defaultValue={rule.processPattern}
-                classNames={{
-                  base: 'min-w-0',
-                  input: 'cursor-text truncate text-base font-semibold',
-                  inputWrapper:
-                    'min-h-9 h-9 px-2 border border-transparent bg-transparent shadow-none transition-colors hover:border-default-200 hover:bg-default-100/60 focus-within:border-primary/40 focus-within:bg-default-100/70'
-                }}
+                className="cursor-text truncate text-base font-semibold"
                 onBlur={(event) => {
                   const processPattern = event.currentTarget.value.trim()
                   if (processPattern !== rule.processPattern) {
@@ -113,8 +103,8 @@ export function AppRoutingRuleRow({
                   }
                 }}
               />
-            </div>
-          </Tooltip>
+            </InputGroup>
+          </div>
           <KokoActionMenu
             ariaLabel={tr('Rule actions')}
             isDisabled={disabled}
@@ -223,10 +213,16 @@ export function AppRoutingRuleRow({
             aria-label={tr('Enable rule')}
             isSelected={rule.enabled}
             isDisabled={disabled}
-            onValueChange={(enabled) => onChange({ enabled })}
-          />
+            onChange={(enabled) => onChange({ enabled })}
+          >
+            <Switch.Content>
+              <Switch.Control>
+                <Switch.Thumb />
+              </Switch.Control>
+            </Switch.Content>
+          </Switch>
         </div>
-      </CardBody>
+      </Card.Content>
     </Card>
   )
 }

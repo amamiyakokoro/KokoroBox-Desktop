@@ -1,5 +1,5 @@
 import { tr } from '../../../../shared/i18n'
-import { Button, Card, CardBody } from '@heroui/react'
+import { Button, Card } from '@heroui-v3/react'
 import { mihomoUnfixedProxy } from '@renderer/utils/ipc'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { FaMapPin } from 'react-icons/fa6'
@@ -161,6 +161,14 @@ const ProxyItem: React.FC<Props> = (props) => {
 
   const fixed = group.fixed && group.fixed === proxy.name
 
+  const selectProxy = (): void => {
+    if (touchTriggeredRef.current) {
+      touchTriggeredRef.current = false
+      return
+    }
+    onSelect(group.name, proxy.name)
+  }
+
   return (
     <div
       ref={wrapperRef}
@@ -171,33 +179,27 @@ const ProxyItem: React.FC<Props> = (props) => {
       onTouchEnd={showProxyDetailTooltip ? handleTouchEnd : undefined}
     >
       <Card
-        as="div"
-        onPress={() => {
-          if (touchTriggeredRef.current) {
-            touchTriggeredRef.current = false
-            return
-          }
-          onSelect(group.name, proxy.name)
-        }}
-        isPressable
-        fullWidth
-        shadow="none"
-        className={`border ${
+        variant="secondary"
+        className={`w-full min-w-0 border p-2 ${
           fixed
             ? 'border-secondary/30 bg-secondary/12'
             : selected
               ? 'border-primary/35 bg-primary/12'
-              : 'border-divider/70 bg-content1/75 hover:bg-default-50'
+              : 'border-divider/70'
         }`}
-        radius="sm"
       >
-        <CardBody className="py-1.5 px-2">
+        <Card.Content>
           <div
-            className={`flex ${proxyDisplayLayout === 'double' ? 'gap-1' : 'justify-between items-center'}`}
+            className={`flex min-w-0 items-center ${proxyDisplayLayout === 'double' ? 'gap-1' : 'justify-between'}`}
           >
             {proxyDisplayLayout === 'double' ? (
               <>
-                <div className="flex flex-col gap-0 flex-1 min-w-0">
+                <button
+                  type="button"
+                  className="flex min-w-0 flex-1 flex-col rounded-md text-left outline-none focus-visible:ring-2 focus-visible:ring-focus"
+                  aria-pressed={selected}
+                  onClick={selectProxy}
+                >
                   <div className="text-ellipsis overflow-hidden whitespace-nowrap">
                     <div className="flag-emoji inline">{proxy.name}</div>
                   </div>
@@ -213,27 +215,26 @@ const ProxyItem: React.FC<Props> = (props) => {
                       </>
                     )}
                   </div>
-                </div>
+                </button>
                 <div className="flex items-center justify-center gap-0.5 shrink-0">
                   {fixed && (
                     <Button
                       isIconOnly
-                      color="danger"
+                      aria-label={`${tr('Cancel')}: ${tr('Fixed selection')}`}
                       onPress={async () => {
                         await mihomoUnfixedProxy(group.name)
                         mutateProxies()
                       }}
-                      variant="light"
-                      className="h-6 w-6 min-w-6 p-0 text-xs"
+                      variant="ghost"
+                      className="h-6 w-6 min-w-6 p-0 text-xs text-danger"
                     >
                       <FaMapPin className="text-xs le" />
                     </Button>
                   )}
                   <Button
-                    isLoading={loading}
-                    color={delayColor(delay)}
+                    isPending={loading}
                     onPress={onDelay}
-                    variant="light"
+                    variant={delayColor(delay) === 'danger' ? 'danger-soft' : 'ghost'}
                     className="h-8 min-w-12 px-1.5 text-xs tabular-nums"
                   >
                     {delayText(delay)}
@@ -242,7 +243,12 @@ const ProxyItem: React.FC<Props> = (props) => {
               </>
             ) : (
               <>
-                <div className="text-ellipsis overflow-hidden whitespace-nowrap">
+                <button
+                  type="button"
+                  className="min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap rounded-md text-left outline-none focus-visible:ring-2 focus-visible:ring-focus"
+                  aria-pressed={selected}
+                  onClick={selectProxy}
+                >
                   <div className="flag-emoji inline">{proxy.name}</div>
                   {proxyDisplayLayout === 'single' && (
                     <>
@@ -256,19 +262,19 @@ const ProxyItem: React.FC<Props> = (props) => {
                       )}
                     </>
                   )}
-                </div>
+                </button>
                 <div className="flex items-center gap-0.5 shrink-0">
                   {fixed && (
                     <div className="flex items-center">
                       <Button
                         isIconOnly
-                        color="danger"
+                        aria-label={`${tr('Cancel')}: ${tr('Fixed selection')}`}
                         onPress={async () => {
                           await mihomoUnfixedProxy(group.name)
                           mutateProxies()
                         }}
-                        variant="light"
-                        className="h-6 w-6 min-w-6 p-0 text-xs"
+                        variant="ghost"
+                        className="h-6 w-6 min-w-6 p-0 text-xs text-danger"
                       >
                         <FaMapPin className="text-xs le" />
                       </Button>
@@ -276,10 +282,9 @@ const ProxyItem: React.FC<Props> = (props) => {
                   )}
                   <div className="flex items-center">
                     <Button
-                      isLoading={loading}
-                      color={delayColor(delay)}
+                      isPending={loading}
                       onPress={onDelay}
-                      variant="light"
+                      variant={delayColor(delay) === 'danger' ? 'danger-soft' : 'ghost'}
                       className="h-8 min-w-12 px-1.5 text-xs tabular-nums"
                     >
                       {delayText(delay)}
@@ -289,7 +294,7 @@ const ProxyItem: React.FC<Props> = (props) => {
               </>
             )}
           </div>
-        </CardBody>
+        </Card.Content>
       </Card>
       {showProxyDetailTooltip && (
         <ProxyDetailTooltip

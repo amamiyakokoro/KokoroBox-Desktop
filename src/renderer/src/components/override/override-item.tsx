@@ -1,5 +1,5 @@
 import { tr } from '../../../../shared/i18n'
-import { Button, Card, CardBody, Chip } from '@heroui/react'
+import { Button, Card, Chip } from '@heroui-v3/react'
 import { KokoActionMenu } from '../base/koko-collections'
 import { IoMdMore, IoMdRefresh } from 'react-icons/io'
 import dayjs from 'dayjs'
@@ -197,35 +197,43 @@ const OverrideItem: React.FC<Props> = (props) => {
         />
       )}
       {openLog && <ExecLogModal id={info.id} onClose={() => setOpenLog(false)} />}
-      <Card
-        as="div"
-        fullWidth
-        isPressable
-        onPress={() => {
-          if (disableOpen) return
-          setOpenFileEditor(true)
-        }}
-      >
-        <div {...attributes} {...listeners} className="h-full w-full">
-          <CardBody className="p-3">
-            <div className="flex h-7 justify-between gap-1">
-              <div className="flex min-w-0 items-center">
-                <h3
-                  title={info?.name}
-                  className="truncate text-sm font-semibold leading-7 text-foreground"
-                >
-                  {info?.name}
+      <Card className="h-full w-full min-w-0 overflow-hidden">
+        <div {...attributes} {...listeners} className="h-full w-full min-w-0">
+          <Card.Content className="min-w-0">
+            <div className="flex min-w-0 items-start gap-2">
+              <button
+                type="button"
+                className="min-w-0 flex-1 rounded-md text-left outline-none focus-visible:ring-2 focus-visible:ring-focus"
+                disabled={disableOpen}
+                onClick={() => setOpenFileEditor(true)}
+              >
+                <h3 title={info.name} className="truncate text-sm font-semibold text-foreground">
+                  {info.name}
                 </h3>
-              </div>
-              <div className="flex shrink-0" data-no-dnd onClick={(e) => e.stopPropagation()}>
+                <div className="mt-2 flex min-w-0 items-center justify-between gap-2">
+                  <div className="flex min-w-0 items-center gap-1.5">
+                    {info.global && (
+                      <Chip size="sm" variant="soft" color="accent">
+                        {tr('Global')}
+                      </Chip>
+                    )}
+                    <span className="truncate text-xs text-muted">
+                      {info.ext === 'yaml' ? 'YAML' : 'JavaScript'}
+                    </span>
+                  </div>
+                  {info.type === 'remote' && (
+                    <small className="shrink-0 text-muted">{dayjs(info.updated).fromNow()}</small>
+                  )}
+                </div>
+              </button>
+              <div className="flex shrink-0" data-no-dnd>
                 {info.type === 'remote' && (
                   <Button
                     isIconOnly
                     size="sm"
-                    variant="light"
-                    color="default"
+                    variant="ghost"
                     aria-label={tr('Refresh')}
-                    disabled={updating}
+                    isDisabled={updating}
                     onPress={async () => {
                       setUpdating(true)
                       try {
@@ -240,10 +248,7 @@ const OverrideItem: React.FC<Props> = (props) => {
                       }
                     }}
                   >
-                    <IoMdRefresh
-                      color="default"
-                      className={`text-[24px] ${updating ? 'animate-spin' : ''}`}
-                    />
+                    <IoMdRefresh className={`text-[20px] ${updating ? 'animate-spin' : ''}`} />
                   </Button>
                 )}
 
@@ -258,28 +263,11 @@ const OverrideItem: React.FC<Props> = (props) => {
                   }))}
                   onAction={onMenuAction}
                 >
-                  <IoMdMore color="default" className="text-[24px]" />
+                  <IoMdMore className="text-[20px]" />
                 </KokoActionMenu>
               </div>
             </div>
-            <div className="flex justify-between">
-              <div className="mt-1.5 flex items-center">
-                {info.global && (
-                  <Chip size="sm" variant="dot" color="primary" className="mr-1.5">
-                    {tr('Global')}
-                  </Chip>
-                )}
-                <span className="rounded-md bg-default-100 px-1.5 py-0.5 text-[11px] text-foreground-500">
-                  {info.ext === 'yaml' ? 'YAML' : 'JavaScript'}
-                </span>
-              </div>
-              {info.type === 'remote' && (
-                <div className="mt-1.5 flex items-center justify-end">
-                  <small className="text-foreground-500">{dayjs(info.updated).fromNow()}</small>
-                </div>
-              )}
-            </div>
-          </CardBody>
+          </Card.Content>
         </div>
       </Card>
     </div>

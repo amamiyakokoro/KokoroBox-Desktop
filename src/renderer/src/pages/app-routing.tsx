@@ -18,7 +18,7 @@ import {
   getAppRoutingStatusLabel,
   getAppRoutingStatusMessage
 } from '@renderer/utils/app-routing-status'
-import { Button, Card, CardBody, Chip, Divider, Input, Switch } from '@heroui/react'
+import { Button, Card, Chip, Input, Label, Separator, Switch, TextField } from '@heroui-v3/react'
 import { KokoActionMenu } from '@renderer/components/base/koko-collections'
 import { KokoSelect } from '@renderer/components/base/koko-form'
 import {
@@ -37,9 +37,9 @@ import { useEffect, useRef, useState } from 'react'
 
 function statusColor(
   status?: AppRoutingStatus
-): 'default' | 'primary' | 'success' | 'warning' | 'danger' {
+): 'default' | 'accent' | 'success' | 'warning' | 'danger' {
   if (status?.state === 'running') return 'success'
-  if (status?.state === 'starting') return 'primary'
+  if (status?.state === 'starting') return 'accent'
   if (status?.state === 'degraded') return 'warning'
   if (status?.state === 'error') return 'danger'
   return 'default'
@@ -204,7 +204,7 @@ const AppRouting: React.FC = () => {
           size="sm"
           isIconOnly
           className="app-nodrag"
-          variant="light"
+          variant="ghost"
           aria-label={tr('Application routing settings')}
           onPress={() => {
             setIsSettingDrawerOpen(true)
@@ -260,7 +260,7 @@ const AppRouting: React.FC = () => {
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <Chip size="sm" color={statusColor(status)} variant="flat">
+              <Chip size="sm" color={statusColor(status)} variant="soft">
                 {getAppRoutingStatusLabel(status)}
               </Chip>
               <p className="text-sm text-foreground-500">
@@ -280,7 +280,12 @@ const AppRouting: React.FC = () => {
               !needsMacApproval &&
               config?.enabled &&
               ['starting', 'error'].includes(status?.state ?? '') && (
-                <Button className="mt-2" size="sm" variant="flat" onPress={() => void refresh()}>
+                <Button
+                  className="mt-2"
+                  size="sm"
+                  variant="secondary"
+                  onPress={() => void refresh()}
+                >
                   {tr('Retry')}
                 </Button>
               )}
@@ -288,13 +293,12 @@ const AppRouting: React.FC = () => {
               <Button
                 className="mt-2"
                 size="sm"
-                color="primary"
-                variant="flat"
-                startContent={<MdRefresh className="text-base" />}
-                isLoading={preparingService}
+                variant="secondary"
+                isPending={preparingService}
                 isDisabled={saving}
                 onPress={() => void prepareWindowsService()}
               >
+                <MdRefresh className="text-base" />
                 {tr('Repair service')}
               </Button>
             )}
@@ -309,18 +313,21 @@ const AppRouting: React.FC = () => {
             aria-label={tr('Application routing')}
             isSelected={config?.enabled ?? false}
             isDisabled={!supported || !config || saving || preparingService}
-            onValueChange={(enabled) => void setRoutingEnabled(enabled)}
-          />
+            onChange={(enabled) => void setRoutingEnabled(enabled)}
+          >
+            <Switch.Content>
+              <Switch.Control>
+                <Switch.Thumb />
+              </Switch.Control>
+            </Switch.Content>
+          </Switch>
         </div>
 
-        <Divider />
+        <Separator />
 
         {needsMacApproval && (
-          <Card
-            className="border border-warning/40 bg-warning-50 dark:bg-warning-900/20"
-            shadow="sm"
-          >
-            <CardBody className="gap-3 p-5">
+          <Card className="border border-warning/40 bg-warning-50 dark:bg-warning-900/20">
+            <Card.Content className="gap-3">
               <div>
                 <h3 className="font-semibold text-warning-900 dark:text-warning-200">
                   {tr('Network Extension approval required')}
@@ -344,24 +351,20 @@ const AppRouting: React.FC = () => {
               </ol>
               <div className="flex flex-wrap gap-2">
                 <Button
-                  color="primary"
-                  startContent={<MdOpenInNew className="text-base" />}
+                  variant="primary"
                   isDisabled={saving}
-                  isLoading={openingSettings}
+                  isPending={openingSettings}
                   onPress={() => void openApprovalSettings()}
                 >
+                  <MdOpenInNew className="text-base" />
                   {tr('Open System Settings and Request Approval')}
                 </Button>
-                <Button
-                  variant="flat"
-                  startContent={<MdRefresh className="text-base" />}
-                  isDisabled={saving}
-                  onPress={() => void refresh()}
-                >
+                <Button variant="secondary" isDisabled={saving} onPress={() => void refresh()}>
+                  <MdRefresh className="text-base" />
                   {tr('I enabled it — check now')}
                 </Button>
               </div>
-            </CardBody>
+            </Card.Content>
           </Card>
         )}
 
@@ -429,10 +432,15 @@ const AppRouting: React.FC = () => {
                 onChange={(value) => setLinuxIdentifierKind(value as AppRoutingIdentifierKind)}
               />
             )}
-            <Input
-              size="sm"
-              label={
-                isMac
+            <TextField
+              className="min-w-0"
+              variant="secondary"
+              value={processPattern}
+              isDisabled={!supported || !config || saving}
+              onChange={setProcessPattern}
+            >
+              <Label>
+                {isMac
                   ? macIdentifierKind === 'macos-process-name'
                     ? tr('Process name')
                     : tr('Signing identifier')
@@ -440,62 +448,61 @@ const AppRouting: React.FC = () => {
                     ? linuxIdentifierKind === 'linux-process-name'
                       ? tr('Process name')
                       : tr('Executable path')
-                    : tr('Process pattern')
-              }
-              placeholder={
-                isMac
-                  ? macIdentifierKind === 'macos-process-name'
-                    ? 'codex'
-                    : 'com.example.app'
-                  : isLinux
-                    ? linuxIdentifierKind === 'linux-process-name'
+                    : tr('Process pattern')}
+              </Label>
+              <Input
+                placeholder={
+                  isMac
+                    ? macIdentifierKind === 'macos-process-name'
                       ? 'codex'
-                      : '/usr/bin/example'
-                    : 'example.exe'
-              }
-              value={processPattern}
-              isDisabled={!supported || !config || saving}
-              onValueChange={setProcessPattern}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter' && processPattern.trim()) void submitPattern()
-              }}
-            />
+                      : 'com.example.app'
+                    : isLinux
+                      ? linuxIdentifierKind === 'linux-process-name'
+                        ? 'codex'
+                        : '/usr/bin/example'
+                      : 'example.exe'
+                }
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' && processPattern.trim()) void submitPattern()
+                }}
+              />
+            </TextField>
           </div>
           <div className="app-routing-rule-actions">
             <Button
               className="app-routing-rule-action"
-              color="primary"
-              startContent={<MdAdd className="text-lg" />}
+              variant="primary"
               isDisabled={!supported || !config || saving || !processPattern.trim()}
               onPress={() => void submitPattern()}
             >
+              <MdAdd className="text-lg" />
               {tr('Add pattern rule')}
             </Button>
             <Button
               className="app-routing-rule-action"
-              variant="flat"
-              startContent={<MdAdd className="text-lg" />}
+              variant="secondary"
               isDisabled={!supported || !config || saving}
               onPress={() =>
                 void addApplications(undefined, isLinux ? linuxIdentifierKind : undefined)
               }
             >
+              <MdAdd className="text-lg" />
               {tr('Select applications')}
             </Button>
           </div>
         </div>
 
         {!supported ? (
-          <Card shadow="sm">
-            <CardBody className="p-5 text-sm text-foreground-500">
+          <Card variant="secondary">
+            <Card.Content className="text-sm text-foreground-500">
               {tr(
                 'Application routing supports Windows 10/11 x64, macOS 13 or later, and Linux x64/arm64.'
               )}
-            </CardBody>
+            </Card.Content>
           </Card>
         ) : !isWindows && config?.rules.length === 0 ? (
-          <Card shadow="sm">
-            <CardBody className="items-center gap-2 p-8 text-center">
+          <Card variant="secondary">
+            <Card.Content className="items-center gap-2 py-4 text-center">
               <p className="font-medium">{tr('No applications added')}</p>
               <p className="text-sm text-foreground-500">
                 {isMac
@@ -510,7 +517,7 @@ const AppRouting: React.FC = () => {
                         'Enter an absolute executable path or select one or more applications, then choose Proxy, Direct, or Block.'
                       )}
               </p>
-            </CardBody>
+            </Card.Content>
           </Card>
         ) : (
           <div className="flex flex-col gap-5">
@@ -520,7 +527,7 @@ const AppRouting: React.FC = () => {
                   <div>
                     <div className="flex items-center gap-2">
                       <h4 className="text-sm font-semibold">{tr('Individual rules')}</h4>
-                      <Chip size="sm" variant="flat">
+                      <Chip size="sm" variant="soft">
                         {ungroupedRules.length}
                       </Chip>
                     </div>
@@ -553,13 +560,13 @@ const AppRouting: React.FC = () => {
 
             {isWindows && (
               <>
-                <Divider />
+                <Separator />
                 <section className="flex flex-col gap-3">
                   <div className="flex flex-wrap items-end justify-between gap-3 px-1">
                     <div>
                       <div className="flex items-center gap-2">
                         <h4 className="text-sm font-semibold">{tr('Rule groups')}</h4>
-                        <Chip size="sm" variant="flat">
+                        <Chip size="sm" variant="soft">
                           {config?.groups?.length ?? 0}
                         </Chip>
                       </div>
@@ -570,20 +577,20 @@ const AppRouting: React.FC = () => {
                     <div className="flex flex-wrap gap-2">
                       <Button
                         size="sm"
-                        variant="flat"
-                        startContent={<MdCreateNewFolder className="text-lg" />}
+                        variant="secondary"
                         isDisabled={!config || saving}
                         onPress={() => setGroupEditor({ name: '' })}
                       >
+                        <MdCreateNewFolder className="text-lg" />
                         {tr('New rule group')}
                       </Button>
                       <Button
                         size="sm"
-                        variant="flat"
-                        startContent={<MdFolderOpen className="text-lg" />}
+                        variant="secondary"
                         isDisabled={!config || saving}
                         onPress={() => void scanDirectory()}
                       >
+                        <MdFolderOpen className="text-lg" />
                         {tr('Scan folder')}
                       </Button>
                     </div>
@@ -626,7 +633,7 @@ const AppRouting: React.FC = () => {
                                   {group.sourceDirectory ?? tr('Manual rule group')}
                                 </span>
                               </span>
-                              <Chip size="sm" variant="flat" className="shrink-0">
+                              <Chip size="sm" variant="soft" className="shrink-0">
                                 {tr('{0} applications', [rules.length])}
                               </Chip>
                             </button>
@@ -679,8 +686,14 @@ const AppRouting: React.FC = () => {
                               aria-label={tr('Enable rule group')}
                               isSelected={group.enabled}
                               isDisabled={saving}
-                              onValueChange={(enabled) => updateGroup(group.id, { enabled })}
-                            />
+                              onChange={(enabled) => updateGroup(group.id, { enabled })}
+                            >
+                              <Switch.Content>
+                                <Switch.Control>
+                                  <Switch.Thumb />
+                                </Switch.Control>
+                              </Switch.Content>
+                            </Switch>
                           </div>
                           {!isCollapsed && (
                             <div
@@ -691,11 +704,11 @@ const AppRouting: React.FC = () => {
                                   <span>{tr('No applications in this rule group')}</span>
                                   <Button
                                     size="sm"
-                                    variant="flat"
-                                    startContent={<MdAdd />}
+                                    variant="secondary"
                                     isDisabled={saving}
                                     onPress={() => void addApplications(group.id)}
                                   >
+                                    <MdAdd />
                                     {tr('Add applications')}
                                   </Button>
                                 </div>
