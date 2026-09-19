@@ -1,5 +1,5 @@
 import { tr } from '../../../../../shared/i18n'
-import { Input, Switch } from '@heroui/react'
+import { KokoSwitch as Switch, KokoTextField as Input } from '@renderer/components/base/koko-form'
 import BasePage from '@renderer/components/base/base-page'
 import SettingItem from '@renderer/components/base/base-setting-item'
 import FeatureSettingsLayout, {

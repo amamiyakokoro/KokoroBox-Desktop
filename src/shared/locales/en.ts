@@ -715,6 +715,7 @@ export const messages: Readonly<Record<string, string>> = {
   'Follow new logs': 'Follow new logs',
   'Stop following new logs': 'Stop following new logs',
   'Clear logs': 'Clear logs',
+  'Clear field': 'Clear field',
   'Live log entry limit': 'Live log entry limit',
   Password: 'Password',
   'Key ID does not match the public key': 'Key ID does not match the public key',

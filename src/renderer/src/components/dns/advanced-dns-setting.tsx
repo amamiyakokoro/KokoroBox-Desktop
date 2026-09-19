@@ -3,7 +3,12 @@ import React, { useState } from 'react'
 import SettingCard from '../base/base-setting-card'
 import SettingItem from '../base/base-setting-item'
 import EditableList from '../base/base-list-editor'
-import { Input, Select, SelectItem, Switch, Tooltip } from '@heroui/react'
+import {
+  KokoSelect,
+  KokoSwitch as Switch,
+  KokoTextField as Input,
+  KokoTooltip as Tooltip
+} from '../base/koko-form'
 import { MdHelpOutline } from 'react-icons/md'
 import { isValidDnsServer, isValidDomainWildcard } from '@renderer/utils/validate'
 import DnsServerList from './dns-server-list'
@@ -314,17 +319,17 @@ const AdvancedDnsSetting: React.FC<AdvancedDnsSettingProps> = ({
         <Switch size="sm" isSelected={preferH3} onValueChange={onPreferH3Change} />
       </SettingItem>
       <SettingItem title={tr('DNS cache algorithm')} divider>
-        <Select
+        <KokoSelect
           aria-label={tr('DNS cache algorithm')}
           className="w-28"
-          size="sm"
-          selectedKeys={new Set([cacheAlgorithm])}
+          value={cacheAlgorithm}
+          options={[
+            { id: 'lru', label: 'LRU' },
+            { id: 'arc', label: 'ARC' }
+          ]}
           disallowEmptySelection
-          onSelectionChange={(keys) => onCacheAlgorithmChange(keys.currentKey as string)}
-        >
-          <SelectItem key="lru">LRU</SelectItem>
-          <SelectItem key="arc">ARC</SelectItem>
-        </Select>
+          onChange={onCacheAlgorithmChange}
+        />
       </SettingItem>
       <SettingItem title={tr('Use system hosts')} divider>
         <Switch size="sm" isSelected={useSystemHosts} onValueChange={onUseSystemHostsChange} />

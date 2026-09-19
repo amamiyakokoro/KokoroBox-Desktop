@@ -2,7 +2,14 @@ import { tr } from '../../../../shared/i18n'
 import React, { useState, useEffect } from 'react'
 import SettingCard from '../base/base-setting-card'
 import SettingItem from '../base/base-setting-item'
-import { Button, Input, Select, SelectItem, Switch, Tab, Tabs, Tooltip } from '@heroui/react'
+import {
+  KokoButton as Button,
+  KokoSelect,
+  KokoSwitch as Switch,
+  KokoTextField as Input,
+  KokoTooltip as Tooltip
+} from '../base/koko-form'
+import { SettingTabs } from '../base/base-controls'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { copyEnv, startNetworkDetection, stopNetworkDetection } from '@renderer/utils/ipc'
 import { platform } from '@renderer/utils/init'
@@ -115,32 +122,29 @@ const BehaviorSettings: React.FC<Props> = ({
               ))}
               divider
             >
-              <Select
+              <KokoSelect
                 aria-label={tr('Environment variable type')}
-                classNames={{ trigger: 'data-[hover=true]:bg-default-200' }}
                 className="w-37.5"
-                size="sm"
-                selectionMode="multiple"
-                selectedKeys={new Set(envType)}
+                multiple
+                value={envType}
+                options={[
+                  { id: 'bash', label: 'Bash' },
+                  { id: 'fish', label: 'Fish' },
+                  { id: 'cmd', label: 'CMD' },
+                  { id: 'powershell', label: 'PowerShell' },
+                  { id: 'nushell', label: 'NuShell' }
+                ]}
                 disallowEmptySelection={true}
-                onSelectionChange={async (v) => {
+                onChange={async (value) => {
                   try {
                     await patchAppConfig({
-                      envType: Array.from(v) as (
-                        'bash' | 'fish' | 'cmd' | 'powershell' | 'nushell'
-                      )[]
+                      envType: value as ('bash' | 'fish' | 'cmd' | 'powershell' | 'nushell')[]
                     })
                   } catch (e) {
                     notify(e, { variant: 'danger' })
                   }
                 }}
-              >
-                <SelectItem key="bash">Bash</SelectItem>
-                <SelectItem key="fish">Fish</SelectItem>
-                <SelectItem key="cmd">CMD</SelectItem>
-                <SelectItem key="powershell">PowerShell</SelectItem>
-                <SelectItem key="nushell">NuShell</SelectItem>
-              </Select>
+              />
             </SettingItem>
           </SettingCard>
         </>
@@ -174,20 +178,20 @@ const BehaviorSettings: React.FC<Props> = ({
           {autoLightweight && (
             <>
               <SettingItem compatKey="legacy" title={tr('Lightweight mode behavior')} divider>
-                <Tabs
-                  size="sm"
-                  color="primary"
+                <SettingTabs
+                  ariaLabel={tr('Lightweight mode behavior')}
                   selectedKey={autoLightweightMode}
-                  onSelectionChange={(v) => {
+                  options={[
+                    { id: 'core', label: tr('Keep only the core') },
+                    { id: 'tray', label: tr('Close only the renderer') }
+                  ]}
+                  onChange={(v) => {
                     patchAppConfig({ autoLightweightMode: v as 'core' | 'tray' })
                     if (v === 'core') {
                       patchAppConfig({ autoLightweightDelay: Math.max(autoLightweightDelay, 5) })
                     }
                   }}
-                >
-                  <Tab key="core" title={tr('Keep only the core')} />
-                  <Tab key="tray" title={tr('Close only the renderer')} />
-                </Tabs>
+                />
               </SettingItem>
               <SettingItem compatKey="legacy" title={tr('Lightweight mode delay')} divider>
                 <Input

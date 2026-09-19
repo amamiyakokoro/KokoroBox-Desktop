@@ -1,5 +1,5 @@
 import { tr } from '../../../../shared/i18n'
-import { Button, Tooltip } from '@heroui/react'
+import { KokoButton as Button, KokoTooltip as Tooltip } from '../base/koko-form'
 import SettingCard from '../base/base-setting-card'
 import SettingItem from '../base/base-setting-item'
 import {

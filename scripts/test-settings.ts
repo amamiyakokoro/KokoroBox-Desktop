@@ -10,6 +10,14 @@ import { normalizeCoreVersion } from '../src/renderer/src/components/sider/core-
 import { formatLogTimestamp } from '../src/renderer/src/components/logs/log-display.ts'
 import { formatProxyType } from '../src/renderer/src/components/proxies/proxy-display.ts'
 
+function collectTsxFiles(directory: string): string[] {
+  return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+    const path = `${directory}/${entry.name}`
+    if (entry.isDirectory()) return collectTsxFiles(path)
+    return entry.isFile() && entry.name.endsWith('.tsx') ? [path] : []
+  })
+}
+
 test('settings drafts merge nested objects and replace arrays without mutating the source', () => {
   const original = {
     profile: { selected: true, fakeIp: false },
@@ -195,7 +203,8 @@ test('shared settings primitives isolate HeroUI v3 compound APIs', () => {
     'src/renderer/src/components/base/border-switch.tsx',
     'src/renderer/src/components/base/base-list-editor.tsx',
     'src/renderer/src/components/base/interface-select.tsx',
-    'src/renderer/src/components/base/base-controls.tsx'
+    'src/renderer/src/components/base/base-controls.tsx',
+    'src/renderer/src/components/base/koko-form.tsx'
   ]
 
   for (const file of primitiveFiles) {
@@ -223,6 +232,40 @@ test('shared settings primitives isolate HeroUI v3 compound APIs', () => {
   assert.match(listEditor, /variant="danger-soft"/)
   assert.match(interfaceSelect, /<Select\.Trigger/)
   assert.match(interfaceSelect, /<ListBox\.Item/)
+})
+
+test('settings and Mihomo forms share the KokoroBox HeroUI v3 conventions', () => {
+  const form = readFileSync('src/renderer/src/components/base/koko-form.tsx', 'utf8')
+  const controls = readFileSync('src/renderer/src/components/base/base-controls.tsx', 'utf8')
+  const migratedFiles = [
+    ...collectTsxFiles('src/renderer/src/components/settings'),
+    ...collectTsxFiles('src/renderer/src/components/mihomo'),
+    ...collectTsxFiles('src/renderer/src/components/dns')
+  ]
+
+  for (const file of migratedFiles) {
+    assert.doesNotMatch(
+      readFileSync(file, 'utf8'),
+      /from '@heroui\/react'/,
+      `${file} still imports HeroUI v2`
+    )
+  }
+
+  assert.match(form, /export const KokoTextField/)
+  assert.match(form, /<InputGroup\.Input/)
+  assert.match(form, /export const KokoSelect/)
+  assert.match(form, /<Select\.Trigger/)
+  assert.match(form, /<Select\.Value \/>/)
+  assert.match(form, /<Select\.Indicator \/>/)
+  assert.match(form, /<Select\.Popover>/)
+  assert.match(form, /<ListBox\.Item/)
+  assert.match(form, /export const KokoSwitch/)
+  assert.match(form, /<Switch\.Content>/)
+  assert.match(form, /<Switch\.Control>/)
+  assert.match(form, /<Switch\.Thumb \/>/)
+  assert.match(controls, /export const SettingTabs/)
+  assert.match(controls, /<Tabs\.List/)
+  assert.match(controls, /<Tabs\.Indicator \/>/)
 })
 
 test('page settings drawers use the shared compact inspector behavior', () => {

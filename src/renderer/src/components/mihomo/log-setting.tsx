@@ -1,6 +1,11 @@
 import { tr } from '../../../../shared/i18n'
 import { useEffect, useState } from 'react'
-import { Button, Input, Switch, Tooltip } from '@heroui/react'
+import {
+  KokoButton as Button,
+  KokoSwitch as Switch,
+  KokoTextField as Input,
+  KokoTooltip as Tooltip
+} from '../base/koko-form'
 import { IoIosHelpCircle } from 'react-icons/io'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import SettingCard from '../base/base-setting-card'

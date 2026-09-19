@@ -1,5 +1,10 @@
 import { tr } from '../../../../../shared/i18n'
-import { Tab, Input, Switch, Tabs, Tooltip } from '@heroui/react'
+import {
+  KokoSwitch as Switch,
+  KokoTextField as Input,
+  KokoTooltip as Tooltip
+} from '@renderer/components/base/koko-form'
+import { SettingTabs } from '@renderer/components/base/base-controls'
 import BasePage from '@renderer/components/base/base-page'
 import SettingItem from '@renderer/components/base/base-setting-item'
 import FeatureSettingsLayout, {
@@ -12,7 +17,7 @@ import DnsServerList from '@renderer/components/dns/dns-server-list'
 import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { restartCore } from '@renderer/utils/ipc'
-import React, { Key, useState } from 'react'
+import React, { useState } from 'react'
 import { notify } from '@renderer/utils/notification'
 import {
   isValidIPv4Cidr,
@@ -288,11 +293,14 @@ const DNS: React.FC<Props> = ({ embedded = false }) => {
             />
           </SettingItem>
           <SettingItem title={tr('DNS policy')} divider>
-            <Tabs
-              size="sm"
-              color="primary"
+            <SettingTabs
+              ariaLabel={tr('DNS policy')}
               selectedKey={isAntiPollutionPreset ? 'anti-pollution' : 'custom'}
-              onSelectionChange={(key: Key) => {
+              options={[
+                { id: 'custom', label: tr('Custom') },
+                { id: 'anti-pollution', label: tr('Anti-pollution') }
+              ]}
+              onChange={(key) => {
                 if (key !== 'anti-pollution') return
                 setValues({
                   ...values,
@@ -305,24 +313,19 @@ const DNS: React.FC<Props> = ({ embedded = false }) => {
                 setDefaultNameserverError(null)
                 setNameserverError(null)
               }}
-            >
-              <Tab key="custom" title={tr('Custom')} />
-              <Tab key="anti-pollution" title={tr('Anti-pollution')} />
-            </Tabs>
+            />
           </SettingItem>
           <SettingItem title={tr('Domain mapping mode')}>
-            <Tabs
-              size="sm"
-              color="primary"
+            <SettingTabs
+              ariaLabel={tr('Domain mapping mode')}
               selectedKey={values.enhancedMode}
-              onSelectionChange={(key: Key) =>
-                setValues({ ...values, enhancedMode: key as DnsMode })
-              }
-            >
-              <Tab key="fake-ip" title={tr('Fake IP')} />
-              <Tab key="redir-host" title={tr('Real IP')} />
-              <Tab key="normal" title={tr('Remove mapping')} />
-            </Tabs>
+              options={[
+                { id: 'fake-ip', label: tr('Fake IP') },
+                { id: 'redir-host', label: tr('Real IP') },
+                { id: 'normal', label: tr('Remove mapping') }
+              ]}
+              onChange={(key) => setValues({ ...values, enhancedMode: key as DnsMode })}
+            />
           </SettingItem>
         </FeatureSettingsSection>
 
@@ -381,11 +384,15 @@ const DNS: React.FC<Props> = ({ embedded = false }) => {
               </SettingItem>
             )}
             <SettingItem title={tr('Fake-IP filter mode')} divider>
-              <Tabs
-                size="sm"
-                color="primary"
+              <SettingTabs
+                ariaLabel={tr('Fake-IP filter mode')}
                 selectedKey={values.fakeIPFilterMode}
-                onSelectionChange={(key: Key) => {
+                options={[
+                  { id: 'blacklist', label: tr('Blacklist') },
+                  { id: 'whitelist', label: tr('Whitelist') },
+                  { id: 'rule', label: tr('Rules') }
+                ]}
+                onChange={(key) => {
                   const fakeIPFilterMode = key as FilterMode
                   setValues({ ...values, fakeIPFilterMode })
                   const firstInvalid = values.fakeIPFilter.find((item) =>
@@ -399,11 +406,7 @@ const DNS: React.FC<Props> = ({ embedded = false }) => {
                       : null
                   )
                 }}
-              >
-                <Tab key="blacklist" title={tr('Blacklist')} />
-                <Tab key="whitelist" title={tr('Whitelist')} />
-                <Tab key="rule" title={tr('Rules')} />
-              </Tabs>
+              />
             </SettingItem>
             <EditableList
               title={tr('Fake IP filter')}

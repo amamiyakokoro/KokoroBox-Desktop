@@ -1,6 +1,7 @@
+/* eslint-disable react/prop-types */
 import { tr } from '../../../../shared/i18n'
-import { Button, Card, CardBody, Chip, Divider, Spinner } from '@heroui/react'
-import { Modal } from '@heroui-v3/react'
+import { Card, Chip, Modal, Separator, Spinner } from '@heroui-v3/react'
+import { KokoButton as Button } from '../base/koko-form'
 import {
   initService,
   installService,
@@ -20,7 +21,9 @@ interface Props {
 type ServiceStatusType = Awaited<ReturnType<typeof serviceStatus>>
 
 function delay(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms))
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms)
+  })
 }
 
 const MacOSServiceSetup: React.FC<Props> = ({ onChange }) => {
@@ -133,20 +136,22 @@ const MacOSServiceSetup: React.FC<Props> = ({ onChange }) => {
               </p>
             </Modal.Header>
             <Modal.Body className="gap-4">
-              <Card shadow="sm" className="border-none bg-default-50">
-                <CardBody className="flex-row items-center justify-between py-4">
+              <Card className="border-none bg-default-50">
+                <Card.Content className="flex-row items-center justify-between py-4">
                   <span className="text-sm font-medium">{tr('Current step')}</span>
                   <Chip
                     size="sm"
-                    variant="flat"
+                    variant="soft"
                     color={
-                      connected ? 'success' : status === 'requires-approval' ? 'warning' : 'primary'
+                      connected ? 'success' : status === 'requires-approval' ? 'warning' : 'accent'
                     }
-                    startContent={status === null ? <Spinner size="sm" color="current" /> : null}
                   >
-                    {statusText}
+                    <Chip.Label className="flex items-center gap-1">
+                      {status === null ? <Spinner size="sm" /> : null}
+                      {statusText}
+                    </Chip.Label>
                   </Chip>
-                </CardBody>
+                </Card.Content>
               </Card>
 
               <ol className="list-decimal space-y-2 pl-5 text-sm text-default-600">
@@ -161,7 +166,7 @@ const MacOSServiceSetup: React.FC<Props> = ({ onChange }) => {
                 </li>
               </ol>
 
-              <Divider />
+              <Separator />
 
               <p className="text-xs leading-5 text-default-500">
                 {tr(

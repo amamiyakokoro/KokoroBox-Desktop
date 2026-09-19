@@ -688,6 +688,7 @@ export const messages: Readonly<Record<string, string>> = {
   'Follow new logs': '跟隨新日誌',
   'Stop following new logs': '停止跟隨新日誌',
   'Clear logs': '清空日誌',
+  'Clear field': '清空欄位',
   'Live log entry limit': '即時日誌快取數',
   Password: '密碼',
   'Key ID does not match the public key': '金鑰 ID 與公鑰不匹配',

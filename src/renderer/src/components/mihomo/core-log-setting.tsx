@@ -1,5 +1,5 @@
 import { tr } from '../../../../shared/i18n'
-import { Select, SelectItem } from '@heroui/react'
+import { KokoSelect } from '../base/koko-form'
 import SettingCard from '../base/base-setting-card'
 import SettingItem from '../base/base-setting-item'
 import React from 'react'
@@ -15,25 +15,21 @@ const CoreLogSetting: React.FC<CoreLogSettingProps> = ({ config, onChange }) => 
   return (
     <SettingCard header={tr('Core logging')}>
       <SettingItem title={tr('Log level')}>
-        <Select
+        <KokoSelect
           aria-label={tr('Log level')}
-          classNames={{ trigger: 'data-[hover=true]:bg-default-200' }}
           className="w-25"
-          size="sm"
-          selectedKeys={new Set([logLevel])}
+          value={logLevel}
+          options={['silent', 'error', 'warning', 'info', 'debug'].map((id) => ({
+            id,
+            label: id
+          }))}
           disallowEmptySelection
-          onSelectionChange={(value) => {
+          onChange={(value) => {
             onChange({
-              'log-level': value.currentKey as LogLevel
+              'log-level': value as LogLevel
             })
           }}
-        >
-          <SelectItem key="silent">silent</SelectItem>
-          <SelectItem key="error">error</SelectItem>
-          <SelectItem key="warning">warning</SelectItem>
-          <SelectItem key="info">info</SelectItem>
-          <SelectItem key="debug">debug</SelectItem>
-        </Select>
+        />
       </SettingItem>
     </SettingCard>
   )

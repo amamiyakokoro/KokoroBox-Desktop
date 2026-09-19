@@ -1,5 +1,10 @@
 import { tr } from '../../../../shared/i18n'
-import { Button, Input, Switch, Tooltip } from '@heroui/react'
+import {
+  KokoButton as Button,
+  KokoSwitch as Switch,
+  KokoTextField as Input,
+  KokoTooltip as Tooltip
+} from '../base/koko-form'
 import React, { useEffect, useRef, useState } from 'react'
 import { BiCopy, BiHide, BiShow } from 'react-icons/bi'
 import { IoIosHelpCircle } from 'react-icons/io'

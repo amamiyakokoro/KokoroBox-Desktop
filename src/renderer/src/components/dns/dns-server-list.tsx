@@ -5,7 +5,12 @@ import {
   type DnsServerEndpoint
 } from '../../../../shared/dns-server'
 import { isValidDnsServer, type ValidationResult } from '@renderer/utils/validate'
-import { Button, Input, Select, SelectItem, Tooltip } from '@heroui/react'
+import {
+  KokoButton as Button,
+  KokoSelect,
+  KokoTextField as Input,
+  KokoTooltip as Tooltip
+} from '../base/koko-form'
 import React from 'react'
 import { MdDeleteForever } from 'react-icons/md'
 
@@ -99,26 +104,20 @@ const DnsServerList: React.FC<DnsServerListProps> = ({
               </Tooltip>
               {!ipOnly && !followRoutingRules && (
                 <>
-                  <Select
+                  <KokoSelect
                     aria-label={tr('Connection')}
-                    size="sm"
                     className="w-30"
-                    selectedKeys={
-                      new Set([endpoint.connection === 'proxy' ? 'direct' : endpoint.connection])
-                    }
+                    value={endpoint.connection === 'proxy' ? 'direct' : endpoint.connection}
+                    options={connectionChoices.map(({ key, label }) => ({ id: key, label }))}
                     disallowEmptySelection
-                    onSelectionChange={(keys) =>
+                    onChange={(connection) =>
                       update(index, {
                         ...endpoint,
-                        connection: keys.currentKey as 'direct' | 'rules',
+                        connection: connection as 'direct' | 'rules',
                         proxyName: undefined
                       })
                     }
-                  >
-                    {connectionChoices.map(({ key, label }) => (
-                      <SelectItem key={key}>{label}</SelectItem>
-                    ))}
-                  </Select>
+                  />
                 </>
               )}
               {!isExtra && (

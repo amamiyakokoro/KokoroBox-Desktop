@@ -1,5 +1,6 @@
 import { tr } from '../../../../shared/i18n'
-import { Button, Select, SelectItem, Tab, Tabs } from '@heroui/react'
+import { KokoButton as Button, KokoSelect } from '../base/koko-form'
+import { SettingTabs } from '../base/base-controls'
 import SettingCard from '../base/base-setting-card'
 import SettingItem from '../base/base-setting-item'
 import PermissionModal from '../mihomo/permission-modal'
@@ -196,104 +197,98 @@ const CoreRuntimeConfig: React.FC<Props> = ({ sections = ['runtime', 'service'] 
             {systemCoreOnlyBuild ? (
               <span className="text-sm text-foreground-600">{tr('System core')}</span>
             ) : (
-              <Select
+              <KokoSelect
                 aria-label={tr('Core version')}
-                classNames={{ trigger: 'data-[hover=true]:bg-default-200' }}
                 className="w-37.5"
-                size="sm"
-                selectedKeys={new Set([core])}
+                value={core}
+                options={[
+                  { id: 'mihomo', label: tr('Built-in stable') },
+                  { id: 'mihomo-alpha', label: tr('Built-in preview') },
+                  { id: 'system', label: tr('Use system core') }
+                ]}
                 disallowEmptySelection
-                onSelectionChange={(value) =>
-                  handleCoreChange(value.currentKey as 'mihomo' | 'mihomo-alpha' | 'system')
+                onChange={(value) =>
+                  handleCoreChange(value as 'mihomo' | 'mihomo-alpha' | 'system')
                 }
-              >
-                <SelectItem key="mihomo">{tr('Built-in stable')}</SelectItem>
-                <SelectItem key="mihomo-alpha">{tr('Built-in preview')}</SelectItem>
-                <SelectItem key="system">{tr('Use system core')}</SelectItem>
-              </Select>
+              />
             )}
           </SettingItem>
           {core === 'system' && (
             <SettingItem compatKey="legacy" title={tr('Choose system core path')} divider>
-              <Select
+              <KokoSelect
                 aria-label={tr('System core path')}
-                classNames={{ trigger: 'data-[hover=true]:bg-default-200' }}
                 className="w-87.5"
-                size="sm"
-                selectedKeys={new Set([appConfig?.systemCorePath || ''])}
+                value={appConfig?.systemCorePath || ''}
+                options={
+                  loadingPaths
+                    ? [{ id: '', label: tr('Searching for a system core...') }]
+                    : systemCorePaths.length > 0
+                      ? systemCorePaths.map((path) => ({ id: path, label: path }))
+                      : [{ id: '', label: tr('System core not found') }]
+                }
                 disallowEmptySelection={systemCorePaths.length > 0}
                 isDisabled={loadingPaths}
-                onSelectionChange={(value) => {
-                  const selectedPath = value.currentKey as string
+                onChange={(selectedPath) => {
                   if (selectedPath) handleConfigChangeWithRestart('systemCorePath', selectedPath)
                 }}
-              >
-                {loadingPaths ? (
-                  <SelectItem key="">{tr('Searching for a system core...')}</SelectItem>
-                ) : systemCorePaths.length > 0 ? (
-                  systemCorePaths.map((path) => <SelectItem key={path}>{path}</SelectItem>)
-                ) : (
-                  <SelectItem key="">{tr('System core not found')}</SelectItem>
-                )}
-              </Select>
+              />
             </SettingItem>
           )}
           <SettingItem compatKey="legacy" title={tr('Core process priority')} divider>
-            <Select
+            <KokoSelect
               aria-label={tr('Core process priority')}
-              classNames={{ trigger: 'data-[hover=true]:bg-default-200' }}
               className="w-37.5"
-              size="sm"
-              selectedKeys={new Set([mihomoCpuPriority])}
+              value={mihomoCpuPriority}
+              options={[
+                { id: 'PRIORITY_HIGHEST', label: tr('Real time') },
+                { id: 'PRIORITY_HIGH', label: tr('High') },
+                { id: 'PRIORITY_ABOVE_NORMAL', label: tr('Above normal') },
+                { id: 'PRIORITY_NORMAL', label: tr('Normal') },
+                { id: 'PRIORITY_BELOW_NORMAL', label: tr('Below normal') },
+                { id: 'PRIORITY_LOW', label: tr('Low') }
+              ]}
               disallowEmptySelection
-              onSelectionChange={(value) =>
-                handleConfigChangeWithRestart('mihomoCpuPriority', value.currentKey as Priority)
+              onChange={(value) =>
+                handleConfigChangeWithRestart('mihomoCpuPriority', value as Priority)
               }
-            >
-              <SelectItem key="PRIORITY_HIGHEST">{tr('Real time')}</SelectItem>
-              <SelectItem key="PRIORITY_HIGH">{tr('High')}</SelectItem>
-              <SelectItem key="PRIORITY_ABOVE_NORMAL">{tr('Above normal')}</SelectItem>
-              <SelectItem key="PRIORITY_NORMAL">{tr('Normal')}</SelectItem>
-              <SelectItem key="PRIORITY_BELOW_NORMAL">{tr('Below normal')}</SelectItem>
-              <SelectItem key="PRIORITY_LOW">{tr('Low')}</SelectItem>
-            </Select>
+            />
           </SettingItem>
           <SettingItem compatKey="legacy" title={tr('Run mode')} divider>
-            <Tabs
-              size="sm"
-              color="primary"
+            <SettingTabs
+              ariaLabel={tr('Run mode')}
               selectedKey={corePermissionMode}
-              onSelectionChange={(key) => handlePermissionModeChange(key as string)}
-            >
-              <Tab key="elevated" title={tr('Direct run')} />
-              <Tab key="service" title={tr('System service')} />
-            </Tabs>
+              options={[
+                { id: 'elevated', label: tr('Direct run') },
+                { id: 'service', label: tr('System service') }
+              ]}
+              onChange={handlePermissionModeChange}
+            />
           </SettingItem>
           {platform === 'linux' && corePermissionMode === 'service' && (
             <SettingItem compatKey="legacy" title={tr('Service core execution mode')} divider>
-              <Tabs
-                size="sm"
-                color="primary"
+              <SettingTabs
+                ariaLabel={tr('Service core execution mode')}
                 selectedKey={serviceRunMode}
-                onSelectionChange={(key) => handleConfigChangeWithRestart('serviceRunMode', key)}
-              >
-                <Tab key="auto" title={tr('Automatic')} />
-                <Tab key="sandbox" title={tr('Sandbox')} />
-                <Tab key="direct" title={tr('Start directly')} />
-              </Tabs>
+                options={[
+                  { id: 'auto', label: tr('Automatic') },
+                  { id: 'sandbox', label: tr('Sandbox') },
+                  { id: 'direct', label: tr('Start directly') }
+                ]}
+                onChange={(key) => handleConfigChangeWithRestart('serviceRunMode', key)}
+              />
             </SettingItem>
           )}
           {corePermissionMode !== 'service' && platform !== 'win32' && (
             <SettingItem compatKey="legacy" title={tr('Startup detection method')} divider>
-              <Tabs
-                size="sm"
-                color="primary"
+              <SettingTabs
+                ariaLabel={tr('Startup detection method')}
                 selectedKey={coreStartupMode}
-                onSelectionChange={(key) => handleConfigChangeWithRestart('coreStartupMode', key)}
-              >
-                <Tab key="post-up" title="Post Up" />
-                <Tab key="log" title={tr('Log parsing')} />
-              </Tabs>
+                options={[
+                  { id: 'post-up', label: 'Post Up' },
+                  { id: 'log', label: tr('Log parsing') }
+                ]}
+                onChange={(key) => handleConfigChangeWithRestart('coreStartupMode', key)}
+              />
             </SettingItem>
           )}
         </SettingCard>

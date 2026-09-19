@@ -5,7 +5,11 @@ import SettingItem from '../base/base-setting-item'
 import EditableList from '../base/base-list-editor'
 
 import { platform } from '@renderer/utils/init'
-import { Button, Input, Switch } from '@heroui/react'
+import {
+  KokoButton as Button,
+  KokoSwitch as Switch,
+  KokoTextField as Input
+} from '../base/koko-form'
 import { FaNetworkWired } from 'react-icons/fa'
 import InterfaceModal from '@renderer/components/mihomo/interface-modal'
 

@@ -1,5 +1,11 @@
 import { tr } from '../../../../../shared/i18n'
-import { Button, Input, Switch, Tab, Tabs, Tooltip } from '@heroui/react'
+import {
+  KokoButton as Button,
+  KokoSwitch as Switch,
+  KokoTextField as Input,
+  KokoTooltip as Tooltip
+} from '@renderer/components/base/koko-form'
+import { SettingTabs } from '@renderer/components/base/base-controls'
 import BasePage from '@renderer/components/base/base-page'
 import SettingItem from '@renderer/components/base/base-setting-item'
 import FeatureSettingsLayout, {
@@ -11,7 +17,7 @@ import PacEditorModal from '@renderer/components/sysproxy/pac-editor-modal'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { platform } from '@renderer/utils/init'
 import { getAppConfig, openUWPTool, serviceStatus, triggerSysProxy } from '@renderer/utils/ipc'
-import React, { Key, useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import ByPassEditorModal from '@renderer/components/sysproxy/bypass-editor-modal'
 import { IoIosHelpCircle } from 'react-icons/io'
 import { notify } from '@renderer/utils/notification'
@@ -214,15 +220,15 @@ const Sysproxy: React.FC<Props> = ({ embedded = false }) => {
             />
           </SettingItem>
           <SettingItem title={tr('Proxy mode')} divider={values.mode === 'auto'}>
-            <Tabs
-              size="sm"
-              color="primary"
+            <SettingTabs
+              ariaLabel={tr('Proxy mode')}
               selectedKey={values.mode}
-              onSelectionChange={(key: Key) => setValues({ ...values, mode: key as SysProxyMode })}
-            >
-              <Tab key="manual" title={tr('Manual')} />
-              <Tab key="auto" title="PAC" />
-            </Tabs>
+              options={[
+                { id: 'manual', label: tr('Manual') },
+                { id: 'auto', label: 'PAC' }
+              ]}
+              onChange={(key) => setValues({ ...values, mode: key as SysProxyMode })}
+            />
           </SettingItem>
           {values.mode === 'auto' && (
             <SettingItem title={tr('PAC script')}>
@@ -250,11 +256,14 @@ const Sysproxy: React.FC<Props> = ({ embedded = false }) => {
             title={tr('Configuration method')}
             divider={platform === 'linux' || values.settingMode === 'service'}
           >
-            <Tabs
-              size="sm"
-              color="primary"
+            <SettingTabs
+              ariaLabel={tr('Configuration method')}
               selectedKey={values.settingMode}
-              onSelectionChange={(key) => {
+              options={[
+                { id: 'exec', label: tr('Run command') },
+                { id: 'service', label: tr('Service mode') }
+              ]}
+              onChange={(key) => {
                 const settingMode = key as 'exec' | 'service'
                 setValues({
                   ...values,
@@ -263,10 +272,7 @@ const Sysproxy: React.FC<Props> = ({ embedded = false }) => {
                   guardNotify: settingMode === 'service' ? values.guardNotify : false
                 })
               }}
-            >
-              <Tab key="exec" title={tr('Run command')} />
-              <Tab key="service" title={tr('Service mode')} />
-            </Tabs>
+            />
           </SettingItem>
           {platform === 'linux' && (
             <SettingItem

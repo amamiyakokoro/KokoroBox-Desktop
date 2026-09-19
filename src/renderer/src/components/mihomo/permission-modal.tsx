@@ -1,7 +1,7 @@
 import { tr } from '../../../../shared/i18n'
 import React, { useEffect, useState } from 'react'
-import { Button, Card, CardBody, CardHeader, Chip, Divider } from '@heroui/react'
-import { Modal } from '@heroui-v3/react'
+import { Card, Chip, Modal, Separator } from '@heroui-v3/react'
+import { KokoButton as Button } from '../base/koko-form'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import {
   checkCorePermission,
@@ -115,11 +115,8 @@ const PermissionModal: React.FC<Props> = (props) => {
               <div className="space-y-4">
                 {isWindows ? (
                   <>
-                    <Card
-                      shadow="sm"
-                      className="border-none bg-linear-to-br from-default-50 to-default-100"
-                    >
-                      <CardBody className="py-4">
+                    <Card className="border-none bg-linear-to-br from-default-50 to-default-100">
+                      <Card.Content className="py-4">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             <span className="text-sm font-medium">
@@ -134,7 +131,7 @@ const PermissionModal: React.FC<Props> = (props) => {
                                   : 'warning'
                                 : 'default'
                             }
-                            variant="flat"
+                            variant="soft"
                             size="sm"
                           >
                             {hasPermission === null
@@ -146,10 +143,10 @@ const PermissionModal: React.FC<Props> = (props) => {
                                 : tr('Unknown')}
                           </Chip>
                         </div>
-                      </CardBody>
+                      </Card.Content>
                     </Card>
 
-                    <Divider />
+                    <Separator />
 
                     <div className="text-xs text-default-500 space-y-2">
                       <div className="flex items-start gap-2">
@@ -173,8 +170,8 @@ const PermissionModal: React.FC<Props> = (props) => {
                 ) : (
                   <>
                     <div className="space-y-3">
-                      <Card shadow="sm" className="border-none">
-                        <CardHeader className="pb-0 pt-4 px-4 flex-col items-start">
+                      <Card className="border-none">
+                        <Card.Header className="pb-0 pt-4 px-4 flex-col items-start">
                           <div className="flex items-center justify-between w-full">
                             <div className="flex items-center gap-2">
                               <h4 className="font-semibold text-medium">
@@ -185,14 +182,14 @@ const PermissionModal: React.FC<Props> = (props) => {
                               color={
                                 getStatusColor('mihomo') === 'bg-success' ? 'success' : 'warning'
                               }
-                              variant="flat"
+                              variant="soft"
                               size="sm"
                             >
                               {getStatusText('mihomo')}
                             </Chip>
                           </div>
-                        </CardHeader>
-                        <CardBody className="pt-3 px-4 pb-4">
+                        </Card.Header>
+                        <Card.Content className="pt-3 px-4 pb-4">
                           {typeof hasPermission !== 'boolean' && hasPermission?.mihomo ? (
                             <Button
                               size="sm"
@@ -216,11 +213,11 @@ const PermissionModal: React.FC<Props> = (props) => {
                               {tr('Authorize core')}
                             </Button>
                           )}
-                        </CardBody>
+                        </Card.Content>
                       </Card>
 
-                      <Card shadow="sm" className="border-none">
-                        <CardHeader className="pb-0 pt-4 px-4 flex-col items-start">
+                      <Card className="border-none">
+                        <Card.Header className="pb-0 pt-4 px-4 flex-col items-start">
                           <div className="flex items-center justify-between w-full">
                             <div className="flex items-center gap-2">
                               <h4 className="font-semibold text-medium">
@@ -233,14 +230,14 @@ const PermissionModal: React.FC<Props> = (props) => {
                                   ? 'success'
                                   : 'warning'
                               }
-                              variant="flat"
+                              variant="soft"
                               size="sm"
                             >
                               {getStatusText('mihomo-alpha')}
                             </Chip>
                           </div>
-                        </CardHeader>
-                        <CardBody className="pt-3 px-4 pb-4">
+                        </Card.Header>
+                        <Card.Content className="pt-3 px-4 pb-4">
                           {typeof hasPermission !== 'boolean' && hasPermission?.['mihomo-alpha'] ? (
                             <Button
                               size="sm"
@@ -264,7 +261,7 @@ const PermissionModal: React.FC<Props> = (props) => {
                               {tr('Authorize core')}
                             </Button>
                           )}
-                        </CardBody>
+                        </Card.Content>
                       </Card>
                     </div>
 

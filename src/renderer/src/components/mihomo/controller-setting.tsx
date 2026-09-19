@@ -2,7 +2,13 @@ import { tr } from '../../../../shared/i18n'
 import React, { useEffect, useState } from 'react'
 import SettingCard from '../base/base-setting-card'
 import SettingItem from '../base/base-setting-item'
-import { Button, Input, Select, SelectItem, Switch, Tooltip } from '@heroui/react'
+import {
+  KokoButton as Button,
+  KokoSelect,
+  KokoSwitch as Switch,
+  KokoTextField as Input,
+  KokoTooltip as Tooltip
+} from '../base/koko-form'
 import { mihomoUpgradeUI } from '@renderer/utils/ipc'
 import EditableList from '../base/base-list-editor'
 import { IoMdCloudDownload, IoMdRefresh } from 'react-icons/io'
@@ -217,35 +223,38 @@ const ControllerSetting: React.FC<ControllerSettingProps> = ({
               }
               divider
             >
-              <Select
+              <KokoSelect
                 aria-label={tr('External UI source')}
-                classNames={{ trigger: 'data-[hover=true]:bg-default-200' }}
                 className="w-37.5"
-                size="sm"
-                selectedKeys={new Set([externalUiUrlInput])}
+                value={externalUiUrlInput}
+                options={[
+                  {
+                    id: 'https://github.com/Zephyruso/zashboard/releases/latest/download/dist.zip',
+                    label: 'zashboard'
+                  },
+                  {
+                    id: 'https://github.com/MetaCubeX/metacubexd/archive/refs/heads/gh-pages.zip',
+                    label: 'metacubexd'
+                  },
+                  {
+                    id: 'https://github.com/MetaCubeX/Yacd-meta/archive/refs/heads/gh-pages.zip',
+                    label: 'yacd-meta'
+                  },
+                  {
+                    id: 'https://github.com/haishanh/yacd/archive/refs/heads/gh-pages.zip',
+                    label: 'yacd'
+                  },
+                  {
+                    id: 'https://github.com/MetaCubeX/Razord-meta/archive/refs/heads/gh-pages.zip',
+                    label: 'razord-meta'
+                  }
+                ]}
                 disallowEmptySelection={true}
-                onSelectionChange={(v) => {
-                  const value = v.currentKey as string
+                onChange={(value) => {
                   setExternalUiUrlInput(value)
                   onChange({ 'external-ui-url': value })
                 }}
-              >
-                <SelectItem key="https://github.com/Zephyruso/zashboard/releases/latest/download/dist.zip">
-                  zashboard
-                </SelectItem>
-                <SelectItem key="https://github.com/MetaCubeX/metacubexd/archive/refs/heads/gh-pages.zip">
-                  metacubexd
-                </SelectItem>
-                <SelectItem key="https://github.com/MetaCubeX/Yacd-meta/archive/refs/heads/gh-pages.zip">
-                  yacd-meta
-                </SelectItem>
-                <SelectItem key="https://github.com/haishanh/yacd/archive/refs/heads/gh-pages.zip">
-                  yacd
-                </SelectItem>
-                <SelectItem key="https://github.com/MetaCubeX/Razord-meta/archive/refs/heads/gh-pages.zip">
-                  razord-meta
-                </SelectItem>
-              </Select>
+              />
             </SettingItem>
           )}
           <SettingItem title={tr('CORS configuration')}></SettingItem>

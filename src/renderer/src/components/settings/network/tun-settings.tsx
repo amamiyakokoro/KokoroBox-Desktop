@@ -1,5 +1,10 @@
 import { tr } from '../../../../../shared/i18n'
-import { Button, Input, Switch, Tab, Tabs } from '@heroui/react'
+import {
+  KokoButton as Button,
+  KokoSwitch as Switch,
+  KokoTextField as Input
+} from '@renderer/components/base/koko-form'
+import { SettingTabs } from '@renderer/components/base/base-controls'
 import BasePage from '@renderer/components/base/base-page'
 import SettingItem from '@renderer/components/base/base-setting-item'
 import FeatureSettingsLayout, {
@@ -10,7 +15,7 @@ import EditableList from '@renderer/components/base/base-list-editor'
 import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'
 import { restartCore, setupFirewall } from '@renderer/utils/ipc'
 import { platform } from '@renderer/utils/init'
-import React, { Key, useState } from 'react'
+import React, { useState } from 'react'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { notify } from '@renderer/utils/notification'
 import { useSettingsSave } from '@renderer/hooks/use-settings-save'
@@ -139,18 +144,18 @@ const Tun: React.FC<Props> = ({ embedded = false }) => {
             )}
             {platform === 'darwin' && (
               <SettingItem title={tr('Configure system DNS automatically')}>
-                <Tabs
-                  size="sm"
-                  color="primary"
+                <SettingTabs
+                  ariaLabel={tr('Configure system DNS automatically')}
                   selectedKey={autoSetDNSMode}
-                  onSelectionChange={async (key: Key) => {
+                  options={[
+                    { id: 'none', label: tr('Do not configure automatically') },
+                    { id: 'exec', label: tr('Run command') },
+                    { id: 'service', label: tr('Service mode') }
+                  ]}
+                  onChange={async (key) => {
                     await patchAppConfig({ autoSetDNSMode: key as 'none' | 'exec' | 'service' })
                   }}
-                >
-                  <Tab key="none" title={tr('Do not configure automatically')} />
-                  <Tab key="exec" title={tr('Run command')} />
-                  <Tab key="service" title={tr('Service mode')} />
-                </Tabs>
+                />
               </SettingItem>
             )}
           </FeatureSettingsSection>
@@ -158,17 +163,17 @@ const Tun: React.FC<Props> = ({ embedded = false }) => {
 
         <FeatureSettingsSection title={tr('TUN routing')}>
           <SettingItem title={tr('TUN network stack')} divider>
-            <Tabs
-              size="sm"
-              color="primary"
+            <SettingTabs
+              ariaLabel={tr('TUN network stack')}
               selectedKey={values.stack}
-              onSelectionChange={(key: Key) => setValues({ ...values, stack: key as TunStack })}
-            >
-              <Tab key="gvisor" title="gVisor" />
-              <Tab key="mixed" title="Mixed" />
-              <Tab key="system" title="System" />
-              <Tab key="mips" title="MIPS" />
-            </Tabs>
+              options={[
+                { id: 'gvisor', label: 'gVisor' },
+                { id: 'mixed', label: 'Mixed' },
+                { id: 'system', label: 'System' },
+                { id: 'mips', label: 'MIPS' }
+              ]}
+              onChange={(key) => setValues({ ...values, stack: key as TunStack })}
+            />
           </SettingItem>
           {platform !== 'darwin' && (
             <>
@@ -275,11 +280,7 @@ const Tun: React.FC<Props> = ({ embedded = false }) => {
   if (embedded) return content
 
   return (
-    <BasePage
-      title={tr('TUN settings')}
-      contentClassName="no-scrollbar"
-      header={saveButton}
-    >
+    <BasePage title={tr('TUN settings')} contentClassName="no-scrollbar" header={saveButton}>
       {content}
     </BasePage>
   )

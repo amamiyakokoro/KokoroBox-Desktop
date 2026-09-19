@@ -2,7 +2,13 @@ import { tr } from '../../../../shared/i18n'
 import React, { useEffect, useState, useRef } from 'react'
 import SettingCard from '../base/base-setting-card'
 import SettingItem from '../base/base-setting-item'
-import { Button, Select, SelectItem, Switch, Tab, Tabs, Tooltip } from '@heroui/react'
+import {
+  KokoButton as Button,
+  KokoSelect,
+  KokoSwitch as Switch,
+  KokoTooltip as Tooltip
+} from '../base/koko-form'
+import { SettingTabs } from '../base/base-controls'
 import { BiSolidFileImport } from 'react-icons/bi'
 import {
   applyTheme,
@@ -240,20 +246,20 @@ const AppearanceConfig: React.FC = () => {
             </SettingItem>
             {proxyInTray && (
               <SettingItem compatKey="legacy" title={tr('Tray menu latency layout')} divider>
-                <Tabs
-                  size="sm"
-                  color="primary"
+                <SettingTabs
+                  ariaLabel={tr('Tray menu latency layout')}
                   selectedKey={trayProxyDelayLayout}
-                  onSelectionChange={async (v) => {
+                  options={[
+                    { id: 'same-line', label: tr('Same line') },
+                    { id: 'new-line', label: tr('New line') }
+                  ]}
+                  onChange={async (v) => {
                     await patchAppConfig({
                       trayProxyDelayLayout: v as 'same-line' | 'new-line'
                     })
                     window.electron.ipcRenderer.send('updateTrayMenu')
                   }}
-                >
-                  <Tab key="same-line" title={tr('Same line')} />
-                  <Tab key="new-line" title={tr('New line')} />
-                </Tabs>
+                />
               </SettingItem>
             )}
           </>
@@ -339,19 +345,19 @@ const AppearanceConfig: React.FC = () => {
           />
         </SettingItem>
         <SettingItem compatKey="legacy" title={tr('Background color')} divider>
-          <Tabs
-            size="sm"
-            color="primary"
+          <SettingTabs
+            ariaLabel={tr('Background color')}
             selectedKey={appTheme}
-            onSelectionChange={(key) => {
-              setTheme(key.toString())
+            options={[
+              { id: 'system', label: tr('Automatic') },
+              { id: 'dark', label: tr('Dark') },
+              { id: 'light', label: tr('Light') }
+            ]}
+            onChange={(key) => {
+              setTheme(key)
               patchAppConfig({ appTheme: key as AppTheme })
             }}
-          >
-            <Tab key="system" title={tr('Automatic')} />
-            <Tab key="dark" title={tr('Dark')} />
-            <Tab key="light" title={tr('Light')} />
-          </Tabs>
+          />
         </SettingItem>
         <SettingItem
           compatKey="legacy"
@@ -408,25 +414,20 @@ const AppearanceConfig: React.FC = () => {
           }
         >
           {customThemes && (
-            <Select
+            <KokoSelect
               aria-label={tr('Custom theme')}
-              classNames={{ trigger: 'data-[hover=true]:bg-default-200' }}
               className="w-[60%]"
-              size="sm"
-              selectedKeys={new Set([customTheme])}
+              value={customTheme}
+              options={customThemes.map((theme) => ({ id: theme.key, label: theme.label }))}
               disallowEmptySelection={true}
-              onSelectionChange={async (v) => {
+              onChange={async (value) => {
                 try {
-                  await patchAppConfig({ customTheme: v.currentKey as string })
+                  await patchAppConfig({ customTheme: value })
                 } catch (e) {
                   notify(e, { variant: 'danger' })
                 }
               }}
-            >
-              {customThemes.map((theme) => (
-                <SelectItem key={theme.key}>{theme.label}</SelectItem>
-              ))}
-            </Select>
+            />
           )}
         </SettingItem>
       </SettingCard>

@@ -1,7 +1,7 @@
 import { tr } from '../../../../shared/i18n'
 import React, { useEffect, useState, useCallback } from 'react'
-import { Button, Spinner, Card, CardBody, Chip, Divider } from '@heroui/react'
-import { Modal } from '@heroui-v3/react'
+import { Card, Chip, Modal, Separator, Spinner } from '@heroui-v3/react'
+import { KokoButton as Button } from '../base/koko-form'
 import {
   openServiceSystemSettings,
   serviceStatus,
@@ -154,23 +154,18 @@ const ServiceModal: React.FC<Props> = (props) => {
             </Modal.Header>
             <Modal.Body>
               <div className="space-y-4">
-                <Card
-                  shadow="sm"
-                  className="border-none bg-linear-to-br from-default-50 to-default-100"
-                >
-                  <CardBody className="py-4">
+                <Card className="border-none bg-linear-to-br from-default-50 to-default-100">
+                  <Card.Content className="py-4">
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-medium">{tr('Service status')}</span>
                       </div>
                       {status === null ? (
-                        <Chip
-                          color="default"
-                          variant="flat"
-                          size="sm"
-                          startContent={<Spinner size="sm" color="current" />}
-                        >
-                          {tr('Checking...')}
+                        <Chip color="default" variant="soft" size="sm">
+                          <Chip.Label className="flex items-center gap-1">
+                            <Spinner size="sm" />
+                            {tr('Checking...')}
+                          </Chip.Label>
                         </Chip>
                       ) : (
                         <Chip
@@ -187,7 +182,7 @@ const ServiceModal: React.FC<Props> = (props) => {
                                       ? 'warning'
                                       : 'default'
                           }
-                          variant="flat"
+                          variant="soft"
                           size="sm"
                         >
                           {getStatusText()}
@@ -200,13 +195,11 @@ const ServiceModal: React.FC<Props> = (props) => {
                         <span className="text-sm font-medium">{tr('Connection status')}</span>
                       </div>
                       {connectionStatus === 'checking' ? (
-                        <Chip
-                          color="default"
-                          variant="flat"
-                          size="sm"
-                          startContent={<Spinner size="sm" color="current" />}
-                        >
-                          {tr('Detecting...')}
+                        <Chip color="default" variant="soft" size="sm">
+                          <Chip.Label className="flex items-center gap-1">
+                            <Spinner size="sm" />
+                            {tr('Detecting...')}
+                          </Chip.Label>
                         </Chip>
                       ) : (
                         <Chip
@@ -217,17 +210,17 @@ const ServiceModal: React.FC<Props> = (props) => {
                                 ? 'danger'
                                 : 'default'
                           }
-                          variant="flat"
+                          variant="soft"
                           size="sm"
                         >
                           {getConnectionStatusText()}
                         </Chip>
                       )}
                     </div>
-                  </CardBody>
+                  </Card.Content>
                 </Card>
 
-                <Divider />
+                <Separator />
 
                 <div className="text-xs text-default-500 space-y-2">
                   <div className="flex items-start gap-2">

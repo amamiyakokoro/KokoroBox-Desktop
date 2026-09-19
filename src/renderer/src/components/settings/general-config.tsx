@@ -2,7 +2,12 @@ import { tr } from '../../../../shared/i18n'
 import React, { useState } from 'react'
 import SettingCard from '../base/base-setting-card'
 import SettingItem from '../base/base-setting-item'
-import { Button, Select, SelectItem, Switch, Tooltip } from '@heroui/react'
+import {
+  KokoButton as Button,
+  KokoSelect,
+  KokoSwitch as Switch,
+  KokoTooltip as Tooltip
+} from '../base/koko-form'
 import useSWR from 'swr'
 import {
   checkAutoRun,
@@ -35,24 +40,23 @@ const GeneralConfig: React.FC = () => {
       <SettingCard header={tr('Language and notifications')}>
         <SettingItem compatKey="legacy" title={tr('Interface language')} divider>
           <div className="flex max-w-full flex-wrap items-center justify-end gap-2">
-            <Select
+            <KokoSelect
               aria-label={tr('Interface language')}
               className="w-44"
-              size="sm"
-              selectedKeys={[language]}
+              value={language}
+              options={[
+                { id: 'system', label: tr('System default') },
+                { id: 'zh-CN', label: '简体中文' },
+                { id: 'zh-TW', label: '繁體中文' },
+                { id: 'en', label: 'English' }
+              ]}
               disallowEmptySelection
-              onSelectionChange={async (selection) => {
-                const nextLanguage = selection.currentKey
+              onChange={async (nextLanguage) => {
                 if (!['system', 'zh-CN', 'zh-TW', 'en'].includes(nextLanguage || '')) return
                 const saved = await patchAppConfig({ language: nextLanguage as AppLanguage })
                 if (saved) setLanguageChanged(true)
               }}
-            >
-              <SelectItem key="system">{tr('System default')}</SelectItem>
-              <SelectItem key="zh-CN">简体中文</SelectItem>
-              <SelectItem key="zh-TW">繁體中文</SelectItem>
-              <SelectItem key="en">English</SelectItem>
-            </Select>
+            />
             {languageChanged && (
               <Button size="sm" color="primary" onPress={() => relaunchApp()}>
                 {tr('Restart to apply language')}

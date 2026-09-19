@@ -3,7 +3,11 @@ import { appRoutingSupported } from '../../../../shared/app-routing'
 import React from 'react'
 import SettingCard from '../base/base-setting-card'
 import SettingItem from '../base/base-setting-item'
-import { Button, Switch, Tooltip } from '@heroui/react'
+import {
+  KokoButton as Button,
+  KokoSwitch as Switch,
+  KokoTooltip as Tooltip
+} from '../base/koko-form'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { LuArrowDown, LuArrowUp } from 'react-icons/lu'
 import { normalizeSiderOrder } from '../sider/sider-order'

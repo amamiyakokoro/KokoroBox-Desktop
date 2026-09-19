@@ -1,5 +1,5 @@
 import { tr } from '../../../../shared/i18n'
-import { Button, Input } from '@heroui/react'
+import { KokoButton as Button, KokoTextField as Input } from '../base/koko-form'
 import SettingCard from '../base/base-setting-card'
 import SettingItem from '../base/base-setting-item'
 import { useAppConfig } from '@renderer/hooks/use-app-config'

@@ -2,7 +2,13 @@ import { tr } from '../../../../shared/i18n'
 import SettingCard from '../base/base-setting-card'
 import SettingItem from '../base/base-setting-item'
 import InterfaceSelect from '../base/interface-select'
-import { Button, Input, Switch, Tab, Tabs, Tooltip } from '@heroui/react'
+import {
+  KokoButton as Button,
+  KokoSwitch as Switch,
+  KokoTextField as Input,
+  KokoTooltip as Tooltip
+} from '../base/koko-form'
+import { SettingTabs } from '../base/base-controls'
 import { IoIosHelpCircle } from 'react-icons/io'
 import React from 'react'
 
@@ -29,18 +35,18 @@ const AdvancedSetting: React.FC<AdvancedSettingProps> = ({ config, onChange }) =
   return (
     <SettingCard header={tr('Advanced settings')}>
       <SettingItem title={tr('Find process')} divider>
-        <Tabs
-          size="sm"
-          color="primary"
+        <SettingTabs
+          ariaLabel={tr('Find process')}
           selectedKey={findProcessMode}
-          onSelectionChange={(key) => {
+          options={[
+            { id: 'strict', label: tr('Automatic') },
+            { id: 'off', label: tr('Off') },
+            { id: 'always', label: tr('Enabled') }
+          ]}
+          onChange={(key) => {
             onChange({ 'find-process-mode': key as FindProcessMode })
           }}
-        >
-          <Tab key="strict" title={tr('Automatic')}></Tab>
-          <Tab key="off" title={tr('Off')}></Tab>
-          <Tab key="always" title={tr('Enabled')}></Tab>
-        </Tabs>
+        />
       </SettingItem>
       <SettingItem title={tr('Remember selected proxies')} divider>
         <Switch
