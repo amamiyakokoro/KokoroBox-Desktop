@@ -811,7 +811,15 @@ test('desktop sidebar separates controls, live status and navigation', () => {
     surfaces.indexOf('export const SiderNavItem'),
     surfaces.indexOf('export const SiderStatusCard')
   )
+  const statusCard = surfaces.slice(
+    surfaces.indexOf('export const SiderStatusCard'),
+    surfaces.indexOf('interface SiderQuickControlProps')
+  )
   const quickControl = surfaces.slice(surfaces.indexOf('export const SiderQuickControl'))
+  const iconButton = surfaces.slice(
+    surfaces.indexOf('export const SiderIconButton'),
+    surfaces.indexOf('export const SiderIconGroup')
+  )
   const quickControlStyles = appOverrides.slice(
     appOverrides.indexOf('.sider-quick-control-container'),
     appOverrides.indexOf('.setting-item')
@@ -863,7 +871,11 @@ test('desktop sidebar separates controls, live status and navigation', () => {
   assert.match(surfaces, /export const SiderIconGroup/)
   assert.match(surfaces, /data-sider-icon-group/)
   assert.match(surfaces, /border-t border-separator\/60/)
-  assert.match(surfaces, /className=\{cn\('app-nodrag', className\)\}/)
+  assert.match(
+    iconButton,
+    /className=\{cn\('app-nodrag', className, active && siderActiveIconButtonClassName\)\}/
+  )
+  assert.match(iconButton, /variant=\{active \? 'secondary' : variant\}/)
   assert.match(surfaces, /const SiderItemIcon/)
   assert.match(surfaces, /const SiderItemContent/)
   assert.match(surfaces, /const SiderTrailingSlot/)
@@ -897,13 +909,29 @@ test('desktop sidebar separates controls, live status and navigation', () => {
   )
   assert.match(navItem, /border-separator\/60 bg-surface\/55/)
   assert.match(navItem, /hover:border-accent\/25 hover:bg-surface-secondary\/70 hover:shadow-sm/)
-  assert.match(navItem, /border-accent\/45 bg-accent-soft\/45/)
+  assert.match(navItem, /active\s*\? siderActiveSurfaceClassName/)
+  assert.match(statusCard, /active\s*\? siderActiveSurfaceClassName/)
+  assert.match(quickControl, /active && siderActiveSurfaceClassName/)
   assert.doesNotMatch(navItem, /border-transparent/)
   assert.match(surfaces, /prominence === 'navigation'[\s\S]*bg-transparent text-base/)
   assert.match(surfaces, /hover:border-default-400\/80/)
-  assert.match(surfaces, /border-primary\/45 bg-primary\/10/)
-  assert.match(surfaces, /focus-visible:outline-primary/)
-  assert.match(surfaces, /group-focus-within:text-primary/)
+  assert.match(
+    surfaces,
+    /const siderActiveSurfaceClassName =[\s\S]*border-accent\/45 bg-accent-soft\/40[\s\S]*ring-accent\/15/
+  )
+  assert.match(
+    surfaces,
+    /const siderActiveIconClassName =[\s\S]*bg-accent-soft text-accent-soft-foreground/
+  )
+  assert.match(surfaces, /active && siderActiveIconClassName/)
+  assert.match(quickControl, /active\s*\? siderActiveIconClassName/)
+  assert.match(surfaces, /className=\{siderItemTitleClassName\}/)
+  assert.doesNotMatch(
+    surfaces,
+    /\b(?:border|bg|ring|text)-primary(?:\/\d+)?\b/
+  )
+  assert.match(surfaces, /focus-visible:outline-accent/)
+  assert.match(surfaces, /group-focus-within:text-accent/)
   assert.match(surfaces, /text-success-600 dark:text-success-400/)
   assert.match(surfaces, /text-danger-600 dark:text-danger-400/)
   assert.equal(quickControl.match(/<button/g)?.length, 1)

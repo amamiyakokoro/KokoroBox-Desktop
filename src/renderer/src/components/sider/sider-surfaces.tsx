@@ -52,6 +52,12 @@ const siderItemTitleClassName =
   'block h-5 truncate text-sm font-semibold leading-5 text-foreground'
 const siderItemSubtitleClassName =
   'flex h-4 min-w-0 items-center gap-1 overflow-hidden text-xs leading-4'
+const siderActiveSurfaceClassName =
+  'border-accent/45 bg-accent-soft/40 ring-1 ring-inset ring-accent/15 hover:border-accent/55 hover:bg-accent-soft/60'
+const siderActiveIconClassName =
+  'bg-accent-soft text-accent-soft-foreground group-hover:bg-accent-soft/80 group-hover:text-accent-soft-foreground'
+const siderActiveIconButtonClassName =
+  'border border-accent/45 bg-accent-soft/55 text-accent-soft-foreground ring-1 ring-inset ring-accent/15 hover:border-accent/55 hover:bg-accent-soft/75'
 
 interface SiderStatusRowProps {
   children: React.ReactNode
@@ -88,15 +94,13 @@ const SiderItemIcon: React.FC<{
   <span
     className={cn(
       'flex size-8 shrink-0 items-center justify-center rounded-lg transition-colors duration-150',
-      prominence === 'navigation'
-        ? 'bg-transparent text-base text-foreground-500 group-hover:bg-default-100/70 group-hover:text-foreground'
-        : prominence === 'account'
-          ? 'bg-accent-soft/35 text-lg text-accent-soft-foreground group-hover:bg-accent-soft/65 group-hover:text-accent-soft-foreground'
-          : 'bg-default-100/70 text-xl text-foreground-500 group-hover:bg-default-200/80 group-hover:text-foreground',
-      active &&
-        (prominence !== 'status'
-          ? 'bg-accent-soft text-accent-soft-foreground group-hover:bg-accent-soft group-hover:text-accent-soft-foreground'
-          : 'bg-primary/15 text-primary group-hover:bg-primary/20 group-hover:text-primary')
+      !active &&
+        (prominence === 'navigation'
+          ? 'bg-transparent text-base text-foreground-500 group-hover:bg-default-100/70 group-hover:text-foreground'
+          : prominence === 'account'
+            ? 'bg-accent-soft/35 text-lg text-accent-soft-foreground group-hover:bg-accent-soft/65 group-hover:text-accent-soft-foreground'
+            : 'bg-default-100/70 text-xl text-foreground-500 group-hover:bg-default-200/80 group-hover:text-foreground'),
+      active && siderActiveIconClassName
     )}
   >
     {children}
@@ -104,15 +108,14 @@ const SiderItemIcon: React.FC<{
 )
 
 const SiderItemContent: React.FC<{
-  active: boolean
   subtitle?: React.ReactNode
   title: string
-}> = ({ active, subtitle, title }) => (
+}> = ({ subtitle, title }) => (
   <span
     className="flex h-[2.375rem] min-w-0 flex-1 flex-col justify-center gap-0.5"
     data-sider-text-stack
   >
-    <span className={cn(siderItemTitleClassName, active && 'text-primary')} title={title}>
+    <span className={siderItemTitleClassName} title={title}>
       {title}
     </span>
     {subtitle ? <span className={siderItemSubtitleClassName}>{subtitle}</span> : null}
@@ -159,12 +162,12 @@ export const SiderIconButton: React.FC<SiderIconButtonProps> = ({
       <Button
         aria-current={active ? 'page' : undefined}
         aria-label={label}
-        className={cn('app-nodrag', className)}
+        className={cn('app-nodrag', className, active && siderActiveIconButtonClassName)}
         isDisabled={isDisabled}
         isIconOnly
         isPending={isPending}
         size="sm"
-        variant={active ? 'primary' : variant}
+        variant={active ? 'secondary' : variant}
         onPress={onPress}
       >
         {children}
@@ -221,7 +224,7 @@ export const SiderNavItem: React.FC<SiderNavItemProps> = ({
     className={cn(
       'group flex items-center rounded-xl border transition-[background-color,border-color,box-shadow,color] duration-150',
       active
-        ? 'border-accent/45 bg-accent-soft/45 text-accent-soft-foreground ring-1 ring-inset ring-accent/15 hover:border-accent/55 hover:bg-accent-soft/65'
+        ? siderActiveSurfaceClassName
         : prominence === 'account'
           ? 'border-accent/20 bg-accent-soft/15 hover:border-accent/35 hover:bg-accent-soft/30 hover:shadow-sm'
           : 'border-separator/60 bg-surface/55 hover:border-accent/25 hover:bg-surface-secondary/70 hover:shadow-sm'
@@ -231,7 +234,7 @@ export const SiderNavItem: React.FC<SiderNavItemProps> = ({
       type="button"
       data-card-primary-action
       className={cn(
-        'grid min-w-0 flex-1 items-center gap-x-2.5 rounded-xl px-2.5 py-2 text-left focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-primary',
+        'grid min-w-0 flex-1 items-center gap-x-2.5 rounded-xl px-2.5 py-2 text-left focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-accent',
         trailing
           ? 'grid-cols-[2rem_minmax(0,1fr)]'
           : 'grid-cols-[2rem_minmax(0,1fr)_2rem]'
@@ -243,7 +246,6 @@ export const SiderNavItem: React.FC<SiderNavItemProps> = ({
         {icon}
       </SiderItemIcon>
       <SiderItemContent
-        active={active}
         title={title}
         subtitle={
           description || status ? (
@@ -261,7 +263,7 @@ export const SiderNavItem: React.FC<SiderNavItemProps> = ({
       />
       {!trailing && (
         <SiderTrailingSlot>
-          <LuChevronRight className="shrink-0 text-sm text-foreground-300 transition-all duration-150 group-hover:translate-x-0.5 group-hover:text-foreground-700 group-focus-within:text-primary" />
+          <LuChevronRight className="shrink-0 text-sm text-foreground-300 transition-all duration-150 group-hover:translate-x-0.5 group-hover:text-foreground-700 group-focus-within:text-accent" />
         </SiderTrailingSlot>
       )}
     </button>
@@ -293,7 +295,7 @@ export const SiderStatusCard: React.FC<SiderStatusCardProps> = ({
     className={cn(
       'group overflow-hidden rounded-xl border bg-content1/85 shadow-none transition-[background-color,border-color,box-shadow] duration-150',
       active
-        ? 'border-primary/45 bg-primary/10 ring-1 ring-inset ring-primary/15 hover:bg-primary/14'
+        ? siderActiveSurfaceClassName
         : 'border-divider hover:border-default-400/80 hover:bg-content2/70 hover:shadow-sm'
     )}
   >
@@ -301,7 +303,7 @@ export const SiderStatusCard: React.FC<SiderStatusCardProps> = ({
       <button
         type="button"
         data-card-primary-action
-        className="flex min-w-0 flex-1 items-center gap-2.5 px-2.5 py-2 text-left focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-primary"
+        className="flex min-w-0 flex-1 items-center gap-2.5 px-2.5 py-2 text-left focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-accent"
         aria-current={active ? 'page' : undefined}
         onClick={onPress}
       >
@@ -309,7 +311,6 @@ export const SiderStatusCard: React.FC<SiderStatusCardProps> = ({
           {icon}
         </SiderItemIcon>
         <SiderItemContent
-          active={active}
           title={title}
           subtitle={
             description || status ? (
@@ -345,7 +346,7 @@ export const SiderStatusCard: React.FC<SiderStatusCardProps> = ({
         />
         {(showChevron ?? !actions) && (
           <SiderTrailingSlot>
-            <LuChevronRight className="shrink-0 text-sm text-foreground-300 transition-all duration-150 group-hover:translate-x-0.5 group-hover:text-foreground-700 group-focus-within:text-primary" />
+            <LuChevronRight className="shrink-0 text-sm text-foreground-300 transition-all duration-150 group-hover:translate-x-0.5 group-hover:text-foreground-700 group-focus-within:text-accent" />
           </SiderTrailingSlot>
         )}
       </button>
@@ -387,8 +388,7 @@ export const SiderQuickControl: React.FC<SiderQuickControlProps> = ({
     <div
       className={cn(
         'sider-quick-control group rounded-2xl border border-divider bg-content1 px-2.5 py-2 shadow-sm transition-[background-color,border-color,box-shadow] duration-150 hover:border-default-400/80 hover:bg-content2/70 hover:shadow-md',
-        active &&
-          'border-primary/45 bg-primary/10 ring-1 ring-inset ring-primary/15 hover:bg-primary/14',
+        active && siderActiveSurfaceClassName,
         disabled && 'opacity-60'
       )}
     >
@@ -397,16 +397,15 @@ export const SiderQuickControl: React.FC<SiderQuickControlProps> = ({
         data-card-primary-action
         aria-label={title}
         aria-current={active ? 'page' : undefined}
-        className={cn(
-          'sider-quick-control__primary min-w-0 rounded-xl text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary',
-          active && 'text-primary'
-        )}
+        className="sider-quick-control__primary min-w-0 rounded-xl text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
         onClick={onPress}
       >
         <span
           className={cn(
-            'sider-quick-control__icon flex size-8 items-center justify-center text-xl text-foreground-600 transition-colors duration-150 group-hover:text-foreground',
-            active && 'text-primary group-hover:text-primary'
+            'sider-quick-control__icon flex size-8 items-center justify-center rounded-lg text-xl transition-colors duration-150',
+            active
+              ? siderActiveIconClassName
+              : 'text-foreground-600 group-hover:text-foreground'
           )}
         >
           {icon}
@@ -414,8 +413,7 @@ export const SiderQuickControl: React.FC<SiderQuickControlProps> = ({
         <span
           className={cn(
             'sider-quick-control__title whitespace-nowrap',
-            siderItemTitleClassName,
-            active && 'text-primary'
+            siderItemTitleClassName
           )}
           title={title}
         >
