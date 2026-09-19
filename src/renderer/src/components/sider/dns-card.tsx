@@ -1,4 +1,3 @@
-import { Button, Tooltip } from '@heroui/react'
 import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'
 import { LuServer } from 'react-icons/lu'
 import { useLocation, useNavigate } from 'react-router-dom'
@@ -7,7 +6,7 @@ import { CSS } from '@dnd-kit/utilities'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import React from 'react'
 import { tr } from '../../../../shared/i18n'
-import { SiderNavItem } from './sider-surfaces'
+import { SiderIconButton, SiderNavItem } from './sider-surfaces'
 
 interface Props {
   iconOnly?: boolean
@@ -46,20 +45,14 @@ const DNSCard: React.FC<Props> = (props) => {
   if (iconOnly) {
     return (
       <div className={`${dnsCardStatus} ${!controlDns ? 'hidden' : ''} flex justify-center`}>
-        <Tooltip content="DNS" placement="right">
-          <Button
-            size="sm"
-            isIconOnly
-            aria-label="DNS"
-            color={match ? 'primary' : 'default'}
-            variant={match ? 'solid' : 'light'}
-            onPress={() => {
-              navigate(settingsPath)
-            }}
-          >
-            <LuServer className="text-[20px]" />
-          </Button>
-        </Tooltip>
+        <SiderIconButton
+          active={match}
+          label="DNS"
+          placement="right"
+          onPress={() => navigate(settingsPath)}
+        >
+          <LuServer className="text-[20px]" />
+        </SiderIconButton>
       </div>
     )
   }

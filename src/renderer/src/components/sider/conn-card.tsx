@@ -1,5 +1,4 @@
 import { tr } from '../../../../shared/i18n'
-import { Button, Tooltip } from '@heroui/react'
 import { FaCircleArrowDown, FaCircleArrowUp } from 'react-icons/fa6'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { calcTraffic } from '@renderer/utils/calc'
@@ -9,7 +8,7 @@ import { CSS } from '@dnd-kit/utilities'
 import { IoLink } from 'react-icons/io5'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import TrafficChart from './traffic-chart'
-import { SiderStatusCard } from './sider-surfaces'
+import { SiderIconButton, SiderStatusCard } from './sider-surfaces'
 
 interface Props {
   iconOnly?: boolean
@@ -68,18 +67,14 @@ const ConnCard: React.FC<Props> = ({ iconOnly }) => {
   if (iconOnly) {
     return (
       <div className={`${connectionCardStatus} flex justify-center`}>
-        <Tooltip content={tr('Connections')} placement="right">
-          <Button
-            size="sm"
-            isIconOnly
-            aria-label={tr('Connections')}
-            color={match ? 'primary' : 'default'}
-            variant={match ? 'solid' : 'light'}
-            onPress={() => navigate('/connections')}
-          >
-            <IoLink className="text-[20px]" />
-          </Button>
-        </Tooltip>
+        <SiderIconButton
+          active={match}
+          label={tr('Connections')}
+          placement="right"
+          onPress={() => navigate('/connections')}
+        >
+          <IoLink className="text-[20px]" />
+        </SiderIconButton>
       </div>
     )
   }

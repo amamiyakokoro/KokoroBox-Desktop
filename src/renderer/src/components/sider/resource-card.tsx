@@ -1,12 +1,11 @@
 import { tr } from '../../../../shared/i18n'
-import { Button, Tooltip } from '@heroui/react'
 import React from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { IoLayersOutline } from 'react-icons/io5'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
-import { SiderNavItem } from './sider-surfaces'
+import { SiderIconButton, SiderNavItem } from './sider-surfaces'
 
 interface Props {
   iconOnly?: boolean
@@ -34,20 +33,14 @@ const ResourceCard: React.FC<Props> = (props) => {
   if (iconOnly) {
     return (
       <div className={`${resourceCardStatus} flex justify-center`}>
-        <Tooltip content={tr('External resources')} placement="right">
-          <Button
-            size="sm"
-            isIconOnly
-            aria-label={tr('External resources')}
-            color={match ? 'primary' : 'default'}
-            variant={match ? 'solid' : 'light'}
-            onPress={() => {
-              navigate('/resources')
-            }}
-          >
-            <IoLayersOutline className="text-[20px]" />
-          </Button>
-        </Tooltip>
+        <SiderIconButton
+          active={match}
+          label={tr('External resources')}
+          placement="right"
+          onPress={() => navigate('/resources')}
+        >
+          <IoLayersOutline className="text-[20px]" />
+        </SiderIconButton>
       </div>
     )
   }

@@ -1,10 +1,9 @@
 import { tr } from '../../../../shared/i18n'
-import { Tabs, Tab } from '@heroui/react'
+import { Tabs } from '@heroui-v3/react'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'
 import { useGroups } from '@renderer/hooks/use-groups'
 import { mihomoCloseConnections, patchMihomoConfig } from '@renderer/utils/ipc'
-import { Key } from 'react'
 
 interface Props {
   iconOnly?: boolean
@@ -27,43 +26,36 @@ const OutboundModeSwitcher: React.FC<Props> = ({ iconOnly }: Props) => {
     window.electron.ipcRenderer.send('updateTrayMenu')
   }
   if (!mode) return null
-  if (iconOnly) {
-    return (
-      <Tabs
-        color="primary"
-        selectedKey={mode}
-        classNames={{
-          tabList: 'bg-content1 shadow-medium outbound-mode-card flex-col'
-        }}
-        onSelectionChange={(key: Key) => onChangeMode(key as OutboundMode)}
-      >
-        <Tab className={`${mode === 'rule' ? 'font-bold' : ''}`} key="rule" title="R" />
-        <Tab className={`${mode === 'global' ? 'font-bold' : ''}`} key="global" title="G" />
-        <Tab className={`${mode === 'direct' ? 'font-bold' : ''}`} key="direct" title="D" />
-      </Tabs>
-    )
-  }
+
+  const options = [
+    { id: 'rule', compactLabel: 'R', label: tr('Rules') },
+    { id: 'global', compactLabel: 'G', label: tr('Global') },
+    { id: 'direct', compactLabel: 'D', label: tr('Direct') }
+  ] as const
+
   return (
     <Tabs
-      fullWidth
-      color="primary"
+      aria-label={tr('Proxy mode')}
+      className={iconOnly ? undefined : 'w-full'}
+      orientation={iconOnly ? 'vertical' : 'horizontal'}
       selectedKey={mode}
-      classNames={{
-        tabList: 'bg-content1 shadow-medium outbound-mode-card'
-      }}
-      onSelectionChange={(key: Key) => onChangeMode(key as OutboundMode)}
+      onSelectionChange={(key) => void onChangeMode(String(key) as OutboundMode)}
     >
-      <Tab className={`${mode === 'rule' ? 'font-bold' : ''}`} key="rule" title={tr('Rules')} />
-      <Tab
-        className={`${mode === 'global' ? 'font-bold' : ''}`}
-        key="global"
-        title={tr('Global')}
-      />
-      <Tab
-        className={`${mode === 'direct' ? 'font-bold' : ''}`}
-        key="direct"
-        title={tr('Direct')}
-      />
+      <Tabs.ListContainer className="outbound-mode-card bg-content1 shadow-sm">
+        <Tabs.List aria-label={tr('Proxy mode')} className={iconOnly ? 'flex-col' : 'w-full'}>
+          {options.map((option) => (
+            <Tabs.Tab
+              aria-label={option.label}
+              className="data-[selected=true]:font-semibold data-[selected=true]:text-primary-foreground"
+              id={option.id}
+              key={option.id}
+            >
+              {iconOnly ? option.compactLabel : option.label}
+              <Tabs.Indicator className="bg-primary shadow-none" />
+            </Tabs.Tab>
+          ))}
+        </Tabs.List>
+      </Tabs.ListContainer>
     </Tabs>
   )
 }

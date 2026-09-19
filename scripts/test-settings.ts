@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { readFileSync } from 'node:fs'
+import { readFileSync, readdirSync } from 'node:fs'
 import { test } from 'node:test'
 import { mergeSettingsPatch } from '../src/renderer/src/utils/merge-settings-patch.ts'
 import {
@@ -290,7 +290,18 @@ test('desktop sidebar separates controls, live status and navigation', () => {
   const rules = readFileSync('src/renderer/src/components/sider/rule-card.tsx', 'utf8')
   const profile = readFileSync('src/renderer/src/components/sider/profile-card.tsx', 'utf8')
   const connections = readFileSync('src/renderer/src/components/sider/conn-card.tsx', 'utf8')
+  const outboundMode = readFileSync(
+    'src/renderer/src/components/sider/outbound-mode-switcher.tsx',
+    'utf8'
+  )
   const quickControl = surfaces.slice(surfaces.indexOf('export const SiderQuickControl'))
+
+  for (const file of readdirSync('src/renderer/src/components/sider').filter((name) =>
+    name.endsWith('.tsx')
+  )) {
+    const source = readFileSync(`src/renderer/src/components/sider/${file}`, 'utf8')
+    assert.doesNotMatch(source, /from '@heroui\/react'/, `${file} still imports HeroUI v2`)
+  }
 
   assert.match(sider, /SiderSection title=\{tr\('Quick controls'\)\} columns=\{2\}/)
   assert.match(sider, /SiderSection title=\{tr\('Current status'\)\}/)
@@ -304,6 +315,8 @@ test('desktop sidebar separates controls, live status and navigation', () => {
   assert.match(surfaces, /export const SiderQuickControl/)
   assert.match(surfaces, /export const SiderNavItem/)
   assert.match(surfaces, /export const SiderStatusCard/)
+  assert.match(surfaces, /export const SiderIconButton/)
+  assert.match(surfaces, /<Tooltip\.Content placement=\{placement\}>/)
   assert.match(surfaces, /metadataSeparator = '·'/)
   assert.match(surfaces, /showChevron \?\? !actions/)
   assert.match(surfaces, /prioritizeDescription \? 'min-w-0 truncate' : 'shrink-0'/)
@@ -342,7 +355,7 @@ test('desktop sidebar separates controls, live status and navigation', () => {
   assert.match(core, /<SiderStatusCard/)
   assert.match(core, /status=\{version \? memoryLabel : undefined\}/)
   assert.match(core, /statusTitle=\{version \? `\$\{tr\('Memory'\)\}/)
-  assert.match(core, /aria-label=\{tr\('Restart'\)\}/)
+  assert.match(core, /label=\{tr\('Restart'\)\}/)
   assert.match(dns, /<SiderNavItem/)
   assert.match(dns, /status=\{enable \? tr\('Enabled'\) : tr\('Disabled'\)\}/)
   assert.doesNotMatch(dns, /patchMihomoConfig/)
@@ -354,8 +367,10 @@ test('desktop sidebar separates controls, live status and navigation', () => {
   assert.match(rules, /description=\{String\(rules\?\.rules\?\.length \?\? 0\)\}/)
   assert.doesNotMatch(rules, /tr\('\{0\} rules'/)
   assert.match(profile, /<SiderStatusCard/)
-  assert.match(profile, /aria-label=\{tr\('Runtime configuration'\)\}/)
-  assert.match(profile, /aria-label=\{tr\('Refresh'\)\}/)
+  assert.match(profile, /label=\{tr\('Runtime configuration'\)\}/)
+  assert.match(profile, /label=\{tr\('Refresh'\)\}/)
+  assert.match(outboundMode, /<Tabs\.List/)
+  assert.match(outboundMode, /<Tabs\.Indicator/)
   assert.match(surfaces, /title=\{title\}/)
   assert.doesNotMatch(profile, /<Card/)
   assert.match(connections, /<SiderStatusCard/)

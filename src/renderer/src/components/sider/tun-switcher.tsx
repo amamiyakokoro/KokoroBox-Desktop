@@ -1,5 +1,4 @@
 import { tr } from '../../../../shared/i18n'
-import { Button, Tooltip } from '@heroui/react'
 import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'
 import BorderSwitch from '@renderer/components/base/border-switch'
 import { TbDeviceIpadHorizontalBolt } from 'react-icons/tb'
@@ -9,7 +8,7 @@ import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import React from 'react'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
-import { SiderQuickControl } from './sider-surfaces'
+import { SiderIconButton, SiderQuickControl } from './sider-surfaces'
 
 interface Props {
   iconOnly?: boolean
@@ -53,19 +52,14 @@ const TunSwitcher: React.FC<Props> = (props) => {
   if (iconOnly) {
     return (
       <div className={`${tunCardStatus} flex justify-center`}>
-        <Tooltip content={tr('TUN mode')} placement="right">
-          <Button
-            size="sm"
-            isIconOnly
-            color={match ? 'primary' : 'default'}
-            variant={match ? 'solid' : 'light'}
-            onPress={() => {
-              navigate(settingsPath)
-            }}
-          >
-            <TbDeviceIpadHorizontalBolt className="text-[20px]" />
-          </Button>
-        </Tooltip>
+        <SiderIconButton
+          active={match}
+          label={tr('TUN mode')}
+          placement="right"
+          onPress={() => navigate(settingsPath)}
+        >
+          <TbDeviceIpadHorizontalBolt className="text-[20px]" />
+        </SiderIconButton>
       </div>
     )
   }

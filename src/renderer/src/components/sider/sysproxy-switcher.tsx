@@ -1,5 +1,4 @@
 import { tr } from '../../../../shared/i18n'
-import { Button, Tooltip } from '@heroui/react'
 import BorderSwitch from '@renderer/components/base/border-switch'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
@@ -10,7 +9,7 @@ import React from 'react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { notify } from '@renderer/utils/notification'
-import { SiderQuickControl } from './sider-surfaces'
+import { SiderIconButton, SiderQuickControl } from './sider-surfaces'
 
 interface Props {
   iconOnly?: boolean
@@ -62,19 +61,14 @@ const SysproxySwitcher: React.FC<Props> = (props) => {
   if (iconOnly) {
     return (
       <div className={`${sysproxyCardStatus} flex justify-center`}>
-        <Tooltip content={tr('System proxy')} placement="right">
-          <Button
-            size="sm"
-            isIconOnly
-            color={match ? 'primary' : 'default'}
-            variant={match ? 'solid' : 'light'}
-            onPress={() => {
-              navigate(settingsPath)
-            }}
-          >
-            <AiOutlineGlobal className="text-[20px]" />
-          </Button>
-        </Tooltip>
+        <SiderIconButton
+          active={match}
+          label={tr('System proxy')}
+          placement="right"
+          onPress={() => navigate(settingsPath)}
+        >
+          <AiOutlineGlobal className="text-[20px]" />
+        </SiderIconButton>
       </div>
     )
   }

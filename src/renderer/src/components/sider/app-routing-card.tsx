@@ -1,5 +1,4 @@
 import { tr } from '../../../../shared/i18n'
-import { Button, Tooltip } from '@heroui/react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
@@ -13,7 +12,7 @@ import {
   getAppRoutingStatusMessage
 } from '@renderer/utils/app-routing-status'
 import { isAppRoutingRuleEffectivelyEnabled } from '../../../../shared/app-routing'
-import { SiderStatusCard } from './sider-surfaces'
+import { SiderIconButton, SiderStatusCard } from './sider-surfaces'
 
 interface Props {
   iconOnly?: boolean
@@ -88,18 +87,14 @@ const AppRoutingCard: React.FC<Props> = ({ iconOnly = false }) => {
   if (iconOnly) {
     return (
       <div className={`${appRoutingCardStatus} app-routing-card flex justify-center`}>
-        <Tooltip content={tr('Application routing')} placement="right">
-          <Button
-            size="sm"
-            isIconOnly
-            aria-label={tr('Application routing')}
-            color={match ? 'primary' : 'default'}
-            variant={match ? 'solid' : 'light'}
-            onPress={() => navigate('/app-routing')}
-          >
-            <MdOutlineAppShortcut className="text-[21px]" />
-          </Button>
-        </Tooltip>
+        <SiderIconButton
+          active={match}
+          label={tr('Application routing')}
+          placement="right"
+          onPress={() => navigate('/app-routing')}
+        >
+          <MdOutlineAppShortcut className="text-[21px]" />
+        </SiderIconButton>
       </div>
     )
   }

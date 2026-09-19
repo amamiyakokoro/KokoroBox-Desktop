@@ -1,6 +1,5 @@
 import { tr } from '../../../../shared/i18n'
-import { Button, Tooltip } from '@heroui/react'
-import { Meter } from '@heroui-v3/react'
+import { Button, Meter, Tooltip } from '@heroui-v3/react'
 import { useProfileConfig } from '@renderer/hooks/use-profile-config'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { calcTraffic } from '@renderer/utils/calc'
@@ -14,7 +13,7 @@ import React, { useState } from 'react'
 import ConfigViewer from './config-viewer'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { TiFolder } from 'react-icons/ti'
-import { SiderStatusCard } from './sider-surfaces'
+import { SiderIconButton, SiderStatusCard } from './sider-surfaces'
 
 dayjs.extend(relativeTime)
 
@@ -67,18 +66,14 @@ const ProfileCard: React.FC<Props> = ({ iconOnly }) => {
   if (iconOnly) {
     return (
       <div className={`${profileCardStatus} flex justify-center`}>
-        <Tooltip content={tr('Subscriptions')} placement="right">
-          <Button
-            size="sm"
-            isIconOnly
-            aria-label={tr('Subscriptions')}
-            color={match ? 'primary' : 'default'}
-            variant={match ? 'solid' : 'light'}
-            onPress={() => navigate('/profiles')}
-          >
-            <TiFolder className="text-[20px]" />
-          </Button>
-        </Tooltip>
+        <SiderIconButton
+          active={match}
+          label={tr('Subscriptions')}
+          placement="right"
+          onPress={() => navigate('/profiles')}
+        >
+          <TiFolder className="text-[20px]" />
+        </SiderIconButton>
       </div>
     )
   }
@@ -106,37 +101,25 @@ const ProfileCard: React.FC<Props> = ({ iconOnly }) => {
         onPress={() => navigate('/profiles')}
         actions={
           <>
-            <Tooltip content={tr('Runtime configuration')} placement="top">
-              <Button
-                isIconOnly
-                size="sm"
-                variant="light"
-                aria-label={tr('Runtime configuration')}
-                onPress={() => setShowRuntimeConfig(true)}
-              >
-                <CgLoadbarDoc className="text-lg" />
-              </Button>
-            </Tooltip>
+            <SiderIconButton
+              label={tr('Runtime configuration')}
+              onPress={() => setShowRuntimeConfig(true)}
+            >
+              <CgLoadbarDoc className="text-lg" />
+            </SiderIconButton>
             {info.type === 'remote' && (
-              <Tooltip
-                content={`${tr('Refresh')} · ${dayjs(info.updated).fromNow()}`}
-                placement="top"
+              <SiderIconButton
+                isDisabled={updating}
+                label={tr('Refresh')}
+                tooltip={`${tr('Refresh')} · ${dayjs(info.updated).fromNow()}`}
+                onPress={async () => {
+                  setUpdating(true)
+                  await addProfileItem(info)
+                  setUpdating(false)
+                }}
               >
-                <Button
-                  isIconOnly
-                  size="sm"
-                  variant="light"
-                  aria-label={tr('Refresh')}
-                  isDisabled={updating}
-                  onPress={async () => {
-                    setUpdating(true)
-                    await addProfileItem(info)
-                    setUpdating(false)
-                  }}
-                >
-                  <IoMdRefresh className={`text-lg ${updating ? 'animate-spin' : ''}`} />
-                </Button>
-              </Tooltip>
+                <IoMdRefresh className={`text-lg ${updating ? 'animate-spin' : ''}`} />
+              </SiderIconButton>
             )}
           </>
         }
@@ -148,20 +131,24 @@ const ProfileCard: React.FC<Props> = ({ iconOnly }) => {
                   <span className="truncate text-foreground-500">
                     {calcTraffic(usage)} / {calcTraffic(total)}
                   </span>
-                  <Tooltip content={dateLabel} placement="top">
-                    <Button
-                      size="sm"
-                      variant="light"
-                      className="h-6 min-w-0 px-1.5 text-xs text-foreground-500"
-                      aria-label={dateLabel}
-                      onPress={() =>
-                        patchAppConfig({
-                          profileDisplayDate: profileDisplayDate === 'expire' ? 'update' : 'expire'
-                        })
-                      }
-                    >
-                      {dateValue}
-                    </Button>
+                  <Tooltip delay={0}>
+                    <Tooltip.Trigger className="inline-flex min-w-0">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-6 min-w-0 px-1.5 text-xs text-foreground-500"
+                        aria-label={dateLabel}
+                        onPress={() =>
+                          patchAppConfig({
+                            profileDisplayDate:
+                              profileDisplayDate === 'expire' ? 'update' : 'expire'
+                          })
+                        }
+                      >
+                        {dateValue}
+                      </Button>
+                    </Tooltip.Trigger>
+                    <Tooltip.Content placement="top">{dateLabel}</Tooltip.Content>
                   </Tooltip>
                 </div>
                 <Meter aria-label={tr('Traffic usage')} maxValue={total} value={usage}>

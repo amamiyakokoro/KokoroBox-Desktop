@@ -1,4 +1,4 @@
-import { cn } from '@heroui/react'
+import { Button, cn, Tooltip, type ButtonProps } from '@heroui-v3/react'
 import type React from 'react'
 import { LuChevronRight } from 'react-icons/lu'
 
@@ -38,6 +38,51 @@ const navigationStatusIndicatorClasses: Record<SiderStatusTone, string> = {
   warning: 'bg-warning-500',
   danger: 'bg-danger-500'
 }
+
+interface SiderIconButtonProps {
+  active?: boolean
+  children: React.ReactNode
+  className?: string
+  isDisabled?: boolean
+  isPending?: boolean
+  label: string
+  onPress: NonNullable<ButtonProps['onPress']>
+  placement?: 'top' | 'right' | 'bottom' | 'left'
+  tooltip?: React.ReactNode
+  variant?: ButtonProps['variant']
+}
+
+export const SiderIconButton: React.FC<SiderIconButtonProps> = ({
+  active = false,
+  children,
+  className,
+  isDisabled,
+  isPending,
+  label,
+  onPress,
+  placement = 'top',
+  tooltip,
+  variant = 'ghost'
+}) => (
+  <Tooltip delay={0}>
+    <Tooltip.Trigger className="inline-flex">
+      <Button
+        aria-current={active ? 'page' : undefined}
+        aria-label={label}
+        className={className}
+        isDisabled={isDisabled}
+        isIconOnly
+        isPending={isPending}
+        size="sm"
+        variant={active ? 'primary' : variant}
+        onPress={onPress}
+      >
+        {children}
+      </Button>
+    </Tooltip.Trigger>
+    <Tooltip.Content placement={placement}>{tooltip ?? label}</Tooltip.Content>
+  </Tooltip>
+)
 
 export const SiderSection: React.FC<{
   title: string

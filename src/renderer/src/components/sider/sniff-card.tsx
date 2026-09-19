@@ -1,5 +1,4 @@
 import { tr } from '../../../../shared/i18n'
-import { Button, Tooltip } from '@heroui/react'
 import { RiScan2Fill } from 'react-icons/ri'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'
@@ -7,7 +6,7 @@ import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import React from 'react'
-import { SiderNavItem } from './sider-surfaces'
+import { SiderIconButton, SiderNavItem } from './sider-surfaces'
 
 interface Props {
   iconOnly?: boolean
@@ -46,20 +45,14 @@ const SniffCard: React.FC<Props> = (props) => {
   if (iconOnly) {
     return (
       <div className={`${sniffCardStatus} ${!controlSniff ? 'hidden' : ''} flex justify-center`}>
-        <Tooltip content={tr('Sniffing')} placement="right">
-          <Button
-            size="sm"
-            isIconOnly
-            aria-label={tr('Sniffing')}
-            color={match ? 'primary' : 'default'}
-            variant={match ? 'solid' : 'light'}
-            onPress={() => {
-              navigate(settingsPath)
-            }}
-          >
-            <RiScan2Fill className="text-[20px]" />
-          </Button>
-        </Tooltip>
+        <SiderIconButton
+          active={match}
+          label={tr('Sniffing')}
+          placement="right"
+          onPress={() => navigate(settingsPath)}
+        >
+          <RiScan2Fill className="text-[20px]" />
+        </SiderIconButton>
       </div>
     )
   }

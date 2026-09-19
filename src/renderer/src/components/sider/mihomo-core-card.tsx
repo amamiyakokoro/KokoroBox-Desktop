@@ -1,5 +1,4 @@
 import { tr } from '../../../../shared/i18n'
-import { Button, Tooltip } from '@heroui/react'
 import { calcTraffic } from '@renderer/utils/calc'
 import { mihomoVersion, restartCore } from '@renderer/utils/ipc'
 import React, { useEffect, useState } from 'react'
@@ -12,7 +11,7 @@ import useSWR from 'swr'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { LuCpu } from 'react-icons/lu'
 import { notify } from '@renderer/utils/notification'
-import { SiderStatusCard } from './sider-surfaces'
+import { SiderIconButton, SiderStatusCard } from './sider-surfaces'
 import { normalizeCoreVersion } from './core-version'
 
 interface Props {
@@ -84,18 +83,14 @@ const MihomoCoreCard: React.FC<Props> = ({ iconOnly }) => {
   if (iconOnly) {
     return (
       <div className={`${mihomoCoreCardStatus} flex justify-center`}>
-        <Tooltip content={tr('Mihomo settings')} placement="right">
-          <Button
-            size="sm"
-            isIconOnly
-            aria-label={tr('Mihomo settings')}
-            color={match ? 'primary' : 'default'}
-            variant={match ? 'solid' : 'light'}
-            onPress={() => navigate(settingsPath)}
-          >
-            <LuCpu className="text-[20px]" />
-          </Button>
-        </Tooltip>
+        <SiderIconButton
+          active={match}
+          label={tr('Mihomo settings')}
+          placement="right"
+          onPress={() => navigate(settingsPath)}
+        >
+          <LuCpu className="text-[20px]" />
+        </SiderIconButton>
       </div>
     )
   }
@@ -125,31 +120,26 @@ const MihomoCoreCard: React.FC<Props> = ({ iconOnly }) => {
         active={match}
         onPress={() => navigate(settingsPath)}
         actions={
-          <Tooltip content={tr('Restart')}>
-            <Button
-              isIconOnly
-              size="sm"
-              variant="light"
-              isDisabled={restarting}
-              aria-label={tr('Restart')}
-              onPress={async () => {
-                try {
-                  setRestarting(true)
-                  await restartCore()
-                  await new Promise((resolve) => {
-                    setTimeout(resolve, 2000)
-                  })
-                } catch (error) {
-                  notify(error, { variant: 'danger' })
-                } finally {
-                  setRestarting(false)
-                  void mutate()
-                }
-              }}
-            >
-              <IoMdRefresh className={restarting ? 'animate-spin' : undefined} />
-            </Button>
-          </Tooltip>
+          <SiderIconButton
+            isDisabled={restarting}
+            label={tr('Restart')}
+            onPress={async () => {
+              try {
+                setRestarting(true)
+                await restartCore()
+                await new Promise((resolve) => {
+                  setTimeout(resolve, 2000)
+                })
+              } catch (error) {
+                notify(error, { variant: 'danger' })
+              } finally {
+                setRestarting(false)
+                void mutate()
+              }
+            }}
+          >
+            <IoMdRefresh className={restarting ? 'animate-spin' : undefined} />
+          </SiderIconButton>
         }
       />
     </div>

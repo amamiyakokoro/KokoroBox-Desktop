@@ -1,5 +1,4 @@
 import { tr } from '../../../../shared/i18n'
-import { Button, Tooltip } from '@heroui/react'
 import { MdOutlineAltRoute } from 'react-icons/md'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useSortable } from '@dnd-kit/sortable'
@@ -7,7 +6,7 @@ import { CSS } from '@dnd-kit/utilities'
 import { useRules } from '@renderer/hooks/use-rules'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import React from 'react'
-import { SiderNavItem } from './sider-surfaces'
+import { SiderIconButton, SiderNavItem } from './sider-surfaces'
 
 interface Props {
   iconOnly?: boolean
@@ -36,20 +35,14 @@ const RuleCard: React.FC<Props> = (props) => {
   if (iconOnly) {
     return (
       <div className={`${ruleCardStatus} flex justify-center`}>
-        <Tooltip content={tr('Rules')} placement="right">
-          <Button
-            size="sm"
-            isIconOnly
-            aria-label={tr('Rules')}
-            color={match ? 'primary' : 'default'}
-            variant={match ? 'solid' : 'light'}
-            onPress={() => {
-              navigate('/rules')
-            }}
-          >
-            <MdOutlineAltRoute className="text-[20px]" />
-          </Button>
-        </Tooltip>
+        <SiderIconButton
+          active={match}
+          label={tr('Rules')}
+          placement="right"
+          onPress={() => navigate('/rules')}
+        >
+          <MdOutlineAltRoute className="text-[20px]" />
+        </SiderIconButton>
       </div>
     )
   }

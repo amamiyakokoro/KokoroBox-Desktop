@@ -1,12 +1,11 @@
 import { tr } from '../../../../shared/i18n'
-import { Button, Tooltip } from '@heroui/react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import React from 'react'
 import { MdManageAccounts } from 'react-icons/md'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { SiderNavItem } from './sider-surfaces'
+import { SiderIconButton, SiderNavItem } from './sider-surfaces'
 
 interface Props {
   iconOnly?: boolean
@@ -33,18 +32,14 @@ const KokoroSettingCard: React.FC<Props> = ({ iconOnly = false }) => {
   if (iconOnly) {
     return (
       <div className={`${kokoroCardStatus} kokoro-setting-card flex justify-center`}>
-        <Tooltip content={tr('Kokoro account and subscription')} placement="right">
-          <Button
-            size="sm"
-            isIconOnly
-            aria-label={tr('Kokoro account and subscription')}
-            color={match ? 'primary' : 'default'}
-            variant={match ? 'solid' : 'light'}
-            onPress={() => navigate('/kokoro')}
-          >
-            <MdManageAccounts className="text-[21px]" />
-          </Button>
-        </Tooltip>
+        <SiderIconButton
+          active={match}
+          label={tr('Kokoro account and subscription')}
+          placement="right"
+          onPress={() => navigate('/kokoro')}
+        >
+          <MdManageAccounts className="text-[21px]" />
+        </SiderIconButton>
       </div>
     )
   }

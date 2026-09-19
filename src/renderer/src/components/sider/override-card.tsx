@@ -1,12 +1,11 @@
 import { tr } from '../../../../shared/i18n'
-import { Button, Tooltip } from '@heroui/react'
 import React from 'react'
 import { MdFormatOverline } from 'react-icons/md'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
-import { SiderNavItem } from './sider-surfaces'
+import { SiderIconButton, SiderNavItem } from './sider-surfaces'
 
 interface Props {
   iconOnly?: boolean
@@ -33,20 +32,14 @@ const OverrideCard: React.FC<Props> = (props) => {
   if (iconOnly) {
     return (
       <div className={`${overrideCardStatus} flex justify-center`}>
-        <Tooltip content={tr('Overrides')} placement="right">
-          <Button
-            size="sm"
-            isIconOnly
-            aria-label={tr('Overrides')}
-            color={match ? 'primary' : 'default'}
-            variant={match ? 'solid' : 'light'}
-            onPress={() => {
-              navigate('/override')
-            }}
-          >
-            <MdFormatOverline className="text-[20px]" />
-          </Button>
-        </Tooltip>
+        <SiderIconButton
+          active={match}
+          label={tr('Overrides')}
+          placement="right"
+          onPress={() => navigate('/override')}
+        >
+          <MdFormatOverline className="text-[20px]" />
+        </SiderIconButton>
       </div>
     )
   }

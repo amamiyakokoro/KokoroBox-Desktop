@@ -1,5 +1,4 @@
 import { tr } from '../../../../shared/i18n'
-import { Button, Tooltip } from '@heroui/react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { LuGroup } from 'react-icons/lu'
@@ -7,7 +6,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { useGroups } from '@renderer/hooks/use-groups'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import React from 'react'
-import { SiderStatusCard } from './sider-surfaces'
+import { SiderIconButton, SiderStatusCard } from './sider-surfaces'
 
 interface Props {
   iconOnly?: boolean
@@ -36,18 +35,14 @@ const ProxyCard: React.FC<Props> = ({ iconOnly }) => {
   if (iconOnly) {
     return (
       <div className={`${proxyCardStatus} flex justify-center`}>
-        <Tooltip content={tr('Proxy groups')} placement="right">
-          <Button
-            size="sm"
-            isIconOnly
-            aria-label={tr('Proxy groups')}
-            color={match ? 'primary' : 'default'}
-            variant={match ? 'solid' : 'light'}
-            onPress={() => navigate('/proxies')}
-          >
-            <LuGroup className="text-[20px]" />
-          </Button>
-        </Tooltip>
+        <SiderIconButton
+          active={match}
+          label={tr('Proxy groups')}
+          placement="right"
+          onPress={() => navigate('/proxies')}
+        >
+          <LuGroup className="text-[20px]" />
+        </SiderIconButton>
       </div>
     )
   }
