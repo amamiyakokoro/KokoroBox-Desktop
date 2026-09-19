@@ -1,9 +1,10 @@
 import { tr } from '../../../../shared/i18n'
-import { Tabs } from '@heroui/react'
+import { Button, Dropdown, Label, Tabs } from '@heroui/react'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'
 import { useGroups } from '@renderer/hooks/use-groups'
 import { mihomoCloseConnections, patchMihomoConfig } from '@renderer/utils/ipc'
+import { LuArrowRight, LuGlobe, LuRoute } from 'react-icons/lu'
 
 interface Props {
   iconOnly?: boolean
@@ -28,21 +29,68 @@ const OutboundModeSwitcher: React.FC<Props> = ({ iconOnly }: Props) => {
   if (!mode) return null
 
   const options = [
-    { id: 'rule', compactLabel: 'R', label: tr('Rules') },
-    { id: 'global', compactLabel: 'G', label: tr('Global') },
-    { id: 'direct', compactLabel: 'D', label: tr('Direct') }
+    { id: 'rule', icon: <LuRoute />, label: tr('Rules') },
+    { id: 'global', icon: <LuGlobe />, label: tr('Global') },
+    { id: 'direct', icon: <LuArrowRight />, label: tr('Direct') }
   ] as const
+  const currentOption = options.find((option) => option.id === mode) ?? options[0]
+  const currentModeLabel = `${tr('Proxy mode')}: ${currentOption.label}`
+
+  if (iconOnly) {
+    return (
+      <Dropdown>
+        <Button
+          ref={(element) => {
+            if (element) element.title = currentModeLabel
+          }}
+          aria-label={currentModeLabel}
+          className="app-nodrag"
+          isIconOnly
+          size="sm"
+          variant="primary"
+        >
+          <span aria-hidden="true" className="text-lg">
+            {currentOption.icon}
+          </span>
+        </Button>
+        <Dropdown.Popover placement="right bottom">
+          <Dropdown.Menu
+            aria-label={tr('Proxy mode')}
+            disallowEmptySelection
+            selectedKeys={new Set([mode])}
+            selectionMode="single"
+            onSelectionChange={(keys) => {
+              const key = keys === 'all' ? undefined : keys.values().next().value
+              if (key !== undefined && key !== mode) {
+                void onChangeMode(String(key) as OutboundMode)
+              }
+            }}
+          >
+            {options.map((option) => (
+              <Dropdown.Item id={option.id} key={option.id} textValue={option.label}>
+                <span aria-hidden="true" className="shrink-0 text-muted [&>svg]:size-4">
+                  {option.icon}
+                </span>
+                <Label className="min-w-0 flex-1">{option.label}</Label>
+                <Dropdown.ItemIndicator />
+              </Dropdown.Item>
+            ))}
+          </Dropdown.Menu>
+        </Dropdown.Popover>
+      </Dropdown>
+    )
+  }
 
   return (
     <Tabs
       aria-label={tr('Proxy mode')}
-      className={iconOnly ? undefined : 'w-full'}
-      orientation={iconOnly ? 'vertical' : 'horizontal'}
+      className="w-full"
+      orientation="horizontal"
       selectedKey={mode}
       onSelectionChange={(key) => void onChangeMode(String(key) as OutboundMode)}
     >
       <Tabs.ListContainer className="outbound-mode-card bg-content1 shadow-sm">
-        <Tabs.List aria-label={tr('Proxy mode')} className={iconOnly ? 'flex-col' : 'w-full'}>
+        <Tabs.List aria-label={tr('Proxy mode')} className="w-full">
           {options.map((option) => (
             <Tabs.Tab
               aria-label={option.label}
@@ -50,7 +98,7 @@ const OutboundModeSwitcher: React.FC<Props> = ({ iconOnly }: Props) => {
               id={option.id}
               key={option.id}
             >
-              {iconOnly ? option.compactLabel : option.label}
+              {option.label}
               <Tabs.Indicator className="bg-primary shadow-none" />
             </Tabs.Tab>
           ))}

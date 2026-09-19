@@ -22,6 +22,7 @@ import { TitleBarOverlayOptions } from 'electron'
 import MihomoIcon from './components/base/mihomo-icon'
 import useSWR from 'swr'
 import { useUnsavedChanges } from '@renderer/hooks/use-unsaved-changes'
+import { SiderIconButton } from '@renderer/components/sider/sider-surfaces'
 
 const ConfirmModal = lazy(() => import('@renderer/components/base/base-confirm'))
 const siderCardsPromise = import('@renderer/components/sider/sider-cards')
@@ -354,7 +355,7 @@ const App: React.FC = () => {
           <Suspense fallback={<div className="min-h-0 flex-1" />}>
             <SiderCards iconOnly />
           </Suspense>
-          <div className="px-2 pt-2 pb-4 flex shrink-0 flex-col items-center space-y-2">
+          <div className="flex shrink-0 flex-col items-center gap-2 border-t border-separator/60 px-2 pb-4 pt-2.5">
             {latest && latest.version && (
               <Suspense fallback={null}>
                 <UpdaterButton
@@ -365,15 +366,14 @@ const App: React.FC = () => {
               </Suspense>
             )}
             <OutboundModeSwitcher iconOnly />
-            <Button
-              size="sm"
-              className="app-nodrag"
-              isIconOnly
-              variant={location.pathname.includes('/settings') ? 'primary' : 'ghost'}
+            <SiderIconButton
+              active={location.pathname.includes('/settings')}
+              label={tr('Application settings')}
+              placement="right"
               onPress={() => navigate('/settings')}
             >
               <IoSettings className="text-[20px]" />
-            </Button>
+            </SiderIconButton>
           </div>
         </div>
       ) : (

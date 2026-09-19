@@ -21,7 +21,7 @@ import SniffCard from './sniff-card'
 import SysproxySwitcher from './sysproxy-switcher'
 import TunSwitcher from './tun-switcher'
 import AppRoutingCard from './app-routing-card'
-import { SiderSection } from './sider-surfaces'
+import { SiderIconGroup, SiderSection } from './sider-surfaces'
 import {
   accountKeys,
   currentStatusKeys,
@@ -170,11 +170,21 @@ export default function SiderCards({ iconOnly = false }: Props): React.JSX.Eleme
   if (iconOnly) {
     return (
       <div className="min-h-0 flex-1 overflow-y-auto no-scrollbar">
-        <div className="min-h-full w-full flex flex-col gap-2">
-          {renderCards(quickControlKeys)}
-          {renderCards(accountKeys)}
-          {renderCards(currentStatusKeys)}
-          {renderCards(navigationKeys)}
+        <div className="flex min-h-full w-full flex-col items-center px-2 pb-2">
+          <SiderIconGroup label={tr('Quick controls')}>
+            {renderCards(quickControlKeys)}
+          </SiderIconGroup>
+          {isAccountVisible && (
+            <SiderIconGroup label="Kokoro" separated>
+              {renderCards(accountKeys)}
+            </SiderIconGroup>
+          )}
+          <SiderIconGroup label={tr('Current status')} separated>
+            {renderCards(currentStatusKeys)}
+          </SiderIconGroup>
+          <SiderIconGroup label={tr('Navigation')} separated>
+            {renderCards(navigationKeys)}
+          </SiderIconGroup>
         </div>
       </div>
     )

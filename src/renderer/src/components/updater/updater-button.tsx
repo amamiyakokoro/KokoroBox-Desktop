@@ -5,6 +5,7 @@ import UpdaterDrawer from './updater-drawer'
 import { GrUpgrade } from 'react-icons/gr'
 import { cancelUpdate } from '@renderer/utils/ipc'
 import { notify } from '@renderer/utils/notification'
+import { SiderIconButton } from '@renderer/components/sider/sider-surfaces'
 
 let notifiedUpdateVersion = ''
 let hiddenUpdateButtonVersion = ''
@@ -108,12 +109,25 @@ const UpdaterButton: React.FC<Props> = (props) => {
           }}
         />
       )}
-      {showButton && (
+      {showButton && iconOnly && (
+        <SiderIconButton
+          label={tr('View update')}
+          placement="right"
+          variant="danger"
+          onPress={() => {
+            setOpenDrawer(true)
+            setDrawerReopenSignal((signal) => signal + 1)
+          }}
+        >
+          <GrUpgrade />
+        </SiderIconButton>
+      )}
+      {showButton && !iconOnly && (
         <Button
           isIconOnly
           aria-label={tr('View update')}
-          className={iconOnly ? 'app-nodrag' : 'fixed right-11.25 app-nodrag'}
-          size={iconOnly ? 'md' : 'sm'}
+          className="fixed right-11.25 app-nodrag"
+          size="sm"
           variant="danger"
           onPress={() => {
             setOpenDrawer(true)

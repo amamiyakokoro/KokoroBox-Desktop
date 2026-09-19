@@ -767,6 +767,8 @@ test('desktop sidebar separates controls, live status and navigation', () => {
     'src/renderer/src/components/sider/outbound-mode-switcher.tsx',
     'utf8'
   )
+  const app = readFileSync('src/renderer/src/App.tsx', 'utf8')
+  const updater = readFileSync('src/renderer/src/components/updater/updater-button.tsx', 'utf8')
   const navItem = surfaces.slice(
     surfaces.indexOf('export const SiderNavItem'),
     surfaces.indexOf('export const SiderStatusCard')
@@ -800,6 +802,12 @@ test('desktop sidebar separates controls, live status and navigation', () => {
     sider,
     /renderCards\(quickControlKeys\)[\s\S]*renderCards\(accountKeys\)[\s\S]*renderCards\(currentStatusKeys\)[\s\S]*renderCards\(navigationKeys\)/
   )
+  assert.equal(sider.match(/<SiderIconGroup/g)?.length, 4)
+  assert.match(sider, /<SiderIconGroup label=\{tr\('Quick controls'\)\}>/)
+  assert.match(sider, /<SiderIconGroup label="Kokoro" separated>/)
+  assert.match(sider, /<SiderIconGroup label=\{tr\('Current status'\)\} separated>/)
+  assert.match(sider, /<SiderIconGroup label=\{tr\('Navigation'\)\} separated>/)
+  assert.match(sider, /isAccountVisible && \([\s\S]*renderCards\(accountKeys\)/)
   assert.doesNotMatch(sider, /SortableContext items=\{orderedKeys\(accountKeys\)\}/)
   assert.match(
     siderOrderSource,
@@ -810,6 +818,10 @@ test('desktop sidebar separates controls, live status and navigation', () => {
   assert.match(surfaces, /export const SiderStatusRow/)
   assert.match(surfaces, /export const SiderStatusCard/)
   assert.match(surfaces, /export const SiderIconButton/)
+  assert.match(surfaces, /export const SiderIconGroup/)
+  assert.match(surfaces, /data-sider-icon-group/)
+  assert.match(surfaces, /border-t border-separator\/60/)
+  assert.match(surfaces, /className=\{cn\('app-nodrag', className\)\}/)
   assert.match(surfaces, /const SiderItemIcon/)
   assert.match(surfaces, /const SiderItemContent/)
   assert.match(surfaces, /const SiderTrailingSlot/)
@@ -922,6 +934,17 @@ test('desktop sidebar separates controls, live status and navigation', () => {
   assert.match(profile, /label=\{tr\('Refresh'\)\}/)
   assert.match(outboundMode, /<Tabs\.List/)
   assert.match(outboundMode, /<Tabs\.Indicator/)
+  assert.match(outboundMode, /if \(iconOnly\) \{[\s\S]*<Dropdown>/)
+  assert.match(outboundMode, /selectionMode="single"/)
+  assert.match(outboundMode, /selectedKeys=\{new Set\(\[mode\]\)\}/)
+  assert.match(outboundMode, /<Dropdown\.ItemIndicator \/>/)
+  assert.match(outboundMode, /LuRoute/)
+  assert.match(outboundMode, /LuGlobe/)
+  assert.match(outboundMode, /LuArrowRight/)
+  assert.doesNotMatch(outboundMode, /compactLabel|orientation=\{iconOnly|flex-col/)
+  assert.match(app, /<OutboundModeSwitcher iconOnly \/>[\s\S]*<SiderIconButton/)
+  assert.match(app, /label=\{tr\('Application settings'\)\}/)
+  assert.match(updater, /iconOnly && \([\s\S]*<SiderIconButton/)
   assert.match(surfaces, /title=\{title\}/)
   assert.doesNotMatch(profile, /<Card/)
   assert.match(connections, /<SiderStatusCard/)

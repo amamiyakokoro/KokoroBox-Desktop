@@ -159,7 +159,7 @@ export const SiderIconButton: React.FC<SiderIconButtonProps> = ({
       <Button
         aria-current={active ? 'page' : undefined}
         aria-label={label}
-        className={className}
+        className={cn('app-nodrag', className)}
         isDisabled={isDisabled}
         isIconOnly
         isPending={isPending}
@@ -172,6 +172,24 @@ export const SiderIconButton: React.FC<SiderIconButtonProps> = ({
     </Tooltip.Trigger>
     <Tooltip.Content placement={placement}>{tooltip ?? label}</Tooltip.Content>
   </Tooltip>
+)
+
+export const SiderIconGroup: React.FC<{
+  children: React.ReactNode
+  label: string
+  separated?: boolean
+}> = ({ children, label, separated = false }) => (
+  <div
+    aria-label={label}
+    className={cn(
+      'flex w-full flex-col items-center gap-1.5 py-0.5',
+      separated && 'mt-1.5 border-t border-separator/60 pt-2'
+    )}
+    data-sider-icon-group
+    role="group"
+  >
+    {children}
+  </div>
 )
 
 export const SiderSection: React.FC<{
