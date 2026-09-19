@@ -23,6 +23,7 @@ interface KokoTabsProps {
   options: KokoTabOption[]
   selectedKey: string
   tabClassName?: string
+  variant?: React.ComponentProps<typeof Tabs>['variant']
   onChange: (key: string) => void | Promise<void>
 }
 
@@ -35,12 +36,14 @@ export const KokoTabs: React.FC<KokoTabsProps> = ({
   options,
   selectedKey,
   tabClassName,
+  variant,
   onChange
 }) => {
   return (
     <Tabs
       className={className}
       selectedKey={selectedKey}
+      variant={variant}
       onSelectionChange={(key) => void onChange(String(key))}
     >
       <Tabs.ListContainer className={listContainerClassName}>

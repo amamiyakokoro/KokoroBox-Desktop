@@ -267,6 +267,7 @@ const ProfileItem: React.FC<Props> = (props) => {
 
                 <KokoActionMenu
                   ariaLabel={tr('Edit details')}
+                  buttonClassName="h-8 w-8 min-w-8"
                   items={menuItems.map((item) => ({
                     id: item.key,
                     label: item.label,

@@ -1,7 +1,6 @@
 import { Dropdown, cn } from '@heroui-v3/react'
-import { buttonVariants } from '@heroui-v3/styles'
 import type React from 'react'
-import { resolveKokoButtonVariant, type KokoButtonProps } from './koko-form'
+import { KokoButton, type KokoButtonProps } from './koko-form'
 
 export interface KokoActionMenuItem {
   id: string
@@ -47,27 +46,20 @@ export const KokoActionMenu: React.FC<KokoActionMenuProps> = ({
   size = 'sm',
   triggerClassName
 }) => {
-  const resolvedVariant = resolveKokoButtonVariant(buttonColor, buttonVariant)
-
   return (
     <Dropdown>
-      <Dropdown.Trigger
+      <KokoButton
         aria-label={ariaLabel}
-        className={cn(
-          buttonVariants({
-            fullWidth: buttonFullWidth,
-            isIconOnly,
-            size,
-            variant: resolvedVariant
-          }),
-          buttonColor === 'primary' && buttonVariant === 'flat' && 'text-primary',
-          buttonClassName,
-          triggerClassName
-        )}
+        className={cn(buttonClassName, triggerClassName)}
+        color={buttonColor}
+        fullWidth={buttonFullWidth}
         isDisabled={isDisabled}
+        isIconOnly={isIconOnly}
+        size={size}
+        variant={buttonVariant}
       >
         {children}
-      </Dropdown.Trigger>
+      </KokoButton>
       <Dropdown.Popover
         placement={placement}
         className={cn('min-w-40 rounded-lg', popoverClassName)}

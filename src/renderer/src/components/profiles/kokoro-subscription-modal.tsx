@@ -321,6 +321,7 @@ const KokoroSettingsPage: React.FC = () => {
                       <KokoSelect
                         aria-label={tr('Plan')}
                         label={tr('Plan')}
+                        labelPlacement="inside"
                         isDisabled={options.plans.length === 0}
                         disallowEmptySelection
                         options={options.plans.map((plan) => ({
@@ -335,6 +336,7 @@ const KokoroSettingsPage: React.FC = () => {
                       <KokoSelect
                         aria-label={tr('Internet provider')}
                         label={tr('Internet provider')}
+                        labelPlacement="inside"
                         disallowEmptySelection
                         options={isps.map((isp) => ({
                           id: isp.value,
@@ -351,6 +353,7 @@ const KokoroSettingsPage: React.FC = () => {
                       <KokoSelect
                         aria-label={tr('Protocol')}
                         label={tr('Protocol')}
+                        labelPlacement="inside"
                         disallowEmptySelection
                         options={protocols.map((protocol) => ({
                           id: protocol.value,
@@ -381,6 +384,7 @@ const KokoroSettingsPage: React.FC = () => {
                         <KokoSelect
                           aria-label={tr('Connection mode')}
                           label={tr('Connection mode')}
+                          labelPlacement="inside"
                           disallowEmptySelection
                           options={[
                             { id: 'relay', label: tr('Relay') },
@@ -393,6 +397,7 @@ const KokoroSettingsPage: React.FC = () => {
                       <KokoSelect
                         aria-label={tr('Rule source')}
                         label={tr('Rule source')}
+                        labelPlacement="inside"
                         disallowEmptySelection
                         options={options.rule_sources.map((source) => ({
                           id: source,
@@ -408,6 +413,7 @@ const KokoroSettingsPage: React.FC = () => {
                       <KokoSelect
                         aria-label={tr('Unmatched traffic')}
                         label={tr('Unmatched traffic')}
+                        labelPlacement="inside"
                         disallowEmptySelection
                         options={options.final_routes.map((route) => ({
                           id: route,

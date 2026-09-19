@@ -108,6 +108,7 @@ interface KokoSelectBaseProps {
   disallowEmptySelection?: boolean
   isDisabled?: boolean
   label?: React.ReactNode
+  labelPlacement?: 'inside' | 'outside'
   options: KokoSelectOption[]
   placeholder?: string
   triggerClassName?: string
@@ -129,20 +130,35 @@ export type KokoSelectProps = KokoSingleSelectProps | KokoMultipleSelectProps
 
 const KokoSelectContent: React.FC<{
   label?: React.ReactNode
+  labelPlacement: 'inside' | 'outside'
   options: KokoSelectOption[]
   placeholder?: string
   triggerClassName?: string
-}> = ({ label, options, placeholder, triggerClassName }) => (
+}> = ({ label, labelPlacement, options, placeholder, triggerClassName }) => (
   <>
-    {label ? <Label className="mb-1 text-xs text-foreground-500">{label}</Label> : null}
-    <Select.Trigger className={cn('h-8 min-h-8 py-0', triggerClassName)}>
-      {placeholder ? (
-        <Select.Value>
-          {({ defaultChildren, isPlaceholder }) => (isPlaceholder ? placeholder : defaultChildren)}
-        </Select.Value>
-      ) : (
-        <Select.Value />
+    {label ? (
+      <Label
+        className={cn(
+          'text-xs text-foreground-500',
+          labelPlacement === 'inside'
+            ? 'pointer-events-none absolute start-3 top-1.5 z-10 max-w-[calc(100%-2.5rem)] truncate'
+            : 'mb-1'
+        )}
+      >
+        {label}
+      </Label>
+    ) : null}
+    <Select.Trigger
+      className={cn(
+        labelPlacement === 'inside' ? 'h-12 min-h-12 items-end pb-1.5 pt-5' : 'h-8 min-h-8 py-0',
+        triggerClassName
       )}
+    >
+      <Select.Value className="min-w-0 truncate">
+        {({ defaultChildren, isPlaceholder, selectedText }) =>
+          isPlaceholder ? (placeholder ?? defaultChildren) : selectedText
+        }
+      </Select.Value>
       <Select.Indicator />
     </Select.Trigger>
     <Select.Popover>
@@ -178,6 +194,7 @@ export const KokoSelect: React.FC<KokoSelectProps> = (props) => {
     disallowEmptySelection = false,
     isDisabled,
     label,
+    labelPlacement = 'outside',
     options,
     placeholder,
     triggerClassName
@@ -187,7 +204,7 @@ export const KokoSelect: React.FC<KokoSelectProps> = (props) => {
     return (
       <Select<object, 'multiple'>
         aria-label={props['aria-label']}
-        className={className}
+        className={cn(labelPlacement === 'inside' && 'relative', className)}
         isDisabled={isDisabled}
         selectionMode="multiple"
         value={props.value}
@@ -199,6 +216,7 @@ export const KokoSelect: React.FC<KokoSelectProps> = (props) => {
       >
         <KokoSelectContent
           label={label}
+          labelPlacement={labelPlacement}
           options={options}
           placeholder={placeholder}
           triggerClassName={triggerClassName}
@@ -210,7 +228,7 @@ export const KokoSelect: React.FC<KokoSelectProps> = (props) => {
   return (
     <Select
       aria-label={props['aria-label']}
-      className={className}
+      className={cn(labelPlacement === 'inside' && 'relative', className)}
       isDisabled={isDisabled}
       value={props.value}
       variant="secondary"
@@ -222,6 +240,7 @@ export const KokoSelect: React.FC<KokoSelectProps> = (props) => {
     >
       <KokoSelectContent
         label={label}
+        labelPlacement={labelPlacement}
         options={options}
         placeholder={placeholder}
         triggerClassName={triggerClassName}

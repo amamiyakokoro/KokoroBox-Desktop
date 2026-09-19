@@ -255,6 +255,7 @@ const KokoroDefaultRules: React.FC = () => {
                     <KokoSelect
                       aria-label={tr('Rule type')}
                       label={tr('Rule type')}
+                      labelPlacement="inside"
                       className="min-w-0"
                       disallowEmptySelection
                       options={options.rule_types.map((type) => ({
@@ -268,6 +269,7 @@ const KokoroDefaultRules: React.FC = () => {
                     <KokoSelect
                       aria-label={tr('Rule target')}
                       label={tr('Rule target')}
+                      labelPlacement="inside"
                       className="min-w-0"
                       disallowEmptySelection
                       options={targetOptions.map((target) => ({ id: target, label: target }))}
@@ -324,6 +326,7 @@ const KokoroDefaultRules: React.FC = () => {
                       <KokoSelect
                         aria-label={tr('Rule content')}
                         label={tr('Rule content')}
+                        labelPlacement="inside"
                         className="min-w-0 flex-1"
                         placeholder={tr('Select a RULE-SET provider')}
                         options={domainProviders.map((provider) => ({

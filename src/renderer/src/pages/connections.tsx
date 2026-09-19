@@ -3,7 +3,7 @@ import BasePage from '@renderer/components/base/base-page'
 import { mihomoCloseConnections, mihomoCloseConnection } from '@renderer/utils/ipc'
 import React, { KeyboardEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { flushSync } from 'react-dom'
-import { Badge, Button, Divider, Input, Tooltip } from '@heroui/react'
+import { Button, Divider, Input, Tooltip } from '@heroui/react'
 import { KokoTabs } from '@renderer/components/base/base-controls'
 import { KokoSelect } from '@renderer/components/base/koko-form'
 import { calcTraffic } from '@renderer/utils/calc'
@@ -974,37 +974,44 @@ const Connections: React.FC = () => {
             ariaLabel={tr('Connection status')}
             selectedKey={tab}
             className="w-fit h-8"
+            variant="secondary"
             options={[
               {
                 id: 'active',
                 indicatorClassName: 'bg-primary',
                 label: (
-                  <Badge
-                    color={tab === 'active' ? 'primary' : 'default'}
-                    size="sm"
-                    shape="circle"
-                    variant="flat"
-                    content={activeConnections.length}
-                    showOutline={false}
-                  >
-                    <span className="p-1">{tr('Active')}</span>
-                  </Badge>
+                  <span className="flex items-center gap-1.5 px-1">
+                    <span>{tr('Active')}</span>
+                    <span
+                      data-slot="connection-count"
+                      className={`min-w-5 rounded-full px-1.5 text-center text-[10px] font-medium leading-4 tabular-nums ${
+                        tab === 'active'
+                          ? 'bg-primary/12 text-primary'
+                          : 'bg-default-100 text-foreground-500'
+                      }`}
+                    >
+                      {activeConnections.length}
+                    </span>
+                  </span>
                 )
               },
               {
                 id: 'closed',
                 indicatorClassName: 'bg-danger',
                 label: (
-                  <Badge
-                    color={tab === 'closed' ? 'danger' : 'default'}
-                    size="sm"
-                    shape="circle"
-                    variant="flat"
-                    content={closedConnections.length}
-                    showOutline={false}
-                  >
-                    <span className="p-1">{tr('Off')}</span>
-                  </Badge>
+                  <span className="flex items-center gap-1.5 px-1">
+                    <span>{tr('Off')}</span>
+                    <span
+                      data-slot="connection-count"
+                      className={`min-w-5 rounded-full px-1.5 text-center text-[10px] font-medium leading-4 tabular-nums ${
+                        tab === 'closed'
+                          ? 'bg-danger/12 text-danger'
+                          : 'bg-default-100 text-foreground-500'
+                      }`}
+                    >
+                      {closedConnections.length}
+                    </span>
+                  </span>
                 )
               }
             ]}
