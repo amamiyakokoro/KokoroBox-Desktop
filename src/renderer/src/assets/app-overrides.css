@@ -6,6 +6,106 @@
  * `pnpm run test:ui-native` when changing this file.
  */
 
+/*
+ * Quick controls stay two-up in the sidebar, so each card owns its responsive
+ * composition. The safe, narrow layout gives its title and status a full row;
+ * only genuinely wider cards opt into the horizontal desktop composition.
+ */
+.sider-quick-control-container {
+  container-type: inline-size;
+  width: 100%;
+  min-width: 0;
+}
+
+.sider-quick-control {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: 2rem 1.25rem 1rem;
+  align-items: center;
+  min-height: 5.5rem;
+  column-gap: 0.5rem;
+  row-gap: 0.125rem;
+}
+
+.sider-quick-control__primary {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-row: 1 / -1;
+  grid-template-columns: minmax(0, 1fr) 2.5rem;
+  grid-template-rows: 2rem 1.25rem 1rem;
+  align-items: center;
+  min-width: 0;
+  column-gap: 0.5rem;
+  row-gap: 0.125rem;
+}
+
+.sider-quick-control__icon {
+  grid-column: 1;
+  grid-row: 1;
+  justify-self: start;
+}
+
+.sider-quick-control__title {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  align-self: center;
+  min-width: 0;
+}
+
+.sider-quick-control__status {
+  grid-column: 1 / -1;
+  grid-row: 3;
+  align-self: center;
+  min-width: 0;
+}
+
+.sider-quick-control__control {
+  z-index: 1;
+  grid-column: 2;
+  grid-row: 1;
+  align-self: center;
+  justify-self: end;
+}
+
+@container (min-width: 10rem) {
+  .sider-quick-control {
+    grid-template-columns: 2rem minmax(0, 1fr) auto;
+    grid-template-rows: 1.25rem 1rem;
+    min-height: 4.5rem;
+    column-gap: 0.625rem;
+  }
+
+  .sider-quick-control__primary {
+    grid-column: 1 / 3;
+    grid-row: 1 / -1;
+    grid-template-columns: 2rem minmax(0, 1fr);
+    grid-template-rows: 1.25rem 1rem;
+    column-gap: 0.625rem;
+  }
+
+  .sider-quick-control__icon {
+    grid-column: 1;
+    grid-row: 1 / -1;
+    align-self: center;
+  }
+
+  .sider-quick-control__title {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .sider-quick-control__status {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  .sider-quick-control__control {
+    grid-column: 3;
+    grid-row: 1 / -1;
+    justify-self: center;
+  }
+}
+
 .setting-item {
   display: grid;
   grid-template-columns: 100px minmax(0, 1fr);

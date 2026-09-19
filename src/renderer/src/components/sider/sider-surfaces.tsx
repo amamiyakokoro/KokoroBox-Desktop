@@ -383,47 +383,58 @@ export const SiderQuickControl: React.FC<SiderQuickControlProps> = ({
   control,
   onPress
 }) => (
-  <div
-    data-sider-quick-control
-    className={cn(
-      'group grid min-h-[4.5rem] grid-cols-[2rem_minmax(0,1fr)_auto] items-center gap-x-2.5 rounded-2xl border border-divider bg-content1 px-2.5 py-2 shadow-sm transition-[background-color,border-color,box-shadow] duration-150 hover:border-default-400/80 hover:bg-content2/70 hover:shadow-md',
-      active &&
-        'border-primary/45 bg-primary/10 ring-1 ring-inset ring-primary/15 hover:bg-primary/14',
-      disabled && 'opacity-60'
-    )}
-  >
-    <button
-      type="button"
-      data-card-primary-action
-      aria-label={title}
-      aria-current={active ? 'page' : undefined}
-      className={cn(
-        'col-span-2 grid min-w-0 grid-cols-[2rem_minmax(0,1fr)] grid-rows-[1.25rem_1rem] items-center gap-x-2.5 gap-y-0.5 rounded-lg text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary',
-        active && 'text-primary'
-      )}
-      onClick={onPress}
-    >
-      <span
-        className={cn(
-          'row-span-2 flex size-8 items-center justify-center self-center text-xl text-foreground-600 transition-colors duration-150 group-hover:text-foreground',
-          active && 'text-primary group-hover:text-primary'
-        )}
-      >
-        {icon}
-      </span>
-      <span className={cn(siderItemTitleClassName, active && 'text-primary')} title={title}>
-        {title}
-      </span>
-      <SiderStatusRow className="w-full" tone={enabled ? 'success' : 'default'}>
-        {status}
-      </SiderStatusRow>
-    </button>
+  <div data-sider-quick-control className="sider-quick-control-container w-full min-w-0">
     <div
-      data-sider-control-slot
-      className="col-start-3 flex min-w-8 items-center justify-center self-center"
-      onPointerDown={(event) => event.stopPropagation()}
+      className={cn(
+        'sider-quick-control group rounded-2xl border border-divider bg-content1 px-2.5 py-2 shadow-sm transition-[background-color,border-color,box-shadow] duration-150 hover:border-default-400/80 hover:bg-content2/70 hover:shadow-md',
+        active &&
+          'border-primary/45 bg-primary/10 ring-1 ring-inset ring-primary/15 hover:bg-primary/14',
+        disabled && 'opacity-60'
+      )}
     >
-      {control}
+      <button
+        type="button"
+        data-card-primary-action
+        aria-label={title}
+        aria-current={active ? 'page' : undefined}
+        className={cn(
+          'sider-quick-control__primary min-w-0 rounded-xl text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary',
+          active && 'text-primary'
+        )}
+        onClick={onPress}
+      >
+        <span
+          className={cn(
+            'sider-quick-control__icon flex size-8 items-center justify-center text-xl text-foreground-600 transition-colors duration-150 group-hover:text-foreground',
+            active && 'text-primary group-hover:text-primary'
+          )}
+        >
+          {icon}
+        </span>
+        <span
+          className={cn(
+            'sider-quick-control__title whitespace-nowrap',
+            siderItemTitleClassName,
+            active && 'text-primary'
+          )}
+          title={title}
+        >
+          {title}
+        </span>
+        <SiderStatusRow
+          className="sider-quick-control__status w-full"
+          tone={enabled ? 'success' : 'default'}
+        >
+          {status}
+        </SiderStatusRow>
+      </button>
+      <div
+        data-sider-control-slot
+        className="sider-quick-control__control flex min-w-10 items-center justify-center"
+        onPointerDown={(event) => event.stopPropagation()}
+      >
+        {control}
+      </div>
     </div>
   </div>
 )

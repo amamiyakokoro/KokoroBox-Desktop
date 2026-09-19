@@ -744,6 +744,7 @@ test('desktop sidebar separates controls, live status and navigation', () => {
     'utf8'
   )
   const surfaces = readFileSync('src/renderer/src/components/sider/sider-surfaces.tsx', 'utf8')
+  const appOverrides = readFileSync('src/renderer/src/assets/app-overrides.css', 'utf8')
   const sidebarSettings = readFileSync(
     'src/renderer/src/components/settings/sider-config.tsx',
     'utf8'
@@ -774,6 +775,10 @@ test('desktop sidebar separates controls, live status and navigation', () => {
     surfaces.indexOf('export const SiderStatusCard')
   )
   const quickControl = surfaces.slice(surfaces.indexOf('export const SiderQuickControl'))
+  const quickControlStyles = appOverrides.slice(
+    appOverrides.indexOf('.sider-quick-control-container'),
+    appOverrides.indexOf('.setting-item')
+  )
 
   for (const file of readdirSync('src/renderer/src/components/sider').filter((name) =>
     name.endsWith('.tsx')
@@ -867,17 +872,41 @@ test('desktop sidebar separates controls, live status and navigation', () => {
   assert.equal(quickControl.match(/<button/g)?.length, 1)
   assert.match(quickControl, /aria-label=\{title\}/)
   assert.match(quickControl, /data-sider-quick-control/)
-  assert.match(quickControl, /grid-cols-\[2rem_minmax\(0,1fr\)_auto\]/)
-  assert.match(quickControl, /min-h-\[4\.5rem\]/)
-  assert.match(quickControl, /row-span-2 flex size-8 items-center justify-center self-center/)
+  assert.match(quickControl, /sider-quick-control-container w-full min-w-0/)
+  assert.match(quickControl, /sider-quick-control__primary/)
+  assert.match(quickControl, /sider-quick-control__icon flex size-8 items-center justify-center/)
+  assert.match(quickControl, /sider-quick-control__title whitespace-nowrap/)
   assert.match(
     quickControl,
-    /<SiderStatusRow className="w-full" tone=\{enabled \? 'success' : 'default'\}>/
+    /className="sider-quick-control__status w-full"[\s\S]*tone=\{enabled \? 'success' : 'default'\}/
   )
   assert.match(quickControl, /data-sider-control-slot/)
-  assert.match(quickControl, /col-start-3 flex min-w-8 items-center justify-center self-center/)
+  assert.match(
+    quickControl,
+    /sider-quick-control__control flex min-w-10 items-center justify-center/
+  )
   assert.match(quickControl, /<\/button>\s*<div[\s\S]*data-sider-control-slot/)
+  assert.doesNotMatch(quickControl, /grid-cols-\[2rem_minmax\(0,1fr\)_auto\]/)
   assert.doesNotMatch(quickControl, /\babsolute\b|right-2\.5|top-2/)
+  assert.match(quickControlStyles, /container-type:\s*inline-size/)
+  assert.match(
+    quickControlStyles,
+    /\.sider-quick-control\s*\{[\s\S]*grid-template-columns:\s*minmax\(0, 1fr\) auto/
+  )
+  assert.match(
+    quickControlStyles,
+    /\.sider-quick-control__title\s*\{[\s\S]*grid-column:\s*1 \/ -1;[\s\S]*grid-row:\s*2/
+  )
+  assert.match(
+    quickControlStyles,
+    /\.sider-quick-control__status\s*\{[\s\S]*grid-column:\s*1 \/ -1;[\s\S]*grid-row:\s*3/
+  )
+  assert.match(quickControlStyles, /@container \(min-width:\s*10rem\)/)
+  assert.match(
+    quickControlStyles,
+    /@container[\s\S]*grid-template-columns:\s*2rem minmax\(0, 1fr\) auto/
+  )
+  assert.doesNotMatch(quickControlStyles, /position:\s*absolute/)
   assert.match(sidebarSettings, /title: tr\('Quick controls'\)/)
   assert.match(sidebarSettings, /title: 'Kokoro',[\s\S]*reorderable: false/)
   assert.match(sidebarSettings, /title: tr\('Current status'\)/)
