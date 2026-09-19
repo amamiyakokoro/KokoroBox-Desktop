@@ -8,7 +8,6 @@ import FeatureSettingsLayout, {
   FeatureSettingsSaveButton,
   FeatureSettingsSection
 } from '@renderer/components/base/base-feature-settings'
-import EditableList from '@renderer/components/base/base-list-editor'
 import PacEditorModal from '@renderer/components/sysproxy/pac-editor-modal'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { platform } from '@renderer/utils/init'
@@ -28,6 +27,42 @@ function FindProxyForURL(url, host) {
 
 interface Props {
   embedded?: boolean
+}
+
+const bypassPreviewLimit = 5
+
+const BypassListPreview: React.FC<{ items: string[] }> = ({ items }) => {
+  const previewItems = items.slice(0, bypassPreviewLimit)
+  const remaining = Math.max(0, items.length - previewItems.length)
+
+  return (
+    <div
+      className="overflow-hidden rounded-xl border border-divider/80 bg-content2/40"
+      data-bypass-preview
+    >
+      {previewItems.length > 0 ? (
+        <ul aria-label={tr('Proxy bypass list')} className="divide-y divide-divider/60">
+          {previewItems.map((item, index) => (
+            <li key={`${item}-${index}`} className="min-w-0 px-3 py-1">
+              <code
+                className="block min-w-0 truncate font-mono text-xs leading-5 text-foreground-600"
+                title={item}
+              >
+                {item}
+              </code>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="px-3 py-2 text-xs leading-5 text-foreground-500">{tr('No bypass entries')}</p>
+      )}
+      {remaining > 0 && (
+        <p className="border-t border-divider/60 px-3 py-1.5 text-xs leading-4 text-foreground-500">
+          {tr('+ {0} more', [remaining])}
+        </p>
+      )}
+    </div>
+  )
 }
 
 const Sysproxy: React.FC<Props> = ({ embedded = false }) => {
@@ -422,43 +457,33 @@ const Sysproxy: React.FC<Props> = ({ embedded = false }) => {
               </SettingItem>
             )}
             {values.mode === 'manual' && (
-              <>
-                <SettingItem title={tr('Add default proxy bypasses')} divider>
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    onPress={() => {
-                      setValues({
-                        ...values,
-                        bypass: Array.from(new Set([...defaultBypass, ...values.bypass]))
-                      })
-                    }}
-                  >
-                    {tr('Add default proxy bypasses')}
-                  </Button>
-                </SettingItem>
-                <SettingItem title={tr('Proxy bypass list')} align="start">
-                  <div className="flex w-full min-w-0 flex-col gap-2">
-                    <div className="flex justify-end">
+              <SettingItem title={tr('Proxy bypass list')} align="start">
+                <div className="flex w-full min-w-0 flex-col gap-2">
+                  <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
+                    <span className="text-xs leading-5 text-foreground-500 tabular-nums">
+                      {tr('{0} items', [values.bypass.length])}
+                    </span>
+                    <div className="flex shrink-0 flex-wrap items-center justify-end gap-1">
                       <Button
                         size="sm"
-                        variant="secondary"
-                        onPress={async () => {
-                          setOpenEditor(true)
+                        variant="ghost"
+                        onPress={() => {
+                          setValues({
+                            ...values,
+                            bypass: Array.from(new Set([...defaultBypass, ...values.bypass]))
+                          })
                         }}
                       >
+                        {tr('Add defaults')}
+                      </Button>
+                      <Button size="sm" variant="secondary" onPress={() => setOpenEditor(true)}>
                         {tr('Edit')}
                       </Button>
                     </div>
-                    <EditableList
-                      items={values.bypass}
-                      onChange={(list) => setValues({ ...values, bypass: list as string[] })}
-                      placeholder={tr('Example: *.baidu.com')}
-                      divider={false}
-                    />
                   </div>
-                </SettingItem>
-              </>
+                  <BypassListPreview items={values.bypass} />
+                </div>
+              </SettingItem>
             )}
           </FeatureSettingsSection>
         )}

@@ -295,7 +295,7 @@ test('SettingItem has one canonical layout without legacy compatibility paths', 
   assert.match(styles, /:root:lang\(en\) \.setting-item__title[\s\S]*overflow-wrap: anywhere/)
 })
 
-test('system proxy fields keep editable lists inside the settings control column', () => {
+test('system proxy keeps bypass inspection on the page and editing in the modal', () => {
   const proxy = readFileSync(
     'src/renderer/src/components/settings/network/system-proxy-settings.tsx',
     'utf8'
@@ -308,10 +308,18 @@ test('system proxy fields keep editable lists inside the settings control column
     proxy,
     /placeholder=\{tr\('Default: 127\.0\.0\.1\. Change only if needed'\)\}/
   )
-  assert.match(
-    proxy,
-    /<SettingItem title=\{tr\('Proxy bypass list'\)\} align="start">[\s\S]*?<EditableList[\s\S]*?<\/SettingItem>/
-  )
+  assert.doesNotMatch(proxy, /import EditableList|<EditableList/)
+  assert.match(proxy, /const bypassPreviewLimit = 5/)
+  assert.match(proxy, /items\.slice\(0, bypassPreviewLimit\)/)
+  assert.match(proxy, /data-bypass-preview/)
+  assert.match(proxy, /<code[\s\S]*title=\{item\}[\s\S]*>\s*\{item\}\s*<\/code>/)
+  assert.match(proxy, /tr\('\+ \{0\} more', \[remaining\]\)/)
+  assert.match(proxy, /tr\('\{0\} items', \[values\.bypass\.length\]\)/)
+  assert.match(proxy, /tr\('Add defaults'\)/)
+  assert.match(proxy, /Array\.from\(new Set\(\[\.\.\.defaultBypass, \.\.\.values\.bypass\]\)\)/)
+  assert.match(proxy, /<ByPassEditorModal[\s\S]*bypass: list/)
+  assert.match(proxy, /onPress=\{\(\) => setOpenEditor\(true\)\}/)
+  assert.match(proxy, /const setValues = \(v: typeof values\): void => \{[\s\S]*setChanged\(true\)/)
 })
 
 test('settings and Mihomo forms share the KokoroBox HeroUI v3 conventions', () => {
