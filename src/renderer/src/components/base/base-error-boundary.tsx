@@ -1,5 +1,5 @@
 import { tr } from '../../../../shared/i18n'
-import { Button } from '@heroui/react'
+import { Button } from '@heroui-v3/react'
 import { JSX, ReactNode } from 'react'
 import { ErrorBoundary, FallbackProps } from 'react-error-boundary'
 
@@ -31,16 +31,14 @@ const ErrorFallback = ({ error }: FallbackProps): JSX.Element => {
 
       {/* <Button
         size="sm"
-        color="primary"
-        variant="flat"
+        variant="secondary"
         onPress={() => open('https://github.com/amamiyakokoro/KokoroBox-Desktop/issues/new/choose')}
       >
         GitHub
       </Button> */}
       <Button
         size="sm"
-        color="primary"
-        variant="flat"
+        variant="primary"
         className="ml-2"
         onPress={() => open('https://t.me/+y7rcYjEKIiI1NzZl')}
       >
@@ -49,7 +47,7 @@ const ErrorFallback = ({ error }: FallbackProps): JSX.Element => {
 
       <Button
         size="sm"
-        variant="flat"
+        variant="secondary"
         className="ml-2"
         onPress={() => navigator.clipboard.writeText('```\n' + message + '\n' + stack + '\n```')}
       >

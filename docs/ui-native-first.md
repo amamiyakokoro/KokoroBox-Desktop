@@ -49,7 +49,7 @@ Run `pnpm run test:ui-native` when changing shared UI primitives or compatibilit
 
 ### HeroUI v2 imports
 
-There are 21 renderer files importing `@heroui/react`. This allowlist can shrink but must not grow.
+There are 15 renderer files importing `@heroui/react`. This allowlist can shrink but must not grow.
 
 Provider/bootstrap entries:
 
@@ -57,17 +57,11 @@ Provider/bootstrap entries:
 - `src/renderer/src/floating.tsx`
 - `src/renderer/src/traymenu.tsx`
 
-Application and low-level entries:
+Application entries:
 
-- `src/renderer/src/App.tsx`
-- `src/renderer/src/components/base/base-editor-lazy.tsx`
-- `src/renderer/src/components/base/base-error-boundary.tsx`
-- `src/renderer/src/components/resources/rule-provider.tsx`
-- `src/renderer/src/components/updater/updater-button.tsx`
 - `src/renderer/src/pages/connections.tsx`
 - `src/renderer/src/pages/override.tsx`
 - `src/renderer/src/pages/profiles.tsx`
-- `src/renderer/src/pages/rules.tsx`
 - `src/renderer/src/pages/settings.tsx`
 
 Higher-risk feature surfaces:

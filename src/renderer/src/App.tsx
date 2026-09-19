@@ -3,7 +3,7 @@ import { useTheme } from 'next-themes'
 import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { NavigateFunction, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import OutboundModeSwitcher from '@renderer/components/sider/outbound-mode-switcher'
-import { Button, Divider } from '@heroui/react'
+import { Button, Separator } from '@heroui-v3/react'
 import { IoSettings } from 'react-icons/io5'
 import { useDeferredRoutePreload } from '@renderer/routes'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
@@ -369,8 +369,7 @@ const App: React.FC = () => {
               size="sm"
               className="app-nodrag"
               isIconOnly
-              color={location.pathname.includes('/settings') ? 'primary' : 'default'}
-              variant={location.pathname.includes('/settings') ? 'solid' : 'light'}
+              variant={location.pathname.includes('/settings') ? 'primary' : 'ghost'}
               onPress={() => navigate('/settings')}
             >
               <IoSettings className="text-[20px]" />
@@ -403,8 +402,7 @@ const App: React.FC = () => {
                 size="sm"
                 className="app-nodrag"
                 isIconOnly
-                color={location.pathname.includes('/settings') ? 'primary' : 'default'}
-                variant={location.pathname.includes('/settings') ? 'solid' : 'light'}
+                variant={location.pathname.includes('/settings') ? 'primary' : 'ghost'}
                 onPress={() => {
                   navigate('/settings')
                 }}
@@ -446,7 +444,7 @@ const App: React.FC = () => {
           }`}
         />
       </div>
-      <Divider orientation="vertical" />
+      <Separator orientation="vertical" />
       <div
         style={{ width: `calc(100% - ${siderWidthValue + 1}px)` }}
         className="main grow h-full overflow-y-auto"

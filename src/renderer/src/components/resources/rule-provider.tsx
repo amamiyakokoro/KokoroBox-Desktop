@@ -10,7 +10,7 @@ import { useEffect, useMemo, useState } from 'react'
 import useSWR from 'swr'
 import SettingCard from '../base/base-setting-card'
 import SettingItem from '../base/base-setting-item'
-import { Button } from '@heroui/react'
+import { Button } from '@heroui-v3/react'
 import { IoMdRefresh } from 'react-icons/io'
 import { CgLoadbarDoc } from 'react-icons/cg'
 import { MdEditDocument } from 'react-icons/md'
@@ -135,7 +135,7 @@ const RuleProvider: React.FC = () => {
       <SettingItem compatKey="legacy" title={tr('Rule providers')} divider>
         <Button
           size="sm"
-          color="primary"
+          variant="primary"
           onPress={() => {
             providers.forEach((provider, index) => {
               onUpdate(provider.name, index)
@@ -173,7 +173,7 @@ const RuleProvider: React.FC = () => {
             {provider.vehicleType !== 'Inline' && (
               <Button
                 isIconOnly
-                variant="light"
+                variant="ghost"
                 size="sm"
                 aria-label={`${tr('View details')}: ${provider.name}`}
                 onPress={() => openProviderDetails(provider)}
@@ -187,7 +187,7 @@ const RuleProvider: React.FC = () => {
             )}
             <Button
               isIconOnly
-              variant="light"
+              variant="ghost"
               size="sm"
               aria-label={`${tr('Refresh')}: ${provider.name}`}
               onPress={() => {

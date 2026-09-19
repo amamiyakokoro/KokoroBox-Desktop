@@ -7,25 +7,19 @@ const rendererRoot = 'src/renderer/src'
 const compatibilityCssPath = 'src/renderer/src/assets/main-compatible.css'
 
 const legacyV2ImportFiles = new Set([
-  'src/renderer/src/App.tsx',
   'src/renderer/src/components/app-routing/rule-row.tsx',
-  'src/renderer/src/components/base/base-editor-lazy.tsx',
-  'src/renderer/src/components/base/base-error-boundary.tsx',
   'src/renderer/src/components/override/override-item.tsx',
   'src/renderer/src/components/profiles/kokoro-default-rules.tsx',
   'src/renderer/src/components/profiles/kokoro-subscription-modal.tsx',
   'src/renderer/src/components/proxies/proxy-item.tsx',
   'src/renderer/src/components/resources/geo-data.tsx',
-  'src/renderer/src/components/resources/rule-provider.tsx',
   'src/renderer/src/components/rules/rule-item.tsx',
-  'src/renderer/src/components/updater/updater-button.tsx',
   'src/renderer/src/floating.tsx',
   'src/renderer/src/main.tsx',
   'src/renderer/src/pages/app-routing.tsx',
   'src/renderer/src/pages/connections.tsx',
   'src/renderer/src/pages/override.tsx',
   'src/renderer/src/pages/profiles.tsx',
-  'src/renderer/src/pages/rules.tsx',
   'src/renderer/src/pages/settings.tsx',
   'src/renderer/src/traymenu.tsx'
 ])
@@ -204,6 +198,6 @@ test('the native-first ownership contract documents the migration boundary', () 
 
   assert.match(contract, /KokoroBox controls layout; HeroUI controls component appearance/)
   assert.match(contract, /Do not add selectors for HeroUI internal classes/)
-  assert.match(contract, /21 renderer files importing `@heroui\/react`/)
+  assert.match(contract, /15 renderer files importing `@heroui\/react`/)
   assert.match(contract, /88 existing internal-selector occurrences/)
 })

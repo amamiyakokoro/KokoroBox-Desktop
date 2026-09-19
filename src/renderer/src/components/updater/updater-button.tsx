@@ -1,5 +1,5 @@
 import { tr } from '../../../../shared/i18n'
-import { Button } from '@heroui/react'
+import { Button } from '@heroui-v3/react'
 import React, { useState, useEffect } from 'react'
 import UpdaterDrawer from './updater-drawer'
 import { GrUpgrade } from 'react-icons/gr'
@@ -113,8 +113,8 @@ const UpdaterButton: React.FC<Props> = (props) => {
           isIconOnly
           aria-label={tr('View update')}
           className={iconOnly ? 'app-nodrag' : 'fixed right-11.25 app-nodrag'}
-          color="danger"
           size={iconOnly ? 'md' : 'sm'}
+          variant="danger"
           onPress={() => {
             setOpenDrawer(true)
             setDrawerReopenSignal((signal) => signal + 1)
