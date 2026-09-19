@@ -296,7 +296,7 @@ test('core feature settings pages use the shared desktop layout', () => {
     'src/renderer/src/components/settings/network/mihomo-settings.tsx'
   ]
   const layout = readFileSync('src/renderer/src/components/base/base-feature-settings.tsx', 'utf8')
-  const styles = readFileSync('src/renderer/src/assets/main-compatible.css', 'utf8')
+  const styles = readFileSync('src/renderer/src/assets/app-overrides.css', 'utf8')
 
   assert.match(layout, /<SettingCardModeProvider value=\{false\}>/)
   assert.match(layout, /<SettingItemModeProvider value=\{false\}>/)

@@ -1,10 +1,10 @@
 import assert from 'node:assert/strict'
-import { readdirSync, readFileSync } from 'node:fs'
+import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { join, relative } from 'node:path'
 import test from 'node:test'
 
 const rendererRoot = 'src/renderer/src'
-const compatibilityCssPath = 'src/renderer/src/assets/main-compatible.css'
+const appOverridesCssPath = 'src/renderer/src/assets/app-overrides.css'
 
 const legacyV2ImportFiles = new Set([
   'src/renderer/src/components/profiles/kokoro-default-rules.tsx',
@@ -33,54 +33,6 @@ const allowedKokoExports = new Set([
   'KokoTabs',
   'KokoTextField',
   'KokoTooltip'
-])
-
-const allowedInternalClasses = new Set([
-  '.button',
-  '.button--icon-only',
-  '.button--sm',
-  '.close-button',
-  '.input',
-  '.input-group',
-  '.input-group__input',
-  '.input-group__suffix',
-  '.list-box',
-  '.list-box-item',
-  '.list-box-item__indicator',
-  '.modal__body',
-  '.select',
-  '.select__popover',
-  '.select__trigger',
-  '.select__value',
-  '.slider',
-  '.slider__fill',
-  '.slider__thumb',
-  '.slider__track',
-  '.switch',
-  '.switch--lg',
-  '.switch--sm',
-  '.switch__control',
-  '.switch__thumb',
-  '.tabs',
-  '.tabs__indicator',
-  '.tabs__list',
-  '.tabs__list-container',
-  '.tabs__tab',
-  '.toast',
-  '.toast__content',
-  '.toast__description',
-  '.toast__title'
-])
-
-const allowedRadiusTokens = new Set([
-  'field-radius',
-  'radius',
-  'radius-2xl',
-  'radius-3xl',
-  'radius-4xl',
-  'radius-lg',
-  'radius-md',
-  'radius-xl'
 ])
 
 const temporaryKokoShimConsumers = {
@@ -204,38 +156,30 @@ test('the HeroUI v2 Tailwind plugin is not loaded by new style entries', () => {
   assert.ok(styleFiles.length <= legacyV2StyleEntries.size)
 })
 
-test('HeroUI internal compatibility selectors can shrink but cannot expand', () => {
-  const css = readFileSync(compatibilityCssPath, 'utf8')
+test('application overrides do not target HeroUI internal classes', () => {
+  const css = readFileSync(appOverridesCssPath, 'utf8')
   const internalSelectors = extractSelectors(css).filter((selector) => {
     internalClassPattern.lastIndex = 0
     return internalClassPattern.test(selector)
   })
-  const internalClasses = new Set(
-    internalSelectors.flatMap((selector) => {
-      internalClassPattern.lastIndex = 0
-      return [...selector.matchAll(internalClassPattern)].map((match) => match[0])
-    })
-  )
 
-  for (const className of internalClasses) {
-    assert.ok(allowedInternalClasses.has(className), `new HeroUI internal selector: ${className}`)
-  }
-  assert.ok(
-    internalSelectors.length <= 88,
-    `HeroUI internal selector count grew from 88 to ${internalSelectors.length}`
-  )
+  assert.deepEqual(internalSelectors, [])
 })
 
-test('global HeroUI radius and field geometry tokens can shrink but cannot expand', () => {
-  const css = readFileSync(compatibilityCssPath, 'utf8')
+test('application overrides do not redefine HeroUI radius or field geometry', () => {
+  const css = readFileSync(appOverridesCssPath, 'utf8')
   const tokens = [...css.matchAll(/--(radius(?:-[\w-]+)?|field-radius)\s*:/g)].map(
     (match) => match[1]
   )
 
-  for (const token of tokens) {
-    assert.ok(allowedRadiusTokens.has(token), `new global HeroUI geometry token: --${token}`)
-  }
-  assert.ok(tokens.length <= allowedRadiusTokens.size)
+  assert.deepEqual(tokens, [])
+})
+
+test('the application imports the renamed overrides stylesheet', () => {
+  const mainCss = readFileSync('src/renderer/src/assets/main.css', 'utf8')
+
+  assert.match(mainCss, /@import '\.\/app-overrides\.css';/)
+  assert.equal(existsSync('src/renderer/src/assets/main-compatible.css'), false)
 })
 
 test('Koko compatibility component exports remain bounded', () => {
@@ -278,5 +222,5 @@ test('the native-first ownership contract documents the migration boundary', () 
   assert.match(contract, /KokoroBox controls layout; HeroUI controls component appearance/)
   assert.match(contract, /Do not add selectors for HeroUI internal classes/)
   assert.match(contract, /10 renderer files importing `@heroui\/react`/)
-  assert.match(contract, /88 existing internal-selector occurrences/)
+  assert.match(contract, /zero HeroUI internal selectors/)
 })

@@ -4,8 +4,8 @@ KokoroBox uses HeroUI v3 as its component design language. The application keeps
 information architecture and desktop layout, while HeroUI owns the appearance and interaction of
 its components.
 
-This document is the Phase 6 baseline. It records existing compatibility debt; it does not approve
-new compatibility styling.
+This document defines the native-first contract established in Phase 6 and tightened in Phase 10.
+Compatibility styling is not an approved extension point.
 
 ## Ownership boundary
 
@@ -34,7 +34,7 @@ The working rule is: **KokoroBox controls layout; HeroUI controls component appe
 
 ## Rules for new work
 
-1. Do not add selectors for HeroUI internal classes to `main-compatible.css`.
+1. Do not add selectors for HeroUI internal classes to `app-overrides.css`.
 2. Prefer public component props, variants, sizes, slots, and application layout wrappers.
 3. Do not add global radius or field-geometry token overrides.
 4. A `Koko*` wrapper may normalize application data or behavior, but should not reproduce HeroUI v2
@@ -108,32 +108,30 @@ may choose compact application-level padding, while Card surface, radius, elevat
 appearance remain native. Interactive cards expose an internal semantic button instead of
 recreating the removed v2 `isPressable` behavior on the Card root.
 
-### Compatibility CSS classification
+### Application overrides after Phase 10
 
-| Area                                                | Classification                | Planned action                                          |
-| --------------------------------------------------- | ----------------------------- | ------------------------------------------------------- |
-| `.setting-item*`, settings grids, container queries | Application layout            | Keep                                                    |
-| Electron drag regions and platform window layout    | Application behavior/layout   | Keep                                                    |
-| Product status tones and traffic visualization      | Product semantics             | Keep                                                    |
-| Root `--radius*` and `--field-radius` overrides     | HeroUI appearance override    | Remove in Phase 10                                      |
-| `.button*`, `.close-button`                         | HeroUI appearance override    | Remove in Phase 10                                      |
-| `.switch*` geometry                                 | HeroUI appearance override    | Remove in Phase 10                                      |
-| `.tabs*` geometry and indicators                    | HeroUI appearance override    | Remove in Phase 10                                      |
-| `.select*`, `.list-box*`, `.input*` appearance      | Mixed layout/appearance       | Move widths to layout props, then remove in Phases 8–10 |
-| `.toast*` internals                                 | HeroUI appearance override    | Remove in Phase 10                                      |
-| tray icon modal slider/input internals              | Local high-risk compatibility | Revisit in Phases 9–10                                  |
-| drawer width and page placement                     | Application layout            | Keep                                                    |
-| drawer backdrop and animation internals             | HeroUI appearance/motion      | Remove in Phase 10                                      |
+`main-compatible.css` was a migration artifact and has been replaced by `app-overrides.css`.
+The renamed stylesheet contains application-owned layout and desktop behavior only:
 
-The automated baseline currently permits 88 existing internal-selector occurrences and eight
-radius/field token declarations. Both limits may decrease; they must not increase.
+- settings rows, settings grids, and container queries;
+- page-inspector content density;
+- updater release-note typography;
+- application search feedback and reduced-motion handling;
+- semantic `data-setting-input` width constraints; and
+- native HTML number-input behavior.
+
+Component appearance is no longer overridden there. The stylesheet has zero HeroUI internal
+selectors and zero global `--radius*` / `--field-radius` declarations. Buttons, switches, tabs,
+inputs, selects, list boxes, toasts, sliders, and drawer overlays therefore use their HeroUI v3
+appearance. Component-specific intent belongs in public props, variants, slots, or local layout
+classes—not global compatibility selectors.
 
 ## Phase exit criteria
 
-Phase 6 is complete when:
+The native-first baseline remains enforced when:
 
 - the ownership contract is documented;
 - existing v2 import sites and style entry points are bounded;
-- current HeroUI internal CSS overrides are measured and prevented from expanding;
+- application CSS contains zero HeroUI internal selectors and geometry-token overrides;
 - current `Koko*` wrapper exports are bounded; and
 - no visible application behavior or component appearance changes are introduced.

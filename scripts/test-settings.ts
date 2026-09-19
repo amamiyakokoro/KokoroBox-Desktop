@@ -103,7 +103,7 @@ test('staged settings protect unsaved changes across navigation and window lifec
 
 test('application settings keep navigation discoverable in compact desktop windows', () => {
   const settings = readFileSync('src/renderer/src/pages/settings.tsx', 'utf8')
-  const styles = readFileSync('src/renderer/src/assets/main-compatible.css', 'utf8')
+  const styles = readFileSync('src/renderer/src/assets/app-overrides.css', 'utf8')
   const settingCard = readFileSync('src/renderer/src/components/base/base-setting-card.tsx', 'utf8')
   const general = readFileSync('src/renderer/src/components/settings/general-config.tsx', 'utf8')
 
@@ -175,7 +175,7 @@ test('network settings use nested panels and preserve legacy routes', () => {
 
 test('feature settings only surface save actions for dirty embedded panels', () => {
   const shared = readFileSync('src/renderer/src/components/base/base-feature-settings.tsx', 'utf8')
-  const styles = readFileSync('src/renderer/src/assets/main-compatible.css', 'utf8')
+  const styles = readFileSync('src/renderer/src/assets/app-overrides.css', 'utf8')
   const featurePages = [
     'src/renderer/src/components/settings/network/system-proxy-settings.tsx',
     'src/renderer/src/components/settings/network/tun-settings.tsx',
@@ -514,7 +514,7 @@ test('Phase 9 card-heavy surfaces use native v3 anatomy and semantic interaction
 test('page settings drawers use the shared compact inspector behavior', () => {
   const drawer = readFileSync('src/renderer/src/components/base/base-settings-drawer.tsx', 'utf8')
   const settingItem = readFileSync('src/renderer/src/components/base/base-setting-item.tsx', 'utf8')
-  const styles = readFileSync('src/renderer/src/assets/main-compatible.css', 'utf8')
+  const styles = readFileSync('src/renderer/src/assets/app-overrides.css', 'utf8')
   const connections = readFileSync(
     'src/renderer/src/components/connections/connection-setting-drawer.tsx',
     'utf8'
@@ -536,10 +536,9 @@ test('page settings drawers use the shared compact inspector behavior', () => {
   assert.match(drawer, /w-\[min\(520px,calc\(100vw-16px\)\)\]/)
   assert.match(drawer, /aria-labelledby=\{headingId\}/)
   assert.match(drawer, /aria-label=\{tr\('Close'\)\}/)
-  assert.match(styles, /\.page-settings-drawer-backdrop\s*\{[^}]*backdrop-filter: none/s)
   assert.match(styles, /\.page-settings-drawer \.setting-item--compact\s*\{[^}]*min-height:/s)
-  assert.match(styles, /\.input-group\[data-setting-input='number'\]/)
-  assert.match(styles, /@media \(prefers-reduced-motion: reduce\)/)
+  assert.match(styles, /\.setting-item \[data-setting-input='number'\]/)
+  assert.doesNotMatch(styles, /\.page-settings-drawer-backdrop\s*\{/)
   assert.match(settingItem, /description\?: React\.ReactNode/)
 
   for (const consumer of consumers) {
@@ -770,7 +769,7 @@ test('connection details use a sectioned desktop inspector without losing diagno
     'src/renderer/src/components/connections/connection-detail-modal.tsx',
     'utf8'
   )
-  const styles = readFileSync('src/renderer/src/assets/main-compatible.css', 'utf8')
+  const styles = readFileSync('src/renderer/src/assets/app-overrides.css', 'utf8')
 
   assert.match(detail, /<Drawer\.Backdrop/)
   assert.match(detail, /placement="right"/)

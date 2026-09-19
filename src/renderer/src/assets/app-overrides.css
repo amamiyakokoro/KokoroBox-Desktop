@@ -1,0 +1,380 @@
+/*
+ * KokoroBox application-level layout and desktop behavior.
+ *
+ * Keep HeroUI component appearance in HeroUI: do not target its internal classes
+ * or redefine its geometry tokens here. See docs/ui-native-first.md and run
+ * `pnpm run test:ui-native` when changing this file.
+ */
+
+.setting-item {
+  display: grid;
+  grid-template-columns: 100px minmax(0, 1fr);
+  row-gap: calc(var(--spacing) * 2);
+  column-gap: calc(var(--spacing) * 3);
+  width: 100%;
+  padding-block: calc(var(--spacing) * 2);
+}
+
+.updater-drawer__release {
+  color: var(--muted);
+  font-size: var(--text-sm);
+  line-height: 1.7;
+}
+
+.updater-drawer__release :where(h1, h2, h3, h4) {
+  margin-block: 0 0.5rem;
+  color: var(--foreground);
+}
+
+.updater-drawer__release :where(p, ul, ol) {
+  margin-block: 0.45rem;
+}
+
+.updater-drawer__release :where(ul, ol) {
+  padding-inline-start: 1.1rem;
+}
+
+.updater-drawer__release li {
+  list-style-position: outside;
+  list-style-type: disc;
+  padding-inline-start: 0.1rem;
+}
+
+.updater-drawer__release > :first-child {
+  margin-block-start: 0;
+}
+
+.updater-drawer__release > :last-child {
+  margin-block-end: 0;
+}
+
+.setting-item--center {
+  align-items: center;
+}
+
+.setting-item--start {
+  align-items: start;
+}
+
+.setting-item--compact {
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: calc(var(--spacing) * 3);
+  row-gap: 0;
+  height: calc(var(--spacing) * 8);
+  padding-block: 0;
+}
+
+.setting-item__title-wrap {
+  display: flex;
+  min-width: 0;
+  min-height: calc(var(--spacing) * 9);
+  align-items: center;
+  gap: calc(var(--spacing) * 2);
+}
+
+.setting-item--compact .setting-item__title-wrap {
+  min-height: calc(var(--spacing) * 8);
+}
+
+.setting-item__title {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: var(--text-sm);
+  line-height: var(--text-sm--line-height);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.setting-item__label-group {
+  min-width: 0;
+}
+
+.setting-item__description {
+  margin-top: calc(var(--spacing) * 0.5);
+  color: var(--muted);
+  font-size: var(--text-xs);
+  line-height: 1.35;
+}
+
+.setting-item--compact .setting-item__title {
+  height: 100%;
+  color: var(--foreground);
+  font-size: var(--text-base);
+  line-height: calc(var(--spacing) * 8);
+}
+
+.setting-item__content {
+  max-width: 100%;
+  min-width: 0;
+}
+
+/* English labels need more room than the original fixed-width Chinese labels. */
+:root:lang(en) .setting-item:not(.setting-item--titleless) {
+  grid-template-columns: minmax(0, 36%) minmax(0, 1fr);
+}
+
+:root:lang(en) .setting-item__title {
+  height: auto;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.5;
+}
+
+:root:lang(en) .setting-item--compact,
+:root:lang(en) .setting-item-legacy {
+  height: auto;
+  min-height: calc(var(--spacing) * 8);
+}
+
+:root:lang(en) .setting-item-legacy {
+  flex-wrap: wrap;
+  align-items: center;
+  gap: calc(var(--spacing) * 2) calc(var(--spacing) * 3);
+}
+
+:root:lang(en) .setting-item-legacy > :first-child {
+  height: auto;
+  min-width: 0;
+  max-width: 100%;
+}
+
+:root:lang(en) .setting-item-legacy h4 {
+  height: auto;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.5;
+}
+
+:root:lang(en) .setting-item-legacy > :last-child:not(:first-child) {
+  max-width: 100%;
+  margin-inline-start: auto;
+}
+
+.setting-item--content-end .setting-item__content {
+  display: flex;
+  justify-content: end;
+}
+
+.setting-item--titleless:has([data-setting-input='full']) {
+  grid-template-columns: minmax(0, 1fr);
+  height: auto;
+}
+
+.setting-item--titleless:has([data-setting-input='full']) .setting-item__content {
+  display: block;
+  width: 100%;
+}
+
+input[type='number']::-webkit-inner-spin-button,
+input[type='number']::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  appearance: none;
+  margin: 0;
+}
+
+input[type='number'] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.setting-item [data-setting-input] {
+  max-width: 100%;
+}
+
+.setting-item [data-setting-input='url'] {
+  width: calc(var(--spacing) * 90);
+}
+
+.setting-item [data-setting-input='number'] {
+  width: calc(var(--spacing) * 32);
+}
+
+.setting-item [data-setting-input='wide'] {
+  width: 80%;
+}
+
+.setting-item [data-setting-input='edit-modal'] {
+  width: 100%;
+  min-width: 0;
+}
+
+.setting-item [data-setting-input='edit-modal-name'] {
+  width: calc(var(--spacing) * 60);
+}
+
+.setting-item [data-setting-input='edit-modal-number'] {
+  width: calc(var(--spacing) * 40);
+}
+
+.setting-item [data-setting-input='full'] {
+  width: 100%;
+}
+
+.setting-item__inline-controls {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--spacing) * 2);
+}
+
+/* Contextual page settings use a compact desktop inspector rhythm while the
+ * application-wide settings pages retain their existing layout. */
+.page-settings-drawer .setting-item--compact {
+  grid-template-columns: minmax(0, 1fr) auto;
+  min-height: calc(var(--spacing) * 11);
+  height: auto;
+  padding-block: calc(var(--spacing) * 1.5);
+}
+
+.page-settings-drawer .setting-item--compact.setting-item--described {
+  min-height: calc(var(--spacing) * 14);
+}
+
+.page-settings-drawer .setting-item--compact .setting-item__title-wrap {
+  min-height: calc(var(--spacing) * 8);
+}
+
+.page-settings-drawer .setting-item--compact .setting-item__title {
+  height: auto;
+  font-size: var(--text-sm);
+  line-height: 1.4;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.page-settings-drawer .setting-item__content {
+  display: flex;
+  align-items: center;
+}
+
+.page-settings-drawer .setting-item__divider {
+  margin-block: 0;
+}
+
+.settings-container {
+  min-width: 0;
+  container-name: settings;
+  container-type: inline-size;
+}
+
+.settings-layout {
+  grid-template-columns: 12rem minmax(0, 1fr);
+}
+
+.settings-content-search {
+  display: block;
+}
+
+.feature-settings-layout__action {
+  position: absolute;
+  z-index: 1;
+  top: calc(var(--spacing) * 3);
+  right: calc(var(--spacing) * 4);
+}
+
+.feature-settings-layout--has-action > .feature-settings-section:first-of-type > header {
+  padding-inline-end: calc(var(--spacing) * 24);
+}
+
+.settings-layout .setting-item,
+.feature-settings-layout .setting-item {
+  grid-template-columns: minmax(10rem, 34%) minmax(0, 1fr);
+  padding-block: calc(var(--spacing) * 2);
+}
+
+.settings-layout .setting-item__title,
+.feature-settings-layout .setting-item__title {
+  height: auto;
+  color: var(--foreground);
+  font-weight: 500;
+  line-height: 1.45;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.settings-layout .setting-item__content,
+.feature-settings-layout .setting-item__content {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.settings-section__content > .setting-item__divider:last-child,
+.feature-settings-section__content > .setting-item__divider:last-child {
+  display: none;
+}
+
+.settings-section__content > .setting-item__divider,
+.feature-settings-section__content > .setting-item__divider {
+  margin-block: 0;
+}
+
+@keyframes settings-search-highlight {
+  0%,
+  35% {
+    background-color: color-mix(in srgb, var(--primary) 14%, transparent);
+    box-shadow: inset 3px 0 0 var(--primary);
+  }
+
+  100% {
+    background-color: transparent;
+    box-shadow: inset 3px 0 0 transparent;
+  }
+}
+
+.settings-search-target {
+  border-radius: var(--radius-medium);
+  animation: settings-search-highlight 1.8s ease-out;
+  outline: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .settings-search-target {
+    animation-duration: 0.01ms;
+  }
+}
+
+/* Compact desktop windows move the labeled settings navigation above the
+ * content instead of introducing a second icon-only rail beside the app nav. */
+@container settings (max-width: 50rem) {
+  .settings-layout {
+    display: block;
+  }
+
+  .settings-navigation {
+    position: relative;
+    top: auto;
+    height: auto;
+    border-right-width: 0;
+    border-bottom: 1px solid var(--border);
+    padding-block: calc(var(--spacing) * 2);
+    padding-inline: calc(var(--spacing) * 3);
+  }
+
+  .settings-navigation-list {
+    flex-direction: row;
+    gap: calc(var(--spacing) * 0.5);
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-bottom: calc(var(--spacing) * 1);
+    scrollbar-color: color-mix(in oklab, var(--muted) 35%, transparent) transparent;
+    scrollbar-width: thin;
+  }
+
+  .settings-navigation-list::-webkit-scrollbar {
+    display: block;
+    height: 4px;
+  }
+
+  .settings-navigation-list::-webkit-scrollbar-thumb {
+    border-radius: 9999px;
+    background: color-mix(in oklab, var(--muted) 35%, transparent);
+  }
+
+  .settings-category-button {
+    width: auto;
+    min-width: max-content;
+    justify-content: flex-start;
+    padding-inline: calc(var(--spacing) * 2.5);
+  }
+}
