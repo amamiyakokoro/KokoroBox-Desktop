@@ -39,6 +39,49 @@ const navigationStatusIndicatorClasses: Record<SiderStatusTone, string> = {
   danger: 'bg-danger-500'
 }
 
+const siderItemTitleClassName = 'block truncate text-sm font-semibold leading-5 text-foreground'
+const siderItemSubtitleClassName =
+  'flex h-4 min-w-0 items-center gap-1 overflow-hidden text-xs leading-4'
+
+const SiderItemIcon: React.FC<{
+  active: boolean
+  children: React.ReactNode
+  prominence: 'navigation' | 'status'
+}> = ({ active, children, prominence }) => (
+  <span
+    className={cn(
+      'flex size-8 shrink-0 items-center justify-center rounded-lg bg-default-100/70 text-foreground-500 transition-colors duration-150 group-hover:bg-default-200/80 group-hover:text-foreground',
+      prominence === 'navigation' ? 'text-base' : 'text-xl',
+      active && 'bg-primary/15 text-primary group-hover:bg-primary/20 group-hover:text-primary'
+    )}
+  >
+    {children}
+  </span>
+)
+
+const SiderItemContent: React.FC<{
+  active: boolean
+  subtitle?: React.ReactNode
+  title: string
+}> = ({ active, subtitle, title }) => (
+  <span className="flex min-h-[2.375rem] min-w-0 flex-1 flex-col justify-center gap-0.5">
+    <span className={cn(siderItemTitleClassName, active && 'text-primary')} title={title}>
+      {title}
+    </span>
+    {subtitle ? <span className={siderItemSubtitleClassName}>{subtitle}</span> : null}
+  </span>
+)
+
+const SiderTrailingSlot: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({
+  children,
+  className,
+  ...props
+}) => (
+  <div {...props} className={cn('flex min-w-8 shrink-0 items-center justify-center', className)}>
+    {children}
+  </div>
+)
+
 interface SiderIconButtonProps {
   active?: boolean
   children: React.ReactNode
@@ -109,8 +152,10 @@ export const SiderNavItem: React.FC<SiderNavItemProps> = ({
 }) => (
   <div
     className={cn(
-      'group flex items-center rounded-xl border border-transparent transition-colors',
-      active ? 'bg-primary/12 text-primary' : 'hover:bg-default-100'
+      'group flex items-center rounded-xl border transition-[background-color,border-color,box-shadow,color] duration-150',
+      active
+        ? 'border-primary/40 bg-primary/12 text-primary ring-1 ring-inset ring-primary/15 hover:bg-primary/16'
+        : 'border-transparent hover:border-default-300 hover:bg-content2/80'
     )}
   >
     <button
@@ -120,50 +165,43 @@ export const SiderNavItem: React.FC<SiderNavItemProps> = ({
       aria-current={active ? 'page' : undefined}
       onClick={onPress}
     >
-      <span
-        className={cn(
-          'flex size-7 shrink-0 items-center justify-center rounded-lg bg-default-100/60 text-base text-foreground-500 transition-colors',
-          active && 'bg-primary/12 text-primary'
-        )}
-      >
+      <SiderItemIcon active={active} prominence="navigation">
         {icon}
-      </span>
-      <span className="min-w-0 flex-1">
-        <span
-          className={cn(
-            'block truncate text-sm font-medium text-foreground',
-            active && 'text-primary'
-          )}
-          title={title}
-        >
-          {title}
-        </span>
-        {(description || status) && (
-          <span className="mt-0.5 flex min-w-0 items-center gap-1 text-xs">
-            {description && <span className="truncate text-foreground-500">{description}</span>}
-            {description && status && <span className="text-foreground-300">·</span>}
-            {status && (
-              <span className="inline-flex shrink-0 items-center gap-1 text-foreground-500">
-                <span
-                  aria-hidden="true"
-                  className={cn(
-                    'size-1.5 rounded-full',
-                    navigationStatusIndicatorClasses[statusTone]
-                  )}
-                />
-                {status}
-              </span>
-            )}
-          </span>
-        )}
-      </span>
+      </SiderItemIcon>
+      <SiderItemContent
+        active={active}
+        title={title}
+        subtitle={
+          description || status ? (
+            <>
+              {description && <span className="truncate text-foreground-500">{description}</span>}
+              {description && status && <span className="text-foreground-300">·</span>}
+              {status && (
+                <span className="inline-flex shrink-0 items-center gap-1 text-foreground-500">
+                  <span
+                    aria-hidden="true"
+                    className={cn(
+                      'size-1.5 rounded-full',
+                      navigationStatusIndicatorClasses[statusTone]
+                    )}
+                  />
+                  {status}
+                </span>
+              )}
+            </>
+          ) : undefined
+        }
+      />
+      {!trailing && (
+        <SiderTrailingSlot>
+          <LuChevronRight className="shrink-0 text-sm text-foreground-300 transition-all duration-150 group-hover:translate-x-0.5 group-hover:text-foreground-700 group-focus-within:text-primary" />
+        </SiderTrailingSlot>
+      )}
     </button>
-    {trailing ? (
-      <div className="shrink-0 pr-2" onPointerDown={(event) => event.stopPropagation()}>
+    {trailing && (
+      <SiderTrailingSlot className="pr-1.5" onPointerDown={(event) => event.stopPropagation()}>
         {trailing}
-      </div>
-    ) : (
-      <LuChevronRight className="mr-2.5 shrink-0 text-sm text-foreground-200 transition-all group-hover:translate-x-0.5 group-hover:text-foreground-500 group-focus-within:text-foreground-500" />
+      </SiderTrailingSlot>
     )}
   </div>
 )
@@ -186,8 +224,10 @@ export const SiderStatusCard: React.FC<SiderStatusCardProps> = ({
 }) => (
   <div
     className={cn(
-      'group overflow-hidden rounded-xl border border-divider bg-content1/85 shadow-none transition-colors',
-      active ? 'border-primary/35 bg-primary/8' : 'hover:border-default-300 hover:bg-default-50'
+      'group overflow-hidden rounded-xl border bg-content1/85 shadow-none transition-[background-color,border-color,box-shadow] duration-150',
+      active
+        ? 'border-primary/45 bg-primary/10 ring-1 ring-inset ring-primary/15 hover:bg-primary/14'
+        : 'border-divider hover:border-default-400/80 hover:bg-content2/70 hover:shadow-sm'
     )}
   >
     <div className="flex min-h-14 items-center">
@@ -198,59 +238,57 @@ export const SiderStatusCard: React.FC<SiderStatusCardProps> = ({
         aria-current={active ? 'page' : undefined}
         onClick={onPress}
       >
-        <span
-          className={cn(
-            'flex size-8 shrink-0 items-center justify-center rounded-lg bg-default-100 text-xl text-foreground-600 transition-colors',
-            active && 'bg-primary/15 text-primary'
-          )}
-        >
+        <SiderItemIcon active={active} prominence="status">
           {icon}
-        </span>
-        <span className="min-w-0 flex-1">
-          <span className="block truncate text-sm font-semibold text-foreground" title={title}>
-            {title}
-          </span>
-          {(description || status) && (
-            <span className="mt-0.5 flex min-w-0 items-center gap-1 text-xs">
-              {description && (
-                <span
-                  title={descriptionTitle}
-                  className={cn(
-                    'truncate text-foreground-500',
-                    prioritizeDescription && 'max-w-[60%] shrink-0'
-                  )}
-                >
-                  {description}
-                </span>
-              )}
-              {description && status && (
-                <span className="text-foreground-300">{metadataSeparator}</span>
-              )}
-              {status && (
-                <span
-                  title={statusTitle}
-                  className={cn(
-                    prioritizeDescription ? 'min-w-0 truncate' : 'shrink-0',
-                    statusToneClasses[statusTone]
-                  )}
-                >
-                  {status}
-                </span>
-              )}
-            </span>
-          )}
-        </span>
+        </SiderItemIcon>
+        <SiderItemContent
+          active={active}
+          title={title}
+          subtitle={
+            description || status ? (
+              <>
+                {description && (
+                  <span
+                    title={descriptionTitle}
+                    className={cn(
+                      'truncate text-foreground-500',
+                      prioritizeDescription && 'max-w-[60%] shrink-0'
+                    )}
+                  >
+                    {description}
+                  </span>
+                )}
+                {description && status && (
+                  <span className="text-foreground-300">{metadataSeparator}</span>
+                )}
+                {status && (
+                  <span
+                    title={statusTitle}
+                    className={cn(
+                      prioritizeDescription ? 'min-w-0 truncate' : 'shrink-0',
+                      statusToneClasses[statusTone]
+                    )}
+                  >
+                    {status}
+                  </span>
+                )}
+              </>
+            ) : undefined
+          }
+        />
         {(showChevron ?? !actions) && (
-          <LuChevronRight className="shrink-0 text-sm text-foreground-300 transition-transform group-hover:translate-x-0.5 group-hover:text-foreground-500" />
+          <SiderTrailingSlot>
+            <LuChevronRight className="shrink-0 text-sm text-foreground-300 transition-all duration-150 group-hover:translate-x-0.5 group-hover:text-foreground-700 group-focus-within:text-primary" />
+          </SiderTrailingSlot>
         )}
       </button>
       {actions && (
-        <div
-          className="flex shrink-0 items-center gap-0.5 pr-2"
+        <SiderTrailingSlot
+          className="gap-0.5 pr-2"
           onPointerDown={(event) => event.stopPropagation()}
         >
           {actions}
-        </div>
+        </SiderTrailingSlot>
       )}
     </div>
     {details && <div className="border-t border-divider/70 px-2.5 py-2">{details}</div>}
@@ -280,8 +318,9 @@ export const SiderQuickControl: React.FC<SiderQuickControlProps> = ({
 }) => (
   <div
     className={cn(
-      'relative min-h-20 rounded-2xl border border-divider bg-content1 px-2.5 py-2 shadow-sm transition-colors',
-      active && 'border-primary/35 bg-primary/8',
+      'group relative min-h-20 rounded-2xl border border-divider bg-content1 px-2.5 py-2 shadow-sm transition-[background-color,border-color,box-shadow] duration-150 hover:border-default-400/80 hover:bg-content2/70 hover:shadow-md',
+      active &&
+        'border-primary/45 bg-primary/10 ring-1 ring-inset ring-primary/15 hover:bg-primary/14',
       disabled && 'opacity-60'
     )}
   >
@@ -298,22 +337,24 @@ export const SiderQuickControl: React.FC<SiderQuickControlProps> = ({
     >
       <span
         className={cn(
-          'flex size-8 items-center justify-center text-xl text-foreground-600',
-          active && 'text-primary'
+          'flex size-8 items-center justify-center text-xl text-foreground-600 transition-colors duration-150 group-hover:text-foreground',
+          active && 'text-primary group-hover:text-primary'
         )}
       >
         {icon}
       </span>
-      <span className="mt-1 block w-full truncate text-sm font-semibold text-foreground">
-        {title}
-      </span>
-      <span
-        className={cn(
-          'mt-0.5 block w-full truncate whitespace-nowrap text-xs',
-          enabled ? 'text-success-600 dark:text-success-400' : 'text-foreground-500'
-        )}
-      >
-        {status}
+      <span className="mt-1 flex w-full min-w-0 flex-col gap-0.5">
+        <span className={cn(siderItemTitleClassName, active && 'text-primary')} title={title}>
+          {title}
+        </span>
+        <span
+          className={cn(
+            'block h-4 w-full truncate whitespace-nowrap text-xs leading-4',
+            enabled ? 'text-success-600 dark:text-success-400' : 'text-foreground-500'
+          )}
+        >
+          {status}
+        </span>
       </span>
     </button>
     <div className="absolute right-2.5 top-2" onPointerDown={(event) => event.stopPropagation()}>
