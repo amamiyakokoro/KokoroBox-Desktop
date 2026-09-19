@@ -631,7 +631,7 @@ export async function startCore(detached = false): Promise<Promise<void>[]> {
   return effectiveCoreStartupMode === 'post-up' ? waitForCoreReadyByHook() : waitForCoreReadyByLog()
 }
 
-export async function stopCore(force = false): Promise<void> {
+export async function stopCore(force = false, serviceRequestTimeoutMs?: number): Promise<void> {
   serviceCoreRuntime.pauseAutoResume()
 
   try {
@@ -648,7 +648,7 @@ export async function stopCore(force = false): Promise<void> {
   const shouldStopServiceCore = serviceCoreRuntime.isManaged() || corePermissionMode === 'service'
   if (shouldStopServiceCore) {
     try {
-      await stopServiceCore()
+      await stopServiceCore(serviceRequestTimeoutMs)
     } catch (error) {
       await appendAppLog(`[Manager]: stop service core failed, ${error}\n`)
     } finally {

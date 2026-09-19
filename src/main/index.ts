@@ -128,7 +128,6 @@ setLocale(resolveLocale(syncConfig.language, app.getPreferredSystemLanguages()))
 app.setName('KokoroBox')
 
 function exitApp(): void {
-  disableSysProxySync()
   app.exit()
 }
 

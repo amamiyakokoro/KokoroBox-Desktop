@@ -18,11 +18,15 @@ let notQuitDialog = false
 let lastQuitAttempt = 0
 let quitPromise: Promise<void> | undefined
 let quitConfirmationPromise: Promise<boolean> | undefined
+let asyncSysProxyCleanupSucceeded = false
 
 // Cleanup normally completes almost immediately. Keep a bounded fallback for
 // unavailable services and OS extensions so an explicit quit can never leave
 // the Electron process waiting indefinitely.
 const cleanupTaskTimeoutMs = 8_000
+const responsiveCleanupTaskTimeoutMs = 3_000
+const exitCommandTimeoutMs = 2_000
+const exitServiceRequestTimeoutMs = 2_500
 const quitConfirmationTimeoutMs = 30_000
 
 export function setNotQuitDialog(): void {
@@ -77,7 +81,10 @@ export function initAppQuitLifecycle(context: AppQuitLifecycleContext): void {
   })
 
   app.on('will-quit', () => {
-    disableSysProxySync()
+    // Windows keeps a synchronous fallback because system proxy state must not
+    // survive the app. Avoid paying for the same command twice after the
+    // asynchronous cleanup already completed successfully.
+    if (!asyncSysProxyCleanupSucceeded) disableSysProxySync()
   })
 }
 
@@ -86,37 +93,66 @@ async function quit(context: AppQuitLifecycleContext): Promise<void> {
   isQuitting = true
   quitPromise = (async () => {
     context.clearLightweightTimeout()
-    await cleanupBeforeExit(false)
+    const mainWindow = context.getMainWindow()
+    if (mainWindow && !mainWindow.isDestroyed()) mainWindow.hide()
+    if (process.platform === 'darwin') app.dock?.hide()
+    await cleanupBeforeExit(false, true)
     context.exitApp()
   })()
   return quitPromise
 }
 
-async function cleanupBeforeExit(useRegistry: boolean): Promise<void> {
+async function cleanupBeforeExit(useRegistry: boolean, responsiveQuit = false): Promise<void> {
   await runCleanupTask('stop network detection', async () => stopNetworkDetection())
 
+  const responsiveTimeoutMs = responsiveQuit ? responsiveCleanupTaskTimeoutMs : cleanupTaskTimeoutMs
+  const sysProxyOptions = responsiveQuit
+    ? {
+        commandTimeoutMs: exitCommandTimeoutMs,
+        serviceRequestTimeoutMs: exitServiceRequestTimeoutMs
+      }
+    : undefined
+
+  const sysProxyCleanup = runCleanupTask(
+    'disable system proxy',
+    async () => triggerSysProxy(false, false, useRegistry, sysProxyOptions),
+    responsiveTimeoutMs
+  ).then((succeeded) => {
+    asyncSysProxyCleanupSucceeded = succeeded
+  })
+
   await Promise.all([
-    runCleanupTask('stop application routing', stopAppRouting),
-    runCleanupTask('disable system proxy', async () => triggerSysProxy(false, false, useRegistry)),
-    runCleanupTask('stop core', stopCore),
-    runCleanupTask('stop traffic presenter', stopTrafficPresenter)
+    runCleanupTask('stop application routing', stopAppRouting, responsiveTimeoutMs),
+    sysProxyCleanup,
+    runCleanupTask(
+      'stop core',
+      async () => stopCore(false, responsiveQuit ? exitServiceRequestTimeoutMs : undefined),
+      cleanupTaskTimeoutMs
+    ),
+    runCleanupTask('stop traffic presenter', stopTrafficPresenter, responsiveTimeoutMs)
   ])
 }
 
-async function runCleanupTask(name: string, task: () => void | Promise<void>): Promise<void> {
+async function runCleanupTask(
+  name: string,
+  task: () => void | Promise<void>,
+  timeoutMs = cleanupTaskTimeoutMs
+): Promise<boolean> {
   let timeout: NodeJS.Timeout | undefined
+  const startedAt = Date.now()
   try {
     await Promise.race([
       Promise.resolve().then(task),
       new Promise<never>((_, reject) => {
-        timeout = setTimeout(
-          () => reject(new Error(`timed out after ${cleanupTaskTimeoutMs} ms`)),
-          cleanupTaskTimeoutMs
-        )
+        timeout = setTimeout(() => reject(new Error(`timed out after ${timeoutMs} ms`)), timeoutMs)
       })
     ])
+    return true
   } catch (error) {
-    await appendAppLog(`[App]: ${name} before exit failed, ${error}\n`).catch(() => {})
+    await appendAppLog(
+      `[App]: ${name} before exit failed after ${Date.now() - startedAt} ms, ${error}\n`
+    ).catch(() => {})
+    return false
   } finally {
     if (timeout) clearTimeout(timeout)
   }
@@ -131,12 +167,11 @@ function showQuitConfirmDialog(context: AppQuitLifecycleContext): Promise<boolea
     }
 
     let settled = false
-    let showTimer: NodeJS.Timeout | undefined
     const confirmTimer = setTimeout(() => finish(false), quitConfirmationTimeoutMs)
     const finish = (confirmed: boolean): void => {
       if (settled) return
       settled = true
-      if (showTimer) clearTimeout(showTimer)
+      clearTimeout(showTimer)
       clearTimeout(confirmTimer)
       ipcMain.off('quit-confirm-result', handleQuitConfirm)
       mainWindow.webContents.off('destroyed', handleRendererUnavailable)
@@ -151,7 +186,7 @@ function showQuitConfirmDialog(context: AppQuitLifecycleContext): Promise<boolea
     ipcMain.on('quit-confirm-result', handleQuitConfirm)
     mainWindow.webContents.once('destroyed', handleRendererUnavailable)
     const delay = context.showWindow()
-    showTimer = setTimeout(() => {
+    const showTimer = setTimeout(() => {
       const currentWindow = context.getMainWindow()
       if (
         !currentWindow ||

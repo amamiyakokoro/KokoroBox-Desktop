@@ -836,9 +836,13 @@ export const startCore = async (
   return await instance.post('/core/start', profile)
 }
 
-export const stopCore = async (): Promise<Record<string, unknown>> => {
+export const stopCore = async (timeoutMs?: number): Promise<Record<string, unknown>> => {
   const instance = getServiceAxios()
-  return await instance.post('/core/stop')
+  return await instance.post(
+    '/core/stop',
+    undefined,
+    timeoutMs ? { timeout: timeoutMs } : undefined
+  )
 }
 
 export const restartCore = async (
@@ -909,14 +913,19 @@ export const setProxy = async (
 export const disableProxy = async (
   device?: string,
   onlyActiveDevice?: boolean,
-  useRegistry?: boolean
+  useRegistry?: boolean,
+  timeoutMs?: number
 ): Promise<void> => {
   const instance = getServiceAxios()
-  return await instance.post('/sysproxy/disable', {
-    device,
-    only_active_device: onlyActiveDevice,
-    use_registry: useRegistry
-  })
+  return await instance.post(
+    '/sysproxy/disable',
+    {
+      device,
+      only_active_device: onlyActiveDevice,
+      use_registry: useRegistry
+    },
+    timeoutMs ? { timeout: timeoutMs } : undefined
+  )
 }
 
 export const setSysDns = async (device?: string, servers?: string[]): Promise<void> => {

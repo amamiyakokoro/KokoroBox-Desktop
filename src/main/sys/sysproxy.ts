@@ -26,6 +26,11 @@ let sysproxyGuardEventsStartedAt = 0
 let lastSysproxyGuardNotificationKey = ''
 let unsubscribeSysproxyGuardEvents: (() => void) | null = null
 
+export interface TriggerSysProxyOptions {
+  commandTimeoutMs?: number
+  serviceRequestTimeoutMs?: number
+}
+
 function registryArgs(useRegistry: boolean): string[] {
   return process.platform === 'win32' && useRegistry ? ['--use-registry'] : []
 }
@@ -33,7 +38,8 @@ function registryArgs(useRegistry: boolean): string[] {
 export function triggerSysProxy(
   enable: boolean,
   onlyActiveDevice: boolean,
-  useRegistry = false
+  useRegistry = false,
+  options: TriggerSysProxyOptions = {}
 ): Promise<void> {
   const request = ++triggerSysProxyRequest
   if (triggerSysProxyTimer) {
@@ -41,7 +47,7 @@ export function triggerSysProxy(
     triggerSysProxyTimer = null
   }
   const task = triggerSysProxyTask.then(() =>
-    triggerSysProxyImpl(enable, onlyActiveDevice, useRegistry, request)
+    triggerSysProxyImpl(enable, onlyActiveDevice, useRegistry, request, options)
   )
   triggerSysProxyTask = task.catch(() => {})
   return task
@@ -51,7 +57,8 @@ async function triggerSysProxyImpl(
   enable: boolean,
   onlyActiveDevice: boolean,
   useRegistry: boolean,
-  request: number
+  request: number,
+  options: TriggerSysProxyOptions
 ): Promise<void> {
   if (enable) {
     if (net.isOnline()) {
@@ -59,13 +66,13 @@ async function triggerSysProxyImpl(
     } else {
       if (request !== triggerSysProxyRequest) return
       triggerSysProxyTimer = setTimeout(() => {
-        triggerSysProxy(enable, onlyActiveDevice, useRegistry).catch((error) => {
+        triggerSysProxy(enable, onlyActiveDevice, useRegistry, options).catch((error) => {
           appendAppLog(`[Sysproxy]: retry enable failed, ${error}\n`).catch(() => {})
         })
       }, 5000)
     }
   } else {
-    await disableSysProxy(onlyActiveDevice, useRegistry)
+    await disableSysProxy(onlyActiveDevice, useRegistry, options)
   }
 }
 
@@ -209,7 +216,11 @@ async function setSysProxy(onlyActiveDevice: boolean, useRegistry = false): Prom
   }
 }
 
-async function disableSysProxy(onlyActiveDevice: boolean, useRegistry = false): Promise<void> {
+async function disableSysProxy(
+  onlyActiveDevice: boolean,
+  useRegistry = false,
+  options: TriggerSysProxyOptions = {}
+): Promise<void> {
   await stopPacServer()
   updateSysproxyGuardEventStream(false)
   const { sysProxy } = await getAppConfig()
@@ -217,13 +228,14 @@ async function disableSysProxy(onlyActiveDevice: boolean, useRegistry = false): 
   const execFilePromise = promisify(execFile)
   const disableWithExec = (): Promise<unknown> =>
     execFilePromise(servicePath(), ['sysproxy', 'disable', ...registryArgs(useRegistry)], {
-      windowsHide: process.platform === 'win32'
+      windowsHide: process.platform === 'win32',
+      ...(options.commandTimeoutMs ? { timeout: options.commandTimeoutMs } : {})
     })
 
   try {
     if (settingMode === 'service') {
       try {
-        await disableProxy('', onlyActiveDevice, useRegistry)
+        await disableProxy('', onlyActiveDevice, useRegistry, options.serviceRequestTimeoutMs)
       } catch (e) {
         await appendAppLog(`[Sysproxy]: disable via service failed, fallback to exec, ${e}\n`)
         await disableWithExec()
