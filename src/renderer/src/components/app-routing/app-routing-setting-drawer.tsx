@@ -1,9 +1,10 @@
 /* eslint-disable react/prop-types */
 import { tr } from '../../../../shared/i18n'
-import { Button, ListBox, Select, Switch } from '@heroui/react'
+import { Button, Switch } from '@heroui/react'
 import SettingItem from '../base/base-setting-item'
 import { settingItemProps } from '../base/base-controls'
 import PageSettingsDrawer, { PageSettingsSection } from '../base/base-settings-drawer'
+import { KokoSelect } from '../base/koko-form'
 
 interface Props {
   isDisabled: boolean
@@ -53,70 +54,38 @@ const AppRoutingSettingDrawer: React.FC<Props> = (props) => {
     >
       <PageSettingsSection title={tr('Rule defaults')}>
         <SettingItem title={tr('Default action for new rules')} {...settingItemProps} divider>
-          <Select
+          <KokoSelect
             aria-label={tr('Default action for new rules')}
+            controlWidth="select"
+            density="compact"
             variant="secondary"
+            disallowEmptySelection
             value={defaultAction}
             isDisabled={isDisabled}
-            onChange={(value) => {
-              if (Array.isArray(value) || value == null) return
-              onDefaultActionChange(value as AppRoutingAction)
-            }}
-          >
-            <Select.Trigger className="h-8 min-h-8 py-0">
-              <Select.Value />
-              <Select.Indicator />
-            </Select.Trigger>
-            <Select.Popover>
-              <ListBox>
-                <ListBox.Item id="proxy" textValue="Proxy">
-                  Proxy
-                  <ListBox.ItemIndicator />
-                </ListBox.Item>
-                <ListBox.Item id="direct" textValue="Direct">
-                  Direct
-                  <ListBox.ItemIndicator />
-                </ListBox.Item>
-                <ListBox.Item id="block" textValue="Block">
-                  Block
-                  <ListBox.ItemIndicator />
-                </ListBox.Item>
-              </ListBox>
-            </Select.Popover>
-          </Select>
+            options={[
+              { id: 'proxy', label: 'Proxy' },
+              { id: 'direct', label: 'Direct' },
+              { id: 'block', label: 'Block' }
+            ]}
+            onChange={(value) => onDefaultActionChange(value as AppRoutingAction)}
+          />
         </SettingItem>
         <SettingItem title={tr('Default protocol for new rules')} {...settingItemProps}>
-          <Select
+          <KokoSelect
             aria-label={tr('Default protocol for new rules')}
+            controlWidth="select"
+            density="compact"
             variant="secondary"
+            disallowEmptySelection
             value={defaultProtocol}
             isDisabled={isDisabled}
-            onChange={(value) => {
-              if (Array.isArray(value) || value == null) return
-              onDefaultProtocolChange(value as AppRoutingProtocol)
-            }}
-          >
-            <Select.Trigger className="h-8 min-h-8 py-0">
-              <Select.Value />
-              <Select.Indicator />
-            </Select.Trigger>
-            <Select.Popover>
-              <ListBox>
-                <ListBox.Item id="both" textValue="TCP + UDP">
-                  TCP + UDP
-                  <ListBox.ItemIndicator />
-                </ListBox.Item>
-                <ListBox.Item id="tcp" textValue="TCP">
-                  TCP
-                  <ListBox.ItemIndicator />
-                </ListBox.Item>
-                <ListBox.Item id="udp" textValue="UDP">
-                  UDP
-                  <ListBox.ItemIndicator />
-                </ListBox.Item>
-              </ListBox>
-            </Select.Popover>
-          </Select>
+            options={[
+              { id: 'both', label: 'TCP + UDP' },
+              { id: 'tcp', label: 'TCP' },
+              { id: 'udp', label: 'UDP' }
+            ]}
+            onChange={(value) => onDefaultProtocolChange(value as AppRoutingProtocol)}
+          />
         </SettingItem>
       </PageSettingsSection>
 

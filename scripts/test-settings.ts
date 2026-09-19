@@ -693,6 +693,11 @@ test('page settings drawers use the shared compact inspector behavior', () => {
   assert.doesNotMatch(connections, /tr\('Confirm'\)/)
   assert.match(appRouting, /description=\{tr\(/)
   assert.doesNotMatch(appRouting, /<Tooltip|SettingHelp/)
+  assert.equal((appRouting.match(/<KokoSelect/g) || []).length, 2)
+  assert.equal((appRouting.match(/controlWidth="select"/g) || []).length, 2)
+  assert.equal((appRouting.match(/density="compact"/g) || []).length, 2)
+  assert.equal((appRouting.match(/disallowEmptySelection/g) || []).length, 2)
+  assert.doesNotMatch(appRouting, /<Select(?:\.|\s)|<ListBox(?:\.|\s)/)
 })
 
 test('desktop sidebar separates controls, live status and navigation', () => {
