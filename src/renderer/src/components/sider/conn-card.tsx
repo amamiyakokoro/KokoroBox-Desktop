@@ -143,7 +143,7 @@ const ConnCard: React.FC<Props> = ({ iconOnly }) => {
         active={match}
         onPress={() => navigate('/connections')}
         details={
-          <div className="relative -mx-2.5 -my-2 h-7 overflow-hidden rounded-b-xl opacity-35">
+          <div className="relative -mx-2.5 -my-2 h-7 overflow-hidden rounded-b-xl opacity-40">
             <TrafficChart data={trafficData} />
           </div>
         }

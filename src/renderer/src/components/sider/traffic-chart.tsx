@@ -15,10 +15,16 @@ function sign(value: number): number {
 
 // Steffen monotone interpolation, matching the curve used by Recharts for `type="monotone"`.
 function createMonotoneAreaPath(values: number[]): string {
-  const maxTraffic = Math.max(...values, 1)
-  const points: Point[] = values.map((traffic, index) => ({
+  const chartTop = 8
+  const chartBottom = 96
+  const usableHeight = chartBottom - chartTop
+  const normalizedValues = values.map((traffic) =>
+    Number.isFinite(traffic) ? Math.max(traffic, 0) : 0
+  )
+  const maxTraffic = Math.max(...normalizedValues, 1)
+  const points: Point[] = normalizedValues.map((traffic, index) => ({
     x: (index / (values.length - 1)) * 100,
-    y: 100 - (traffic / maxTraffic) * 50
+    y: chartBottom - (traffic / maxTraffic) * usableHeight
   }))
   if (points.length === 2) {
     return `M ${points[0].x} ${points[0].y} L ${points[1].x} ${points[1].y} L 100 100 L 0 100 Z`

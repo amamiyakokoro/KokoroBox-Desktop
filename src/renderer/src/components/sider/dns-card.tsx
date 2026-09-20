@@ -1,12 +1,15 @@
 import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'
+import { Switch } from '@heroui/react'
 import { LuServer } from 'react-icons/lu'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
+import { restartCore } from '@renderer/utils/ipc'
+import { notify } from '@renderer/utils/notification'
 import React from 'react'
 import { tr } from '../../../../shared/i18n'
-import { SiderIconButton, SiderNavItem } from './sider-surfaces'
+import { SiderIconButton, SiderQuickControl } from './sider-surfaces'
 
 interface Props {
   iconOnly?: boolean
@@ -14,7 +17,7 @@ interface Props {
 const settingsPath = '/settings?section=network&panel=dns'
 
 const DNSCard: React.FC<Props> = (props) => {
-  const { appConfig } = useAppConfig()
+  const { appConfig, patchAppConfig } = useAppConfig()
   const { iconOnly } = props
   const {
     dnsCardStatus = 'col-span-1',
@@ -28,9 +31,7 @@ const DNSCard: React.FC<Props> = (props) => {
     (location.pathname.includes('/settings') &&
       location.search.includes('section=network') &&
       location.search.includes('panel=dns'))
-  const { controledMihomoConfig } = useControledMihomoConfig()
-  const { dns } = controledMihomoConfig || {}
-  const { enable = true } = dns || {}
+  const { patchControledMihomoConfig } = useControledMihomoConfig()
   const {
     listeners,
     setNodeRef,
@@ -41,9 +42,19 @@ const DNSCard: React.FC<Props> = (props) => {
     id: 'dns'
   })
   const transform = tf ? { x: tf.x, y: tf.y, scaleX: 1, scaleY: 1 } : null
+  const onChange = async (value: boolean): Promise<void> => {
+    try {
+      await patchAppConfig({ controlDns: value })
+      await patchControledMihomoConfig({})
+      await restartCore()
+    } catch (error) {
+      notify(error, { variant: 'danger' })
+    }
+  }
+
   if (iconOnly) {
     return (
-      <div className={`${dnsCardStatus} ${!controlDns ? 'hidden' : ''} flex justify-center`}>
+      <div className={`${dnsCardStatus} flex justify-center`}>
         <SiderIconButton
           active={match}
           label="DNS"
@@ -64,20 +75,29 @@ const DNSCard: React.FC<Props> = (props) => {
         transition,
         zIndex: isDragging ? 'calc(infinity)' : undefined
       }}
-      className={`${dnsCardStatus} ${!controlDns ? 'hidden' : ''} dns-card`}
+      className={`${dnsCardStatus} dns-card`}
     >
       <div
         ref={setNodeRef}
         {...listeners}
         className={isDragging && !disableAnimation ? 'scale-[0.98]' : undefined}
       >
-        <SiderNavItem
+        <SiderQuickControl
           icon={<LuServer />}
           title="DNS"
-          status={enable ? tr('Enabled') : tr('Disabled')}
-          statusTone={enable ? 'success' : 'danger'}
+          status={controlDns ? tr('Enabled') : tr('Disabled')}
+          enabled={controlDns}
           active={match}
           onPress={() => navigate(settingsPath)}
+          control={
+            <Switch size="sm" aria-label="DNS" isSelected={controlDns} onChange={onChange}>
+              <Switch.Content>
+                <Switch.Control>
+                  <Switch.Thumb />
+                </Switch.Control>
+              </Switch.Content>
+            </Switch>
+          }
         />
       </div>
     </div>
