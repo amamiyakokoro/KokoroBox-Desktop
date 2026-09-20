@@ -89,17 +89,17 @@ const OutboundModeSwitcher: React.FC<Props> = ({ iconOnly }: Props) => {
       selectedKey={mode}
       onSelectionChange={(key) => void onChangeMode(String(key) as OutboundMode)}
     >
-      <Tabs.ListContainer className="outbound-mode-card bg-content1 shadow-sm">
+      <Tabs.ListContainer className="outbound-mode-card border border-separator/60 bg-surface-secondary/80 shadow-sm">
         <Tabs.List aria-label={tr('Proxy mode')} className="w-full">
           {options.map((option) => (
             <Tabs.Tab
               aria-label={option.label}
-              className="data-[selected=true]:font-semibold data-[selected=true]:text-primary-foreground"
+              className="text-muted transition-colors hover:text-foreground data-[selected=true]:font-semibold data-[selected=true]:text-accent-soft-foreground data-[selected=false]:hover:bg-accent-soft/25"
               id={option.id}
               key={option.id}
             >
               {option.label}
-              <Tabs.Indicator className="bg-primary shadow-none" />
+              <Tabs.Indicator className="border border-accent/25 bg-accent-soft/60 shadow-none ring-1 ring-inset ring-accent/10" />
             </Tabs.Tab>
           ))}
         </Tabs.List>

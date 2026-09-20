@@ -1036,6 +1036,15 @@ test('desktop sidebar separates controls, live status and navigation', () => {
   assert.match(profile, /label=\{tr\('Refresh'\)\}/)
   assert.match(outboundMode, /<Tabs\.List/)
   assert.match(outboundMode, /<Tabs\.Indicator/)
+  assert.match(outboundMode, /Tabs\.ListContainer className="[^"]*bg-surface-secondary\/80[^"]*"/)
+  assert.match(outboundMode, /data-\[selected=true\]:text-accent-soft-foreground/)
+  assert.match(
+    outboundMode,
+    /Tabs\.Indicator className="[^"]*border-accent\/25[^"]*bg-accent-soft\/60[^"]*ring-accent\/10[^"]*"/
+  )
+  assert.match(outboundMode, /data-\[selected=false\]:hover:bg-accent-soft\/25/)
+  assert.doesNotMatch(outboundMode, /Tabs\.Indicator className="[^"]*bg-primary/)
+  assert.doesNotMatch(outboundMode, /data-\[selected=true\]:text-primary-foreground/)
   assert.match(outboundMode, /if \(iconOnly\) \{[\s\S]*<Dropdown>/)
   assert.match(outboundMode, /selectionMode="single"/)
   assert.match(outboundMode, /selectedKeys=\{new Set\(\[mode\]\)\}/)
