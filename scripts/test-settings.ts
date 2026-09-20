@@ -789,6 +789,10 @@ test('desktop sidebar separates controls, live status and navigation', () => {
     'utf8'
   )
   const surfaces = readFileSync('src/renderer/src/components/sider/sider-surfaces.tsx', 'utf8')
+  const statusIndicator = readFileSync(
+    'src/renderer/src/components/base/koko-status-indicator.tsx',
+    'utf8'
+  )
   const appOverrides = readFileSync('src/renderer/src/assets/app-overrides.css', 'utf8')
   const sidebarSettings = readFileSync(
     'src/renderer/src/components/settings/sider-config.tsx',
@@ -891,9 +895,19 @@ test('desktop sidebar separates controls, live status and navigation', () => {
   assert.match(surfaces, /siderItemSubtitleClassName[\s\S]*h-4[\s\S]*leading-4/)
   assert.match(surfaces, /h-\[2\.375rem\][\s\S]*flex-col[\s\S]*gap-0\.5/)
   assert.match(surfaces, /data-sider-text-stack/)
-  assert.match(surfaces, /data-status-tone=\{tone\}/)
-  assert.match(surfaces, /inline-flex h-4 min-w-0 items-center gap-1\.5/)
-  assert.match(surfaces, /size-1\.5 shrink-0 rounded-full/)
+  assert.match(surfaces, /KokoStatusIndicator/)
+  assert.match(surfaces, /tone=\{kokoStatusTone\(tone\)\}/)
+  assert.match(
+    statusIndicator,
+    /export type KokoStatusTone = 'neutral' \| 'success' \| 'warning' \| 'danger'/
+  )
+  assert.match(statusIndicator, /data-status-tone=\{tone\}/)
+  assert.match(statusIndicator, /inline-flex h-4 min-w-0 items-center gap-2/)
+  assert.match(statusIndicator, /size-2 shrink-0 rounded-full/)
+  assert.match(statusIndicator, /success: 'bg-success'/)
+  assert.match(statusIndicator, /warning: 'bg-warning'/)
+  assert.match(statusIndicator, /danger: 'bg-danger'/)
+  assert.doesNotMatch(statusIndicator, /#[\da-fA-F]{3,8}|rgb\(/)
   assert.match(surfaces, /<SiderStatusRow className="shrink-0" tone=\{statusTone\}>/)
   assert.match(surfaces, /grid-cols-\[2rem_minmax\(0,1fr\)_2rem\]/)
   assert.match(surfaces, /size-8 shrink-0 items-center justify-center/)
@@ -905,16 +919,9 @@ test('desktop sidebar separates controls, live status and navigation', () => {
   assert.match(surfaces, /prioritizeDescription \? 'min-w-0 truncate' : 'shrink-0'/)
   assert.match(surfaces, /columns === 2 \? 'grid grid-cols-2 gap-1\.5' : 'flex flex-col gap-1\.5'/)
   assert.match(surfaces, /aria-current=\{active \? 'page' : undefined\}/)
-  assert.match(surfaces, /navigationStatusIndicatorClasses/)
-  assert.match(surfaces, /success: 'bg-success'/)
-  assert.match(surfaces, /warning: 'bg-warning'/)
-  assert.match(surfaces, /danger: 'bg-danger'/)
+  assert.doesNotMatch(surfaces, /navigationStatusIndicatorClasses/)
   assert.doesNotMatch(surfaces, /bg-(?:success|warning|danger)-500/)
-  assert.match(surfaces, /navigationStatusTextClasses\[tone\]/)
-  assert.match(
-    surfaces,
-    /const navigationStatusTextClasses[\s\S]*success: 'text-foreground-500'[\s\S]*warning: 'text-warning'[\s\S]*danger: 'text-danger'/
-  )
+  assert.doesNotMatch(surfaces, /navigationStatusTextClasses/)
   assert.match(navItem, /border-separator\/60 bg-surface\/55/)
   assert.match(navItem, /hover:border-accent\/25 hover:bg-surface-secondary\/70 hover:shadow-sm/)
   assert.match(navItem, /active\s*\? siderActiveSurfaceClassName/)
@@ -951,7 +958,7 @@ test('desktop sidebar separates controls, live status and navigation', () => {
   assert.match(quickControl, /sider-quick-control__title whitespace-nowrap/)
   assert.match(
     quickControl,
-    /className="sider-quick-control__status w-full"[\s\S]*tone=\{enabled \? 'success' : 'default'\}/
+    /className="sider-quick-control__status w-full"[\s\S]*tone=\{enabled \? 'success' : 'danger'\}/
   )
   assert.match(quickControl, /data-sider-control-slot/)
   assert.match(
@@ -1003,6 +1010,8 @@ test('desktop sidebar separates controls, live status and navigation', () => {
   assert.match(appRouting, /getAppRoutingStatusMessage/)
   assert.match(appRouting, /isAppRoutingRuleEffectivelyEnabled/)
   assert.match(appRouting, /statusTone=\{statusTone\}/)
+  assert.match(appRouting, /statusIndicator/)
+  assert.match(appRouting, /status\?\.state === 'disabled'[\s\S]*\? \('danger' as const\)/)
   assert.match(appRouting, /<SiderStatusCard/)
   assert.match(appRouting, /role="status"/)
   assert.match(appRoutingStatus, /export function getAppRoutingStatusLabel/)
@@ -1016,12 +1025,12 @@ test('desktop sidebar separates controls, live status and navigation', () => {
   assert.match(core, /label=\{tr\('Restart'\)\}/)
   assert.match(dns, /<SiderNavItem/)
   assert.match(dns, /status=\{enable \? tr\('Enabled'\) : tr\('Disabled'\)\}/)
-  assert.match(dns, /statusTone=\{enable \? 'success' : 'default'\}/)
+  assert.match(dns, /statusTone=\{enable \? 'success' : 'danger'\}/)
   assert.doesNotMatch(dns, /\bmt-|translate-y/)
   assert.doesNotMatch(dns, /patchMihomoConfig/)
   assert.match(sniff, /<SiderNavItem/)
   assert.match(sniff, /status=\{enable \? tr\('Enabled'\) : tr\('Disabled'\)\}/)
-  assert.match(sniff, /statusTone=\{enable \? 'success' : 'default'\}/)
+  assert.match(sniff, /statusTone=\{enable \? 'success' : 'danger'\}/)
   assert.doesNotMatch(sniff, /\bmt-|translate-y/)
   assert.doesNotMatch(sniff, /patchMihomoConfig/)
   assert.match(kokoro, /<SiderNavItem/)

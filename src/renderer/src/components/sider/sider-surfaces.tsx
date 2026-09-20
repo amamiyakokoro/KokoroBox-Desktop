@@ -1,4 +1,8 @@
 import { Button, cn, Tooltip, type ButtonProps } from '@heroui/react'
+import {
+  KokoStatusIndicator,
+  type KokoStatusTone
+} from '@renderer/components/base/koko-status-indicator'
 import type React from 'react'
 import { LuChevronRight } from 'react-icons/lu'
 
@@ -26,6 +30,7 @@ interface SiderStatusCardProps extends SiderNavItemProps {
   metadataSeparator?: React.ReactNode
   prioritizeDescription?: boolean
   showChevron?: boolean
+  statusIndicator?: boolean
 }
 
 const statusToneClasses: Record<SiderStatusTone, string> = {
@@ -35,19 +40,8 @@ const statusToneClasses: Record<SiderStatusTone, string> = {
   danger: 'text-danger-600 dark:text-danger-400'
 }
 
-const navigationStatusIndicatorClasses: Record<SiderStatusTone, string> = {
-  default: 'bg-foreground-300',
-  success: 'bg-success',
-  warning: 'bg-warning',
-  danger: 'bg-danger'
-}
-
-const navigationStatusTextClasses: Record<SiderStatusTone, string> = {
-  default: 'text-foreground-500',
-  success: 'text-foreground-500',
-  warning: 'text-warning',
-  danger: 'text-danger'
-}
+const kokoStatusTone = (tone: SiderStatusTone): KokoStatusTone =>
+  tone === 'default' ? 'neutral' : tone
 
 const siderItemTitleClassName =
   'block h-5 truncate text-sm font-semibold leading-5 text-foreground'
@@ -71,20 +65,9 @@ export const SiderStatusRow: React.FC<SiderStatusRowProps> = ({
   className,
   tone = 'default'
 }) => (
-  <span
-    className={cn(
-      'inline-flex h-4 min-w-0 items-center gap-1.5 text-xs leading-4',
-      navigationStatusTextClasses[tone],
-      className
-    )}
-    data-status-tone={tone}
-  >
-    <span
-      aria-hidden="true"
-      className={cn('size-1.5 shrink-0 rounded-full', navigationStatusIndicatorClasses[tone])}
-    />
-    <span className="min-w-0 truncate">{children}</span>
-  </span>
+  <KokoStatusIndicator className={className} tone={kokoStatusTone(tone)}>
+    {children}
+  </KokoStatusIndicator>
 )
 
 const SiderItemIcon: React.FC<{
@@ -293,6 +276,7 @@ export const SiderStatusCard: React.FC<SiderStatusCardProps> = ({
   metadataSeparator = '·',
   prioritizeDescription = false,
   showChevron,
+  statusIndicator = false,
   onPress
 }) => (
   <div
@@ -350,7 +334,15 @@ export const SiderStatusCard: React.FC<SiderStatusCardProps> = ({
                   {description && status && (
                     <span className="text-foreground-300">{metadataSeparator}</span>
                   )}
-                  {status && (
+                  {status && statusIndicator ? (
+                    <KokoStatusIndicator
+                      className={prioritizeDescription ? 'min-w-0' : 'shrink-0'}
+                      title={statusTitle}
+                      tone={kokoStatusTone(statusTone)}
+                    >
+                      {status}
+                    </KokoStatusIndicator>
+                  ) : status ? (
                     <span
                       title={statusTitle}
                       className={cn(
@@ -360,7 +352,7 @@ export const SiderStatusCard: React.FC<SiderStatusCardProps> = ({
                     >
                       {status}
                     </span>
-                  )}
+                  ) : null}
                 </>
               ) : undefined
             }
@@ -443,7 +435,7 @@ export const SiderQuickControl: React.FC<SiderQuickControlProps> = ({
         </span>
         <SiderStatusRow
           className="sider-quick-control__status w-full"
-          tone={enabled ? 'success' : 'default'}
+          tone={enabled ? 'success' : 'danger'}
         >
           {status}
         </SiderStatusRow>

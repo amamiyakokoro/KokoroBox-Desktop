@@ -75,7 +75,7 @@ const DNSCard: React.FC<Props> = (props) => {
           icon={<LuServer />}
           title="DNS"
           status={enable ? tr('Enabled') : tr('Disabled')}
-          statusTone={enable ? 'success' : 'default'}
+          statusTone={enable ? 'success' : 'danger'}
           active={match}
           onPress={() => navigate(settingsPath)}
         />

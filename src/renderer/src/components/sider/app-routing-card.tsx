@@ -72,7 +72,9 @@ const AppRoutingCard: React.FC<Props> = ({ iconOnly = false }) => {
         ? ('warning' as const)
         : status?.state === 'error'
           ? ('danger' as const)
-          : ('default' as const)
+          : status?.state === 'disabled' || (config && !config.enabled)
+            ? ('danger' as const)
+            : ('default' as const)
   const statusMessage = getAppRoutingStatusMessage(
     status?.message,
     status?.protectedApplicationCount
@@ -116,6 +118,7 @@ const AppRoutingCard: React.FC<Props> = ({ iconOnly = false }) => {
         description={tr('{0} applications', [enabledRuleCount])}
         status={runtimeLabel}
         statusTone={statusTone}
+        statusIndicator
         active={match}
         onPress={() => navigate('/app-routing')}
         details={

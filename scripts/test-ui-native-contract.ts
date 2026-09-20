@@ -11,6 +11,7 @@ const allowedKokoExports = new Set([
   'KokoSearchField',
   'KokoSegmentedControl',
   'KokoSelect',
+  'KokoStatusIndicator',
   'KokoTabs',
   'KokoTextField',
   'KokoToolbar',
