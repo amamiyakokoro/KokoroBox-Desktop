@@ -131,7 +131,7 @@ const ConnCard: React.FC<Props> = ({ iconOnly }) => {
             >
               <span className="sr-only">{`${tr('Upload speed')}: ${uploadRate}`}</span>
               <FaCircleArrowUp aria-hidden="true" className="size-3 shrink-0" />
-              <span aria-hidden="true" className="min-w-0 text-right">
+              <span aria-hidden="true" className="min-w-0 text-left">
                 <span className="sider-connection-rate__full">{uploadRate}</span>
                 <span className="sider-connection-rate__compact">
                   {calcCompactTraffic(upload)}

@@ -1348,8 +1348,7 @@ test('desktop sidebar separates controls, live status and navigation', () => {
     2
   )
   assert.equal(connections.match(/className="grid w-full min-w-0/g)?.length, 2)
-  assert.match(connections, /className="min-w-0 text-left"/)
-  assert.match(connections, /className="min-w-0 text-right"/)
+  assert.equal(connections.match(/className="min-w-0 text-left"/g)?.length, 2)
   assert.match(connections, /calcCompactTraffic\(download\)/)
   assert.match(connections, /calcCompactTraffic\(upload\)/)
   assert.doesNotMatch(connections, /truncate/)
