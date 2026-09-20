@@ -674,11 +674,15 @@ test('profile and override pages share the collection management layout contract
   assert.match(toolbar, /export default CollectionImportToolbar/)
   assert.match(toolbar, /variant="primary"/)
   assert.match(toolbar, /tr\('Paste'\)/)
-  assert.match(surface, /repeat\(auto-fill,minmax\(min\(20rem,100%\),24rem\)\)/)
+  assert.match(surface, /repeat\(auto-fit,minmax\(min\(20rem,100%\),1fr\)\)/)
+  assert.doesNotMatch(surface, /repeat\(auto-fill/)
+  assert.doesNotMatch(surface, /minmax\(min\(20rem,100%\),24rem\)/)
+  assert.doesNotMatch(surface, /justify-start/)
   assert.match(surface, /export const CollectionCard/)
   assert.match(surface, /border-accent\/55 bg-accent-soft\/35/)
   assert.match(surface, /export const CollectionDropZone/)
   assert.match(surface, /export const CollectionEmptyState/)
+  assert.match(surface, /className="col-span-full [^"]*"/)
 
   for (const page of [profiles, overrides]) {
     assert.match(page, /<CollectionImportToolbar/)
@@ -689,9 +693,13 @@ test('profile and override pages share the collection management layout contract
   }
 
   assert.match(profileItem, /<CollectionCard isBusy=\{selecting\} isCurrent=\{isCurrent\}>/)
+  assert.match(profileItem, /className="[^"]*\bmin-w-0\b[^"]*touch-sortable-card[^"]*"/)
+  assert.doesNotMatch(profileItem, /touch-sortable-card[^"\n]*(?:max-w-|justify-self-start)/)
   assert.match(profileItem, /tr\('Current'\)/)
   assert.doesNotMatch(profileItem, /bg-primary|text-primary-foreground/)
   assert.match(overrideItem, /<CollectionCard/)
+  assert.match(overrideItem, /className="[^"]*\bmin-w-0\b[^"]*touch-sortable-card[^"]*"/)
+  assert.doesNotMatch(overrideItem, /touch-sortable-card[^"\n]*(?:max-w-|justify-self-start)/)
   assert.match(overrideItem, /info\.type === 'remote' \? tr\('Remote'\) : tr\('Local'\)/)
 })
 

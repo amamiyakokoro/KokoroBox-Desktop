@@ -10,7 +10,7 @@ interface CollectionGridProps {
 export const CollectionGrid: React.FC<CollectionGridProps> = ({ children, className }) => (
   <div
     className={cn(
-      'grid grid-cols-[repeat(auto-fill,minmax(min(20rem,100%),24rem))] items-stretch justify-start gap-3 p-3',
+      'grid grid-cols-[repeat(auto-fit,minmax(min(20rem,100%),1fr))] items-stretch gap-3 p-3',
       className
     )}
   >
