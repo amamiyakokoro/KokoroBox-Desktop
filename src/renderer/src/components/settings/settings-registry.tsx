@@ -619,7 +619,7 @@ export const getSettingsCategories = (): SettingsCategoryDefinition[] => {
       },
       {
         key: 'appearance',
-        label: tr('Appearance and interface'),
+        label: tr('Appearance'),
         icon: LuBrush,
         entries: [
           entry('show-floating-window', tr('Show floating window'), tr('Appearance')),
@@ -682,21 +682,21 @@ export const getSettingsCategories = (): SettingsCategoryDefinition[] => {
       },
       {
         key: 'core',
-        label: tr('Core and system'),
+        label: tr('Core'),
         icon: LuCpu,
         entries: corePanels.flatMap((panel) => panel.entries),
         panels: corePanels
       },
       {
         key: 'data',
-        label: tr('Data and integrations'),
+        label: tr('Data'),
         icon: LuArchiveRestore,
         entries: dataPanels.flatMap((panel) => panel.entries),
         panels: dataPanels
       },
       {
         key: 'shortcuts',
-        label: tr('Keyboard shortcuts'),
+        label: tr('Shortcuts'),
         icon: LuCommand,
         entries: [
           entry('shortcut-toggle-window', tr('Toggle window'), tr('Keyboard shortcuts')),
@@ -721,7 +721,7 @@ export const getSettingsCategories = (): SettingsCategoryDefinition[] => {
       },
       {
         key: 'diagnostics',
-        label: tr('Diagnostics and about'),
+        label: tr('Diagnostics'),
         icon: LuWrench,
         entries: diagnosticsPanels.flatMap((panel) => panel.entries),
         panels: diagnosticsPanels

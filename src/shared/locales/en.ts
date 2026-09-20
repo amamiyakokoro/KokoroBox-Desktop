@@ -32,6 +32,8 @@ export const messages: Readonly<Record<string, string>> = {
   'Scroll settings categories right': 'Scroll settings categories right',
   'Settings panels': 'Settings panels',
   Network: 'Network',
+  Data: 'Data',
+  Shortcuts: 'Shortcuts',
   'Appearance and interface': 'Appearance and interface',
   'Core and system': 'Core and system',
   'Data and integrations': 'Data and integrations',

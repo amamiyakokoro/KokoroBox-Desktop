@@ -32,6 +32,8 @@ export const messages: Readonly<Record<string, string>> = {
   'Scroll settings categories right': '向右捲動設定分類',
   'Settings panels': '設定面板',
   Network: '網路',
+  Data: '資料',
+  Shortcuts: '快捷鍵',
   'Appearance and interface': '外觀與介面',
   'Core and system': '核心與系統',
   'Data and integrations': '資料與整合',

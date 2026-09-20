@@ -32,6 +32,8 @@ export const messages: Readonly<Record<string, string>> = {
   'Scroll settings categories right': '向右滚动设置分类',
   'Settings panels': '设置面板',
   Network: '网络',
+  Data: '数据',
+  Shortcuts: '快捷键',
   'Appearance and interface': '外观与界面',
   'Core and system': '内核与系统',
   'Data and integrations': '数据与集成',
