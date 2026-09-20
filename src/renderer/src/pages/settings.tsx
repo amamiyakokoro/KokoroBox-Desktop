@@ -250,9 +250,9 @@ const Settings: React.FC = () => {
         <div ref={layoutRef} className="settings-layout grid min-h-full">
           <nav
             aria-label={tr('Settings categories')}
-            className="settings-navigation sticky top-0 z-10 flex h-[calc(100vh-49px)] flex-col border-r border-divider bg-surface-secondary/85 p-3"
+            className="settings-navigation sticky top-0 z-10 flex h-[calc(100vh-49px)] flex-col border-r border-separator/70 bg-surface-secondary/65 p-3"
           >
-            <div className="settings-navigation-search mb-3 flex justify-end">
+            <div className="settings-navigation-search mb-3 flex justify-start">
               {searchExpanded || normalizedSearch ? (
                 <KokoSearchField
                   inputRef={searchInputRef}
@@ -321,7 +321,7 @@ const Settings: React.FC = () => {
                       className={cn(
                         'settings-category-button app-nodrag w-full shrink-0 justify-start px-3 font-medium text-foreground-600',
                         active
-                          ? 'bg-accent-soft text-accent-soft-foreground hover:bg-accent-soft/80'
+                          ? 'bg-accent-soft/55 text-accent-soft-foreground hover:bg-accent-soft/70'
                           : 'hover:bg-surface/75 hover:text-foreground'
                       )}
                       aria-label={item.label}
@@ -361,7 +361,7 @@ const Settings: React.FC = () => {
           <main className="min-w-0 pb-4">
             {(normalizedSearch || selectedPanels.length > 1) && (
               <header className="settings-context-header sticky top-0 z-10 w-full bg-surface/95">
-                <div className="settings-context-inner mx-auto w-full max-w-[960px] px-4">
+                <div className="settings-context-inner w-full max-w-[960px] px-6">
                   {normalizedSearch ? (
                     <h1 className="py-3 text-lg font-semibold tracking-tight">
                       {tr('Search settings')}
@@ -389,7 +389,7 @@ const Settings: React.FC = () => {
                 </div>
               </header>
             )}
-            <div className="settings-content-inner mx-auto w-full max-w-[960px] px-4">
+            <div className="settings-content-inner w-full max-w-[960px] px-6">
               {normalizedSearch ? (
                 <div className="mx-3 mt-2 border-y border-divider">
                   {searchResults.length ? (

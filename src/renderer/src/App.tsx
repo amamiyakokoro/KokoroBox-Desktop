@@ -23,6 +23,10 @@ import MihomoIcon from './components/base/mihomo-icon'
 import useSWR from 'swr'
 import { useUnsavedChanges } from '@renderer/hooks/use-unsaved-changes'
 import { SiderIconButton } from '@renderer/components/sider/sider-surfaces'
+import {
+  isSettingsFocusRoute,
+  resolveSiderPresentationWidth
+} from '@renderer/components/sider/sider-presentation'
 
 const ConfirmModal = lazy(() => import('@renderer/components/base/base-confirm'))
 const siderCardsPromise = import('@renderer/components/sider/sider-cards')
@@ -53,6 +57,12 @@ const App: React.FC = () => {
   const { setTheme, systemTheme } = useTheme()
   navigate = useNavigate()
   const location = useLocation()
+  const settingsFocusMode = isSettingsFocusRoute(location.pathname)
+  const presentedSiderWidth = resolveSiderPresentationWidth(
+    location.pathname,
+    siderWidthValue,
+    narrowWidth
+  )
   const page = <Outlet />
   const { hasUnsavedChanges, confirmUnsavedChanges } = useUnsavedChanges()
   useDeferredRoutePreload()
@@ -347,7 +357,7 @@ const App: React.FC = () => {
           />
         )}
       </Suspense>
-      {siderWidthValue === narrowWidth ? (
+      {presentedSiderWidth === narrowWidth ? (
         <div style={{ width: `${narrowWidth}px` }} className="side h-full flex flex-col">
           <div className="app-drag flex shrink-0 justify-center items-center z-40 bg-transparent h-11.25">
             {platform !== 'darwin' && <MihomoIcon className="h-8 leading-8 text-lg mx-px" />}
@@ -420,33 +430,35 @@ const App: React.FC = () => {
         </div>
       )}
 
-      <div
-        onPointerDown={(event) => {
-          resizePointerIdRef.current = event.pointerId
-          event.currentTarget.setPointerCapture(event.pointerId)
-          updateSiderWidthFromClientX(event.clientX)
-          setResizing(true)
-        }}
-        style={{
-          position: 'fixed',
-          zIndex: 50,
-          left: `${siderWidthValue - 6}px`,
-          width: '12px',
-          height: '100vh',
-          cursor: 'ew-resize',
-          touchAction: 'none'
-        }}
-        className="group flex justify-center"
-      >
+      {!settingsFocusMode && (
         <div
-          className={`h-full w-0.5 transition-colors ${
-            resizing ? 'bg-primary' : 'bg-transparent group-hover:bg-primary/60'
-          }`}
-        />
-      </div>
+          onPointerDown={(event) => {
+            resizePointerIdRef.current = event.pointerId
+            event.currentTarget.setPointerCapture(event.pointerId)
+            updateSiderWidthFromClientX(event.clientX)
+            setResizing(true)
+          }}
+          style={{
+            position: 'fixed',
+            zIndex: 50,
+            left: `${siderWidthValue - 6}px`,
+            width: '12px',
+            height: '100vh',
+            cursor: 'ew-resize',
+            touchAction: 'none'
+          }}
+          className="group flex justify-center"
+        >
+          <div
+            className={`h-full w-0.5 transition-colors ${
+              resizing ? 'bg-primary' : 'bg-transparent group-hover:bg-primary/60'
+            }`}
+          />
+        </div>
+      )}
       <Separator orientation="vertical" />
       <div
-        style={{ width: `calc(100% - ${siderWidthValue + 1}px)` }}
+        style={{ width: `calc(100% - ${presentedSiderWidth + 1}px)` }}
         className="main grow h-full overflow-y-auto"
       >
         <Suspense fallback={null}>{page}</Suspense>

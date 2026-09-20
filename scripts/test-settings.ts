@@ -11,6 +11,10 @@ import {
 } from '../src/renderer/src/components/sider/sider-order.ts'
 import { normalizeCoreVersion } from '../src/renderer/src/components/sider/core-version.ts'
 import {
+  isSettingsFocusRoute,
+  resolveSiderPresentationWidth
+} from '../src/renderer/src/components/sider/sider-presentation.ts'
+import {
   formatLogTimestamp,
   parseLogMessage
 } from '../src/renderer/src/components/logs/log-display.ts'
@@ -128,10 +132,13 @@ test('application settings keep one clear navigation hierarchy in compact deskto
   assert.match(settings, /event\.key === 'Escape'/)
   assert.match(settings, /settings-context-header sticky top-0 z-10 w-full bg-surface\/95/)
   assert.doesNotMatch(settings, /settings-context-header[^"\n]*border-b/)
-  assert.match(settings, /settings-navigation[^"\n]*bg-surface-secondary\/85/)
-  assert.match(settings, /bg-accent-soft text-accent-soft-foreground/)
-  assert.match(settings, /settings-context-inner mx-auto w-full max-w-\[960px\] px-4/)
-  assert.match(settings, /settings-content-inner mx-auto w-full max-w-\[960px\] px-4/)
+  assert.match(settings, /settings-navigation[^"\n]*bg-surface-secondary\/65/)
+  assert.match(settings, /border-r border-separator\/70/)
+  assert.match(settings, /bg-accent-soft\/55 text-accent-soft-foreground/)
+  assert.match(settings, /settings-navigation-search mb-3 flex justify-start/)
+  assert.match(settings, /settings-context-inner w-full max-w-\[960px\] px-6/)
+  assert.match(settings, /settings-content-inner w-full max-w-\[960px\] px-6/)
+  assert.doesNotMatch(settings, /settings-(?:context|content)-inner mx-auto/)
   assert.match(settings, /<main className="min-w-0 pb-4">/)
   assert.match(settings, /scrollTo\(\{ top: 0, left: 0 \}\)/)
   assert.equal(settings.match(/setSearchParams\(nextParams\)\s*resetContentScroll\(\)/g)?.length, 2)
@@ -186,6 +193,7 @@ test('application settings keep one clear navigation hierarchy in compact deskto
     /\.settings-container \{[\s\S]*overflow-x: clip;[\s\S]*container-type: inline-size/
   )
   assert.match(styles, /\.settings-layout \{[\s\S]*width: 100%;[\s\S]*min-width: 0;/)
+  assert.match(styles, /grid-template-columns: 12rem minmax\(0, 1fr\)/)
   assert.match(styles, /@container settings \(max-width: 50rem\)/)
   assert.doesNotMatch(styles, /@media \(max-width: 1050px\)/)
   assert.match(styles, /\.settings-navigation-list \{[\s\S]*flex-direction: row/)
@@ -241,6 +249,32 @@ test('application settings keep one clear navigation hierarchy in compact deskto
   assert.match(kokoForm, /<InputGroup\.Suffix[^>]*>[\s\S]*\{endContent\}/)
   assert.match(general, /header=\{tr\('Language and notifications'\)\}/)
   assert.match(general, /header=\{tr\('Startup and updates'\)\}/)
+})
+
+test('Application Settings uses a route-level sidebar focus mode without changing preferences', () => {
+  const app = readFileSync('src/renderer/src/App.tsx', 'utf8')
+  const presentation = readFileSync(
+    'src/renderer/src/components/sider/sider-presentation.ts',
+    'utf8'
+  )
+
+  assert.equal(isSettingsFocusRoute('/settings'), true)
+  assert.equal(isSettingsFocusRoute('/settings/network'), true)
+  assert.equal(isSettingsFocusRoute('/profiles'), false)
+  assert.equal(resolveSiderPresentationWidth('/settings', 250, 70), 70)
+  assert.equal(resolveSiderPresentationWidth('/settings/network', 400, 60), 60)
+  assert.equal(resolveSiderPresentationWidth('/profiles', 250, 70), 250)
+  assert.equal(resolveSiderPresentationWidth('/profiles', 70, 70), 70)
+
+  assert.match(app, /const settingsFocusMode = isSettingsFocusRoute\(location\.pathname\)/)
+  assert.match(app, /const presentedSiderWidth = resolveSiderPresentationWidth\(/)
+  assert.match(app, /presentedSiderWidth === narrowWidth/)
+  assert.match(app, /<SiderCards iconOnly \/>/)
+  assert.match(app, /active=\{location\.pathname\.includes\('\/settings'\)\}/)
+  assert.match(app, /!settingsFocusMode && \(/)
+  assert.match(app, /calc\(100% - \$\{presentedSiderWidth \+ 1\}px\)/)
+  assert.equal(app.match(/patchAppConfig\(\{ siderWidth:/g)?.length, 1)
+  assert.doesNotMatch(presentation, /patchAppConfig|localStorage|setSiderWidthValue/)
 })
 
 test('network settings use nested panels and preserve legacy routes', () => {
