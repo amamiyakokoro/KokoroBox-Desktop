@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import MihomoIcon from './components/base/mihomo-icon'
+import KokoroBoxIcon from './components/base/kokorobox-icon'
 import { calcTraffic } from './utils/calc'
 import { showContextMenu, triggerMainWindow } from './utils/ipc'
 import { useAppConfig } from './hooks/use-app-config'
@@ -80,7 +80,7 @@ const FloatingApp: React.FC = () => {
             }
             className={`app-nodrag cursor-pointer floating-thumb ${tunEnabled || sysProxyEnabled ? 'bg-accent' : 'bg-default'} hover:opacity-90 rounded-full h-[calc(100%-4px)] aspect-square`}
           >
-            <MihomoIcon className="floating-icon text-accent-foreground h-full leading-full text-[22px] mx-auto" />
+            <KokoroBoxIcon className="floating-icon mx-auto h-full w-6 text-accent-foreground" />
           </div>
         </div>
         <div className="w-full overflow-hidden">

@@ -19,7 +19,7 @@ import {
 } from '@renderer/utils/ipc'
 import { platform } from '@renderer/utils/init'
 import { TitleBarOverlayOptions } from 'electron'
-import MihomoIcon from './components/base/mihomo-icon'
+import KokoroBoxIcon from './components/base/kokorobox-icon'
 import useSWR from 'swr'
 import { useUnsavedChanges } from '@renderer/hooks/use-unsaved-changes'
 import { SiderIconButton } from '@renderer/components/sider/sider-surfaces'
@@ -365,7 +365,7 @@ const App: React.FC = () => {
       {presentedSiderWidth === narrowWidth ? (
         <div style={{ width: `${narrowWidth}px` }} className="side h-full flex flex-col">
           <div className="app-drag flex shrink-0 justify-center items-center z-40 bg-transparent h-11.25">
-            {platform !== 'darwin' && <MihomoIcon className="h-8 leading-8 text-lg mx-px" />}
+            {platform !== 'darwin' && <KokoroBoxIcon className="size-7 text-foreground" />}
           </div>
           <Suspense fallback={<div className="min-h-0 flex-1" />}>
             <SiderCards iconOnly />
@@ -405,7 +405,8 @@ const App: React.FC = () => {
             <div
               className={`flex justify-between p-2 ${!useWindowFrame && platform === 'darwin' ? 'ml-16.5' : ''}`}
             >
-              <div className="flex ml-1">
+              <div className="ml-1 flex items-center gap-2">
+                <KokoroBoxIcon className="size-7 shrink-0 text-foreground" />
                 <h3 className="text-lg font-bold leading-8">KokoroBox</h3>
               </div>
               {latest && latest.version && (

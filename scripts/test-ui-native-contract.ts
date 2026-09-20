@@ -132,6 +132,27 @@ test('the shared application preference controls next-themes in every renderer',
   }
 })
 
+test('KokoroBox-owned surfaces share the native wind-chime brand mark', () => {
+  const icon = readFileSync(
+    'src/renderer/src/components/base/kokorobox-icon.tsx',
+    'utf8'
+  )
+  const app = readFileSync('src/renderer/src/App.tsx', 'utf8')
+  const floatingApp = readFileSync('src/renderer/src/FloatingApp.tsx', 'utf8')
+
+  assert.match(icon, /viewBox="0 0 512 512"/)
+  assert.match(icon, /fill="currentColor"/)
+  assert.match(icon, /aria-hidden="true"/)
+  assert.match(icon, /SVGProps<SVGSVGElement>/)
+  assert.equal(icon.match(/<path /g)?.length, 1)
+  assert.equal(app.match(/<KokoroBoxIcon /g)?.length, 2)
+  assert.equal(floatingApp.match(/<KokoroBoxIcon /g)?.length, 1)
+  assert.doesNotMatch(app, /MihomoIcon/)
+  assert.doesNotMatch(floatingApp, /MihomoIcon/)
+  assert.match(floatingApp, /className="floating-icon [^"]*h-full[^"]*w-6/)
+  assert.match(floatingApp, /transform: `rotate\(\$\{rotation\}deg\)`/)
+})
+
 test('active source uses native semantic tokens without a legacy theme bridge', () => {
   const sourceFiles = collectFiles('src').filter((file) =>
     /\.(?:css|[cm]?[jt]sx?)$/.test(file)
