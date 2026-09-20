@@ -1,5 +1,5 @@
 import { tr } from '../../../../shared/i18n'
-import { Button, Meter, Tooltip } from '@heroui/react'
+import { Button, Chip, Meter, Tooltip } from '@heroui/react'
 import { useProfileConfig } from '@renderer/hooks/use-profile-config'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { calcTraffic } from '@renderer/utils/calc'
@@ -94,8 +94,22 @@ const ProfileCard: React.FC<Props> = ({ iconOnly }) => {
         allowTextWrap
         icon={<TiFolder />}
         title={info.name}
-        description={tr('Subscriptions')}
-        status={info.type === 'remote' ? tr('Remote') : tr('Local')}
+        status={
+          <>
+            {info.type === 'remote' ? tr('Remote') : tr('Local')}
+            {info.kokoro && (
+              <Chip
+                className="shrink-0"
+                color="accent"
+                size="sm"
+                title={tr('Kokoro subscription')}
+                variant="soft"
+              >
+                Kokoro
+              </Chip>
+            )}
+          </>
+        }
         active={match}
         onPress={() => navigate('/profiles')}
         actions={

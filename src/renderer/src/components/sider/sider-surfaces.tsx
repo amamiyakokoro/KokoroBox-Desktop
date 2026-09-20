@@ -32,6 +32,7 @@ interface SiderStatusCardProps extends SiderNavItemProps {
   prioritizeDescription?: boolean
   showChevron?: boolean
   statusIndicator?: boolean
+  stackStatus?: boolean
 }
 
 const statusToneClasses: Record<SiderStatusTone, string> = {
@@ -95,9 +96,10 @@ const SiderItemIcon: React.FC<{
 
 const SiderItemContent: React.FC<{
   allowTextWrap?: boolean
+  stackStatus?: boolean
   subtitle?: React.ReactNode
   title: string
-}> = ({ allowTextWrap = false, subtitle, title }) => (
+}> = ({ allowTextWrap = false, stackStatus = false, subtitle, title }) => (
   <span
     className={cn(
       'flex min-w-0 flex-1 flex-col justify-center gap-0.5',
@@ -118,7 +120,8 @@ const SiderItemContent: React.FC<{
       <span
         className={cn(
           siderItemSubtitleClassName,
-          allowTextWrap && 'h-auto min-h-4 flex-wrap overflow-visible'
+          allowTextWrap && 'h-auto min-h-4 flex-wrap overflow-visible',
+          stackStatus && 'flex-col items-start gap-1'
         )}
       >
         {subtitle}
@@ -295,6 +298,7 @@ export const SiderStatusCard: React.FC<SiderStatusCardProps> = ({
   prioritizeDescription = false,
   showChevron,
   statusIndicator = false,
+  stackStatus = false,
   onPress
 }) => (
   <div
@@ -335,6 +339,7 @@ export const SiderStatusCard: React.FC<SiderStatusCardProps> = ({
         ) : (
           <SiderItemContent
             allowTextWrap={allowTextWrap}
+            stackStatus={stackStatus}
             title={title}
             subtitle={
               description || status ? (
@@ -352,7 +357,9 @@ export const SiderStatusCard: React.FC<SiderStatusCardProps> = ({
                   )}
                   {status && (
                     <span className="inline-flex shrink-0 items-center gap-1">
-                      {description && <span className="text-muted">{metadataSeparator}</span>}
+                      {description && !stackStatus && (
+                        <span className="text-muted">{metadataSeparator}</span>
+                      )}
                       {statusIndicator ? (
                         <KokoStatusIndicator
                           className={prioritizeDescription ? 'min-w-0' : 'shrink-0'}

@@ -116,10 +116,15 @@ const AppRoutingCard: React.FC<Props> = ({ iconOnly = false }) => {
         allowTextWrap
         icon={<MdOutlineAppShortcut />}
         title={tr('Application routing')}
-        description={tr('{0} applications', [enabledRuleCount])}
+        description={
+          enabledRuleCount === 1
+            ? tr('{0} application', [enabledRuleCount])
+            : tr('{0} applications', [enabledRuleCount])
+        }
         status={runtimeLabel}
         statusTone={statusTone}
         statusIndicator
+        stackStatus
         active={match}
         onPress={() => navigate('/app-routing')}
         details={

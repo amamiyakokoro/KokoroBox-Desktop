@@ -155,6 +155,7 @@ export const messages: Readonly<Record<string, string>> = {
   'Create an empty rule group or scan a folder to add its applications automatically.':
     '手動建立空白規則群組，或掃描資料夾並自動加入其中的應用程式。',
   'No applications in this rule group': '規則群組中暫無應用程式',
+  '{0} application': '{0} 個應用程式',
   '{0} applications': '{0} 個應用程式',
   '{0} proxies': '{0} 個代理',
   '{0} rules': '{0} 條規則',
