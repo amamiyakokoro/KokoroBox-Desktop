@@ -1,23 +1,14 @@
 import { tr } from '../../../../shared/i18n'
-import {
-  Button,
-  Input,
-  InputGroup,
-  Label,
-  Modal,
-  Separator,
-  Surface,
-  Switch,
-  Tooltip
-} from '@heroui/react'
+import { Button, Modal, Surface, Switch, Tooltip } from '@heroui/react'
 import { KokoActionMenu } from '../base/koko-collections'
+import ModalSettingItem from '../base/base-modal-setting-item'
+import { KokoTextField } from '../base/koko-form'
 import type { ReactNode } from 'react'
 import React, { useState } from 'react'
 import { useOverrideConfig } from '@renderer/hooks/use-override-config'
 import { ageIdentityToRecipient, generateAgeKeyPair, restartCore } from '@renderer/utils/ipc'
 import { MdDeleteForever } from 'react-icons/md'
 import { FaPlus } from 'react-icons/fa6'
-import { IoIosHelpCircle } from 'react-icons/io'
 import { BiCopy, BiHide, BiShow } from 'react-icons/bi'
 import { LuArrowRight, LuRefreshCw } from 'react-icons/lu'
 import { notify } from '@renderer/utils/notification'
@@ -90,44 +81,24 @@ const EditInfoModal: React.FC<Props> = (props) => {
     title: string,
     content: ReactNode,
     options?: {
-      actions?: ReactNode
       align?: 'start' | 'center'
       divider?: boolean
-      stacked?: boolean
+      help?: ReactNode
     }
   ) => {
-    const { actions, align = 'center', divider = true, stacked = false } = options || {}
+    const { align = 'center', divider = true, help } = options || {}
 
     return (
-      <Surface key={title} variant="transparent" className="flex flex-col">
-        {stacked ? (
-          <div className="flex flex-col gap-1.5 py-2">
-            <div className="flex items-center gap-2">
-              <Label className="setting-item__title">{title}</Label>
-              {actions}
-            </div>
-            <div className="w-full min-w-0">{content}</div>
-          </div>
-        ) : (
-          <div
-            className={`setting-item px-0 setting-item--content-end ${
-              align === 'start' ? 'setting-item--start' : 'setting-item--center'
-            }`}
-            style={{ gridTemplateColumns: '150px minmax(0, 1fr)' }}
-          >
-            <div className="setting-item__title-wrap">
-              <Label className="setting-item__title">{title}</Label>
-            </div>
-            <div className="setting-item__content">
-              <div className="flex w-full min-w-0 items-center justify-end gap-2">
-                {actions}
-                {content}
-              </div>
-            </div>
-          </div>
-        )}
-        {divider ? <Separator variant="tertiary" className="bg-surface-secondary/70" /> : null}
-      </Surface>
+      <ModalSettingItem
+        key={title}
+        align={align}
+        divider={divider}
+        help={help}
+        labelWidth="wide"
+        title={title}
+      >
+        {content}
+      </ModalSettingItem>
     )
   }
 
@@ -254,26 +225,24 @@ const EditInfoModal: React.FC<Props> = (props) => {
               <Surface variant="transparent" className="flex flex-col">
                 {renderField(
                   tr('Name'),
-                  <Input
+                  <KokoTextField
                     aria-label={tr('Name')}
-                    data-setting-input="edit-modal-name"
+                    controlWidth="full"
                     value={values.name}
-                    variant="secondary"
-                    onChange={(event) => {
-                      setValues({ ...values, name: event.target.value })
+                    onChangeValue={(value) => {
+                      setValues({ ...values, name: value })
                     }}
                   />
                 )}
                 {values.type === 'remote' &&
                   renderField(
                     tr('Subscription URL'),
-                    <Input
+                    <KokoTextField
                       aria-label={tr('Subscription URL')}
-                      data-setting-input="edit-modal"
+                      controlWidth="full"
                       value={values.url}
-                      variant="secondary"
-                      onChange={(event) => {
-                        setValues({ ...values, url: event.target.value })
+                      onChangeValue={(value) => {
+                        setValues({ ...values, url: value })
                       }}
                     />,
                     { align: 'start' }
@@ -281,28 +250,24 @@ const EditInfoModal: React.FC<Props> = (props) => {
                 {values.type === 'remote' &&
                   renderField(
                     tr('Certificate fingerprint'),
-                    <Input
+                    <KokoTextField
                       aria-label={tr('Certificate fingerprint')}
-                      data-setting-input="edit-modal"
+                      controlWidth="full"
                       value={values.fingerprint ?? ''}
-                      variant="secondary"
-                      onChange={(event) => {
-                        const v = event.target.value
-                        setValues({ ...values, fingerprint: v.trim() || undefined })
+                      onChangeValue={(value) => {
+                        setValues({ ...values, fingerprint: value.trim() || undefined })
                       }}
                     />
                   )}
                 {values.type === 'remote' &&
                   renderField(
                     tr('Custom user agent'),
-                    <Input
+                    <KokoTextField
                       aria-label={tr('Custom user agent')}
-                      data-setting-input="edit-modal"
+                      controlWidth="full"
                       value={values.ua ?? ''}
-                      variant="secondary"
-                      onChange={(event) => {
-                        const v = event.target.value
-                        setValues({ ...values, ua: v.trim() || undefined })
+                      onChangeValue={(value) => {
+                        setValues({ ...values, ua: value.trim() || undefined })
                       }}
                     />
                   )}
@@ -362,131 +327,113 @@ const EditInfoModal: React.FC<Props> = (props) => {
                   )}
                 {renderField(
                   tr('age public key'),
-                  <InputGroup data-setting-input="edit-modal" variant="secondary">
-                    <InputGroup.Input
-                      aria-label={tr('age public key')}
-                      value={values.ageRecipient ?? ''}
-                      placeholder="age1..."
-                      onChange={(event) => {
-                        const v = event.target.value
-                        setValues({ ...values, ageRecipient: v.trim() || undefined })
-                      }}
-                    />
-                    <InputGroup.Suffix>
-                      <Tooltip delay={0}>
-                        <Tooltip.Trigger>
-                          <Button
-                            aria-label={tr('Derive a public key from the age private key')}
-                            isIconOnly
-                            size="sm"
-                            variant="ghost"
-                            onPress={handleDeriveAgeRecipient}
-                          >
-                            <LuArrowRight className="text-lg" />
-                          </Button>
-                        </Tooltip.Trigger>
-                        <Tooltip.Content>
-                          {tr('Derive public key from private key')}
-                        </Tooltip.Content>
-                      </Tooltip>
-                      <Button
-                        aria-label={tr('Copy age public key')}
-                        isIconOnly
-                        size="sm"
-                        variant="ghost"
-                        onPress={() => copyValue(values.ageRecipient, tr('age public key copied'))}
-                      >
-                        <BiCopy className="text-lg" />
-                      </Button>
-                    </InputGroup.Suffix>
-                  </InputGroup>
+                  <KokoTextField
+                    aria-label={tr('age public key')}
+                    controlWidth="full"
+                    value={values.ageRecipient ?? ''}
+                    placeholder="age1..."
+                    onChangeValue={(value) => {
+                      setValues({ ...values, ageRecipient: value.trim() || undefined })
+                    }}
+                    suffix={
+                      <>
+                        <Tooltip delay={0}>
+                          <Tooltip.Trigger>
+                            <Button
+                              aria-label={tr('Derive a public key from the age private key')}
+                              isIconOnly
+                              size="sm"
+                              variant="ghost"
+                              onPress={handleDeriveAgeRecipient}
+                            >
+                              <LuArrowRight className="text-lg" />
+                            </Button>
+                          </Tooltip.Trigger>
+                          <Tooltip.Content>
+                            {tr('Derive public key from private key')}
+                          </Tooltip.Content>
+                        </Tooltip>
+                        <Button
+                          aria-label={tr('Copy age public key')}
+                          isIconOnly
+                          size="sm"
+                          variant="ghost"
+                          onPress={() => copyValue(values.ageRecipient, tr('age public key copied'))}
+                        >
+                          <BiCopy className="text-lg" />
+                        </Button>
+                      </>
+                    }
+                  />
                 )}
                 {renderField(
                   tr('age private key'),
-                  <InputGroup data-setting-input="edit-modal" variant="secondary">
-                    <InputGroup.Input
-                      aria-label={tr('age private key')}
-                      type={ageIdentityVisible ? 'text' : 'password'}
-                      value={values.ageIdentity ?? ''}
-                      placeholder="AGE-SECRET-KEY-1..."
-                      onChange={(event) => {
-                        const v = event.target.value
-                        setValues({ ...values, ageIdentity: v.trim() || undefined })
-                      }}
-                    />
-                    <InputGroup.Suffix>
-                      <Button
-                        aria-label={tr('Generate age private key')}
-                        isIconOnly
-                        size="sm"
-                        variant="ghost"
-                        onPress={handleGenerateAgeKeyPair}
-                      >
-                        <LuRefreshCw className="text-lg" />
-                      </Button>
-                      <Button
-                        aria-label={tr('Copy age private key')}
-                        isIconOnly
-                        size="sm"
-                        variant="ghost"
-                        onPress={() => copyValue(values.ageIdentity, tr('age private key copied'))}
-                      >
-                        <BiCopy className="text-lg" />
-                      </Button>
-                      <Button
-                        aria-label={
-                          ageIdentityVisible
-                            ? tr('Hide age private key')
-                            : tr('Show age private key')
-                        }
-                        isIconOnly
-                        size="sm"
-                        variant="ghost"
-                        onPress={() => setAgeIdentityVisible((visible) => !visible)}
-                      >
-                        {ageIdentityVisible ? (
-                          <BiHide className="text-lg" />
-                        ) : (
-                          <BiShow className="text-lg" />
-                        )}
-                      </Button>
-                    </InputGroup.Suffix>
-                  </InputGroup>
+                  <KokoTextField
+                    aria-label={tr('age private key')}
+                    controlWidth="full"
+                    type={ageIdentityVisible ? 'text' : 'password'}
+                    value={values.ageIdentity ?? ''}
+                    placeholder="AGE-SECRET-KEY-1..."
+                    onChangeValue={(value) => {
+                      setValues({ ...values, ageIdentity: value.trim() || undefined })
+                    }}
+                    suffix={
+                      <>
+                        <Button
+                          aria-label={tr('Generate age private key')}
+                          isIconOnly
+                          size="sm"
+                          variant="ghost"
+                          onPress={handleGenerateAgeKeyPair}
+                        >
+                          <LuRefreshCw className="text-lg" />
+                        </Button>
+                        <Button
+                          aria-label={tr('Copy age private key')}
+                          isIconOnly
+                          size="sm"
+                          variant="ghost"
+                          onPress={() => copyValue(values.ageIdentity, tr('age private key copied'))}
+                        >
+                          <BiCopy className="text-lg" />
+                        </Button>
+                        <Button
+                          aria-label={
+                            ageIdentityVisible
+                              ? tr('Hide age private key')
+                              : tr('Show age private key')
+                          }
+                          isIconOnly
+                          size="sm"
+                          variant="ghost"
+                          onPress={() => setAgeIdentityVisible((visible) => !visible)}
+                        >
+                          {ageIdentityVisible ? (
+                            <BiHide className="text-lg" />
+                          ) : (
+                            <BiShow className="text-lg" />
+                          )}
+                        </Button>
+                      </>
+                    }
+                  />
                 )}
                 {values.type === 'remote' &&
                   values.autoUpdate &&
                   renderField(
                     tr('Update interval (minutes)'),
-                    <Input
+                    <KokoTextField
                       aria-label={tr('Update interval (minutes)')}
+                      controlWidth="number"
                       type="number"
-                      data-setting-input="edit-modal-number"
                       value={values.interval?.toString() ?? ''}
-                      variant="secondary"
-                      onChange={(event) => {
-                        setValues({ ...values, interval: parseInt(event.target.value) })
+                      onChangeValue={(value) => {
+                        setValues({ ...values, interval: parseInt(value) })
                       }}
-                      disabled={values.locked}
+                      isDisabled={values.locked}
                     />,
                     {
-                      actions: values.locked ? (
-                        <Tooltip delay={0}>
-                          <Tooltip.Trigger>
-                            <Button
-                              aria-label={tr('Description')}
-                              className="size-7 min-w-7"
-                              isIconOnly
-                              size="sm"
-                              variant="ghost"
-                            >
-                              <IoIosHelpCircle className="text-lg" />
-                            </Button>
-                          </Tooltip.Trigger>
-                          <Tooltip.Content>
-                            {tr('The update interval is managed remotely')}
-                          </Tooltip.Content>
-                        </Tooltip>
-                      ) : undefined
+                      help: values.locked ? tr('The update interval is managed remotely') : undefined
                     }
                   )}
                 {renderField(tr('Overrides'), overrideContent, { align: 'start', divider: false })}

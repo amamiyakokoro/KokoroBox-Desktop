@@ -383,21 +383,18 @@ input[type='number'] {
   width: calc(var(--spacing) * 32);
 }
 
-.setting-item [data-setting-input='edit-modal'] {
-  width: 100%;
-  min-width: 0;
-}
-
-.setting-item [data-setting-input='edit-modal-name'] {
-  width: calc(var(--spacing) * 60);
-}
-
-.setting-item [data-setting-input='edit-modal-number'] {
-  width: calc(var(--spacing) * 40);
-}
-
 .setting-item [data-setting-input='full'] {
   width: 100%;
+}
+
+.modal-setting-item--narrow .setting-item {
+  grid-template-columns: minmax(0, 5.5rem) minmax(0, 1fr);
+  padding-inline: 0;
+}
+
+.modal-setting-item--wide .setting-item {
+  grid-template-columns: minmax(0, 9.375rem) minmax(0, 1fr);
+  padding-inline: 0;
 }
 
 .setting-item__inline-controls {

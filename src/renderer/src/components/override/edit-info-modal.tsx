@@ -1,17 +1,9 @@
 import { tr } from '../../../../shared/i18n'
-import {
-  Button,
-  Input,
-  Label,
-  ListBox,
-  Modal,
-  Select,
-  Separator,
-  Surface,
-  Switch
-} from '@heroui/react'
+import { Button, Modal, Surface, Switch } from '@heroui/react'
 import type { ReactNode } from 'react'
 import React, { useState } from 'react'
+import ModalSettingItem from '../base/base-modal-setting-item'
+import { KokoSelect, KokoTextField } from '../base/koko-form'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { useProfileConfig } from '@renderer/hooks/use-profile-config'
 import { restartCore } from '@renderer/utils/ipc'
@@ -55,29 +47,22 @@ const EditInfoModal: React.FC<Props> = (props) => {
     title: string,
     content: ReactNode,
     options?: {
-      actions?: ReactNode
       align?: 'start' | 'center'
       divider?: boolean
     }
   ) => {
-    const { actions, align = 'center', divider = true } = options || {}
+    const { align = 'center', divider = true } = options || {}
 
     return (
-      <Surface key={title} variant="transparent" className="flex flex-col">
-        <div
-          className={`setting-item px-0 setting-item--content-end ${
-            align === 'start' ? 'setting-item--start' : 'setting-item--center'
-          }`}
-          style={{ gridTemplateColumns: '88px minmax(0, 1fr)' }}
-        >
-          <div className="setting-item__title-wrap">
-            <Label className="setting-item__title">{title}</Label>
-            {actions}
-          </div>
-          <div className="setting-item__content">{content}</div>
-        </div>
-        {divider ? <Separator variant="tertiary" className="bg-surface-secondary/70" /> : null}
-      </Surface>
+      <ModalSettingItem
+        key={title}
+        align={align}
+        divider={divider}
+        labelWidth="narrow"
+        title={title}
+      >
+        {content}
+      </ModalSettingItem>
     )
   }
 
@@ -100,26 +85,24 @@ const EditInfoModal: React.FC<Props> = (props) => {
               <Surface variant="transparent" className="flex flex-col">
                 {renderField(
                   tr('Name'),
-                  <Input
+                  <KokoTextField
                     aria-label={tr('Name')}
-                    data-setting-input="edit-modal-name"
+                    controlWidth="full"
                     value={values.name}
-                    variant="secondary"
-                    onChange={(event) => {
-                      setValues({ ...values, name: event.target.value })
+                    onChangeValue={(value) => {
+                      setValues({ ...values, name: value })
                     }}
                   />
                 )}
                 {values.type === 'remote' &&
                   renderField(
                     tr('Override URL'),
-                    <Input
+                    <KokoTextField
                       aria-label={tr('Override URL')}
-                      data-setting-input="edit-modal"
+                      controlWidth="full"
                       value={values.url || ''}
-                      variant="secondary"
-                      onChange={(event) => {
-                        setValues({ ...values, url: event.target.value })
+                      onChangeValue={(value) => {
+                        setValues({ ...values, url: value })
                       }}
                     />,
                     { align: 'start' }
@@ -127,60 +110,44 @@ const EditInfoModal: React.FC<Props> = (props) => {
                 {values.type === 'remote' &&
                   renderField(
                     tr('Certificate fingerprint'),
-                    <Input
+                    <KokoTextField
                       aria-label={tr('Certificate fingerprint')}
-                      data-setting-input="edit-modal"
+                      controlWidth="full"
                       value={values.fingerprint ?? ''}
-                      variant="secondary"
-                      onChange={(event) => {
-                        const v = event.target.value
-                        setValues({ ...values, fingerprint: v.trim() || undefined })
+                      onChangeValue={(value) => {
+                        setValues({ ...values, fingerprint: value.trim() || undefined })
                       }}
                     />
                   )}
                 {values.type === 'remote' &&
                   renderField(
                     tr('Custom user agent'),
-                    <Input
+                    <KokoTextField
                       aria-label={tr('Custom user agent')}
-                      data-setting-input="edit-modal"
+                      controlWidth="full"
                       value={values.ua ?? ''}
-                      variant="secondary"
-                      onChange={(event) => {
-                        const v = event.target.value
-                        setValues({ ...values, ua: v.trim() || undefined })
+                      onChangeValue={(value) => {
+                        setValues({ ...values, ua: value.trim() || undefined })
                       }}
                     />
                   )}
                 {renderField(
                   tr('File type'),
-                  <Select
+                  <KokoSelect
                     aria-label={tr('File type')}
-                    className="w-40!"
+                    controlWidth="select"
+                    density="compact"
+                    disallowEmptySelection
+                    options={[
+                      { id: 'yaml', label: 'YAML' },
+                      { id: 'js', label: 'JavaScript' }
+                    ]}
                     value={values.ext}
                     variant="secondary"
                     onChange={(value) => {
-                      if (Array.isArray(value) || value == null) return
                       setValues({ ...values, ext: value as 'js' | 'yaml' })
                     }}
-                  >
-                    <Select.Trigger>
-                      <Select.Value />
-                      <Select.Indicator />
-                    </Select.Trigger>
-                    <Select.Popover>
-                      <ListBox>
-                        <ListBox.Item id="yaml" textValue="YAML">
-                          YAML
-                          <ListBox.ItemIndicator />
-                        </ListBox.Item>
-                        <ListBox.Item id="js" textValue="JavaScript">
-                          JavaScript
-                          <ListBox.ItemIndicator />
-                        </ListBox.Item>
-                      </ListBox>
-                    </Select.Popover>
-                  </Select>
+                  />
                 )}
                 {renderField(
                   tr('Global overrides'),

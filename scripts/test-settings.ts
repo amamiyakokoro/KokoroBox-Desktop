@@ -866,6 +866,44 @@ test('profile and override pages share the collection management layout contract
   assert.match(overrideItem, /info\.type === 'remote' \? tr\('Remote'\) : tr\('Local'\)/)
 })
 
+test('profile and override edit modals reuse shared settings form anatomy', () => {
+  const modalSettingItem = readFileSync(
+    'src/renderer/src/components/base/base-modal-setting-item.tsx',
+    'utf8'
+  )
+  const profileModal = readFileSync(
+    'src/renderer/src/components/profiles/edit-info-modal.tsx',
+    'utf8'
+  )
+  const overrideModal = readFileSync(
+    'src/renderer/src/components/override/edit-info-modal.tsx',
+    'utf8'
+  )
+  const styles = readFileSync('src/renderer/src/assets/app-overrides.css', 'utf8')
+
+  assert.match(modalSettingItem, /<SettingItem \{\.\.\.props\} contentAlign="end"/)
+  assert.match(styles, /\.modal-setting-item--narrow \.setting-item/)
+  assert.match(styles, /\.modal-setting-item--wide \.setting-item/)
+  assert.doesNotMatch(styles, /data-setting-input='edit-modal/)
+
+  for (const modal of [profileModal, overrideModal]) {
+    assert.match(modal, /<ModalSettingItem/)
+    assert.match(modal, /<KokoTextField/)
+    assert.doesNotMatch(modal, /gridTemplateColumns|setting-item__title-wrap|<Label|<Separator/)
+    assert.doesNotMatch(modal, /<Input(?:\.|\s)|<InputGroup(?:\.|\s)/)
+  }
+
+  assert.equal((profileModal.match(/<KokoTextField/g) || []).length, 7)
+  assert.match(profileModal, /suffix=\{[\s\S]*handleDeriveAgeRecipient/)
+  assert.match(profileModal, /help: values\.locked/)
+  assert.doesNotMatch(profileModal, /IoIosHelpCircle/)
+  assert.equal((overrideModal.match(/<KokoTextField/g) || []).length, 4)
+  assert.equal((overrideModal.match(/<KokoSelect/g) || []).length, 1)
+  assert.match(overrideModal, /density="compact"/)
+  assert.match(overrideModal, /disallowEmptySelection/)
+  assert.doesNotMatch(overrideModal, /<Select(?:\.|\s)|<ListBox(?:\.|\s)/)
+})
+
 test('Phase 9 card-heavy surfaces use native v3 anatomy and semantic interactions', () => {
   const files = [
     'src/renderer/src/components/rules/rule-item.tsx',
