@@ -12,7 +12,6 @@ export const defaultSiderOrder = [
   'profile',
   'mihomo',
   'rule',
-  'resource',
   'override',
   'log'
 ] as const
@@ -26,14 +25,7 @@ export const currentStatusKeys = new Set<string>([
   'connection',
   'mihomo'
 ])
-export const navigationKeys = new Set<string>([
-  'dns',
-  'sniff',
-  'rule',
-  'resource',
-  'override',
-  'log'
-])
+export const navigationKeys = new Set<string>(['dns', 'sniff', 'rule', 'override', 'log'])
 
 export const groupForSiderKey = (key: string): SiderGroup | undefined => {
   if (quickControlKeys.has(key)) return 'quick'
@@ -45,7 +37,11 @@ export const groupForSiderKey = (key: string): SiderGroup | undefined => {
 
 export const normalizeSiderOrder = (configuredOrder?: string[]): string[] => {
   const knownKeys = new Set<string>(defaultSiderOrder)
-  const uniqueConfigured = (configuredOrder ?? []).filter(
+  const configured = configuredOrder ?? []
+  const migratedOrder = configured.includes('rule')
+    ? configured.filter((key) => key !== 'resource')
+    : configured.map((key) => (key === 'resource' ? 'rule' : key))
+  const uniqueConfigured = migratedOrder.filter(
     (key, index, order) => knownKeys.has(key) && order.indexOf(key) === index
   )
 
@@ -53,4 +49,14 @@ export const normalizeSiderOrder = (configuredOrder?: string[]): string[] => {
     ...uniqueConfigured,
     ...defaultSiderOrder.filter((key) => !uniqueConfigured.includes(key))
   ]
+}
+
+export const resolveRulesCardStatus = (
+  ruleStatus?: CardStatus,
+  legacyResourceStatus?: CardStatus
+): CardStatus => {
+  if (ruleStatus === 'hidden' && legacyResourceStatus === 'hidden') return 'hidden'
+  if (ruleStatus && ruleStatus !== 'hidden') return ruleStatus
+  if (legacyResourceStatus && legacyResourceStatus !== 'hidden') return legacyResourceStatus
+  return 'col-span-1'
 }

@@ -7,6 +7,7 @@ import { useRules } from '@renderer/hooks/use-rules'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import React from 'react'
 import { SiderIconButton, SiderNavItem } from './sider-surfaces'
+import { resolveRulesCardStatus } from './sider-order'
 
 interface Props {
   iconOnly?: boolean
@@ -15,10 +16,14 @@ interface Props {
 const RuleCard: React.FC<Props> = (props) => {
   const { appConfig } = useAppConfig()
   const { iconOnly } = props
-  const { ruleCardStatus = 'col-span-1', disableAnimation = false } = appConfig || {}
+  const { disableAnimation = false } = appConfig || {}
+  const ruleCardStatus = resolveRulesCardStatus(
+    appConfig?.ruleCardStatus,
+    appConfig?.resourceCardStatus
+  )
   const location = useLocation()
   const navigate = useNavigate()
-  const match = location.pathname.includes('/rules')
+  const match = location.pathname.includes('/rules') || location.pathname.includes('/resources')
   const { rules } = useRules()
   const {
     listeners,

@@ -6,7 +6,7 @@ import SettingCard from '../base/base-setting-card'
 import SettingItem from '../base/base-setting-item'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { LuArrowDown, LuArrowUp } from 'react-icons/lu'
-import { normalizeSiderOrder } from '../sider/sider-order'
+import { normalizeSiderOrder, resolveRulesCardStatus } from '../sider/sider-order'
 
 type SiderCardConfigKey =
   | 'sysproxyCardStatus'
@@ -27,6 +27,7 @@ type SiderCardConfigKey =
 interface SiderConfigEntry {
   id: string
   key: SiderCardConfigKey
+  legacyKey?: SiderCardConfigKey
   title: string
   defaultStatus: Exclude<CardStatus, 'hidden'>
   supported?: boolean
@@ -119,13 +120,8 @@ const SiderConfig: React.FC = () => {
         {
           id: 'rule',
           key: 'ruleCardStatus',
+          legacyKey: 'resourceCardStatus',
           title: tr('Rules'),
-          defaultStatus: 'col-span-1'
-        },
-        {
-          id: 'resource',
-          key: 'resourceCardStatus',
-          title: tr('Rule collections'),
           defaultStatus: 'col-span-1'
         },
         {
@@ -175,7 +171,10 @@ const SiderConfig: React.FC = () => {
         return (
           <SettingCard key={group.title} header={group.title}>
             {entries.map((item, index) => {
-              const status = appConfig?.[item.key] ?? item.defaultStatus
+              const status =
+                item.id === 'rule'
+                  ? resolveRulesCardStatus(appConfig?.ruleCardStatus, appConfig?.resourceCardStatus)
+                  : (appConfig?.[item.key] ?? item.defaultStatus)
               const canReorder = group.reorderable !== false && entries.length > 1
               return (
                 <SettingItem
@@ -224,8 +223,10 @@ const SiderConfig: React.FC = () => {
                       aria-label={item.title}
                       isSelected={status !== 'hidden'}
                       onChange={(visible) => {
+                        const nextStatus = visible ? item.defaultStatus : 'hidden'
                         void patchAppConfig({
-                          [item.key]: visible ? item.defaultStatus : 'hidden'
+                          [item.key]: nextStatus,
+                          ...(item.legacyKey ? { [item.legacyKey]: 'hidden' } : {})
                         })
                       }}
                     >

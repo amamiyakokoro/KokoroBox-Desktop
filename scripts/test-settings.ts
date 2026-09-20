@@ -6,7 +6,8 @@ import {
   accountKeys,
   groupForSiderKey,
   navigationKeys,
-  normalizeSiderOrder
+  normalizeSiderOrder,
+  resolveRulesCardStatus
 } from '../src/renderer/src/components/sider/sider-order.ts'
 import { normalizeCoreVersion } from '../src/renderer/src/components/sider/core-version.ts'
 import {
@@ -1131,6 +1132,8 @@ test('desktop sidebar separates controls, live status and navigation', () => {
   assert.equal(groupForSiderKey('dns'), 'navigation')
   assert.deepEqual([...accountKeys], ['kokoro'])
   assert.equal(navigationKeys.has('kokoro'), false)
+  assert.equal(navigationKeys.has('rule'), true)
+  assert.equal(navigationKeys.has('resource'), false)
   assert.notEqual(groupForSiderKey('sysproxy'), groupForSiderKey('profile'))
   assert.deepEqual(normalizeSiderOrder(['tun', 'sysproxy', 'tun', 'unknown']).slice(0, 2), [
     'tun',
@@ -1141,6 +1144,20 @@ test('desktop sidebar separates controls, live status and navigation', () => {
     'kokoro',
     'proxy'
   ])
+  assert.deepEqual(normalizeSiderOrder(['dns', 'resource', 'proxy']).slice(0, 3), [
+    'dns',
+    'rule',
+    'proxy'
+  ])
+  assert.deepEqual(normalizeSiderOrder(['resource', 'dns', 'rule', 'proxy']).slice(0, 3), [
+    'dns',
+    'rule',
+    'proxy'
+  ])
+  assert.equal(resolveRulesCardStatus('hidden', 'hidden'), 'hidden')
+  assert.equal(resolveRulesCardStatus('hidden', undefined), 'col-span-1')
+  assert.equal(resolveRulesCardStatus(undefined, 'hidden'), 'col-span-1')
+  assert.equal(resolveRulesCardStatus('col-span-1', 'hidden'), 'col-span-1')
   assert.equal(normalizeCoreVersion(' v1.19.31 '), 'v1.19.31')
   assert.equal(normalizeCoreVersion('mihomo v1.19.31 linux amd64'), 'v1.19.31')
   assert.equal(normalizeCoreVersion('Meta v1.19.31-abcdef'), 'v1.19.31')
@@ -1374,6 +1391,14 @@ test('Kokoro account options and default rules use clear desktop sections and sa
 
 test('operational lists use compact hierarchy without changing their behavior', () => {
   const rulesPage = readFileSync('src/renderer/src/pages/rules.tsx', 'utf8')
+  const rulesWorkspace = readFileSync(
+    'src/renderer/src/components/rules/rules-workspace.tsx',
+    'utf8'
+  )
+  const routingRulesView = readFileSync(
+    'src/renderer/src/components/rules/routing-rules-view.tsx',
+    'utf8'
+  )
   const ruleItem = readFileSync('src/renderer/src/components/rules/rule-item.tsx', 'utf8')
   const resourcesPage = readFileSync('src/renderer/src/pages/resources.tsx', 'utf8')
   const geoData = readFileSync('src/renderer/src/components/settings/geo-data-settings.tsx', 'utf8')
@@ -1397,14 +1422,32 @@ test('operational lists use compact hierarchy without changing their behavior', 
   )
   const logsPage = readFileSync('src/renderer/src/pages/logs.tsx', 'utf8')
   const logItem = readFileSync('src/renderer/src/components/logs/log-item.tsx', 'utf8')
-  const resourceCard = readFileSync('src/renderer/src/components/sider/resource-card.tsx', 'utf8')
+  const ruleCard = readFileSync('src/renderer/src/components/sider/rule-card.tsx', 'utf8')
+  const siderCards = readFileSync('src/renderer/src/components/sider/sider-cards.tsx', 'utf8')
   const sidebarSettings = readFileSync(
     'src/renderer/src/components/settings/sider-config.tsx',
     'utf8'
   )
   const routes = readFileSync('src/renderer/src/routes/index.tsx', 'utf8')
 
-  assert.match(rulesPage, /<Virtuoso/)
+  assert.match(rulesPage, /<RulesWorkspace view="routing" \/>/)
+  assert.match(resourcesPage, /<RulesWorkspace view="collections" \/>/)
+  assert.match(rulesWorkspace, /<BasePage title=\{tr\('Rules'\)\}/)
+  assert.match(rulesWorkspace, /<KokoTabs/)
+  assert.match(rulesWorkspace, /variant="secondary"/)
+  assert.match(rulesWorkspace, /density="toolbar"/)
+  assert.match(rulesWorkspace, /selectionStyle="accent-underline"/)
+  assert.match(rulesWorkspace, /\{ id: 'routing', label: tr\('Routing rules'\) \}/)
+  assert.match(rulesWorkspace, /\{ id: 'collections', label: tr\('Rule collections'\) \}/)
+  assert.match(rulesWorkspace, /navigate\(key === 'collections' \? '\/resources' : '\/rules'\)/)
+  assert.match(rulesWorkspace, /view === 'routing' \? <RoutingRulesView \/> : <RuleProvider \/>/)
+  assert.match(routingRulesView, /<Virtuoso/)
+  assert.match(routingRulesView, /<KokoToolbar/)
+  assert.match(routingRulesView, /<KokoSearchField/)
+  assert.match(routingRulesView, /const query = filter\.trim\(\)/)
+  assert.match(routingRulesView, /includesIgnoreCase\(rule\.payload, query\)/)
+  assert.match(routingRulesView, /includesIgnoreCase\(rule\.type, query\)/)
+  assert.match(routingRulesView, /includesIgnoreCase\(rule\.proxy, query\)/)
   assert.match(ruleItem, /<Card className="rule-list-card" data-enabled=\{isEnabled\}>/)
   assert.match(ruleItem, /<Card\.Content className="rule-list-card__content">/)
   assert.match(ruleItem, /<Chip size="sm" variant="soft" color="default"/)
@@ -1429,9 +1472,7 @@ test('operational lists use compact hierarchy without changing their behavior', 
   assert.match(ruleItem, /aria-label=\{`\$\{tr\('Enable rule'\)\}:/)
   assert.match(ruleItem, /mihomoRulesDisable/)
 
-  assert.match(resourcesPage, /className="resource-page[^"]*max-w-\[68rem\]/)
-  assert.match(resourcesPage, /title=\{tr\('Rule collections'\)\}/)
-  assert.match(resourcesPage, /<RuleProvider \/>/)
+  assert.match(resourcesPage, /<RulesWorkspace view="collections" \/>/)
   assert.doesNotMatch(resourcesPage, /GeoData|ProxyProvider/)
   assert.match(geoData, /<FeatureSettingsLayout>/)
   assert.match(geoData, /<FeatureSettingsSection title=\{tr\('Database sources'\)\}>/)
@@ -1459,14 +1500,33 @@ test('operational lists use compact hierarchy without changing their behavior', 
   assert.match(ruleProvider, /<ResourceProviderRow/)
   assert.match(ruleProvider, /tr\('\{0\} rules', \[provider\.ruleCount\]\)/)
   assert.match(ruleProvider, /provider\.vehicleType\} · \$\{provider\.behavior\}/)
-  assert.match(ruleProvider, /variant="ghost"[\s\S]*tr\('Update all'\)/)
+  assert.match(ruleProvider, /<KokoToolbar/)
+  assert.match(ruleProvider, /<KokoSearchField/)
+  assert.match(ruleProvider, /<KokoToolbarIconButton/)
+  assert.match(ruleProvider, /label=\{tr\('Update all'\)\}/)
+  assert.match(ruleProvider, /<LuRefreshCw/)
+  assert.match(ruleProvider, /updatingAll \? 'animate-spin' : ''/)
+  assert.match(
+    ruleProvider,
+    /\[provider\.name, provider\.vehicleType, provider\.behavior, provider\.format\]/
+  )
+  assert.match(ruleProvider, /includesIgnoreCase\(value \|\| '', query\)/)
+  assert.match(ruleProvider, /tr\('No rule collections match this search\.'\)/)
+  assert.match(ruleProvider, /tr\('No rule collections yet'\)/)
+  assert.doesNotMatch(ruleProvider, /<ResourceSection/)
   assert.doesNotMatch(ruleProvider, /title=\{tr\('Rule providers'\)\}/)
   assert.doesNotMatch(ruleProvider, /SettingCard|SettingItem|<Chip|::/)
   assert.match(ruleProvider, /mihomoUpdateRuleProviders/)
   assert.match(routes, /path: 'resources'[\s\S]*<Resources \/>/)
-  assert.match(resourceCard, /tr\('Rule collections'\)/)
-  assert.match(resourceCard, /navigate\('\/resources'\)/)
-  assert.match(sidebarSettings, /title: tr\('Rule collections'\)/)
+  assert.match(routes, /path: 'rules'[\s\S]*<Rules \/>/)
+  assert.match(
+    ruleCard,
+    /location\.pathname\.includes\('\/rules'\) \|\| location\.pathname\.includes\('\/resources'\)/
+  )
+  assert.match(ruleCard, /onPress=\{\(\) => navigate\('\/rules'\)\}/)
+  assert.doesNotMatch(siderCards, /ResourceCard|resource: ResourceCard/)
+  assert.match(sidebarSettings, /legacyKey: 'resourceCardStatus'/)
+  assert.doesNotMatch(sidebarSettings, /title: tr\('Rule collections'\)/)
 
   assert.match(overridesPage, /<CollectionGrid>/)
   assert.doesNotMatch(overridesPage, /lg:grid-cols-3|xl:grid-cols-4/)
