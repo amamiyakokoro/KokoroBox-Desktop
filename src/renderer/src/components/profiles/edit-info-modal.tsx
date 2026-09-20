@@ -215,13 +215,13 @@ const EditInfoModal: React.FC<Props> = (props) => {
         className="top-12 h-[calc(100%-48px)]"
       >
         <Modal.Container scroll="inside">
-          <Modal.Dialog className="w-[min(600px,calc(100%-24px))] max-w-none">
+          <Modal.Dialog className="w-[600px] max-w-[calc(100vw-32px)]">
             <Modal.Header className="app-drag pb-1">
               <Modal.Heading>
                 {item.id ? tr('Edit details') : tr('Import remote configuration')}
               </Modal.Heading>
             </Modal.Header>
-            <Modal.Body className="no-scrollbar max-h-[70vh] overflow-y-auto pt-1 pb-2">
+            <Modal.Body className="no-scrollbar max-h-[70vh] min-w-0 overflow-x-hidden overflow-y-auto pt-1 pb-2">
               <Surface variant="transparent" className="flex flex-col">
                 {renderField(
                   tr('Name'),
