@@ -1009,84 +1009,86 @@ const Connections: React.FC = () => {
             ]}
             onChange={handleTabChange}
           />
-          <Tooltip delay={0} isOpen={Boolean(compiledFilter.error)}>
-            <Tooltip.Trigger className="relative min-w-36 flex-1">
-              <div className="relative min-w-0 flex-1">
-                <InputGroup
-                  variant="secondary"
-                  data-invalid={Boolean(compiledFilter.error) || undefined}
-                  className="h-9 min-h-9"
-                >
-                  <InputGroup.Prefix className="h-full items-center">
-                    <LuSearch aria-hidden="true" className="shrink-0 text-foreground-400" />
-                  </InputGroup.Prefix>
-                  <InputGroup.Input
-                    ref={filterInputRef}
-                    className="h-9 py-0 font-mono text-sm tracking-normal focus-visible:outline-none"
-                    value={filter}
-                    placeholder={tr('Filter')}
-                    aria-invalid={Boolean(compiledFilter.error) || undefined}
-                    onChange={(event) => handleFilterValueChange(event.target.value)}
-                    onKeyDown={handleFilterKeyDown}
-                    onFocus={() => {
-                      setIsFilterFocused(true)
-                      requestAnimationFrame(() => syncFilterCursor())
-                    }}
-                    onBlur={() => {
-                      setCompletionSession(null)
-                      requestAnimationFrame(() => {
-                        const activeElement = document.activeElement
-                        if (activeElement !== filterInputRef.current) {
-                          setIsFilterFocused(false)
-                        }
-                      })
-                    }}
-                    onClick={() => {
-                      setCompletionSession(null)
-                      syncFilterCursor()
-                    }}
-                    onKeyUp={() => syncFilterCursor()}
-                    onSelect={handleFilterSelect}
-                  />
-                  {filter ? (
-                    <InputGroup.Suffix>
-                      <Button
-                        aria-label={tr('Clear field')}
-                        className="size-6 min-w-6"
-                        isIconOnly
-                        size="sm"
-                        variant="ghost"
-                        onPress={() => handleFilterValueChange('')}
+          <div className="relative min-w-36 flex-1">
+            <Tooltip delay={0} isOpen={Boolean(compiledFilter.error)}>
+              <Tooltip.Trigger className="block w-full">
+                <div className="relative w-full">
+                  <InputGroup
+                    variant="secondary"
+                    data-invalid={Boolean(compiledFilter.error) || undefined}
+                    className="h-9 min-h-9 w-full"
+                  >
+                    <InputGroup.Prefix className="h-full items-center">
+                      <LuSearch aria-hidden="true" className="shrink-0 text-foreground-400" />
+                    </InputGroup.Prefix>
+                    <InputGroup.Input
+                      ref={filterInputRef}
+                      className="h-9 py-0 font-mono text-sm tracking-normal focus-visible:outline-none"
+                      value={filter}
+                      placeholder={tr('Filter')}
+                      aria-invalid={Boolean(compiledFilter.error) || undefined}
+                      onChange={(event) => handleFilterValueChange(event.target.value)}
+                      onKeyDown={handleFilterKeyDown}
+                      onFocus={() => {
+                        setIsFilterFocused(true)
+                        requestAnimationFrame(() => syncFilterCursor())
+                      }}
+                      onBlur={() => {
+                        setCompletionSession(null)
+                        requestAnimationFrame(() => {
+                          const activeElement = document.activeElement
+                          if (activeElement !== filterInputRef.current) {
+                            setIsFilterFocused(false)
+                          }
+                        })
+                      }}
+                      onClick={() => {
+                        setCompletionSession(null)
+                        syncFilterCursor()
+                      }}
+                      onKeyUp={() => syncFilterCursor()}
+                      onSelect={handleFilterSelect}
+                    />
+                    {filter ? (
+                      <InputGroup.Suffix>
+                        <Button
+                          aria-label={tr('Clear field')}
+                          className="size-6 min-w-6"
+                          isIconOnly
+                          size="sm"
+                          variant="ghost"
+                          onPress={() => handleFilterValueChange('')}
+                        >
+                          <CgClose />
+                        </Button>
+                      </InputGroup.Suffix>
+                    ) : null}
+                  </InputGroup>
+                  {inlineCompletionSuffix ? (
+                    <div className="pointer-events-none absolute top-1/2 left-10 right-10 z-10 flex -translate-y-1/2 items-center overflow-hidden font-mono text-sm tracking-normal">
+                      <div
+                        className="flex items-center whitespace-pre"
+                        style={{ transform: `translateX(-${filterScrollLeft}px)` }}
                       >
-                        <CgClose />
-                      </Button>
-                    </InputGroup.Suffix>
-                  ) : null}
-                </InputGroup>
-                {inlineCompletionSuffix ? (
-                  <div className="pointer-events-none absolute top-1/2 left-10 right-10 z-10 flex -translate-y-1/2 items-center overflow-hidden font-mono text-sm tracking-normal">
-                    <div
-                      className="flex items-center whitespace-pre"
-                      style={{ transform: `translateX(-${filterScrollLeft}px)` }}
-                    >
-                      <span className="invisible whitespace-pre">{filter}</span>
-                      <span className="whitespace-pre text-foreground-400/55">
-                        {inlineCompletionSuffix}
-                      </span>
+                        <span className="invisible whitespace-pre">{filter}</span>
+                        <span className="whitespace-pre text-foreground-400/55">
+                          {inlineCompletionSuffix}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                ) : null}
-              </div>
-            </Tooltip.Trigger>
-            <Tooltip.Content
-              className="bg-danger text-danger-foreground"
-              placement="left"
-              showArrow
-              offset={10}
-            >
-              {compiledFilter.error ?? tr('Invalid format')}
-            </Tooltip.Content>
-          </Tooltip>
+                  ) : null}
+                </div>
+              </Tooltip.Trigger>
+              <Tooltip.Content
+                className="bg-danger text-danger-foreground"
+                placement="left"
+                showArrow
+                offset={10}
+              >
+                {compiledFilter.error ?? tr('Invalid format')}
+              </Tooltip.Content>
+            </Tooltip>
+          </div>
 
           <KokoSelect
             aria-label={tr('Sort field')}

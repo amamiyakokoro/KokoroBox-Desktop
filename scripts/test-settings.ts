@@ -1157,6 +1157,14 @@ test('connection rows stay dense while preserving realtime data and grouped acti
   assert.match(page, /connectionInterval = 500/)
   assert.match(page, /<KokoToolbar aria-label=\{tr\('Connections'\)\}>/)
   assert.match(page, /<InputGroup\.Prefix[\s\S]*<LuSearch/)
+  assert.match(
+    page,
+    /<div className="relative min-w-36 flex-1">[\s\S]*<Tooltip delay=\{0\} isOpen=\{Boolean\(compiledFilter\.error\)\}>/
+  )
+  assert.match(page, /<Tooltip\.Trigger className="block w-full">/)
+  assert.match(page, /<div className="relative w-full">[\s\S]*<InputGroup/)
+  assert.match(page, /className="h-9 min-h-9 w-full"/)
+  assert.doesNotMatch(page, /Tooltip\.Trigger className="relative min-w-36 flex-1"/)
   assert.match(page, /filterInputRef/)
   assert.match(page, /inlineCompletionSuffix/)
   assert.match(page, /filterScrollLeft/)
