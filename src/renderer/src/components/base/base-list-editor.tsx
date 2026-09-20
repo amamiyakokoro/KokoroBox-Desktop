@@ -1,6 +1,6 @@
 import { tr } from '../../../../shared/i18n'
 import React from 'react'
-import { Button, Separator, Tooltip } from '@heroui/react'
+import { Button, Separator, Tooltip, cn } from '@heroui/react'
 import { KokoTextField } from './koko-form'
 import { MdDeleteForever } from 'react-icons/md'
 import type { ValidationResult } from '@renderer/utils/validate'
@@ -8,6 +8,7 @@ import type { ValidationResult } from '@renderer/utils/validate'
 interface ValidatedInputProps {
   disabled?: boolean
   error?: string
+  inputClassName?: string
   isValid: boolean
   onChange: (value: string) => void
   placeholder: string
@@ -17,6 +18,7 @@ interface ValidatedInputProps {
 const ValidatedInput: React.FC<ValidatedInputProps> = ({
   disabled,
   error,
+  inputClassName,
   isValid,
   onChange,
   placeholder,
@@ -26,6 +28,7 @@ const ValidatedInput: React.FC<ValidatedInputProps> = ({
     <Tooltip.Trigger className="block min-w-0 w-full">
       <KokoTextField
         className="w-full"
+        classNames={{ input: inputClassName }}
         isDisabled={disabled}
         isInvalid={!isValid}
         placeholder={placeholder}
@@ -57,6 +60,11 @@ interface EditableListProps {
   disableFirst?: boolean
   divider?: boolean
   objectMode?: 'keyValue' | 'array' | 'record'
+  layout?: 'inline' | 'key-value'
+  part1Label?: string
+  part2Label?: string
+  inputClassName?: string
+  newItemAppearance?: 'default' | 'subtle'
   validate?: (part1: string, part2?: string) => boolean | ValidationResult
   validatePart1?: (part1: string) => boolean | ValidationResult
   validatePart2?: (part2: string) => boolean | ValidationResult
@@ -73,11 +81,17 @@ const EditableList: React.FC<EditableListProps> = ({
   disableFirst = false,
   divider = true,
   objectMode,
+  layout = 'inline',
+  part1Label,
+  part2Label,
+  inputClassName,
+  newItemAppearance = 'default',
   validate,
   validatePart1,
   validatePart2
 }) => {
   const isDual = !!parse && !!format
+  const isKeyValueLayout = layout === 'key-value' && (isDual || Boolean(objectMode))
 
   let processedItems: Array<{ part1: string; part2?: string }> = []
 
@@ -152,8 +166,20 @@ const EditableList: React.FC<EditableListProps> = ({
 
   return (
     <>
-      <div className={`flex flex-col space-y-2 ${!title ? 'mt-2' : ''}`}>
+      <div
+        className={cn(
+          'flex flex-col space-y-2',
+          !title && 'mt-2',
+          isKeyValueLayout && 'editable-list-key-value'
+        )}
+      >
         {title && <h4 className="text-base font-medium">{title}</h4>}
+        {isKeyValueLayout && part1Label && part2Label ? (
+          <div className="editable-list-key-value__header text-xs font-medium text-foreground-500">
+            <span>{part1Label}</span>
+            <span>{part2Label}</span>
+          </div>
+        ) : null}
         {displayed.map((entry, idx) => {
           const disabled = disableFirst && idx === 0
           const isExtra = idx === processedItems.length
@@ -197,14 +223,83 @@ const EditableList: React.FC<EditableListProps> = ({
           const part1Error = validatePart1 ? validation1.error : validation.error
           const part2Error = validatePart2 ? validation2.error : validation.error
 
+          if (isKeyValueLayout) {
+            return (
+              <div
+                key={idx}
+                className={cn(
+                  'editable-list-key-value__row grid min-w-0 gap-2',
+                  isExtra &&
+                    'rounded-lg border border-dashed border-separator/70 bg-surface-secondary/25 p-2'
+                )}
+                data-new-item={isExtra || undefined}
+              >
+                <div className="editable-list-key-value__field editable-list-key-value__field--key min-w-0">
+                  {part1Label ? (
+                    <span className="editable-list-key-value__field-label mb-1 block text-xs text-foreground-500">
+                      {part1Label}
+                    </span>
+                  ) : null}
+                  <ValidatedInput
+                    disabled={disabled}
+                    error={part1Error}
+                    inputClassName={inputClassName}
+                    isValid={part1Valid}
+                    placeholder={placeholder}
+                    value={entry.part1}
+                    onChange={(value) => handleUpdate(idx, value, entry.part2)}
+                  />
+                </div>
+                <div className="editable-list-key-value__field editable-list-key-value__field--value min-w-0">
+                  {part2Label ? (
+                    <span className="editable-list-key-value__field-label mb-1 block text-xs text-foreground-500">
+                      {part2Label}
+                    </span>
+                  ) : null}
+                  <ValidatedInput
+                    disabled={disabled}
+                    error={part2Error}
+                    inputClassName={inputClassName}
+                    isValid={part2Valid}
+                    placeholder={part2Placeholder}
+                    value={entry.part2 || ''}
+                    onChange={(value) => handleUpdate(idx, entry.part1, value)}
+                  />
+                </div>
+                {idx < processedItems.length && !disabled ? (
+                  <Button
+                    aria-label={tr('Delete')}
+                    className="editable-list-key-value__delete h-8 min-h-8 w-8 min-w-8 shrink-0 rounded-lg text-danger/70 hover:bg-danger/10 hover:text-danger focus-visible:bg-danger/10 focus-visible:text-danger"
+                    isIconOnly
+                    size="sm"
+                    variant="ghost"
+                    onPress={() => handleUpdate(idx, '', '')}
+                  >
+                    <MdDeleteForever className="text-lg" />
+                  </Button>
+                ) : null}
+              </div>
+            )
+          }
+
           return (
-            <div key={idx} className="flex min-w-0 items-center gap-2">
+            <div
+              key={idx}
+              className={cn(
+                'flex min-w-0 items-center gap-2',
+                isExtra &&
+                  newItemAppearance === 'subtle' &&
+                  'rounded-lg border border-dashed border-separator/70 bg-surface-secondary/25 p-2'
+              )}
+              data-new-item={isExtra || undefined}
+            >
               {isDual || objectMode ? (
                 <>
                   <div className="min-w-0 w-1/3">
                     <ValidatedInput
                       disabled={disabled}
                       error={part1Error}
+                      inputClassName={inputClassName}
                       isValid={part1Valid}
                       placeholder={placeholder}
                       value={entry.part1}
@@ -216,6 +311,7 @@ const EditableList: React.FC<EditableListProps> = ({
                     <ValidatedInput
                       disabled={disabled}
                       error={part2Error}
+                      inputClassName={inputClassName}
                       isValid={part2Valid}
                       placeholder={part2Placeholder}
                       value={entry.part2 || ''}
@@ -227,6 +323,7 @@ const EditableList: React.FC<EditableListProps> = ({
                 <ValidatedInput
                   disabled={disabled}
                   error={part1Error}
+                  inputClassName={inputClassName}
                   isValid={part1Valid}
                   placeholder={placeholder}
                   value={entry.part1}

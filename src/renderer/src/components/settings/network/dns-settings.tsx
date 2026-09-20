@@ -342,10 +342,11 @@ const DNS: React.FC<Props> = ({ embedded = false }) => {
           <FeatureSettingsSection title={tr('Fake IP settings')}>
             <SettingItem title={tr('Fake IP range (IPv4)')} divider>
               <Tooltip delay={0} isOpen={!!fakeIPRangeError}>
-                <Tooltip.Trigger className="inline-flex w-[40%]">
+                <Tooltip.Trigger className="inline-flex w-full max-w-72">
                   <Input
                     size="sm"
-                    className="w-full"
+                    controlWidth="full"
+                    classNames={{ input: 'font-mono' }}
                     isInvalid={Boolean(fakeIPRangeError)}
                     placeholder={tr('Example: 198.18.0.1/16')}
                     value={values.fakeIPRange}
@@ -369,10 +370,11 @@ const DNS: React.FC<Props> = ({ embedded = false }) => {
             {values.ipv6 && (
               <SettingItem title={tr('Fake IP range (IPv6)')} divider>
                 <Tooltip delay={0} isOpen={!!fakeIPRange6Error}>
-                  <Tooltip.Trigger className="inline-flex w-[40%]">
+                  <Tooltip.Trigger className="inline-flex w-full max-w-72">
                     <Input
                       size="sm"
-                      className="w-full"
+                      controlWidth="full"
+                      classNames={{ input: 'font-mono' }}
                       isInvalid={Boolean(fakeIPRange6Error)}
                       placeholder={tr('Example: fc00::/18')}
                       value={values.fakeIPRange6}
@@ -442,6 +444,8 @@ const DNS: React.FC<Props> = ({ embedded = false }) => {
                 )
               }}
               placeholder={tr('Example: +.lan')}
+              inputClassName="font-mono"
+              newItemAppearance="subtle"
               divider={false}
             />
           </FeatureSettingsSection>
@@ -463,6 +467,8 @@ const DNS: React.FC<Props> = ({ embedded = false }) => {
               )
             }}
             placeholder={tr('Example: 223.5.5.5')}
+            inputClassName="font-mono"
+            newItemAppearance="subtle"
           />
           <DnsServerList
             title={tr('Default DNS servers')}

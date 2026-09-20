@@ -62,3 +62,63 @@ test('global DNS rule routing hides redundant per-server connection selectors', 
   assert.match(page, /followRoutingRules=\{values\.respectRules\}/)
   assert.match(advanced, /followRoutingRules=\{respectRules\}/)
 })
+
+test('DNS settings use sectioned, container-responsive list editors', () => {
+  const page = readFileSync('src/renderer/src/components/settings/network/dns-settings.tsx', 'utf8')
+  const advanced = readFileSync(
+    'src/renderer/src/components/dns/advanced-dns-setting.tsx',
+    'utf8'
+  )
+  const servers = readFileSync('src/renderer/src/components/dns/dns-server-list.tsx', 'utf8')
+  const editor = readFileSync(
+    'src/renderer/src/components/base/base-list-editor.tsx',
+    'utf8'
+  )
+  const styles = readFileSync('src/renderer/src/assets/app-overrides.css', 'utf8')
+
+  assert.match(page, /FeatureSettingsSection title=\{tr\('DNS behavior'\)\}/)
+  assert.match(page, /FeatureSettingsSection title=\{tr\('Fake IP settings'\)\}/)
+  assert.match(page, /FeatureSettingsSection title=\{tr\('DNS servers'\)\}/)
+  assert.match(advanced, /FeatureSettingsSection title=\{tr\('DNS routing'\)\}/)
+  assert.match(advanced, /FeatureSettingsSection title=\{tr\('Advanced options'\)\}/)
+  assert.doesNotMatch(advanced, /SettingCard|Advanced DNS settings/)
+
+  assert.match(advanced, /layout="key-value"/)
+  assert.match(advanced, /part1Label=\{tr\('Domain or rule'\)\}/)
+  assert.match(advanced, /part2Label=\{tr\('DNS servers'\)\}/)
+  assert.match(editor, /layout\?: 'inline' \| 'key-value'/)
+  assert.match(editor, /editable-list-key-value__row grid min-w-0 gap-2/)
+  assert.match(editor, /data-new-item=\{isExtra \|\| undefined\}/)
+
+  const keyValueBranch = editor.slice(
+    editor.indexOf('if (isKeyValueLayout)'),
+    editor.indexOf("'flex min-w-0 items-center gap-2'")
+  )
+  assert.doesNotMatch(keyValueBranch, />:<\/span>/)
+  assert.doesNotMatch(keyValueBranch, /w-1\/3/)
+
+  assert.match(servers, /dns-server-list__row grid min-w-0 items-end gap-2/)
+  assert.doesNotMatch(servers, /flex-wrap/)
+  assert.doesNotMatch(servers, /className="w-30"/)
+  assert.match(servers, /controlWidth="select"/)
+  assert.match(servers, /variant="ghost"/)
+  assert.match(servers, /text-danger\/70/)
+  assert.doesNotMatch(servers, /text-warning/)
+
+  assert.match(styles, /\.editable-list-key-value,[\s\S]*\.dns-server-list \{[\s\S]*container-type: inline-size/)
+  assert.match(styles, /@container \(min-width: 36rem\)/)
+  assert.match(styles, /minmax\(10rem, 0\.8fr\) minmax\(16rem, 1\.8fr\) auto/)
+  assert.match(styles, /minmax\(16rem, 1fr\) minmax\(10rem, 14rem\) auto/)
+
+  for (const source of [page, advanced, servers]) {
+    assert.doesNotMatch(source, /\bw-(?:28|30|32)\b|w-\[40%\]/)
+  }
+  assert.match(page, /controlWidth="full"/)
+  assert.match(advanced, /controlWidth="short"/)
+  assert.match(advanced, /controlWidth="select"/)
+
+  assert.match(page, /useUnsavedChangesGuard/)
+  assert.match(page, /restartCore\(\)/)
+  assert.match(advanced, /isValidDnsServer/)
+  assert.match(advanced, /isValidDomainWildcard/)
+})

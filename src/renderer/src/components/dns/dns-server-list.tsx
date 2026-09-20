@@ -5,7 +5,7 @@ import {
   type DnsServerEndpoint
 } from '../../../../shared/dns-server'
 import { isValidDnsServer, type ValidationResult } from '@renderer/utils/validate'
-import { Button, Tooltip } from '@heroui/react'
+import { Button, Tooltip, cn } from '@heroui/react'
 import { KokoSelect, KokoTextField as Input } from '../base/koko-form'
 import React from 'react'
 import { MdDeleteForever } from 'react-icons/md'
@@ -58,7 +58,7 @@ const DnsServerList: React.FC<DnsServerListProps> = ({
   const displayed = [...endpoints, { address: '', connection: 'direct' as const, parameters: [] }]
 
   return (
-    <div className={divider ? 'border-b border-divider pb-4' : ''}>
+    <div className={cn('dns-server-list min-w-0', divider && 'border-b border-divider pb-4')}>
       <h4 className="mb-2 text-base font-medium">{title}</h4>
       <p className="mb-3 text-xs text-foreground-500">
         {followRoutingRules
@@ -77,15 +77,22 @@ const DnsServerList: React.FC<DnsServerListProps> = ({
           return (
             <div
               key={`${index}-${items[index] ?? 'new'}`}
-              className="flex flex-wrap items-center gap-2"
+              className={cn(
+                'dns-server-list__row grid min-w-0 items-end gap-2',
+                isExtra &&
+                  'rounded-lg border border-dashed border-separator/70 bg-surface-secondary/25 p-2'
+              )}
+              data-has-connection={!ipOnly && !followRoutingRules ? 'true' : undefined}
+              data-new-item={isExtra || undefined}
             >
               <Tooltip delay={0} isOpen={!validation.ok}>
-                <Tooltip.Trigger className="inline-flex min-w-0 flex-1">
+                <Tooltip.Trigger className="dns-server-list__field inline-flex min-w-0 w-full">
                   <Input
                     aria-label={tr('DNS server')}
                     size="sm"
-                    className="min-w-52 flex-1"
+                    controlWidth="full"
                     classNames={{
+                      input: 'font-mono',
                       inputWrapper: validation.ok ? '' : 'border-danger ring-1 ring-danger'
                     }}
                     placeholder={placeholder}
@@ -102,30 +109,30 @@ const DnsServerList: React.FC<DnsServerListProps> = ({
                 </Tooltip.Content>
               </Tooltip>
               {!ipOnly && !followRoutingRules && (
-                <>
-                  <KokoSelect
-                    aria-label={tr('Connection')}
-                    variant="secondary"
-                    className="w-30"
-                    value={endpoint.connection === 'proxy' ? 'direct' : endpoint.connection}
-                    options={connectionChoices.map(({ key, label }) => ({ id: key, label }))}
-                    disallowEmptySelection
-                    onChange={(connection) =>
-                      update(index, {
-                        ...endpoint,
-                        connection: connection as 'direct' | 'rules',
-                        proxyName: undefined
-                      })
-                    }
-                  />
-                </>
+                <KokoSelect
+                  aria-label={tr('Connection')}
+                  className="dns-server-list__connection"
+                  controlWidth="select"
+                  density="compact"
+                  variant="secondary"
+                  value={endpoint.connection === 'proxy' ? 'direct' : endpoint.connection}
+                  options={connectionChoices.map(({ key, label }) => ({ id: key, label }))}
+                  disallowEmptySelection
+                  onChange={(connection) =>
+                    update(index, {
+                      ...endpoint,
+                      connection: connection as 'direct' | 'rules',
+                      proxyName: undefined
+                    })
+                  }
+                />
               )}
               {!isExtra && (
                 <Button
                   isIconOnly
                   size="sm"
-                  className="text-warning-700 dark:text-warning-400"
-                  variant="secondary"
+                  className="dns-server-list__delete text-danger/70 hover:bg-danger/10 hover:text-danger focus-visible:bg-danger/10 focus-visible:text-danger"
+                  variant="ghost"
                   aria-label={tr('Delete')}
                   onPress={() => update(index, { ...endpoint, address: '' })}
                 >
