@@ -163,6 +163,7 @@ export default function SiderCards({ iconOnly = false }: Props): React.JSX.Eleme
     })
 
   const orderedKeys = (keys: Set<string>): string[] => order.filter((key) => keys.has(key))
+  const hasNavigationItems = orderedKeys(navigationKeys).length > 0
 
   if (iconOnly) {
     return (
@@ -179,9 +180,11 @@ export default function SiderCards({ iconOnly = false }: Props): React.JSX.Eleme
           <SiderIconGroup label={tr('Current status')} separated>
             {renderCards(currentStatusKeys)}
           </SiderIconGroup>
-          <SiderIconGroup label={tr('Navigation')} separated>
-            {renderCards(navigationKeys)}
-          </SiderIconGroup>
+          {hasNavigationItems && (
+            <SiderIconGroup label={tr('Navigation')} separated>
+              {renderCards(navigationKeys)}
+            </SiderIconGroup>
+          )}
         </div>
       </div>
     )
@@ -214,9 +217,11 @@ export default function SiderCards({ iconOnly = false }: Props): React.JSX.Eleme
               {renderCards(currentStatusKeys)}
             </SiderSection>
           </SortableContext>
-          <SortableContext items={orderedKeys(navigationKeys)}>
-            <SiderSection title={tr('Navigation')}>{renderCards(navigationKeys)}</SiderSection>
-          </SortableContext>
+          {hasNavigationItems && (
+            <SortableContext items={orderedKeys(navigationKeys)}>
+              <SiderSection title={tr('Navigation')}>{renderCards(navigationKeys)}</SiderSection>
+            </SortableContext>
+          )}
         </div>
       </DndContext>
     </div>

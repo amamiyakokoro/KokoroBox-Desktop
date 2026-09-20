@@ -56,6 +56,19 @@ const SiderConfig: React.FC = () => {
           key: 'tunCardStatus',
           title: tr('TUN mode'),
           defaultStatus: 'col-span-1'
+        },
+        {
+          id: 'mihomo',
+          key: 'mihomoCoreCardStatus',
+          title: tr('Core'),
+          defaultStatus: 'col-span-2'
+        },
+        { id: 'dns', key: 'dnsCardStatus', title: 'DNS', defaultStatus: 'col-span-1' },
+        {
+          id: 'sniff',
+          key: 'sniffCardStatus',
+          title: tr('Sniffing'),
+          defaultStatus: 'col-span-1'
         }
       ]
     },
@@ -75,10 +88,11 @@ const SiderConfig: React.FC = () => {
       title: tr('Current status'),
       entries: [
         {
-          id: 'profile',
-          key: 'profileCardStatus',
-          title: tr('Subscriptions'),
-          defaultStatus: 'col-span-2'
+          id: 'app-routing',
+          key: 'appRoutingCardStatus',
+          title: tr('Application routing'),
+          defaultStatus: 'col-span-2',
+          supported: appRoutingSupported(window.api.platform, window.api.arch)
         },
         {
           id: 'proxy',
@@ -87,35 +101,16 @@ const SiderConfig: React.FC = () => {
           defaultStatus: 'col-span-2'
         },
         {
-          id: 'app-routing',
-          key: 'appRoutingCardStatus',
-          title: tr('Application routing'),
-          defaultStatus: 'col-span-2',
-          supported: appRoutingSupported(window.api.platform, window.api.arch)
-        },
-        {
           id: 'connection',
           key: 'connectionCardStatus',
           title: tr('Connections'),
           defaultStatus: 'col-span-2'
         },
         {
-          id: 'mihomo',
-          key: 'mihomoCoreCardStatus',
-          title: tr('Core'),
+          id: 'profile',
+          key: 'profileCardStatus',
+          title: tr('Subscriptions'),
           defaultStatus: 'col-span-2'
-        }
-      ]
-    },
-    {
-      title: tr('Navigation'),
-      entries: [
-        { id: 'dns', key: 'dnsCardStatus', title: 'DNS', defaultStatus: 'col-span-1' },
-        {
-          id: 'sniff',
-          key: 'sniffCardStatus',
-          title: tr('Sniffing'),
-          defaultStatus: 'col-span-1'
         },
         {
           id: 'rule',

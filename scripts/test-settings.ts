@@ -4,9 +4,12 @@ import { test } from 'node:test'
 import { mergeSettingsPatch } from '../src/renderer/src/utils/merge-settings-patch.ts'
 import {
   accountKeys,
+  currentStatusKeys,
+  defaultSiderOrder,
   groupForSiderKey,
   navigationKeys,
   normalizeSiderOrder,
+  quickControlKeys,
   resolveRulesCardStatus
 } from '../src/renderer/src/components/sider/sider-order.ts'
 import { normalizeCoreVersion } from '../src/renderer/src/components/sider/core-version.ts'
@@ -984,6 +987,7 @@ test('desktop sidebar separates controls, live status and navigation', () => {
   assert.match(sider, /orderedKeys\(quickControlKeys\)/)
   assert.match(sider, /orderedKeys\(currentStatusKeys\)/)
   assert.match(sider, /orderedKeys\(navigationKeys\)/)
+  assert.match(sider, /const hasNavigationItems = orderedKeys\(navigationKeys\)\.length > 0/)
   assert.match(
     sider,
     /renderCards\(quickControlKeys\)[\s\S]*renderCards\(accountKeys\)[\s\S]*renderCards\(currentStatusKeys\)[\s\S]*renderCards\(navigationKeys\)/
@@ -1117,7 +1121,15 @@ test('desktop sidebar separates controls, live status and navigation', () => {
   assert.match(sidebarSettings, /title: tr\('Quick controls'\)/)
   assert.match(sidebarSettings, /title: 'Kokoro',[\s\S]*reorderable: false/)
   assert.match(sidebarSettings, /title: tr\('Current status'\)/)
-  assert.match(sidebarSettings, /title: tr\('Navigation'\)/)
+  assert.doesNotMatch(sidebarSettings, /title: tr\('Navigation'\)/)
+  assert.match(
+    sidebarSettings,
+    /title: tr\('Quick controls'\)[\s\S]*id: 'sysproxy'[\s\S]*id: 'tun'[\s\S]*id: 'mihomo'[\s\S]*id: 'dns'[\s\S]*id: 'sniff'[\s\S]*title: 'Kokoro'/
+  )
+  assert.match(
+    sidebarSettings,
+    /title: tr\('Current status'\)[\s\S]*id: 'app-routing'[\s\S]*id: 'proxy'[\s\S]*id: 'connection'[\s\S]*id: 'profile'[\s\S]*id: 'rule'[\s\S]*id: 'override'[\s\S]*id: 'log'/
+  )
   assert.match(sidebarSettings, /moveSiderItem/)
   assert.match(sidebarSettings, /aria-label=\{`\$\{tr\('Move up'\)\}: \$\{item\.title\}`\}/)
   assert.match(sidebarSettings, /aria-label=\{`\$\{tr\('Move down'\)\}: \$\{item\.title\}`\}/)
@@ -1231,33 +1243,89 @@ test('desktop sidebar separates controls, live status and navigation', () => {
   assert.doesNotMatch(connections, /<Card/)
 
   assert.equal(groupForSiderKey('sysproxy'), 'quick')
+  assert.equal(groupForSiderKey('mihomo'), 'quick')
+  assert.equal(groupForSiderKey('dns'), 'quick')
+  assert.equal(groupForSiderKey('sniff'), 'quick')
   assert.equal(groupForSiderKey('kokoro'), 'account')
   assert.equal(groupForSiderKey('profile'), 'status')
-  assert.equal(groupForSiderKey('dns'), 'navigation')
+  assert.equal(groupForSiderKey('rule'), 'status')
+  assert.equal(groupForSiderKey('override'), 'status')
+  assert.equal(groupForSiderKey('log'), 'status')
+  assert.deepEqual([...quickControlKeys], ['sysproxy', 'tun', 'mihomo', 'dns', 'sniff'])
   assert.deepEqual([...accountKeys], ['kokoro'])
+  assert.deepEqual([...currentStatusKeys], [
+    'app-routing',
+    'proxy',
+    'connection',
+    'profile',
+    'rule',
+    'override',
+    'log'
+  ])
   assert.equal(navigationKeys.has('kokoro'), false)
-  assert.equal(navigationKeys.has('rule'), true)
+  assert.equal(navigationKeys.size, 0)
   assert.equal(navigationKeys.has('resource'), false)
   assert.notEqual(groupForSiderKey('sysproxy'), groupForSiderKey('profile'))
+  assert.deepEqual(defaultSiderOrder, [
+    'sysproxy',
+    'tun',
+    'mihomo',
+    'dns',
+    'sniff',
+    'kokoro',
+    'app-routing',
+    'proxy',
+    'connection',
+    'profile',
+    'rule',
+    'override',
+    'log'
+  ])
   assert.deepEqual(normalizeSiderOrder(['tun', 'sysproxy', 'tun', 'unknown']).slice(0, 2), [
     'tun',
     'sysproxy'
   ])
-  assert.deepEqual(normalizeSiderOrder(['dns', 'kokoro', 'proxy']).slice(0, 3), [
+  assert.deepEqual(
+    normalizeSiderOrder([
+      'sysproxy',
+      'tun',
+      'kokoro',
+      'app-routing',
+      'dns',
+      'sniff',
+      'proxy',
+      'connection',
+      'profile',
+      'mihomo',
+      'rule',
+      'override',
+      'log'
+    ]),
+    defaultSiderOrder
+  )
+  const customizedCurrentOrder = [
+    'tun',
+    'sysproxy',
+    'sniff',
     'dns',
+    'mihomo',
     'kokoro',
-    'proxy'
-  ])
-  assert.deepEqual(normalizeSiderOrder(['dns', 'resource', 'proxy']).slice(0, 3), [
-    'dns',
-    'rule',
-    'proxy'
-  ])
-  assert.deepEqual(normalizeSiderOrder(['resource', 'dns', 'rule', 'proxy']).slice(0, 3), [
-    'dns',
-    'rule',
-    'proxy'
-  ])
+    'profile',
+    'connection',
+    'proxy',
+    'app-routing',
+    'log',
+    'override',
+    'rule'
+  ]
+  assert.deepEqual(normalizeSiderOrder(customizedCurrentOrder), customizedCurrentOrder)
+  const partialCurrentOrder = ['tun', 'sysproxy', 'kokoro', 'profile', 'proxy']
+  assert.deepEqual(
+    normalizeSiderOrder(partialCurrentOrder).filter((key) => partialCurrentOrder.includes(key)),
+    partialCurrentOrder
+  )
+  assert.equal(normalizeSiderOrder(['dns', 'resource', 'proxy']).includes('resource'), false)
+  assert.equal(normalizeSiderOrder(['dns', 'resource', 'proxy']).includes('rule'), true)
   assert.equal(resolveRulesCardStatus('hidden', 'hidden'), 'hidden')
   assert.equal(resolveRulesCardStatus('hidden', undefined), 'col-span-1')
   assert.equal(resolveRulesCardStatus(undefined, 'hidden'), 'col-span-1')
