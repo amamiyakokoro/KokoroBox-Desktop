@@ -364,7 +364,7 @@ const App: React.FC = () => {
       </Suspense>
       {presentedSiderWidth === narrowWidth ? (
         <div style={{ width: `${narrowWidth}px` }} className="side h-full flex flex-col">
-          <div className="app-drag flex shrink-0 justify-center items-center z-40 bg-transparent h-11.25">
+          <div className="app-drag flex shrink-0 justify-center items-center z-40 bg-transparent h-12.25">
             {platform !== 'darwin' && <KokoroBoxIcon className="size-7 text-foreground" />}
           </div>
           <Suspense fallback={<div className="min-h-0 flex-1" />}>
