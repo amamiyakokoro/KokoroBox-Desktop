@@ -340,6 +340,7 @@ export const messages: Readonly<Record<string, string>> = {
   'Kokoro subscription added': 'Kokoro subscription added',
   'Kokoro settings': 'Kokoro settings',
   'Kokoro account and subscription': 'Kokoro account and subscription',
+  'Kokoro account': 'Kokoro account',
   'Subscription options': 'Subscription options',
   'Update behavior': 'Update behavior',
   'Account, plan and profile import': 'Account, plan and profile import',

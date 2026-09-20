@@ -20,7 +20,7 @@ const KokoroSettingCard: React.FC<Props> = ({ iconOnly = false }) => {
       <div className={`${kokoroCardStatus} kokoro-setting-card flex justify-center`}>
         <SiderIconButton
           active={match}
-          label={tr('Kokoro account and subscription')}
+          label={tr('Kokoro account')}
           placement="right"
           onPress={() => navigate('/kokoro')}
         >
@@ -34,7 +34,7 @@ const KokoroSettingCard: React.FC<Props> = ({ iconOnly = false }) => {
     <div className={`${kokoroCardStatus} kokoro-setting-card`}>
       <SiderNavItem
         icon={<MdManageAccounts />}
-        title={tr('Kokoro account and subscription')}
+        title={tr('Kokoro account')}
         prominence="account"
         active={match}
         onPress={() => navigate('/kokoro')}

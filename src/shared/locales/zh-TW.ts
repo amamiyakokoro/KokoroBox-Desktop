@@ -327,6 +327,7 @@ export const messages: Readonly<Record<string, string>> = {
   'Kokoro subscription added': 'Kokoro 訂閱已新增',
   'Kokoro settings': 'Kokoro 設定',
   'Kokoro account and subscription': 'Kokoro 帳號與訂閱',
+  'Kokoro account': 'Kokoro 帳號',
   'Subscription options': '訂閱選項',
   'Update behavior': '更新行為',
   'Account, plan and profile import': '帳號、方案與設定檔匯入',

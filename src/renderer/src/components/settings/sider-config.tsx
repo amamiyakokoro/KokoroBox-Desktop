@@ -79,7 +79,7 @@ const SiderConfig: React.FC = () => {
         {
           id: 'kokoro',
           key: 'kokoroCardStatus',
-          title: tr('Kokoro account and subscription'),
+          title: tr('Kokoro account'),
           defaultStatus: 'col-span-2'
         }
       ]
