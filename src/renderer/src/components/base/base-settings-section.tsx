@@ -21,7 +21,7 @@ export const SettingsSection: React.FC<SettingsSectionProps> = ({
   settingLabel,
   title
 }) => {
-  const hasHeader = title || description || action
+  const hasHeader = Boolean(title || description || action)
 
   return (
     <section
@@ -46,7 +46,8 @@ export const SettingsSection: React.FC<SettingsSectionProps> = ({
       ) : null}
       <div
         className={cn(
-          'settings-section__content border-t border-separator px-1 py-0.5',
+          'settings-section__content px-1 py-0.5',
+          hasHeader && 'border-t border-separator',
           contentClassName
         )}
       >

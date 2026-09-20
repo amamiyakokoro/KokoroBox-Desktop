@@ -240,7 +240,9 @@ test('application settings keep one clear navigation hierarchy in compact deskto
   assert.match(settingCard, /<SettingsSection/)
   assert.match(settingsSection, /settings-section__heading/)
   assert.match(settingsSection, /text-base font-semibold leading-6 text-foreground/)
-  assert.match(settingsSection, /settings-section__content border-t border-separator/)
+  assert.match(settingsSection, /const hasHeader = Boolean\(title \|\| description \|\| action\)/)
+  assert.match(settingsSection, /settings-section__content px-1 py-0\.5/)
+  assert.match(settingsSection, /hasHeader && 'border-t border-separator'/)
   assert.doesNotMatch(settingsSection, /settings-section__content border-y/)
   assert.match(logSetting, /<SettingCard>/)
   assert.doesNotMatch(logSetting, /<SettingCard header=\{tr\('Application logs'\)\}>/)
@@ -449,7 +451,8 @@ test('SettingItem has one canonical layout without legacy compatibility paths', 
   assert.match(featureLayout, /<SettingsSection/)
   assert.match(settingsSection, /settings-section px-3 py-1\.5 first:pt-1\.5/)
   assert.match(settingsSection, /settings-section__heading text-base font-semibold leading-6/)
-  assert.match(settingsSection, /settings-section__content border-t border-separator px-1 py-0\.5/)
+  assert.match(settingsSection, /settings-section__content px-1 py-0\.5/)
+  assert.match(settingsSection, /hasHeader && 'border-t border-separator'/)
   assert.match(styles, /\.setting-item__title-line\s*\{[\s\S]*align-items: center/)
   assert.match(
     styles,
