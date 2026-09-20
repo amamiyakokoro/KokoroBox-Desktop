@@ -13,8 +13,10 @@ A cross-platform [Mihomo](https://github.com/MetaCubeX/mihomo) desktop client wi
 ## Features
 
 - Stable and preview Mihomo cores, system proxy, TUN, DNS, sniffing, routing, and profiles
-- Kokoro subscriptions with osu! OAuth sign-in, custom rules, and automatic updates
+- Kokoro account with osu! sign-in, custom rules, and automatically refreshed subscriptions
+- Subscription cards distinguish Kokoro imports from manually added remote subscriptions
 - Per-application **Proxy**, **Direct**, and **Block** rules
+- Searchable application settings and compact sidebar controls
 - WebDAV backup and restore; English, Simplified Chinese, and Traditional Chinese UI
 
 ## Application routing
@@ -57,6 +59,17 @@ Windows packages are currently unsigned. On macOS, use the DMG for normal instal
 KokoroBox to Applications, launch the installed copy, then follow the system-service and optional
 application-routing approval prompts. The PKG is retained for recovery and managed deployment.
 
+## Application updates
+
+Choose the **Stable** or **Rolling** channel in Application settings. You can check manually there
+or enable automatic checks.
+
+- **macOS:** Sparkle handles update checks, prompts, downloads, installation, and relaunch for the
+  installed app. See the [macOS update guide](docs/macos-updates.md).
+- **Windows:** The in-app updater checks the selected channel and downloads the matching installer.
+- **Linux:** KokoroBox can report available updates; install them through your system package
+  manager.
+
 ## Development
 
 Requires Node.js 22.12+ and pnpm 11. Windows builds also need Go 1.23+; macOS application-routing builds need Xcode.
@@ -77,7 +90,7 @@ pnpm test:app-routing
 pnpm build:win # or build:mac / build:linux
 ```
 
-For packaging, signing, Linux system-core builds, and release publication, see the [release guide](docs/releases.md). The [native integration guide](docs/native-integration.md) documents the Rust boundary and migration rules. UI text and translation contributions should follow the [localization guide](docs/localization.md).
+For packaging, signing, Linux system-core builds, and release publication, see the [release guide](docs/releases.md). The [native integration guide](docs/native-integration.md) documents the Rust boundary and migration rules. UI work follows the [HeroUI v3 UI contract](docs/ui-native-first.md); text and translation contributions should follow the [localization guide](docs/localization.md).
 
 ## License
 

@@ -6,14 +6,14 @@ Windows and Linux keep their existing update implementations.
 
 ## Distribution model
 
-The migration deliberately separates first installation from subsequent updates:
+KokoroBox separates first installation from subsequent updates:
 
 - The signed and notarized DMG is the normal first-install package.
 - The signed and notarized PKG remains available for recovery, legacy migration, and managed
   deployment.
 - A signed archive containing only `KokoroBox.app` is the Sparkle update payload.
 - An appcast is the authenticated update index. Stable and rolling channels use separate feeds.
-- The existing `latest.yml` remains available during migration and for non-macOS clients.
+- The existing `latest.yml` remains available for non-macOS clients.
 
 The DMG and application archive contain the same Developer ID-signed app bundle used to build the
 PKG. Both the archive and appcast are signed with Sparkle EdDSA keys. Apple code signing,
@@ -55,17 +55,14 @@ falling back protected Proxy rules to Direct.
 
 ## Privileged components
 
-Regular Sparkle app-bundle updates cannot reproduce arbitrary PKG scripts. Two legacy installer
-responsibilities must therefore be removed before Sparkle becomes the only macOS update path:
+Regular Sparkle app-bundle updates do not run PKG scripts. The migration removed two legacy
+installer responsibilities before Sparkle became the macOS update path:
 
-1. Bundled Mihomo executables must no longer depend on installer-applied setuid bits. Privileged
-   core and TUN operations move behind the authenticated KokoroBox Service boundary.
-2. The privileged daemon and its launchd property list must live inside the signed application
-   bundle and be registered through `SMAppService`. They must not depend on an installer-maintained
-   copy in `/Library/PrivilegedHelperTools`.
-
-Until both conditions are satisfied, macOS continues using the PKG updater by default. Sparkle is
-built and validated in parallel but is not enabled for existing users.
+1. Bundled Mihomo executables no longer depend on installer-applied setuid bits. Privileged core
+   and TUN operations use the authenticated KokoroBox Service boundary.
+2. The privileged daemon and its launchd property list live inside the signed application bundle
+   and are registered through `SMAppService`, without an installer-maintained copy in
+   `/Library/PrivilegedHelperTools`.
 
 The `SMAppService` migration is implemented for macOS 13 and later. The signed application embeds
 `KokoroBoxService.plist` in `Contents/Library/LaunchDaemons` and the daemon in
@@ -170,10 +167,9 @@ in-app manifest checker and PKG installer are not used. If the native bridge or 
 signed configuration cannot initialize, KokoroBox records the failure and opens the matching
 GitHub Release so recovery remains an explicit user action.
 
-The first release containing this stage is the transition release: users on an older version
-install it through the existing notarized PKG path, while all subsequent updates can replace the
-App bundle through Sparkle. Keep validating that transition from the last PKG-only Intel and Apple
-Silicon releases before removing the legacy PKG update implementation.
+Users on the last PKG-only versions install a transition release through the notarized PKG path.
+Subsequent updates replace the app bundle through Sparkle. Validate this path from Intel and Apple
+Silicon PKG-only releases.
 
 The notarized DMG is now the normal first-install experience. The PKG remains useful for explicit
 recovery, legacy migration, and managed deployment; the Sparkle ZIP remains an update payload
@@ -181,7 +177,7 @@ rather than a user-facing installer.
 
 ## Rollback
 
-The PKG remains a recovery path throughout the migration. If a feed or native bridge fails,
+The PKG remains a recovery path. If a feed or native bridge fails,
 KokoroBox opens the matching GitHub release instead of executing a downloaded file. A bad Sparkle
 release is superseded by a newer signed appcast item; published artifacts and tags are never
 overwritten.
