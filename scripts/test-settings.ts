@@ -633,7 +633,7 @@ test('collection and overlay primitives preserve HeroUI v3 identity and selectio
   assert.match(connections, /<KokoTabs[\s\S]*variant="secondary"/)
   assert.match(connections, /<KokoTabs[\s\S]*density="toolbar"/)
   assert.equal(connections.match(/whitespace-nowrap">/g)?.length, 2)
-  assert.match(connections, /data-slot="connection-count"/)
+  assert.match(connections, /data-koko-part="connection-count"/)
   assert.doesNotMatch(connections, /bg-danger\/12 text-danger/)
   assert.doesNotMatch(connections, /\bBadge\b/)
   assert.match(profiles, /buttonClassName="[^"]*h-8[^"]*w-8[^"]*min-w-8/)

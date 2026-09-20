@@ -210,14 +210,8 @@
   outline: none;
 }
 
-:where(
-  button,
-  a,
-  [role='button'],
-  [role='link'],
-  [tabindex]
-):not([data-slot]):focus-visible {
-  outline: 2px solid var(--accent);
+[data-koko-focus-ring]:focus-visible {
+  outline: 2px solid var(--focus);
   outline-offset: 2px;
 }
 

@@ -171,16 +171,36 @@ test('the application imports the renamed overrides stylesheet', () => {
 test('HeroUI form controls own focus appearance without a nested application outline', () => {
   const mainCss = readFileSync('src/renderer/src/assets/main.css', 'utf8')
   const searchField = readFileSync('src/renderer/src/components/base/koko-search-field.tsx', 'utf8')
-  const focusRuleStart = mainCss.indexOf(':where(\n  button,')
+  const textViewer = readFileSync('src/renderer/src/components/base/text-viewer.tsx', 'utf8')
+  const controllerSetting = readFileSync(
+    'src/renderer/src/components/mihomo/controller-setting.tsx',
+    'utf8'
+  )
+  const focusRuleStart = mainCss.indexOf('[data-koko-focus-ring]:focus-visible')
   const focusRuleEnd = mainCss.indexOf('\n}', focusRuleStart)
   const focusRule = mainCss.slice(focusRuleStart, focusRuleEnd)
 
   assert.ok(focusRuleStart >= 0 && focusRuleEnd > focusRuleStart)
-  assert.match(focusRule, /:not\(\[data-slot\]\):focus-visible/)
-  assert.doesNotMatch(focusRule, /\b(?:input|select|textarea)\b/)
-  assert.match(focusRule, /outline: 2px solid var\(--accent\)/)
+  assert.match(focusRule, /^\[data-koko-focus-ring\]:focus-visible/)
+  assert.match(focusRule, /outline: 2px solid var\(--focus\)/)
+  assert.doesNotMatch(mainCss, /\[data-slot\]/)
+  assert.match(textViewer, /data-koko-focus-ring[\s\S]*tabIndex=\{0\}/)
+  assert.match(controllerSetting, /aria-label=\{tr\('Access key'\)\}[\s\S]*data-koko-focus-ring/)
   assert.match(searchField, /<InputGroup[\s\S]*variant="secondary"/)
   assert.doesNotMatch(searchField, /focus-visible:/)
+})
+
+test('renderer-owned metadata does not reuse HeroUI internal slot attributes', () => {
+  for (const file of collectSourceFiles(rendererRoot)) {
+    assert.doesNotMatch(
+      readFileSync(file, 'utf8'),
+      /data-slot=/,
+      `${file} reuses HeroUI's internal data-slot convention`
+    )
+  }
+
+  const connections = readFileSync('src/renderer/src/pages/connections.tsx', 'utf8')
+  assert.match(connections, /data-koko-part="connection-count"/)
 })
 
 test('Koko compatibility component exports remain bounded', () => {
@@ -249,6 +269,8 @@ test('the native-first ownership contract documents the migration boundary', () 
   assert.match(contract, /canonical `@heroui\/react` and `@heroui\/styles` packages/)
   assert.match(contract, /React Aria `I18nProvider`/)
   assert.match(contract, /Renderer utility classes must use HeroUI v3 semantic colors/)
+  assert.match(contract, /Raw HTML controls[\s\S]*`data-koko-focus-ring`/)
+  assert.match(contract, /Do not infer HeroUI ownership[\s\S]*`data-slot`/)
   assert.match(
     contract,
     /application-owned `prefix`, `suffix`, `inputClassName`, and `onChangeValue`/

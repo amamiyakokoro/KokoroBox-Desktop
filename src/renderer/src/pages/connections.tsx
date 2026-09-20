@@ -984,7 +984,7 @@ const Connections: React.FC = () => {
                   <span className="flex items-center gap-1.5 whitespace-nowrap">
                     <span>{tr('Active')}</span>
                     <span
-                      data-slot="connection-count"
+                      data-koko-part="connection-count"
                       className={`min-w-4 text-center text-xs font-semibold leading-4 tabular-nums ${tab === 'active' ? 'text-accent' : 'text-muted'}`}
                     >
                       {activeConnections.length}
@@ -998,7 +998,7 @@ const Connections: React.FC = () => {
                   <span className="flex items-center gap-1.5 whitespace-nowrap">
                     <span>{tr('Closed')}</span>
                     <span
-                      data-slot="connection-count"
+                      data-koko-part="connection-count"
                       className={`min-w-4 text-center text-xs font-semibold leading-4 tabular-nums ${tab === 'closed' ? 'text-accent' : 'text-muted'}`}
                     >
                       {closedConnections.length}

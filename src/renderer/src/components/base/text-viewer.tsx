@@ -283,6 +283,7 @@ export const TextViewer: React.FC<Props> = ({ value }) => {
       </div>
       <div
         ref={viewerRef}
+        data-koko-focus-ring
         tabIndex={0}
         className="min-h-0 flex-1"
         onFocus={() => setIsViewerFocused(true)}

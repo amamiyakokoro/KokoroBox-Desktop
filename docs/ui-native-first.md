@@ -45,6 +45,9 @@ The working rule is: **KokoroBox controls layout; HeroUI controls component appe
 7. Renderer utility classes must use HeroUI v3 semantic colors such as `accent`, `surface`,
    `surface-secondary`, `muted`, and `separator`. Do not reintroduce the v2 `primary`, `content*`,
    numbered semantic scales, or `divider` vocabulary.
+8. Raw HTML controls that need the shared application focus ring must opt in with
+   `data-koko-focus-ring`. Do not infer HeroUI ownership from internal attributes such as
+   `data-slot`; native HeroUI components own their own focus treatment.
 
 Run `pnpm run test:ui-native` when changing shared UI primitives or compatibility CSS.
 

@@ -142,8 +142,10 @@ const ControllerSetting: React.FC<ControllerSettingProps> = ({
               prefix={
                 <button
                   type="button"
+                  aria-label={tr('Access key')}
+                  data-koko-focus-ring
                   onClick={() => setShowPassword((prev) => !prev)}
-                  className="text-gray-500 hover:text-gray-700"
+                  className="text-muted outline-none hover:text-foreground"
                 >
                   {showPassword ? (
                     <AiOutlineEyeInvisible className="w-4 h-4" />

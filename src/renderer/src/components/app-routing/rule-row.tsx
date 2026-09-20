@@ -153,7 +153,7 @@ export function AppRoutingRuleRow({
             ) : (
               <button
                 type="button"
-                className="group/title flex max-w-full min-w-0 items-center gap-1.5 rounded-md text-left"
+                className="group/title flex max-w-full min-w-0 items-center gap-1.5 rounded-md text-left outline-none"
                 disabled={disabled}
                 title={tr('Edit')}
                 onClick={() => setIsEditingPattern(true)}

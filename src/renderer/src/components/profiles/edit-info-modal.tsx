@@ -472,13 +472,15 @@ const EditInfoModal: React.FC<Props> = (props) => {
                       actions: values.locked ? (
                         <Tooltip delay={0}>
                           <Tooltip.Trigger>
-                            <button
-                              type="button"
+                            <Button
                               aria-label={tr('Description')}
-                              className="flex size-7 items-center justify-center rounded-full bg-transparent p-0 text-foreground outline-none ring-0 shadow-none hover:bg-transparent focus:bg-transparent focus:outline-none focus-visible:outline-none focus-visible:ring-0"
+                              className="size-7 min-w-7"
+                              isIconOnly
+                              size="sm"
+                              variant="ghost"
                             >
                               <IoIosHelpCircle className="text-lg" />
-                            </button>
+                            </Button>
                           </Tooltip.Trigger>
                           <Tooltip.Content>
                             {tr('The update interval is managed remotely')}

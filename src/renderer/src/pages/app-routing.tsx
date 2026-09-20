@@ -633,7 +633,7 @@ const AppRouting: React.FC = () => {
                           <div className="app-routing-group-header" data-enabled={group.enabled}>
                             <button
                               type="button"
-                              className="flex min-w-0 flex-1 items-center gap-2 text-left"
+                              className="flex min-w-0 flex-1 items-center gap-2 text-left outline-none"
                               aria-expanded={!isCollapsed}
                               onClick={() => toggleGroup(group.id)}
                             >
