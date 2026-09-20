@@ -23,6 +23,7 @@ import { handleDeepLink } from './resolve/deepLink'
 import { createDeepLinkInbox, takeInitialDeepLinks } from './resolve/deepLinkInbox'
 import { initAppQuitLifecycle, isAppQuitting } from './resolve/appLifecycle'
 import { showNotification } from './utils/notification'
+import { configureNativeMacOSUpdate } from './resolve/macosNativeUpdater'
 import { appendAppLog } from './utils/log'
 import { migrateLegacyWindowsTasks } from './sys/autoRun'
 import { createPendingKokoroRelayProof } from './kokoro/client'
@@ -371,6 +372,17 @@ function startPrimaryInstance(initialDeepLinks: string[]): void {
         })
         app.quit()
         return
+      }
+
+      if (process.platform === 'darwin' && app.isPackaged) {
+        try {
+          configureNativeMacOSUpdate(
+            appConfig.updateChannel ?? 'stable',
+            appConfig.autoCheckUpdate ?? false
+          )
+        } catch (error) {
+          void appendAppLog(`[Updater]: initialize Sparkle failed, ${error}\n`)
+        }
       }
 
       // Default open or close DevTools by F12 in development

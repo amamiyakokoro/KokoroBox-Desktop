@@ -70,6 +70,7 @@ import {
 import { triggerSysProxy } from '../sys/sysproxy'
 import { disableTerminalProxy } from '../sys/terminal-proxy'
 import { checkUpdate, downloadAndInstallUpdate, cancelUpdate } from '../resolve/autoUpdater'
+import { configureNativeMacOSUpdate } from '../resolve/macosNativeUpdater'
 import {
   checkElevateTask,
   deleteElevateTask,
@@ -184,6 +185,21 @@ async function startTrafficPresenterAndRestoreTray(): Promise<void> {
 
 async function patchAppConfigWithServiceSync(patch: Partial<AppConfig>): Promise<AppConfig> {
   const nextConfig = await patchAppConfig(await normalizeServiceModePatch(patch))
+
+  if (
+    process.platform === 'darwin' &&
+    app.isPackaged &&
+    ('autoCheckUpdate' in patch || 'updateChannel' in patch)
+  ) {
+    try {
+      configureNativeMacOSUpdate(
+        nextConfig.updateChannel ?? 'stable',
+        nextConfig.autoCheckUpdate ?? false
+      )
+    } catch (error) {
+      void appendAppLog(`[Updater]: configure Sparkle failed, ${error}\n`)
+    }
+  }
 
   if (
     process.platform === 'linux' &&

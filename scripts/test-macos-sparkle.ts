@@ -16,7 +16,10 @@ import {
   validateSignedSparkleAppcast,
   validateSparkleSigningKeys
 } from './macos-sparkle.ts'
-import { runNativeMacOSUpdater } from '../src/main/resolve/macosNativeUpdaterState.ts'
+import {
+  configureNativeMacOSUpdater,
+  runNativeMacOSUpdater
+} from '../src/main/resolve/macosNativeUpdaterState.ts'
 
 const privateKey = 'AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE='
 const publicKey = 'iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w='
@@ -112,10 +115,21 @@ test('macOS package stages the updater with only a bounded dynamic channel', () 
 test('main process adapter activates Sparkle and validates its state transitions', () => {
   const adapter = readFileSync('src/main/resolve/macosNativeUpdater.ts', 'utf8')
   const updater = readFileSync('src/main/resolve/autoUpdater.ts', 'utf8')
+  const app = readFileSync('src/renderer/src/App.tsx', 'utf8')
+  const actions = readFileSync('src/renderer/src/components/settings/actions.tsx', 'utf8')
+  const main = readFileSync('src/main/index.ts', 'utf8')
+  const ipc = readFileSync('src/main/utils/ipc.ts', 'utf8')
 
   assert.match(adapter, /export const macOSNativeUpdaterEnabled = true/)
   assert.match(adapter, /process\.dlopen\(nativeModule, modulePath\)/)
+  assert.match(adapter, /typeof candidate\.configure !== 'function'/)
   assert.doesNotMatch(adapter, /process\.env|napi_get_value_string/)
+  assert.match(updater, /if \(process\.platform === 'darwin'\) \{[\s\S]*launchNativeMacOSUpdate/)
+  assert.doesNotMatch(updater, /\.pkg|installer -pkg/)
+  assert.match(app, /platform !== 'darwin' && autoCheckUpdate/)
+  assert.match(actions, /if \(platform === 'darwin'\) return/)
+  assert.match(main, /configureNativeMacOSUpdate\([\s\S]*appConfig\.autoCheckUpdate/)
+  assert.match(ipc, /configureNativeMacOSUpdate\([\s\S]*nextConfig\.autoCheckUpdate/)
   assert.match(updater, /return 'native'/)
   assert.match(updater, /releaseTag === 'rolling' \? 'rolling' : 'stable'/)
   assert.match(updater, /shell\.openExternal/)
@@ -128,6 +142,10 @@ test('main process adapter activates Sparkle and validates its state transitions
       calls.push(`initialize:${channel}`)
       return { available: true, initialized: true, canCheckForUpdates: true }
     },
+    configure: (channel: 'stable' | 'rolling', enabled: boolean) => {
+      calls.push(`configure:${channel}:${enabled}`)
+      return { available: true, initialized: true, canCheckForUpdates: true }
+    },
     checkForUpdates: (channel: 'stable' | 'rolling') => {
       calls.push(`check:${channel}`)
       return { available: true, initialized: true, canCheckForUpdates: true }
@@ -135,6 +153,9 @@ test('main process adapter activates Sparkle and validates its state transitions
   }
   runNativeMacOSUpdater(bridge, 'rolling')
   assert.deepEqual(calls, ['initialize:rolling', 'check:rolling'])
+  calls.length = 0
+  configureNativeMacOSUpdater(bridge, 'stable', true)
+  assert.deepEqual(calls, ['initialize:stable', 'configure:stable:true'])
   assert.throws(() =>
     runNativeMacOSUpdater(
       {
@@ -144,15 +165,15 @@ test('main process adapter activates Sparkle and validates its state transitions
       'stable'
     )
   )
-  assert.throws(() =>
-    runNativeMacOSUpdater(
-      {
-        ...bridge,
-        initialize: () => ({ available: true, initialized: true, canCheckForUpdates: false })
-      },
-      'stable'
-    )
+  calls.length = 0
+  runNativeMacOSUpdater(
+    {
+      ...bridge,
+      state: () => ({ available: true, initialized: true, canCheckForUpdates: false })
+    },
+    'stable'
   )
+  assert.deepEqual(calls, [])
 })
 
 test('native bridge restricts the feed and validates the 32-byte public key', () => {
@@ -167,4 +188,7 @@ test('native bridge restricts the feed and validates the 32-byte public key', ()
   assert.match(source, /isEqualToString:@"rolling"/)
   assert.match(source, /feedURLStringForUpdater/)
   assert.match(source, /decodedPublicKey\.length != 32/)
+  assert.match(source, /automaticallyChecksForUpdates = enabled/)
+  assert.match(source, /resetUpdateCycleAfterShortDelay/)
+  assert.match(source, /\{"configure", nullptr, KBConfigureUpdater/)
 })

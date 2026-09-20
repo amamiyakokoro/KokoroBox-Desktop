@@ -42,7 +42,7 @@ static NSString *KBReadChannel(napi_env env, napi_callback_info info) {
   napi_value args[1];
   napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
   napi_valuetype type = napi_undefined;
-  if (argc != 1 || napi_typeof(env, args[0], &type) != napi_ok || type != napi_string) {
+  if (argc < 1 || napi_typeof(env, args[0], &type) != napi_ok || type != napi_string) {
     napi_throw_type_error(env, nullptr, "update channel must be stable or rolling");
     return nil;
   }
@@ -165,10 +165,49 @@ static napi_value KBCheckForUpdates(napi_env env, napi_callback_info info) {
   }
 }
 
+static napi_value KBConfigureUpdater(napi_env env, napi_callback_info info) {
+  if (!KBRequireMainThread(env)) return nullptr;
+  size_t argc = 2;
+  napi_value args[2];
+  napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+  napi_valuetype enabledType = napi_undefined;
+  if (argc != 2 || napi_typeof(env, args[1], &enabledType) != napi_ok ||
+      enabledType != napi_boolean) {
+    napi_throw_type_error(env, nullptr, "automatic update checks must be a boolean");
+    return nullptr;
+  }
+  NSString *channel = KBReadChannel(env, info);
+  if (!channel) return nullptr;
+  if (!KBUpdaterController) {
+    KBThrow(env, @"The macOS updater has not been initialized");
+    return nullptr;
+  }
+  bool enabled = false;
+  if (napi_get_value_bool(env, args[1], &enabled) != napi_ok) {
+    KBThrow(env, @"Unable to read automatic update preference");
+    return nullptr;
+  }
+  @try {
+    BOOL channelChanged = ![KBUpdateChannel isEqualToString:channel];
+    KBUpdateChannel = [channel copy];
+    SPUUpdater *updater = KBUpdaterController.updater;
+    BOOL automaticChecksChanged = updater.automaticallyChecksForUpdates != enabled;
+    if (automaticChecksChanged) updater.automaticallyChecksForUpdates = enabled;
+    if (channelChanged && enabled && !automaticChecksChanged) {
+      [updater resetUpdateCycleAfterShortDelay];
+    }
+    return KBCreateState(env);
+  } @catch (NSException *exception) {
+    KBThrow(env, exception.reason ?: @"Unable to configure the macOS updater");
+    return nullptr;
+  }
+}
+
 static napi_value KBInitialize(napi_env env, napi_value exports) {
   napi_property_descriptor properties[] = {
       {"state", nullptr, KBState, nullptr, nullptr, nullptr, napi_default, nullptr},
       {"initialize", nullptr, KBInitializeUpdater, nullptr, nullptr, nullptr, napi_default, nullptr},
+      {"configure", nullptr, KBConfigureUpdater, nullptr, nullptr, nullptr, napi_default, nullptr},
       {"checkForUpdates", nullptr, KBCheckForUpdates, nullptr, nullptr, nullptr, napi_default, nullptr},
   };
   napi_define_properties(env, exports, sizeof(properties) / sizeof(properties[0]), properties);

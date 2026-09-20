@@ -2,6 +2,7 @@ import { is } from '@electron-toolkit/utils'
 import { existsSync } from 'node:fs'
 import path from 'node:path'
 import {
+  configureNativeMacOSUpdater as configureNativeMacOSUpdaterState,
   MacOSUpdateChannel,
   MacOSUpdaterBridge,
   runNativeMacOSUpdater
@@ -30,6 +31,7 @@ function loadNativeBridge(): MacOSUpdaterBridge {
   if (
     typeof candidate.state !== 'function' ||
     typeof candidate.initialize !== 'function' ||
+    typeof candidate.configure !== 'function' ||
     typeof candidate.checkForUpdates !== 'function'
   ) {
     throw new Error('The macOS updater module has an unsupported interface')
@@ -49,4 +51,17 @@ export function showNativeMacOSUpdate(
   const bridge = bridgeOverride ?? loadNativeBridge()
   runNativeMacOSUpdater(bridge, channel)
   return true
+}
+
+/** Starts Sparkle's own background schedule using the app's update preferences. */
+export function configureNativeMacOSUpdate(
+  channel: MacOSUpdateChannel,
+  automaticallyChecksForUpdates: boolean,
+  platform: NodeJS.Platform = process.platform,
+  bridgeOverride?: MacOSUpdaterBridge
+): void {
+  if (platform !== 'darwin' || !macOSNativeUpdaterEnabled) return
+
+  const bridge = bridgeOverride ?? loadNativeBridge()
+  configureNativeMacOSUpdaterState(bridge, channel, automaticallyChecksForUpdates)
 }

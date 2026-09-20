@@ -17,6 +17,7 @@ import { startTour } from '@renderer/utils/driver'
 import { useNavigate } from 'react-router-dom'
 import ConfirmModal from '../base/base-confirm'
 import { notify } from '@renderer/utils/notification'
+import { platform } from '@renderer/utils/init'
 
 async function handleCreateHeapSnapshot(): Promise<void> {
   try {
@@ -75,6 +76,7 @@ const Actions: React.FC<Props> = ({
     try {
       setCheckingUpdate(true)
       const nextVersion = await checkUpdate()
+      if (platform === 'darwin') return
       if (!nextVersion) {
         notify(tr("You're up to date"), { body: tr('No update needed') })
         return

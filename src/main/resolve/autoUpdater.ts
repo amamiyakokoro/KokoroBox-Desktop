@@ -7,8 +7,7 @@ import { dataDir, exeDir, exePath, isPortable, resourcesFilesDir } from '../util
 import { copyFile, rm, writeFile, readFile, statfs } from 'fs/promises'
 import path from 'path'
 import { existsSync } from 'fs'
-import { exec, spawn } from 'child_process'
-import { promisify } from 'util'
+import { spawn } from 'child_process'
 import { createHash } from 'crypto'
 import os from 'os'
 import { setNotQuitDialog, mainWindow } from '..'
@@ -20,7 +19,7 @@ import {
 } from '../service/fallback'
 import { appendAppLog } from '../utils/log'
 import { systemCoreOnlyBuild } from '../../shared/build-flags'
-import { macOSNativeUpdaterEnabled, showNativeMacOSUpdate } from './macosNativeUpdater'
+import { showNativeMacOSUpdate } from './macosNativeUpdater'
 
 let downloadCancelToken: CancelTokenSource | null = null
 const WINDOWS_INSTALLER_MIN_TEMP_SPACE_BYTES = 1024 * 1024 * 1024
@@ -59,7 +58,34 @@ async function ensureFreeSpace(dir: string, requiredBytes: number, message: stri
   }
 }
 
+async function launchNativeMacOSUpdate(
+  channel: AppUpdateChannel,
+  releasePage: string
+): Promise<AppUpdateLaunchResult> {
+  try {
+    if (!showNativeMacOSUpdate(channel)) throw new Error('Native macOS updater did not start')
+    return 'native'
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error)
+    await appendAppLog(`[Updater]: native macOS updater unavailable, ${detail}\n`).catch(() => {})
+    // Recovery remains an explicit user action if the signed Sparkle bridge is unavailable.
+    await shell.openExternal(releasePage)
+    return 'external'
+  }
+}
+
 export async function checkUpdate(): Promise<AppVersion | undefined> {
+  if (process.platform === 'darwin') {
+    const { updateChannel = 'stable' } = await getAppConfig()
+    await launchNativeMacOSUpdate(
+      updateChannel,
+      updateChannel === 'rolling'
+        ? 'https://github.com/amamiyakokoro/KokoroBox-Desktop/releases/tag/rolling'
+        : 'https://github.com/amamiyakokoro/KokoroBox-Desktop/releases/latest'
+    )
+    return undefined
+  }
+
   const { 'mixed-port': mixedPort = 7890 } = await getControledMihomoConfig()
   const { updateChannel = 'stable', githubToken } = await getAppConfig()
   const url = UPDATE_MANIFEST_URLS[updateChannel]
@@ -118,21 +144,11 @@ export async function downloadAndInstallUpdate(
   tag?: string
 ): Promise<AppUpdateLaunchResult | void> {
   const releaseTag = resolveReleaseTag(version, tag)
-  if (process.platform === 'darwin' && macOSNativeUpdaterEnabled) {
-    try {
-      const channel = releaseTag === 'rolling' ? 'rolling' : 'stable'
-      if (!showNativeMacOSUpdate(channel)) throw new Error('Native macOS updater did not start')
-      return 'native'
-    } catch (error) {
-      const detail = error instanceof Error ? error.message : String(error)
-      await appendAppLog(`[Updater]: native macOS updater unavailable, ${detail}\n`).catch(() => {})
-      // Never fall back to executing a downloaded PKG from an already migrated build. The
-      // release page keeps recovery explicit if the signed native bridge cannot initialize.
-      await shell.openExternal(
-        `https://github.com/amamiyakokoro/KokoroBox-Desktop/releases/tag/${encodeURIComponent(releaseTag)}`
-      )
-      return 'external'
-    }
+  if (process.platform === 'darwin') {
+    return launchNativeMacOSUpdate(
+      releaseTag === 'rolling' ? 'rolling' : 'stable',
+      `https://github.com/amamiyakokoro/KokoroBox-Desktop/releases/tag/${encodeURIComponent(releaseTag)}`
+    )
   }
 
   let appUpdateInstalling = false
@@ -156,9 +172,7 @@ export async function downloadAndInstallUpdate(
   const baseUrl = `https://github.com/amamiyakokoro/KokoroBox-Desktop/releases/download/${releaseTag}/`
   const fileMap: Record<string, string> = {
     'win32-x64': `kokorobox-desktop-windows-${version}-x64-setup.exe`,
-    'win32-arm64': `kokorobox-desktop-windows-${version}-arm64-setup.exe`,
-    'darwin-x64': `kokorobox-desktop-macos-${version}-x64.pkg`,
-    'darwin-arm64': `kokorobox-desktop-macos-${version}-arm64.pkg`
+    'win32-arm64': `kokorobox-desktop-windows-${version}-arm64-setup.exe`
   }
   const file = fileMap[`${process.platform}-${process.arch}`]
   if (isPortable())
@@ -285,24 +299,6 @@ export async function downloadAndInstallUpdate(
       appUpdateInstalling = true
       setNotQuitDialog()
       app.quit()
-    }
-    if (file.endsWith('.pkg')) {
-      try {
-        await pauseSysProxy()
-        await pauseServiceFallbackForAppUpdate()
-        const execPromise = promisify(exec)
-        const shell = `installer -pkg ${path.join(dataDir(), file).replace(' ', '\\\\ ')} -target /`
-        const command = `do shell script "${shell}" with administrator privileges`
-        await execPromise(`osascript -e '${command}'`)
-        appUpdateInstalling = true
-        app.relaunch()
-        setNotQuitDialog()
-        app.quit()
-      } catch {
-        await clearAppUpdateServiceFallbackPause()
-        await resumeSysProxy()
-        shell.openPath(path.join(dataDir(), file))
-      }
     }
   } catch (e) {
     if (!appUpdateInstalling) {

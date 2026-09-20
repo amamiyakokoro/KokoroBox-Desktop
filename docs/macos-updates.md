@@ -160,12 +160,13 @@ the pinned Sparkle 2.10.0 tools, and removed with the other temporary signing ma
 5. **Bundle updates:** switch macOS update actions to Sparkle after privileged runtime migration.
 6. **Cleanup:** remove the macOS PKG auto-install code; retain PKG only for first install and repair.
 
-The foundation, native-integration, privileged-runtime, parallel-publication and bundle-update
-stages are implemented. Release builds compile and sign the updater bridge and embedded Sparkle framework,
+The foundation, native-integration, privileged-runtime, parallel-publication, bundle-update and
+cleanup stages are implemented. Release builds compile and sign the updater bridge and embedded Sparkle framework,
 inject the architecture-specific `SUFeedURL` and `SUPublicEDKey` before code signing, notarize the
 application independently of the PKG, and publish the signed application archive and appcast only
-after their receipt and checksums are verified. Builds containing this stage use Sparkle's standard
-update UI and never silently fall back to executing a downloaded PKG. If the native bridge or its
+after their receipt and checksums are verified. On macOS, manual update checks open Sparkle's
+standard UI directly, and the automatic-check preference controls Sparkle's own schedule. The
+in-app manifest checker and PKG installer are not used. If the native bridge or its
 signed configuration cannot initialize, KokoroBox records the failure and opens the matching
 GitHub Release so recovery remains an explicit user action.
 

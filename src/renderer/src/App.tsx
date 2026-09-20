@@ -91,9 +91,10 @@ const App: React.FC = () => {
       }
     }
   }
+  const useInAppUpdateChecks = platform !== 'darwin' && autoCheckUpdate
   const { data: latest } = useSWR(
-    autoCheckUpdate ? ['checkUpdate', updateChannel] : undefined,
-    autoCheckUpdate ? checkUpdate : (): undefined => {},
+    useInAppUpdateChecks ? ['checkUpdate', updateChannel] : undefined,
+    useInAppUpdateChecks ? checkUpdate : (): undefined => {},
     {
       refreshInterval: 1000 * 60 * 10
     }
