@@ -458,6 +458,17 @@ input[type='number'] {
   width: 100%;
 }
 
+.settings-navigation-strip {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  flex: 1 1 auto;
+}
+
+.settings-navigation-scroll-control {
+  display: none;
+}
+
 .feature-settings-layout__action {
   position: absolute;
   z-index: 1;
@@ -552,8 +563,19 @@ input[type='number'] {
     padding-inline: calc(var(--spacing) * 3);
   }
 
-  .settings-navigation-list {
+  .settings-navigation-strip {
     order: 1;
+    min-width: 0;
+    flex: 1 1 auto;
+    align-items: center;
+    gap: calc(var(--spacing) * 0.5);
+  }
+
+  .settings-navigation-scroll-control {
+    display: inline-flex;
+  }
+
+  .settings-navigation-list {
     min-width: 0;
     flex-direction: row;
     flex: 1 1 auto;

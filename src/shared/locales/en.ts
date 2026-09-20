@@ -28,6 +28,8 @@ export const messages: Readonly<Record<string, string>> = {
   'Protocol ports': 'Protocol ports',
   'Sniffing exceptions': 'Sniffing exceptions',
   'Settings categories': 'Settings categories',
+  'Scroll settings categories left': 'Scroll settings categories left',
+  'Scroll settings categories right': 'Scroll settings categories right',
   'Settings panels': 'Settings panels',
   Network: 'Network',
   'Appearance and interface': 'Appearance and interface',

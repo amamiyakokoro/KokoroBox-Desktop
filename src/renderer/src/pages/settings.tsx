@@ -13,12 +13,19 @@ import { KokoTabs } from '@renderer/components/base/base-controls'
 import { KokoSearchField } from '@renderer/components/base/koko-search-field'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { LuChevronRight, LuSearch } from 'react-icons/lu'
+import { LuChevronLeft, LuChevronRight, LuSearch } from 'react-icons/lu'
+
+const emptyCategoryScrollState = {
+  hasOverflow: false,
+  canScrollLeft: false,
+  canScrollRight: false
+}
 
 const Settings: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams()
   const [search, setSearch] = useState('')
   const [searchExpanded, setSearchExpanded] = useState(false)
+  const [categoryScrollState, setCategoryScrollState] = useState(emptyCategoryScrollState)
   const layoutRef = useRef<HTMLDivElement>(null)
   const categoryNavigationRef = useRef<HTMLDivElement>(null)
   const searchInputRef = useRef<HTMLInputElement>(null)
@@ -75,6 +82,34 @@ const Settings: React.FC = () => {
     })
   }, [])
 
+  const updateCategoryScrollState = useCallback((): void => {
+    const navigation = categoryNavigationRef.current
+    if (!navigation) return
+
+    const maxScrollLeft = Math.max(0, navigation.scrollWidth - navigation.clientWidth)
+    const nextState = {
+      hasOverflow: maxScrollLeft > 1,
+      canScrollLeft: navigation.scrollLeft > 1,
+      canScrollRight: navigation.scrollLeft < maxScrollLeft - 1
+    }
+    setCategoryScrollState((current) =>
+      current.hasOverflow === nextState.hasOverflow &&
+      current.canScrollLeft === nextState.canScrollLeft &&
+      current.canScrollRight === nextState.canScrollRight
+        ? current
+        : nextState
+    )
+  }, [])
+
+  const scrollCategories = (direction: -1 | 1): void => {
+    const navigation = categoryNavigationRef.current
+    if (!navigation) return
+    navigation.scrollBy({
+      behavior: 'smooth',
+      left: direction * Math.max(200, Math.round(navigation.clientWidth * 0.7))
+    })
+  }
+
   const resetContentScroll = (): void => {
     requestAnimationFrame(() => {
       layoutRef.current?.closest<HTMLElement>('.content')?.scrollTo({ top: 0, left: 0 })
@@ -124,6 +159,20 @@ const Settings: React.FC = () => {
     window.addEventListener('keydown', handleSearchShortcut)
     return () => window.removeEventListener('keydown', handleSearchShortcut)
   }, [openSearch, search, searchExpanded])
+
+  useEffect(() => {
+    const navigation = categoryNavigationRef.current
+    if (!navigation) return
+
+    const animationFrame = requestAnimationFrame(updateCategoryScrollState)
+    const resizeObserver = new ResizeObserver(updateCategoryScrollState)
+    resizeObserver.observe(navigation)
+
+    return () => {
+      cancelAnimationFrame(animationFrame)
+      resizeObserver.disconnect()
+    }
+  }, [updateCategoryScrollState])
 
   useEffect(() => {
     const navigation = categoryNavigationRef.current
@@ -235,40 +284,79 @@ const Settings: React.FC = () => {
                 </Tooltip>
               )}
             </div>
-            <ScrollShadow
-              ref={categoryNavigationRef}
-              orientation="horizontal"
-              size={28}
-              className="settings-navigation-list flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto"
-            >
-              {categories.map((item) => {
-                const Icon = item.icon
-                const active = category === item.key && !normalizedSearch
-                return (
-                  <Button
-                    key={item.key}
-                    size="sm"
-                    variant="ghost"
-                    className={cn(
-                      'settings-category-button app-nodrag w-full shrink-0 justify-start px-3 font-medium text-foreground-600',
-                      active
-                        ? 'bg-accent-soft text-accent-soft-foreground hover:bg-accent-soft/80'
-                        : 'hover:bg-surface/75 hover:text-foreground'
-                    )}
-                    aria-label={item.label}
-                    aria-current={active ? 'page' : undefined}
-                    onPress={() => {
-                      setSearch('')
-                      setSearchExpanded(false)
-                      selectCategory(item.key)
-                    }}
-                  >
-                    <Icon className="text-base" />
-                    <span className="settings-category-label">{item.label}</span>
-                  </Button>
-                )
-              })}
-            </ScrollShadow>
+            <div className="settings-navigation-strip">
+              {categoryScrollState.hasOverflow && (
+                <Tooltip delay={400}>
+                  <Tooltip.Trigger>
+                    <Button
+                      isDisabled={!categoryScrollState.canScrollLeft}
+                      isIconOnly
+                      size="sm"
+                      variant="ghost"
+                      className="settings-navigation-scroll-control app-nodrag h-9 w-9 min-w-9 shrink-0"
+                      aria-label={tr('Scroll settings categories left')}
+                      onPress={() => scrollCategories(-1)}
+                    >
+                      <LuChevronLeft aria-hidden="true" />
+                    </Button>
+                  </Tooltip.Trigger>
+                  <Tooltip.Content>{tr('Scroll settings categories left')}</Tooltip.Content>
+                </Tooltip>
+              )}
+              <ScrollShadow
+                ref={categoryNavigationRef}
+                orientation="horizontal"
+                size={28}
+                className="settings-navigation-list flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto"
+                onScroll={updateCategoryScrollState}
+              >
+                {categories.map((item) => {
+                  const Icon = item.icon
+                  const active = category === item.key && !normalizedSearch
+                  return (
+                    <Button
+                      key={item.key}
+                      size="sm"
+                      variant="ghost"
+                      className={cn(
+                        'settings-category-button app-nodrag w-full shrink-0 justify-start px-3 font-medium text-foreground-600',
+                        active
+                          ? 'bg-accent-soft text-accent-soft-foreground hover:bg-accent-soft/80'
+                          : 'hover:bg-surface/75 hover:text-foreground'
+                      )}
+                      aria-label={item.label}
+                      aria-current={active ? 'page' : undefined}
+                      onPress={() => {
+                        setSearch('')
+                        setSearchExpanded(false)
+                        selectCategory(item.key)
+                      }}
+                    >
+                      <Icon className="text-base" />
+                      <span className="settings-category-label">{item.label}</span>
+                    </Button>
+                  )
+                })}
+              </ScrollShadow>
+              {categoryScrollState.hasOverflow && (
+                <Tooltip delay={400}>
+                  <Tooltip.Trigger>
+                    <Button
+                      isDisabled={!categoryScrollState.canScrollRight}
+                      isIconOnly
+                      size="sm"
+                      variant="ghost"
+                      className="settings-navigation-scroll-control app-nodrag h-9 w-9 min-w-9 shrink-0"
+                      aria-label={tr('Scroll settings categories right')}
+                      onPress={() => scrollCategories(1)}
+                    >
+                      <LuChevronRight aria-hidden="true" />
+                    </Button>
+                  </Tooltip.Trigger>
+                  <Tooltip.Content>{tr('Scroll settings categories right')}</Tooltip.Content>
+                </Tooltip>
+              )}
+            </div>
           </nav>
           <main className="min-w-0 pb-4">
             {(normalizedSearch || selectedPanels.length > 1) && (

@@ -28,6 +28,8 @@ export const messages: Readonly<Record<string, string>> = {
   'Protocol ports': '协议端口',
   'Sniffing exceptions': '嗅探排除项',
   'Settings categories': '设置分类',
+  'Scroll settings categories left': '向左滚动设置分类',
+  'Scroll settings categories right': '向右滚动设置分类',
   'Settings panels': '设置面板',
   Network: '网络',
   'Appearance and interface': '外观与界面',

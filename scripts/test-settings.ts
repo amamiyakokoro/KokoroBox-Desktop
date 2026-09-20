@@ -136,9 +136,24 @@ test('application settings keep one clear navigation hierarchy in compact deskto
   assert.match(settings, /scrollTo\(\{ top: 0, left: 0 \}\)/)
   assert.equal(settings.match(/setSearchParams\(nextParams\)\s*resetContentScroll\(\)/g)?.length, 2)
   assert.match(settings, /settings-navigation-list/)
+  assert.match(settings, /settings-navigation-strip/)
   assert.match(settings, /settings-navigation-search/)
   assert.match(settings, /<ScrollShadow/)
   assert.match(settings, /orientation="horizontal"/)
+  assert.match(settings, /const \[categoryScrollState, setCategoryScrollState\]/)
+  assert.match(settings, /navigation\.scrollWidth - navigation\.clientWidth/)
+  assert.match(settings, /new ResizeObserver\(updateCategoryScrollState\)/)
+  assert.match(settings, /resizeObserver\.observe\(navigation\)/)
+  assert.match(settings, /onScroll=\{updateCategoryScrollState\}/)
+  assert.match(settings, /categoryScrollState\.hasOverflow &&/)
+  assert.match(settings, /isDisabled=\{!categoryScrollState\.canScrollLeft\}/)
+  assert.match(settings, /isDisabled=\{!categoryScrollState\.canScrollRight\}/)
+  assert.match(settings, /<LuChevronLeft aria-hidden="true"/)
+  assert.match(settings, /<LuChevronRight aria-hidden="true"/)
+  assert.match(settings, /navigation\.scrollBy\(\{/)
+  assert.match(settings, /navigation\.clientWidth \* 0\.7/)
+  assert.match(settings, /behavior: 'smooth'/)
+  assert.doesNotMatch(settings, /onWheel=/)
   assert.doesNotMatch(settings, /activeCategory\.scrollIntoView/)
   assert.match(settings, /const itemStart = activeCategory\.offsetLeft/)
   assert.match(settings, /const itemEnd = itemStart \+ activeCategory\.offsetWidth/)
@@ -175,6 +190,12 @@ test('application settings keep one clear navigation hierarchy in compact deskto
   assert.doesNotMatch(styles, /@media \(max-width: 1050px\)/)
   assert.match(styles, /\.settings-navigation-list \{[\s\S]*flex-direction: row/)
   assert.match(styles, /\.settings-navigation-list \{[\s\S]*overflow-x: auto/)
+  assert.match(styles, /\.settings-navigation-strip \{[\s\S]*display: flex;/)
+  assert.match(styles, /\.settings-navigation-scroll-control \{[\s\S]*display: none;/)
+  assert.match(
+    styles,
+    /@container settings \(max-width: 50rem\)[\s\S]*\.settings-navigation-scroll-control \{[\s\S]*display: inline-flex;/
+  )
   assert.match(styles, /\.settings-navigation \{[\s\S]*min-height: 3rem;/)
   assert.match(
     styles,
