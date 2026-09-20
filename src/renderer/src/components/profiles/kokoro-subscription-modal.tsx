@@ -292,8 +292,8 @@ const KokoroSettingsPage: React.FC = () => {
                 </Button>
               </section>
 
-              <div className="grid min-h-0 grid-cols-1 items-start gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(420px,1.08fr)]">
-                <div className="flex min-w-0 flex-col gap-4">
+              <div className="flex min-h-0 w-full flex-col gap-4">
+                <div className="flex w-full min-w-0 flex-col gap-4">
                   {!mihomoAvailable && (
                     <p className="rounded-lg bg-danger-soft px-3 py-2 text-sm text-danger-soft-foreground">
                       {tr('Mihomo format is not available for this Kokoro account.')}

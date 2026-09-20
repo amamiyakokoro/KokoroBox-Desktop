@@ -1526,6 +1526,14 @@ test('Kokoro account options and default rules use clear desktop sections and sa
   assert.match(page, /<KokoroSectionHeading id=\{headingId\} title=\{title\} \/>/)
   assert.match(page, /title=\{tr\('Subscription options'\)\}/)
   assert.match(page, /title=\{tr\('Update behavior'\)\}/)
+  assert.match(page, /className="flex min-h-0 w-full flex-col gap-4"/)
+  assert.match(page, /className="flex w-full min-w-0 flex-col gap-4"/)
+  assert.doesNotMatch(
+    page,
+    /lg:grid-cols-\[minmax\(0,1fr\)_minmax\(420px,1\.08fr\)\]/
+  )
+  assert.equal(page.match(/<KokoroOptionSection/g)?.length, 2)
+  assert.match(page, /<KokoroDefaultRules \/>/)
   assert.match(page, /grid-cols-\[auto_minmax\(0,1fr\)_auto\]/)
   assert.match(page, /<Chip key=\{plan\} size="sm" color="accent" variant="soft">/)
   assert.match(page, /bg-accent-soft font-semibold text-accent-soft-foreground/)
