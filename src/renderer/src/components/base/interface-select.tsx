@@ -1,7 +1,7 @@
 import { tr } from '../../../../shared/i18n'
 import React, { useEffect, useState } from 'react'
-import { ListBox, Select } from '@heroui/react'
 import { getInterfaces } from '@renderer/utils/ipc'
+import { KokoSelect } from './koko-form'
 
 const DISABLED_INTERFACE_KEY = '__disabled__'
 
@@ -13,42 +13,35 @@ const InterfaceSelect: React.FC<{
   const [ifaces, setIfaces] = useState<string[]>([])
   useEffect(() => {
     const fetchInterfaces = async (): Promise<void> => {
-      const names = Object.keys(await getInterfaces())
-      setIfaces(names.filter((name) => !exclude.includes(name)))
+      setIfaces(Object.keys(await getInterfaces()))
     }
-    fetchInterfaces()
+    void fetchInterfaces()
   }, [])
 
+  const excludedInterfaces = new Set(exclude)
+  const options = [
+    {
+      id: DISABLED_INTERFACE_KEY,
+      label: tr('Disable')
+    },
+    ...ifaces
+      .filter((name) => !excludedInterfaces.has(name))
+      .map((name) => ({ id: name, label: name }))
+  ]
+
   return (
-    <Select
+    <KokoSelect
       aria-label={tr('Network interface')}
-      className="w-75"
+      className="w-75 max-w-full"
+      density="compact"
+      disallowEmptySelection
+      options={options}
       value={value || DISABLED_INTERFACE_KEY}
       variant="secondary"
       onChange={(key) => {
-        if (Array.isArray(key) || key == null) return
-        onChange(key === DISABLED_INTERFACE_KEY ? '' : String(key))
+        onChange(key === DISABLED_INTERFACE_KEY ? '' : key)
       }}
-    >
-      <Select.Trigger className="h-8 min-h-8 py-0">
-        <Select.Value />
-        <Select.Indicator />
-      </Select.Trigger>
-      <Select.Popover>
-        <ListBox>
-          <ListBox.Item id={DISABLED_INTERFACE_KEY} textValue={tr('Disable')}>
-            {tr('Disable')}
-            <ListBox.ItemIndicator />
-          </ListBox.Item>
-          {ifaces.map((name) => (
-            <ListBox.Item id={name} key={name} textValue={name}>
-              {name}
-              <ListBox.ItemIndicator />
-            </ListBox.Item>
-          ))}
-        </ListBox>
-      </Select.Popover>
-    </Select>
+    />
   )
 }
 

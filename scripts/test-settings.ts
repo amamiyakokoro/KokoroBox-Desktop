@@ -396,7 +396,6 @@ test('shared settings primitives isolate HeroUI v3 compound APIs', () => {
     'src/renderer/src/components/base/base-setting-card.tsx',
     'src/renderer/src/components/base/base-feature-settings.tsx',
     'src/renderer/src/components/base/base-list-editor.tsx',
-    'src/renderer/src/components/base/interface-select.tsx',
     'src/renderer/src/components/base/base-controls.tsx',
     'src/renderer/src/components/base/koko-form.tsx',
     'src/renderer/src/components/base/koko-collections.tsx'
@@ -423,8 +422,16 @@ test('shared settings primitives isolate HeroUI v3 compound APIs', () => {
   assert.match(listEditor, /aria-label=\{tr\('Delete'\)\}/)
   assert.match(listEditor, /variant="ghost"/)
   assert.doesNotMatch(listEditor, /variant="danger-soft"/)
-  assert.match(interfaceSelect, /<Select\.Trigger/)
-  assert.match(interfaceSelect, /<ListBox\.Item/)
+  assert.match(interfaceSelect, /import \{ KokoSelect \} from '\.\/koko-form'/)
+  assert.doesNotMatch(interfaceSelect, /from '@heroui\/react'/)
+  assert.doesNotMatch(interfaceSelect, /<Select\.|<ListBox/)
+  assert.match(interfaceSelect, /<KokoSelect/)
+  assert.match(interfaceSelect, /density="compact"/)
+  assert.match(interfaceSelect, /disallowEmptySelection/)
+  assert.match(interfaceSelect, /value=\{value \|\| DISABLED_INTERFACE_KEY\}/)
+  assert.match(interfaceSelect, /key === DISABLED_INTERFACE_KEY \? '' : key/)
+  assert.match(interfaceSelect, /\.filter\(\(name\) => !excludedInterfaces\.has\(name\)\)/)
+  assert.doesNotMatch(interfaceSelect, /Select\.Trigger|h-8 min-h-8|items-center py-0/)
 })
 
 test('SettingItem has one canonical layout without legacy compatibility paths', () => {
