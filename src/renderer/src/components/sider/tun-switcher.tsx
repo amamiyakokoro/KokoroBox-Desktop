@@ -1,6 +1,6 @@
 import { tr } from '../../../../shared/i18n'
 import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'
-import BorderSwitch from '@renderer/components/base/border-switch'
+import { Switch } from '@heroui/react'
 import { TbDeviceIpadHorizontalBolt } from 'react-icons/tb'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { restartCore } from '@renderer/utils/ipc'
@@ -87,12 +87,18 @@ const TunSwitcher: React.FC<Props> = (props) => {
           active={match}
           onPress={() => navigate(settingsPath)}
           control={
-            <BorderSwitch
-              isShowBorder={false}
+            <Switch
+              size="sm"
               aria-label={tr('TUN mode')}
               isSelected={enable}
-              onValueChange={onChange}
-            />
+              onChange={onChange}
+            >
+              <Switch.Content>
+                <Switch.Control>
+                  <Switch.Thumb />
+                </Switch.Control>
+              </Switch.Content>
+            </Switch>
           }
         />
       </div>

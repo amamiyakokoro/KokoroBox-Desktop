@@ -294,7 +294,6 @@ test('shared settings primitives isolate HeroUI v3 compound APIs', () => {
     'src/renderer/src/components/base/base-setting-item.tsx',
     'src/renderer/src/components/base/base-setting-card.tsx',
     'src/renderer/src/components/base/base-feature-settings.tsx',
-    'src/renderer/src/components/base/border-switch.tsx',
     'src/renderer/src/components/base/base-list-editor.tsx',
     'src/renderer/src/components/base/interface-select.tsx',
     'src/renderer/src/components/base/base-controls.tsx',
@@ -308,7 +307,6 @@ test('shared settings primitives isolate HeroUI v3 compound APIs', () => {
     assert.doesNotMatch(source, /@heroui-v3/)
   }
 
-  const borderSwitch = readFileSync('src/renderer/src/components/base/border-switch.tsx', 'utf8')
   const settingCard = readFileSync('src/renderer/src/components/base/base-setting-card.tsx', 'utf8')
   const listEditor = readFileSync('src/renderer/src/components/base/base-list-editor.tsx', 'utf8')
   const interfaceSelect = readFileSync(
@@ -316,11 +314,6 @@ test('shared settings primitives isolate HeroUI v3 compound APIs', () => {
     'utf8'
   )
 
-  assert.match(borderSwitch, /<Switch\.Content>/)
-  assert.match(borderSwitch, /<Switch\.Control/)
-  assert.match(borderSwitch, /<Switch\.Thumb \/>/)
-  assert.match(borderSwitch, /onChange=\{onChange \?\? onValueChange\}/)
-  assert.doesNotMatch(borderSwitch, /classNames=/)
   assert.match(settingCard, /<Disclosure>/)
   assert.match(settingCard, /<Surface/)
   assert.match(listEditor, /<Tooltip\.Content/)
@@ -1043,11 +1036,18 @@ test('desktop sidebar separates controls, live status and navigation', () => {
   assert.doesNotMatch(sidebarSettings, /<Radio/)
   assert.match(systemProxy, /<SiderQuickControl/)
   assert.match(systemProxy, /onPress=\{\(\) => navigate\(settingsPath\)\}/)
-  assert.match(systemProxy, /control=\{[\s\S]*<BorderSwitch/)
+  assert.match(systemProxy, /control=\{[\s\S]*<Switch[\s\S]*size="sm"/)
+  assert.match(systemProxy, /<Switch\.Content>[\s\S]*<Switch\.Control>[\s\S]*<Switch\.Thumb \/>/)
+  assert.match(systemProxy, /isDisabled=\{mode == 'manual' && disabled\}/)
+  assert.match(systemProxy, /onChange=\{onChange\}/)
+  assert.doesNotMatch(systemProxy, /BorderSwitch|border-2|isShowBorder/)
   assert.doesNotMatch(systemProxy, /\.\.\.attributes/)
   assert.match(tun, /<SiderQuickControl/)
   assert.match(tun, /onPress=\{\(\) => navigate\(settingsPath\)\}/)
-  assert.match(tun, /control=\{[\s\S]*<BorderSwitch/)
+  assert.match(tun, /control=\{[\s\S]*<Switch[\s\S]*size="sm"/)
+  assert.match(tun, /<Switch\.Content>[\s\S]*<Switch\.Control>[\s\S]*<Switch\.Thumb \/>/)
+  assert.match(tun, /onChange=\{onChange\}/)
+  assert.doesNotMatch(tun, /BorderSwitch|border-2|isShowBorder/)
   assert.doesNotMatch(tun, /\.\.\.attributes/)
   assert.match(appRouting, /getAppRoutingStatus/)
   assert.match(appRouting, /getAppRoutingStatusMessage/)

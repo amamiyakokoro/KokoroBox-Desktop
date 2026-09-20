@@ -1,5 +1,5 @@
 import { tr } from '../../../../shared/i18n'
-import BorderSwitch from '@renderer/components/base/border-switch'
+import { Switch } from '@heroui/react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'
@@ -97,13 +97,19 @@ const SysproxySwitcher: React.FC<Props> = (props) => {
           active={match}
           onPress={() => navigate(settingsPath)}
           control={
-            <BorderSwitch
-              isShowBorder={false}
+            <Switch
+              size="sm"
               aria-label={tr('System proxy')}
               isSelected={!(mode != 'auto' && disabled) && enable}
               isDisabled={mode == 'manual' && disabled}
-              onValueChange={onChange}
-            />
+              onChange={onChange}
+            >
+              <Switch.Content>
+                <Switch.Control>
+                  <Switch.Thumb />
+                </Switch.Control>
+              </Switch.Content>
+            </Switch>
           }
         />
       </div>
