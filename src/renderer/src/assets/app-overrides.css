@@ -548,7 +548,6 @@ input[type='number'] {
     align-items: center;
     gap: calc(var(--spacing) * 2);
     border-right-width: 0;
-    border-bottom: 1px solid var(--border);
     padding-block: calc(var(--spacing) * 1.5);
     padding-inline: calc(var(--spacing) * 3);
   }

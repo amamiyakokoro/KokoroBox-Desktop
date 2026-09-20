@@ -272,7 +272,7 @@ const Settings: React.FC = () => {
           </nav>
           <main className="min-w-0 pb-4">
             {(normalizedSearch || selectedPanels.length > 1) && (
-              <header className="settings-context-header sticky top-0 z-10 w-full border-b border-divider bg-surface/95">
+              <header className="settings-context-header sticky top-0 z-10 w-full bg-surface/95">
                 <div className="settings-context-inner mx-auto w-full max-w-[960px] px-4">
                   {normalizedSearch ? (
                     <h1 className="py-3 text-lg font-semibold tracking-tight">

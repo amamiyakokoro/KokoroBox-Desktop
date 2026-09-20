@@ -125,10 +125,8 @@ test('application settings keep one clear navigation hierarchy in compact deskto
   assert.match(settings, /const openSearch = useCallback/)
   assert.match(settings, /searchInputRef\.current\?\.focus\(\)/)
   assert.match(settings, /event\.key === 'Escape'/)
-  assert.match(
-    settings,
-    /settings-context-header sticky top-0 z-10 w-full border-b border-divider bg-surface\/95/
-  )
+  assert.match(settings, /settings-context-header sticky top-0 z-10 w-full bg-surface\/95/)
+  assert.doesNotMatch(settings, /settings-context-header[^"\n]*border-b/)
   assert.match(settings, /settings-navigation[^"\n]*bg-surface-secondary\/85/)
   assert.match(settings, /bg-accent-soft text-accent-soft-foreground/)
   assert.match(settings, /settings-context-inner mx-auto w-full max-w-\[960px\] px-4/)
@@ -180,6 +178,10 @@ test('application settings keep one clear navigation hierarchy in compact deskto
   assert.match(
     styles,
     /\.settings-navigation \{[\s\S]*padding-block: calc\(var\(--spacing\) \* 1\.5\)/
+  )
+  assert.doesNotMatch(
+    styles,
+    /@container settings \(max-width: 50rem\)[\s\S]*?\.settings-navigation \{[^}]*border-bottom/
   )
   assert.match(settings, /settings-panel-navigation[^"\n]*overflow-x-auto/)
   assert.match(styles, /\.settings-navigation-search \{[\s\S]*flex: 0 0 auto;[\s\S]*width: auto;/)
@@ -483,8 +485,9 @@ test('settings and Mihomo forms share the KokoroBox HeroUI v3 conventions', () =
   assert.match(controls, /selectionStyle\?: 'native' \| 'accent-underline'/)
   assert.match(controls, /selectionStyle = 'native'/)
   assert.match(controls, /<Tabs\.Indicator/)
-  assert.match(controls, /selectionStyle === 'accent-underline' && 'h-0\.5 bg-accent'/)
-  assert.match(controls, /data-\[selected=true\]:text-accent-soft-foreground/)
+  assert.match(controls, /<Tabs\.Indicator \/>/)
+  assert.doesNotMatch(controls, /selectionStyle === 'accent-underline' && 'h-0\.5 bg-accent'/)
+  assert.match(controls, /data-\[selected=true\]:text-accent/)
   assert.doesNotMatch(
     controls,
     /indicatorClassName|listClassName|listContainerClassName|tabClassName/
