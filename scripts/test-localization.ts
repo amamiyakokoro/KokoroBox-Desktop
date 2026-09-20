@@ -80,6 +80,48 @@ test('localized catalogs completely cover the canonical English source catalog',
   }
 })
 
+test('Chinese catalogs preserve canonical networking and product terminology', () => {
+  const expected: Readonly<
+    Record<string, readonly [simplifiedChinese: string, traditionalChinese: string]>
+  > = {
+    'Fake IP settings': ['Fake IP 设置', 'Fake IP 設定'],
+    'Fake IP': ['Fake IP', 'Fake IP'],
+    'Fake IP range (IPv4)': ['Fake IP 范围 (IPv4)', 'Fake IP 範圍 (IPv4)'],
+    'Fake IP range (IPv6)': ['Fake IP 范围 (IPv6)', 'Fake IP 範圍 (IPv6)'],
+    'Fake IP filter': ['Fake IP 过滤器', 'Fake IP 過濾器'],
+    'Fake-IP filter mode': ['Fake-IP 过滤模式', 'Fake-IP 過濾模式'],
+    'TUN interface name': ['TUN 网卡名称', 'TUN 網路卡名稱'],
+    'TUN network stack': ['TUN 网络栈', 'TUN 網路堆疊'],
+    'Toggle TUN mode': ['切换 TUN 模式', '切換 TUN 模式'],
+    'HTTP port': ['HTTP 端口', 'HTTP 連接埠'],
+    'SOCKS port': ['SOCKS 端口', 'SOCKS 連接埠'],
+    'TLS sniffing ports': ['TLS 嗅探端口', 'TLS 嗅探連接埠'],
+    'Proxy DNS servers': ['代理 DNS 服务器', '代理 DNS 伺服器'],
+    'GeoIP mode': ['GeoIP 模式', 'GeoIP 模式'],
+    'GeoIP-MMDB database': ['GeoIP-MMDB 数据库', 'GeoIP-MMDB 資料庫'],
+    'GeoSite database': ['GeoSite 数据库', 'GeoSite 資料庫'],
+    'WebDAV backup': ['WebDAV 备份', 'WebDAV 備份'],
+    'Gist synchronization': ['Gist 同步', 'Gist 同步'],
+    'VMess always uses relay mode': ['VMess 固定使用中继模式', 'VMess 固定使用中繼模式']
+  }
+
+  for (const [source, [simplified, traditional]] of Object.entries(expected)) {
+    assert.equal(simplifiedChinese[source], simplified, `zh-CN: ${source}`)
+    assert.equal(traditionalChinese[source], traditional, `zh-TW: ${source}`)
+  }
+
+  assert.doesNotMatch(Object.values(simplifiedChinese).join('\n'), /虚假 IP/)
+  assert.doesNotMatch(Object.values(traditionalChinese).join('\n'), /虛假 IP/)
+  assert.match(
+    simplifiedChinese['Enable a local Mihomo SOCKS or mixed listener first'],
+    /Mihomo SOCKS.*mixed/
+  )
+  assert.match(
+    traditionalChinese['Enable a local Mihomo SOCKS or mixed listener first'],
+    /Mihomo SOCKS.*mixed/
+  )
+})
+
 test('English UI, native menu, OAuth and interpolated messages retain user data', () => {
   setLocale('en')
   assert.equal(getLocale(), 'en')
