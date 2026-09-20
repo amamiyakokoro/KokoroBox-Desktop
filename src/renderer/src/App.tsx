@@ -405,7 +405,7 @@ const App: React.FC = () => {
             <div
               className={`flex justify-between p-2 ${!useWindowFrame && platform === 'darwin' ? 'ml-16.5' : ''}`}
             >
-              <div className="ml-1 flex items-center gap-2">
+              <div className="ml-2 flex items-center gap-2">
                 <KokoroBoxIcon className="size-7 shrink-0 text-foreground" />
                 <h3 className="text-lg font-bold leading-8">KokoroBox</h3>
               </div>
