@@ -59,7 +59,7 @@ const ConnectionGroupHeaderComponent: React.FC<Props> = ({
           type="button"
           aria-expanded={expanded}
           aria-label={title}
-          className="absolute inset-0 z-0 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/45"
+          className="absolute inset-0 z-0 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus/45"
           onClick={() => onToggle(groupKey, expanded)}
         />
         <Card.Content className="pointer-events-none relative z-1 min-h-14 w-full p-0">
@@ -74,12 +74,12 @@ const ConnectionGroupHeaderComponent: React.FC<Props> = ({
                 <div className="truncate text-sm font-medium leading-snug" title={title}>
                   {title}
                 </div>
-                <div className="truncate whitespace-nowrap text-[11px] leading-snug text-foreground-500 tabular-nums">
+                <div className="truncate whitespace-nowrap text-[11px] leading-snug text-muted tabular-nums">
                   <span className="mr-2">
                     ↑ {uploadTraffic} ↓ {downloadTraffic}
                   </span>
                   {hasSpeed && (
-                    <span className="text-xs font-medium text-primary">
+                    <span className="text-xs font-medium text-accent">
                       ↑ {uploadSpeedText}/s ↓ {downloadSpeedText}/s
                     </span>
                   )}
@@ -87,10 +87,10 @@ const ConnectionGroupHeaderComponent: React.FC<Props> = ({
               </div>
             </div>
             <div className="flex shrink-0 items-center gap-0.5">
-              <span className="mr-1 text-xs text-foreground-500 tabular-nums">{count}</span>
+              <span className="mr-1 text-xs text-muted tabular-nums">{count}</span>
               <span aria-hidden="true" className="size-8 shrink-0" />
               <IoIosArrowBack
-                className={`ml-0.5 flex h-8 items-center text-base text-foreground-400 transition duration-200 ${
+                className={`ml-0.5 flex h-8 items-center text-base text-muted transition duration-200 ${
                   expanded ? '-rotate-90' : ''
                 }`}
               />
@@ -104,7 +104,7 @@ const ConnectionGroupHeaderComponent: React.FC<Props> = ({
           className={`pointer-events-auto absolute right-9 top-1/2 z-2 -translate-y-1/2 ${
             isClosed
               ? ''
-              : 'text-foreground-500 opacity-40 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100'
+              : 'text-muted opacity-40 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100'
           }`}
           aria-label={
             isClosed

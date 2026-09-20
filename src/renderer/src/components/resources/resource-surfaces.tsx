@@ -23,7 +23,7 @@ export const ResourceSection: React.FC<ResourceSectionProps> = ({
               <h2 className="text-base font-semibold leading-6 text-foreground">{title}</h2>
             ) : null}
             {description ? (
-              <p className="mt-0.5 text-xs leading-5 text-foreground-500">{description}</p>
+              <p className="mt-0.5 text-xs leading-5 text-muted">{description}</p>
             ) : null}
           </div>
         ) : null}
@@ -58,7 +58,7 @@ export const ResourceSettingRow: React.FC<ResourceSettingRowProps> = ({
         {label}
       </div>
       {description ? (
-        <div className="mt-0.5 text-xs leading-4 text-foreground-500">{description}</div>
+        <div className="mt-0.5 text-xs leading-4 text-muted">{description}</div>
       ) : null}
     </div>
     <div
@@ -97,12 +97,10 @@ export const ResourceProviderRow: React.FC<ResourceProviderRowProps> = ({
           {name}
         </span>
         {count ? (
-          <span className="shrink-0 text-xs leading-4 text-foreground-500 tabular-nums">
-            {count}
-          </span>
+          <span className="shrink-0 text-xs leading-4 text-muted tabular-nums">{count}</span>
         ) : null}
       </div>
-      <div className="mt-0.5 truncate text-xs leading-4 text-foreground-500" title={metadataTitle}>
+      <div className="mt-0.5 truncate text-xs leading-4 text-muted" title={metadataTitle}>
         {metadata}
       </div>
     </div>

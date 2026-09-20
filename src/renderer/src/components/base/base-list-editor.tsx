@@ -175,7 +175,7 @@ const EditableList: React.FC<EditableListProps> = ({
       >
         {title && <h4 className="text-base font-medium">{title}</h4>}
         {isKeyValueLayout && part1Label && part2Label ? (
-          <div className="editable-list-key-value__header text-xs font-medium text-foreground-500">
+          <div className="editable-list-key-value__header text-xs font-medium text-muted">
             <span>{part1Label}</span>
             <span>{part2Label}</span>
           </div>
@@ -236,7 +236,7 @@ const EditableList: React.FC<EditableListProps> = ({
               >
                 <div className="editable-list-key-value__field editable-list-key-value__field--key min-w-0">
                   {part1Label ? (
-                    <span className="editable-list-key-value__field-label mb-1 block text-xs text-foreground-500">
+                    <span className="editable-list-key-value__field-label mb-1 block text-xs text-muted">
                       {part1Label}
                     </span>
                   ) : null}
@@ -252,7 +252,7 @@ const EditableList: React.FC<EditableListProps> = ({
                 </div>
                 <div className="editable-list-key-value__field editable-list-key-value__field--value min-w-0">
                   {part2Label ? (
-                    <span className="editable-list-key-value__field-label mb-1 block text-xs text-foreground-500">
+                    <span className="editable-list-key-value__field-label mb-1 block text-xs text-muted">
                       {part2Label}
                     </span>
                   ) : null}

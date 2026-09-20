@@ -117,10 +117,7 @@ const DetailSection = ({ title, children }: DetailSectionProps) => {
 
   return (
     <section aria-labelledby={headingId} className="pb-3 last:pb-0">
-      <h3
-        id={headingId}
-        className="mb-1 px-1 text-xs font-medium tracking-wide text-foreground-500"
-      >
+      <h3 id={headingId} className="mb-1 px-1 text-xs font-medium tracking-wide text-muted">
         {title}
       </h3>
       <div>{children}</div>
@@ -166,7 +163,7 @@ const ConnectionDetailModal = ({ connection, onClose }: Props) => {
       row.kind === 'copy' ? (
         <KokoActionMenu
           ariaLabel={`${tr('Copy rule')}: ${row.title}`}
-          buttonClassName="app-nodrag h-7 min-h-7 w-7 min-w-7 rounded-md text-foreground-400 hover:bg-default/40 hover:text-foreground focus-visible:text-foreground"
+          buttonClassName="app-nodrag h-7 min-h-7 w-7 min-w-7 rounded-md text-muted hover:bg-default/40 hover:text-foreground focus-visible:text-foreground"
           buttonVariant="ghost"
           items={buildCopyMenuItems(row.value, row.displayName, row.prefix)
             .filter((item) => item !== null)
@@ -187,7 +184,7 @@ const ConnectionDetailModal = ({ connection, onClose }: Props) => {
         key={row.title}
         className="grid min-h-9 grid-cols-[minmax(104px,0.34fr)_minmax(0,1fr)_auto] items-center gap-x-3 border-t border-separator/60 px-1 py-1.5 first:border-t-0"
       >
-        <div className="min-w-0 text-xs leading-5 text-foreground-500">{row.title}</div>
+        <div className="min-w-0 text-xs leading-5 text-muted">{row.title}</div>
         <div className={valueClassName} title={title}>
           {content}
         </div>
@@ -547,7 +544,7 @@ const ConnectionDetailModal = ({ connection, onClose }: Props) => {
                 ) : null}
                 {advancedRows.length > 0 ? (
                   <details className="group border-t border-separator/70 pt-2">
-                    <summary className="flex min-h-9 cursor-pointer list-none items-center justify-between rounded-lg px-1 text-xs font-medium tracking-wide text-foreground-500 outline-offset-2 transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary">
+                    <summary className="flex min-h-9 cursor-pointer list-none items-center justify-between rounded-lg px-1 text-xs font-medium tracking-wide text-muted outline-offset-2 transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-focus">
                       <span>{tr('Advanced options')}</span>
                       <HiChevronDown
                         aria-hidden="true"

@@ -34,17 +34,16 @@ interface SiderStatusCardProps extends SiderNavItemProps {
 }
 
 const statusToneClasses: Record<SiderStatusTone, string> = {
-  default: 'text-foreground-500',
-  success: 'text-success-600 dark:text-success-400',
-  warning: 'text-warning-600 dark:text-warning-400',
-  danger: 'text-danger-600 dark:text-danger-400'
+  default: 'text-muted',
+  success: 'text-success',
+  warning: 'text-warning',
+  danger: 'text-danger'
 }
 
 const kokoStatusTone = (tone: SiderStatusTone): KokoStatusTone =>
   tone === 'default' ? 'neutral' : tone
 
-const siderItemTitleClassName =
-  'block h-5 truncate text-sm font-semibold leading-5 text-foreground'
+const siderItemTitleClassName = 'block h-5 truncate text-sm font-semibold leading-5 text-foreground'
 const siderItemSubtitleClassName =
   'flex h-4 min-w-0 items-center gap-1 overflow-hidden text-xs leading-4'
 const siderActiveSurfaceClassName =
@@ -81,10 +80,10 @@ const SiderItemIcon: React.FC<{
       'flex size-8 shrink-0 items-center justify-center rounded-lg transition-colors duration-150',
       !active &&
         (prominence === 'navigation'
-          ? 'bg-transparent text-base text-foreground-500 group-hover:bg-default-100/70 group-hover:text-foreground'
+          ? 'bg-transparent text-base text-muted group-hover:bg-surface-secondary/70 group-hover:text-foreground'
           : prominence === 'account'
             ? 'bg-accent-soft/35 text-lg text-accent-soft-foreground group-hover:bg-accent-soft/65 group-hover:text-accent-soft-foreground'
-            : 'bg-default-100/70 text-xl text-foreground-500 group-hover:bg-default-200/80 group-hover:text-foreground'),
+            : 'bg-surface-secondary/70 text-xl text-muted group-hover:bg-surface-secondary/80 group-hover:text-foreground'),
       active && siderActiveIconClassName,
       className
     )}
@@ -187,7 +186,7 @@ export const SiderSection: React.FC<{
   columns?: 1 | 2
 }> = ({ title, children, columns = 1 }) => (
   <section className="sider-section">
-    <h2 className="mb-1 px-1 text-xs font-semibold text-foreground-500">{title}</h2>
+    <h2 className="mb-1 px-1 text-xs font-semibold text-muted">{title}</h2>
     <div className={columns === 2 ? 'grid grid-cols-2 gap-1.5' : 'flex flex-col gap-1.5'}>
       {children}
     </div>
@@ -221,9 +220,7 @@ export const SiderNavItem: React.FC<SiderNavItemProps> = ({
       data-card-primary-action
       className={cn(
         'grid min-w-0 flex-1 items-center gap-x-2.5 rounded-xl px-2.5 py-2 text-left focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-accent',
-        trailing
-          ? 'grid-cols-[2rem_minmax(0,1fr)]'
-          : 'grid-cols-[2rem_minmax(0,1fr)_2rem]'
+        trailing ? 'grid-cols-[2rem_minmax(0,1fr)]' : 'grid-cols-[2rem_minmax(0,1fr)_2rem]'
       )}
       aria-current={active ? 'page' : undefined}
       onClick={onPress}
@@ -236,8 +233,8 @@ export const SiderNavItem: React.FC<SiderNavItemProps> = ({
         subtitle={
           description || status ? (
             <>
-              {description && <span className="truncate text-foreground-500">{description}</span>}
-              {description && status && <span className="text-foreground-300">·</span>}
+              {description && <span className="truncate text-muted">{description}</span>}
+              {description && status && <span className="text-muted">·</span>}
               {status && (
                 <SiderStatusRow className="shrink-0" tone={statusTone}>
                   {status}
@@ -249,7 +246,7 @@ export const SiderNavItem: React.FC<SiderNavItemProps> = ({
       />
       {!trailing && (
         <SiderTrailingSlot>
-          <LuChevronRight className="shrink-0 text-sm text-foreground-300 transition-all duration-150 group-hover:translate-x-0.5 group-hover:text-foreground-700 group-focus-within:text-accent" />
+          <LuChevronRight className="shrink-0 text-sm text-muted transition-all duration-150 group-hover:translate-x-0.5 group-hover:text-foreground group-focus-within:text-accent" />
         </SiderTrailingSlot>
       )}
     </button>
@@ -281,10 +278,10 @@ export const SiderStatusCard: React.FC<SiderStatusCardProps> = ({
 }) => (
   <div
     className={cn(
-      'group overflow-hidden rounded-xl border bg-content1/85 shadow-none transition-[background-color,border-color,box-shadow] duration-150',
+      'group overflow-hidden rounded-xl border bg-surface/85 shadow-none transition-[background-color,border-color,box-shadow] duration-150',
       active
         ? siderActiveSurfaceClassName
-        : 'border-divider hover:border-default-400/80 hover:bg-content2/70 hover:shadow-sm'
+        : 'border-separator hover:border-accent/25 hover:bg-surface-secondary/70 hover:shadow-sm'
     )}
   >
     <div className="flex min-h-14 items-center">
@@ -324,16 +321,14 @@ export const SiderStatusCard: React.FC<SiderStatusCardProps> = ({
                     <span
                       title={descriptionTitle}
                       className={cn(
-                        'truncate text-foreground-500',
+                        'truncate text-muted',
                         prioritizeDescription && 'max-w-[60%] shrink-0'
                       )}
                     >
                       {description}
                     </span>
                   )}
-                  {description && status && (
-                    <span className="text-foreground-300">{metadataSeparator}</span>
-                  )}
+                  {description && status && <span className="text-muted">{metadataSeparator}</span>}
                   {status && statusIndicator ? (
                     <KokoStatusIndicator
                       className={prioritizeDescription ? 'min-w-0' : 'shrink-0'}
@@ -360,7 +355,7 @@ export const SiderStatusCard: React.FC<SiderStatusCardProps> = ({
         )}
         {(showChevron ?? !actions) && (
           <SiderTrailingSlot>
-            <LuChevronRight className="shrink-0 text-sm text-foreground-300 transition-all duration-150 group-hover:translate-x-0.5 group-hover:text-foreground-700 group-focus-within:text-accent" />
+            <LuChevronRight className="shrink-0 text-sm text-muted transition-all duration-150 group-hover:translate-x-0.5 group-hover:text-foreground group-focus-within:text-accent" />
           </SiderTrailingSlot>
         )}
       </button>
@@ -373,7 +368,7 @@ export const SiderStatusCard: React.FC<SiderStatusCardProps> = ({
         </SiderTrailingSlot>
       )}
     </div>
-    {details && <div className="border-t border-divider/70 px-2.5 py-2">{details}</div>}
+    {details && <div className="border-t border-separator/70 px-2.5 py-2">{details}</div>}
   </div>
 )
 
@@ -401,7 +396,7 @@ export const SiderQuickControl: React.FC<SiderQuickControlProps> = ({
   <div data-sider-quick-control className="sider-quick-control-container w-full min-w-0">
     <div
       className={cn(
-        'sider-quick-control group rounded-2xl border border-divider bg-content1 px-2.5 py-2 shadow-sm transition-[background-color,border-color,box-shadow] duration-150 hover:border-default-400/80 hover:bg-content2/70 hover:shadow-md',
+        'sider-quick-control group rounded-2xl border border-separator bg-surface px-2.5 py-2 shadow-sm transition-[background-color,border-color,box-shadow] duration-150 hover:border-accent/25 hover:bg-surface-secondary/70 hover:shadow-md',
         active && siderActiveSurfaceClassName,
         disabled && 'opacity-60'
       )}
@@ -417,18 +412,13 @@ export const SiderQuickControl: React.FC<SiderQuickControlProps> = ({
         <span
           className={cn(
             'sider-quick-control__icon flex size-8 items-center justify-center rounded-lg text-xl transition-colors duration-150',
-            active
-              ? siderActiveIconClassName
-              : 'text-foreground-600 group-hover:text-foreground'
+            active ? siderActiveIconClassName : 'text-muted group-hover:text-foreground'
           )}
         >
           {icon}
         </span>
         <span
-          className={cn(
-            'sider-quick-control__title whitespace-nowrap',
-            siderItemTitleClassName
-          )}
+          className={cn('sider-quick-control__title whitespace-nowrap', siderItemTitleClassName)}
           title={title}
         >
           {title}

@@ -200,7 +200,7 @@ const CoreRuntimeConfig: React.FC<Props> = ({
             divider
           >
             {systemCoreOnlyBuild ? (
-              <span className="text-sm text-foreground-600">{tr('System core')}</span>
+              <span className="text-sm text-muted">{tr('System core')}</span>
             ) : (
               <KokoSelect
                 aria-label={tr('Core version')}
@@ -353,7 +353,7 @@ const CoreRuntimeConfig: React.FC<Props> = ({
           <SettingItem contentAlign="end" title={tr('Service status')}>
             <Button
               size="sm"
-              className="text-primary"
+              className="text-accent"
               variant="secondary"
               onPress={() => setShowServiceModal(true)}
             >

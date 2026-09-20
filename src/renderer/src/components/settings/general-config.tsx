@@ -84,7 +84,7 @@ const GeneralConfig: React.FC = () => {
                 <Tooltip.Trigger>
                   <Button
                     size="sm"
-                    className="text-warning-700 dark:text-warning-400"
+                    className="text-warning"
                     variant="secondary"
                     onPress={async () => {
                       try {

@@ -72,7 +72,7 @@ export const KokoTabs: React.FC<KokoTabsProps> = ({
                 'min-w-max whitespace-nowrap',
                 density === 'toolbar' && 'h-9 px-2.5',
                 selectionStyle === 'accent-underline' &&
-                  'rounded-md text-foreground-500 transition-colors hover:bg-surface-secondary/60 hover:text-foreground data-[selected=true]:font-medium data-[selected=true]:text-accent'
+                  'rounded-md text-muted transition-colors hover:bg-surface-secondary/60 hover:text-foreground data-[selected=true]:font-medium data-[selected=true]:text-accent'
               )}
               isDisabled={option.isDisabled}
             >

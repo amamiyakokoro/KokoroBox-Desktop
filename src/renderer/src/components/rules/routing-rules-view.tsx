@@ -25,7 +25,7 @@ const RoutingRulesView: React.FC = () => {
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <KokoToolbar aria-label={tr('Routing rules')} className="shrink-0 border-b border-divider">
+      <KokoToolbar aria-label={tr('Routing rules')} className="shrink-0 border-b border-separator">
         <KokoSearchField
           aria-label={tr('Search routing rules')}
           className="min-w-0 flex-1"

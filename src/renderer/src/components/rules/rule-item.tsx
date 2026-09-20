@@ -91,7 +91,7 @@ const RuleItem: React.FC<Props> = ({ rule, index }) => {
                 className="shrink-0 text-sm text-accent-soft-foreground/70"
               />
               <span
-                className="truncate text-xs font-medium leading-4 text-foreground-500"
+                className="truncate text-xs font-medium leading-4 text-muted"
                 title={rule.proxy}
               >
                 {rule.proxy}

@@ -179,7 +179,7 @@ const ProxyItem: React.FC<Props> = (props) => {
           selected
             ? 'border-accent/45 bg-accent-soft/40'
             : fixed
-              ? 'border-secondary/30 bg-secondary/10'
+              ? 'border-separator/70 bg-surface-secondary/60'
               : 'border-separator/60 bg-surface-secondary/40 hover:border-accent/25 hover:bg-accent-soft/15'
         }`}
         data-selected={selected || undefined}
@@ -205,14 +205,14 @@ const ProxyItem: React.FC<Props> = (props) => {
                   {proxy.name}
                 </span>
                 {proxyDisplayLayout === 'single' ? (
-                  <span className="ml-2 min-w-0 truncate text-xs text-foreground-500">
+                  <span className="ml-2 min-w-0 truncate text-xs text-muted">
                     {formatProxyType(proxy.type)}
                     {shouldShowGroupSelectedProxy ? ` → ${proxy.now}` : ''}
                   </span>
                 ) : null}
               </span>
               {proxyDisplayLayout === 'double' ? (
-                <span className="ml-3.5 mt-0.5 min-w-0 truncate text-xs leading-4 text-foreground-500">
+                <span className="ml-3.5 mt-0.5 min-w-0 truncate text-xs leading-4 text-muted">
                   {formatProxyType(proxy.type)}
                   {proxy.udp !== undefined && !shouldShowGroupSelectedProxy ? (
                     <span className="ml-1 opacity-70">· UDP</span>
@@ -243,7 +243,7 @@ const ProxyItem: React.FC<Props> = (props) => {
               ) : null}
               <Button
                 className={`h-7 min-w-12 px-1.5 text-xs tabular-nums transition-opacity group-hover/proxy-node:opacity-100 group-focus-within/proxy-node:opacity-100 ${
-                  delay === 0 ? '' : 'text-foreground-500 opacity-75'
+                  delay === 0 ? '' : 'text-muted opacity-75'
                 }`}
                 isPending={loading}
                 variant={delay === 0 ? 'danger-soft' : 'ghost'}

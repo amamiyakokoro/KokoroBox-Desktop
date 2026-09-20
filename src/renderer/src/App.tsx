@@ -451,7 +451,7 @@ const App: React.FC = () => {
         >
           <div
             className={`h-full w-0.5 transition-colors ${
-              resizing ? 'bg-primary' : 'bg-transparent group-hover:bg-primary/60'
+              resizing ? 'bg-accent' : 'bg-transparent group-hover:bg-accent/60'
             }`}
           />
         </div>

@@ -199,7 +199,7 @@ const KokoroSettingsPage: React.FC = () => {
         {!session?.authenticated && (
           <header className="mb-5 border-b border-separator/70 pb-4">
             <h2 className="text-lg font-semibold">{tr('Kokoro subscription')}</h2>
-            <p className="mt-1 text-xs text-foreground-500">
+            <p className="mt-1 text-xs text-muted">
               {tr('Sign in with osu! to securely fetch a Mihomo profile from Kokoro')}
             </p>
           </header>
@@ -215,7 +215,7 @@ const KokoroSettingsPage: React.FC = () => {
                 <LuLogIn className="text-2xl" />
               </div>
               <h3 className="text-base font-semibold">{tr('Sign in to Kokoro')}</h3>
-              <p className="mt-2 max-w-sm text-sm leading-6 text-foreground-500">
+              <p className="mt-2 max-w-sm text-sm leading-6 text-muted">
                 {tr(
                   'Authorize with osu! in your system browser. Kokoro never sees your osu! password. Sign-in credentials are kept in system secure storage.'
                 )}
@@ -267,7 +267,7 @@ const KokoroSettingsPage: React.FC = () => {
                       </Chip>
                     ))}
                   </div>
-                  <p className="mt-1 text-xs text-foreground-500">
+                  <p className="mt-1 text-xs text-muted">
                     {user.bandwidth_limit === 0
                       ? tr('Used this month: {0} · Unlimited', [calcTraffic(user.traffic_usage)])
                       : tr('Used this month: {0} / {1}', [
@@ -284,7 +284,7 @@ const KokoroSettingsPage: React.FC = () => {
                 <Button
                   size="sm"
                   variant="ghost"
-                  className="shrink-0 text-foreground-500 data-[hover=true]:text-danger"
+                  className="shrink-0 text-muted data-[hover=true]:text-danger"
                   onPress={handleLogout}
                 >
                   <LuLogOut className="text-danger" />
@@ -372,10 +372,8 @@ const KokoroSettingsPage: React.FC = () => {
                       />
                       {!supportsDirect ? (
                         <div className="flex min-h-12 flex-col justify-center rounded-lg border border-separator/70 bg-surface-secondary px-3 py-1.5">
-                          <span className="text-xs text-foreground-500">
-                            {tr('Connection mode')}
-                          </span>
-                          <span className="truncate text-sm text-foreground-500">
+                          <span className="text-xs text-muted">{tr('Connection mode')}</span>
+                          <span className="truncate text-sm text-muted">
                             {settings?.protocol === 'vmess'
                               ? tr('VMess always uses relay mode')
                               : tr('This protocol currently supports relay mode only')}
@@ -440,7 +438,7 @@ const KokoroSettingsPage: React.FC = () => {
                           <p className="text-sm font-medium">
                             {tr('Update rule sets automatically')}
                           </p>
-                          <p className="mt-0.5 text-xs text-foreground-500">
+                          <p className="mt-0.5 text-xs text-muted">
                             {tr('Update remote rule providers')}
                           </p>
                         </div>
@@ -463,7 +461,7 @@ const KokoroSettingsPage: React.FC = () => {
                           <p className="text-sm font-medium">
                             {tr('Update subscription automatically')}
                           </p>
-                          <p className="mt-0.5 text-xs text-foreground-500">
+                          <p className="mt-0.5 text-xs text-muted">
                             {tr('Keep the last working configuration if an update fails')}
                           </p>
                         </div>

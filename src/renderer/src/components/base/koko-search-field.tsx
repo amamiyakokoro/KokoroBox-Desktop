@@ -23,12 +23,9 @@ export const KokoSearchField: React.FC<KokoSearchFieldProps> = ({
   value,
   ...inputProps
 }) => (
-  <InputGroup
-    className={cn('h-9 min-h-9 w-64 max-w-full shrink-0', className)}
-    variant="secondary"
-  >
+  <InputGroup className={cn('h-9 min-h-9 w-64 max-w-full shrink-0', className)} variant="secondary">
     <InputGroup.Prefix className="h-full items-center">
-      <LuSearch aria-hidden="true" className="shrink-0 text-foreground-400" />
+      <LuSearch aria-hidden="true" className="shrink-0 text-muted" />
     </InputGroup.Prefix>
     <InputGroup.Input
       {...inputProps}

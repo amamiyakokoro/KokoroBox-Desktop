@@ -291,12 +291,12 @@ const TrayIconCropModal: React.FC<Props> = (props) => {
                         />
                       </div>
                       <div
-                        className="absolute cursor-move rounded-none border-2 border-primary ring-1 ring-background/80"
+                        className="absolute cursor-move rounded-none border-2 border-accent ring-1 ring-background/80"
                         style={cropRadiusStyle}
                         onPointerDown={(e) => handlePointerDown(e, 'move')}
                       >
                         <div
-                          className="absolute h-4 w-4 -translate-x-1/2 -translate-y-1/2 cursor-nwse-resize rounded-full border-2 border-background bg-primary shadow-sm"
+                          className="absolute h-4 w-4 -translate-x-1/2 -translate-y-1/2 cursor-nwse-resize rounded-full border-2 border-background bg-accent shadow-sm"
                           style={resizeHandleStyle}
                           onPointerDown={(e) => {
                             e.stopPropagation()
@@ -307,7 +307,7 @@ const TrayIconCropModal: React.FC<Props> = (props) => {
                     </>
                   )}
                 </div>
-                <div className="flex w-full min-w-72 flex-col gap-3 border-t border-default-200 pt-3">
+                <div className="flex w-full min-w-72 flex-col gap-3 border-t border-separator pt-3">
                   <Slider
                     aria-label={tr('Corner radius')}
                     className="w-full"
@@ -318,8 +318,8 @@ const TrayIconCropModal: React.FC<Props> = (props) => {
                     onChange={(value) => setCornerRadiusPercent(getSliderNumber(value))}
                   >
                     <div className="mb-1 flex items-center justify-between gap-3">
-                      <Label className="text-xs text-default-600">{tr('Corner radius')}</Label>
-                      <Slider.Output className="text-xs text-default-500">
+                      <Label className="text-xs text-muted">{tr('Corner radius')}</Label>
+                      <Slider.Output className="text-xs text-muted">
                         {`${cornerRadiusPercent}%`}
                       </Slider.Output>
                     </div>
@@ -329,7 +329,7 @@ const TrayIconCropModal: React.FC<Props> = (props) => {
                     </Slider.Track>
                   </Slider>
                   <div className="flex w-full flex-col gap-2">
-                    <Label className="text-xs text-default-600">{tr('Style')}</Label>
+                    <Label className="text-xs text-muted">{tr('Style')}</Label>
                     <Tabs
                       selectedKey={colorMode}
                       onSelectionChange={(key) => setColorMode(String(key) as ColorMode)}
@@ -348,7 +348,7 @@ const TrayIconCropModal: React.FC<Props> = (props) => {
                     {colorMode === 'custom' && (
                       <div className="flex items-center gap-2 pt-1">
                         <div
-                          className="h-7 w-7 shrink-0 rounded-full border border-default-300"
+                          className="h-7 w-7 shrink-0 rounded-full border border-separator"
                           style={{
                             backgroundColor: `rgb(${rgbColor.red}, ${rgbColor.green}, ${rgbColor.blue})`
                           }}

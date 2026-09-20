@@ -90,7 +90,7 @@ const PermissionModal: React.FC<Props> = (props) => {
   }
 
   const getStatusColor = (coreName: 'mihomo' | 'mihomo-alpha'): string => {
-    if (hasPermission === null) return 'bg-default-400 animate-pulse'
+    if (hasPermission === null) return 'bg-muted animate-pulse'
     if (typeof hasPermission === 'boolean') {
       return hasPermission ? 'bg-success' : 'bg-warning'
     }
@@ -147,7 +147,7 @@ const PermissionModal: React.FC<Props> = (props) => {
 
                     <Separator />
 
-                    <div className="text-xs text-default-500 space-y-2">
+                    <div className="text-xs text-muted space-y-2">
                       <div className="flex items-start gap-2">
                         <span className="mt-0.5">•</span>
                         <span>
@@ -173,9 +173,7 @@ const PermissionModal: React.FC<Props> = (props) => {
                         <Card.Header className="pb-0 pt-4 px-4 flex-col items-start">
                           <div className="flex items-center justify-between w-full">
                             <div className="flex items-center gap-2">
-                              <h4 className="font-semibold text-medium">
-                                {tr('Built-in release')}
-                              </h4>
+                              <h4 className="font-semibold text-base">{tr('Built-in release')}</h4>
                             </div>
                             <Chip
                               color={
@@ -192,7 +190,7 @@ const PermissionModal: React.FC<Props> = (props) => {
                           {typeof hasPermission !== 'boolean' && hasPermission?.mihomo ? (
                             <Button
                               size="sm"
-                              className="text-warning-700 dark:text-warning-400"
+                              className="text-warning"
                               variant="secondary"
                               onPress={() => handleCoreAction('mihomo', false)}
                               isPending={loading.mihomo}
@@ -218,9 +216,7 @@ const PermissionModal: React.FC<Props> = (props) => {
                         <Card.Header className="pb-0 pt-4 px-4 flex-col items-start">
                           <div className="flex items-center justify-between w-full">
                             <div className="flex items-center gap-2">
-                              <h4 className="font-semibold text-medium">
-                                {tr('Built-in preview')}
-                              </h4>
+                              <h4 className="font-semibold text-base">{tr('Built-in preview')}</h4>
                             </div>
                             <Chip
                               color={
@@ -239,7 +235,7 @@ const PermissionModal: React.FC<Props> = (props) => {
                           {typeof hasPermission !== 'boolean' && hasPermission?.['mihomo-alpha'] ? (
                             <Button
                               size="sm"
-                              className="text-warning-700 dark:text-warning-400"
+                              className="text-warning"
                               variant="secondary"
                               onPress={() => handleCoreAction('mihomo-alpha', false)}
                               isPending={loading['mihomo-alpha']}
@@ -262,7 +258,7 @@ const PermissionModal: React.FC<Props> = (props) => {
                       </Card>
                     </div>
 
-                    <div className="text-xs text-default-500 space-y-2">
+                    <div className="text-xs text-muted space-y-2">
                       <div className="flex items-start gap-2">
                         <span>{tr('Grant the core the system permissions it needs')}</span>
                       </div>
@@ -278,7 +274,7 @@ const PermissionModal: React.FC<Props> = (props) => {
               {isWindows && typeof hasPermission === 'boolean' ? (
                 <Button
                   size="sm"
-                  className={hasPermission ? 'text-warning-700 dark:text-warning-400' : undefined}
+                  className={hasPermission ? 'text-warning' : undefined}
                   variant={hasPermission ? 'secondary' : 'primary'}
                   onPress={() => handleWindowsAction(!hasPermission)}
                   isPending={windowsLoading}

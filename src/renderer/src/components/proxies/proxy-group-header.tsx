@@ -27,9 +27,7 @@ const GroupMetadata: React.FC<GroupMetadataProps> = ({ group, className = '' }) 
     Boolean(group.now) && ['Selector', 'Fallback', 'URLTest'].includes(group.type)
 
   return (
-    <span
-      className={`flex min-w-0 items-center gap-1 text-xs leading-4 text-foreground-500 ${className}`}
-    >
+    <span className={`flex min-w-0 items-center gap-1 text-xs leading-4 text-muted ${className}`}>
       <span className="shrink-0">{getGroupTypeLabel(group.type)}</span>
       {showsSelectedTarget ? (
         <>
@@ -157,7 +155,7 @@ const ProxyGroupHeader = memo(function ProxyGroupHeader({
             </Button>
             <LuChevronRight
               aria-hidden="true"
-              className={`ml-0.5 text-base text-foreground-500 transition-[color,transform] duration-150 group-hover/proxy:text-accent-soft-foreground ${isOpen ? 'rotate-90' : ''}`}
+              className={`ml-0.5 text-base text-muted transition-[color,transform] duration-150 group-hover/proxy:text-accent-soft-foreground ${isOpen ? 'rotate-90' : ''}`}
             />
           </div>
         </div>

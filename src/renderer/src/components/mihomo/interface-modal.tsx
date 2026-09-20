@@ -43,8 +43,8 @@ const InterfaceModal: React.FC<Props> = (props) => {
                       return (
                         <div key={v.address}>
                           <div className="mt-2 flex items-center justify-between gap-3">
-                            <span className="text-sm text-foreground-500">{v.family}</span>
-                            <div className="flex min-w-0 items-center gap-1 rounded-lg bg-default-100 px-2 py-1">
+                            <span className="text-sm text-muted">{v.family}</span>
+                            <div className="flex min-w-0 items-center gap-1 rounded-lg bg-surface-secondary px-2 py-1">
                               <code className="truncate text-xs" title={v.address}>
                                 {v.address}
                               </code>

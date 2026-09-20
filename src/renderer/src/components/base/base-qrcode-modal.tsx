@@ -28,9 +28,7 @@ const QRCodeModal: React.FC<Props> = ({ title, url, onClose }) => {
               <div className="rounded-lg bg-white p-4">
                 <QRCodeSVG value={url} size={256} />
               </div>
-              <p className="mt-2 break-all text-center text-sm text-foreground-500 select-all">
-                {url}
-              </p>
+              <p className="mt-2 break-all text-center text-sm text-muted select-all">{url}</p>
             </Modal.Body>
             <Modal.CloseTrigger className="app-nodrag" />
           </Modal.Dialog>

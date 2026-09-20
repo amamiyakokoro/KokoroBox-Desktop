@@ -136,7 +136,7 @@ const MacOSServiceSetup: React.FC<Props> = ({ onChange }) => {
           <Modal.Dialog className="w-120">
             <Modal.Header className="flex-col gap-1">
               <Modal.Heading>{tr('Complete macOS System Service Setup')}</Modal.Heading>
-              <p className="text-sm font-normal text-default-500">
+              <p className="text-sm font-normal text-muted">
                 {tr(
                   'KokoroBox runs the proxy core through a system service by default. Daily launches no longer require elevation after setup.'
                 )}
@@ -161,7 +161,7 @@ const MacOSServiceSetup: React.FC<Props> = ({ onChange }) => {
                 </Card.Content>
               </Card>
 
-              <ol className="list-decimal space-y-2 pl-5 text-sm text-default-600">
+              <ol className="list-decimal space-y-2 pl-5 text-sm text-muted">
                 <li>{tr('Register the signed KokoroBox system service.')}</li>
                 <li>
                   {tr('If macOS opens System Settings, allow the KokoroBox background item.')}
@@ -175,7 +175,7 @@ const MacOSServiceSetup: React.FC<Props> = ({ onChange }) => {
 
               <Separator />
 
-              <p className="text-xs leading-5 text-default-500">
+              <p className="text-xs leading-5 text-muted">
                 {tr(
                   'The PKG requires administrator authorization once. macOS manages service registration and approval; administrator verification may be requested again only when repairing credentials from an older service.'
                 )}

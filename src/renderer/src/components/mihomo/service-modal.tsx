@@ -22,18 +22,11 @@ interface Props {
 type ServiceStatusType = Awaited<ReturnType<typeof serviceStatus>>
 type ConnectionStatusType = 'connected' | 'disconnected' | 'checking' | 'unknown'
 type ServiceAction =
-  | 'refresh'
-  | 'init'
-  | 'install'
-  | 'start'
-  | 'restart'
-  | 'repair'
-  | 'uninstall'
-  | 'open-settings'
+  'refresh' | 'init' | 'install' | 'start' | 'restart' | 'repair' | 'uninstall' | 'open-settings'
 type StatusColor = 'default' | 'success' | 'warning' | 'danger'
 
 const statusDotClasses: Record<StatusColor, string> = {
-  default: 'bg-foreground-300',
+  default: 'bg-muted',
   success: 'bg-success',
   warning: 'bg-warning',
   danger: 'bg-danger'
@@ -252,14 +245,14 @@ const ServiceModal: React.FC<Props> = (props) => {
 
                 <div className="space-y-1">
                   <h3 className="text-sm font-semibold text-foreground">KokoroBox Service</h3>
-                  <p className="text-xs leading-5 text-foreground-500">
+                  <p className="text-xs leading-5 text-muted">
                     {systemCoreOnlyBuild
                       ? tr('Using system service: {0}', [systemServicePath])
                       : tr(
                           'Provides elevated permissions for system proxy settings and core process management'
                         )}
                   </p>
-                  <p className="text-xs leading-5 text-foreground-500">
+                  <p className="text-xs leading-5 text-muted">
                     {systemCoreOnlyBuild
                       ? tr('The service lifecycle is managed by the distribution init system')
                       : requiresMacApproval
@@ -273,7 +266,7 @@ const ServiceModal: React.FC<Props> = (props) => {
                     <Separator />
                     <h3
                       id="service-maintenance-heading"
-                      className="pt-2 text-xs font-semibold text-foreground-500"
+                      className="pt-2 text-xs font-semibold text-muted"
                     >
                       {tr('Maintenance')}
                     </h3>
@@ -335,7 +328,7 @@ const ServiceModal: React.FC<Props> = (props) => {
                       {tr('Danger zone')}
                     </h3>
                     <div className="flex items-center justify-between gap-4">
-                      <p className="text-xs leading-5 text-foreground-500">
+                      <p className="text-xs leading-5 text-muted">
                         {tr('Remove KokoroBox Service from this system.')}
                       </p>
                       <Button
@@ -354,12 +347,7 @@ const ServiceModal: React.FC<Props> = (props) => {
               </div>
             </Modal.Body>
             <Modal.Footer className="justify-end gap-2">
-              <Button
-                size="sm"
-                variant="ghost"
-                onPress={() => onChange(false)}
-                isDisabled={isBusy}
-              >
+              <Button size="sm" variant="ghost" onPress={() => onChange(false)} isDisabled={isBusy}>
                 {tr('Close')}
               </Button>
 
@@ -415,9 +403,7 @@ const ServiceModal: React.FC<Props> = (props) => {
                 >
                   {tr('Initialize')}
                 </Button>
-              ) : status === 'stopped' ||
-                status === 'paused' ||
-                status === 'requires-approval' ? (
+              ) : status === 'stopped' || status === 'paused' || status === 'requires-approval' ? (
                 <Button
                   size="sm"
                   variant="primary"

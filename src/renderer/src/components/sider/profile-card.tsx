@@ -126,7 +126,7 @@ const ProfileCard: React.FC<Props> = ({ iconOnly }) => {
             extra ? (
               <div className="space-y-1.5">
                 <div className="flex min-w-0 items-center justify-between gap-2 text-xs">
-                  <span className="truncate text-foreground-500">
+                  <span className="truncate text-muted">
                     {calcTraffic(usage)} / {calcTraffic(total)}
                   </span>
                   <Tooltip delay={0}>
@@ -134,7 +134,7 @@ const ProfileCard: React.FC<Props> = ({ iconOnly }) => {
                       <Button
                         size="sm"
                         variant="ghost"
-                        className="h-6 min-w-0 px-1.5 text-xs text-foreground-500"
+                        className="h-6 min-w-0 px-1.5 text-xs text-muted"
                         aria-label={dateLabel}
                         onPress={() =>
                           patchAppConfig({
@@ -150,13 +150,13 @@ const ProfileCard: React.FC<Props> = ({ iconOnly }) => {
                   </Tooltip>
                 </div>
                 <Meter aria-label={tr('Traffic usage')} maxValue={total} value={usage}>
-                  <Meter.Track className="h-1.5 bg-default-200">
-                    <Meter.Fill className="bg-primary" />
+                  <Meter.Track className="h-1.5 bg-surface-secondary">
+                    <Meter.Fill className="bg-accent" />
                   </Meter.Track>
                 </Meter>
               </div>
             ) : (
-              <div className="flex items-center justify-between gap-2 text-xs text-foreground-500">
+              <div className="flex items-center justify-between gap-2 text-xs text-muted">
                 <span>{tr('Last updated')}</span>
                 <span>{dayjs(info.updated).fromNow()}</span>
               </div>

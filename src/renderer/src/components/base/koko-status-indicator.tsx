@@ -4,15 +4,15 @@ import type React from 'react'
 export type KokoStatusTone = 'neutral' | 'success' | 'warning' | 'danger'
 
 const statusDotClasses: Record<KokoStatusTone, string> = {
-  neutral: 'bg-foreground-300',
+  neutral: 'bg-muted',
   success: 'bg-success',
   warning: 'bg-warning',
   danger: 'bg-danger'
 }
 
 const statusTextClasses: Record<KokoStatusTone, string> = {
-  neutral: 'text-foreground-500',
-  success: 'text-foreground-500',
+  neutral: 'text-muted',
+  success: 'text-muted',
   warning: 'text-warning',
   danger: 'text-danger'
 }

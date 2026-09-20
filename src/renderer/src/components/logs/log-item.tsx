@@ -12,28 +12,28 @@ const levelTone: Record<LogLevel, { badge: string; row: string }> = {
     row: 'border-l-warning/70 bg-warning-soft/20'
   },
   info: {
-    badge: 'border-separator/80 bg-surface-secondary text-foreground-600',
+    badge: 'border-separator/80 bg-surface-secondary text-muted',
     row: 'border-l-transparent'
   },
   debug: {
-    badge: 'border-separator/60 bg-transparent text-foreground-400',
+    badge: 'border-separator/60 bg-transparent text-muted',
     row: 'border-l-transparent'
   },
   silent: {
-    badge: 'border-separator/60 bg-transparent text-foreground-400',
+    badge: 'border-separator/60 bg-transparent text-muted',
     row: 'border-l-transparent'
   }
 }
 
 const tokenTone: Record<Exclude<LogToken['kind'], 'action'>, string> = {
-  text: 'text-foreground-600',
+  text: 'text-muted',
   protocol: 'font-semibold text-accent-soft-foreground',
-  ip: 'font-medium text-success-600 dark:text-success-400',
+  ip: 'font-medium text-success',
   domain: 'font-semibold text-foreground',
-  port: 'text-foreground-500',
+  port: 'text-muted',
   process: 'rounded bg-surface-secondary px-1 font-medium text-foreground',
   rule: 'rounded bg-warning-soft/50 px-1 font-medium text-warning-soft-foreground',
-  keyword: 'text-foreground-400',
+  keyword: 'text-muted',
   error: 'font-semibold text-danger'
 }
 
@@ -109,14 +109,14 @@ const LogItemComponent: React.FC<Props> = (props) => {
   return (
     <div
       data-log-level={type}
-      className={`mx-2 grid grid-cols-[5.25rem_4.5rem_minmax(0,1fr)] items-start gap-2 border-b border-l-2 border-b-divider/70 px-2 py-1.5 transition-[background-color,opacity,transform] duration-300 ease-out hover:bg-content2/70 ${levelTone[type].row} ${
+      className={`mx-2 grid grid-cols-[5.25rem_4.5rem_minmax(0,1fr)] items-start gap-2 border-b border-l-2 border-b-separator/70 px-2 py-1.5 transition-[background-color,opacity,transform] duration-300 ease-out hover:bg-surface-secondary/70 ${levelTone[type].row} ${
         entered ? 'translate-y-0 opacity-100' : 'translate-y-1 opacity-0'
       } ${index === 0 ? 'border-t' : ''} ${
         animateOnMount && type !== 'warning' && type !== 'error' ? 'bg-accent-soft/20' : ''
       }`}
     >
       <time
-        className="pt-0.5 font-mono text-[11px] leading-5 text-foreground-400 tabular-nums"
+        className="pt-0.5 font-mono text-[11px] leading-5 text-muted tabular-nums"
         dateTime={time}
         title={time}
       >
@@ -130,7 +130,7 @@ const LogItemComponent: React.FC<Props> = (props) => {
           ))}
         </div>
         {message.secondary?.length ? (
-          <div className="mt-0.5 whitespace-pre-wrap text-[11px] leading-4 text-foreground-500">
+          <div className="mt-0.5 whitespace-pre-wrap text-[11px] leading-4 text-muted">
             {message.secondary.map((token, tokenIndex) => (
               <KokoLogToken key={`${tokenIndex}:${token.value}`} token={token} />
             ))}

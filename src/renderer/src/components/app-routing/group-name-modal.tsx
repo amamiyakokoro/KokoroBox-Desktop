@@ -60,7 +60,7 @@ export function AppRoutingGroupNameModal({
                   }}
                 />
               </div>
-              <p className="text-xs text-foreground-500">
+              <p className="text-xs text-muted">
                 {tr('After creating the group, use its menu to add applications or scan a folder.')}
               </p>
             </Modal.Body>

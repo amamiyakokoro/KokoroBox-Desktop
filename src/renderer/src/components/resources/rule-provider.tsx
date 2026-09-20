@@ -153,7 +153,10 @@ const RuleProvider: React.FC = () => {
           }
         />
       )}
-      <KokoToolbar aria-label={tr('Rule collections')} className="shrink-0 border-b border-divider">
+      <KokoToolbar
+        aria-label={tr('Rule collections')}
+        className="shrink-0 border-b border-separator"
+      >
         <KokoSearchField
           aria-label={tr('Search rule collections')}
           className="min-w-0 flex-1"
@@ -176,7 +179,7 @@ const RuleProvider: React.FC = () => {
       <div className="min-h-0 flex-1 overflow-y-auto custom-scrollbar">
         <main className="resource-page mx-auto w-full max-w-[68rem] px-5 py-4">
           {!data ? (
-            <div className="flex min-h-32 items-center justify-center text-foreground-500">
+            <div className="flex min-h-32 items-center justify-center text-muted">
               <Spinner size="sm" aria-label={tr('Loading')} />
             </div>
           ) : filteredProviders.length ? (
@@ -227,7 +230,7 @@ const RuleProvider: React.FC = () => {
               })}
             </Surface>
           ) : (
-            <div className="flex min-h-32 items-center justify-center px-4 text-center text-sm text-foreground-500">
+            <div className="flex min-h-32 items-center justify-center px-4 text-center text-sm text-muted">
               {providers.length
                 ? tr('No rule collections match this search.')
                 : tr('No rule collections yet')}

@@ -533,8 +533,8 @@ const Proxies: React.FC = () => {
       {mode === 'direct' ? (
         <div className="h-full w-full flex justify-center items-center">
           <div className="flex flex-col items-center">
-            <MdDoubleArrow className="text-foreground-500 text-[100px]" />
-            <h2 className="text-foreground-500 text-[20px]">{tr('Direct mode')}</h2>
+            <MdDoubleArrow className="text-muted text-[100px]" />
+            <h2 className="text-muted text-[20px]">{tr('Direct mode')}</h2>
           </div>
         </div>
       ) : (

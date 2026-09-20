@@ -146,7 +146,7 @@ const KokoSelectContent: React.FC<{
     {label ? (
       <Label
         className={cn(
-          'text-xs text-foreground-500',
+          'text-xs text-muted',
           labelPlacement === 'inside'
             ? 'pointer-events-none absolute start-3 top-1.5 z-10 max-w-[calc(100%-2.5rem)] truncate'
             : 'mb-1'
@@ -190,7 +190,7 @@ const KokoSelectContent: React.FC<{
             <span className="min-w-0 flex-1">
               <span className="block truncate">{option.label}</span>
               {option.description ? (
-                <span className="mt-0.5 block truncate text-xs text-foreground-500">
+                <span className="mt-0.5 block truncate text-xs text-muted">
                   {option.description}
                 </span>
               ) : null}

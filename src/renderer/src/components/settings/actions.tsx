@@ -174,7 +174,7 @@ const Actions: React.FC<Props> = ({
       {sections.includes('version') && (
         <SettingCard header={showVersionHeading ? tr('Version information') : undefined}>
           <SettingItem contentAlign="end" title={tr('App version')}>
-            <div className="text-sm tabular-nums text-foreground-500">v{version}</div>
+            <div className="text-sm tabular-nums text-muted">v{version}</div>
           </SettingItem>
         </SettingCard>
       )}

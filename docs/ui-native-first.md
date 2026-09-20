@@ -42,6 +42,9 @@ The working rule is: **KokoroBox controls layout; HeroUI controls component appe
 5. Product-specific status colors are allowed. Generic component states should use HeroUI tokens.
 6. When an existing compatibility rule blocks a migration, remove or narrow it instead of adding a
    second override.
+7. Renderer utility classes must use HeroUI v3 semantic colors such as `accent`, `surface`,
+   `surface-secondary`, `muted`, and `separator`. Do not reintroduce the v2 `primary`, `content*`,
+   numbered semantic scales, or `divider` vocabulary.
 
 Run `pnpm run test:ui-native` when changing shared UI primitives or compatibility CSS.
 
@@ -61,7 +64,10 @@ locale semantics with React Aria `I18nProvider` and the existing `getLocale()` s
 
 Renderer styles now load only Tailwind and `@heroui/styles`. The legacy `hero.mjs` Tailwind plugin
 and `@source` scan of `@heroui/theme` have been removed. Legacy `--heroui-*` runtime tokens are not
-used by renderer UI; the theme resolver retains its compatibility bridge for installed user themes.
+used by renderer UI. The renderer also uses only HeroUI v3 semantic utility names. The theme
+resolver retains an explicitly isolated compatibility bridge for already-installed user themes;
+that bridge is not an approved renderer styling API and is intended to retire with a future major
+custom-theme format revision.
 
 ### KokoroBox desktop primitives
 

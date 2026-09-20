@@ -96,10 +96,10 @@ const TrayMenuApp: React.FC = () => {
   }, [groups])
 
   return (
-    <div className="flex flex-col h-screen w-screen overflow-hidden bg-content1 rounded-xl border border-divider">
-      <div className="flex items-center justify-between px-3 py-2 border-b border-divider bg-content2/50">
+    <div className="flex flex-col h-screen w-screen overflow-hidden bg-surface rounded-xl border border-separator">
+      <div className="flex items-center justify-between px-3 py-2 border-b border-separator bg-surface-secondary/50">
         <div className="flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-primary animate-pulse shadow-lg shadow-primary/50" />
+          <div className="w-2 h-2 rounded-full bg-accent animate-pulse shadow-lg shadow-accent/50" />
           <span className="text-sm font-semibold">KokoroBox</span>
         </div>
         <div className="flex items-center gap-1">
@@ -126,20 +126,20 @@ const TrayMenuApp: React.FC = () => {
         </div>
       </div>
 
-      <div className="flex items-center justify-center gap-4 px-3 py-2 border-b border-divider bg-content2/30">
+      <div className="flex items-center justify-center gap-4 px-3 py-2 border-b border-separator bg-surface-secondary/30">
         <div className="flex items-center gap-1">
-          <span className="text-xs text-default-500">↑</span>
+          <span className="text-xs text-muted">↑</span>
           <span className="text-xs font-mono font-medium">{calcTraffic(traffic.up)}/s</span>
         </div>
         <div className="flex items-center gap-1">
-          <span className="text-xs text-default-500">↓</span>
+          <span className="text-xs text-muted">↓</span>
           <span className="text-xs font-mono font-medium">{calcTraffic(traffic.down)}/s</span>
         </div>
       </div>
 
       <ScrollShadow className="flex-1 overflow-y-auto">
         {!groups || groups.length === 0 ? (
-          <div className="flex items-center justify-center h-full text-default-400 text-sm">
+          <div className="flex items-center justify-center h-full text-muted text-sm">
             {tr('No data')}
           </div>
         ) : (
@@ -155,8 +155,8 @@ const TrayMenuApp: React.FC = () => {
                 aria-label={group.name}
                 className="py-0"
               >
-                <Accordion.Heading className="flex items-center rounded-lg px-2 hover:bg-default-100">
-                  <Accordion.Trigger className="flex min-w-0 flex-1 items-center gap-2 py-2 text-sm font-medium outline-none focus-visible:ring-2 focus-visible:ring-primary/45">
+                <Accordion.Heading className="flex items-center rounded-lg px-2 hover:bg-surface-secondary">
+                  <Accordion.Trigger className="flex min-w-0 flex-1 items-center gap-2 py-2 text-sm font-medium outline-none focus-visible:ring-2 focus-visible:ring-focus/45">
                     <Accordion.Indicator className="size-4 shrink-0" />
                     <span className="min-w-0 flex-1 truncate text-left">{group.name}</span>
                     <Chip size="sm" variant="soft" className="h-4 shrink-0 text-[10px]">
@@ -196,15 +196,15 @@ const TrayMenuApp: React.FC = () => {
                             className={`
                               flex items-center justify-between px-2 py-1.5 rounded-lg cursor-pointer
                               transition-colors duration-150
-                              ${isActive ? 'bg-primary/15 border border-primary/30' : 'hover:bg-default-100'}
+                              ${isActive ? 'border border-accent/30 bg-accent-soft/55' : 'hover:bg-surface-secondary'}
                             `}
                           >
                             <div className="flex items-center gap-2 flex-1 min-w-0">
                               {isActive && (
-                                <IoCheckmarkCircle className="text-primary text-sm shrink-0" />
+                                <IoCheckmarkCircle className="shrink-0 text-sm text-accent-soft-foreground" />
                               )}
                               <span
-                                className={`text-xs truncate ${isActive ? 'text-primary font-medium' : ''}`}
+                                className={`truncate text-xs ${isActive ? 'font-medium text-accent-soft-foreground' : ''}`}
                               >
                                 {proxy.name}
                               </span>

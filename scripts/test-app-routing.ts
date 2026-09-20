@@ -1151,7 +1151,7 @@ test('application routing rules use a two-line identity-first card layout', () =
   assert.doesNotMatch(page, /<h2[^>]*>\{tr\('Application routing'\)\}<\/h2>/)
   assert.doesNotMatch(page, /<span[^>]*>\{tr\('or'\)\}<\/span>/)
   assert.match(page, /const isProxyTrafficBlocked =/)
-  assert.match(page, /border-default-200 bg-default-50 text-foreground-600/)
+  assert.match(page, /border-separator bg-surface-secondary text-muted/)
   assert.match(row, /ariaLabel=\{tr\('Rule actions'\)\}/)
   assert.match(row, /isDisabled: index === 0/)
   assert.match(row, /isDisabled: index === count - 1/)

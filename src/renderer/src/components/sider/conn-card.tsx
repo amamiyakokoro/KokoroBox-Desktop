@@ -111,7 +111,7 @@ const ConnCard: React.FC<Props> = ({ iconOnly }) => {
         icon={<IoLink />}
         title={tr('Connections')}
         metadata={
-          <div className="sider-connection-metadata grid min-w-0 grid-cols-2 items-center gap-x-1.5 text-xs leading-4 text-foreground-500 tabular-nums">
+          <div className="sider-connection-metadata grid min-w-0 grid-cols-2 items-center gap-x-1.5 text-xs leading-4 text-muted tabular-nums">
             <span
               className="inline-flex min-w-0 items-center gap-1 whitespace-nowrap"
               title={`${tr('Download speed')}: ${downloadRate}`}

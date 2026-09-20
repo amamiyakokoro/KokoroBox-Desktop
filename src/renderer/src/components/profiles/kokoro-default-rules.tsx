@@ -215,7 +215,7 @@ const KokoroDefaultRules: React.FC = () => {
               ) : undefined
             }
           />
-          <p className="mt-1 text-xs leading-5 text-foreground-500">
+          <p className="mt-1 text-xs leading-5 text-muted">
             {tr('Edit only the default rule set used by Kokoro profiles. Rules run in this order.')}
           </p>
         </div>
@@ -362,9 +362,7 @@ const KokoroDefaultRules: React.FC = () => {
                         value={rule.payload || ''}
                         onChange={(value) => updateRule(index, { payload: value })}
                       >
-                        <Label className="mb-1 text-xs text-foreground-500">
-                          {tr('Rule content')}
-                        </Label>
+                        <Label className="mb-1 text-xs text-muted">{tr('Rule content')}</Label>
                         <Input
                           variant="secondary"
                           placeholder={
@@ -387,7 +385,7 @@ const KokoroDefaultRules: React.FC = () => {
             )}
             <div className="flex flex-wrap items-center gap-3">
               <div className="flex min-w-0 items-center gap-2" aria-live="polite">
-                <span className="text-xs tabular-nums text-foreground-400">
+                <span className="text-xs tabular-nums text-muted">
                   {rules.length} / {maxRules}
                 </span>
                 {isDirty ? (

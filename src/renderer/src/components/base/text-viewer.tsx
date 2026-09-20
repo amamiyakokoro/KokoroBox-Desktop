@@ -226,7 +226,7 @@ export const TextViewer: React.FC<Props> = ({ value }) => {
 
   return (
     <div
-      className="flex h-full w-full flex-col overflow-hidden bg-content1 text-foreground"
+      className="flex h-full w-full flex-col overflow-hidden bg-surface text-foreground"
       style={{ userSelect: 'text' }}
     >
       <span
@@ -235,9 +235,9 @@ export const TextViewer: React.FC<Props> = ({ value }) => {
       >
         0000000000
       </span>
-      <div className="flex shrink-0 items-center gap-1 border-b border-divider px-2 py-1">
+      <div className="flex shrink-0 items-center gap-1 border-b border-separator px-2 py-1">
         <div className="relative min-w-0 flex-1">
-          <MdSearch className="pointer-events-none absolute left-2 top-1/2 z-10 -translate-y-1/2 text-lg text-foreground-500" />
+          <MdSearch className="pointer-events-none absolute left-2 top-1/2 z-10 -translate-y-1/2 text-lg text-muted" />
           <Input
             ref={inputRef}
             size={8}
@@ -254,7 +254,7 @@ export const TextViewer: React.FC<Props> = ({ value }) => {
           />
         </div>
         {query.trim() && (
-          <span className="min-w-12 shrink-0 text-right text-xs text-foreground-500">
+          <span className="min-w-12 shrink-0 text-right text-xs text-muted">
             {`${matches.length ? currentMatch + 1 : 0}/${matches.length}`}
           </span>
         )}
@@ -299,12 +299,12 @@ export const TextViewer: React.FC<Props> = ({ value }) => {
             const isCursorLine = cursor.line === index
             return (
               <div
-                className={`flex min-h-5 font-mono text-[13px] leading-5 tracking-normal ${active?.line === index ? 'bg-warning/10' : isCursorLine ? 'bg-default-100/70' : ''}`}
+                className={`flex min-h-5 font-mono text-[13px] leading-5 tracking-normal ${active?.line === index ? 'bg-warning/10' : isCursorLine ? 'bg-surface-secondary/70' : ''}`}
                 style={{ userSelect: 'text' }}
                 onMouseDown={(event) => updateCursor(event, index, line)}
               >
                 <span
-                  className={`sticky left-0 w-14 shrink-0 border-r border-divider bg-content1 px-2 text-right ${isCursorLine ? 'text-primary' : 'text-foreground-400'}`}
+                  className={`sticky left-0 w-14 shrink-0 border-r border-separator bg-surface px-2 text-right ${isCursorLine ? 'text-accent' : 'text-muted'}`}
                   style={{ userSelect: 'none' }}
                 >
                   {index + 1}

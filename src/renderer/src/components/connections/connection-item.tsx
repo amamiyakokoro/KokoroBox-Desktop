@@ -100,7 +100,7 @@ const ConnectionItemComponent: React.FC<Props> = ({
         <button
           type="button"
           aria-label={hideProcess ? destination : `${processName} → ${destination}`}
-          className="absolute inset-0 z-0 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/45"
+          className="absolute inset-0 z-0 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus/45"
           onClick={handleCardPress}
         />
         <div className="pointer-events-none relative z-1 flex w-full items-center justify-between">
@@ -118,15 +118,13 @@ const ConnectionItemComponent: React.FC<Props> = ({
                   {hideProcess ? destination : `${processName} → ${destination}`}
                 </span>
               </div>
-              <small className="ml-2 whitespace-nowrap text-[11px] text-foreground-400">
-                {timeAgo}
-              </small>
+              <small className="ml-2 whitespace-nowrap text-[11px] text-muted">{timeAgo}</small>
             </Card.Header>
             <Card.Footer className="px-3 pb-2 pt-1">
               <div className="no-scrollbar pointer-events-auto flex min-w-0 items-center gap-2 overflow-x-auto whitespace-nowrap">
                 <span
-                  className={`rounded-md bg-default-100 px-1.5 py-0.5 text-[11px] ${
-                    info.isActive ? 'text-foreground-500' : 'text-danger-500'
+                  className={`rounded-md bg-surface-secondary px-1.5 py-0.5 text-[11px] ${
+                    info.isActive ? 'text-muted' : 'text-danger'
                   }`}
                 >
                   {info.metadata.type}({info.metadata.network.toUpperCase()})
@@ -136,11 +134,11 @@ const ConnectionItemComponent: React.FC<Props> = ({
                     {info.chains[0]}
                   </span>
                 </Chip>
-                <span className="text-[11px] text-foreground-500 tabular-nums">
+                <span className="text-[11px] text-muted tabular-nums">
                   ↑ {uploadTraffic} ↓ {downloadTraffic}
                 </span>
                 {hasSpeed && (
-                  <span className="text-xs font-medium text-primary tabular-nums">
+                  <span className="text-xs font-medium text-accent tabular-nums">
                     ↑ {uploadSpeed || '0 B'}/s ↓ {downloadSpeed || '0 B'}/s
                   </span>
                 )}
@@ -155,7 +153,7 @@ const ConnectionItemComponent: React.FC<Props> = ({
           aria-label={info.isActive ? tr('Close connection') : tr('Delete record')}
           className={`pointer-events-auto absolute right-2 top-2 z-2 transition-opacity ${
             info.isActive
-              ? 'text-foreground-500 opacity-40 group-hover:opacity-100 group-focus-within:opacity-100'
+              ? 'text-muted opacity-40 group-hover:opacity-100 group-focus-within:opacity-100'
               : ''
           }`}
           onPress={handleClose}

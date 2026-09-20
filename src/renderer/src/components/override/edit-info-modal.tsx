@@ -76,7 +76,7 @@ const EditInfoModal: React.FC<Props> = (props) => {
           </div>
           <div className="setting-item__content">{content}</div>
         </div>
-        {divider ? <Separator variant="tertiary" className="bg-default-100/70" /> : null}
+        {divider ? <Separator variant="tertiary" className="bg-surface-secondary/70" /> : null}
       </Surface>
     )
   }

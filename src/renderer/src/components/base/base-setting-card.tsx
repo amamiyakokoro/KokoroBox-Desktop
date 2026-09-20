@@ -44,7 +44,7 @@ const SettingCard: React.FC<Props> = (props) => {
         <Disclosure.Heading>
           <Disclosure.Trigger className="flex min-h-11 w-full items-center gap-3 px-3 py-2 text-left text-base font-medium text-foreground">
             <span className="min-w-0 flex-1 truncate">{header}</span>
-            <Disclosure.Indicator className="text-foreground-500" />
+            <Disclosure.Indicator className="text-muted" />
           </Disclosure.Trigger>
         </Disclosure.Heading>
         <Disclosure.Content>

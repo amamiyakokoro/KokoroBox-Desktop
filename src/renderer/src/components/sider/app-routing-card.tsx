@@ -125,7 +125,7 @@ const AppRoutingCard: React.FC<Props> = ({ iconOnly = false }) => {
           attentionMessage ? (
             <p
               role="status"
-              className={`line-clamp-2 text-xs leading-4 ${status?.state === 'error' ? 'text-danger-600 dark:text-danger-400' : 'text-warning-600 dark:text-warning-400'}`}
+              className={`line-clamp-2 text-xs leading-4 ${status?.state === 'error' ? 'text-danger' : 'text-warning'}`}
               title={attentionMessage}
             >
               {attentionMessage}

@@ -10,6 +10,10 @@ const defaultThemeKey = 'default.css'
 let insertedCSSKeyMain: string | undefined = undefined
 let insertedCSSKeyFloating: string | undefined = undefined
 
+/**
+ * Legacy local-theme compatibility only. Renderer code must use HeroUI v3 semantic tokens.
+ * Keep this bridge isolated until the next major custom-theme format revision.
+ */
 function normalizeThemeCss(css: string): string {
   const hasLegacyHeroUIVars = /--heroui-(primary|secondary|warning|danger)\s*:/i.test(css)
 

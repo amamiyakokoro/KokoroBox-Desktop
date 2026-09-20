@@ -162,13 +162,13 @@ export function AppRoutingRuleRow({
                   <span className="block truncate text-sm font-semibold leading-5 text-foreground">
                     {rule.processPattern}
                   </span>
-                  <span className="block truncate text-xs leading-4 text-foreground-500">
+                  <span className="block truncate text-xs leading-4 text-muted">
                     {identifierLabel}
                   </span>
                 </span>
                 <MdEdit
                   aria-hidden="true"
-                  className="shrink-0 text-sm text-foreground-400 opacity-45 transition-opacity group-hover/title:opacity-100 group-focus-visible/title:opacity-100"
+                  className="shrink-0 text-sm text-muted opacity-45 transition-opacity group-hover/title:opacity-100 group-focus-visible/title:opacity-100"
                 />
               </button>
             )}

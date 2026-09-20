@@ -18,16 +18,7 @@ import {
   getAppRoutingStatusLabel,
   getAppRoutingStatusMessage
 } from '@renderer/utils/app-routing-status'
-import {
-  Button,
-  Card,
-  Chip,
-  Description,
-  Input,
-  Separator,
-  Switch,
-  TextField
-} from '@heroui/react'
+import { Button, Card, Chip, Description, Input, Separator, Switch, TextField } from '@heroui/react'
 import { KokoActionMenu } from '@renderer/components/base/koko-collections'
 import { KokoSelect } from '@renderer/components/base/koko-form'
 import {
@@ -49,7 +40,7 @@ function statusTone(status?: AppRoutingStatus): { dot: string; label: string } {
   if (status?.state === 'starting') return { dot: 'bg-accent', label: 'text-accent' }
   if (status?.state === 'degraded') return { dot: 'bg-warning', label: 'text-warning' }
   if (status?.state === 'error') return { dot: 'bg-danger', label: 'text-danger' }
-  return { dot: 'bg-foreground-300', label: 'text-foreground-600' }
+  return { dot: 'bg-muted', label: 'text-muted' }
 }
 
 const AppRouting: React.FC = () => {
@@ -142,10 +133,10 @@ const AppRouting: React.FC = () => {
     (status.protectedApplicationCount ?? 0) > 0
   const failureProtectionTone =
     isProxyTrafficBlocked && status?.state === 'error'
-      ? 'border-danger/30 bg-danger-50 text-danger-800 dark:bg-danger-900/20 dark:text-danger-300'
+      ? 'border-danger/30 bg-danger-soft/60 text-danger-soft-foreground'
       : isProxyTrafficBlocked
-        ? 'border-warning/30 bg-warning-50 text-warning-800 dark:bg-warning-900/20 dark:text-warning-300'
-        : 'border-default-200 bg-default-50 text-foreground-600 dark:bg-default-100/40'
+        ? 'border-warning/30 bg-warning-soft/60 text-warning-soft-foreground'
+        : 'border-separator bg-surface-secondary text-muted'
   const submitPattern = async (): Promise<void> => {
     const identifierKind = isMac ? macIdentifierKind : isLinux ? linuxIdentifierKind : undefined
     if (await addPattern(processPattern, identifierKind)) {
@@ -275,14 +266,14 @@ const AppRouting: React.FC = () => {
               <span className={`text-sm font-semibold ${currentStatusTone.label}`}>
                 {getAppRoutingStatusLabel(status)}
               </span>
-              <span className="text-sm text-foreground-500">
+              <span className="text-sm text-muted">
                 {tr(
                   'Route selected applications through local Mihomo without system proxy or TUN.'
                 )}
               </span>
             </div>
             {config?.enabled && (
-              <p className="mt-1 pl-4 font-mono text-xs text-foreground-500">
+              <p className="mt-1 pl-4 font-mono text-xs text-muted">
                 {tr('Upstream')} · {displayedProxyProtocol} · 127.0.0.1:{displayedProxyPort}
                 {backendLabel ? ` · ${backendLabel}` : ''}
               </p>
@@ -338,17 +329,17 @@ const AppRouting: React.FC = () => {
         <Separator />
 
         {needsMacApproval && (
-          <Card className="border border-warning/40 bg-warning-50 dark:bg-warning-900/20">
+          <Card className="border border-warning/40 bg-warning-soft/40">
             <Card.Content className="gap-3">
               <div>
-                <h3 className="font-semibold text-warning-900 dark:text-warning-200">
+                <h3 className="font-semibold text-warning-soft-foreground">
                   {tr('Network Extension approval required')}
                 </h3>
-                <p className="mt-1 text-sm text-warning-800 dark:text-warning-300">
+                <p className="mt-1 text-sm text-warning-soft-foreground">
                   {tr('macOS needs your approval before application routing can start.')}
                 </p>
               </div>
-              <ol className="list-decimal space-y-1 pl-5 text-sm text-warning-800 dark:text-warning-300">
+              <ol className="list-decimal space-y-1 pl-5 text-sm text-warning-soft-foreground">
                 <li>
                   {tr(
                     'In System Settings, go to General → Login Items & Extensions → Network Extensions.'
@@ -382,7 +373,7 @@ const AppRouting: React.FC = () => {
 
         <div>
           <h3 className="font-semibold">{tr('Application rules')}</h3>
-          <p className="text-sm text-foreground-500">
+          <p className="text-sm text-muted">
             {isMac
               ? tr(
                   'Rules match from top to bottom by process name or application signing identifier.'
@@ -522,7 +513,7 @@ const AppRouting: React.FC = () => {
 
         {!supported ? (
           <Card variant="secondary">
-            <Card.Content className="text-sm text-foreground-500">
+            <Card.Content className="text-sm text-muted">
               {tr(
                 'Application routing supports Windows 10/11 x64, macOS 13 or later, and Linux x64/arm64.'
               )}
@@ -532,7 +523,7 @@ const AppRouting: React.FC = () => {
           <Card variant="secondary">
             <Card.Content className="items-center gap-2 py-4 text-center">
               <p className="font-medium">{tr('No applications added')}</p>
-              <p className="text-sm text-foreground-500">
+              <p className="text-sm text-muted">
                 {isMac
                   ? tr(
                       'Enter a process name or signing identifier, or select one or more .app bundles, then choose Proxy, Direct, or Block.'
@@ -559,14 +550,14 @@ const AppRouting: React.FC = () => {
                         {ungroupedRules.length}
                       </Chip>
                     </div>
-                    <p className="mt-0.5 text-xs text-foreground-500">
+                    <p className="mt-0.5 text-xs text-muted">
                       {tr('Applications that do not belong to a rule group.')}
                     </p>
                   </div>
                 </div>
               )}
               {ungroupedRules.length === 0 && isWindows ? (
-                <div className="rounded-xl border border-dashed border-default-200 px-4 py-5 text-center text-sm text-foreground-500">
+                <div className="rounded-xl border border-dashed border-separator px-4 py-5 text-center text-sm text-muted">
                   {tr('No individual rules')}
                 </div>
               ) : (
@@ -598,7 +589,7 @@ const AppRouting: React.FC = () => {
                           {config?.groups?.length ?? 0}
                         </Chip>
                       </div>
-                      <p className="mt-0.5 text-xs text-foreground-500">
+                      <p className="mt-0.5 text-xs text-muted">
                         {tr('Manage applications together. Rule groups are collapsed by default.')}
                       </p>
                     </div>
@@ -625,9 +616,9 @@ const AppRouting: React.FC = () => {
                   </div>
 
                   {(config?.groups?.length ?? 0) === 0 ? (
-                    <div className="rounded-xl border border-dashed border-default-200 px-4 py-6 text-center">
+                    <div className="rounded-xl border border-dashed border-separator px-4 py-6 text-center">
                       <p className="text-sm font-medium">{tr('No rule groups')}</p>
-                      <p className="mt-1 text-xs text-foreground-500">
+                      <p className="mt-1 text-xs text-muted">
                         {tr(
                           'Create an empty rule group or scan a folder to add its applications automatically.'
                         )}
@@ -647,7 +638,7 @@ const AppRouting: React.FC = () => {
                               onClick={() => toggleGroup(group.id)}
                             >
                               <MdKeyboardArrowDown
-                                className={`shrink-0 text-xl text-foreground-500 transition-transform duration-150 ${isCollapsed ? '-rotate-90' : ''}`}
+                                className={`shrink-0 text-xl text-muted transition-transform duration-150 ${isCollapsed ? '-rotate-90' : ''}`}
                               />
                               <MdFolderOpen className="shrink-0 text-xl text-accent-soft-foreground" />
                               <span className="min-w-0 flex-1">
@@ -655,7 +646,7 @@ const AppRouting: React.FC = () => {
                                   {group.name}
                                 </span>
                                 <span
-                                  className="block truncate text-xs text-foreground-500"
+                                  className="block truncate text-xs text-muted"
                                   title={group.sourceDirectory}
                                 >
                                   {group.sourceDirectory ?? tr('Manual rule group')}
@@ -728,7 +719,7 @@ const AppRouting: React.FC = () => {
                               className={`ml-4 flex flex-col gap-3 border-l-2 pl-3 transition-opacity duration-150 ${group.enabled ? 'border-accent/25' : 'border-separator opacity-70'}`}
                             >
                               {rules.length === 0 ? (
-                                <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-dashed border-default-200 px-4 py-3 text-sm text-foreground-500">
+                                <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-dashed border-separator px-4 py-3 text-sm text-muted">
                                   <span>{tr('No applications in this rule group')}</span>
                                   <Button
                                     size="sm"

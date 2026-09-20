@@ -38,7 +38,7 @@ export const SettingsSection: React.FC<SettingsSectionProps> = ({
               </h2>
             ) : null}
             {description ? (
-              <p className="mt-0.5 text-xs leading-4 text-foreground-500">{description}</p>
+              <p className="mt-0.5 text-xs leading-4 text-muted">{description}</p>
             ) : null}
           </div>
           {action ? <div className="shrink-0">{action}</div> : null}
@@ -46,7 +46,7 @@ export const SettingsSection: React.FC<SettingsSectionProps> = ({
       ) : null}
       <div
         className={cn(
-          'settings-section__content border-t border-divider px-1 py-0.5',
+          'settings-section__content border-t border-separator px-1 py-0.5',
           contentClassName
         )}
       >

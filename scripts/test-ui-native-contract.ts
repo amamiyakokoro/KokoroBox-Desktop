@@ -21,6 +21,9 @@ const allowedKokoExports = new Set([
 const internalClassPattern =
   /\.(?:button|close-button|switch|tabs|select|list-box(?:-item)?|input(?:-group)?|modal|drawer|tooltip|card|toast|slider|meter|progress-bar)(?:(?:__|--)[\w-]+)?(?=[\s.:#>+~,\u005b]|$)/g
 
+const legacyHeroUiUtilityPattern =
+  /\b(?:bg|text|border(?:-[trblxy])?|divide(?:-[xy])?|ring|outline|shadow|fill|stroke|from|via|to|caret|decoration)-(?:primary|secondary)(?:-foreground|-[0-9]+)?(?:\/[0-9]+)?\b|\b(?:bg|text|border(?:-[trblxy])?|divide(?:-[xy])?|ring|outline|shadow|fill|stroke|from|via|to|caret|decoration)-content[1-4](?:\/[0-9]+)?\b|\b(?:bg|text|border(?:-[trblxy])?|divide(?:-[xy])?|ring|outline|shadow|fill|stroke|from|via|to|caret|decoration)-(?:foreground|default|success|warning|danger)-(?:50|100|200|300|400|500|600|700|800|900)(?:\/[0-9]+)?\b|\b(?:border(?:-[trblxy])?|divide(?:-[xy])?)-divider(?:\/[0-9]+)?\b|\btext-(?:tiny|small|medium|large)\b|\brounded-(?:small|medium|large)\b|\bopacity-hover\b/g
+
 function collectFiles(directory: string): string[] {
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
     const path = join(directory, entry.name)
@@ -104,6 +107,17 @@ test('renderer styles and components use native semantic tokens', () => {
   assert.doesNotMatch(legacyThemeBridge, /theme-hub/)
 })
 
+test('renderer does not use HeroUI v2 utility vocabulary', () => {
+  const offenders = collectFiles(rendererRoot)
+    .filter((file) => /\.(?:css|[cm]?[jt]sx?)$/.test(file))
+    .flatMap((file) => {
+      const matches = readFileSync(file, 'utf8').match(legacyHeroUiUtilityPattern) ?? []
+      return matches.length ? [`${file}: ${[...new Set(matches)].join(', ')}`] : []
+    })
+
+  assert.deepEqual(offenders, [])
+})
+
 test('application overrides do not target HeroUI internal classes', () => {
   const css = readFileSync(appOverridesCssPath, 'utf8')
   const internalSelectors = extractSelectors(css).filter((selector) => {
@@ -132,10 +146,7 @@ test('the application imports the renamed overrides stylesheet', () => {
 
 test('HeroUI form controls own focus appearance without a nested application outline', () => {
   const mainCss = readFileSync('src/renderer/src/assets/main.css', 'utf8')
-  const searchField = readFileSync(
-    'src/renderer/src/components/base/koko-search-field.tsx',
-    'utf8'
-  )
+  const searchField = readFileSync('src/renderer/src/components/base/koko-search-field.tsx', 'utf8')
   const focusRuleStart = mainCss.indexOf(':where(\n  button,')
   const focusRuleEnd = mainCss.indexOf('\n}', focusRuleStart)
   const focusRule = mainCss.slice(focusRuleStart, focusRuleEnd)
@@ -183,6 +194,8 @@ test('the native-first ownership contract documents the migration boundary', () 
   assert.match(contract, /Do not add selectors for HeroUI internal classes/)
   assert.match(contract, /canonical `@heroui\/react` and `@heroui\/styles` packages/)
   assert.match(contract, /React Aria `I18nProvider`/)
+  assert.match(contract, /Renderer utility classes must use HeroUI v3 semantic colors/)
+  assert.match(contract, /explicitly isolated compatibility bridge/)
   assert.match(contract, /zero HeroUI internal selectors/)
   assert.match(contract, /KokoSegmentedControl[\s\S]*`ToggleButtonGroup`/)
   assert.match(contract, /Use `KokoTabs` for page, panel, and section navigation/)

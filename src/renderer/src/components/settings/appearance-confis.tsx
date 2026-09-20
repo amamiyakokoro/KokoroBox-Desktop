@@ -191,7 +191,7 @@ const AppearanceConfig: React.FC = () => {
           >
             <div className="flex min-w-0 max-w-[65%] items-center justify-end gap-2">
               {customTrayIcon && (
-                <span className="truncate text-xs text-default-500">
+                <span className="truncate text-xs text-muted">
                   {customTrayIcon.startsWith('data:image/')
                     ? tr('Custom icon saved')
                     : customTrayIcon}

@@ -237,7 +237,7 @@ test('application settings keep one clear navigation hierarchy in compact deskto
   assert.match(settingCard, /<SettingsSection/)
   assert.match(settingsSection, /settings-section__heading/)
   assert.match(settingsSection, /text-base font-semibold leading-6 text-foreground/)
-  assert.match(settingsSection, /settings-section__content border-t border-divider/)
+  assert.match(settingsSection, /settings-section__content border-t border-separator/)
   assert.doesNotMatch(settingsSection, /settings-section__content border-y/)
   assert.match(logSetting, /<SettingCard>/)
   assert.doesNotMatch(logSetting, /<SettingCard header=\{tr\('Application logs'\)\}>/)
@@ -424,7 +424,7 @@ test('SettingItem has one canonical layout without legacy compatibility paths', 
   assert.match(featureLayout, /<SettingsSection/)
   assert.match(settingsSection, /settings-section px-3 py-1\.5 first:pt-1\.5/)
   assert.match(settingsSection, /settings-section__heading text-base font-semibold leading-6/)
-  assert.match(settingsSection, /settings-section__content border-t border-divider px-1 py-0\.5/)
+  assert.match(settingsSection, /settings-section__content border-t border-separator px-1 py-0\.5/)
   assert.match(styles, /\.setting-item__title-line\s*\{[\s\S]*align-items: center/)
   assert.match(
     styles,
@@ -1022,7 +1022,7 @@ test('desktop sidebar separates controls, live status and navigation', () => {
   assert.match(quickControl, /active && siderActiveSurfaceClassName/)
   assert.doesNotMatch(navItem, /border-transparent/)
   assert.match(surfaces, /prominence === 'navigation'[\s\S]*bg-transparent text-base/)
-  assert.match(surfaces, /hover:border-default-400\/80/)
+  assert.match(surfaces, /hover:border-accent\/25/)
   assert.match(
     surfaces,
     /const siderActiveSurfaceClassName =[\s\S]*border-accent\/45 bg-accent-soft\/40[\s\S]*ring-accent\/15/
@@ -1037,8 +1037,8 @@ test('desktop sidebar separates controls, live status and navigation', () => {
   assert.doesNotMatch(surfaces, /\b(?:border|bg|ring|text)-primary(?:\/\d+)?\b/)
   assert.match(surfaces, /focus-visible:outline-accent/)
   assert.match(surfaces, /group-focus-within:text-accent/)
-  assert.match(surfaces, /text-success-600 dark:text-success-400/)
-  assert.match(surfaces, /text-danger-600 dark:text-danger-400/)
+  assert.match(surfaces, /success: 'text-success'/)
+  assert.match(surfaces, /danger: 'text-danger'/)
   assert.equal(quickControl.match(/<button/g)?.length, 1)
   assert.match(quickControl, /aria-label=\{title\}/)
   assert.match(quickControl, /data-sider-quick-control/)
@@ -1294,11 +1294,11 @@ test('connection rows stay dense while preserving realtime data and grouped acti
 
   assert.match(item, /style=\{\{ minHeight: 68 \}\}/)
   assert.match(item, /className="size-11 bg-transparent"/)
-  assert.match(item, /text-\[11px\] text-foreground-400/)
+  assert.match(item, /text-\[11px\] text-muted/)
   assert.match(item, /group-hover:opacity-100 group-focus-within:opacity-100/)
   assert.match(item, /<button[\s\S]*type="button"[\s\S]*onClick=\{handleCardPress\}/)
   assert.doesNotMatch(item, /role="button"|event\.key !== 'Enter'|stopPropagation\(\)/)
-  assert.match(item, /font-medium text-primary tabular-nums/)
+  assert.match(item, /font-medium text-accent tabular-nums/)
   assert.match(item, /title=\{hideProcess \? destination/)
 
   assert.match(page, /Close all \{0\} active connections/)
@@ -1604,7 +1604,7 @@ test('operational lists use compact hierarchy without changing their behavior', 
   assert.doesNotMatch(logItem, /<Card/)
   assert.match(logItem, /grid-cols-\[5\.25rem_4\.5rem_minmax\(0,1fr\)\]/)
   assert.match(logItem, /data-log-level=\{type\}/)
-  assert.match(logItem, /border-b border-l-2 border-b-divider\/70/)
+  assert.match(logItem, /border-b border-l-2 border-b-separator\/70/)
   assert.match(logItem, /export const KokoLogLevelBadge/)
   assert.match(logItem, /export const KokoLogToken/)
   assert.match(logItem, /message\.secondary/)

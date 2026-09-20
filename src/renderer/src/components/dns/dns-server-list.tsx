@@ -58,9 +58,9 @@ const DnsServerList: React.FC<DnsServerListProps> = ({
   const displayed = [...endpoints, { address: '', connection: 'direct' as const, parameters: [] }]
 
   return (
-    <div className={cn('dns-server-list min-w-0', divider && 'border-b border-divider pb-4')}>
+    <div className={cn('dns-server-list min-w-0', divider && 'border-b border-separator pb-4')}>
       <h4 className="mb-2 text-base font-medium">{title}</h4>
-      <p className="mb-3 text-xs text-foreground-500">
+      <p className="mb-3 text-xs text-muted">
         {followRoutingRules
           ? tr('DNS connections follow the global routing rules.')
           : tr(

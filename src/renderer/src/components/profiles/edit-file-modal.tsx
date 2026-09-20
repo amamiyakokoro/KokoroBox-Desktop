@@ -88,7 +88,7 @@ const EditFileModal: React.FC<Props> = (props) => {
                   {tr('Edit subscription')}
                 </Modal.Heading>
                 {isRemote && (
-                  <small className="ml-2 text-foreground-500">
+                  <small className="ml-2 text-muted">
                     {tr(
                       'Note: Subscription updates overwrite edits made here. To customize the configuration, use'
                     )}

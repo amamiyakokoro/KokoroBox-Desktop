@@ -891,7 +891,7 @@ const Connections: React.FC = () => {
       header={
         <>
           <div className="app-nodrag flex items-center gap-2">
-            <div className="flex items-center gap-2 whitespace-nowrap text-xs text-foreground-500 tabular-nums">
+            <div className="flex items-center gap-2 whitespace-nowrap text-xs text-muted tabular-nums">
               <span>↑ {calcTraffic(connectionsInfo?.uploadTotal ?? 0)}</span>
               <span>↓ {calcTraffic(connectionsInfo?.downloadTotal ?? 0)}</span>
             </div>
@@ -985,7 +985,7 @@ const Connections: React.FC = () => {
                     <span>{tr('Active')}</span>
                     <span
                       data-slot="connection-count"
-                      className={`min-w-4 text-center text-xs font-semibold leading-4 tabular-nums ${tab === 'active' ? 'text-accent' : 'text-foreground-400'}`}
+                      className={`min-w-4 text-center text-xs font-semibold leading-4 tabular-nums ${tab === 'active' ? 'text-accent' : 'text-muted'}`}
                     >
                       {activeConnections.length}
                     </span>
@@ -999,7 +999,7 @@ const Connections: React.FC = () => {
                     <span>{tr('Closed')}</span>
                     <span
                       data-slot="connection-count"
-                      className={`min-w-4 text-center text-xs font-semibold leading-4 tabular-nums ${tab === 'closed' ? 'text-accent' : 'text-foreground-400'}`}
+                      className={`min-w-4 text-center text-xs font-semibold leading-4 tabular-nums ${tab === 'closed' ? 'text-accent' : 'text-muted'}`}
                     >
                       {closedConnections.length}
                     </span>
@@ -1019,7 +1019,7 @@ const Connections: React.FC = () => {
                     className="h-9 min-h-9 w-full"
                   >
                     <InputGroup.Prefix className="h-full items-center">
-                      <LuSearch aria-hidden="true" className="shrink-0 text-foreground-400" />
+                      <LuSearch aria-hidden="true" className="shrink-0 text-muted" />
                     </InputGroup.Prefix>
                     <InputGroup.Input
                       ref={filterInputRef}
@@ -1071,7 +1071,7 @@ const Connections: React.FC = () => {
                         style={{ transform: `translateX(-${filterScrollLeft}px)` }}
                       >
                         <span className="invisible whitespace-pre">{filter}</span>
-                        <span className="whitespace-pre text-foreground-400/55">
+                        <span className="whitespace-pre text-muted/55">
                           {inlineCompletionSuffix}
                         </span>
                       </div>
@@ -1133,7 +1133,7 @@ const Connections: React.FC = () => {
               overscan={200}
             />
           ) : (
-            <div className="h-full flex items-center justify-center text-foreground-500">
+            <div className="h-full flex items-center justify-center text-muted">
               {filter === '' ? tr('No connections') : tr('No matching processes')}
             </div>
           )

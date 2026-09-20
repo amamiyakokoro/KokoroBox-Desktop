@@ -211,7 +211,7 @@ const ProxyProvider: React.FC = () => {
               details={
                 provider.subscriptionInfo ? (
                   <div className="space-y-1.5 pt-1">
-                    <div className="flex items-center justify-between gap-4 text-xs leading-4 text-foreground-500">
+                    <div className="flex items-center justify-between gap-4 text-xs leading-4 text-muted">
                       <span className="tabular-nums">
                         {`${calcTraffic(
                           provider.subscriptionInfo.Upload + provider.subscriptionInfo.Download

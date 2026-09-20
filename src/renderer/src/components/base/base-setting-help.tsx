@@ -21,7 +21,7 @@ export const SettingHelp: React.FC<SettingHelpProps> = ({
         size="sm"
         variant="ghost"
         className={cn(
-          'app-nodrag size-7 min-w-7 shrink-0 text-foreground-500 hover:text-foreground',
+          'app-nodrag size-7 min-w-7 shrink-0 text-muted hover:text-foreground',
           className
         )}
         aria-label={ariaLabel}

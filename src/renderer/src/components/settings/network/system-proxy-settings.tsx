@@ -36,15 +36,15 @@ const BypassListPreview: React.FC<{ items: string[] }> = ({ items }) => {
 
   return (
     <div
-      className="overflow-hidden rounded-xl border border-divider/80 bg-content2/40"
+      className="overflow-hidden rounded-xl border border-separator/80 bg-surface-secondary/40"
       data-bypass-preview
     >
       {previewItems.length > 0 ? (
-        <ul aria-label={tr('Proxy bypass list')} className="divide-y divide-divider/60">
+        <ul aria-label={tr('Proxy bypass list')} className="divide-y divide-separator/60">
           {previewItems.map((item, index) => (
             <li key={`${item}-${index}`} className="min-w-0 px-3 py-1">
               <code
-                className="block min-w-0 truncate font-mono text-xs leading-5 text-foreground-600"
+                className="block min-w-0 truncate font-mono text-xs leading-5 text-muted"
                 title={item}
               >
                 {item}
@@ -53,10 +53,10 @@ const BypassListPreview: React.FC<{ items: string[] }> = ({ items }) => {
           ))}
         </ul>
       ) : (
-        <p className="px-3 py-2 text-xs leading-5 text-foreground-500">{tr('No bypass entries')}</p>
+        <p className="px-3 py-2 text-xs leading-5 text-muted">{tr('No bypass entries')}</p>
       )}
       {remaining > 0 && (
-        <p className="border-t border-divider/60 px-3 py-1.5 text-xs leading-4 text-foreground-500">
+        <p className="border-t border-separator/60 px-3 py-1.5 text-xs leading-4 text-muted">
           {tr('+ {0} more', [remaining])}
         </p>
       )}
@@ -416,7 +416,7 @@ const Sysproxy: React.FC<Props> = ({ embedded = false }) => {
               <SettingItem title={tr('Proxy bypass list')} align="start">
                 <div className="flex w-full min-w-0 flex-col gap-2">
                   <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
-                    <span className="text-xs leading-5 text-foreground-500 tabular-nums">
+                    <span className="text-xs leading-5 text-muted tabular-nums">
                       {tr('{0} items', [values.bypass.length])}
                     </span>
                     <div className="flex shrink-0 flex-wrap items-center justify-end gap-1">

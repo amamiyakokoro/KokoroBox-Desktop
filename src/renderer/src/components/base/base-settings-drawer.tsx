@@ -32,10 +32,10 @@ export const PageSettingsSection: React.FC<PageSettingsSectionProps> = ({
       className="border-t border-separator/70 py-5 first:border-t-0 first:pt-0 last:pb-0"
     >
       <header className="mb-1.5 px-1">
-        <h3 id={headingId} className="text-xs font-medium text-foreground-500">
+        <h3 id={headingId} className="text-xs font-medium text-muted">
           {title}
         </h3>
-        {description && <p className="mt-1 text-xs leading-4 text-foreground-500">{description}</p>}
+        {description && <p className="mt-1 text-xs leading-4 text-muted">{description}</p>}
       </header>
       <div className="flex flex-col">{children}</div>
     </section>
