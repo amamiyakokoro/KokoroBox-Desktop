@@ -772,6 +772,7 @@ export const messages: Readonly<Record<string, string>> = {
   'App version': '應用程式版本',
   'App directory': '應用程式目錄',
   'Application settings': '應用程式設定',
+  'Back to application': '返回應用程式',
   Latency: '延遲',
   'Latency test URL': '延遲測試地址',
   'Concurrent latency tests': '延遲測試併發數量',

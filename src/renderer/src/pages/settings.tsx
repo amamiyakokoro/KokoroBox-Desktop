@@ -12,8 +12,8 @@ import { SettingCardModeProvider } from '@renderer/components/base/base-setting-
 import { KokoTabs } from '@renderer/components/base/base-controls'
 import { KokoSearchField } from '@renderer/components/base/koko-search-field'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
-import { LuChevronLeft, LuChevronRight, LuSearch } from 'react-icons/lu'
+import { useOutletContext, useSearchParams } from 'react-router-dom'
+import { LuArrowLeft, LuChevronLeft, LuChevronRight, LuSearch } from 'react-icons/lu'
 
 const emptyCategoryScrollState = {
   hasOverflow: false,
@@ -22,6 +22,7 @@ const emptyCategoryScrollState = {
 }
 
 const Settings: React.FC = () => {
+  const { leaveSettings } = useOutletContext<{ leaveSettings: () => void }>()
   const [searchParams, setSearchParams] = useSearchParams()
   const [search, setSearch] = useState('')
   const [searchExpanded, setSearchExpanded] = useState(false)
@@ -231,7 +232,26 @@ const Settings: React.FC = () => {
 
   return (
     <BasePage
-      title={tr('Application settings')}
+      title={
+        <div className="flex h-full items-center gap-1">
+          <Tooltip delay={400}>
+            <Tooltip.Trigger>
+              <Button
+                isIconOnly
+                size="sm"
+                variant="ghost"
+                className="app-nodrag"
+                aria-label={tr('Back to application')}
+                onPress={leaveSettings}
+              >
+                <LuArrowLeft aria-hidden="true" />
+              </Button>
+            </Tooltip.Trigger>
+            <Tooltip.Content>{tr('Back to application')}</Tooltip.Content>
+          </Tooltip>
+          <span>{tr('Application settings')}</span>
+        </div>
+      }
       contentClassName="overflow-x-clip"
       header={
         <Button

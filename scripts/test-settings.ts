@@ -253,6 +253,7 @@ test('application settings keep one clear navigation hierarchy in compact deskto
 
 test('Application Settings uses a route-level sidebar focus mode without changing preferences', () => {
   const app = readFileSync('src/renderer/src/App.tsx', 'utf8')
+  const settings = readFileSync('src/renderer/src/pages/settings.tsx', 'utf8')
   const presentation = readFileSync(
     'src/renderer/src/components/sider/sider-presentation.ts',
     'utf8'
@@ -270,7 +271,28 @@ test('Application Settings uses a route-level sidebar focus mode without changin
   assert.match(app, /const presentedSiderWidth = resolveSiderPresentationWidth\(/)
   assert.match(app, /presentedSiderWidth === narrowWidth/)
   assert.match(app, /<SiderCards iconOnly \/>/)
-  assert.match(app, /active=\{location\.pathname\.includes\('\/settings'\)\}/)
+  assert.match(app, /const lastNonSettingsRouteRef = useRef\('\/proxies'\)/)
+  assert.match(
+    app,
+    /if \(!isSettingsFocusRoute\(location\.pathname\)\) \{[\s\S]*lastNonSettingsRouteRef\.current = `\$\{location\.pathname\}\$\{location\.search\}`/
+  )
+  assert.match(
+    app,
+    /const leaveSettings = useCallback\([\s\S]*navigate\(lastNonSettingsRouteRef\.current\)/
+  )
+  assert.match(app, /<Outlet context=\{\{ leaveSettings \}\} \/>/)
+  assert.match(
+    app,
+    /const settingsActionLabel = settingsFocusMode[\s\S]*tr\('Back to application'\)[\s\S]*tr\('Application settings'\)/
+  )
+  assert.match(app, /label=\{settingsActionLabel\}/)
+  assert.match(app, /onPress=\{settingsFocusMode \? leaveSettings : \(\) => navigate\('\/settings'\)\}/)
+  assert.match(app, /settingsFocusMode \? \([\s\S]*<LuArrowLeft/)
+  assert.doesNotMatch(app, /navigate\(-1\)/)
+  assert.match(settings, /useOutletContext<\{ leaveSettings: \(\) => void \}>\(\)/)
+  assert.match(settings, /aria-label=\{tr\('Back to application'\)\}/)
+  assert.match(settings, /className="app-nodrag"[\s\S]*onPress=\{leaveSettings\}/)
+  assert.match(settings, /<LuArrowLeft aria-hidden="true" \/>/)
   assert.match(app, /!settingsFocusMode && \(/)
   assert.match(app, /calc\(100% - \$\{presentedSiderWidth \+ 1\}px\)/)
   assert.equal(app.match(/patchAppConfig\(\{ siderWidth:/g)?.length, 1)

@@ -1,10 +1,11 @@
 import { tr } from '../../shared/i18n'
 import { useTheme } from 'next-themes'
-import { lazy, Suspense, useEffect, useRef, useState } from 'react'
-import { NavigateFunction, Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
+import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import OutboundModeSwitcher from '@renderer/components/sider/outbound-mode-switcher'
-import { Button, Separator } from '@heroui/react'
+import { Button, Separator, Tooltip } from '@heroui/react'
 import { IoSettings } from 'react-icons/io5'
+import { LuArrowLeft } from 'react-icons/lu'
 import { useDeferredRoutePreload } from '@renderer/routes'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import {
@@ -33,8 +34,6 @@ const SiderCards = lazy(() => siderCardsPromise)
 const UpdaterButton = lazy(() => import('@renderer/components/updater/updater-button'))
 const MacOSServiceSetup = lazy(() => import('@renderer/components/mihomo/macos-service-setup'))
 
-let navigate: NavigateFunction
-
 const App: React.FC = () => {
   const { appConfig, patchAppConfig } = useAppConfig()
   const {
@@ -53,17 +52,32 @@ const App: React.FC = () => {
   const resizingRef = useRef(resizing)
   const resizePointerIdRef = useRef<number | null>(null)
   const { systemTheme } = useTheme()
-  navigate = useNavigate()
+  const navigate = useNavigate()
   const location = useLocation()
+  const lastNonSettingsRouteRef = useRef('/proxies')
   const settingsFocusMode = isSettingsFocusRoute(location.pathname)
+  const settingsActionLabel = settingsFocusMode
+    ? tr('Back to application')
+    : tr('Application settings')
   const presentedSiderWidth = resolveSiderPresentationWidth(
     location.pathname,
     siderWidthValue,
     narrowWidth
   )
-  const page = <Outlet />
   const { hasUnsavedChanges, confirmUnsavedChanges } = useUnsavedChanges()
   useDeferredRoutePreload()
+
+  useEffect(() => {
+    if (!isSettingsFocusRoute(location.pathname)) {
+      lastNonSettingsRouteRef.current = `${location.pathname}${location.search}`
+    }
+  }, [location.pathname, location.search])
+
+  const leaveSettings = useCallback((): void => {
+    navigate(lastNonSettingsRouteRef.current)
+  }, [navigate])
+
+  const page = <Outlet context={{ leaveSettings }} />
 
   const setTitlebar = (): void => {
     if (!useWindowFrame && platform !== 'darwin') {
@@ -368,12 +382,15 @@ const App: React.FC = () => {
             )}
             <OutboundModeSwitcher iconOnly />
             <SiderIconButton
-              active={location.pathname.includes('/settings')}
-              label={tr('Application settings')}
+              label={settingsActionLabel}
               placement="right"
-              onPress={() => navigate('/settings')}
+              onPress={settingsFocusMode ? leaveSettings : () => navigate('/settings')}
             >
-              <IoSettings className="text-[20px]" />
+              {settingsFocusMode ? (
+                <LuArrowLeft aria-hidden="true" className="text-[20px]" />
+              ) : (
+                <IoSettings aria-hidden="true" className="text-[20px]" />
+              )}
             </SiderIconButton>
           </div>
         </div>
@@ -399,17 +416,21 @@ const App: React.FC = () => {
                   />
                 </Suspense>
               )}
-              <Button
-                size="sm"
-                className="app-nodrag"
-                isIconOnly
-                variant={location.pathname.includes('/settings') ? 'primary' : 'ghost'}
-                onPress={() => {
-                  navigate('/settings')
-                }}
-              >
-                <IoSettings className="text-[20px]" />
-              </Button>
+              <Tooltip delay={0}>
+                <Tooltip.Trigger>
+                  <Button
+                    aria-label={tr('Application settings')}
+                    size="sm"
+                    className="app-nodrag"
+                    isIconOnly
+                    variant="ghost"
+                    onPress={() => navigate('/settings')}
+                  >
+                    <IoSettings aria-hidden="true" className="text-[20px]" />
+                  </Button>
+                </Tooltip.Trigger>
+                <Tooltip.Content>{tr('Application settings')}</Tooltip.Content>
+              </Tooltip>
             </div>
           </div>
           <div className="mt-2 mx-2">

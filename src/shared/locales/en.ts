@@ -799,6 +799,7 @@ export const messages: Readonly<Record<string, string>> = {
   'App version': 'App version',
   'App directory': 'App directory',
   'Application settings': 'Application settings',
+  'Back to application': 'Back to application',
   Latency: 'Latency',
   'Latency test URL': 'Latency test URL',
   'Concurrent latency tests': 'Concurrent latency tests',

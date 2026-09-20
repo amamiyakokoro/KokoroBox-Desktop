@@ -769,6 +769,7 @@ export const messages: Readonly<Record<string, string>> = {
   'App version': '应用版本',
   'App directory': '应用目录',
   'Application settings': '应用设置',
+  'Back to application': '返回应用',
   Latency: '延迟',
   'Latency test URL': '延迟测试地址',
   'Concurrent latency tests': '延迟测试并发数量',
