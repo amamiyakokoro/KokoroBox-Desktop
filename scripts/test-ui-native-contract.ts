@@ -100,6 +100,8 @@ test('renderer styles and components use native semantic tokens', () => {
 
   const legacyThemeBridge = readFileSync('src/main/resolve/theme.ts', 'utf8')
   assert.match(legacyThemeBridge, /--heroui-primary/)
+  assert.match(legacyThemeBridge, /HeroUI v2 -> v3 token bridge/)
+  assert.doesNotMatch(legacyThemeBridge, /theme-hub/)
 })
 
 test('application overrides do not target HeroUI internal classes', () => {

@@ -124,14 +124,7 @@ import {
   showMainWindow,
   triggerMainWindow
 } from '..'
-import {
-  applyTheme,
-  fetchThemes,
-  importThemes,
-  readTheme,
-  resolveThemes,
-  writeTheme
-} from '../resolve/theme'
+import { applyTheme, importThemes, readTheme, resolveThemes, writeTheme } from '../resolve/theme'
 import path from 'path'
 import v8 from 'v8'
 import { getGistRawUrl } from '../resolve/gistApi'
@@ -460,7 +453,6 @@ export function registerIpcMainHandlers(): void {
   ipcMain.handle('getImageDataURL', (_e, url) => ipcErrorWrapper(getImageDataURL)(url))
   ipcMain.handle('getIconDataURL', (_e, appPath) => ipcErrorWrapper(getIconDataURL)(appPath))
   ipcMain.handle('resolveThemes', () => ipcErrorWrapper(resolveThemes)())
-  ipcMain.handle('fetchThemes', () => ipcErrorWrapper(fetchThemes)())
   ipcMain.handle('importThemes', (_e, file) => ipcErrorWrapper(importThemes)(file))
   ipcMain.handle('readTheme', (_e, theme) => ipcErrorWrapper(readTheme)(theme))
   ipcMain.handle('writeTheme', (_e, theme, css) => ipcErrorWrapper(writeTheme)(theme, css))

@@ -1,6 +1,6 @@
 import { tr } from '../../../../shared/i18n'
 import React, { useEffect, useState, useRef } from 'react'
-import { Button, Switch } from '@heroui/react'
+import { Button, Switch, Tooltip } from '@heroui/react'
 import SettingCard from '../base/base-setting-card'
 import SettingItem from '../base/base-setting-item'
 import { KokoSelect } from '../base/koko-form'
@@ -10,7 +10,6 @@ import {
   applyTheme,
   closeFloatingWindow,
   closeTrayIcon,
-  fetchThemes,
   getFilePath,
   importThemes,
   relaunchApp,
@@ -26,7 +25,6 @@ import {
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { platform } from '@renderer/utils/init'
 import { useTheme } from 'next-themes'
-import { IoMdCloudDownload } from 'react-icons/io'
 import { MdEditDocument } from 'react-icons/md'
 import CSSEditorModal from './css-editor-modal'
 import TrayIconCropModal from './tray-icon-crop-modal'
@@ -39,7 +37,6 @@ const AppearanceConfig: React.FC = () => {
   const [customThemes, setCustomThemes] = useState<{ key: string; label: string }[]>()
   const [openCSSEditor, setOpenCSSEditor] = useState(false)
   const [trayIconCropDataURL, setTrayIconCropDataURL] = useState('')
-  const [fetching, setFetching] = useState(false)
   const { setTheme } = useTheme()
   const {
     useDockIcon = true,
@@ -57,6 +54,12 @@ const AppearanceConfig: React.FC = () => {
     appTheme = 'system'
   } = appConfig || {}
   const [localShowFloating, setLocalShowFloating] = useState(showFloating)
+  const selectedCustomTheme = customThemes?.some((theme) => theme.key === customTheme)
+    ? customTheme
+    : 'default.css'
+  const canEditCustomTheme =
+    selectedCustomTheme !== 'default.css' &&
+    Boolean(customThemes?.some((theme) => theme.key === selectedCustomTheme))
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
@@ -385,55 +388,48 @@ const AppearanceConfig: React.FC = () => {
         </SettingItem>
         <SettingItem
           contentAlign="end"
-          title={tr('Theme')}
+          title={tr('Custom theme')}
+          help={tr('Applies a local CSS theme. Import a CSS file to add one.')}
           actions={
             <>
-              <Button
-                size="sm"
-                isPending={fetching}
-                isIconOnly
-                variant="ghost"
-                onPress={async () => {
-                  setFetching(true)
-                  try {
-                    await fetchThemes()
-                    setCustomThemes(await resolveThemes())
-                  } catch (e) {
-                    notify(e, { variant: 'danger' })
-                  } finally {
-                    setFetching(false)
-                  }
-                }}
-              >
-                <IoMdCloudDownload className="text-lg" />
-              </Button>
-              <Button
-                size="sm"
-                isIconOnly
-                variant="ghost"
-                onPress={async () => {
-                  const files = await getFilePath(['css'])
-                  if (!files) return
-                  try {
-                    await importThemes(files)
-                    setCustomThemes(await resolveThemes())
-                  } catch (e) {
-                    notify(e, { variant: 'danger' })
-                  }
-                }}
-              >
-                <BiSolidFileImport className="text-lg" />
-              </Button>
-              <Button
-                size="sm"
-                isIconOnly
-                variant="ghost"
-                onPress={async () => {
-                  setOpenCSSEditor(true)
-                }}
-              >
-                <MdEditDocument className="text-lg" />
-              </Button>
+              <Tooltip delay={0}>
+                <Tooltip.Trigger>
+                  <Button
+                    aria-label={tr('Import theme')}
+                    size="sm"
+                    isIconOnly
+                    variant="ghost"
+                    onPress={async () => {
+                      const files = await getFilePath(['css'])
+                      if (!files) return
+                      try {
+                        await importThemes(files)
+                        setCustomThemes(await resolveThemes())
+                      } catch (e) {
+                        notify(e, { variant: 'danger' })
+                      }
+                    }}
+                  >
+                    <BiSolidFileImport aria-hidden="true" className="text-lg" />
+                  </Button>
+                </Tooltip.Trigger>
+                <Tooltip.Content>{tr('Import theme')}</Tooltip.Content>
+              </Tooltip>
+              <Tooltip delay={0}>
+                <Tooltip.Trigger>
+                  <Button
+                    aria-label={tr('Edit theme')}
+                    isDisabled={!canEditCustomTheme}
+                    size="sm"
+                    isIconOnly
+                    variant="ghost"
+                    onPress={() => setOpenCSSEditor(true)}
+                  >
+                    <MdEditDocument aria-hidden="true" className="text-lg" />
+                  </Button>
+                </Tooltip.Trigger>
+                <Tooltip.Content>{tr('Edit theme')}</Tooltip.Content>
+              </Tooltip>
             </>
           }
         >
@@ -442,7 +438,7 @@ const AppearanceConfig: React.FC = () => {
               aria-label={tr('Custom theme')}
               variant="secondary"
               controlWidth="full"
-              value={customTheme}
+              value={selectedCustomTheme}
               options={customThemes.map((theme) => ({ id: theme.key, label: theme.label }))}
               disallowEmptySelection={true}
               onChange={async (value) => {

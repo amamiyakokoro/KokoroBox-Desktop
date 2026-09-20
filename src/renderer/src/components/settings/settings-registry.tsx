@@ -654,7 +654,7 @@ export const getSettingsCategories = (): SettingsCategoryDefinition[] => {
           entry('window-drag-area', tr('Enable window drag area'), tr('Appearance')),
           entry('show-update-button', tr('Show update button'), tr('Appearance')),
           entry('background-color', tr('Background color'), tr('Appearance')),
-          entry('theme', tr('Theme'), tr('Appearance')),
+          entry('theme', tr('Custom theme'), tr('Appearance')),
           entry('disable-gpu', tr('Disable GPU acceleration'), tr('Performance')),
           entry('reduce-animations', tr('Reduce animations'), tr('Performance')),
           entry('sidebar-settings', tr('Sidebar settings'), tr('Sidebar settings')),

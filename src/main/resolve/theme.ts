@@ -2,13 +2,11 @@ import { tr } from '../../shared/i18n'
 import { copyFile, readdir, readFile, writeFile } from 'fs/promises'
 import { themesDir } from '../utils/dirs'
 import path from 'path'
-import axios from 'axios'
-import AdmZip from 'adm-zip'
-import { getControledMihomoConfig } from '../config'
 import { existsSync } from 'fs'
 import { mainWindow } from '..'
 import { floatingWindow } from './floatingWindow'
 
+const defaultThemeKey = 'default.css'
 let insertedCSSKeyMain: string | undefined = undefined
 let insertedCSSKeyFloating: string | undefined = undefined
 
@@ -68,7 +66,7 @@ export async function resolveThemes(): Promise<{ key: string; label: string }[]>
   const files = await readdir(themesDir())
   const themes = await Promise.all(
     files
-      .filter((file) => file.endsWith('.css'))
+      .filter((file) => file.endsWith('.css') && file !== defaultThemeKey)
       .map(async (file) => {
         const css = (await readFile(path.join(themesDir(), file), 'utf-8')) || ''
         let name = file
@@ -78,29 +76,7 @@ export async function resolveThemes(): Promise<{ key: string; label: string }[]>
         return { key: file, label: name }
       })
   )
-  if (themes.find((theme) => theme.key === 'default.css')) {
-    return themes
-  } else {
-    return [{ key: 'default.css', label: tr('Default') }, ...themes]
-  }
-}
-
-export async function fetchThemes(): Promise<void> {
-  const zipUrl = 'https://github.com/mihomo-party-org/theme-hub/releases/download/latest/themes.zip'
-  const { 'mixed-port': mixedPort = 7890 } = await getControledMihomoConfig()
-  const zipData = await axios.get(zipUrl, {
-    responseType: 'arraybuffer',
-    headers: { 'Content-Type': 'application/octet-stream' },
-    ...(mixedPort != 0 && {
-      proxy: {
-        protocol: 'http',
-        host: '127.0.0.1',
-        port: mixedPort
-      }
-    })
-  })
-  const zip = new AdmZip(zipData.data as Buffer)
-  zip.extractAllTo(themesDir(), true)
+  return [{ key: defaultThemeKey, label: tr('Default') }, ...themes]
 }
 
 export async function importThemes(files: string[]): Promise<void> {
@@ -114,11 +90,15 @@ export async function importThemes(files: string[]): Promise<void> {
 }
 
 export async function readTheme(theme: string): Promise<string> {
+  if (!theme || theme === defaultThemeKey) return ''
   if (!existsSync(path.join(themesDir(), theme))) return ''
   return await readFile(path.join(themesDir(), theme), 'utf-8')
 }
 
 export async function writeTheme(theme: string, css: string): Promise<void> {
+  if (!theme || theme === defaultThemeKey) {
+    throw new Error('Default theme is read-only')
+  }
   await writeFile(path.join(themesDir(), theme), css)
 }
 

@@ -649,12 +649,8 @@ export async function getIconDataURL(appPath: string): Promise<string> {
   return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('getIconDataURL', appPath))
 }
 
-export async function resolveThemes(): Promise<{ key: string; label: string; content: string }[]> {
+export async function resolveThemes(): Promise<{ key: string; label: string }[]> {
   return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('resolveThemes'))
-}
-
-export async function fetchThemes(): Promise<void> {
-  return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('fetchThemes'))
 }
 
 export async function importThemes(files: string[]): Promise<void> {

@@ -67,7 +67,7 @@ use. These can include:
 - **Updates and bundled resources.** If update checking is enabled, or when
   you explicitly download an update, KokoroBox contacts GitHub Releases and
   the GitHub API. Update requests necessarily disclose ordinary connection
-  data, such as your IP address, to GitHub. Downloaded rule, GeoIP, theme, or
+  data, such as your IP address, to GitHub. Downloaded rule, GeoIP, or
   external UI resources contact their configured source.
 - **Profiles, overrides, and DNS.** Remote profile or override updates contact
   the URLs you add. DNS requests are sent to the DNS servers in your Mihomo

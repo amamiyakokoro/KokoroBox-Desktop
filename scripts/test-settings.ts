@@ -1820,3 +1820,50 @@ test('settings use semantic widths, compact pending actions and focused help', (
   assert.match(tun, /title="MTU"[\s\S]*help=\{tr\(/)
   assert.match(sniffer, /title=\{tr\('Override connection address'\)\}[\s\S]*help=\{tr\(/)
 })
+
+test('custom themes remain local-only and Default is a read-only no-override option', () => {
+  const appearance = readFileSync(
+    'src/renderer/src/components/settings/appearance-confis.tsx',
+    'utf8'
+  )
+  const registry = readFileSync(
+    'src/renderer/src/components/settings/settings-registry.tsx',
+    'utf8'
+  )
+  const rendererIpc = readFileSync('src/renderer/src/utils/ipc.ts', 'utf8')
+  const mainIpc = readFileSync('src/main/utils/ipc.ts', 'utf8')
+  const themeResolver = readFileSync('src/main/resolve/theme.ts', 'utf8')
+  const privacy = readFileSync('PRIVACY_POLICY.md', 'utf8')
+
+  assert.doesNotMatch(appearance, /IoMdCloudDownload|fetchThemes/)
+  assert.doesNotMatch(rendererIpc, /export async function fetchThemes/)
+  assert.doesNotMatch(mainIpc, /ipcMain\.handle\('fetchThemes'/)
+  assert.doesNotMatch(themeResolver, /theme-hub|axios|AdmZip/)
+  assert.doesNotMatch(privacy, /Downloaded rule, GeoIP, theme/)
+
+  assert.match(themeResolver, /const defaultThemeKey = 'default\.css'/)
+  assert.match(themeResolver, /file !== defaultThemeKey/)
+  assert.match(
+    themeResolver,
+    /return \[\{ key: defaultThemeKey, label: tr\('Default'\) \}, \.\.\.themes\]/
+  )
+  assert.match(themeResolver, /if \(!theme \|\| theme === defaultThemeKey\) return ''/)
+  assert.match(themeResolver, /throw new Error\('Default theme is read-only'\)/)
+  assert.match(themeResolver, /export async function importThemes/)
+  assert.match(themeResolver, /export async function readTheme/)
+  assert.match(themeResolver, /export async function writeTheme/)
+  assert.match(themeResolver, /export async function applyTheme/)
+  assert.match(themeResolver, /Sparkle compatibility: HeroUI v2 -> v3 token bridge/)
+
+  assert.match(appearance, /title=\{tr\('Custom theme'\)\}/)
+  assert.match(
+    appearance,
+    /help=\{tr\('Applies a local CSS theme\. Import a CSS file to add one\.'\)\}/
+  )
+  assert.match(appearance, /aria-label=\{tr\('Import theme'\)\}/)
+  assert.match(appearance, /aria-label=\{tr\('Edit theme'\)\}/)
+  assert.match(appearance, /isDisabled=\{!canEditCustomTheme\}/)
+  assert.match(appearance, /value=\{selectedCustomTheme\}/)
+  assert.match(appearance, /<KokoSelect/)
+  assert.match(registry, /entry\('theme', tr\('Custom theme'\), tr\('Appearance'\)\)/)
+})
