@@ -33,6 +33,7 @@ import Tun from './network/tun-settings'
 import DNS from './network/dns-settings'
 import Mihomo from './network/mihomo-settings'
 import Sniffer from './network/sniffer-settings'
+import GeoDataSettings from './geo-data-settings'
 
 export type SettingsCategory =
   'general' | 'appearance' | 'network' | 'core' | 'data' | 'shortcuts' | 'diagnostics'
@@ -494,6 +495,37 @@ export const getSettingsCategories = (): SettingsCategoryDefinition[] => {
           <GistIntegrationSettings />
         </>
       )
+    },
+    {
+      key: 'geo-data',
+      label: tr('Geo databases'),
+      entries: [
+        entry('geoip-dat-url', tr('GeoIP-DAT database'), tr('Database sources'), {
+          panel: 'geo-data'
+        }),
+        entry('geoip-mmdb-url', tr('GeoIP-MMDB database'), tr('Database sources'), {
+          panel: 'geo-data'
+        }),
+        entry('geosite-url', tr('GeoSite database'), tr('Database sources'), {
+          panel: 'geo-data'
+        }),
+        entry('ip-asn-url', tr('IP-ASN database'), tr('Database sources'), {
+          panel: 'geo-data'
+        }),
+        entry('geoip-mode', tr('GeoIP mode'), tr('Update behavior'), {
+          panel: 'geo-data'
+        }),
+        entry('geo-auto-update', tr('Update databases automatically'), tr('Update behavior'), {
+          panel: 'geo-data'
+        }),
+        entry('geo-update-interval', tr('Update interval (hours)'), tr('Update behavior'), {
+          panel: 'geo-data'
+        }),
+        entry('geo-update-now', tr('Update databases'), tr('Update behavior'), {
+          panel: 'geo-data'
+        })
+      ],
+      content: () => <GeoDataSettings />
     }
   ]
 

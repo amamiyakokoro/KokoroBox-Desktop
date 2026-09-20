@@ -125,7 +125,7 @@ const SiderConfig: React.FC = () => {
         {
           id: 'resource',
           key: 'resourceCardStatus',
-          title: tr('External resources'),
+          title: tr('Rule collections'),
           defaultStatus: 'col-span-1'
         },
         {

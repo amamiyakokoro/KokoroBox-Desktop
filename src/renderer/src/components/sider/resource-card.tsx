@@ -34,7 +34,7 @@ const ResourceCard: React.FC<Props> = (props) => {
       <div className={`${resourceCardStatus} flex justify-center`}>
         <SiderIconButton
           active={match}
-          label={tr('External resources')}
+          label={tr('Rule collections')}
           placement="right"
           onPress={() => navigate('/resources')}
         >
@@ -60,7 +60,7 @@ const ResourceCard: React.FC<Props> = (props) => {
       >
         <SiderNavItem
           icon={<IoLayersOutline />}
-          title={tr('External resources')}
+          title={tr('Rule collections')}
           active={match}
           onPress={() => navigate('/resources')}
         />

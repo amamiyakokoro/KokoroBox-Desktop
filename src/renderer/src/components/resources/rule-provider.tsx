@@ -132,7 +132,6 @@ const RuleProvider: React.FC = () => {
         />
       )}
       <ResourceSection
-        title={tr('Rule providers')}
         action={
           <Button
             size="sm"

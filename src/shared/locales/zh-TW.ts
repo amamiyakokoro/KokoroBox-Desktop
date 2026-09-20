@@ -33,6 +33,8 @@ export const messages: Readonly<Record<string, string>> = {
   'Appearance and interface': '外觀與介面',
   'Core and system': '核心與系統',
   'Data and integrations': '資料與整合',
+  'Database sources': '資料來源',
+  'Rule collections': '規則集合',
   'Subscription data': '訂閱資料',
   'Gist synchronization': 'Gist 同步',
   'Subscription data and sync': '訂閱資料與同步',

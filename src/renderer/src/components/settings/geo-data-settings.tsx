@@ -1,14 +1,16 @@
 import { tr } from '../../../../shared/i18n'
-/* eslint-disable react/prop-types */
 import { Button, Switch } from '@heroui/react'
 import { KokoSegmentedControl } from '@renderer/components/base/base-controls'
 import { KokoTextField } from '@renderer/components/base/koko-form'
+import FeatureSettingsLayout, {
+  FeatureSettingsSection
+} from '@renderer/components/base/base-feature-settings'
+import SettingItem from '@renderer/components/base/base-setting-item'
 import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'
 import { mihomoUpgradeGeo } from '@renderer/utils/ipc'
-import { useState, useEffect, useMemo } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { IoMdRefresh } from 'react-icons/io'
 import { notify } from '@renderer/utils/notification'
-import { ResourceSection, ResourceSettingRow } from './resource-surfaces'
 
 const defaultGeoxUrl = {
   geoip: 'https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geoip.dat',
@@ -29,30 +31,30 @@ const GeoUrlSetting: React.FC<Props> = (props) => {
   const { title, value, savedValue, onChange, onConfirm } = props
 
   return (
-    <ResourceSettingRow
-      label={title}
-      actions={
-        value !== savedValue ? (
-          <Button size="sm" variant="primary" onPress={onConfirm}>
+    <SettingItem title={title} divider>
+      <div className="flex w-full min-w-0 items-center gap-2">
+        <KokoTextField
+          size="sm"
+          aria-label={title}
+          title={value}
+          value={value}
+          controlWidth="full"
+          className="min-w-0 flex-1"
+          data-setting-input="full"
+          classNames={{ input: 'font-mono text-xs' }}
+          onValueChange={onChange}
+        />
+        {value !== savedValue ? (
+          <Button className="shrink-0" size="sm" variant="primary" onPress={onConfirm}>
             {tr('Confirm')}
           </Button>
-        ) : undefined
-      }
-    >
-      <KokoTextField
-        size="sm"
-        aria-label={title}
-        title={value}
-        value={value}
-        controlWidth="full"
-        classNames={{ input: 'truncate font-mono text-xs' }}
-        onValueChange={onChange}
-      />
-    </ResourceSettingRow>
+        ) : null}
+      </div>
+    </SettingItem>
   )
 }
 
-const GeoData: React.FC = () => {
+const GeoDataSettings: React.FC = () => {
   const { controledMihomoConfig, patchControledMihomoConfig } = useControledMihomoConfig()
   const {
     'geox-url': geoxUrlRaw,
@@ -89,16 +91,8 @@ const GeoData: React.FC = () => {
   }, [geoxUrl])
 
   return (
-    <>
-      <ResourceSection
-        title={tr('Geo databases')}
-        action={
-          <Button size="sm" variant="ghost" onPress={updateDatabases}>
-            <IoMdRefresh className={`text-base ${updating ? 'animate-spin' : ''}`} />
-            {tr('Update databases')}
-          </Button>
-        }
-      >
+    <FeatureSettingsLayout>
+      <FeatureSettingsSection title={tr('Database sources')}>
         <GeoUrlSetting
           title={tr('GeoIP-DAT database')}
           value={geoipInput}
@@ -135,10 +129,10 @@ const GeoData: React.FC = () => {
             patchControledMihomoConfig({ 'geox-url': { ...geoxUrl, asn: asnInput } })
           }}
         />
-      </ResourceSection>
+      </FeatureSettingsSection>
 
-      <ResourceSection title={tr('Update behavior')}>
-        <ResourceSettingRow label={tr('GeoIP mode')} contentAlign="end">
+      <FeatureSettingsSection title={tr('Update behavior')}>
+        <SettingItem title={tr('GeoIP mode')} contentAlign="end" divider>
           <KokoSegmentedControl
             ariaLabel={tr('GeoIP mode')}
             selectedKey={geoMode ? 'dat' : 'db'}
@@ -150,8 +144,8 @@ const GeoData: React.FC = () => {
               patchControledMihomoConfig({ 'geodata-mode': key === 'dat' })
             }}
           />
-        </ResourceSettingRow>
-        <ResourceSettingRow label={tr('Update databases automatically')} contentAlign="end">
+        </SettingItem>
+        <SettingItem title={tr('Update databases automatically')} contentAlign="end" divider>
           <Switch
             size="sm"
             aria-label={tr('Update databases automatically')}
@@ -166,9 +160,9 @@ const GeoData: React.FC = () => {
               </Switch.Control>
             </Switch.Content>
           </Switch>
-        </ResourceSettingRow>
+        </SettingItem>
         {geoAutoUpdate && (
-          <ResourceSettingRow label={tr('Update interval (hours)')} contentAlign="end">
+          <SettingItem title={tr('Update interval (hours)')} contentAlign="end" divider>
             <KokoTextField
               size="sm"
               type="number"
@@ -179,11 +173,17 @@ const GeoData: React.FC = () => {
                 patchControledMihomoConfig({ 'geo-update-interval': parseInt(v) })
               }}
             />
-          </ResourceSettingRow>
+          </SettingItem>
         )}
-      </ResourceSection>
-    </>
+        <SettingItem title={tr('Update databases')} contentAlign="end">
+          <Button size="sm" variant="secondary" isPending={updating} onPress={updateDatabases}>
+            <IoMdRefresh className="text-base" />
+            {tr('Update databases')}
+          </Button>
+        </SettingItem>
+      </FeatureSettingsSection>
+    </FeatureSettingsLayout>
   )
 }
 
-export default GeoData
+export default GeoDataSettings

@@ -2,7 +2,7 @@ import { Surface, cn } from '@heroui/react'
 import type React from 'react'
 
 interface ResourceSectionProps {
-  title: React.ReactNode
+  title?: React.ReactNode
   description?: React.ReactNode
   action?: React.ReactNode
   children: React.ReactNode
@@ -15,15 +15,21 @@ export const ResourceSection: React.FC<ResourceSectionProps> = ({
   children
 }) => (
   <section className="resource-section">
-    <header className="resource-section__header">
-      <div className="min-w-0">
-        <h2 className="text-base font-semibold leading-6 text-foreground">{title}</h2>
-        {description ? (
-          <p className="mt-0.5 text-xs leading-5 text-foreground-500">{description}</p>
+    {title || description || action ? (
+      <header className="resource-section__header">
+        {title || description ? (
+          <div className="min-w-0">
+            {title ? (
+              <h2 className="text-base font-semibold leading-6 text-foreground">{title}</h2>
+            ) : null}
+            {description ? (
+              <p className="mt-0.5 text-xs leading-5 text-foreground-500">{description}</p>
+            ) : null}
+          </div>
         ) : null}
-      </div>
-      {action ? <div className="shrink-0">{action}</div> : null}
-    </header>
+        {action ? <div className="ml-auto shrink-0">{action}</div> : null}
+      </header>
+    ) : null}
     <Surface className="resource-section__body">{children}</Surface>
   </section>
 )

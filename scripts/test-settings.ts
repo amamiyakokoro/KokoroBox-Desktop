@@ -1338,7 +1338,7 @@ test('operational lists use compact hierarchy without changing their behavior', 
   const rulesPage = readFileSync('src/renderer/src/pages/rules.tsx', 'utf8')
   const ruleItem = readFileSync('src/renderer/src/components/rules/rule-item.tsx', 'utf8')
   const resourcesPage = readFileSync('src/renderer/src/pages/resources.tsx', 'utf8')
-  const geoData = readFileSync('src/renderer/src/components/resources/geo-data.tsx', 'utf8')
+  const geoData = readFileSync('src/renderer/src/components/settings/geo-data-settings.tsx', 'utf8')
   const proxyProvider = readFileSync(
     'src/renderer/src/components/resources/proxy-provider.tsx',
     'utf8'
@@ -1359,6 +1359,12 @@ test('operational lists use compact hierarchy without changing their behavior', 
   )
   const logsPage = readFileSync('src/renderer/src/pages/logs.tsx', 'utf8')
   const logItem = readFileSync('src/renderer/src/components/logs/log-item.tsx', 'utf8')
+  const resourceCard = readFileSync('src/renderer/src/components/sider/resource-card.tsx', 'utf8')
+  const sidebarSettings = readFileSync(
+    'src/renderer/src/components/settings/sider-config.tsx',
+    'utf8'
+  )
+  const routes = readFileSync('src/renderer/src/routes/index.tsx', 'utf8')
 
   assert.match(rulesPage, /<Virtuoso/)
   assert.match(ruleItem, /<Card className="rule-list-card" data-enabled=\{isEnabled\}>/)
@@ -1386,13 +1392,22 @@ test('operational lists use compact hierarchy without changing their behavior', 
   assert.match(ruleItem, /mihomoRulesDisable/)
 
   assert.match(resourcesPage, /className="resource-page[^"]*max-w-\[68rem\]/)
-  assert.match(geoData, /<ResourceSection[\s\S]*title=\{tr\('Geo databases'\)\}/)
-  assert.match(geoData, /<ResourceSection title=\{tr\('Update behavior'\)\}>/)
-  assert.match(geoData, /<ResourceSettingRow/)
-  assert.doesNotMatch(geoData, /SettingCard|SettingItem|w-\[70%\]/)
+  assert.match(resourcesPage, /title=\{tr\('Rule collections'\)\}/)
+  assert.match(resourcesPage, /<RuleProvider \/>/)
+  assert.doesNotMatch(resourcesPage, /GeoData|ProxyProvider/)
+  assert.match(geoData, /<FeatureSettingsLayout>/)
+  assert.match(geoData, /<FeatureSettingsSection title=\{tr\('Database sources'\)\}>/)
+  assert.match(geoData, /<FeatureSettingsSection title=\{tr\('Update behavior'\)\}>/)
+  assert.match(geoData, /<SettingItem/)
+  assert.doesNotMatch(geoData, /ResourceSection|ResourceSettingRow|SettingCard|w-\[70%\]/)
   assert.match(geoData, /controlWidth="full"/)
+  assert.match(geoData, /data-setting-input="full"/)
   assert.match(geoData, /title=\{value\}/)
   assert.match(geoData, /mihomoUpgradeGeo\(\)/)
+  assert.match(geoData, /'geox-url'/)
+  assert.match(geoData, /'geodata-mode'/)
+  assert.match(geoData, /'geo-auto-update'/)
+  assert.match(geoData, /'geo-update-interval'/)
   assert.match(resourceSurfaces, /export const ResourceSection/)
   assert.match(resourceSurfaces, /export const ResourceSettingRow/)
   assert.match(resourceSurfaces, /export const ResourceProviderRow/)
@@ -1407,8 +1422,13 @@ test('operational lists use compact hierarchy without changing their behavior', 
   assert.match(ruleProvider, /tr\('\{0\} rules', \[provider\.ruleCount\]\)/)
   assert.match(ruleProvider, /provider\.vehicleType\} · \$\{provider\.behavior\}/)
   assert.match(ruleProvider, /variant="ghost"[\s\S]*tr\('Update all'\)/)
+  assert.doesNotMatch(ruleProvider, /title=\{tr\('Rule providers'\)\}/)
   assert.doesNotMatch(ruleProvider, /SettingCard|SettingItem|<Chip|::/)
   assert.match(ruleProvider, /mihomoUpdateRuleProviders/)
+  assert.match(routes, /path: 'resources'[\s\S]*<Resources \/>/)
+  assert.match(resourceCard, /tr\('Rule collections'\)/)
+  assert.match(resourceCard, /navigate\('\/resources'\)/)
+  assert.match(sidebarSettings, /title: tr\('Rule collections'\)/)
 
   assert.match(overridesPage, /<CollectionGrid>/)
   assert.doesNotMatch(overridesPage, /lg:grid-cols-3|xl:grid-cols-4/)
@@ -1541,7 +1561,7 @@ test('core settings separate runtime, service and environment concerns', () => {
   assert.match(runtime, /sections\.includes\('service'\)/)
 })
 
-test('data settings separate subscriptions, backups and developer integrations', () => {
+test('data settings separate subscriptions, backups, integrations and Geo databases', () => {
   const registry = readFileSync(
     'src/renderer/src/components/settings/settings-registry.tsx',
     'utf8'
@@ -1558,6 +1578,21 @@ test('data settings separate subscriptions, backups and developer integrations',
   assert.match(registry, /content: \(\) => <WebdavConfig \/>/)
   assert.match(registry, /key: 'integrations'/)
   assert.match(registry, /<GistIntegrationSettings \/>/)
+  assert.match(registry, /key: 'geo-data'/)
+  assert.match(registry, /label: tr\('Geo databases'\)/)
+  assert.match(registry, /content: \(\) => <GeoDataSettings \/>/)
+  for (const settingId of [
+    'geoip-dat-url',
+    'geoip-mmdb-url',
+    'geosite-url',
+    'ip-asn-url',
+    'geoip-mode',
+    'geo-auto-update',
+    'geo-update-interval',
+    'geo-update-now'
+  ]) {
+    assert.match(registry, new RegExp(`entry\\('${settingId}'`))
+  }
   assert.match(registry, /entries: dataPanels\.flatMap/)
   assert.match(registry, /panels: dataPanels/)
   assert.match(integrations, /hasSubscriptionSection = sections\.includes\('subscription'\)/)
