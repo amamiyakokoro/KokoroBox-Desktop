@@ -44,6 +44,10 @@ import {
 } from './release-artifacts.ts'
 import { sparkleAppcastName, sparkleRelease, sparkleUpdateArchiveName } from './macos-sparkle.ts'
 
+function githubExpression(value: string): string {
+  return '$' + `{{ ${value} }}`
+}
+
 const teamId = kokoroBoxAppleTeamId
 const sha = '1234567890abcdef1234567890abcdef12345678'
 const submissionId = '12345678-1234-1234-1234-123456789abc'
@@ -633,7 +637,7 @@ test('callers isolate macOS build secrets from Linux publication secrets', () =>
     ])
   }
   const config = parse(readFileSync('.github/workflows/build.yml', 'utf8'))
-  assert.equal(config.jobs.build['runs-on'], '${{ matrix.runner || matrix.os }}')
+  assert.equal(config.jobs.build['runs-on'], githubExpression('matrix.runner || matrix.os'))
   const macTargets = config.jobs.build.strategy.matrix.include.filter(
     (target: { os: string }) => target.os === 'macos-latest'
   )

@@ -39,6 +39,10 @@ import {
   verifyKokoroBoxServiceChecksum
 } from './kokorobox-service.ts'
 
+function githubExpression(value: string): string {
+  return '$' + `{{ ${value} }}`
+}
+
 const sha = '1234567890abcdef1234567890abcdef12345678'
 const base = { packageVersion: '2.26.8', sha }
 const workflow = (name: string) => parse(readFileSync(`.github/workflows/${name}.yml`, 'utf8'))
@@ -265,7 +269,7 @@ test('stable builds pin verified service releases while rolling builds follow pr
   )
 
   const build = workflow('build')
-  assert.equal(build.jobs.build.env.RELEASE_CHANNEL, '${{ inputs.channel }}')
+  assert.equal(build.jobs.build.env.RELEASE_CHANNEL, githubExpression('inputs.channel'))
   const prepare = readFileSync('scripts/prepare.ts', 'utf8')
   assert.match(prepare, /sha256URL: asset\.sha256URL/)
   assert.match(prepare, /verifyKokoroBoxServiceChecksum/)
@@ -592,11 +596,11 @@ test('workflows gate publication on all builds and do not invoke upstream-only s
     assert.equal(config.jobs.publish.uses, './.github/workflows/publish.yml')
     assert.equal(
       config.jobs.publish.secrets.LINUX_GPG_PRIVATE_KEY,
-      '${{ secrets.LINUX_GPG_PRIVATE_KEY }}'
+      githubExpression('secrets.LINUX_GPG_PRIVATE_KEY')
     )
     assert.equal(
       config.jobs.publish.secrets.LINUX_GPG_PASSPHRASE,
-      '${{ secrets.LINUX_GPG_PASSPHRASE }}'
+      githubExpression('secrets.LINUX_GPG_PASSPHRASE')
     )
     assert.equal(config.jobs.publish.with.linux_gpg_fingerprint, undefined)
     assert.equal(config.concurrency['cancel-in-progress'], false)
@@ -625,8 +629,14 @@ test('workflows gate publication on all builds and do not invoke upstream-only s
   assert.match(releasePlan, /build_number: sourceBuildNumber/)
   const rolling = workflow('rolling')
   const release = workflow('release')
-  assert.equal(rolling.jobs.build.with.build_number, '${{ needs.prepare.outputs.build_number }}')
-  assert.equal(release.jobs.build.with.build_number, '${{ needs.prepare.outputs.build_number }}')
+  assert.equal(
+    rolling.jobs.build.with.build_number,
+    githubExpression('needs.prepare.outputs.build_number')
+  )
+  assert.equal(
+    release.jobs.build.with.build_number,
+    githubExpression('needs.prepare.outputs.build_number')
+  )
   const publish = readFileSync('.github/workflows/publish.yml', 'utf8')
   const publishWorkflow = workflow('publish')
   assert.equal(publishWorkflow.on.workflow_call.secrets.LINUX_GPG_PRIVATE_KEY.required, true)

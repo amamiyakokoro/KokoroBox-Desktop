@@ -102,7 +102,9 @@ try {
   clearTimeout(watchdog)
   socket?.close()
   if (child.exitCode === null && child.signalCode === null) {
-    const closed = new Promise((resolve) => child.once('close', resolve))
+    const closed = new Promise((resolve) => {
+      child.once('close', resolve)
+    })
     try {
       process.kill(-child.pid, 'SIGKILL')
     } catch {
