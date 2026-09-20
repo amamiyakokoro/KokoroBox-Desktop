@@ -22,6 +22,7 @@ interface SiderStatusCardProps extends SiderNavItemProps {
   descriptionTitle?: string
   statusTitle?: string
   details?: React.ReactNode
+  metadata?: React.ReactNode
   metadataSeparator?: React.ReactNode
   prioritizeDescription?: boolean
   showChevron?: boolean
@@ -89,8 +90,9 @@ export const SiderStatusRow: React.FC<SiderStatusRowProps> = ({
 const SiderItemIcon: React.FC<{
   active: boolean
   children: React.ReactNode
+  className?: string
   prominence: SiderItemProminence | 'status'
-}> = ({ active, children, prominence }) => (
+}> = ({ active, children, className, prominence }) => (
   <span
     className={cn(
       'flex size-8 shrink-0 items-center justify-center rounded-lg transition-colors duration-150',
@@ -100,7 +102,8 @@ const SiderItemIcon: React.FC<{
           : prominence === 'account'
             ? 'bg-accent-soft/35 text-lg text-accent-soft-foreground group-hover:bg-accent-soft/65 group-hover:text-accent-soft-foreground'
             : 'bg-default-100/70 text-xl text-foreground-500 group-hover:bg-default-200/80 group-hover:text-foreground'),
-      active && siderActiveIconClassName
+      active && siderActiveIconClassName,
+      className
     )}
   >
     {children}
@@ -286,6 +289,7 @@ export const SiderStatusCard: React.FC<SiderStatusCardProps> = ({
   descriptionTitle,
   statusTitle,
   details,
+  metadata,
   metadataSeparator = '·',
   prioritizeDescription = false,
   showChevron,
@@ -303,47 +307,65 @@ export const SiderStatusCard: React.FC<SiderStatusCardProps> = ({
       <button
         type="button"
         data-card-primary-action
-        className="flex min-w-0 flex-1 items-center gap-2.5 px-2.5 py-2 text-left focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-accent"
+        className={cn(
+          'sider-status-card__primary min-w-0 flex-1 px-2.5 py-2 text-left focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-accent',
+          metadata
+            ? 'grid grid-cols-[2rem_minmax(0,1fr)_2rem] grid-rows-[1.25rem_1rem] items-center gap-x-2.5 gap-y-0.5'
+            : 'flex items-center gap-2.5'
+        )}
         aria-current={active ? 'page' : undefined}
         onClick={onPress}
       >
-        <SiderItemIcon active={active} prominence="status">
+        <SiderItemIcon
+          active={active}
+          className={metadata ? 'row-span-2 self-center' : undefined}
+          prominence="status"
+        >
           {icon}
         </SiderItemIcon>
-        <SiderItemContent
-          title={title}
-          subtitle={
-            description || status ? (
-              <>
-                {description && (
-                  <span
-                    title={descriptionTitle}
-                    className={cn(
-                      'truncate text-foreground-500',
-                      prioritizeDescription && 'max-w-[60%] shrink-0'
-                    )}
-                  >
-                    {description}
-                  </span>
-                )}
-                {description && status && (
-                  <span className="text-foreground-300">{metadataSeparator}</span>
-                )}
-                {status && (
-                  <span
-                    title={statusTitle}
-                    className={cn(
-                      prioritizeDescription ? 'min-w-0 truncate' : 'shrink-0',
-                      statusToneClasses[statusTone]
-                    )}
-                  >
-                    {status}
-                  </span>
-                )}
-              </>
-            ) : undefined
-          }
-        />
+        {metadata ? (
+          <>
+            <span className={siderItemTitleClassName} title={title}>
+              {title}
+            </span>
+            <div className="col-[2/4] row-start-2 min-w-0">{metadata}</div>
+          </>
+        ) : (
+          <SiderItemContent
+            title={title}
+            subtitle={
+              description || status ? (
+                <>
+                  {description && (
+                    <span
+                      title={descriptionTitle}
+                      className={cn(
+                        'truncate text-foreground-500',
+                        prioritizeDescription && 'max-w-[60%] shrink-0'
+                      )}
+                    >
+                      {description}
+                    </span>
+                  )}
+                  {description && status && (
+                    <span className="text-foreground-300">{metadataSeparator}</span>
+                  )}
+                  {status && (
+                    <span
+                      title={statusTitle}
+                      className={cn(
+                        prioritizeDescription ? 'min-w-0 truncate' : 'shrink-0',
+                        statusToneClasses[statusTone]
+                      )}
+                    >
+                      {status}
+                    </span>
+                  )}
+                </>
+              ) : undefined
+            }
+          />
+        )}
         {(showChevron ?? !actions) && (
           <SiderTrailingSlot>
             <LuChevronRight className="shrink-0 text-sm text-foreground-300 transition-all duration-150 group-hover:translate-x-0.5 group-hover:text-foreground-700 group-focus-within:text-accent" />

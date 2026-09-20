@@ -1059,6 +1059,22 @@ test('desktop sidebar separates controls, live status and navigation', () => {
   assert.match(surfaces, /title=\{title\}/)
   assert.doesNotMatch(profile, /<Card/)
   assert.match(connections, /<SiderStatusCard/)
+  assert.match(surfaces, /metadata\?: React\.ReactNode/)
+  assert.match(
+    surfaces,
+    /metadata\s*\? 'grid grid-cols-\[2rem_minmax\(0,1fr\)_2rem\]/
+  )
+  assert.match(surfaces, /className=\{metadata \? 'row-span-2 self-center' : undefined\}/)
+  assert.match(surfaces, /<div className="col-\[2\/4\] row-start-2 min-w-0"/)
+  assert.match(statusCard, /description \|\| status/)
+  assert.match(connections, /metadata=\{/)
+  assert.doesNotMatch(connections, /description=\{|status=\{/)
+  assert.match(connections, /grid-cols-2[^"\n]*tabular-nums/)
+  assert.match(connections, /calcCompactTraffic\(download\)/)
+  assert.match(connections, /calcCompactTraffic\(upload\)/)
+  assert.doesNotMatch(connections, /truncate/)
+  assert.match(appOverrides, /container: sider-status-card \/ inline-size/)
+  assert.match(appOverrides, /@container sider-status-card \(min-width: 15rem\)/)
   assert.match(connections, /<TrafficChart/)
   assert.doesNotMatch(connections, /<Card/)
 

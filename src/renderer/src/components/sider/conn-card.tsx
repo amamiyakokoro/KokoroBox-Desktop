@@ -14,6 +14,21 @@ interface Props {
   iconOnly?: boolean
 }
 
+const compactTrafficUnits = ['B', 'K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y'] as const
+
+const calcCompactTraffic = (bytes: number): string => {
+  let value = bytes
+  let unitIndex = 0
+
+  while (value >= 1024 && unitIndex < compactTrafficUnits.length - 1) {
+    value /= 1024
+    unitIndex += 1
+  }
+
+  const precision = value >= 100 ? 0 : value >= 10 ? 1 : 2
+  return `${Number(value.toFixed(precision))}${compactTrafficUnits[unitIndex]}/s`
+}
+
 const ConnCard: React.FC<Props> = ({ iconOnly }) => {
   const { appConfig } = useAppConfig()
   const { connectionCardStatus = 'col-span-2', disableAnimation = false } = appConfig || {}
@@ -38,6 +53,8 @@ const ConnCard: React.FC<Props> = ({ iconOnly }) => {
   const transform = sortableTransform
     ? { x: sortableTransform.x, y: sortableTransform.y, scaleX: 1, scaleY: 1 }
     : null
+  const downloadRate = `${calcTraffic(download)}/s`
+  const uploadRate = `${calcTraffic(upload)}/s`
 
   useEffect(() => {
     const handleTraffic = (_event: unknown, info: ControllerTraffic): void => {
@@ -93,17 +110,35 @@ const ConnCard: React.FC<Props> = ({ iconOnly }) => {
       <SiderStatusCard
         icon={<IoLink />}
         title={tr('Connections')}
-        description={
-          <span className="inline-flex items-center gap-1">
-            <FaCircleArrowDown aria-hidden="true" />
-            {calcTraffic(download)}/s
-          </span>
-        }
-        status={
-          <span className="inline-flex items-center gap-1">
-            <FaCircleArrowUp aria-hidden="true" />
-            {calcTraffic(upload)}/s
-          </span>
+        metadata={
+          <div className="sider-connection-metadata grid min-w-0 grid-cols-2 items-center gap-x-1.5 text-xs leading-4 text-foreground-500 tabular-nums">
+            <span
+              className="inline-flex min-w-0 items-center gap-1 whitespace-nowrap"
+              title={`${tr('Download speed')}: ${downloadRate}`}
+            >
+              <span className="sr-only">{`${tr('Download speed')}: ${downloadRate}`}</span>
+              <FaCircleArrowDown aria-hidden="true" className="size-3 shrink-0" />
+              <span aria-hidden="true" className="sider-connection-rate__full">
+                {downloadRate}
+              </span>
+              <span aria-hidden="true" className="sider-connection-rate__compact">
+                {calcCompactTraffic(download)}
+              </span>
+            </span>
+            <span
+              className="inline-flex min-w-0 items-center justify-self-end gap-1 whitespace-nowrap"
+              title={`${tr('Upload speed')}: ${uploadRate}`}
+            >
+              <span className="sr-only">{`${tr('Upload speed')}: ${uploadRate}`}</span>
+              <FaCircleArrowUp aria-hidden="true" className="size-3 shrink-0" />
+              <span aria-hidden="true" className="sider-connection-rate__full">
+                {uploadRate}
+              </span>
+              <span aria-hidden="true" className="sider-connection-rate__compact">
+                {calcCompactTraffic(upload)}
+              </span>
+            </span>
+          </div>
         }
         active={match}
         onPress={() => navigate('/connections')}
