@@ -76,7 +76,10 @@ test('DNS settings use sectioned, container-responsive list editors', () => {
   )
   const styles = readFileSync('src/renderer/src/assets/app-overrides.css', 'utf8')
 
-  assert.match(page, /FeatureSettingsSection title=\{tr\('DNS behavior'\)\}/)
+  assert.match(
+    page,
+    /<FeatureSettingsSection[\s\S]*?title=\{tr\('DNS behavior'\)\}[\s\S]*?action=\{embedded \? saveButton : undefined\}/
+  )
   assert.match(page, /FeatureSettingsSection title=\{tr\('Fake IP settings'\)\}/)
   assert.match(page, /FeatureSettingsSection title=\{tr\('DNS servers'\)\}/)
   assert.match(advanced, /FeatureSettingsSection title=\{tr\('DNS routing'\)\}/)
