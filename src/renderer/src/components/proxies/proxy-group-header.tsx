@@ -70,7 +70,7 @@ const ProxyGroupHeader = memo(function ProxyGroupHeader({
   onGroupDelay
 }: ProxyGroupHeaderProps) {
   return (
-    <div className={`w-full px-2 pt-1.5 ${isLast && !isOpen ? 'pb-1.5' : ''}`}>
+    <div className={`w-full bg-background px-2 pt-1.5 ${isLast && !isOpen ? 'pb-1.5' : ''}`}>
       <div
         className={`group/proxy relative min-w-0 rounded-lg border transition-[background-color,border-color] duration-150 focus-within:ring-2 focus-within:ring-accent/35 ${
           isRelevant
