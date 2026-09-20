@@ -111,31 +111,31 @@ const ConnCard: React.FC<Props> = ({ iconOnly }) => {
         icon={<IoLink />}
         title={tr('Connections')}
         metadata={
-          <div className="sider-connection-metadata grid min-w-0 grid-cols-2 items-center gap-x-1.5 text-xs leading-4 text-muted tabular-nums">
+          <div className="sider-connection-metadata grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,1fr)] items-center gap-x-1.5 text-xs leading-4 text-muted tabular-nums">
             <span
-              className="inline-flex min-w-0 items-center gap-1 whitespace-nowrap"
+              className="grid w-full min-w-0 grid-cols-[0.75rem_minmax(0,1fr)] items-center gap-1 whitespace-nowrap"
               title={`${tr('Download speed')}: ${downloadRate}`}
             >
               <span className="sr-only">{`${tr('Download speed')}: ${downloadRate}`}</span>
               <FaCircleArrowDown aria-hidden="true" className="size-3 shrink-0" />
-              <span aria-hidden="true" className="sider-connection-rate__full">
-                {downloadRate}
-              </span>
-              <span aria-hidden="true" className="sider-connection-rate__compact">
-                {calcCompactTraffic(download)}
+              <span aria-hidden="true" className="min-w-0 text-left">
+                <span className="sider-connection-rate__full">{downloadRate}</span>
+                <span className="sider-connection-rate__compact">
+                  {calcCompactTraffic(download)}
+                </span>
               </span>
             </span>
             <span
-              className="inline-flex min-w-0 items-center justify-self-end gap-1 whitespace-nowrap"
+              className="grid w-full min-w-0 grid-cols-[0.75rem_minmax(0,1fr)] items-center gap-1 whitespace-nowrap"
               title={`${tr('Upload speed')}: ${uploadRate}`}
             >
               <span className="sr-only">{`${tr('Upload speed')}: ${uploadRate}`}</span>
               <FaCircleArrowUp aria-hidden="true" className="size-3 shrink-0" />
-              <span aria-hidden="true" className="sider-connection-rate__full">
-                {uploadRate}
-              </span>
-              <span aria-hidden="true" className="sider-connection-rate__compact">
-                {calcCompactTraffic(upload)}
+              <span aria-hidden="true" className="min-w-0 text-right">
+                <span className="sider-connection-rate__full">{uploadRate}</span>
+                <span className="sider-connection-rate__compact">
+                  {calcCompactTraffic(upload)}
+                </span>
               </span>
             </span>
           </div>

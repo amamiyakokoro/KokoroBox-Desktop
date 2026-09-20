@@ -91,6 +91,7 @@ const ProfileCard: React.FC<Props> = ({ iconOnly }) => {
     >
       {showRuntimeConfig && <ConfigViewer onClose={() => setShowRuntimeConfig(false)} />}
       <SiderStatusCard
+        allowTextWrap
         icon={<TiFolder />}
         title={info.name}
         description={tr('Subscriptions')}

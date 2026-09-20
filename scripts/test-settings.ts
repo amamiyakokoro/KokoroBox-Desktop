@@ -1015,9 +1015,15 @@ test('desktop sidebar separates controls, live status and navigation', () => {
   assert.match(surfaces, /const SiderItemIcon/)
   assert.match(surfaces, /const SiderItemContent/)
   assert.match(surfaces, /const SiderTrailingSlot/)
-  assert.match(surfaces, /siderItemTitleClassName[\s\S]*h-5[\s\S]*font-semibold leading-5/)
+  assert.match(surfaces, /siderItemTitleClassName[\s\S]*font-semibold leading-5/)
   assert.match(surfaces, /siderItemSubtitleClassName[\s\S]*h-4[\s\S]*leading-4/)
-  assert.match(surfaces, /h-\[2\.375rem\][\s\S]*flex-col[\s\S]*gap-0\.5/)
+  assert.match(surfaces, /flex min-w-0 flex-1 flex-col justify-center gap-0\.5/)
+  assert.match(
+    surfaces,
+    /allowTextWrap \? 'min-h-\[2\.375rem\] py-0\.5' : 'h-\[2\.375rem\]'/
+  )
+  assert.match(surfaces, /allowTextWrap \? 'line-clamp-2 break-words' : 'h-5 truncate'/)
+  assert.match(surfaces, /allowTextWrap && 'h-auto min-h-4 flex-wrap overflow-visible'/)
   assert.match(surfaces, /data-sider-text-stack/)
   assert.match(surfaces, /KokoStatusIndicator/)
   assert.match(surfaces, /tone=\{kokoStatusTone\(tone\)\}/)
@@ -1064,7 +1070,7 @@ test('desktop sidebar separates controls, live status and navigation', () => {
   )
   assert.match(surfaces, /active && siderActiveIconClassName/)
   assert.match(quickControl, /active\s*\? siderActiveIconClassName/)
-  assert.match(surfaces, /className=\{siderItemTitleClassName\}/)
+  assert.match(surfaces, /className=\{cn\(siderItemTitleClassName, 'h-5 truncate'\)\}/)
   assert.doesNotMatch(surfaces, /\b(?:border|bg|ring|text)-primary(?:\/\d+)?\b/)
   assert.match(surfaces, /focus-visible:outline-accent/)
   assert.match(surfaces, /group-focus-within:text-accent/)
@@ -1203,10 +1209,22 @@ test('desktop sidebar separates controls, live status and navigation', () => {
   assert.match(statusCard, /description \|\| status/)
   assert.match(connections, /metadata=\{/)
   assert.doesNotMatch(connections, /description=\{|status=\{/)
-  assert.match(connections, /grid-cols-2[^"\n]*tabular-nums/)
+  assert.match(
+    connections,
+    /grid-cols-\[minmax\(0,1fr\)_minmax\(0,1fr\)\][^"\n]*tabular-nums/
+  )
+  assert.equal(
+    connections.match(/grid-cols-\[0\.75rem_minmax\(0,1fr\)\]/g)?.length,
+    2
+  )
+  assert.equal(connections.match(/className="grid w-full min-w-0/g)?.length, 2)
+  assert.match(connections, /className="min-w-0 text-left"/)
+  assert.match(connections, /className="min-w-0 text-right"/)
   assert.match(connections, /calcCompactTraffic\(download\)/)
   assert.match(connections, /calcCompactTraffic\(upload\)/)
   assert.doesNotMatch(connections, /truncate/)
+  assert.match(appRouting, /<SiderStatusCard[\s\S]*allowTextWrap/)
+  assert.match(profile, /<SiderStatusCard[\s\S]*allowTextWrap/)
   assert.match(appOverrides, /container: sider-status-card \/ inline-size/)
   assert.match(appOverrides, /@container sider-status-card \(min-width: 15rem\)/)
   assert.match(connections, /<TrafficChart/)

@@ -23,6 +23,7 @@ interface SiderNavItemProps {
 
 interface SiderStatusCardProps extends SiderNavItemProps {
   actions?: React.ReactNode
+  allowTextWrap?: boolean
   descriptionTitle?: string
   statusTitle?: string
   details?: React.ReactNode
@@ -43,7 +44,7 @@ const statusToneClasses: Record<SiderStatusTone, string> = {
 const kokoStatusTone = (tone: SiderStatusTone): KokoStatusTone =>
   tone === 'default' ? 'neutral' : tone
 
-const siderItemTitleClassName = 'block h-5 truncate text-sm font-semibold leading-5 text-foreground'
+const siderItemTitleClassName = 'block min-w-0 text-sm font-semibold leading-5 text-foreground'
 const siderItemSubtitleClassName =
   'flex h-4 min-w-0 items-center gap-1 overflow-hidden text-xs leading-4'
 const siderActiveSurfaceClassName =
@@ -93,17 +94,36 @@ const SiderItemIcon: React.FC<{
 )
 
 const SiderItemContent: React.FC<{
+  allowTextWrap?: boolean
   subtitle?: React.ReactNode
   title: string
-}> = ({ subtitle, title }) => (
+}> = ({ allowTextWrap = false, subtitle, title }) => (
   <span
-    className="flex h-[2.375rem] min-w-0 flex-1 flex-col justify-center gap-0.5"
+    className={cn(
+      'flex min-w-0 flex-1 flex-col justify-center gap-0.5',
+      allowTextWrap ? 'min-h-[2.375rem] py-0.5' : 'h-[2.375rem]'
+    )}
     data-sider-text-stack
   >
-    <span className={siderItemTitleClassName} title={title}>
+    <span
+      className={cn(
+        siderItemTitleClassName,
+        allowTextWrap ? 'line-clamp-2 break-words' : 'h-5 truncate'
+      )}
+      title={title}
+    >
       {title}
     </span>
-    {subtitle ? <span className={siderItemSubtitleClassName}>{subtitle}</span> : null}
+    {subtitle ? (
+      <span
+        className={cn(
+          siderItemSubtitleClassName,
+          allowTextWrap && 'h-auto min-h-4 flex-wrap overflow-visible'
+        )}
+      >
+        {subtitle}
+      </span>
+    ) : null}
   </span>
 )
 
@@ -266,6 +286,7 @@ export const SiderStatusCard: React.FC<SiderStatusCardProps> = ({
   statusTone = 'default',
   active = false,
   actions,
+  allowTextWrap = false,
   descriptionTitle,
   statusTitle,
   details,
@@ -306,13 +327,14 @@ export const SiderStatusCard: React.FC<SiderStatusCardProps> = ({
         </SiderItemIcon>
         {metadata ? (
           <>
-            <span className={siderItemTitleClassName} title={title}>
+            <span className={cn(siderItemTitleClassName, 'h-5 truncate')} title={title}>
               {title}
             </span>
             <div className="col-[2/4] row-start-2 min-w-0">{metadata}</div>
           </>
         ) : (
           <SiderItemContent
+            allowTextWrap={allowTextWrap}
             title={title}
             subtitle={
               description || status ? (
@@ -321,33 +343,37 @@ export const SiderStatusCard: React.FC<SiderStatusCardProps> = ({
                     <span
                       title={descriptionTitle}
                       className={cn(
-                        'truncate text-muted',
+                        allowTextWrap ? 'whitespace-nowrap text-muted' : 'truncate text-muted',
                         prioritizeDescription && 'max-w-[60%] shrink-0'
                       )}
                     >
                       {description}
                     </span>
                   )}
-                  {description && status && <span className="text-muted">{metadataSeparator}</span>}
-                  {status && statusIndicator ? (
-                    <KokoStatusIndicator
-                      className={prioritizeDescription ? 'min-w-0' : 'shrink-0'}
-                      title={statusTitle}
-                      tone={kokoStatusTone(statusTone)}
-                    >
-                      {status}
-                    </KokoStatusIndicator>
-                  ) : status ? (
-                    <span
-                      title={statusTitle}
-                      className={cn(
-                        prioritizeDescription ? 'min-w-0 truncate' : 'shrink-0',
-                        statusToneClasses[statusTone]
+                  {status && (
+                    <span className="inline-flex shrink-0 items-center gap-1">
+                      {description && <span className="text-muted">{metadataSeparator}</span>}
+                      {statusIndicator ? (
+                        <KokoStatusIndicator
+                          className={prioritizeDescription ? 'min-w-0' : 'shrink-0'}
+                          title={statusTitle}
+                          tone={kokoStatusTone(statusTone)}
+                        >
+                          {status}
+                        </KokoStatusIndicator>
+                      ) : (
+                        <span
+                          title={statusTitle}
+                          className={cn(
+                            prioritizeDescription ? 'min-w-0 truncate' : 'shrink-0',
+                            statusToneClasses[statusTone]
+                          )}
+                        >
+                          {status}
+                        </span>
                       )}
-                    >
-                      {status}
                     </span>
-                  ) : null}
+                  )}
                 </>
               ) : undefined
             }
