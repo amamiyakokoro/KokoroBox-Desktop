@@ -1,9 +1,10 @@
 import { tr } from '../../../../shared/i18n'
-import { Button, InputGroup, ListBox, Select, Switch } from '@heroui/react'
+import { Button, Switch } from '@heroui/react'
 import React, { useEffect, useState } from 'react'
 import SettingItem from '../base/base-setting-item'
 import { settingItemProps } from '../base/base-controls'
 import PageSettingsDrawer, { PageSettingsSection } from '../base/base-settings-drawer'
+import { KokoSelect, KokoTextField } from '../base/koko-form'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { restartMihomoConnections } from '@renderer/utils/ipc'
 import { HiSortAscending, HiSortDescending } from 'react-icons/hi'
@@ -101,52 +102,29 @@ const ConnectionSettingDrawer: React.FC<Props> = (props) => {
         {connectionGroupByProcess && (
           <SettingItem title={tr('Group sort order')} {...settingItemProps}>
             <div className="flex items-center justify-end gap-2">
-              <Select
+              <KokoSelect
                 aria-label={tr('Group sort field')}
+                controlWidth="select"
+                density="compact"
+                disallowEmptySelection
+                options={[
+                  { id: 'name', label: tr('Name') },
+                  { id: 'count', label: tr('Connection count') },
+                  { id: 'upload', label: tr('Uploaded') },
+                  { id: 'download', label: tr('Downloaded') },
+                  { id: 'uploadSpeed', label: tr('Upload speed') },
+                  { id: 'downloadSpeed', label: tr('Download speed') }
+                ]}
                 variant="secondary"
                 value={connectionGroupSort}
                 onChange={(value) => {
-                  if (Array.isArray(value) || value == null) return
                   if (value === connectionGroupSort) return
                   patchAppConfig({
                     connectionGroupSort: value as
                       'name' | 'count' | 'upload' | 'download' | 'uploadSpeed' | 'downloadSpeed'
                   })
                 }}
-              >
-                <Select.Trigger className="h-8 min-h-8 py-0">
-                  <Select.Value />
-                  <Select.Indicator />
-                </Select.Trigger>
-                <Select.Popover>
-                  <ListBox>
-                    <ListBox.Item id="name" textValue={tr('Name')}>
-                      {tr('Name')}
-                      <ListBox.ItemIndicator />
-                    </ListBox.Item>
-                    <ListBox.Item id="count" textValue={tr('Connection count')}>
-                      {tr('Connection count')}
-                      <ListBox.ItemIndicator />
-                    </ListBox.Item>
-                    <ListBox.Item id="upload" textValue={tr('Uploaded')}>
-                      {tr('Uploaded')}
-                      <ListBox.ItemIndicator />
-                    </ListBox.Item>
-                    <ListBox.Item id="download" textValue={tr('Downloaded')}>
-                      {tr('Downloaded')}
-                      <ListBox.ItemIndicator />
-                    </ListBox.Item>
-                    <ListBox.Item id="uploadSpeed" textValue={tr('Upload speed')}>
-                      {tr('Upload speed')}
-                      <ListBox.ItemIndicator />
-                    </ListBox.Item>
-                    <ListBox.Item id="downloadSpeed" textValue={tr('Download speed')}>
-                      {tr('Download speed')}
-                      <ListBox.ItemIndicator />
-                    </ListBox.Item>
-                  </ListBox>
-                </Select.Popover>
-              </Select>
+              />
               <Button
                 size="sm"
                 isIconOnly
@@ -172,23 +150,22 @@ const ConnectionSettingDrawer: React.FC<Props> = (props) => {
 
       <PageSettingsSection title={tr('Refresh')}>
         <SettingItem title={tr('Refresh interval')} {...settingItemProps}>
-          <InputGroup data-setting-input="number" variant="secondary">
-            <InputGroup.Input
-              aria-label={tr('Refresh interval')}
-              type="number"
-              value={intervalInput.toString()}
-              max={10000}
-              min={100}
-              onBlur={applyInterval}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter') event.currentTarget.blur()
-              }}
-              onChange={(event) => {
-                setIntervalInput(parseInt(event.target.value) || 100)
-              }}
-            />
-            <InputGroup.Suffix>ms</InputGroup.Suffix>
-          </InputGroup>
+          <KokoTextField
+            aria-label={tr('Refresh interval')}
+            controlWidth="number"
+            type="number"
+            suffix="ms"
+            value={intervalInput.toString()}
+            max={10000}
+            min={100}
+            onBlur={applyInterval}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') event.currentTarget.blur()
+            }}
+            onChangeValue={(value) => {
+              setIntervalInput(parseInt(value) || 100)
+            }}
+          />
         </SettingItem>
       </PageSettingsSection>
     </PageSettingsDrawer>
