@@ -5,6 +5,7 @@ import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-c
 import { useGroups } from '@renderer/hooks/use-groups'
 import { mihomoCloseConnections, patchMihomoConfig } from '@renderer/utils/ipc'
 import { LuArrowRight, LuGlobe, LuRoute } from 'react-icons/lu'
+import { getOutboundModeLabel } from './outbound-mode'
 
 interface Props {
   iconOnly?: boolean
@@ -29,9 +30,9 @@ const OutboundModeSwitcher: React.FC<Props> = ({ iconOnly }: Props) => {
   if (!mode) return null
 
   const options = [
-    { id: 'rule', icon: <LuRoute />, label: tr('Rules') },
-    { id: 'global', icon: <LuGlobe />, label: tr('Global') },
-    { id: 'direct', icon: <LuArrowRight />, label: tr('Direct') }
+    { id: 'rule', icon: <LuRoute />, label: getOutboundModeLabel('rule') },
+    { id: 'global', icon: <LuGlobe />, label: getOutboundModeLabel('global') },
+    { id: 'direct', icon: <LuArrowRight />, label: getOutboundModeLabel('direct') }
   ] as const
   const currentOption = options.find((option) => option.id === mode) ?? options[0]
   const currentModeLabel = `${tr('Proxy mode')}: ${currentOption.label}`

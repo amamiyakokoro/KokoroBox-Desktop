@@ -5,7 +5,9 @@ import { LuGroup } from 'react-icons/lu'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useGroups } from '@renderer/hooks/use-groups'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
+import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'
 import React from 'react'
+import { getOutboundModeLabel } from './outbound-mode'
 import { SiderIconButton, SiderStatusCard } from './sider-surfaces'
 
 interface Props {
@@ -19,6 +21,8 @@ const ProxyCard: React.FC<Props> = ({ iconOnly }) => {
   const navigate = useNavigate()
   const match = location.pathname.includes('/proxies')
   const { groups = [] } = useGroups()
+  const { controledMihomoConfig } = useControledMihomoConfig()
+  const { mode = 'rule' } = controledMihomoConfig || {}
   const {
     listeners,
     setNodeRef,
@@ -29,14 +33,22 @@ const ProxyCard: React.FC<Props> = ({ iconOnly }) => {
   const transform = sortableTransform
     ? { x: sortableTransform.x, y: sortableTransform.y, scaleX: 1, scaleY: 1 }
     : null
-  const primaryGroup = groups.find((group) => group.name.toUpperCase() === 'GLOBAL') ?? groups[0]
+  const globalGroup = groups.find((group) => group.name.toUpperCase() === 'GLOBAL')
+  const modeLabel = getOutboundModeLabel(mode)
+  const modeStatus =
+    mode === 'global'
+      ? globalGroup?.now
+      : mode === 'rule'
+        ? tr('{0} groups', [groups.length])
+        : undefined
+  const cardLabel = `${tr('Proxy')} — ${modeLabel}`
 
   if (iconOnly) {
     return (
       <div className={`${proxyCardStatus} flex justify-center`}>
         <SiderIconButton
           active={match}
-          label={tr('Proxy groups')}
+          label={cardLabel}
           placement="right"
           onPress={() => navigate('/proxies')}
         >
@@ -60,9 +72,9 @@ const ProxyCard: React.FC<Props> = ({ iconOnly }) => {
       <SiderStatusCard
         icon={<LuGroup />}
         title={tr('Proxy')}
-        description={primaryGroup?.name ?? tr('Proxy groups')}
-        status={primaryGroup?.now ?? tr('{0} groups', [groups.length])}
-        metadataSeparator="→"
+        description={modeLabel}
+        status={modeStatus}
+        metadataSeparator={mode === 'global' ? '→' : '·'}
         active={match}
         onPress={() => navigate('/proxies')}
       />
