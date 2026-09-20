@@ -236,8 +236,11 @@ const Sysproxy: React.FC<Props> = ({ embedded = false }) => {
           }}
         />
       )}
-      <FeatureSettingsLayout action={embedded ? saveButton : undefined}>
-        <FeatureSettingsSection title={tr('Proxy configuration')}>
+      <FeatureSettingsLayout>
+        <FeatureSettingsSection
+          title={tr('Proxy configuration')}
+          action={embedded ? saveButton : undefined}
+        >
           <SettingItem
             title={tr('Proxy host')}
             description={tr('Leave empty to use 127.0.0.1')}

@@ -6,12 +6,12 @@ import SettingsSection from './base-settings-section'
 
 interface FeatureSettingsLayoutProps {
   children: ReactNode
-  action?: ReactNode
 }
 
 interface FeatureSettingsSectionProps {
   title: string
   description?: string
+  action?: ReactNode
   children: ReactNode
 }
 
@@ -48,9 +48,11 @@ export const FeatureSettingsSaveButton: React.FC<FeatureSettingsSaveButtonProps>
 export const FeatureSettingsSection: React.FC<FeatureSettingsSectionProps> = ({
   title,
   description,
+  action,
   children
 }) => (
   <SettingsSection
+    action={action}
     className="feature-settings-section"
     contentClassName="feature-settings-section__content"
     description={description}
@@ -60,12 +62,9 @@ export const FeatureSettingsSection: React.FC<FeatureSettingsSectionProps> = ({
   </SettingsSection>
 )
 
-const FeatureSettingsLayout: React.FC<FeatureSettingsLayoutProps> = ({ children, action }) => (
+const FeatureSettingsLayout: React.FC<FeatureSettingsLayoutProps> = ({ children }) => (
   <SettingCardModeProvider value={false}>
-    <div
-      className={`feature-settings-layout relative mx-auto w-full max-w-[960px] pb-4 pt-1 ${action ? 'feature-settings-layout--has-action' : ''}`}
-    >
-      {action && <div className="feature-settings-layout__action">{action}</div>}
+    <div className="feature-settings-layout mx-auto w-full max-w-[960px] pb-4 pt-1">
       {children}
     </div>
   </SettingCardModeProvider>

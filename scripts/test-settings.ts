@@ -343,26 +343,49 @@ test('network settings use nested panels and preserve legacy routes', () => {
 test('feature settings only surface save actions for dirty embedded panels', () => {
   const shared = readFileSync('src/renderer/src/components/base/base-feature-settings.tsx', 'utf8')
   const styles = readFileSync('src/renderer/src/assets/app-overrides.css', 'utf8')
-  const featurePages = [
-    'src/renderer/src/components/settings/network/system-proxy-settings.tsx',
+  const featurePages = new Map([
+    ['src/renderer/src/components/settings/network/system-proxy-settings.tsx', 'Proxy configuration'],
+    ['src/renderer/src/components/settings/network/dns-settings.tsx', 'DNS behavior'],
+    ['src/renderer/src/components/settings/network/sniffer-settings.tsx', 'Sniffing behavior'],
+    ['src/renderer/src/components/settings/network/mihomo-settings.tsx', 'Core network']
+  ])
+  const tun = readFileSync(
     'src/renderer/src/components/settings/network/tun-settings.tsx',
-    'src/renderer/src/components/settings/network/dns-settings.tsx',
-    'src/renderer/src/components/settings/network/sniffer-settings.tsx',
-    'src/renderer/src/components/settings/network/mihomo-settings.tsx'
-  ]
+    'utf8'
+  )
+  const layoutProps = shared.match(/interface FeatureSettingsLayoutProps \{[\s\S]*?\}/)?.[0] ?? ''
 
   assert.match(shared, /if \(!isDirty\) return null/)
   assert.match(shared, /action\?: ReactNode/)
-  assert.match(shared, /feature-settings-layout__action/)
-  assert.match(styles, /\.feature-settings-layout__action/)
-  assert.match(styles, /\.feature-settings-layout--has-action/)
+  assert.match(shared, /<SettingsSection[\s\S]*action=\{action\}/)
+  assert.doesNotMatch(layoutProps, /action\?: ReactNode/)
+  assert.doesNotMatch(shared, /feature-settings-layout__(?:action)|feature-settings-layout--has-action/)
+  assert.doesNotMatch(styles, /\.feature-settings-layout__(?:action)|\.feature-settings-layout--has-action/)
 
-  for (const page of featurePages) {
+  for (const [page, firstSectionTitle] of featurePages) {
     const source = readFileSync(page, 'utf8')
-    assert.match(source, /<FeatureSettingsLayout[\s\S]*action=/)
+    assert.match(source, /<FeatureSettingsLayout>/)
+    assert.match(
+      source,
+      new RegExp(
+        `<FeatureSettingsSection[\\s\\S]{0,160}title=\\{tr\\('${firstSectionTitle}'\\)\\}[\\s\\S]{0,160}action=\\{embedded \\? saveButton : undefined\\}`
+      )
+    )
+    assert.doesNotMatch(source, /<FeatureSettingsLayout[^>]*action=/)
     assert.doesNotMatch(source, /mx-auto flex w-full max-w-\[1040px\] justify-end/)
     assert.match(source, /useUnsavedChangesGuard/)
   }
+
+  assert.match(
+    tun,
+    /title=\{tr\('Platform integration'\)\}[\s\S]{0,160}action=\{embedded \? saveButton : undefined\}/
+  )
+  assert.match(
+    tun,
+    /title=\{tr\('TUN routing'\)\}[\s\S]{0,240}embedded && platform !== 'win32' && platform !== 'darwin' \? saveButton : undefined/
+  )
+  assert.doesNotMatch(tun, /<FeatureSettingsLayout[^>]*action=/)
+  assert.match(tun, /useUnsavedChangesGuard/)
 })
 
 test('shared settings primitives isolate HeroUI v3 compound APIs', () => {

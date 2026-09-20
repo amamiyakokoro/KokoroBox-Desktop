@@ -469,17 +469,6 @@ input[type='number'] {
   display: none;
 }
 
-.feature-settings-layout__action {
-  position: absolute;
-  z-index: 1;
-  top: calc(var(--spacing) * 3);
-  right: calc(var(--spacing) * 4);
-}
-
-.feature-settings-layout--has-action > .feature-settings-section:first-of-type > header {
-  padding-inline-end: calc(var(--spacing) * 24);
-}
-
 .settings-layout .setting-item,
 .feature-settings-layout .setting-item {
   grid-template-columns: minmax(10rem, 34%) minmax(0, 1fr);

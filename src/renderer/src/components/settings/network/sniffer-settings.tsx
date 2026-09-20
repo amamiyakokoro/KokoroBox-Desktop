@@ -133,8 +133,11 @@ const Sniffer: React.FC<Props> = ({ embedded = false }) => {
 
   const content = (
     <>
-      <FeatureSettingsLayout action={embedded ? saveButton : undefined}>
-        <FeatureSettingsSection title={tr('Sniffing behavior')}>
+      <FeatureSettingsLayout>
+        <FeatureSettingsSection
+          title={tr('Sniffing behavior')}
+          action={embedded ? saveButton : undefined}
+        >
           <SettingItem title={tr('Override domain sniffing settings')} divider>
             <Switch
               size="sm"

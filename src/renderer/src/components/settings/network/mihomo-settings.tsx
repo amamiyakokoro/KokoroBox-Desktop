@@ -104,8 +104,11 @@ const Mihomo: React.FC<Props> = ({ embedded = false }) => {
 
   const content = (
     <>
-      <FeatureSettingsLayout action={embedded ? saveButton : undefined}>
-        <FeatureSettingsSection title={tr('Core network')}>
+      <FeatureSettingsLayout>
+        <FeatureSettingsSection
+          title={tr('Core network')}
+          action={embedded ? saveButton : undefined}
+        >
           <SettingItem title="IPv6">
             <Switch size="sm" isSelected={ipv6} onChange={(value) => stageChange({ ipv6: value })}>
               <Switch.Content>

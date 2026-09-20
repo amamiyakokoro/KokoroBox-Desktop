@@ -113,9 +113,12 @@ const Tun: React.FC<Props> = ({ embedded = false }) => {
 
   const content = (
     <>
-      <FeatureSettingsLayout action={embedded ? saveButton : undefined}>
+      <FeatureSettingsLayout>
         {(platform === 'win32' || platform === 'darwin') && (
-          <FeatureSettingsSection title={tr('Platform integration')}>
+          <FeatureSettingsSection
+            title={tr('Platform integration')}
+            action={embedded ? saveButton : undefined}
+          >
             {platform === 'win32' && (
               <SettingItem title={tr('Reset firewall')}>
                 <Button
@@ -158,7 +161,12 @@ const Tun: React.FC<Props> = ({ embedded = false }) => {
           </FeatureSettingsSection>
         )}
 
-        <FeatureSettingsSection title={tr('TUN routing')}>
+        <FeatureSettingsSection
+          title={tr('TUN routing')}
+          action={
+            embedded && platform !== 'win32' && platform !== 'darwin' ? saveButton : undefined
+          }
+        >
           <SettingItem title={tr('TUN network stack')} divider>
             <KokoSegmentedControl
               ariaLabel={tr('TUN network stack')}
