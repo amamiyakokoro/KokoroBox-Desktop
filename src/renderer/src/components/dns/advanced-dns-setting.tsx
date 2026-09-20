@@ -4,7 +4,7 @@ import { Switch } from '@heroui/react'
 import SettingItem from '../base/base-setting-item'
 import EditableList from '../base/base-list-editor'
 import { FeatureSettingsSection } from '../base/base-feature-settings'
-import { KokoSelect, KokoTextField as Input } from '../base/koko-form'
+import { KokoSelect, KokoTextField } from '../base/koko-form'
 import { isValidDnsServer, isValidDomainWildcard } from '@renderer/utils/validate'
 import DnsServerList from './dns-server-list'
 
@@ -311,12 +311,11 @@ const AdvancedDnsSetting: React.FC<AdvancedDnsSettingProps> = ({
               </Switch>
             </SettingItem>
             <SettingItem title={tr('Fallback GeoIP country')} divider>
-              <Input
+              <KokoTextField
                 aria-label={tr('Fallback GeoIP country')}
-                size="sm"
                 controlWidth="short"
                 value={String(fallbackFilter['geoip-code'] || 'CN')}
-                onValueChange={(code) =>
+                onChangeValue={(code) =>
                   onFallbackFilterChange({ ...fallbackFilter, 'geoip-code': code.toUpperCase() })
                 }
               />

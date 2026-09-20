@@ -149,7 +149,7 @@ const Logs: React.FC = () => {
               value={filter}
               aria-label={tr('Filter')}
               placeholder={tr('Filter')}
-              onValueChange={setFilter}
+              onChangeValue={setFilter}
             />
             <KokoSelect
               aria-label={tr('Filter by log level')}

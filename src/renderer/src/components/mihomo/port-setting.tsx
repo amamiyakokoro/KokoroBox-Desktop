@@ -6,7 +6,7 @@ import SettingItem from '../base/base-setting-item'
 import EditableList from '../base/base-list-editor'
 
 import { platform } from '@renderer/utils/init'
-import { KokoTextField as Input } from '../base/koko-form'
+import { KokoTextField } from '../base/koko-form'
 import { FaNetworkWired } from 'react-icons/fa'
 import InterfaceModal from '@renderer/components/mihomo/interface-modal'
 
@@ -85,15 +85,14 @@ const PortSetting: React.FC<PortSettingProps> = ({ config, onChange, onValidatio
       {lanOpen && <InterfaceModal onClose={() => setLanOpen(false)} />}
       <SettingCard header={tr('Port settings')}>
         <SettingItem title={tr('Mixed port')} divider>
-          <Input
-            size="sm"
+          <KokoTextField
             type="number"
             controlWidth="number"
             value={mixedPortInput.toString()}
             max={65535}
             min={0}
             isInvalid={hasPortError}
-            onValueChange={(v) => {
+            onChangeValue={(v) => {
               const value = parseInt(v) || 0
               setMixedPortInput(value)
               onChange({ 'mixed-port': value })
@@ -101,15 +100,14 @@ const PortSetting: React.FC<PortSettingProps> = ({ config, onChange, onValidatio
           />
         </SettingItem>
         <SettingItem title={tr('SOCKS port')} divider>
-          <Input
-            size="sm"
+          <KokoTextField
             type="number"
             controlWidth="number"
             value={socksPortInput.toString()}
             max={65535}
             min={0}
             isInvalid={hasPortError}
-            onValueChange={(v) => {
+            onChangeValue={(v) => {
               const value = parseInt(v) || 0
               setSocksPortInput(value)
               onChange({ 'socks-port': value })
@@ -117,15 +115,14 @@ const PortSetting: React.FC<PortSettingProps> = ({ config, onChange, onValidatio
           />
         </SettingItem>
         <SettingItem title={tr('HTTP port')} divider>
-          <Input
-            size="sm"
+          <KokoTextField
             type="number"
             controlWidth="number"
             value={httpPortInput.toString()}
             max={65535}
             min={0}
             isInvalid={hasPortError}
-            onValueChange={(v) => {
+            onChangeValue={(v) => {
               const value = parseInt(v) || 0
               setHttpPortInput(value)
               onChange({ port: value })
@@ -134,15 +131,14 @@ const PortSetting: React.FC<PortSettingProps> = ({ config, onChange, onValidatio
         </SettingItem>
         {platform !== 'win32' && (
           <SettingItem title={tr('Redir port')} divider>
-            <Input
-              size="sm"
+            <KokoTextField
               type="number"
               controlWidth="number"
               value={redirPortInput.toString()}
               max={65535}
               min={0}
               isInvalid={hasPortError}
-              onValueChange={(v) => {
+              onChangeValue={(v) => {
                 const value = parseInt(v) || 0
                 setRedirPortInput(value)
                 onChange({ 'redir-port': value })
@@ -152,15 +148,14 @@ const PortSetting: React.FC<PortSettingProps> = ({ config, onChange, onValidatio
         )}
         {platform === 'linux' && (
           <SettingItem title={tr('TProxy port')} divider>
-            <Input
-              size="sm"
+            <KokoTextField
               type="number"
               controlWidth="number"
               value={tproxyPortInput.toString()}
               max={65535}
               min={0}
               isInvalid={hasPortError}
-              onValueChange={(v) => {
+              onChangeValue={(v) => {
                 const value = parseInt(v) || 0
                 setTproxyPortInput(value)
                 onChange({ 'tproxy-port': value })

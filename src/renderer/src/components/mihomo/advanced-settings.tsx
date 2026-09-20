@@ -3,7 +3,7 @@ import { Switch } from '@heroui/react'
 import SettingCard from '../base/base-setting-card'
 import SettingItem from '../base/base-setting-item'
 import InterfaceSelect from '../base/interface-select'
-import { KokoTextField as Input } from '../base/koko-form'
+import { KokoTextField } from '../base/koko-form'
 import { KokoSegmentedControl } from '../base/base-controls'
 import React from 'react'
 
@@ -129,23 +129,21 @@ const AdvancedSetting: React.FC<AdvancedSettingProps> = ({ config, onChange }) =
         </Switch>
       </SettingItem>
       <SettingItem title={tr('TCP keep-alive interval')} divider>
-        <Input
-          size="sm"
+        <KokoTextField
           type="number"
           controlWidth="number"
           value={interval.toString()}
           min={0}
-          onValueChange={(v) => onChange({ 'keep-alive-interval': parseInt(v) || 0 })}
+          onChangeValue={(v) => onChange({ 'keep-alive-interval': parseInt(v) || 0 })}
         />
       </SettingItem>
       <SettingItem title={tr('TCP keep-alive idle time')} divider>
-        <Input
-          size="sm"
+        <KokoTextField
           type="number"
           controlWidth="number"
           value={idle.toString()}
           min={0}
-          onValueChange={(v) => onChange({ 'keep-alive-idle': parseInt(v) || 0 })}
+          onChangeValue={(v) => onChange({ 'keep-alive-idle': parseInt(v) || 0 })}
         />
       </SettingItem>
       <SettingItem title={tr('Set outbound interface')}>

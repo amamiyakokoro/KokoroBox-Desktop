@@ -163,7 +163,7 @@ const RuleProvider: React.FC = () => {
           placeholder={tr('Search rule collections')}
           value={filter}
           onClear={() => setFilter('')}
-          onValueChange={setFilter}
+          onChangeValue={setFilter}
         />
         <KokoToolbarIconButton
           isDisabled={updatingAll || updating.size > 0 || !providers.length}

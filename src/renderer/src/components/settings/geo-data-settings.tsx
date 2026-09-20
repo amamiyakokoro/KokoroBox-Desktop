@@ -35,15 +35,14 @@ const GeoUrlSetting: React.FC<Props> = (props) => {
     <SettingItem title={title} divider>
       <div className="flex w-full min-w-0 items-center gap-2">
         <KokoTextField
-          size="sm"
           aria-label={title}
           title={value}
           value={value}
           controlWidth="full"
           className="min-w-0 flex-1"
           data-setting-input="full"
-          classNames={{ input: 'font-mono text-xs' }}
-          onValueChange={onChange}
+          inputClassName="font-mono text-xs"
+          onChangeValue={onChange}
         />
         <PendingFieldAction isVisible={value !== savedValue} onPress={onConfirm} />
       </div>
@@ -161,12 +160,11 @@ const GeoDataSettings: React.FC = () => {
         {geoAutoUpdate && (
           <SettingItem title={tr('Update interval (hours)')} contentAlign="end" divider>
             <KokoTextField
-              size="sm"
               type="number"
               aria-label={tr('Update interval (hours)')}
               controlWidth="number"
               value={geoUpdateInterval.toString()}
-              onValueChange={(v) => {
+              onChangeValue={(v) => {
                 patchControledMihomoConfig({ 'geo-update-interval': parseInt(v) })
               }}
             />

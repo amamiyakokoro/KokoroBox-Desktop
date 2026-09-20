@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react'
 import { Button, Switch, Tooltip } from '@heroui/react'
 import SettingCard from '../base/base-setting-card'
 import SettingItem from '../base/base-setting-item'
-import { KokoSelect, KokoTextField as Input } from '../base/koko-form'
+import { KokoSelect, KokoTextField } from '../base/koko-form'
 import { KokoSegmentedControl } from '../base/base-controls'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { copyEnv, startNetworkDetection, stopNetworkDetection } from '@renderer/utils/ipc'
@@ -64,16 +64,15 @@ const BehaviorSettings: React.FC<Props> = ({
               )}
               divider
             >
-              <Input
-                size="sm"
+              <KokoTextField
                 className="w-60"
                 type={githubTokenVisible ? 'text' : 'password'}
                 value={githubToken}
                 placeholder="GitHub Personal Access Token"
-                onValueChange={(value) => {
+                onChangeValue={(value) => {
                   void patchAppConfig({ githubToken: value })
                 }}
-                endContent={
+                suffix={
                   <Button
                     aria-label={
                       githubTokenVisible ? tr('Hide GitHub token') : tr('Show GitHub token')
@@ -186,13 +185,12 @@ const BehaviorSettings: React.FC<Props> = ({
                 />
               </SettingItem>
               <SettingItem contentAlign="end" title={tr('Lightweight mode delay')} divider>
-                <Input
-                  size="sm"
+                <KokoTextField
                   controlWidth="number"
                   type="number"
-                  endContent={tr('seconds')}
+                  suffix={tr('seconds')}
                   value={autoLightweightDelay.toString()}
-                  onValueChange={async (v: string) => {
+                  onChangeValue={async (v: string) => {
                     let num = parseInt(v)
                     if (isNaN(num)) num = 0
                     const minDelay = autoLightweightMode === 'core' ? 5 : 0
@@ -238,14 +236,13 @@ const BehaviorSettings: React.FC<Props> = ({
             <>
               <SettingItem contentAlign="end" title={tr('Connectivity check interval')} divider>
                 <div className="flex items-center justify-end gap-2">
-                  <Input
-                    size="sm"
+                  <KokoTextField
                     type="number"
                     controlWidth="number"
-                    endContent={tr('seconds')}
+                    suffix={tr('seconds')}
                     value={interval.toString()}
                     min={1}
-                    onValueChange={(v) => {
+                    onChangeValue={(v) => {
                       setInterval(Math.max(parseInt(v) || 10, 1))
                     }}
                   />

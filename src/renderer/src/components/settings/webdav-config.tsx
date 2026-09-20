@@ -3,7 +3,7 @@ import React, { useState } from 'react'
 import { Button } from '@heroui/react'
 import SettingCard from '../base/base-setting-card'
 import SettingItem from '../base/base-setting-item'
-import { KokoTextField as Input } from '../base/koko-form'
+import { KokoTextField } from '../base/koko-form'
 import { listWebdavBackups, webdavBackup } from '@renderer/utils/ipc'
 import WebdavRestoreModal from './webdav-restore-modal'
 import debounce from '@renderer/utils/debounce'
@@ -60,45 +60,41 @@ const WebdavConfig: React.FC = () => {
       )}
       <SettingCard header={tr('WebDAV backup')}>
         <SettingItem contentAlign="end" title={tr('WebDAV URL')} divider>
-          <Input
-            size="sm"
+          <KokoTextField
             controlWidth="full"
             value={webdav.webdavUrl}
-            onValueChange={(v) => {
+            onChangeValue={(v) => {
               setWebdav({ ...webdav, webdavUrl: v })
               setWebdavDebounce({ ...webdav, webdavUrl: v })
             }}
           />
         </SettingItem>
         <SettingItem contentAlign="end" title={tr('WebDAV backup directory')} divider>
-          <Input
-            size="sm"
+          <KokoTextField
             controlWidth="full"
             value={webdav.webdavDir}
-            onValueChange={(v) => {
+            onChangeValue={(v) => {
               setWebdav({ ...webdav, webdavDir: v })
               setWebdavDebounce({ ...webdav, webdavDir: v })
             }}
           />
         </SettingItem>
         <SettingItem contentAlign="end" title={tr('WebDAV username')} divider>
-          <Input
-            size="sm"
+          <KokoTextField
             controlWidth="full"
             value={webdav.webdavUsername}
-            onValueChange={(v) => {
+            onChangeValue={(v) => {
               setWebdav({ ...webdav, webdavUsername: v })
               setWebdavDebounce({ ...webdav, webdavUsername: v })
             }}
           />
         </SettingItem>
         <SettingItem contentAlign="end" title={tr('WebDAV password')} divider>
-          <Input
-            size="sm"
+          <KokoTextField
             controlWidth="full"
             type="password"
             value={webdav.webdavPassword}
-            onValueChange={(v) => {
+            onChangeValue={(v) => {
               setWebdav({ ...webdav, webdavPassword: v })
               setWebdavDebounce({ ...webdav, webdavPassword: v })
             }}

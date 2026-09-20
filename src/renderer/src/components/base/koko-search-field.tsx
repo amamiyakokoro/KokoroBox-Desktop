@@ -11,7 +11,7 @@ interface KokoSearchFieldProps extends Omit<
   inputRef?: React.Ref<HTMLInputElement>
   isDisabled?: boolean
   onClear?: () => void
-  onValueChange: (value: string) => void
+  onChangeValue: (value: string) => void
 }
 
 export const KokoSearchField: React.FC<KokoSearchFieldProps> = ({
@@ -19,7 +19,7 @@ export const KokoSearchField: React.FC<KokoSearchFieldProps> = ({
   inputRef,
   isDisabled,
   onClear,
-  onValueChange,
+  onChangeValue,
   value,
   ...inputProps
 }) => (
@@ -33,7 +33,7 @@ export const KokoSearchField: React.FC<KokoSearchFieldProps> = ({
       className="h-9 py-0"
       disabled={isDisabled}
       value={value}
-      onChange={(event) => onValueChange(event.target.value)}
+      onChange={(event) => onChangeValue(event.target.value)}
     />
     {value ? (
       <InputGroup.Suffix className="h-full items-center">
@@ -45,7 +45,7 @@ export const KokoSearchField: React.FC<KokoSearchFieldProps> = ({
           variant="ghost"
           onPress={() => {
             onClear?.()
-            if (!onClear) onValueChange('')
+            if (!onClear) onChangeValue('')
           }}
         >
           <LuX aria-hidden="true" />

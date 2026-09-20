@@ -1,6 +1,6 @@
 import { tr } from '../../../../shared/i18n'
 import { Button, Label, Modal } from '@heroui/react'
-import { KokoTextField as Input } from '../base/koko-form'
+import { KokoTextField } from '../base/koko-form'
 import { useState } from 'react'
 
 interface AppRoutingGroupNameModalProps {
@@ -47,14 +47,14 @@ export function AppRoutingGroupNameModal({
             <Modal.Body>
               <div className="flex flex-col gap-1.5">
                 <Label className="text-sm font-medium">{tr('Rule group name')}</Label>
-                <Input
+                <KokoTextField
                   autoFocus
                   aria-label={tr('Rule group name')}
                   placeholder={tr('For example: Games')}
                   value={name}
                   maxLength={80}
                   isDisabled={saving}
-                  onValueChange={setName}
+                  onChangeValue={setName}
                   onKeyDown={(event) => {
                     if (event.key === 'Enter') void submit()
                   }}

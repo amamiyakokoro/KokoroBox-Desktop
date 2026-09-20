@@ -14,7 +14,7 @@ interface CollectionImportToolbarProps {
   onImport: () => void | Promise<void>
   onInputKeyUp?: (event: React.KeyboardEvent<HTMLInputElement>) => void
   onPaste: () => void | Promise<void>
-  onValueChange: (value: string) => void
+  onChangeValue: (value: string) => void
   placeholder?: string
   value: string
 }
@@ -29,7 +29,7 @@ const CollectionImportToolbar: React.FC<CollectionImportToolbarProps> = ({
   onImport,
   onInputKeyUp,
   onPaste,
-  onValueChange,
+  onChangeValue,
   placeholder,
   value
 }) => (
@@ -43,7 +43,7 @@ const CollectionImportToolbar: React.FC<CollectionImportToolbarProps> = ({
       <KokoTextField
         aria-label={inputAriaLabel}
         className="min-w-52 flex-1 basis-72"
-        endContent={
+        suffix={
           <Button
             aria-label={tr('Paste')}
             className="h-7 w-7 min-w-7"
@@ -56,10 +56,9 @@ const CollectionImportToolbar: React.FC<CollectionImportToolbarProps> = ({
           </Button>
         }
         placeholder={placeholder}
-        size="sm"
         value={value}
         onKeyUp={onInputKeyUp}
-        onValueChange={onValueChange}
+        onChangeValue={onChangeValue}
       />
       {inputTrailing ? <div className="flex h-8 shrink-0 items-center">{inputTrailing}</div> : null}
       <Button

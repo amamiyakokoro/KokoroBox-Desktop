@@ -28,13 +28,12 @@ const ValidatedInput: React.FC<ValidatedInputProps> = ({
     <Tooltip.Trigger className="block min-w-0 w-full">
       <KokoTextField
         className="w-full"
-        classNames={{ input: inputClassName }}
+        inputClassName={inputClassName}
         isDisabled={disabled}
         isInvalid={!isValid}
         placeholder={placeholder}
-        size="sm"
         value={value}
-        onValueChange={onChange}
+        onChangeValue={onChange}
       />
     </Tooltip.Trigger>
     <Tooltip.Content

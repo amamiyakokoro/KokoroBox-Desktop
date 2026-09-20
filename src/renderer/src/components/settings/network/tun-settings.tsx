@@ -1,6 +1,6 @@
 import { tr } from '../../../../../shared/i18n'
 import { Button, Switch } from '@heroui/react'
-import { KokoTextField as Input } from '@renderer/components/base/koko-form'
+import { KokoTextField } from '@renderer/components/base/koko-form'
 import { KokoSegmentedControl } from '@renderer/components/base/base-controls'
 import BasePage from '@renderer/components/base/base-page'
 import SettingItem from '@renderer/components/base/base-setting-item'
@@ -175,11 +175,10 @@ const Tun: React.FC<Props> = ({ embedded = false }) => {
           {platform !== 'darwin' && (
             <>
               <SettingItem title={tr('TUN interface name')} divider>
-                <Input
-                  size="sm"
+                <KokoTextField
                   controlWidth="short"
                   value={values.device}
-                  onValueChange={(v) => {
+                  onChangeValue={(v) => {
                     setValues({ ...values, device: v })
                   }}
                 />
@@ -290,13 +289,12 @@ const Tun: React.FC<Props> = ({ embedded = false }) => {
             )}
             divider
           >
-            <Input
-              size="sm"
+            <KokoTextField
               type="number"
               controlWidth="number"
               value={values.mtu.toString()}
               min={1}
-              onValueChange={(v) => {
+              onChangeValue={(v) => {
                 setValues({
                   ...values,
                   mtu: Math.min(Math.max(parseInt(v) || 1500, 1), 65535)
@@ -309,11 +307,10 @@ const Tun: React.FC<Props> = ({ embedded = false }) => {
             help={tr('Intercepts DNS traffic sent to these targets and forwards it to Mihomo.')}
             divider
           >
-            <Input
-              size="sm"
+            <KokoTextField
               controlWidth="full"
               value={values.dnsHijack.join(',')}
-              onValueChange={(v) => {
+              onChangeValue={(v) => {
                 const arr = v !== '' ? v.split(',') : []
                 setValues({ ...values, dnsHijack: arr })
               }}

@@ -263,7 +263,7 @@ const Settings: React.FC = () => {
                   onBlur={(event) => {
                     if (!event.currentTarget.value.trim()) setSearchExpanded(false)
                   }}
-                  onValueChange={setSearch}
+                  onChangeValue={setSearch}
                   onClear={() => setSearch('')}
                 />
               ) : (

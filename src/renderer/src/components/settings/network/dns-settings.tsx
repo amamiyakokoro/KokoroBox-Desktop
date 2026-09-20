@@ -1,6 +1,6 @@
 import { tr } from '../../../../../shared/i18n'
 import { Switch, Tooltip } from '@heroui/react'
-import { KokoTextField as Input } from '@renderer/components/base/koko-form'
+import { KokoTextField } from '@renderer/components/base/koko-form'
 import { KokoSegmentedControl } from '@renderer/components/base/base-controls'
 import BasePage from '@renderer/components/base/base-page'
 import SettingItem from '@renderer/components/base/base-setting-item'
@@ -354,14 +354,13 @@ const DNS: React.FC<Props> = ({ embedded = false }) => {
             <SettingItem title={tr('Fake IP range (IPv4)')} divider>
               <Tooltip delay={0} isOpen={!!fakeIPRangeError}>
                 <Tooltip.Trigger className="inline-flex w-full max-w-72">
-                  <Input
-                    size="sm"
+                  <KokoTextField
                     controlWidth="full"
-                    classNames={{ input: 'font-mono' }}
+                    inputClassName="font-mono"
                     isInvalid={Boolean(fakeIPRangeError)}
                     placeholder={tr('Example: 198.18.0.1/16')}
                     value={values.fakeIPRange}
-                    onValueChange={(v) => {
+                    onChangeValue={(v) => {
                       setValues({ ...values, fakeIPRange: v })
                       const r = isValidIPv4Cidr(v)
                       setFakeIPRangeError(r.ok ? null : (r.error ?? tr('Invalid format')))
@@ -382,14 +381,13 @@ const DNS: React.FC<Props> = ({ embedded = false }) => {
               <SettingItem title={tr('Fake IP range (IPv6)')} divider>
                 <Tooltip delay={0} isOpen={!!fakeIPRange6Error}>
                   <Tooltip.Trigger className="inline-flex w-full max-w-72">
-                    <Input
-                      size="sm"
+                    <KokoTextField
                       controlWidth="full"
-                      classNames={{ input: 'font-mono' }}
+                      inputClassName="font-mono"
                       isInvalid={Boolean(fakeIPRange6Error)}
                       placeholder={tr('Example: fc00::/18')}
                       value={values.fakeIPRange6}
-                      onValueChange={(v) => {
+                      onChangeValue={(v) => {
                         setValues({ ...values, fakeIPRange6: v })
                         const r = isValidIPv6Cidr(v)
                         setFakeIPRange6Error(r.ok ? null : (r.error ?? tr('Invalid format')))

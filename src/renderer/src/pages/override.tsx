@@ -277,7 +277,7 @@ const Override: React.FC = () => {
         value={url}
         onImport={handleImport}
         onPaste={async () => setUrl(await navigator.clipboard.readText())}
-        onValueChange={setUrl}
+        onChangeValue={setUrl}
       />
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
         <CollectionDropZone active={fileOver} label={tr('Drop to import')}>

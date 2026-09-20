@@ -1,6 +1,6 @@
 import { tr } from '../../../../../shared/i18n'
 import { Button, Switch } from '@heroui/react'
-import { KokoTextField as Input } from '@renderer/components/base/koko-form'
+import { KokoTextField } from '@renderer/components/base/koko-form'
 import { KokoSegmentedControl } from '@renderer/components/base/base-controls'
 import BasePage from '@renderer/components/base/base-page'
 import SettingItem from '@renderer/components/base/base-setting-item'
@@ -243,12 +243,11 @@ const Sysproxy: React.FC<Props> = ({ embedded = false }) => {
             description={tr('Leave empty to use 127.0.0.1')}
             divider
           >
-            <Input
-              size="sm"
+            <KokoTextField
               controlWidth="short"
               value={values.host}
               placeholder="127.0.0.1"
-              onValueChange={(v) => {
+              onChangeValue={(v) => {
                 setValues({ ...values, host: v })
               }}
             />

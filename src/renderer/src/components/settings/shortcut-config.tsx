@@ -1,5 +1,5 @@
 import { tr } from '../../../../shared/i18n'
-import { KokoTextField as Input } from '../base/koko-form'
+import { KokoTextField } from '../base/koko-form'
 import PendingFieldAction from '../base/base-pending-field-action'
 import SettingCard from '../base/base-setting-card'
 import SettingItem from '../base/base-setting-item'
@@ -152,12 +152,11 @@ const ShortcutInput: React.FC<{
   }
   return (
     <div className="flex min-w-0 items-center justify-end gap-2">
-      <Input
+      <KokoTextField
         placeholder={tr('Click to record shortcut')}
         onKeyDown={(e: KeyboardEvent): void => {
           parseShortcut(e, setInputValue)
         }}
-        size="sm"
         controlWidth="select"
         onClear={() => setInputValue('')}
         value={inputValue}

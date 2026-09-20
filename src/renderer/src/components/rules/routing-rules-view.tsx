@@ -32,7 +32,7 @@ const RoutingRulesView: React.FC = () => {
           placeholder={tr('Search routing rules')}
           value={filter}
           onClear={() => setFilter('')}
-          onValueChange={setFilter}
+          onChangeValue={setFilter}
         />
       </KokoToolbar>
       <div className="min-h-0 flex-1">

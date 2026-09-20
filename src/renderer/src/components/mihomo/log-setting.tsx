@@ -1,7 +1,7 @@
 import { tr } from '../../../../shared/i18n'
 import { useEffect, useState } from 'react'
 import { Switch } from '@heroui/react'
-import { KokoTextField as Input } from '../base/koko-form'
+import { KokoTextField } from '../base/koko-form'
 import PendingFieldAction from '../base/base-pending-field-action'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import SettingCard from '../base/base-setting-card'
@@ -58,15 +58,14 @@ const LogSetting: React.FC = () => {
       </SettingItem>
       <SettingItem contentAlign="end" title={tr('Log retention days')} divider>
         <div className="flex items-center justify-end gap-2">
-          <Input
-            size="sm"
+          <KokoTextField
             type="number"
             controlWidth="number"
-            endContent={tr('days')}
+            suffix={tr('days')}
             value={maxLogDaysInput.toString()}
             min={1}
             isDisabled={!saveLogs}
-            onValueChange={(value) => {
+            onChangeValue={(value) => {
               setMaxLogDaysInput(Math.max(parseInt(value) || 0, 1))
             }}
           />
@@ -86,15 +85,14 @@ const LogSetting: React.FC = () => {
         divider
       >
         <div className="flex items-center justify-end gap-2">
-          <Input
-            size="sm"
+          <KokoTextField
             type="number"
             controlWidth="number"
-            endContent="MB"
+            suffix="MB"
             value={maxLogFileSizeMBInput.toString()}
             min={1}
             isDisabled={!saveLogs}
-            onValueChange={(value) => {
+            onChangeValue={(value) => {
               setMaxLogFileSizeMBInput(Math.max(parseInt(value) || 0, 1))
             }}
           />
@@ -111,14 +109,13 @@ const LogSetting: React.FC = () => {
         help={tr('Only affects entries retained in the live log view, not local log files')}
       >
         <div className="flex items-center justify-end gap-2">
-          <Input
-            size="sm"
+          <KokoTextField
             type="number"
             controlWidth="number"
-            endContent={tr('entries')}
+            suffix={tr('entries')}
             value={maxLogEntriesInput.toString()}
             min={1}
-            onValueChange={(value) => {
+            onChangeValue={(value) => {
               setMaxLogEntriesInput(Math.max(parseInt(value) || 0, 1))
             }}
           />

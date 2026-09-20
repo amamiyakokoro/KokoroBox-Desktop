@@ -98,7 +98,8 @@ Switch, and Tooltip APIs are used directly instead of preserving v2 vocabulary t
 Phase 8 has established these thinner contracts:
 
 - `KokoSearchField` is the single-line 36px desktop search control. It owns icon/value/clear-action
-  alignment while HeroUI owns its secondary input surface and focus behavior.
+  alignment while HeroUI owns its secondary input surface and focus behavior. Search values use
+  the application-owned `onChangeValue` callback rather than preserving v2 `onValueChange`.
 - `KokoTabs` maps option data and selection for page or panel navigation. Labels never wrap; when
   the available width is exhausted, navigation scrolls instead of compressing text.
 - `KokoSegmentedControl` maps compact 2–4 choice settings to the native HeroUI
@@ -108,7 +109,10 @@ Phase 8 has established these thinner contracts:
   density, and application control-width intent. Its native variant defaults to `primary`;
   consumers choose `secondary` for controls embedded in surfaces, inspectors, and toolbars.
 - `KokoTextField` shares the same optional application control-width vocabulary: number (128px),
-  short text (288px), select (224px), URL (480px maximum), or full width.
+  short text (288px), select (224px), URL (480px maximum), or full width. Its thin composition API
+  uses application-owned `prefix`, `suffix`, `inputClassName`, and `onChangeValue` names; it does
+  not preserve the HeroUI v2 Input props `startContent`, `endContent`, `classNames`,
+  `isClearable`, or `onValueChange`.
 - `KokoActionMenu` maps application actions to native Dropdown items and uses a native v3 Button
   trigger. It does not translate v2 colors or variants and does not restyle the native popover.
 - `KokoStatusIndicator` pairs visible status text with a compact semantic dot. It uses theme

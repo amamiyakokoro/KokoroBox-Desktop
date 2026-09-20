@@ -1,6 +1,6 @@
 import { tr } from '../../../../shared/i18n'
 import { Button, Switch, Tooltip } from '@heroui/react'
-import { KokoTextField as Input } from '../base/koko-form'
+import { KokoTextField } from '../base/koko-form'
 import React, { useEffect, useRef, useState } from 'react'
 import { BiCopy, BiHide, BiShow } from 'react-icons/bi'
 import { LuArrowRight, LuRefreshCw } from 'react-icons/lu'
@@ -125,13 +125,12 @@ const SubscriptionIntegrationSettings: React.FC<Props> = ({
               'Leave empty to use the default user agent. Some providers return different content based on this value.'
             )}
           >
-            <Input
-              size="sm"
+            <KokoTextField
               aria-label={tr('Subscription user agent')}
               controlWidth="full"
               value={ua}
               placeholder={tr('Default: {0}', [defaultUserAgent])}
-              onValueChange={(value) => {
+              onChangeValue={(value) => {
                 setUa(value)
                 setUaDebounce(value)
               }}
@@ -213,16 +212,15 @@ const SubscriptionIntegrationSettings: React.FC<Props> = ({
               description={tr('Used to encrypt synchronized configuration.')}
               divider
             >
-              <Input
-                size="sm"
+              <KokoTextField
                 aria-label={tr('Gist age public key')}
                 data-setting-input="full"
                 value={gistAgeRecipient}
                 placeholder="age1..."
-                onValueChange={(value) => {
+                onChangeValue={(value) => {
                   patchAppConfig({ gistAgeRecipient: value.trim() || undefined })
                 }}
-                endContent={
+                suffix={
                   <div className="flex items-center gap-1">
                     <Tooltip delay={0}>
                       <Tooltip.Trigger>
@@ -260,17 +258,16 @@ const SubscriptionIntegrationSettings: React.FC<Props> = ({
                 'Required to decrypt synchronized configuration. Keep this key private.'
               )}
             >
-              <Input
-                size="sm"
+              <KokoTextField
                 aria-label={tr('Gist age private key')}
                 data-setting-input="full"
                 type={gistAgeIdentityVisible ? 'text' : 'password'}
                 value={gistAgeIdentity}
                 placeholder="AGE-SECRET-KEY-1..."
-                onValueChange={(value) => {
+                onChangeValue={(value) => {
                   patchAppConfig({ gistAgeIdentity: value.trim() || undefined })
                 }}
-                endContent={
+                suffix={
                   <div className="flex items-center gap-1">
                     <Button
                       aria-label={tr('Generate Gist age private key')}

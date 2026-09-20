@@ -1,6 +1,6 @@
 import { tr } from '../../../../../shared/i18n'
 import { Switch } from '@heroui/react'
-import { KokoTextField as Input } from '@renderer/components/base/koko-form'
+import { KokoTextField } from '@renderer/components/base/koko-form'
 import BasePage from '@renderer/components/base/base-page'
 import SettingItem from '@renderer/components/base/base-setting-item'
 import FeatureSettingsLayout, {
@@ -229,30 +229,27 @@ const Sniffer: React.FC<Props> = ({ embedded = false }) => {
 
         <FeatureSettingsSection title={tr('Protocol ports')}>
           <SettingItem title={tr('HTTP sniffing ports')} divider>
-            <Input
-              size="sm"
+            <KokoTextField
               controlWidth="full"
               placeholder={tr('Port numbers, separated by commas')}
               value={values.sniff.HTTP?.ports.join(',')}
-              onValueChange={(v) => handleSniffPortChange('HTTP', v)}
+              onChangeValue={(v) => handleSniffPortChange('HTTP', v)}
             />
           </SettingItem>
           <SettingItem title={tr('TLS sniffing ports')} divider>
-            <Input
-              size="sm"
+            <KokoTextField
               controlWidth="full"
               placeholder={tr('Port numbers, separated by commas')}
               value={values.sniff.TLS?.ports.join(',')}
-              onValueChange={(v) => handleSniffPortChange('TLS', v)}
+              onChangeValue={(v) => handleSniffPortChange('TLS', v)}
             />
           </SettingItem>
           <SettingItem title={tr('QUIC sniffing ports')}>
-            <Input
-              size="sm"
+            <KokoTextField
               controlWidth="full"
               placeholder={tr('Port numbers, separated by commas')}
               value={values.sniff.QUIC?.ports.join(',')}
-              onValueChange={(v) => handleSniffPortChange('QUIC', v)}
+              onChangeValue={(v) => handleSniffPortChange('QUIC', v)}
             />
           </SettingItem>
         </FeatureSettingsSection>

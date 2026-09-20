@@ -211,6 +211,36 @@ test('Koko compatibility component exports remain bounded', () => {
   }
 })
 
+test('Koko fields expose application semantics instead of the HeroUI v2 Input API', () => {
+  const form = readFileSync('src/renderer/src/components/base/koko-form.tsx', 'utf8')
+  const searchField = readFileSync('src/renderer/src/components/base/koko-search-field.tsx', 'utf8')
+
+  assert.match(form, /prefix\?: React\.ReactNode/)
+  assert.match(form, /suffix\?: React\.ReactNode/)
+  assert.match(form, /inputClassName\?: string/)
+  assert.match(form, /onChangeValue\?: \(value: string\) => void/)
+  assert.match(searchField, /onChangeValue: \(value: string\) => void/)
+
+  for (const [name, source] of [
+    ['KokoTextField', form],
+    ['KokoSearchField', searchField]
+  ]) {
+    assert.doesNotMatch(source, /\bonValueChange\b/, `${name} exposes v2 onValueChange`)
+    assert.doesNotMatch(source, /\bstartContent\b/, `${name} exposes v2 startContent`)
+    assert.doesNotMatch(source, /\bendContent\b/, `${name} exposes v2 endContent`)
+    assert.doesNotMatch(source, /\bclassNames\b/, `${name} exposes v2 classNames`)
+    assert.doesNotMatch(source, /\bisClearable\b/, `${name} exposes v2 isClearable`)
+  }
+
+  for (const file of collectSourceFiles(rendererRoot)) {
+    assert.doesNotMatch(
+      readFileSync(file, 'utf8'),
+      /KokoTextField\s+as\s+Input/,
+      `${file} hides KokoTextField behind a generic Input alias`
+    )
+  }
+})
+
 test('the native-first ownership contract documents the migration boundary', () => {
   const contract = readFileSync('docs/ui-native-first.md', 'utf8')
 
@@ -219,6 +249,10 @@ test('the native-first ownership contract documents the migration boundary', () 
   assert.match(contract, /canonical `@heroui\/react` and `@heroui\/styles` packages/)
   assert.match(contract, /React Aria `I18nProvider`/)
   assert.match(contract, /Renderer utility classes must use HeroUI v3 semantic colors/)
+  assert.match(
+    contract,
+    /application-owned `prefix`, `suffix`, `inputClassName`, and `onChangeValue`/
+  )
   assert.match(contract, /explicitly isolated compatibility bridge/)
   assert.match(contract, /zero HeroUI internal selectors/)
   assert.match(contract, /KokoSegmentedControl[\s\S]*`ToggleButtonGroup`/)

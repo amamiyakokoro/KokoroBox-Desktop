@@ -6,7 +6,7 @@ import {
 } from '../../../../shared/dns-server'
 import { isValidDnsServer, type ValidationResult } from '@renderer/utils/validate'
 import { Button, Tooltip, cn } from '@heroui/react'
-import { KokoSelect, KokoTextField as Input } from '../base/koko-form'
+import { KokoSelect, KokoTextField } from '../base/koko-form'
 import React from 'react'
 import { MdDeleteForever } from 'react-icons/md'
 
@@ -87,17 +87,14 @@ const DnsServerList: React.FC<DnsServerListProps> = ({
             >
               <Tooltip delay={0} isOpen={!validation.ok}>
                 <Tooltip.Trigger className="dns-server-list__field inline-flex min-w-0 w-full">
-                  <Input
+                  <KokoTextField
                     aria-label={tr('DNS server')}
-                    size="sm"
                     controlWidth="full"
-                    classNames={{
-                      input: 'font-mono',
-                      inputWrapper: validation.ok ? '' : 'border-danger ring-1 ring-danger'
-                    }}
+                    inputClassName="font-mono"
+                    isInvalid={!validation.ok}
                     placeholder={placeholder}
                     value={endpoint.address}
-                    onValueChange={(address) => update(index, { ...endpoint, address })}
+                    onChangeValue={(address) => update(index, { ...endpoint, address })}
                   />
                 </Tooltip.Trigger>
                 <Tooltip.Content

@@ -251,7 +251,7 @@ const ProxySettingDrawer: React.FC<Props> = (props) => {
               data-setting-input="url"
               value={url}
               placeholder={tr('Default: https://www.gstatic.com/generate_204')}
-              onValueChange={(v) => {
+              onChangeValue={(v) => {
                 setUrl(v)
                 setUrlDebounce(v)
               }}

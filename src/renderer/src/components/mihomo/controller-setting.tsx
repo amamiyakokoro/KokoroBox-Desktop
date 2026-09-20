@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react'
 import { Button, Switch, Tooltip } from '@heroui/react'
 import SettingCard from '../base/base-setting-card'
 import SettingItem from '../base/base-setting-item'
-import { KokoSelect, KokoTextField as Input } from '../base/koko-form'
+import { KokoSelect, KokoTextField } from '../base/koko-form'
 import { mihomoUpgradeUI } from '@renderer/utils/ipc'
 import EditableList from '../base/base-list-editor'
 import { IoMdCloudDownload, IoMdRefresh } from 'react-icons/io'
@@ -88,12 +88,11 @@ const ControllerSetting: React.FC<ControllerSettingProps> = ({
       <SettingItem title={tr('Listen address')} divider={externalController !== ''}>
         <Tooltip delay={0} isOpen={!!externalControllerError}>
           <Tooltip.Trigger className="inline-flex min-w-0">
-            <Input
-              size="sm"
+            <KokoTextField
               className="w-50"
               isInvalid={Boolean(externalControllerError)}
               value={externalControllerInput}
-              onValueChange={(v) => {
+              onChangeValue={(v) => {
                 setExternalControllerInput(v)
                 const result = isValidListenAddress(v)
                 const error = result.ok ? null : (result.error ?? tr('Invalid format'))
@@ -132,16 +131,15 @@ const ControllerSetting: React.FC<ControllerSettingProps> = ({
             }
             divider
           >
-            <Input
-              size="sm"
+            <KokoTextField
               type={showPassword ? 'text' : 'password'}
               className="w-50"
               value={secretInput}
-              onValueChange={(value) => {
+              onChangeValue={(value) => {
                 setSecretInput(value)
                 onChange({ secret: value })
               }}
-              startContent={
+              prefix={
                 <button
                   type="button"
                   onClick={() => setShowPassword((prev) => !prev)}

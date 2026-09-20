@@ -3,11 +3,6 @@ import React from 'react'
 import { LuX } from 'react-icons/lu'
 import { tr } from '../../../../shared/i18n'
 
-type KokoTextFieldClassNames = {
-  input?: string
-  inputWrapper?: string
-}
-
 export type KokoControlWidth = 'number' | 'short' | 'select' | 'path' | 'url' | 'full'
 
 const controlWidthClassNames: Record<KokoControlWidth, string> = {
@@ -21,73 +16,60 @@ const controlWidthClassNames: Record<KokoControlWidth, string> = {
 
 interface KokoTextFieldProps extends Omit<
   React.ComponentProps<typeof InputGroup.Input>,
-  'className' | 'disabled' | 'onChange' | 'size'
+  'className' | 'disabled' | 'onChange' | 'prefix' | 'size'
 > {
   className?: string
-  classNames?: KokoTextFieldClassNames
   controlWidth?: KokoControlWidth
-  endContent?: React.ReactNode
+  inputClassName?: string
   isDisabled?: boolean
-  isClearable?: boolean
   isInvalid?: boolean
   onClear?: () => void
-  onValueChange?: (value: string) => void
-  size?: 'sm' | 'md' | 'lg'
-  startContent?: React.ReactNode
+  onChangeValue?: (value: string) => void
+  prefix?: React.ReactNode
+  suffix?: React.ReactNode
   'data-setting-input'?: string
 }
 
 export const KokoTextField: React.FC<KokoTextFieldProps> = ({
   className,
-  classNames,
   controlWidth,
-  endContent,
+  inputClassName,
   isDisabled,
-  isClearable,
   isInvalid,
   onClear,
-  onValueChange,
-  size = 'sm',
-  startContent,
+  onChangeValue,
+  prefix,
+  suffix,
   value,
   'data-setting-input': dataSettingInput,
   ...inputProps
 }) => (
   <InputGroup
-    className={cn(
-      size === 'sm' && 'min-h-8',
-      size === 'lg' && 'min-h-10',
-      controlWidth && controlWidthClassNames[controlWidth],
-      classNames?.inputWrapper,
-      className
-    )}
+    className={cn('min-h-8', controlWidth && controlWidthClassNames[controlWidth], className)}
     data-invalid={isInvalid || undefined}
     data-setting-input={dataSettingInput}
     variant="secondary"
   >
-    {startContent && <InputGroup.Prefix>{startContent}</InputGroup.Prefix>}
+    {prefix && <InputGroup.Prefix>{prefix}</InputGroup.Prefix>}
     <InputGroup.Input
       {...inputProps}
       aria-invalid={isInvalid || undefined}
-      className={classNames?.input}
+      className={inputClassName}
       disabled={isDisabled}
       value={value}
-      onChange={(event) => onValueChange?.(event.target.value)}
+      onChange={(event) => onChangeValue?.(event.target.value)}
     />
-    {(endContent || ((isClearable || onClear) && value)) && (
+    {(suffix || (onClear && value)) && (
       <InputGroup.Suffix className="gap-1">
-        {endContent}
-        {(isClearable || onClear) && value ? (
+        {suffix}
+        {onClear && value ? (
           <Button
             aria-label={tr('Clear field')}
             className="h-6 w-6 min-w-6"
             isIconOnly
             size="sm"
             variant="ghost"
-            onPress={() => {
-              onClear?.()
-              if (!onClear) onValueChange?.('')
-            }}
+            onPress={onClear}
           >
             <LuX />
           </Button>

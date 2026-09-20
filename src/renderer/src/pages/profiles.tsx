@@ -327,7 +327,7 @@ const Profiles: React.FC = () => {
         onImport={() => handleImport(url)}
         onInputKeyUp={handleInputKeyUp}
         onPaste={async () => setUrl(await navigator.clipboard.readText())}
-        onValueChange={setUrl}
+        onChangeValue={setUrl}
       />
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
         <CollectionDropZone active={fileOver} label={tr('Drop to import')}>

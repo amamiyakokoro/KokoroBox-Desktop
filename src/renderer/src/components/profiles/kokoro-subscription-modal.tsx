@@ -469,15 +469,14 @@ const KokoroSettingsPage: React.FC = () => {
                           <KokoTextField
                             aria-label={tr('Update interval')}
                             type="number"
-                            size="sm"
                             className="w-32 shrink-0"
                             min={options.profile_update.min_hours}
                             max={options.profile_update.max_hours}
-                            endContent={
+                            suffix={
                               <span className="shrink-0 whitespace-nowrap">{tr('hours')}</span>
                             }
                             value={String(settings?.profile_update_hours || '')}
-                            onValueChange={(value) =>
+                            onChangeValue={(value) =>
                               updateSettings({
                                 profile_update_hours: Math.min(
                                   options.profile_update.max_hours,
