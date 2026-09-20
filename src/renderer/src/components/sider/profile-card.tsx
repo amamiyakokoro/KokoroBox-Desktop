@@ -50,6 +50,7 @@ const ProfileCard: React.FC<Props> = ({ iconOnly }) => {
     type: 'local',
     name: tr('Blank profile')
   }
+  const isKokoroProfile = info.type === 'remote' && Boolean(info.kokoro)
 
   const extra = info.extra
   const usage = (extra?.upload ?? 0) + (extra?.download ?? 0)
@@ -95,20 +96,21 @@ const ProfileCard: React.FC<Props> = ({ iconOnly }) => {
         icon={<TiFolder />}
         title={info.name}
         status={
-          <>
-            {info.type === 'remote' ? tr('Remote') : tr('Local')}
-            {info.kokoro && (
-              <Chip
-                className="shrink-0"
-                color="accent"
-                size="sm"
-                title={tr('Kokoro subscription')}
-                variant="soft"
-              >
-                Kokoro
-              </Chip>
-            )}
-          </>
+          isKokoroProfile ? (
+            <Chip
+              className="shrink-0"
+              color="accent"
+              size="sm"
+              title={tr('Kokoro subscription')}
+              variant="soft"
+            >
+              Kokoro
+            </Chip>
+          ) : info.type === 'remote' ? (
+            tr('Remote')
+          ) : (
+            tr('Local')
+          )
         }
         active={match}
         onPress={() => navigate('/profiles')}

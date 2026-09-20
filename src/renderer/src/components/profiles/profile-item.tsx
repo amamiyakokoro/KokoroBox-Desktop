@@ -46,6 +46,7 @@ const ProfileItem: React.FC<Props> = (props) => {
     switching
   } = props
   const extra = info?.extra
+  const isKokoroProfile = info.type === 'remote' && Boolean(info.kokoro)
   const usage = (extra?.upload ?? 0) + (extra?.download ?? 0)
   const total = extra?.total ?? 0
   const { appConfig, patchAppConfig } = useAppConfig()
@@ -279,7 +280,13 @@ const ProfileItem: React.FC<Props> = (props) => {
               </div>
             </div>
             <div className="mt-0.5 flex min-w-0 items-center gap-1.5 text-xs text-muted">
-              <span>{info.type === 'remote' ? tr('Remote') : tr('Local')}</span>
+              {isKokoroProfile ? (
+                <Chip color="accent" size="sm" title={tr('Kokoro subscription')} variant="soft">
+                  Kokoro
+                </Chip>
+              ) : (
+                <span>{info.type === 'remote' ? tr('Remote') : tr('Local')}</span>
+              )}
               {info.type === 'remote' ? (
                 <>
                   <span aria-hidden="true">·</span>
