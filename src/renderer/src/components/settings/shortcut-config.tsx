@@ -1,6 +1,6 @@
 import { tr } from '../../../../shared/i18n'
-import { Button } from '@heroui/react'
 import { KokoTextField as Input } from '../base/koko-form'
+import PendingFieldAction from '../base/base-pending-field-action'
 import SettingCard from '../base/base-setting-card'
 import SettingItem from '../base/base-setting-item'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
@@ -56,89 +56,35 @@ const ShortcutConfig: React.FC = () => {
     restartAppShortcut = ''
   } = appConfig || {}
 
+  const shortcuts = [
+    [tr('Toggle window'), showWindowShortcut, 'showWindowShortcut'],
+    [tr('Toggle floating window'), showFloatingWindowShortcut, 'showFloatingWindowShortcut'],
+    [tr('Toggle system proxy'), triggerSysProxyShortcut, 'triggerSysProxyShortcut'],
+    [tr('Toggle TUN mode'), triggerTunShortcut, 'triggerTunShortcut'],
+    [tr('Switch to rule mode'), ruleModeShortcut, 'ruleModeShortcut'],
+    [tr('Switch to global mode'), globalModeShortcut, 'globalModeShortcut'],
+    [tr('Switch to direct mode'), directModeShortcut, 'directModeShortcut'],
+    [tr('Quit and keep core running'), quitWithoutCoreShortcut, 'quitWithoutCoreShortcut'],
+    [tr('Restart app'), restartAppShortcut, 'restartAppShortcut']
+  ] as const
+
   return (
-    <SettingCard header={tr('Keyboard shortcuts')}>
-      <SettingItem contentAlign="end" title={tr('Toggle window')} divider>
-        <div className="flex justify-end w-[60%]">
-          <ShortcutInput
-            value={showWindowShortcut}
-            patchAppConfig={patchAppConfig}
-            action="showWindowShortcut"
-          />
-        </div>
-      </SettingItem>
-      <SettingItem contentAlign="end" title={tr('Toggle floating window')} divider>
-        <div className="flex justify-end w-[60%]">
-          <ShortcutInput
-            value={showFloatingWindowShortcut}
-            patchAppConfig={patchAppConfig}
-            action="showFloatingWindowShortcut"
-          />
-        </div>
-      </SettingItem>
-      <SettingItem contentAlign="end" title={tr('Toggle system proxy')} divider>
-        <div className="flex justify-end w-[60%]">
-          <ShortcutInput
-            value={triggerSysProxyShortcut}
-            patchAppConfig={patchAppConfig}
-            action="triggerSysProxyShortcut"
-          />
-        </div>
-      </SettingItem>
-      <SettingItem contentAlign="end" title={tr('Toggle TUN mode')} divider>
-        <div className="flex justify-end w-[60%]">
-          <ShortcutInput
-            value={triggerTunShortcut}
-            patchAppConfig={patchAppConfig}
-            action="triggerTunShortcut"
-          />
-        </div>
-      </SettingItem>
-      <SettingItem contentAlign="end" title={tr('Switch to rule mode')} divider>
-        <div className="flex justify-end w-[60%]">
-          <ShortcutInput
-            value={ruleModeShortcut}
-            patchAppConfig={patchAppConfig}
-            action="ruleModeShortcut"
-          />
-        </div>
-      </SettingItem>
-      <SettingItem contentAlign="end" title={tr('Switch to global mode')} divider>
-        <div className="flex justify-end w-[60%]">
-          <ShortcutInput
-            value={globalModeShortcut}
-            patchAppConfig={patchAppConfig}
-            action="globalModeShortcut"
-          />
-        </div>
-      </SettingItem>
-      <SettingItem contentAlign="end" title={tr('Switch to direct mode')} divider>
-        <div className="flex justify-end w-[60%]">
-          <ShortcutInput
-            value={directModeShortcut}
-            patchAppConfig={patchAppConfig}
-            action="directModeShortcut"
-          />
-        </div>
-      </SettingItem>
-      <SettingItem contentAlign="end" title={tr('Quit and keep core running')} divider>
-        <div className="flex justify-end w-[60%]">
-          <ShortcutInput
-            value={quitWithoutCoreShortcut}
-            patchAppConfig={patchAppConfig}
-            action="quitWithoutCoreShortcut"
-          />
-        </div>
-      </SettingItem>
-      <SettingItem contentAlign="end" title={tr('Restart app')}>
-        <div className="flex justify-end w-[60%]">
-          <ShortcutInput
-            value={restartAppShortcut}
-            patchAppConfig={patchAppConfig}
-            action="restartAppShortcut"
-          />
-        </div>
-      </SettingItem>
+    <SettingCard
+      header={tr('Keyboard shortcuts')}
+      description={tr(
+        'Click a shortcut field and press a new key combination. Press Backspace to clear it.'
+      )}
+    >
+      {shortcuts.map(([title, value, action], index) => (
+        <SettingItem
+          key={action}
+          contentAlign="end"
+          title={title}
+          divider={index < shortcuts.length - 1}
+        >
+          <ShortcutInput value={value} patchAppConfig={patchAppConfig} action={action} />
+        </SettingItem>
+      ))}
     </SettingCard>
   )
 }
@@ -205,39 +151,33 @@ const ShortcutInput: React.FC<{
     }
   }
   return (
-    <>
-      {inputValue !== value && (
-        <Button
-          variant="primary"
-          className="mr-2"
-          size="sm"
-          onPress={async () => {
-            try {
-              if (await registerShortcut(value, inputValue, action)) {
-                await patchAppConfig({ [action]: inputValue })
-                window.electron.ipcRenderer.send('updateTrayMenu')
-              } else {
-                notify(tr('Failed to register shortcut'), { variant: 'danger' })
-              }
-            } catch (e) {
-              notify(tr('Failed to register shortcut: {0}', [e]), { variant: 'danger' })
-            }
-          }}
-        >
-          {tr('Confirm')}
-        </Button>
-      )}
+    <div className="flex min-w-0 items-center justify-end gap-2">
       <Input
         placeholder={tr('Click to record shortcut')}
         onKeyDown={(e: KeyboardEvent): void => {
           parseShortcut(e, setInputValue)
         }}
         size="sm"
+        controlWidth="select"
         onClear={() => setInputValue('')}
         value={inputValue}
-        className="w-[calc(100%-72px)] pr-0"
       />
-    </>
+      <PendingFieldAction
+        isVisible={inputValue !== value}
+        onPress={async () => {
+          try {
+            if (await registerShortcut(value, inputValue, action)) {
+              await patchAppConfig({ [action]: inputValue })
+              window.electron.ipcRenderer.send('updateTrayMenu')
+            } else {
+              notify(tr('Failed to register shortcut'), { variant: 'danger' })
+            }
+          } catch (e) {
+            notify(tr('Failed to register shortcut: {0}', [e]), { variant: 'danger' })
+          }
+        }}
+      />
+    </div>
   )
 }
 

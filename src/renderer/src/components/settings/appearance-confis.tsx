@@ -441,7 +441,7 @@ const AppearanceConfig: React.FC = () => {
             <KokoSelect
               aria-label={tr('Custom theme')}
               variant="secondary"
-              className="w-[60%]"
+              controlWidth="full"
               value={customTheme}
               options={customThemes.map((theme) => ({ id: theme.key, label: theme.label }))}
               disallowEmptySelection={true}

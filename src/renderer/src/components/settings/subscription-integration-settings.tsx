@@ -128,7 +128,7 @@ const SubscriptionIntegrationSettings: React.FC<Props> = ({
             <Input
               size="sm"
               aria-label={tr('Subscription user agent')}
-              data-setting-input="wide"
+              controlWidth="full"
               value={ua}
               placeholder={tr('Default: {0}', [defaultUserAgent])}
               onValueChange={(value) => {
@@ -207,7 +207,12 @@ const SubscriptionIntegrationSettings: React.FC<Props> = ({
             </SettingItem>
           )}
           {gistSyncEnabled && gistEncrypted && (
-            <SettingItem contentAlign="end" title={tr('Gist age public key')} divider>
+            <SettingItem
+              contentAlign="end"
+              title={tr('Gist age public key')}
+              description={tr('Used to encrypt synchronized configuration.')}
+              divider
+            >
               <Input
                 size="sm"
                 aria-label={tr('Gist age public key')}
@@ -248,7 +253,13 @@ const SubscriptionIntegrationSettings: React.FC<Props> = ({
             </SettingItem>
           )}
           {gistSyncEnabled && gistEncrypted && (
-            <SettingItem contentAlign="end" title={tr('Gist age private key')}>
+            <SettingItem
+              contentAlign="end"
+              title={tr('Gist age private key')}
+              description={tr(
+                'Required to decrypt synchronized configuration. Keep this key private.'
+              )}
+            >
               <Input
                 size="sm"
                 aria-label={tr('Gist age private key')}

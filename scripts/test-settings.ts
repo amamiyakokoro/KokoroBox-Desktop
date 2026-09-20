@@ -110,12 +110,13 @@ test('application settings keep one clear navigation hierarchy in compact deskto
   const settings = readFileSync('src/renderer/src/pages/settings.tsx', 'utf8')
   const styles = readFileSync('src/renderer/src/assets/app-overrides.css', 'utf8')
   const settingCard = readFileSync('src/renderer/src/components/base/base-setting-card.tsx', 'utf8')
-  const logSetting = readFileSync('src/renderer/src/components/mihomo/log-setting.tsx', 'utf8')
-  const kokoForm = readFileSync('src/renderer/src/components/base/koko-form.tsx', 'utf8')
-  const searchField = readFileSync(
-    'src/renderer/src/components/base/koko-search-field.tsx',
+  const settingsSection = readFileSync(
+    'src/renderer/src/components/base/base-settings-section.tsx',
     'utf8'
   )
+  const logSetting = readFileSync('src/renderer/src/components/mihomo/log-setting.tsx', 'utf8')
+  const kokoForm = readFileSync('src/renderer/src/components/base/koko-form.tsx', 'utf8')
+  const searchField = readFileSync('src/renderer/src/components/base/koko-search-field.tsx', 'utf8')
   const general = readFileSync('src/renderer/src/components/settings/general-config.tsx', 'utf8')
 
   assert.match(settings, /aria-current=\{active \? 'page' : undefined\}/)
@@ -130,14 +131,8 @@ test('application settings keep one clear navigation hierarchy in compact deskto
   )
   assert.match(settings, /settings-navigation[^"\n]*bg-surface-secondary\/85/)
   assert.match(settings, /bg-accent-soft text-accent-soft-foreground/)
-  assert.match(
-    settings,
-    /settings-context-inner mx-auto w-full max-w-\[960px\] px-4/
-  )
-  assert.match(
-    settings,
-    /settings-content-inner mx-auto w-full max-w-\[960px\] px-4/
-  )
+  assert.match(settings, /settings-context-inner mx-auto w-full max-w-\[960px\] px-4/)
+  assert.match(settings, /settings-content-inner mx-auto w-full max-w-\[960px\] px-4/)
   assert.match(settings, /<main className="min-w-0 pb-4">/)
   assert.match(settings, /scrollTo\(\{ top: 0, left: 0 \}\)/)
   assert.equal(settings.match(/setSearchParams\(nextParams\)\s*resetContentScroll\(\)/g)?.length, 2)
@@ -158,10 +153,7 @@ test('application settings keep one clear navigation hierarchy in compact deskto
   assert.match(settings, /selectionStyle="accent-underline"/)
   assert.match(settings, /className="app-nodrag w-max max-w-none"/)
   assert.match(settings, /settings-panel-navigation[^"\n]*min-h-10[^"\n]*overflow-x-auto/)
-  assert.doesNotMatch(
-    settings,
-    /settings-panel-navigation[^"\n]*overflow-x-auto[^"\n]*px-3/
-  )
+  assert.doesNotMatch(settings, /settings-panel-navigation[^"\n]*overflow-x-auto[^"\n]*px-3/)
   assert.match(settings, /onChange=\{selectPanel\}/)
   assert.match(settings, /\{\(normalizedSearch \|\| selectedPanels\.length > 1\) && \(/)
   assert.match(settings, /\{normalizedSearch \? \([\s\S]*?<h1[\s\S]*?tr\('Search settings'\)/)
@@ -210,10 +202,11 @@ test('application settings keep one clear navigation hierarchy in compact deskto
   assert.match(searchField, /h-9 min-h-9/)
   assert.match(searchField, /className="h-9 py-0"/)
   assert.match(searchField, /aria-label=\{tr\('Clear field'\)\}/)
-  assert.match(settingCard, /settings-section__heading/)
-  assert.match(settingCard, /text-base font-semibold leading-6 text-foreground/)
-  assert.match(settingCard, /settings-section__content border-t border-divider/)
-  assert.doesNotMatch(settingCard, /settings-section__content border-y/)
+  assert.match(settingCard, /<SettingsSection/)
+  assert.match(settingsSection, /settings-section__heading/)
+  assert.match(settingsSection, /text-base font-semibold leading-6 text-foreground/)
+  assert.match(settingsSection, /settings-section__content border-t border-divider/)
+  assert.doesNotMatch(settingsSection, /settings-section__content border-y/)
   assert.match(logSetting, /<SettingCard>/)
   assert.doesNotMatch(logSetting, /<SettingCard header=\{tr\('Application logs'\)\}>/)
   assert.doesNotMatch(logSetting, /className="w-25"/)
@@ -330,6 +323,10 @@ test('SettingItem has one canonical layout without legacy compatibility paths', 
   const settingHelp = readFileSync('src/renderer/src/components/base/base-setting-help.tsx', 'utf8')
   const settingItem = readFileSync('src/renderer/src/components/base/base-setting-item.tsx', 'utf8')
   const settingCard = readFileSync('src/renderer/src/components/base/base-setting-card.tsx', 'utf8')
+  const settingsSection = readFileSync(
+    'src/renderer/src/components/base/base-settings-section.tsx',
+    'utf8'
+  )
   const featureLayout = readFileSync(
     'src/renderer/src/components/base/base-feature-settings.tsx',
     'utf8'
@@ -365,12 +362,15 @@ test('SettingItem has one canonical layout without legacy compatibility paths', 
   assert.match(settingHelp, /ariaLabel = tr\('Description'\)/)
   assert.match(settingHelp, /<LuCircleHelp aria-hidden="true"/)
   assert.match(settingHelp, /max-w-72 text-sm leading-5/)
-  assert.match(settingCard, /settings-section px-3 py-1\.5 first:pt-1\.5/)
-  assert.match(featureLayout, /feature-settings-section px-3 py-1\.5 first:pt-1\.5/)
+  assert.match(settingCard, /<SettingsSection/)
+  assert.match(featureLayout, /<SettingsSection/)
+  assert.match(settingsSection, /settings-section px-3 py-1\.5 first:pt-1\.5/)
+  assert.match(settingsSection, /settings-section__heading text-base font-semibold leading-6/)
+  assert.match(settingsSection, /settings-section__content border-t border-divider px-1 py-0\.5/)
   assert.match(styles, /\.setting-item__title-line\s*\{[\s\S]*align-items: center/)
   assert.match(
     styles,
-    /\.settings-layout \.setting-item,[\s\S]*padding-block: calc\(var\(--spacing\) \* 1\.5\)/
+    /\.settings-layout \.setting-item,[\s\S]*padding-block: calc\(var\(--spacing\) \* 1\.25\)/
   )
   assert.match(
     styles,
@@ -426,10 +426,14 @@ test('settings and Mihomo forms share the KokoroBox HeroUI v3 conventions', () =
   }
 
   assert.match(form, /export const KokoTextField/)
-  assert.match(form, /export type KokoControlWidth = 'number' \| 'short' \| 'select' \| 'url' \| 'full'/)
+  assert.match(
+    form,
+    /export type KokoControlWidth = 'number' \| 'short' \| 'select' \| 'path' \| 'url' \| 'full'/
+  )
   assert.match(form, /number: 'w-32 max-w-full'/)
   assert.match(form, /short: 'w-full max-w-72'/)
   assert.match(form, /select: 'w-56 max-w-full'/)
+  assert.match(form, /path: 'w-full max-w-96'/)
   assert.match(form, /url: 'w-full max-w-120'/)
   assert.match(form, /controlWidth\?: KokoControlWidth/)
   assert.match(form, /<InputGroup\.Input/)
@@ -619,10 +623,7 @@ test('renderer components use the canonical HeroUI v3 package', () => {
 })
 
 test('service management separates maintenance, danger and state-specific actions', () => {
-  const serviceModal = readFileSync(
-    'src/renderer/src/components/mihomo/service-modal.tsx',
-    'utf8'
-  )
+  const serviceModal = readFileSync('src/renderer/src/components/mihomo/service-modal.tsx', 'utf8')
   const footer = serviceModal.slice(
     serviceModal.indexOf('<Modal.Footer'),
     serviceModal.indexOf('</Modal.Footer>')
@@ -820,10 +821,7 @@ test('page settings drawers use the shared compact inspector behavior', () => {
 
 test('desktop sidebar separates controls, live status and navigation', () => {
   const sider = readFileSync('src/renderer/src/components/sider/sider-cards.tsx', 'utf8')
-  const siderOrderSource = readFileSync(
-    'src/renderer/src/components/sider/sider-order.ts',
-    'utf8'
-  )
+  const siderOrderSource = readFileSync('src/renderer/src/components/sider/sider-order.ts', 'utf8')
   const surfaces = readFileSync('src/renderer/src/components/sider/sider-surfaces.tsx', 'utf8')
   const statusIndicator = readFileSync(
     'src/renderer/src/components/base/koko-status-indicator.tsx',
@@ -977,10 +975,7 @@ test('desktop sidebar separates controls, live status and navigation', () => {
   assert.match(surfaces, /active && siderActiveIconClassName/)
   assert.match(quickControl, /active\s*\? siderActiveIconClassName/)
   assert.match(surfaces, /className=\{siderItemTitleClassName\}/)
-  assert.doesNotMatch(
-    surfaces,
-    /\b(?:border|bg|ring|text)-primary(?:\/\d+)?\b/
-  )
+  assert.doesNotMatch(surfaces, /\b(?:border|bg|ring|text)-primary(?:\/\d+)?\b/)
   assert.match(surfaces, /focus-visible:outline-accent/)
   assert.match(surfaces, /group-focus-within:text-accent/)
   assert.match(surfaces, /text-success-600 dark:text-success-400/)
@@ -1112,10 +1107,7 @@ test('desktop sidebar separates controls, live status and navigation', () => {
   assert.doesNotMatch(profile, /<Card/)
   assert.match(connections, /<SiderStatusCard/)
   assert.match(surfaces, /metadata\?: React\.ReactNode/)
-  assert.match(
-    surfaces,
-    /metadata\s*\? 'grid grid-cols-\[2rem_minmax\(0,1fr\)_2rem\]/
-  )
+  assert.match(surfaces, /metadata\s*\? 'grid grid-cols-\[2rem_minmax\(0,1fr\)_2rem\]/)
   assert.match(surfaces, /className=\{metadata \? 'row-span-2 self-center' : undefined\}/)
   assert.match(surfaces, /<div className="col-\[2\/4\] row-start-2 min-w-0"/)
   assert.match(statusCard, /description \|\| status/)
@@ -1663,7 +1655,10 @@ test('diagnostics settings separate logs, maintenance and lifecycle actions', ()
   assert.match(registry, /key: 'maintenance'/)
   assert.match(registry, /<Actions sections=\{\['application', 'diagnostics'\]\} \/>/)
   assert.match(registry, /key: 'lifecycle'/)
-  assert.match(registry, /<Actions sections=\{\['version', 'danger'\]\} \/>/)
+  assert.match(
+    registry,
+    /<Actions sections=\{\['version', 'danger'\]\} showVersionHeading=\{false\} \/>/
+  )
   assert.match(registry, /entries: diagnosticsPanels\.flatMap/)
   assert.match(registry, /panels: diagnosticsPanels/)
   assert.match(actions, /export type ActionSection/)
@@ -1671,4 +1666,39 @@ test('diagnostics settings separate logs, maintenance and lifecycle actions', ()
   assert.match(actions, /sections\.includes\('diagnostics'\)/)
   assert.match(actions, /sections\.includes\('version'\)/)
   assert.match(actions, /sections\.includes\('danger'\)/)
+  assert.match(actions, /showVersionHeading \? tr\('Version information'\) : undefined/)
+})
+
+test('settings use semantic widths, compact pending actions and focused help', () => {
+  const form = readFileSync('src/renderer/src/components/base/koko-form.tsx', 'utf8')
+  const pendingAction = readFileSync(
+    'src/renderer/src/components/base/base-pending-field-action.tsx',
+    'utf8'
+  )
+  const shortcuts = readFileSync('src/renderer/src/components/settings/shortcut-config.tsx', 'utf8')
+  const logs = readFileSync('src/renderer/src/components/mihomo/log-setting.tsx', 'utf8')
+  const runtime = readFileSync(
+    'src/renderer/src/components/settings/core-runtime-config.tsx',
+    'utf8'
+  )
+  const tun = readFileSync('src/renderer/src/components/settings/network/tun-settings.tsx', 'utf8')
+  const sniffer = readFileSync(
+    'src/renderer/src/components/settings/network/sniffer-settings.tsx',
+    'utf8'
+  )
+
+  assert.match(form, /KokoControlWidth = 'number' \| 'short' \| 'select' \| 'path'/)
+  assert.match(form, /path: 'w-full max-w-96'/)
+  assert.doesNotMatch(runtime, /w-37\.5|w-87\.5/)
+  assert.match(runtime, /controlWidth="path"/)
+  assert.doesNotMatch(shortcuts, /w-\[60%\]|w-\[calc\(/)
+  assert.match(shortcuts, /controlWidth="select"/)
+  assert.match(shortcuts, /Click a shortcut field and press a new key combination/)
+  assert.match(shortcuts, /<PendingFieldAction/)
+  assert.equal(logs.match(/<PendingFieldAction/g)?.length, 3)
+  assert.match(pendingAction, /className="size-8 min-w-8 shrink-0"/)
+  assert.match(pendingAction, /<LuCheck aria-hidden="true"/)
+  assert.match(tun, /title=\{tr\('Strict routing'\)\}[\s\S]*help=\{tr\(/)
+  assert.match(tun, /title="MTU"[\s\S]*help=\{tr\(/)
+  assert.match(sniffer, /title=\{tr\('Override connection address'\)\}[\s\S]*help=\{tr\(/)
 })

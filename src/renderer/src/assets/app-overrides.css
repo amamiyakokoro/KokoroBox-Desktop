@@ -383,10 +383,6 @@ input[type='number'] {
   width: calc(var(--spacing) * 32);
 }
 
-.setting-item [data-setting-input='wide'] {
-  width: 80%;
-}
-
 .setting-item [data-setting-input='edit-modal'] {
   width: 100%;
   min-width: 0;
@@ -476,7 +472,7 @@ input[type='number'] {
 .settings-layout .setting-item,
 .feature-settings-layout .setting-item {
   grid-template-columns: minmax(10rem, 34%) minmax(0, 1fr);
-  padding-block: calc(var(--spacing) * 1.5);
+  padding-block: calc(var(--spacing) * 1.25);
 }
 
 .settings-layout .setting-item__title-wrap,

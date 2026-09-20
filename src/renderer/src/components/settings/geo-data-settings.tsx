@@ -11,6 +11,7 @@ import { mihomoUpgradeGeo } from '@renderer/utils/ipc'
 import React, { useEffect, useMemo, useState } from 'react'
 import { IoMdRefresh } from 'react-icons/io'
 import { notify } from '@renderer/utils/notification'
+import PendingFieldAction from '@renderer/components/base/base-pending-field-action'
 
 const defaultGeoxUrl = {
   geoip: 'https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geoip.dat',
@@ -44,11 +45,7 @@ const GeoUrlSetting: React.FC<Props> = (props) => {
           classNames={{ input: 'font-mono text-xs' }}
           onValueChange={onChange}
         />
-        {value !== savedValue ? (
-          <Button className="shrink-0" size="sm" variant="primary" onPress={onConfirm}>
-            {tr('Confirm')}
-          </Button>
-        ) : null}
+        <PendingFieldAction isVisible={value !== savedValue} onPress={onConfirm} />
       </div>
     </SettingItem>
   )

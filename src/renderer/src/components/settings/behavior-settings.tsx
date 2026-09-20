@@ -10,6 +10,7 @@ import { copyEnv, startNetworkDetection, stopNetworkDetection } from '@renderer/
 import { platform } from '@renderer/utils/init'
 import { BiCopy, BiHide, BiShow } from 'react-icons/bi'
 import EditableList from '../base/base-list-editor'
+import PendingFieldAction from '../base/base-pending-field-action'
 import { notify } from '@renderer/utils/notification'
 
 const emptyArray: string[] = []
@@ -117,7 +118,7 @@ const BehaviorSettings: React.FC<Props> = ({
               <KokoSelect
                 aria-label={tr('Environment variable type')}
                 variant="secondary"
-                className="w-37.5"
+                controlWidth="select"
                 multiple
                 value={envType}
                 options={[
@@ -187,7 +188,7 @@ const BehaviorSettings: React.FC<Props> = ({
               <SettingItem contentAlign="end" title={tr('Lightweight mode delay')} divider>
                 <Input
                   size="sm"
-                  className="w-25"
+                  controlWidth="number"
                   type="number"
                   endContent={tr('seconds')}
                   value={autoLightweightDelay.toString()}
@@ -236,24 +237,11 @@ const BehaviorSettings: React.FC<Props> = ({
           {networkDetection && (
             <>
               <SettingItem contentAlign="end" title={tr('Connectivity check interval')} divider>
-                <div className="flex">
-                  {interval !== networkDetectionInterval && (
-                    <Button
-                      size="sm"
-                      variant="primary"
-                      className="mr-2"
-                      onPress={async () => {
-                        await patchAppConfig({ networkDetectionInterval: interval })
-                        await startNetworkDetection()
-                      }}
-                    >
-                      {tr('Confirm')}
-                    </Button>
-                  )}
+                <div className="flex items-center justify-end gap-2">
                   <Input
                     size="sm"
                     type="number"
-                    className="w-25"
+                    controlWidth="number"
                     endContent={tr('seconds')}
                     value={interval.toString()}
                     min={1}
@@ -261,21 +249,23 @@ const BehaviorSettings: React.FC<Props> = ({
                       setInterval(Math.max(parseInt(v) || 10, 1))
                     }}
                   />
+                  <PendingFieldAction
+                    isVisible={interval !== networkDetectionInterval}
+                    onPress={async () => {
+                      await patchAppConfig({ networkDetectionInterval: interval })
+                      await startNetworkDetection()
+                    }}
+                  />
                 </div>
               </SettingItem>
               <SettingItem contentAlign="end" title={tr('Interfaces excluded from detection')}>
-                {bypass.length != networkDetectionBypass.length && (
-                  <Button
-                    size="sm"
-                    variant="primary"
-                    onPress={async () => {
-                      await patchAppConfig({ networkDetectionBypass: bypass })
-                      await startNetworkDetection()
-                    }}
-                  >
-                    {tr('Confirm')}
-                  </Button>
-                )}
+                <PendingFieldAction
+                  isVisible={bypass.length != networkDetectionBypass.length}
+                  onPress={async () => {
+                    await patchAppConfig({ networkDetectionBypass: bypass })
+                    await startNetworkDetection()
+                  }}
+                />
               </SettingItem>
               <EditableList items={bypass} onChange={(list) => setBypass(list as string[])} />
             </>
@@ -284,17 +274,10 @@ const BehaviorSettings: React.FC<Props> = ({
             contentAlign="end"
             title={tr('Use direct connections on specified Wi-Fi SSIDs')}
           >
-            {pauseSSIDInput.join('') !== pauseSSIDArray.join('') && (
-              <Button
-                size="sm"
-                variant="primary"
-                onPress={() => {
-                  patchAppConfig({ pauseSSID: pauseSSIDInput })
-                }}
-              >
-                {tr('Confirm')}
-              </Button>
-            )}
+            <PendingFieldAction
+              isVisible={pauseSSIDInput.join('') !== pauseSSIDArray.join('')}
+              onPress={() => patchAppConfig({ pauseSSID: pauseSSIDInput })}
+            />
           </SettingItem>
           <EditableList
             items={pauseSSIDInput}

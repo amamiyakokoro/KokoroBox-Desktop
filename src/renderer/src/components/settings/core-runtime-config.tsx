@@ -205,7 +205,7 @@ const CoreRuntimeConfig: React.FC<Props> = ({
               <KokoSelect
                 aria-label={tr('Core version')}
                 variant="secondary"
-                className="w-37.5"
+                controlWidth="select"
                 value={core}
                 options={[
                   {
@@ -236,7 +236,7 @@ const CoreRuntimeConfig: React.FC<Props> = ({
               <KokoSelect
                 aria-label={tr('System core path')}
                 variant="secondary"
-                className="w-87.5"
+                controlWidth="path"
                 value={appConfig?.systemCorePath || ''}
                 options={
                   loadingPaths
@@ -264,7 +264,7 @@ const CoreRuntimeConfig: React.FC<Props> = ({
             <KokoSelect
               aria-label={tr('Core process priority')}
               variant="secondary"
-              className="w-37.5"
+              controlWidth="select"
               value={mihomoCpuPriority}
               options={[
                 { id: 'PRIORITY_HIGHEST', label: tr('Real time') },

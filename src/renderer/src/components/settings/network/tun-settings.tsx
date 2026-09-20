@@ -177,14 +177,20 @@ const Tun: React.FC<Props> = ({ embedded = false }) => {
               <SettingItem title={tr('TUN interface name')} divider>
                 <Input
                   size="sm"
-                  className="w-25"
+                  controlWidth="short"
                   value={values.device}
                   onValueChange={(v) => {
                     setValues({ ...values, device: v })
                   }}
                 />
               </SettingItem>
-              <SettingItem title={tr('Strict routing')} divider>
+              <SettingItem
+                title={tr('Strict routing')}
+                help={tr(
+                  'Prevents traffic from bypassing the TUN routing table on supported platforms.'
+                )}
+                divider
+              >
                 <Switch
                   size="sm"
                   isSelected={values.strictRoute}
@@ -201,7 +207,11 @@ const Tun: React.FC<Props> = ({ embedded = false }) => {
               </SettingItem>
             </>
           )}
-          <SettingItem title={tr('Configure routes automatically')} divider>
+          <SettingItem
+            title={tr('Configure routes automatically')}
+            help={tr('Adds the routes required to send system traffic through TUN.')}
+            divider
+          >
             <Switch
               size="sm"
               isSelected={values.autoRoute}
@@ -217,7 +227,11 @@ const Tun: React.FC<Props> = ({ embedded = false }) => {
             </Switch>
           </SettingItem>
           {platform === 'linux' && (
-            <SettingItem title={tr('Configure TCP redirection automatically')} divider>
+            <SettingItem
+              title={tr('Configure TCP redirection automatically')}
+              help={tr('Configures TCP redirection rules automatically on Linux.')}
+              divider
+            >
               <Switch
                 size="sm"
                 isSelected={values.autoRedirect}
@@ -233,7 +247,10 @@ const Tun: React.FC<Props> = ({ embedded = false }) => {
               </Switch>
             </SettingItem>
           )}
-          <SettingItem title={tr('Select outbound interface automatically')}>
+          <SettingItem
+            title={tr('Select outbound interface automatically')}
+            help={tr('Detects the active outbound interface when the network changes.')}
+          >
             <Switch
               size="sm"
               isSelected={values.autoDetectInterface}
@@ -266,11 +283,17 @@ const Tun: React.FC<Props> = ({ embedded = false }) => {
               </Switch.Content>
             </Switch>
           </SettingItem>
-          <SettingItem title="MTU" divider>
+          <SettingItem
+            title="MTU"
+            help={tr(
+              'Maximum packet size for the TUN interface. Keep the default unless your network requires another value.'
+            )}
+            divider
+          >
             <Input
               size="sm"
               type="number"
-              className="w-25"
+              controlWidth="number"
               value={values.mtu.toString()}
               min={1}
               onValueChange={(v) => {
@@ -281,10 +304,14 @@ const Tun: React.FC<Props> = ({ embedded = false }) => {
               }}
             />
           </SettingItem>
-          <SettingItem title={tr('DNS hijacking targets, separated by commas')} divider>
+          <SettingItem
+            title={tr('DNS hijacking targets, separated by commas')}
+            help={tr('Intercepts DNS traffic sent to these targets and forwards it to Mihomo.')}
+            divider
+          >
             <Input
               size="sm"
-              className="w-[50%]"
+              controlWidth="full"
               value={values.dnsHijack.join(',')}
               onValueChange={(v) => {
                 const arr = v !== '' ? v.split(',') : []

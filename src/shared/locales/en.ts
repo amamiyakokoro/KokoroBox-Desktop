@@ -1427,5 +1427,36 @@ export const messages: Readonly<Record<string, string>> = {
   'Example: tls://1.1.1.1': 'Example: tls://1.1.1.1',
   'Invalid update version format': 'Invalid update version format',
   'The update version does not match its release tag':
-    'The update version does not match its release tag'
+    'The update version does not match its release tag',
+  'Click a shortcut field and press a new key combination. Press Backspace to clear it.':
+    'Click a shortcut field and press a new key combination. Press Backspace to clear it.',
+  'Used to encrypt synchronized configuration.': 'Used to encrypt synchronized configuration.',
+  'Required to decrypt synchronized configuration. Keep this key private.':
+    'Required to decrypt synchronized configuration. Keep this key private.',
+  'Stable receives tested releases. Rolling receives newer builds more frequently.':
+    'Stable receives tested releases. Rolling receives newer builds more frequently.',
+  'Manual configures a fixed proxy endpoint. PAC uses a script to decide which requests use the proxy.':
+    'Manual configures a fixed proxy endpoint. PAC uses a script to decide which requests use the proxy.',
+  'Prevents traffic from bypassing the TUN routing table on supported platforms.':
+    'Prevents traffic from bypassing the TUN routing table on supported platforms.',
+  'Adds the routes required to send system traffic through TUN.':
+    'Adds the routes required to send system traffic through TUN.',
+  'Configures TCP redirection rules automatically on Linux.':
+    'Configures TCP redirection rules automatically on Linux.',
+  'Detects the active outbound interface when the network changes.':
+    'Detects the active outbound interface when the network changes.',
+  'Maximum packet size for the TUN interface. Keep the default unless your network requires another value.':
+    'Maximum packet size for the TUN interface. Keep the default unless your network requires another value.',
+  'Intercepts DNS traffic sent to these targets and forwards it to Mihomo.':
+    'Intercepts DNS traffic sent to these targets and forwards it to Mihomo.',
+  'Replaces the original destination with the domain discovered by protocol sniffing.':
+    'Replaces the original destination with the domain discovered by protocol sniffing.',
+  'Uses existing DNS mappings to recover domains for IP connections.':
+    'Uses existing DNS mappings to recover domains for IP connections.',
+  'Attempts protocol sniffing when an IP connection has no DNS mapping.':
+    'Attempts protocol sniffing when an IP connection has no DNS mapping.',
+  'Anti-pollution applies a curated preset. Custom keeps the DNS values below fully editable.':
+    'Anti-pollution applies a curated preset. Custom keeps the DNS values below fully editable.',
+  'Fake IP improves domain-based routing. Real IP resolves normally. Remove mapping disables enhanced mapping.':
+    'Fake IP improves domain-based routing. Real IP resolves normally. Remove mapping disables enhanced mapping.'
 }

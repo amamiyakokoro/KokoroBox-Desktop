@@ -8,12 +8,13 @@ type KokoTextFieldClassNames = {
   inputWrapper?: string
 }
 
-export type KokoControlWidth = 'number' | 'short' | 'select' | 'url' | 'full'
+export type KokoControlWidth = 'number' | 'short' | 'select' | 'path' | 'url' | 'full'
 
 const controlWidthClassNames: Record<KokoControlWidth, string> = {
   number: 'w-32 max-w-full',
   short: 'w-full max-w-72',
   select: 'w-56 max-w-full',
+  path: 'w-full max-w-96',
   url: 'w-full max-w-120',
   full: 'w-full'
 }

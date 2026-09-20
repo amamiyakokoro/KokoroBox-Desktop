@@ -153,7 +153,13 @@ const GeneralConfig: React.FC = () => {
             </Switch.Content>
           </Switch>
         </SettingItem>
-        <SettingItem contentAlign="end" title={tr('Update channel')}>
+        <SettingItem
+          contentAlign="end"
+          title={tr('Update channel')}
+          help={tr(
+            'Stable receives tested releases. Rolling receives newer builds more frequently.'
+          )}
+        >
           <KokoSegmentedControl
             ariaLabel={tr('Update channel')}
             selectedKey={updateChannel}

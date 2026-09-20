@@ -1384,5 +1384,36 @@ export const messages: Readonly<Record<string, string>> = {
   'Example: https://dns.alidns.com/dns-query': '例：https://dns.alidns.com/dns-query',
   'Example: tls://1.1.1.1': '例：tls://1.1.1.1',
   'Invalid update version format': '更新版本格式无效',
-  'The update version does not match its release tag': '更新版本与发布标签不匹配'
+  'The update version does not match its release tag': '更新版本与发布标签不匹配',
+  'Click a shortcut field and press a new key combination. Press Backspace to clear it.':
+    '点击快捷键字段并按下新的按键组合；按 Backspace 可清除。',
+  'Used to encrypt synchronized configuration.': '用于加密同步的设置。',
+  'Required to decrypt synchronized configuration. Keep this key private.':
+    '解密同步设置所必需。请妥善保管，不要分享此密钥。',
+  'Stable receives tested releases. Rolling receives newer builds more frequently.':
+    '稳定版提供经过测试的版本；滚动版会更频繁地获取较新的构建。',
+  'Manual configures a fixed proxy endpoint. PAC uses a script to decide which requests use the proxy.':
+    '手动模式使用固定代理端点；PAC 由脚本决定哪些请求使用代理。',
+  'Prevents traffic from bypassing the TUN routing table on supported platforms.':
+    '在支持的平台上防止流量绕过 TUN 路由表。',
+  'Adds the routes required to send system traffic through TUN.':
+    '自动添加让系统流量通过 TUN 所需的路由。',
+  'Configures TCP redirection rules automatically on Linux.':
+    '在 Linux 上自动设置 TCP 重定向规则。',
+  'Detects the active outbound interface when the network changes.':
+    '网络变化时自动检测当前使用的出口接口。',
+  'Maximum packet size for the TUN interface. Keep the default unless your network requires another value.':
+    'TUN 接口的最大数据包大小。除非网络环境需要，否则请保留默认值。',
+  'Intercepts DNS traffic sent to these targets and forwards it to Mihomo.':
+    '拦截发送到这些目标的 DNS 流量，并转交给 Mihomo。',
+  'Replaces the original destination with the domain discovered by protocol sniffing.':
+    '使用协议嗅探得到的域名替换原始连接目标。',
+  'Uses existing DNS mappings to recover domains for IP connections.':
+    '使用现有 DNS 映射，还原 IP 连接的域名。',
+  'Attempts protocol sniffing when an IP connection has no DNS mapping.':
+    '当 IP 连接没有 DNS 映射时，尝试进行协议嗅探。',
+  'Anti-pollution applies a curated preset. Custom keeps the DNS values below fully editable.':
+    '防污染模式会应用整理过的预设值；自定义模式则保留下方 DNS 设置的完整编辑能力。',
+  'Fake IP improves domain-based routing. Real IP resolves normally. Remove mapping disables enhanced mapping.':
+    'Fake IP 可增强域名分流；真实 IP 使用常规解析；移除映射会停用增强映射。'
 }

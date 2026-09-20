@@ -2,6 +2,7 @@ import { tr } from '../../../../shared/i18n'
 import { Button } from '@heroui/react'
 import React, { type ReactNode } from 'react'
 import { SettingCardModeProvider } from './base-setting-card'
+import SettingsSection from './base-settings-section'
 
 interface FeatureSettingsLayoutProps {
   children: ReactNode
@@ -49,15 +50,14 @@ export const FeatureSettingsSection: React.FC<FeatureSettingsSectionProps> = ({
   description,
   children
 }) => (
-  <section className="feature-settings-section px-3 py-1.5 first:pt-1.5">
-    <header className="px-1 pb-1.5 pt-0.5">
-      <h2 className="text-base font-semibold leading-6 text-foreground">{title}</h2>
-      {description && <p className="mt-0.5 text-xs leading-4 text-foreground-500">{description}</p>}
-    </header>
-    <div className="feature-settings-section__content border-t border-divider px-1 py-0.5">
-      {children}
-    </div>
-  </section>
+  <SettingsSection
+    className="feature-settings-section"
+    contentClassName="feature-settings-section__content"
+    description={description}
+    title={title}
+  >
+    {children}
+  </SettingsSection>
 )
 
 const FeatureSettingsLayout: React.FC<FeatureSettingsLayoutProps> = ({ children, action }) => (

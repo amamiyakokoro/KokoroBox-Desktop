@@ -132,7 +132,7 @@ const AdvancedSetting: React.FC<AdvancedSettingProps> = ({ config, onChange }) =
         <Input
           size="sm"
           type="number"
-          className="w-25"
+          controlWidth="number"
           value={interval.toString()}
           min={0}
           onValueChange={(v) => onChange({ 'keep-alive-interval': parseInt(v) || 0 })}
@@ -142,7 +142,7 @@ const AdvancedSetting: React.FC<AdvancedSettingProps> = ({ config, onChange }) =
         <Input
           size="sm"
           type="number"
-          className="w-25"
+          controlWidth="number"
           value={idle.toString()}
           min={0}
           onValueChange={(v) => onChange({ 'keep-alive-idle': parseInt(v) || 0 })}

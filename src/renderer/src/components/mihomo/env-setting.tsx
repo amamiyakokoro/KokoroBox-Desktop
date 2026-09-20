@@ -1,6 +1,6 @@
 import { tr } from '../../../../shared/i18n'
 import React, { useState } from 'react'
-import { Button, Switch } from '@heroui/react'
+import { Switch } from '@heroui/react'
 import SettingCard from '../base/base-setting-card'
 import SettingItem from '../base/base-setting-item'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
@@ -9,6 +9,7 @@ import EditableList from '../base/base-list-editor'
 import { platform } from '@renderer/utils/init'
 import { notify } from '@renderer/utils/notification'
 import PubSub from 'pubsub-js'
+import PendingFieldAction from '../base/base-pending-field-action'
 
 const EnvSetting: React.FC = () => {
   const { appConfig, patchAppConfig } = useAppConfig()
@@ -96,17 +97,10 @@ const EnvSetting: React.FC = () => {
         </SettingItem>
       )}
       <SettingItem contentAlign="end" title={tr('Trusted path')}>
-        {safePathsInput.join('') != safePaths.join('') && (
-          <Button
-            size="sm"
-            variant="primary"
-            onPress={() => {
-              handleConfigChangeWithRestart('safePaths', safePathsInput)
-            }}
-          >
-            {tr('Confirm')}
-          </Button>
-        )}
+        <PendingFieldAction
+          isVisible={safePathsInput.join('') != safePaths.join('')}
+          onPress={() => handleConfigChangeWithRestart('safePaths', safePathsInput)}
+        />
       </SettingItem>
       <EditableList
         items={safePathsInput}

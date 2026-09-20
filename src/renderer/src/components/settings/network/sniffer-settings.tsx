@@ -156,7 +156,13 @@ const Sniffer: React.FC<Props> = ({ embedded = false }) => {
               </Switch.Content>
             </Switch>
           </SettingItem>
-          <SettingItem title={tr('Override connection address')} divider>
+          <SettingItem
+            title={tr('Override connection address')}
+            help={tr(
+              'Replaces the original destination with the domain discovered by protocol sniffing.'
+            )}
+            divider
+          >
             <Switch
               size="sm"
               isSelected={values.overrideDestination}
@@ -182,7 +188,11 @@ const Sniffer: React.FC<Props> = ({ embedded = false }) => {
               </Switch.Content>
             </Switch>
           </SettingItem>
-          <SettingItem title={tr('Sniff real IP mappings')} divider>
+          <SettingItem
+            title={tr('Sniff real IP mappings')}
+            help={tr('Uses existing DNS mappings to recover domains for IP connections.')}
+            divider
+          >
             <Switch
               size="sm"
               isSelected={values.forceDNSMapping}
@@ -197,7 +207,10 @@ const Sniffer: React.FC<Props> = ({ embedded = false }) => {
               </Switch.Content>
             </Switch>
           </SettingItem>
-          <SettingItem title={tr('Sniff unmapped IP addresses')}>
+          <SettingItem
+            title={tr('Sniff unmapped IP addresses')}
+            help={tr('Attempts protocol sniffing when an IP connection has no DNS mapping.')}
+          >
             <Switch
               size="sm"
               isSelected={values.parsePureIP}
@@ -218,7 +231,7 @@ const Sniffer: React.FC<Props> = ({ embedded = false }) => {
           <SettingItem title={tr('HTTP sniffing ports')} divider>
             <Input
               size="sm"
-              className="w-[50%]"
+              controlWidth="full"
               placeholder={tr('Port numbers, separated by commas')}
               value={values.sniff.HTTP?.ports.join(',')}
               onValueChange={(v) => handleSniffPortChange('HTTP', v)}
@@ -227,7 +240,7 @@ const Sniffer: React.FC<Props> = ({ embedded = false }) => {
           <SettingItem title={tr('TLS sniffing ports')} divider>
             <Input
               size="sm"
-              className="w-[50%]"
+              controlWidth="full"
               placeholder={tr('Port numbers, separated by commas')}
               value={values.sniff.TLS?.ports.join(',')}
               onValueChange={(v) => handleSniffPortChange('TLS', v)}
@@ -236,7 +249,7 @@ const Sniffer: React.FC<Props> = ({ embedded = false }) => {
           <SettingItem title={tr('QUIC sniffing ports')}>
             <Input
               size="sm"
-              className="w-[50%]"
+              controlWidth="full"
               placeholder={tr('Port numbers, separated by commas')}
               value={values.sniff.QUIC?.ports.join(',')}
               onValueChange={(v) => handleSniffPortChange('QUIC', v)}

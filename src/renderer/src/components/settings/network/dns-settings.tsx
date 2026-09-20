@@ -301,7 +301,13 @@ const DNS: React.FC<Props> = ({ embedded = false }) => {
               </Switch.Content>
             </Switch>
           </SettingItem>
-          <SettingItem title={tr('DNS policy')} divider>
+          <SettingItem
+            title={tr('DNS policy')}
+            help={tr(
+              'Anti-pollution applies a curated preset. Custom keeps the DNS values below fully editable.'
+            )}
+            divider
+          >
             <KokoSegmentedControl
               ariaLabel={tr('DNS policy')}
               selectedKey={isAntiPollutionPreset ? 'anti-pollution' : 'custom'}
@@ -324,7 +330,12 @@ const DNS: React.FC<Props> = ({ embedded = false }) => {
               }}
             />
           </SettingItem>
-          <SettingItem title={tr('Domain mapping mode')}>
+          <SettingItem
+            title={tr('Domain mapping mode')}
+            help={tr(
+              'Fake IP improves domain-based routing. Real IP resolves normally. Remove mapping disables enhanced mapping.'
+            )}
+          >
             <KokoSegmentedControl
               ariaLabel={tr('Domain mapping mode')}
               selectedKey={values.enhancedMode}

@@ -1,8 +1,10 @@
 import React, { createContext, useContext } from 'react'
 import { Disclosure, Surface } from '@heroui/react'
+import SettingsSection from './base-settings-section'
 
 interface Props {
   header?: string
+  description?: React.ReactNode
   children?: React.ReactNode
   className?: string
 }
@@ -12,25 +14,19 @@ const SettingCardCollapsibleContext = createContext(true)
 export const SettingCardModeProvider = SettingCardCollapsibleContext.Provider
 
 const SettingCard: React.FC<Props> = (props) => {
-  const { header, children, className } = props
+  const { header, description, children, className } = props
   const collapsible = useContext(SettingCardCollapsibleContext)
 
   if (!collapsible) {
     return (
-      <section
-        className={`${className || ''} settings-section px-3 py-1.5 first:pt-1.5`}
-        data-setting-label={header}
-        tabIndex={header ? -1 : undefined}
+      <SettingsSection
+        className={className}
+        description={description}
+        settingLabel={header}
+        title={header}
       >
-        {header && (
-          <h2 className="settings-section__heading px-1 pb-1.5 pt-0.5 text-base font-semibold leading-6 text-foreground">
-            {header}
-          </h2>
-        )}
-        <div className="settings-section__content border-t border-divider px-1 py-0.5">
-          {children}
-        </div>
-      </section>
+        {children}
+      </SettingsSection>
     )
   }
 

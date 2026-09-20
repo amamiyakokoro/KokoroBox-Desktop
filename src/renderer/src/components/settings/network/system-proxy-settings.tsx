@@ -253,7 +253,13 @@ const Sysproxy: React.FC<Props> = ({ embedded = false }) => {
               }}
             />
           </SettingItem>
-          <SettingItem title={tr('Proxy mode')} divider={values.mode === 'auto'}>
+          <SettingItem
+            title={tr('Proxy mode')}
+            help={tr(
+              'Manual configures a fixed proxy endpoint. PAC uses a script to decide which requests use the proxy.'
+            )}
+            divider={values.mode === 'auto'}
+          >
             <KokoSegmentedControl
               ariaLabel={tr('Proxy mode')}
               selectedKey={values.mode}

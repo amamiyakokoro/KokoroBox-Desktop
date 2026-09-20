@@ -577,7 +577,7 @@ export const getSettingsCategories = (): SettingsCategoryDefinition[] => {
         }),
         entry('quit-app', tr('Quit app'), tr('Danger zone'), { panel: 'lifecycle' })
       ],
-      content: () => <Actions sections={['version', 'danger']} />
+      content: () => <Actions sections={['version', 'danger']} showVersionHeading={false} />
     }
   ]
 

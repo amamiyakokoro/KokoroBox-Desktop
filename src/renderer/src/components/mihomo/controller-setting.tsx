@@ -231,7 +231,7 @@ const ControllerSetting: React.FC<ControllerSettingProps> = ({
               <KokoSelect
                 aria-label={tr('External UI source')}
                 variant="secondary"
-                className="w-37.5"
+                controlWidth="select"
                 value={externalUiUrlInput}
                 options={[
                   {

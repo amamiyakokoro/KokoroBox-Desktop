@@ -88,7 +88,7 @@ const PortSetting: React.FC<PortSettingProps> = ({ config, onChange, onValidatio
           <Input
             size="sm"
             type="number"
-            className="w-25"
+            controlWidth="number"
             value={mixedPortInput.toString()}
             max={65535}
             min={0}
@@ -104,7 +104,7 @@ const PortSetting: React.FC<PortSettingProps> = ({ config, onChange, onValidatio
           <Input
             size="sm"
             type="number"
-            className="w-25"
+            controlWidth="number"
             value={socksPortInput.toString()}
             max={65535}
             min={0}
@@ -120,7 +120,7 @@ const PortSetting: React.FC<PortSettingProps> = ({ config, onChange, onValidatio
           <Input
             size="sm"
             type="number"
-            className="w-25"
+            controlWidth="number"
             value={httpPortInput.toString()}
             max={65535}
             min={0}
@@ -137,7 +137,7 @@ const PortSetting: React.FC<PortSettingProps> = ({ config, onChange, onValidatio
             <Input
               size="sm"
               type="number"
-              className="w-25"
+              controlWidth="number"
               value={redirPortInput.toString()}
               max={65535}
               min={0}
@@ -155,7 +155,7 @@ const PortSetting: React.FC<PortSettingProps> = ({ config, onChange, onValidatio
             <Input
               size="sm"
               type="number"
-              className="w-25"
+              controlWidth="number"
               value={tproxyPortInput.toString()}
               max={65535}
               min={0}

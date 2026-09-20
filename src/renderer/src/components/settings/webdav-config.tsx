@@ -62,7 +62,7 @@ const WebdavConfig: React.FC = () => {
         <SettingItem contentAlign="end" title={tr('WebDAV URL')} divider>
           <Input
             size="sm"
-            className="w-[60%]"
+            controlWidth="full"
             value={webdav.webdavUrl}
             onValueChange={(v) => {
               setWebdav({ ...webdav, webdavUrl: v })
@@ -73,7 +73,7 @@ const WebdavConfig: React.FC = () => {
         <SettingItem contentAlign="end" title={tr('WebDAV backup directory')} divider>
           <Input
             size="sm"
-            className="w-[60%]"
+            controlWidth="full"
             value={webdav.webdavDir}
             onValueChange={(v) => {
               setWebdav({ ...webdav, webdavDir: v })
@@ -84,7 +84,7 @@ const WebdavConfig: React.FC = () => {
         <SettingItem contentAlign="end" title={tr('WebDAV username')} divider>
           <Input
             size="sm"
-            className="w-[60%]"
+            controlWidth="full"
             value={webdav.webdavUsername}
             onValueChange={(v) => {
               setWebdav({ ...webdav, webdavUsername: v })
@@ -95,7 +95,7 @@ const WebdavConfig: React.FC = () => {
         <SettingItem contentAlign="end" title={tr('WebDAV password')} divider>
           <Input
             size="sm"
-            className="w-[60%]"
+            controlWidth="full"
             type="password"
             value={webdav.webdavPassword}
             onValueChange={(v) => {

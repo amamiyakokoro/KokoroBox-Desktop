@@ -31,10 +31,12 @@ export type ActionSection = 'application' | 'diagnostics' | 'danger' | 'version'
 
 interface Props {
   sections?: ActionSection[]
+  showVersionHeading?: boolean
 }
 
 const Actions: React.FC<Props> = ({
-  sections = ['application', 'diagnostics', 'version', 'danger']
+  sections = ['application', 'diagnostics', 'version', 'danger'],
+  showVersionHeading = true
 }) => {
   const navigate = useNavigate()
   const [newVersion, setNewVersion] = useState('')
@@ -170,7 +172,7 @@ const Actions: React.FC<Props> = ({
       )}
 
       {sections.includes('version') && (
-        <SettingCard header={tr('Version information')}>
+        <SettingCard header={showVersionHeading ? tr('Version information') : undefined}>
           <SettingItem contentAlign="end" title={tr('App version')}>
             <div className="text-sm tabular-nums text-foreground-500">v{version}</div>
           </SettingItem>

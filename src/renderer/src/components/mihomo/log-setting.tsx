@@ -1,7 +1,8 @@
 import { tr } from '../../../../shared/i18n'
 import { useEffect, useState } from 'react'
-import { Button, Switch } from '@heroui/react'
+import { Switch } from '@heroui/react'
 import { KokoTextField as Input } from '../base/koko-form'
+import PendingFieldAction from '../base/base-pending-field-action'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import SettingCard from '../base/base-setting-card'
 import SettingItem from '../base/base-setting-item'
@@ -56,19 +57,7 @@ const LogSetting: React.FC = () => {
         </Switch>
       </SettingItem>
       <SettingItem contentAlign="end" title={tr('Log retention days')} divider>
-        <div className="flex">
-          {saveLogs && maxLogDaysInput !== maxLogDays && (
-            <Button
-              size="sm"
-              variant="primary"
-              className="mr-2"
-              onPress={() => {
-                patchAppConfig({ maxLogDays: maxLogDaysInput })
-              }}
-            >
-              {tr('Confirm')}
-            </Button>
-          )}
+        <div className="flex items-center justify-end gap-2">
           <Input
             size="sm"
             type="number"
@@ -81,6 +70,11 @@ const LogSetting: React.FC = () => {
               setMaxLogDaysInput(Math.max(parseInt(value) || 0, 1))
             }}
           />
+          <PendingFieldAction
+            isDisabled={!saveLogs}
+            isVisible={saveLogs && maxLogDaysInput !== maxLogDays}
+            onPress={() => patchAppConfig({ maxLogDays: maxLogDaysInput })}
+          />
         </div>
       </SettingItem>
       <SettingItem
@@ -91,19 +85,7 @@ const LogSetting: React.FC = () => {
         )}
         divider
       >
-        <div className="flex">
-          {saveLogs && maxLogFileSizeMBInput !== maxLogFileSizeMB && (
-            <Button
-              size="sm"
-              variant="primary"
-              className="mr-2"
-              onPress={() => {
-                patchAppConfig({ maxLogFileSizeMB: maxLogFileSizeMBInput })
-              }}
-            >
-              {tr('Confirm')}
-            </Button>
-          )}
+        <div className="flex items-center justify-end gap-2">
           <Input
             size="sm"
             type="number"
@@ -116,6 +98,11 @@ const LogSetting: React.FC = () => {
               setMaxLogFileSizeMBInput(Math.max(parseInt(value) || 0, 1))
             }}
           />
+          <PendingFieldAction
+            isDisabled={!saveLogs}
+            isVisible={saveLogs && maxLogFileSizeMBInput !== maxLogFileSizeMB}
+            onPress={() => patchAppConfig({ maxLogFileSizeMB: maxLogFileSizeMBInput })}
+          />
         </div>
       </SettingItem>
       <SettingItem
@@ -123,19 +110,7 @@ const LogSetting: React.FC = () => {
         title={tr('Live log entry limit')}
         help={tr('Only affects entries retained in the live log view, not local log files')}
       >
-        <div className="flex">
-          {maxLogEntriesInput !== maxLogEntries && (
-            <Button
-              size="sm"
-              variant="primary"
-              className="mr-2"
-              onPress={() => {
-                patchAppConfig({ maxLogEntries: maxLogEntriesInput })
-              }}
-            >
-              {tr('Confirm')}
-            </Button>
-          )}
+        <div className="flex items-center justify-end gap-2">
           <Input
             size="sm"
             type="number"
@@ -146,6 +121,10 @@ const LogSetting: React.FC = () => {
             onValueChange={(value) => {
               setMaxLogEntriesInput(Math.max(parseInt(value) || 0, 1))
             }}
+          />
+          <PendingFieldAction
+            isVisible={maxLogEntriesInput !== maxLogEntries}
+            onPress={() => patchAppConfig({ maxLogEntries: maxLogEntriesInput })}
           />
         </div>
       </SettingItem>
