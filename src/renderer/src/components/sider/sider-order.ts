@@ -1,6 +1,6 @@
 export type SiderGroup = 'quick' | 'account' | 'status' | 'navigation'
 
-const siderGroupOrder: SiderGroup[] = ['quick', 'account', 'status', 'navigation']
+const siderGroupOrder: SiderGroup[] = ['account', 'quick', 'status', 'navigation']
 
 export const siderKeysByGroup: Record<SiderGroup, readonly string[]> = {
   quick: ['sysproxy', 'tun', 'mihomo', 'dns', 'sniff'],
