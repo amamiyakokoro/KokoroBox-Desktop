@@ -558,9 +558,20 @@ export const messages: Readonly<Record<string, string>> = {
   'Core settings': '内核设置',
   'Invalid core path': '内核路径错误',
   'Core process priority': '内核进程优先级',
+  'Higher priorities may improve responsiveness under load, but real-time priority can reduce overall system responsiveness.':
+    '较高的优先级可改善高负载时的响应速度，但实时优先级可能降低整体系统响应能力。',
   'Built-in release': '内置正式版',
   'Built-in stable': '内置稳定版',
   'Built-in preview': '内置预览版',
+  'Recommended for most users': '建议大多数用户选择',
+  'Newest features; may be less stable': '包含最新功能，但稳定性可能较低',
+  'Use an externally installed Mihomo binary': '使用系统中另外安装的 Mihomo 可执行文件',
+  'Direct run starts the core with elevated permissions. System service keeps privileged features available in the background.':
+    '直接运行会以提升的权限启动内核；系统服务可让需要权限的功能在后台持续可用。',
+  'Automatic is recommended. Sandbox isolates the service core; Start directly runs it without sandboxing.':
+    '建议使用自动模式。沙盒会隔离服务内核；直接启动则不使用沙盒。',
+  'Post Up waits for the configured startup hook. Log parsing detects readiness from core logs.':
+    'Post Up 会等待配置的启动钩子；日志解析则从内核日志判断是否已就绪。',
   Cool: '冷色',
   'Outbound interface': '出站接口',
   'Outbound mode ({0})': '出站模式 ({0})',
@@ -1214,6 +1225,8 @@ export const messages: Readonly<Record<string, string>> = {
   'Subscription import failed': '订阅导入失败',
   'Subscription imported': '订阅导入成功',
   'Subscription user agent': '订阅拉取 UA',
+  'Leave empty to use the default user agent. Some providers return different content based on this value.':
+    '留空时使用默认 User Agent；部分订阅服务会根据此值返回不同内容。',
   'Invalid subscription format: cannot parse a valid configuration\n':
     '订阅格式错误，无法解析为有效的配置文件\n',
   Subscriptions: '订阅管理',
@@ -1231,6 +1244,8 @@ export const messages: Readonly<Record<string, string>> = {
   'Use this icon in the tray. PNG, JPG and WebP images are cropped before saving.':
     '设置后托盘会使用此图标。PNG、JPG、WebP 会先裁剪后保存。',
   'Configuration method': '设置方式',
+  'Run command applies proxy settings directly. Service mode uses KokoroBox Service for privileged and persistent changes.':
+    '执行命令会直接应用代理设置；服务模式则通过 KokoroBox Service 执行需要权限且持续生效的更改。',
   'Access key': '访问密钥',
   'Certificate fingerprint': '证书指纹',
   'Certificate fingerprint mismatch': '证书指纹不匹配',

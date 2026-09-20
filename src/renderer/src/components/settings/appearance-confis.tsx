@@ -1,6 +1,6 @@
 import { tr } from '../../../../shared/i18n'
 import React, { useEffect, useState, useRef } from 'react'
-import { Button, Switch, Tooltip } from '@heroui/react'
+import { Button, Switch } from '@heroui/react'
 import SettingCard from '../base/base-setting-card'
 import SettingItem from '../base/base-setting-item'
 import { KokoSelect } from '../base/koko-form'
@@ -26,7 +26,7 @@ import {
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { platform } from '@renderer/utils/init'
 import { useTheme } from 'next-themes'
-import { IoIosHelpCircle, IoMdCloudDownload } from 'react-icons/io'
+import { IoMdCloudDownload } from 'react-icons/io'
 import { MdEditDocument } from 'react-icons/md'
 import CSSEditorModal from './css-editor-modal'
 import TrayIconCropModal from './tray-icon-crop-modal'
@@ -101,18 +101,7 @@ const AppearanceConfig: React.FC = () => {
         <SettingItem
           contentAlign="end"
           title={tr('Show floating window')}
-          actions={
-            <Tooltip delay={0}>
-              <Tooltip.Trigger>
-                <Button isIconOnly size="sm" variant="ghost">
-                  <IoIosHelpCircle className="text-lg" />
-                </Button>
-              </Tooltip.Trigger>
-              <Tooltip.Content>
-                {tr('The floating window may crash the app unless GPU acceleration is disabled')}
-              </Tooltip.Content>
-            </Tooltip>
-          }
+          help={tr('The floating window may crash the app unless GPU acceleration is disabled')}
           divider
         >
           <Switch
@@ -192,20 +181,9 @@ const AppearanceConfig: React.FC = () => {
           <SettingItem
             contentAlign="end"
             title={tr('Custom tray icon')}
-            actions={
-              <Tooltip delay={0}>
-                <Tooltip.Trigger>
-                  <Button isIconOnly size="sm" variant="ghost">
-                    <IoIosHelpCircle className="text-lg" />
-                  </Button>
-                </Tooltip.Trigger>
-                <Tooltip.Content>
-                  {tr(
-                    'Use this icon in the tray. PNG, JPG and WebP images are cropped before saving.'
-                  )}
-                </Tooltip.Content>
-              </Tooltip>
-            }
+            help={tr(
+              'Use this icon in the tray. PNG, JPG and WebP images are cropped before saving.'
+            )}
             divider
           >
             <div className="flex min-w-0 max-w-[65%] items-center justify-end gap-2">
@@ -354,20 +332,9 @@ const AppearanceConfig: React.FC = () => {
           <SettingItem
             contentAlign="end"
             title={tr('Enable window drag area')}
-            actions={
-              <Tooltip delay={0}>
-                <Tooltip.Trigger>
-                  <Button isIconOnly size="sm" variant="ghost">
-                    <IoIosHelpCircle className="text-lg" />
-                  </Button>
-                </Tooltip.Trigger>
-                <Tooltip.Content>
-                  {tr(
-                    'Drag the window using empty areas in page headers. Useful when the system does not provide a draggable title bar.'
-                  )}
-                </Tooltip.Content>
-              </Tooltip>
-            }
+            help={tr(
+              'Drag the window using empty areas in page headers. Useful when the system does not provide a draggable title bar.'
+            )}
             divider
           >
             <Switch

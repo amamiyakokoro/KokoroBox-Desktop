@@ -18,16 +18,16 @@ const SettingCard: React.FC<Props> = (props) => {
   if (!collapsible) {
     return (
       <section
-        className={`${className || ''} settings-section px-3 py-2 first:pt-2`}
+        className={`${className || ''} settings-section px-3 py-1.5 first:pt-1.5`}
         data-setting-label={header}
         tabIndex={header ? -1 : undefined}
       >
         {header && (
-          <h2 className="settings-section__heading px-1 pb-2 pt-1 text-base font-semibold leading-6 text-foreground">
+          <h2 className="settings-section__heading px-1 pb-1.5 pt-0.5 text-base font-semibold leading-6 text-foreground">
             {header}
           </h2>
         )}
-        <div className="settings-section__content border-t border-divider px-1 py-1">
+        <div className="settings-section__content border-t border-divider px-1 py-0.5">
           {children}
         </div>
       </section>

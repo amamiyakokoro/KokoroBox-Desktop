@@ -1,8 +1,7 @@
 import { tr } from '../../../../shared/i18n'
 import { useEffect, useState } from 'react'
-import { Button, Switch, Tooltip } from '@heroui/react'
+import { Button, Switch } from '@heroui/react'
 import { KokoTextField as Input } from '../base/koko-form'
-import { IoIosHelpCircle } from 'react-icons/io'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import SettingCard from '../base/base-setting-card'
 import SettingItem from '../base/base-setting-item'
@@ -37,20 +36,9 @@ const LogSetting: React.FC = () => {
       <SettingItem
         contentAlign="end"
         title={tr('Save logs')}
-        actions={
-          <Tooltip delay={0}>
-            <Tooltip.Trigger>
-              <Button isIconOnly size="sm" variant="ghost">
-                <IoIosHelpCircle className="text-lg" />
-              </Button>
-            </Tooltip.Trigger>
-            <Tooltip.Content>
-              {tr(
-                'When disabled, logs are no longer written to local files. The live log view still shows the current session'
-              )}
-            </Tooltip.Content>
-          </Tooltip>
-        }
+        help={tr(
+          'When disabled, logs are no longer written to local files. The live log view still shows the current session'
+        )}
         divider
       >
         <Switch
@@ -98,20 +86,9 @@ const LogSetting: React.FC = () => {
       <SettingItem
         contentAlign="end"
         title={tr('Log file size limit')}
-        actions={
-          <Tooltip delay={0}>
-            <Tooltip.Trigger>
-              <Button isIconOnly size="sm" variant="ghost">
-                <IoIosHelpCircle className="text-lg" />
-              </Button>
-            </Tooltip.Trigger>
-            <Tooltip.Content>
-              {tr(
-                'Only affects local log files. The oldest lines are removed when the size limit is exceeded'
-              )}
-            </Tooltip.Content>
-          </Tooltip>
-        }
+        help={tr(
+          'Only affects local log files. The oldest lines are removed when the size limit is exceeded'
+        )}
         divider
       >
         <div className="flex">
@@ -144,18 +121,7 @@ const LogSetting: React.FC = () => {
       <SettingItem
         contentAlign="end"
         title={tr('Live log entry limit')}
-        actions={
-          <Tooltip delay={0}>
-            <Tooltip.Trigger>
-              <Button isIconOnly size="sm" variant="ghost">
-                <IoIosHelpCircle className="text-lg" />
-              </Button>
-            </Tooltip.Trigger>
-            <Tooltip.Content>
-              {tr('Only affects entries retained in the live log view, not local log files')}
-            </Tooltip.Content>
-          </Tooltip>
-        }
+        help={tr('Only affects entries retained in the live log view, not local log files')}
       >
         <div className="flex">
           {maxLogEntriesInput !== maxLogEntries && (

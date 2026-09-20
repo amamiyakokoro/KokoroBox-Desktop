@@ -1,5 +1,5 @@
 import { tr } from '../../../../shared/i18n'
-import { Button, Tooltip } from '@heroui/react'
+import { Button } from '@heroui/react'
 import SettingCard from '../base/base-setting-card'
 import SettingItem from '../base/base-setting-item'
 import {
@@ -13,7 +13,6 @@ import {
 import React, { useEffect, useState } from 'react'
 import UpdaterDrawer from '../updater/updater-drawer'
 import { version } from '@renderer/utils/init'
-import { IoIosHelpCircle } from 'react-icons/io'
 import { startTour } from '@renderer/utils/driver'
 import { useNavigate } from 'react-router-dom'
 import ConfirmModal from '../base/base-confirm'
@@ -151,16 +150,7 @@ const Actions: React.FC<Props> = ({
           <SettingItem
             contentAlign="end"
             title={tr('Clear cache')}
-            actions={
-              <Tooltip delay={0}>
-                <Tooltip.Trigger>
-                  <Button isIconOnly size="sm" variant="ghost">
-                    <IoIosHelpCircle className="text-lg" />
-                  </Button>
-                </Tooltip.Trigger>
-                <Tooltip.Content>{tr('Clear the app renderer cache')}</Tooltip.Content>
-              </Tooltip>
-            }
+            help={tr('Clear the app renderer cache')}
             divider
           >
             <Button size="sm" variant="secondary" onPress={() => localStorage.clear()}>
@@ -170,18 +160,7 @@ const Actions: React.FC<Props> = ({
           <SettingItem
             contentAlign="end"
             title={tr('Create heap snapshot')}
-            actions={
-              <Tooltip delay={0}>
-                <Tooltip.Trigger>
-                  <Button isIconOnly size="sm" variant="ghost">
-                    <IoIosHelpCircle className="text-lg" />
-                  </Button>
-                </Tooltip.Trigger>
-                <Tooltip.Content>
-                  {tr('Create a main-process heap snapshot to diagnose memory issues')}
-                </Tooltip.Content>
-              </Tooltip>
-            }
+            help={tr('Create a main-process heap snapshot to diagnose memory issues')}
           >
             <Button size="sm" variant="secondary" onPress={handleCreateHeapSnapshot}>
               {tr('Create heap snapshot')}
@@ -203,18 +182,7 @@ const Actions: React.FC<Props> = ({
           <SettingItem
             contentAlign="end"
             title={tr('Reset app')}
-            actions={
-              <Tooltip delay={0}>
-                <Tooltip.Trigger>
-                  <Button isIconOnly size="sm" variant="ghost">
-                    <IoIosHelpCircle className="text-lg" />
-                  </Button>
-                </Tooltip.Trigger>
-                <Tooltip.Content>
-                  {tr('Delete all configuration and reset the app')}
-                </Tooltip.Content>
-              </Tooltip>
-            }
+            help={tr('Delete all configuration and reset the app')}
             divider
           >
             <Button size="sm" variant="danger-soft" onPress={() => setConfirmOpen(true)}>
@@ -224,18 +192,7 @@ const Actions: React.FC<Props> = ({
           <SettingItem
             contentAlign="end"
             title={tr('Quit and keep core running')}
-            actions={
-              <Tooltip delay={0}>
-                <Tooltip.Trigger>
-                  <Button isIconOnly size="sm" variant="ghost">
-                    <IoIosHelpCircle className="text-lg" />
-                  </Button>
-                </Tooltip.Trigger>
-                <Tooltip.Content>
-                  {tr('Quit the app completely, leaving only the core process running')}
-                </Tooltip.Content>
-              </Tooltip>
-            }
+            help={tr('Quit the app completely, leaving only the core process running')}
             divider
           >
             <Button size="sm" variant="secondary" onPress={quitWithoutCore}>

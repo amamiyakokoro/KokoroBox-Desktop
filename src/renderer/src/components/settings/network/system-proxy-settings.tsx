@@ -1,5 +1,5 @@
 import { tr } from '../../../../../shared/i18n'
-import { Button, Switch, Tooltip } from '@heroui/react'
+import { Button, Switch } from '@heroui/react'
 import { KokoTextField as Input } from '@renderer/components/base/koko-form'
 import { KokoSegmentedControl } from '@renderer/components/base/base-controls'
 import BasePage from '@renderer/components/base/base-page'
@@ -14,7 +14,6 @@ import { platform } from '@renderer/utils/init'
 import { getAppConfig, openUWPTool, serviceStatus, triggerSysProxy } from '@renderer/utils/ipc'
 import React, { useEffect, useState } from 'react'
 import ByPassEditorModal from '@renderer/components/sysproxy/bypass-editor-modal'
-import { IoIosHelpCircle } from 'react-icons/io'
 import { notify } from '@renderer/utils/notification'
 import { useSettingsSave } from '@renderer/hooks/use-settings-save'
 import { useUnsavedChangesGuard } from '@renderer/hooks/use-unsaved-changes'
@@ -290,6 +289,9 @@ const Sysproxy: React.FC<Props> = ({ embedded = false }) => {
           )}
           <SettingItem
             title={tr('Configuration method')}
+            help={tr(
+              'Run command applies proxy settings directly. Service mode uses KokoroBox Service for privileged and persistent changes.'
+            )}
             divider={platform === 'linux' || values.settingMode === 'service'}
           >
             <KokoSegmentedControl
@@ -313,22 +315,9 @@ const Sysproxy: React.FC<Props> = ({ embedded = false }) => {
           {platform === 'linux' && (
             <SettingItem
               title={tr('Terminal proxy')}
-              actions={
-                <Tooltip delay={0}>
-                  <Tooltip.Trigger>
-                    <Button isIconOnly size="sm" variant="ghost" aria-label={tr('Description')}>
-                      <IoIosHelpCircle className="text-lg" />
-                    </Button>
-                  </Tooltip.Trigger>
-                  <Tooltip.Content>
-                    <div>
-                      {tr(
-                        'Existing terminals do not update automatically after enabling or disabling this setting. Fully close and reopen the terminal; some desktop environments may require signing in again.'
-                      )}
-                    </div>
-                  </Tooltip.Content>
-                </Tooltip>
-              }
+              help={tr(
+                'Existing terminals do not update automatically after enabling or disabling this setting. Fully close and reopen the terminal; some desktop environments may require signing in again.'
+              )}
             >
               <Switch
                 size="sm"
@@ -348,24 +337,9 @@ const Sysproxy: React.FC<Props> = ({ embedded = false }) => {
           {platform !== 'linux' && values.settingMode === 'service' && (
             <SettingItem
               title={tr('Active interfaces only')}
-              actions={
-                <Tooltip delay={0}>
-                  <Tooltip.Trigger>
-                    <Button isIconOnly size="sm" variant="ghost" aria-label={tr('Description')}>
-                      <IoIosHelpCircle className="text-lg" />
-                    </Button>
-                  </Tooltip.Trigger>
-                  <Tooltip.Content>
-                    <>
-                      <div>
-                        {tr(
-                          'Apply the system proxy only to active network interfaces. Requires service mode'
-                        )}
-                      </div>
-                    </>
-                  </Tooltip.Content>
-                </Tooltip>
-              }
+              help={tr(
+                'Apply the system proxy only to active network interfaces. Requires service mode'
+              )}
             >
               <Switch
                 size="sm"
@@ -390,22 +364,9 @@ const Sysproxy: React.FC<Props> = ({ embedded = false }) => {
             {values.settingMode === 'service' && (
               <SettingItem
                 title={tr('System proxy watchdog')}
-                actions={
-                  <Tooltip delay={0}>
-                    <Tooltip.Trigger>
-                      <Button isIconOnly size="sm" variant="ghost" aria-label={tr('Description')}>
-                        <IoIosHelpCircle className="text-lg" />
-                      </Button>
-                    </Tooltip.Trigger>
-                    <Tooltip.Content>
-                      <div>
-                        {tr(
-                          'Restore the system proxy automatically if it is changed. Requires service mode'
-                        )}
-                      </div>
-                    </Tooltip.Content>
-                  </Tooltip>
-                }
+                help={tr(
+                  'Restore the system proxy automatically if it is changed. Requires service mode'
+                )}
                 divider={values.guard || values.mode === 'manual'}
               >
                 <Switch
@@ -426,18 +387,7 @@ const Sysproxy: React.FC<Props> = ({ embedded = false }) => {
             {values.settingMode === 'service' && values.guard && (
               <SettingItem
                 title={tr('Watchdog notifications')}
-                actions={
-                  <Tooltip delay={0}>
-                    <Tooltip.Trigger>
-                      <Button isIconOnly size="sm" variant="ghost" aria-label={tr('Description')}>
-                        <IoIosHelpCircle className="text-lg" />
-                      </Button>
-                    </Tooltip.Trigger>
-                    <Tooltip.Content>
-                      <div>{tr('Notify when system proxy restoration succeeds or fails')}</div>
-                    </Tooltip.Content>
-                  </Tooltip>
-                }
+                help={tr('Notify when system proxy restoration succeeds or fails')}
                 divider={values.mode === 'manual'}
               >
                 <Switch

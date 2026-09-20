@@ -561,9 +561,20 @@ export const messages: Readonly<Record<string, string>> = {
   'Core settings': '核心設定',
   'Invalid core path': '核心路徑錯誤',
   'Core process priority': '核心程序優先順序',
+  'Higher priorities may improve responsiveness under load, but real-time priority can reduce overall system responsiveness.':
+    '較高的優先順序可改善高負載時的回應速度，但即時優先順序可能降低整體系統回應能力。',
   'Built-in release': '內建正式版',
   'Built-in stable': '內建穩定版',
   'Built-in preview': '內建預覽版',
+  'Recommended for most users': '建議大多數使用者選用',
+  'Newest features; may be less stable': '包含最新功能，但穩定性可能較低',
+  'Use an externally installed Mihomo binary': '使用系統中另外安裝的 Mihomo 執行檔',
+  'Direct run starts the core with elevated permissions. System service keeps privileged features available in the background.':
+    '直接執行會以提高的權限啟動核心；系統服務可讓需要權限的功能在背景持續可用。',
+  'Automatic is recommended. Sandbox isolates the service core; Start directly runs it without sandboxing.':
+    '建議使用自動模式。沙盒會隔離服務核心；直接啟動則不使用沙盒。',
+  'Post Up waits for the configured startup hook. Log parsing detects readiness from core logs.':
+    'Post Up 會等待設定的啟動掛鉤；日誌解析則從核心日誌判斷是否已就緒。',
   Cool: '冷色',
   'Outbound interface': '出站介面',
   'Outbound mode ({0})': '出站模式 ({0})',
@@ -1217,6 +1228,8 @@ export const messages: Readonly<Record<string, string>> = {
   'Subscription import failed': '訂閱匯入失敗',
   'Subscription imported': '訂閱匯入成功',
   'Subscription user agent': '訂閱下載 UA',
+  'Leave empty to use the default user agent. Some providers return different content based on this value.':
+    '留空時使用預設 User Agent；部分訂閱服務會依此值回傳不同內容。',
   'Invalid subscription format: cannot parse a valid configuration\n':
     '訂閱格式錯誤，無法解析為有效的設定檔案\n',
   Subscriptions: '訂閱管理',
@@ -1234,6 +1247,8 @@ export const messages: Readonly<Record<string, string>> = {
   'Use this icon in the tray. PNG, JPG and WebP images are cropped before saving.':
     '設定後系統匣會使用此圖示。PNG、JPG、WebP 會先裁切後儲存。',
   'Configuration method': '設定方式',
+  'Run command applies proxy settings directly. Service mode uses KokoroBox Service for privileged and persistent changes.':
+    '執行命令會直接套用代理設定；服務模式則透過 KokoroBox Service 執行需要權限且持續生效的變更。',
   'Access key': '存取金鑰',
   'Certificate fingerprint': '憑證指紋',
   'Certificate fingerprint mismatch': '憑證指紋不匹配',

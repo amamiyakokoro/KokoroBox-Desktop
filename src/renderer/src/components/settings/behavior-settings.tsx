@@ -8,7 +8,6 @@ import { KokoSegmentedControl } from '../base/base-controls'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { copyEnv, startNetworkDetection, stopNetworkDetection } from '@renderer/utils/ipc'
 import { platform } from '@renderer/utils/init'
-import { IoIosHelpCircle } from 'react-icons/io'
 import { BiCopy, BiHide, BiShow } from 'react-icons/bi'
 import EditableList from '../base/base-list-editor'
 import { notify } from '@renderer/utils/notification'
@@ -19,10 +18,12 @@ type SettingsSection = 'integration' | 'background' | 'network'
 
 interface Props {
   sections?: SettingsSection[]
+  showIntegrationHeading?: boolean
 }
 
 const BehaviorSettings: React.FC<Props> = ({
-  sections = ['integration', 'background', 'network']
+  sections = ['integration', 'background', 'network'],
+  showIntegrationHeading = true
 }) => {
   const { appConfig, patchAppConfig } = useAppConfig()
   const {
@@ -53,24 +54,13 @@ const BehaviorSettings: React.FC<Props> = ({
     <>
       {sections.includes('integration') && (
         <>
-          <SettingCard header={tr('Developer integration')}>
+          <SettingCard header={showIntegrationHeading ? tr('Developer integration') : undefined}>
             <SettingItem
               contentAlign="end"
               title="GitHub API Token"
-              actions={
-                <Tooltip delay={0}>
-                  <Tooltip.Trigger>
-                    <Button aria-label={tr('Description')} isIconOnly size="sm" variant="ghost">
-                      <IoIosHelpCircle className="text-lg" />
-                    </Button>
-                  </Tooltip.Trigger>
-                  <Tooltip.Content>
-                    {tr(
-                      'Used for GitHub update checks, downloads and Gist sync. Leave empty for anonymous requests'
-                    )}
-                  </Tooltip.Content>
-                </Tooltip>
-              }
+              help={tr(
+                'Used for GitHub update checks, downloads and Gist sync. Leave empty for anonymous requests'
+              )}
               divider
             >
               <Input
@@ -157,20 +147,9 @@ const BehaviorSettings: React.FC<Props> = ({
           <SettingItem
             contentAlign="end"
             title={tr('Automatic lightweight mode')}
-            actions={
-              <Tooltip delay={0}>
-                <Tooltip.Trigger>
-                  <Button isIconOnly size="sm" variant="ghost">
-                    <IoIosHelpCircle className="text-lg" />
-                  </Button>
-                </Tooltip.Trigger>
-                <Tooltip.Content>
-                  {tr(
-                    'Enter lightweight mode after the window has been closed for the specified time'
-                  )}
-                </Tooltip.Content>
-              </Tooltip>
-            }
+            help={tr(
+              'Enter lightweight mode after the window has been closed for the specified time'
+            )}
             divider
           >
             <Switch
@@ -230,20 +209,9 @@ const BehaviorSettings: React.FC<Props> = ({
           <SettingItem
             contentAlign="end"
             title={tr('Stop core when offline')}
-            actions={
-              <Tooltip delay={0}>
-                <Tooltip.Trigger>
-                  <Button isIconOnly size="sm" variant="ghost">
-                    <IoIosHelpCircle className="text-lg" />
-                  </Button>
-                </Tooltip.Trigger>
-                <Tooltip.Content>
-                  {tr(
-                    'Stop the core when the network disconnects and restart it when connectivity returns'
-                  )}
-                </Tooltip.Content>
-              </Tooltip>
-            }
+            help={tr(
+              'Stop the core when the network disconnects and restart it when connectivity returns'
+            )}
             divider
           >
             <Switch
@@ -339,7 +307,9 @@ const BehaviorSettings: React.FC<Props> = ({
   )
 }
 
-export const IntegrationSettings: React.FC = () => <BehaviorSettings sections={['integration']} />
+export const IntegrationSettings: React.FC = () => (
+  <BehaviorSettings sections={['integration']} showIntegrationHeading={false} />
+)
 
 export const BackgroundBehaviorSettings: React.FC = () => (
   <BehaviorSettings sections={['background']} />

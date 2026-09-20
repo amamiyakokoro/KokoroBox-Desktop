@@ -1,11 +1,10 @@
 import { tr } from '../../../../shared/i18n'
 import React, { useState } from 'react'
-import { Switch, Tooltip } from '@heroui/react'
+import { Switch } from '@heroui/react'
 import SettingItem from '../base/base-setting-item'
 import EditableList from '../base/base-list-editor'
 import { FeatureSettingsSection } from '../base/base-feature-settings'
 import { KokoSelect, KokoTextField as Input } from '../base/koko-form'
-import { MdHelpOutline } from 'react-icons/md'
 import { isValidDnsServer, isValidDomainWildcard } from '@renderer/utils/validate'
 import DnsServerList from './dns-server-list'
 
@@ -126,23 +125,9 @@ const AdvancedDnsSetting: React.FC<AdvancedDnsSettingProps> = ({
         />
         <SettingItem
           title={tr('Apply domain DNS policy to direct DNS')}
-          actions={
-            <Tooltip delay={0}>
-              <Tooltip.Trigger>
-                <span
-                  className="ml-1 inline-flex cursor-help text-foreground-400"
-                  aria-label={tr('Description')}
-                >
-                  <MdHelpOutline />
-                </span>
-              </Tooltip.Trigger>
-              <Tooltip.Content>
-                {tr(
-                  'When enabled, direct traffic still checks the domain DNS policy before using Direct DNS. When disabled, it always uses Direct DNS.'
-                )}
-              </Tooltip.Content>
-            </Tooltip>
-          }
+          help={tr(
+            'When enabled, direct traffic still checks the domain DNS policy before using Direct DNS. When disabled, it always uses Direct DNS.'
+          )}
           divider
         >
           <Switch

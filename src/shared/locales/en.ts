@@ -585,9 +585,20 @@ export const messages: Readonly<Record<string, string>> = {
   'Core settings': 'Core settings',
   'Invalid core path': 'Invalid core path',
   'Core process priority': 'Core process priority',
+  'Higher priorities may improve responsiveness under load, but real-time priority can reduce overall system responsiveness.':
+    'Higher priorities may improve responsiveness under load, but real-time priority can reduce overall system responsiveness.',
   'Built-in release': 'Built-in release',
   'Built-in stable': 'Built-in stable',
   'Built-in preview': 'Built-in preview',
+  'Recommended for most users': 'Recommended for most users',
+  'Newest features; may be less stable': 'Newest features; may be less stable',
+  'Use an externally installed Mihomo binary': 'Use an externally installed Mihomo binary',
+  'Direct run starts the core with elevated permissions. System service keeps privileged features available in the background.':
+    'Direct run starts the core with elevated permissions. System service keeps privileged features available in the background.',
+  'Automatic is recommended. Sandbox isolates the service core; Start directly runs it without sandboxing.':
+    'Automatic is recommended. Sandbox isolates the service core; Start directly runs it without sandboxing.',
+  'Post Up waits for the configured startup hook. Log parsing detects readiness from core logs.':
+    'Post Up waits for the configured startup hook. Log parsing detects readiness from core logs.',
   Cool: 'Cool',
   'Outbound interface': 'Outbound interface',
   'Outbound mode ({0})': 'Outbound mode ({0})',
@@ -1252,6 +1263,8 @@ export const messages: Readonly<Record<string, string>> = {
   'Subscription import failed': 'Subscription import failed',
   'Subscription imported': 'Subscription imported',
   'Subscription user agent': 'Subscription user agent',
+  'Leave empty to use the default user agent. Some providers return different content based on this value.':
+    'Leave empty to use the default user agent. Some providers return different content based on this value.',
   'Invalid subscription format: cannot parse a valid configuration\n':
     'Invalid subscription format: cannot parse a valid configuration\n',
   Subscriptions: 'Subscriptions',
@@ -1270,6 +1283,8 @@ export const messages: Readonly<Record<string, string>> = {
   'Use this icon in the tray. PNG, JPG and WebP images are cropped before saving.':
     'Use this icon in the tray. PNG, JPG and WebP images are cropped before saving.',
   'Configuration method': 'Configuration method',
+  'Run command applies proxy settings directly. Service mode uses KokoroBox Service for privileged and persistent changes.':
+    'Run command applies proxy settings directly. Service mode uses KokoroBox Service for privileged and persistent changes.',
   'Access key': 'Access key',
   'Certificate fingerprint': 'Certificate fingerprint',
   'Certificate fingerprint mismatch': 'Certificate fingerprint mismatch',

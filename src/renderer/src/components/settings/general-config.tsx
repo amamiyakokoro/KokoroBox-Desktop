@@ -13,7 +13,6 @@ import {
   relaunchApp
 } from '@renderer/utils/ipc'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
-import { IoIosHelpCircle } from 'react-icons/io'
 import ConfirmModal from '../base/base-confirm'
 import { notify } from '@renderer/utils/notification'
 import { KokoSegmentedControl } from '../base/base-controls'
@@ -209,18 +208,7 @@ export const PerformanceConfig: React.FC = () => {
         <SettingItem
           contentAlign="end"
           title={tr('Disable GPU acceleration')}
-          actions={
-            <Tooltip delay={0}>
-              <Tooltip.Trigger>
-                <Button isIconOnly size="sm" variant="ghost">
-                  <IoIosHelpCircle className="text-lg" />
-                </Button>
-              </Tooltip.Trigger>
-              <Tooltip.Content>
-                {tr('Disable GPU acceleration. This may improve stability but reduce performance')}
-              </Tooltip.Content>
-            </Tooltip>
-          }
+          help={tr('Disable GPU acceleration. This may improve stability but reduce performance')}
           divider
         >
           <Switch
@@ -241,18 +229,7 @@ export const PerformanceConfig: React.FC = () => {
         <SettingItem
           contentAlign="end"
           title={tr('Reduce animations')}
-          actions={
-            <Tooltip delay={0}>
-              <Tooltip.Trigger>
-                <Button isIconOnly size="sm" variant="ghost">
-                  <IoIosHelpCircle className="text-lg" />
-                </Button>
-              </Tooltip.Trigger>
-              <Tooltip.Content>
-                {tr('Reduce most animations, which may improve performance')}
-              </Tooltip.Content>
-            </Tooltip>
-          }
+          help={tr('Reduce most animations, which may improve performance')}
         >
           <Switch
             size="sm"

@@ -52,9 +52,13 @@ type CoreRuntimeSection = 'runtime' | 'service'
 
 interface Props {
   sections?: CoreRuntimeSection[]
+  showSectionHeadings?: boolean
 }
 
-const CoreRuntimeConfig: React.FC<Props> = ({ sections = ['runtime', 'service'] }) => {
+const CoreRuntimeConfig: React.FC<Props> = ({
+  sections = ['runtime', 'service'],
+  showSectionHeadings = true
+}) => {
   const { appConfig, patchAppConfig } = useAppConfig()
   const { controledMihomoConfig } = useControledMihomoConfig()
   const { tun } = controledMihomoConfig || {}
@@ -176,7 +180,7 @@ const CoreRuntimeConfig: React.FC<Props> = ({ sections = ['runtime', 'service'] 
         />
       )}
       {sections.includes('runtime') && (
-        <SettingCard header={tr('Core runtime')}>
+        <SettingCard header={showSectionHeadings ? tr('Core runtime') : undefined}>
           <SettingItem
             contentAlign="end"
             title={tr('Core version')}
@@ -204,9 +208,21 @@ const CoreRuntimeConfig: React.FC<Props> = ({ sections = ['runtime', 'service'] 
                 className="w-37.5"
                 value={core}
                 options={[
-                  { id: 'mihomo', label: tr('Built-in stable') },
-                  { id: 'mihomo-alpha', label: tr('Built-in preview') },
-                  { id: 'system', label: tr('Use system core') }
+                  {
+                    id: 'mihomo',
+                    label: tr('Built-in stable'),
+                    description: tr('Recommended for most users')
+                  },
+                  {
+                    id: 'mihomo-alpha',
+                    label: tr('Built-in preview'),
+                    description: tr('Newest features; may be less stable')
+                  },
+                  {
+                    id: 'system',
+                    label: tr('Use system core'),
+                    description: tr('Use an externally installed Mihomo binary')
+                  }
                 ]}
                 disallowEmptySelection
                 onChange={(value) =>
@@ -237,7 +253,14 @@ const CoreRuntimeConfig: React.FC<Props> = ({ sections = ['runtime', 'service'] 
               />
             </SettingItem>
           )}
-          <SettingItem contentAlign="end" title={tr('Core process priority')} divider>
+          <SettingItem
+            contentAlign="end"
+            title={tr('Core process priority')}
+            help={tr(
+              'Higher priorities may improve responsiveness under load, but real-time priority can reduce overall system responsiveness.'
+            )}
+            divider
+          >
             <KokoSelect
               aria-label={tr('Core process priority')}
               variant="secondary"
@@ -257,7 +280,14 @@ const CoreRuntimeConfig: React.FC<Props> = ({ sections = ['runtime', 'service'] 
               }
             />
           </SettingItem>
-          <SettingItem contentAlign="end" title={tr('Run mode')} divider>
+          <SettingItem
+            contentAlign="end"
+            title={tr('Run mode')}
+            help={tr(
+              'Direct run starts the core with elevated permissions. System service keeps privileged features available in the background.'
+            )}
+            divider
+          >
             <KokoSegmentedControl
               ariaLabel={tr('Run mode')}
               selectedKey={corePermissionMode}
@@ -269,7 +299,14 @@ const CoreRuntimeConfig: React.FC<Props> = ({ sections = ['runtime', 'service'] 
             />
           </SettingItem>
           {platform === 'linux' && corePermissionMode === 'service' && (
-            <SettingItem contentAlign="end" title={tr('Service core execution mode')} divider>
+            <SettingItem
+              contentAlign="end"
+              title={tr('Service core execution mode')}
+              help={tr(
+                'Automatic is recommended. Sandbox isolates the service core; Start directly runs it without sandboxing.'
+              )}
+              divider
+            >
               <KokoSegmentedControl
                 ariaLabel={tr('Service core execution mode')}
                 selectedKey={serviceRunMode}
@@ -283,7 +320,14 @@ const CoreRuntimeConfig: React.FC<Props> = ({ sections = ['runtime', 'service'] 
             </SettingItem>
           )}
           {corePermissionMode !== 'service' && platform !== 'win32' && (
-            <SettingItem contentAlign="end" title={tr('Startup detection method')} divider>
+            <SettingItem
+              contentAlign="end"
+              title={tr('Startup detection method')}
+              help={tr(
+                'Post Up waits for the configured startup hook. Log parsing detects readiness from core logs.'
+              )}
+              divider
+            >
               <KokoSegmentedControl
                 ariaLabel={tr('Startup detection method')}
                 selectedKey={coreStartupMode}
@@ -298,7 +342,7 @@ const CoreRuntimeConfig: React.FC<Props> = ({ sections = ['runtime', 'service'] 
         </SettingCard>
       )}
       {sections.includes('service') && (
-        <SettingCard header={tr('Service management')}>
+        <SettingCard header={showSectionHeadings ? tr('Service management') : undefined}>
           {!systemCoreOnlyBuild && platform !== 'darwin' && (
             <SettingItem contentAlign="end" title={tr('Elevation status')} divider>
               <Button size="sm" variant="secondary" onPress={() => setShowPermissionModal(true)}>
@@ -322,10 +366,12 @@ const CoreRuntimeConfig: React.FC<Props> = ({ sections = ['runtime', 'service'] 
   )
 }
 
-export const CoreExecutionSettings: React.FC = () => <CoreRuntimeConfig sections={['runtime']} />
+export const CoreExecutionSettings: React.FC = () => (
+  <CoreRuntimeConfig sections={['runtime']} showSectionHeadings={false} />
+)
 
 export const ServiceManagementSettings: React.FC = () => (
-  <CoreRuntimeConfig sections={['service']} />
+  <CoreRuntimeConfig sections={['service']} showSectionHeadings={false} />
 )
 
 export default CoreRuntimeConfig

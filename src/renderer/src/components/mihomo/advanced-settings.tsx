@@ -1,11 +1,10 @@
 import { tr } from '../../../../shared/i18n'
-import { Button, Switch, Tooltip } from '@heroui/react'
+import { Switch } from '@heroui/react'
 import SettingCard from '../base/base-setting-card'
 import SettingItem from '../base/base-setting-item'
 import InterfaceSelect from '../base/interface-select'
 import { KokoTextField as Input } from '../base/koko-form'
 import { KokoSegmentedControl } from '../base/base-controls'
-import { IoIosHelpCircle } from 'react-icons/io'
 import React from 'react'
 
 interface AdvancedSettingProps {
@@ -76,18 +75,7 @@ const AdvancedSetting: React.FC<AdvancedSettingProps> = ({ config, onChange }) =
       </SettingItem>
       <SettingItem
         title={tr('Use RTT latency tests')}
-        actions={
-          <Tooltip delay={0}>
-            <Tooltip.Trigger>
-              <Button isIconOnly size="sm" variant="ghost">
-                <IoIosHelpCircle className="text-lg" />
-              </Button>
-            </Tooltip.Trigger>
-            <Tooltip.Content>
-              {tr('Use a unified latency test to eliminate differences in proxy handshake times')}
-            </Tooltip.Content>
-          </Tooltip>
-        }
+        help={tr('Use a unified latency test to eliminate differences in proxy handshake times')}
         divider
       >
         <Switch
@@ -106,20 +94,9 @@ const AdvancedSetting: React.FC<AdvancedSettingProps> = ({ config, onChange }) =
       </SettingItem>
       <SettingItem
         title={tr('Concurrent TCP connections')}
-        actions={
-          <Tooltip delay={0}>
-            <Tooltip.Trigger>
-              <Button isIconOnly size="sm" variant="ghost">
-                <IoIosHelpCircle className="text-lg" />
-              </Button>
-            </Tooltip.Trigger>
-            <Tooltip.Content>
-              {tr(
-                'Connect concurrently to IP addresses returned by DNS and use the connection with the fastest handshake'
-              )}
-            </Tooltip.Content>
-          </Tooltip>
-        }
+        help={tr(
+          'Connect concurrently to IP addresses returned by DNS and use the connection with the fastest handshake'
+        )}
         divider
       >
         <Switch

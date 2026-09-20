@@ -290,6 +290,7 @@ test('feature settings only surface save actions for dirty embedded panels', () 
 test('shared settings primitives isolate HeroUI v3 compound APIs', () => {
   const primitiveFiles = [
     'src/renderer/src/components/base/base-page.tsx',
+    'src/renderer/src/components/base/base-setting-help.tsx',
     'src/renderer/src/components/base/base-setting-item.tsx',
     'src/renderer/src/components/base/base-setting-card.tsx',
     'src/renderer/src/components/base/base-feature-settings.tsx',
@@ -333,16 +334,27 @@ test('shared settings primitives isolate HeroUI v3 compound APIs', () => {
 })
 
 test('SettingItem has one canonical layout without legacy compatibility paths', () => {
+  const settingHelp = readFileSync('src/renderer/src/components/base/base-setting-help.tsx', 'utf8')
   const settingItem = readFileSync('src/renderer/src/components/base/base-setting-item.tsx', 'utf8')
+  const settingCard = readFileSync('src/renderer/src/components/base/base-setting-card.tsx', 'utf8')
   const featureLayout = readFileSync(
     'src/renderer/src/components/base/base-feature-settings.tsx',
     'utf8'
   )
   const settingsPage = readFileSync('src/renderer/src/pages/settings.tsx', 'utf8')
   const styles = readFileSync('src/renderer/src/assets/app-overrides.css', 'utf8')
+  const settingSurfaceFiles = [
+    ...collectTsxFiles('src/renderer/src/components/settings'),
+    ...collectTsxFiles('src/renderer/src/components/mihomo'),
+    ...collectTsxFiles('src/renderer/src/components/dns')
+  ]
 
   for (const file of collectTsxFiles('src/renderer/src')) {
     assert.doesNotMatch(readFileSync(file, 'utf8'), /compatKey=["']legacy["']/, file)
+  }
+
+  for (const file of settingSurfaceFiles) {
+    assert.doesNotMatch(readFileSync(file, 'utf8'), /IoIosHelpCircle|MdHelpOutline/, file)
   }
 
   assert.doesNotMatch(settingItem, /compatKey|SettingItemLegacyContext|useContext/)
@@ -351,8 +363,26 @@ test('SettingItem has one canonical layout without legacy compatibility paths', 
   assert.doesNotMatch(styles, /setting-item-legacy/)
   assert.equal(settingItem.match(/setting-item select-text/g)?.length, 1)
   assert.match(settingItem, /data-setting-label=\{searchableLabel\}/)
+  assert.match(settingItem, /help\?: React\.ReactNode/)
+  assert.match(settingItem, /<SettingHelp>\{help\}<\/SettingHelp>/)
+  assert.match(settingItem, /setting-item__title-line/)
   assert.match(settingItem, /setting-item__description/)
   assert.match(settingItem, /\{actions\}/)
+  assert.match(settingHelp, /<Tooltip delay=\{200\}>/)
+  assert.match(settingHelp, /ariaLabel = tr\('Description'\)/)
+  assert.match(settingHelp, /<LuCircleHelp aria-hidden="true"/)
+  assert.match(settingHelp, /max-w-72 text-sm leading-5/)
+  assert.match(settingCard, /settings-section px-3 py-1\.5 first:pt-1\.5/)
+  assert.match(featureLayout, /feature-settings-section px-3 py-1\.5 first:pt-1\.5/)
+  assert.match(styles, /\.setting-item__title-line\s*\{[\s\S]*align-items: center/)
+  assert.match(
+    styles,
+    /\.settings-layout \.setting-item,[\s\S]*padding-block: calc\(var\(--spacing\) \* 1\.5\)/
+  )
+  assert.match(
+    styles,
+    /\.settings-layout \.setting-item__title-wrap,[\s\S]*min-height: calc\(var\(--spacing\) \* 8\)/
+  )
   assert.match(styles, /:root:lang\(en\) \.setting-item:not\(\.setting-item--titleless\)/)
   assert.match(styles, /:root:lang\(en\) \.setting-item__title[\s\S]*overflow-wrap: anywhere/)
 })
@@ -1560,6 +1590,7 @@ test('core settings separate runtime, service and environment concerns', () => {
     'src/renderer/src/components/settings/core-runtime-config.tsx',
     'utf8'
   )
+  const environment = readFileSync('src/renderer/src/components/mihomo/env-setting.tsx', 'utf8')
 
   assert.match(registry, /const corePanels:/)
   assert.match(registry, /key: 'runtime'/)
@@ -1572,6 +1603,11 @@ test('core settings separate runtime, service and environment concerns', () => {
   assert.match(registry, /panels: corePanels/)
   assert.match(runtime, /sections\.includes\('runtime'\)/)
   assert.match(runtime, /sections\.includes\('service'\)/)
+  assert.match(runtime, /showSectionHeadings\?: boolean/)
+  assert.match(runtime, /showSectionHeadings=\{false\}/)
+  assert.match(runtime, /help=\{tr\([\s\S]*Higher priorities may improve responsiveness/)
+  assert.match(runtime, /description: tr\('Recommended for most users'\)/)
+  assert.doesNotMatch(environment, /<SettingCard header=\{tr\('Environment variables'\)\}>/)
 })
 
 test('data settings separate subscriptions, backups, integrations and Geo databases', () => {
@@ -1608,6 +1644,8 @@ test('data settings separate subscriptions, backups, integrations and Geo databa
   }
   assert.match(registry, /entries: dataPanels\.flatMap/)
   assert.match(registry, /panels: dataPanels/)
+  assert.match(integrations, /showSubscriptionHeading\?: boolean/)
+  assert.match(integrations, /showSubscriptionHeading=\{false\}/)
   assert.match(integrations, /hasSubscriptionSection = sections\.includes\('subscription'\)/)
   assert.match(integrations, /hasGistSection = sections\.includes\('gist'\)/)
 })

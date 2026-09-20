@@ -3,7 +3,6 @@ import { Button, Switch, Tooltip } from '@heroui/react'
 import { KokoTextField as Input } from '../base/koko-form'
 import React, { useEffect, useRef, useState } from 'react'
 import { BiCopy, BiHide, BiShow } from 'react-icons/bi'
-import { IoIosHelpCircle } from 'react-icons/io'
 import { LuArrowRight, LuRefreshCw } from 'react-icons/lu'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import {
@@ -21,10 +20,12 @@ type IntegrationSection = 'subscription' | 'gist'
 
 interface Props {
   sections?: IntegrationSection[]
+  showSubscriptionHeading?: boolean
 }
 
 const SubscriptionIntegrationSettings: React.FC<Props> = ({
-  sections = ['subscription', 'gist']
+  sections = ['subscription', 'gist'],
+  showSubscriptionHeading = true
 }) => {
   const hasSubscriptionSection = sections.includes('subscription')
   const hasGistSection = sections.includes('gist')
@@ -93,24 +94,13 @@ const SubscriptionIntegrationSettings: React.FC<Props> = ({
   return (
     <>
       {hasSubscriptionSection && (
-        <SettingCard header={tr('Subscription data')}>
+        <SettingCard header={showSubscriptionHeading ? tr('Subscription data') : undefined}>
           <SettingItem
             contentAlign="end"
             title={tr('Use a separate working directory for each profile')}
-            actions={
-              <Tooltip delay={0}>
-                <Tooltip.Trigger>
-                  <Button aria-label={tr('Description')} isIconOnly size="sm" variant="ghost">
-                    <IoIosHelpCircle className="text-lg" />
-                  </Button>
-                </Tooltip.Trigger>
-                <Tooltip.Content>
-                  {tr(
-                    'Save proxy selections separately when different profiles contain groups with the same name'
-                  )}
-                </Tooltip.Content>
-              </Tooltip>
-            }
+            help={tr(
+              'Save proxy selections separately when different profiles contain groups with the same name'
+            )}
             divider
           >
             <Switch
@@ -128,7 +118,13 @@ const SubscriptionIntegrationSettings: React.FC<Props> = ({
               </Switch.Content>
             </Switch>
           </SettingItem>
-          <SettingItem contentAlign="end" title={tr('Subscription user agent')}>
+          <SettingItem
+            contentAlign="end"
+            title={tr('Subscription user agent')}
+            description={tr(
+              'Leave empty to use the default user agent. Some providers return different content based on this value.'
+            )}
+          >
             <Input
               size="sm"
               aria-label={tr('Subscription user agent')}
@@ -312,7 +308,7 @@ const SubscriptionIntegrationSettings: React.FC<Props> = ({
 }
 
 export const SubscriptionDataSettings: React.FC = () => (
-  <SubscriptionIntegrationSettings sections={['subscription']} />
+  <SubscriptionIntegrationSettings sections={['subscription']} showSubscriptionHeading={false} />
 )
 
 export const GistIntegrationSettings: React.FC = () => (

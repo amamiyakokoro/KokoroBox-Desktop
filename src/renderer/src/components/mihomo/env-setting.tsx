@@ -32,7 +32,7 @@ const EnvSetting: React.FC = () => {
   const [safePathsInput, setSafePathsInput] = useState(safePaths)
 
   return (
-    <SettingCard header={tr('Environment variables')}>
+    <SettingCard>
       <SettingItem contentAlign="end" title={tr('Disable system CAs')} divider>
         <Switch
           size="sm"

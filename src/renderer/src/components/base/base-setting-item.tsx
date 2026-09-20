@@ -1,10 +1,12 @@
 import { cn, Separator } from '@heroui/react'
 
 import React from 'react'
+import SettingHelp from './base-setting-help'
 
 export interface SettingItemProps {
   title: React.ReactNode
   description?: React.ReactNode
+  help?: React.ReactNode
   actions?: React.ReactNode
   children?: React.ReactNode
   divider?: boolean
@@ -17,6 +19,7 @@ const SettingItem: React.FC<SettingItemProps> = (props) => {
   const {
     title,
     description,
+    help,
     actions,
     children,
     divider = false,
@@ -26,7 +29,7 @@ const SettingItem: React.FC<SettingItemProps> = (props) => {
   } = props
   const isCompact = variant === 'compact'
   const hasTitle = title !== null && title !== undefined && title !== false
-  const isTitleless = !hasTitle && !actions
+  const isTitleless = !hasTitle && !help && !actions
   const searchableLabel = typeof title === 'string' ? title : undefined
 
   return (
@@ -43,17 +46,18 @@ const SettingItem: React.FC<SettingItemProps> = (props) => {
         data-setting-label={searchableLabel}
         tabIndex={searchableLabel ? -1 : undefined}
       >
-        {(hasTitle || actions) && (
+        {(hasTitle || help || actions) && (
           <div className="setting-item__title-wrap">
-            {hasTitle &&
-              (description ? (
-                <div className="setting-item__label-group">
+            {hasTitle && (
+              <div className="setting-item__label-group">
+                <div className="setting-item__title-line">
                   <h4 className="setting-item__title">{title}</h4>
-                  <p className="setting-item__description">{description}</p>
+                  {help && <SettingHelp>{help}</SettingHelp>}
                 </div>
-              ) : (
-                <h4 className="setting-item__title">{title}</h4>
-              ))}
+                {description && <p className="setting-item__description">{description}</p>}
+              </div>
+            )}
+            {!hasTitle && help && <SettingHelp>{help}</SettingHelp>}
             {actions}
           </div>
         )}
