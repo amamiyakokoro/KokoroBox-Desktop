@@ -534,13 +534,14 @@ input[type='number'] {
   .settings-navigation {
     position: relative;
     top: auto;
+    min-height: 3rem;
     height: auto;
     flex-direction: row;
     align-items: center;
     gap: calc(var(--spacing) * 2);
     border-right-width: 0;
     border-bottom: 1px solid var(--border);
-    padding-block: calc(var(--spacing) * 2);
+    padding-block: calc(var(--spacing) * 1.5);
     padding-inline: calc(var(--spacing) * 3);
   }
 
@@ -552,7 +553,7 @@ input[type='number'] {
     gap: calc(var(--spacing) * 0.5);
     overflow-x: auto;
     overflow-y: hidden;
-    padding-bottom: calc(var(--spacing) * 1);
+    padding-bottom: 0;
     scrollbar-color: color-mix(in oklab, var(--muted) 35%, transparent) transparent;
     scrollbar-width: thin;
   }

@@ -1,5 +1,5 @@
 import { tr } from '../../../shared/i18n'
-import { Button, ScrollShadow, Tooltip } from '@heroui/react'
+import { Button, ScrollShadow, Tooltip, cn } from '@heroui/react'
 import BasePage from '@renderer/components/base/base-page'
 import { IoLogoGithub } from 'react-icons/io5'
 import {
@@ -201,7 +201,7 @@ const Settings: React.FC = () => {
         <div ref={layoutRef} className="settings-layout grid min-h-full">
           <nav
             aria-label={tr('Settings categories')}
-            className="settings-navigation sticky top-0 z-10 flex h-[calc(100vh-49px)] flex-col border-r border-divider bg-background/95 p-3"
+            className="settings-navigation sticky top-0 z-10 flex h-[calc(100vh-49px)] flex-col border-r border-divider bg-surface-secondary/85 p-3"
           >
             <div className="settings-navigation-search mb-3 flex justify-end">
               {searchExpanded || normalizedSearch ? (
@@ -248,8 +248,13 @@ const Settings: React.FC = () => {
                   <Button
                     key={item.key}
                     size="sm"
-                    variant={active ? 'secondary' : 'ghost'}
-                    className="settings-category-button app-nodrag w-full shrink-0 justify-start px-3"
+                    variant="ghost"
+                    className={cn(
+                      'settings-category-button app-nodrag w-full shrink-0 justify-start px-3 font-medium text-foreground-600',
+                      active
+                        ? 'bg-accent-soft text-accent-soft-foreground hover:bg-accent-soft/80'
+                        : 'hover:bg-surface/75 hover:text-foreground'
+                    )}
                     aria-label={item.label}
                     aria-current={active ? 'page' : undefined}
                     onPress={() => {
@@ -267,7 +272,7 @@ const Settings: React.FC = () => {
           </nav>
           <main className="min-w-0 pb-4">
             {(normalizedSearch || selectedPanels.length > 1) && (
-              <header className="settings-context-header sticky top-0 z-10 w-full border-b border-divider bg-background/95">
+              <header className="settings-context-header sticky top-0 z-10 w-full border-b border-divider bg-surface/95">
                 <div className="settings-context-inner mx-auto w-full max-w-[960px] px-4">
                   {normalizedSearch ? (
                     <h1 className="py-3 text-lg font-semibold tracking-tight">
@@ -276,7 +281,7 @@ const Settings: React.FC = () => {
                   ) : (
                     <nav
                       aria-label={tr('Settings panels')}
-                      className="settings-panel-navigation no-scrollbar min-w-0 overflow-x-auto"
+                      className="settings-panel-navigation no-scrollbar flex min-h-10 min-w-0 items-center overflow-x-auto"
                     >
                       <KokoTabs
                         ariaLabel={tr('Settings panels')}
@@ -286,6 +291,7 @@ const Settings: React.FC = () => {
                           id: panel.key,
                           label: panel.label
                         }))}
+                        selectionStyle="accent-underline"
                         selectedKey={selectedPanel?.key ?? selectedPanels[0]?.key ?? ''}
                         variant="secondary"
                         onChange={selectPanel}

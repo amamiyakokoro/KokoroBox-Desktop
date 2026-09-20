@@ -126,8 +126,10 @@ test('application settings keep one clear navigation hierarchy in compact deskto
   assert.match(settings, /event\.key === 'Escape'/)
   assert.match(
     settings,
-    /settings-context-header sticky top-0 z-10 w-full border-b border-divider bg-background\/95/
+    /settings-context-header sticky top-0 z-10 w-full border-b border-divider bg-surface\/95/
   )
+  assert.match(settings, /settings-navigation[^"\n]*bg-surface-secondary\/85/)
+  assert.match(settings, /bg-accent-soft text-accent-soft-foreground/)
   assert.match(
     settings,
     /settings-context-inner mx-auto w-full max-w-\[960px\] px-4/
@@ -153,7 +155,9 @@ test('application settings keep one clear navigation hierarchy in compact deskto
   assert.match(settings, /<KokoTabs/)
   assert.match(settings, /variant="secondary"/)
   assert.match(settings, /density="toolbar"/)
+  assert.match(settings, /selectionStyle="accent-underline"/)
   assert.match(settings, /className="app-nodrag w-max max-w-none"/)
+  assert.match(settings, /settings-panel-navigation[^"\n]*min-h-10[^"\n]*overflow-x-auto/)
   assert.doesNotMatch(
     settings,
     /settings-panel-navigation[^"\n]*overflow-x-auto[^"\n]*px-3/
@@ -180,6 +184,11 @@ test('application settings keep one clear navigation hierarchy in compact deskto
   assert.doesNotMatch(styles, /@media \(max-width: 1050px\)/)
   assert.match(styles, /\.settings-navigation-list \{[\s\S]*flex-direction: row/)
   assert.match(styles, /\.settings-navigation-list \{[\s\S]*overflow-x: auto/)
+  assert.match(styles, /\.settings-navigation \{[\s\S]*min-height: 3rem;/)
+  assert.match(
+    styles,
+    /\.settings-navigation \{[\s\S]*padding-block: calc\(var\(--spacing\) \* 1\.5\)/
+  )
   assert.match(settings, /settings-panel-navigation[^"\n]*overflow-x-auto/)
   assert.match(styles, /\.settings-navigation-search \{[\s\S]*flex: 0 0 auto;[\s\S]*width: auto;/)
   assert.doesNotMatch(styles, /clamp\(10rem, 30cqi, 15rem\)/)
@@ -444,7 +453,11 @@ test('settings and Mihomo forms share the KokoroBox HeroUI v3 conventions', () =
   assert.match(controls, /variant\?: React\.ComponentProps<typeof Tabs>\['variant'\]/)
   assert.match(controls, /variant=\{variant\}/)
   assert.match(controls, /<Tabs\.List/)
-  assert.match(controls, /<Tabs\.Indicator \/>/)
+  assert.match(controls, /selectionStyle\?: 'native' \| 'accent-underline'/)
+  assert.match(controls, /selectionStyle = 'native'/)
+  assert.match(controls, /<Tabs\.Indicator/)
+  assert.match(controls, /selectionStyle === 'accent-underline' && 'h-0\.5 bg-accent'/)
+  assert.match(controls, /data-\[selected=true\]:text-accent-soft-foreground/)
   assert.doesNotMatch(
     controls,
     /indicatorClassName|listClassName|listContainerClassName|tabClassName/

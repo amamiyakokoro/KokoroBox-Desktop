@@ -18,6 +18,7 @@ interface KokoTabsProps {
   className?: string
   density?: 'normal' | 'toolbar'
   options: KokoTabOption[]
+  selectionStyle?: 'native' | 'accent-underline'
   selectedKey: string
   variant?: React.ComponentProps<typeof Tabs>['variant']
   onChange: (key: string) => void | Promise<void>
@@ -43,6 +44,7 @@ export const KokoTabs: React.FC<KokoTabsProps> = ({
   className,
   density = 'normal',
   options,
+  selectionStyle = 'native',
   selectedKey,
   variant = 'secondary',
   onChange
@@ -66,11 +68,18 @@ export const KokoTabs: React.FC<KokoTabsProps> = ({
             <Tabs.Tab
               key={option.id}
               id={option.id}
-              className={cn('min-w-max whitespace-nowrap', density === 'toolbar' && 'h-9 px-2.5')}
+              className={cn(
+                'min-w-max whitespace-nowrap',
+                density === 'toolbar' && 'h-9 px-2.5',
+                selectionStyle === 'accent-underline' &&
+                  'rounded-md text-foreground-500 transition-colors hover:bg-surface-secondary/60 hover:text-foreground data-[selected=true]:font-medium data-[selected=true]:text-accent-soft-foreground'
+              )}
               isDisabled={option.isDisabled}
             >
               <span className="whitespace-nowrap">{option.label}</span>
-              <Tabs.Indicator />
+              <Tabs.Indicator
+                className={cn(selectionStyle === 'accent-underline' && 'h-0.5 bg-accent')}
+              />
             </Tabs.Tab>
           ))}
         </Tabs.List>
