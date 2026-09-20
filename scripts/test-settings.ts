@@ -910,11 +910,15 @@ test('page settings drawers use the shared compact inspector behavior', () => {
     'src/renderer/src/components/app-routing/app-routing-setting-drawer.tsx',
     'utf8'
   )
+  const proxySettings = readFileSync(
+    'src/renderer/src/components/proxies/proxy-setting-drawer.tsx',
+    'utf8'
+  )
   const consumers = [
     connections,
     appRouting,
     readFileSync('src/renderer/src/components/profiles/profile-setting-drawer.tsx', 'utf8'),
-    readFileSync('src/renderer/src/components/proxies/proxy-setting-drawer.tsx', 'utf8')
+    proxySettings
   ]
 
   assert.match(drawer, /const DRAWER_CLOSE_ANIMATION_MS = 220/)
@@ -951,6 +955,10 @@ test('page settings drawers use the shared compact inspector behavior', () => {
   assert.equal((appRouting.match(/density="compact"/g) || []).length, 2)
   assert.equal((appRouting.match(/disallowEmptySelection/g) || []).length, 2)
   assert.doesNotMatch(appRouting, /<Select(?:\.|\s)|<ListBox(?:\.|\s)/)
+  assert.equal((proxySettings.match(/<KokoTextField/g) || []).length, 3)
+  assert.equal((proxySettings.match(/controlWidth="number"/g) || []).length, 2)
+  assert.match(proxySettings, /suffix="ms"/)
+  assert.doesNotMatch(proxySettings, /<InputGroup(?:\.|\s)/)
 })
 
 test('desktop sidebar separates controls, live status and navigation', () => {

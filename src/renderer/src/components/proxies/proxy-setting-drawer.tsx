@@ -1,5 +1,5 @@
 import { tr } from '../../../../shared/i18n'
-import { InputGroup, Switch } from '@heroui/react'
+import { Switch } from '@heroui/react'
 import React, { useState, useEffect, useRef } from 'react'
 import SettingItem from '../base/base-setting-item'
 import { KokoSegmentedControl, settingItemProps } from '../base/base-controls'
@@ -279,38 +279,34 @@ const ProxySettingDrawer: React.FC<Props> = (props) => {
         </SettingItem>
         {!delayTestUseGroupApi && (
           <SettingItem title={tr('Concurrent latency tests')} {...settingItemProps} divider>
-            <InputGroup data-setting-input="number" variant="secondary">
-              <InputGroup.Input
-                aria-label={tr('Concurrent latency tests')}
-                type="number"
-                value={delayTestConcurrency?.toString()}
-                min={MIN_DELAY_TEST_CONCURRENCY}
-                max={MAX_DELAY_TEST_CONCURRENCY}
-                placeholder={tr('Default: {0}', [DEFAULT_DELAY_TEST_CONCURRENCY])}
-                onChange={(event) => {
-                  const v = event.target.value
-                  patchAppConfig({
-                    delayTestConcurrency: normalizeDelayTestConcurrency(parseInt(v))
-                  })
-                }}
-              />
-            </InputGroup>
+            <KokoTextField
+              aria-label={tr('Concurrent latency tests')}
+              controlWidth="number"
+              type="number"
+              value={delayTestConcurrency?.toString()}
+              min={MIN_DELAY_TEST_CONCURRENCY}
+              max={MAX_DELAY_TEST_CONCURRENCY}
+              placeholder={tr('Default: {0}', [DEFAULT_DELAY_TEST_CONCURRENCY])}
+              onChangeValue={(value) => {
+                patchAppConfig({
+                  delayTestConcurrency: normalizeDelayTestConcurrency(parseInt(value))
+                })
+              }}
+            />
           </SettingItem>
         )}
         <SettingItem title={tr('Latency test timeout')} {...settingItemProps}>
-          <InputGroup data-setting-input="number" variant="secondary">
-            <InputGroup.Input
-              aria-label={tr('Latency test timeout')}
-              type="number"
-              value={delayTestTimeout?.toString()}
-              placeholder={tr('Default: 5000')}
-              onChange={(event) => {
-                const v = event.target.value
-                patchAppConfig({ delayTestTimeout: parseInt(v) })
-              }}
-            />
-            <InputGroup.Suffix>ms</InputGroup.Suffix>
-          </InputGroup>
+          <KokoTextField
+            aria-label={tr('Latency test timeout')}
+            controlWidth="number"
+            type="number"
+            suffix="ms"
+            value={delayTestTimeout?.toString()}
+            placeholder={tr('Default: 5000')}
+            onChangeValue={(value) => {
+              patchAppConfig({ delayTestTimeout: parseInt(value) })
+            }}
+          />
         </SettingItem>
       </PageSettingsSection>
     </PageSettingsDrawer>
