@@ -2,6 +2,7 @@ import React, { createContext, useContext, ReactNode } from 'react'
 import useSWR from 'swr'
 import { getAppConfig, patchAppConfig as patch } from '@renderer/utils/ipc'
 import { notify } from '@renderer/utils/notification'
+import { useTheme } from 'next-themes'
 
 interface AppConfigContextType {
   appConfig: AppConfig | undefined
@@ -22,6 +23,8 @@ const syncReducedMotionPreference = (disableAnimation: boolean): void => {
 
 export const AppConfigProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const { data: appConfig, mutate: mutateAppConfig } = useSWR('getConfig', () => getAppConfig())
+  const { setTheme } = useTheme()
+  const appTheme = appConfig?.appTheme
 
   const patchAppConfig = async (value: Partial<AppConfig>): Promise<AppConfig | undefined> => {
     try {
@@ -49,6 +52,11 @@ export const AppConfigProvider: React.FC<{ children: ReactNode }> = ({ children 
     if (!appConfig) return
     syncReducedMotionPreference(appConfig.disableAnimation === true)
   }, [appConfig])
+
+  React.useEffect(() => {
+    if (!appTheme) return
+    setTheme(appTheme)
+  }, [appTheme, setTheme])
 
   return (
     <AppConfigContext.Provider value={{ appConfig, mutateAppConfig, patchAppConfig }}>

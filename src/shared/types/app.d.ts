@@ -102,7 +102,6 @@ interface AppConfig {
   siderOrder: string[]
   siderWidth: number
   appTheme: AppTheme
-  customTheme?: string
   autoCheckUpdate: boolean
   silentStart: boolean
   autoCloseConnection: boolean

@@ -35,7 +35,6 @@ import { quitWithoutCore, restartCore } from '../core/manager'
 import { floatingWindow, triggerFloatingWindow } from './floatingWindow'
 import { is } from '@electron-toolkit/utils'
 import { extname, join } from 'path'
-import { applyTheme } from './theme'
 import { existsSync } from 'fs'
 
 export let tray: Tray | null = null
@@ -154,7 +153,7 @@ function hideCustomTray(): void {
 }
 
 async function showCustomTray(): Promise<void> {
-  const { useCustomTrayMenu = false, customTheme = 'default.css' } = await getAppConfig()
+  const { useCustomTrayMenu = false } = await getAppConfig()
   if (!useCustomTrayMenu) {
     await updateTrayMenu()
     return
@@ -189,10 +188,6 @@ async function showCustomTray(): Promise<void> {
     customTrayWindow.on('close', () => {
       customTrayWindow = null
     })
-    customTrayWindow.on('ready-to-show', () => {
-      applyTheme(customTheme)
-    })
-
     if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
       await customTrayWindow.loadURL(`${process.env['ELECTRON_RENDERER_URL']}/traymenu.html`)
     } else {

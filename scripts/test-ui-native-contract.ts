@@ -112,12 +112,32 @@ test('the shared application preference controls native reduced motion in every 
   assert.match(appOverrides, /:root\[data-reduce-motion='true'\] \.rule-list-card/)
 })
 
-test('renderer styles and components use native semantic tokens', () => {
-  const rendererFiles = collectFiles(rendererRoot).filter((file) =>
+test('the shared application preference controls next-themes in every renderer', () => {
+  const appConfigProvider = readFileSync('src/renderer/src/hooks/use-app-config.tsx', 'utf8')
+  const app = readFileSync('src/renderer/src/App.tsx', 'utf8')
+
+  assert.match(appConfigProvider, /const \{ setTheme \} = useTheme\(\)/)
+  assert.match(appConfigProvider, /const appTheme = appConfig\?\.appTheme/)
+  assert.match(appConfigProvider, /setTheme\(appTheme\)/)
+  assert.match(app, /setNativeTheme\(appTheme\)/)
+
+  for (const file of [
+    'src/renderer/src/main.tsx',
+    'src/renderer/src/floating.tsx',
+    'src/renderer/src/traymenu.tsx'
+  ]) {
+    const source = readFileSync(file, 'utf8')
+    assert.match(source, /<NextThemesProvider attribute="class" enableSystem defaultTheme="dark">/)
+    assert.match(source, /<AppConfigProvider>/)
+  }
+})
+
+test('active source uses native semantic tokens without a legacy theme bridge', () => {
+  const sourceFiles = collectFiles('src').filter((file) =>
     /\.(?:css|[cm]?[jt]sx?)$/.test(file)
   )
 
-  for (const file of rendererFiles) {
+  for (const file of sourceFiles) {
     assert.doesNotMatch(
       readFileSync(file, 'utf8'),
       /--heroui-|hsl\(var\(--heroui-/,
@@ -125,10 +145,20 @@ test('renderer styles and components use native semantic tokens', () => {
     )
   }
 
-  const legacyThemeBridge = readFileSync('src/main/resolve/theme.ts', 'utf8')
-  assert.match(legacyThemeBridge, /--heroui-primary/)
-  assert.match(legacyThemeBridge, /HeroUI v2 -> v3 token bridge/)
-  assert.doesNotMatch(legacyThemeBridge, /theme-hub/)
+  assert.equal(existsSync('src/main/resolve/theme.ts'), false)
+})
+
+test('custom CSS theme architecture cannot return through active source', () => {
+  const sourceFiles = collectSourceFiles('src')
+  const removedThemeApiPattern =
+    /\b(?:customTheme|resolveThemes|importThemes|readTheme|writeTheme|applyTheme|normalizeThemeCss|themesDir)\b/
+  const offenders = sourceFiles.flatMap((file) => {
+    const matches = readFileSync(file, 'utf8').match(removedThemeApiPattern) ?? []
+    return matches.length ? [`${file}: ${[...new Set(matches)].join(', ')}`] : []
+  })
+
+  assert.deepEqual(offenders, [])
+  assert.equal(existsSync('src/renderer/src/components/settings/css-editor-modal.tsx'), false)
 })
 
 test('renderer does not use HeroUI v2 utility vocabulary', () => {
@@ -275,7 +305,9 @@ test('the native-first ownership contract documents the migration boundary', () 
     contract,
     /application-owned `prefix`, `suffix`, `inputClassName`, and `onChangeValue`/
   )
-  assert.match(contract, /explicitly isolated compatibility bridge/)
+  assert.match(contract, /Custom CSS[\s\S]*legacy HeroUI v2 token bridge have been removed/)
+  assert.match(contract, /System, Light, and Dark through `appTheme` are the only supported/)
+  assert.doesNotMatch(contract, /compatibility bridge for already-installed user themes/)
   assert.match(contract, /zero HeroUI internal selectors/)
   assert.match(contract, /KokoSegmentedControl[\s\S]*`ToggleButtonGroup`/)
   assert.match(contract, /Use `KokoTabs` for page, panel, and section navigation/)

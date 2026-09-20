@@ -73,10 +73,9 @@ setting remains authoritative.
 
 Renderer styles now load only Tailwind and `@heroui/styles`. The legacy `hero.mjs` Tailwind plugin
 and `@source` scan of `@heroui/theme` have been removed. Legacy `--heroui-*` runtime tokens are not
-used by renderer UI. The renderer also uses only HeroUI v3 semantic utility names. The theme
-resolver retains an explicitly isolated compatibility bridge for already-installed user themes;
-that bridge is not an approved renderer styling API and is intended to retire with a future major
-custom-theme format revision.
+used by active source. The renderer also uses only HeroUI v3 semantic utility names. Custom CSS
+themes, runtime stylesheet injection, and the legacy HeroUI v2 token bridge have been removed.
+System, Light, and Dark through `appTheme` are the only supported application color schemes.
 
 ### KokoroBox desktop primitives
 

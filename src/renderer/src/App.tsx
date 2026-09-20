@@ -8,7 +8,6 @@ import { IoSettings } from 'react-icons/io5'
 import { useDeferredRoutePreload } from '@renderer/routes'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import {
-  applyTheme,
   checkUpdate,
   confirmCloseMainWindow,
   serviceStatus,
@@ -40,7 +39,6 @@ const App: React.FC = () => {
   const { appConfig, patchAppConfig } = useAppConfig()
   const {
     appTheme = 'system',
-    customTheme,
     useWindowFrame = false,
     siderWidth = 250,
     autoCheckUpdate,
@@ -54,7 +52,7 @@ const App: React.FC = () => {
   const [resizing, setResizing] = useState(false)
   const resizingRef = useRef(resizing)
   const resizePointerIdRef = useRef<number | null>(null)
-  const { setTheme, systemTheme } = useTheme()
+  const { systemTheme } = useTheme()
   navigate = useNavigate()
   const location = useLocation()
   const settingsFocusMode = isSettingsFocusRoute(location.pathname)
@@ -109,15 +107,8 @@ const App: React.FC = () => {
 
   useEffect(() => {
     setNativeTheme(appTheme)
-    setTheme(appTheme)
     setTitlebar()
   }, [appTheme, systemTheme])
-
-  useEffect(() => {
-    applyTheme(customTheme || 'default.css').then(() => {
-      setTitlebar()
-    })
-  }, [customTheme])
 
   useEffect(() => {
     window.addEventListener('pointermove', onResizeMove)

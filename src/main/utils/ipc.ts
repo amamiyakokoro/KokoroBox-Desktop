@@ -124,7 +124,6 @@ import {
   showMainWindow,
   triggerMainWindow
 } from '..'
-import { applyTheme, importThemes, readTheme, resolveThemes, writeTheme } from '../resolve/theme'
 import path from 'path'
 import v8 from 'v8'
 import { getGistRawUrl } from '../resolve/gistApi'
@@ -452,11 +451,6 @@ export function registerIpcMainHandlers(): void {
   ipcMain.handle('getAppName', (_e, appPath) => ipcErrorWrapper(getAppName)(appPath))
   ipcMain.handle('getImageDataURL', (_e, url) => ipcErrorWrapper(getImageDataURL)(url))
   ipcMain.handle('getIconDataURL', (_e, appPath) => ipcErrorWrapper(getIconDataURL)(appPath))
-  ipcMain.handle('resolveThemes', () => ipcErrorWrapper(resolveThemes)())
-  ipcMain.handle('importThemes', (_e, file) => ipcErrorWrapper(importThemes)(file))
-  ipcMain.handle('readTheme', (_e, theme) => ipcErrorWrapper(readTheme)(theme))
-  ipcMain.handle('writeTheme', (_e, theme, css) => ipcErrorWrapper(writeTheme)(theme, css))
-  ipcMain.handle('applyTheme', (_e, theme) => ipcErrorWrapper(applyTheme)(theme))
   ipcMain.handle('copyEnv', (_e, type) => ipcErrorWrapper(copyEnv)(type))
   ipcMain.handle('alert', (_e, msg) => {
     void showNotification({ title: 'KokoroBox', body: msg, variant: 'danger' })

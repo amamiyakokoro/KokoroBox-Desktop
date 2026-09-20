@@ -1156,8 +1156,6 @@ export const messages: Readonly<Record<string, string>> = {
   'Keep editing': '继续编辑',
   Edit: '编辑',
   'Edit PAC script': '编辑 PAC 脚本',
-  'Edit theme': '编辑主题',
-  'Import theme': '导入主题',
   'Edit details': '编辑信息',
   'Edit file': '编辑文件',
   'Edit bypass list (YAML)': '编辑绕过列表 (YAML)',
@@ -1189,9 +1187,6 @@ export const messages: Readonly<Record<string, string>> = {
   'Configure routes automatically': '自动设置路由规则',
   'Select outbound interface automatically': '自动选择流量出口',
   'Custom hosts': '自定义 Hosts',
-  'Custom theme': '自定义主题',
-  'Applies a local CSS theme. Import a CSS file to add one.':
-    '应用本地 CSS 主题。导入 CSS 文件以添加自定义主题。',
   'Custom tray icon': '自定义托盘图标',
   'Color presets': '色彩预设',
   'Proxy sort order': '节点排序方式',

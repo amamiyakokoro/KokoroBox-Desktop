@@ -8,8 +8,7 @@ import {
   overrideConfigPath,
   overrideDir,
   profileConfigPath,
-  profilesDir,
-  themesDir
+  profilesDir
 } from '../utils/dirs'
 
 const DEFAULT_WEBDAV_DIR = 'KokoroBox'
@@ -28,7 +27,6 @@ export async function webdavBackup(): Promise<boolean> {
   zip.addLocalFile(controledMihomoConfigPath())
   zip.addLocalFile(profileConfigPath())
   zip.addLocalFile(overrideConfigPath())
-  zip.addLocalFolder(themesDir(), 'themes')
   zip.addLocalFolder(profilesDir(), 'profiles')
   zip.addLocalFolder(overrideDir(), 'override')
   const date = new Date()

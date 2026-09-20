@@ -649,46 +649,12 @@ export async function getIconDataURL(appPath: string): Promise<string> {
   return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('getIconDataURL', appPath))
 }
 
-export async function resolveThemes(): Promise<{ key: string; label: string }[]> {
-  return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('resolveThemes'))
-}
-
-export async function importThemes(files: string[]): Promise<void> {
-  return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('importThemes', files))
-}
-
-export async function readTheme(theme: string): Promise<string> {
-  return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('readTheme', theme))
-}
-
-export async function writeTheme(theme: string, css: string): Promise<void> {
-  return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('writeTheme', theme, css))
-}
-
 export async function startNetworkDetection(): Promise<void> {
   return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('startNetworkDetection'))
 }
 
 export async function stopNetworkDetection(): Promise<void> {
   return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('stopNetworkDetection'))
-}
-
-let applyThemeRunning = false
-const waitList: string[] = []
-export async function applyTheme(theme: string): Promise<void> {
-  if (applyThemeRunning) {
-    waitList.push(theme)
-    return
-  }
-  applyThemeRunning = true
-  try {
-    return await ipcErrorWrapper(window.electron.ipcRenderer.invoke('applyTheme', theme))
-  } finally {
-    applyThemeRunning = false
-    if (waitList.length > 0) {
-      await applyTheme(waitList.shift() || '')
-    }
-  }
 }
 
 export async function registerShortcut(

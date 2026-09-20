@@ -1,8 +1,7 @@
 import { is } from '@electron-toolkit/utils'
 import { BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
-import { getAppConfig, patchAppConfig } from '../config'
-import { applyTheme } from './theme'
+import { patchAppConfig } from '../config'
 import { buildContextMenu, showTrayIcon } from './tray'
 import { createWindowStateManager } from './windowState'
 import { getLocale } from '../../shared/i18n'
@@ -41,7 +40,6 @@ async function createFloatingWindow(): Promise<void> {
     saveSize: false,
     restoreWindowMode: false
   })
-  const { customTheme = 'default.css' } = await getAppConfig()
   floatingWindow = new BrowserWindow({
     width: 120,
     height: 42,
@@ -68,7 +66,6 @@ async function createFloatingWindow(): Promise<void> {
   })
   floatingWindowState.attach(floatingWindow)
   floatingWindow.on('ready-to-show', () => {
-    applyTheme(customTheme)
     floatingWindow?.show()
     floatingWindow?.setAlwaysOnTop(true, 'screen-saver')
   })

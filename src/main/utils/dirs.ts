@@ -58,10 +58,6 @@ export function resourcesFilesDir(): string {
   return path.join(resourcesDir(), 'files')
 }
 
-export function themesDir(): string {
-  return path.join(dataDir(), 'themes')
-}
-
 export function mihomoIpcPath(): string {
   if (process.platform === 'win32') {
     return '\\\\.\\pipe\\KokoroBox\\mihomo'

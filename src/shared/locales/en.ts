@@ -1194,8 +1194,6 @@ export const messages: Readonly<Record<string, string>> = {
   'Keep editing': 'Keep editing',
   Edit: 'Edit',
   'Edit PAC script': 'Edit PAC script',
-  'Edit theme': 'Edit theme',
-  'Import theme': 'Import theme',
   'Edit details': 'Edit details',
   'Edit file': 'Edit file',
   'Edit bypass list (YAML)': 'Edit bypass list (YAML)',
@@ -1227,9 +1225,6 @@ export const messages: Readonly<Record<string, string>> = {
   'Configure routes automatically': 'Configure routes automatically',
   'Select outbound interface automatically': 'Select outbound interface automatically',
   'Custom hosts': 'Custom hosts',
-  'Custom theme': 'Custom theme',
-  'Applies a local CSS theme. Import a CSS file to add one.':
-    'Applies a local CSS theme. Import a CSS file to add one.',
   'Custom tray icon': 'Custom tray icon',
   'Color presets': 'Color presets',
   'Proxy sort order': 'Proxy sort order',
