@@ -88,6 +88,30 @@ test('renderer entrypoints preserve locale through React Aria', () => {
   }
 })
 
+test('the shared application preference controls native reduced motion in every renderer', () => {
+  const appConfigProvider = readFileSync('src/renderer/src/hooks/use-app-config.tsx', 'utf8')
+  const appOverrides = readFileSync(appOverridesCssPath, 'utf8')
+
+  assert.match(appConfigProvider, /document\.documentElement\.dataset\.reduceMotion = 'true'/)
+  assert.match(appConfigProvider, /delete document\.documentElement\.dataset\.reduceMotion/)
+  assert.doesNotMatch(appConfigProvider, /dataset\.reduceMotion = 'false'/)
+  assert.match(
+    appConfigProvider,
+    /syncReducedMotionPreference\(appConfig\.disableAnimation === true\)/
+  )
+
+  for (const file of [
+    'src/renderer/src/main.tsx',
+    'src/renderer/src/floating.tsx',
+    'src/renderer/src/traymenu.tsx'
+  ]) {
+    assert.match(readFileSync(file, 'utf8'), /<AppConfigProvider>/)
+  }
+
+  assert.match(appOverrides, /:root\[data-reduce-motion='true'\] \.settings-search-target/)
+  assert.match(appOverrides, /:root\[data-reduce-motion='true'\] \.rule-list-card/)
+})
+
 test('renderer styles and components use native semantic tokens', () => {
   const rendererFiles = collectFiles(rendererRoot).filter((file) =>
     /\.(?:css|[cm]?[jt]sx?)$/.test(file)

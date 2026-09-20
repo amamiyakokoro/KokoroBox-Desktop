@@ -62,6 +62,12 @@ locale semantics with React Aria `I18nProvider` and the existing `getLocale()` s
 - `src/renderer/src/floating.tsx`
 - `src/renderer/src/traymenu.tsx`
 
+The shared `AppConfigProvider` also synchronizes the application's Reduce animations preference to
+the document root as `data-reduce-motion="true"`. This gives HeroUI's native motion variants and
+KokoroBox-owned transitions one source of truth in every renderer window. When the application
+preference is off, the attribute is removed so the operating system's `prefers-reduced-motion`
+setting remains authoritative.
+
 Renderer styles now load only Tailwind and `@heroui/styles`. The legacy `hero.mjs` Tailwind plugin
 and `@source` scan of `@heroui/theme` have been removed. Legacy `--heroui-*` runtime tokens are not
 used by renderer UI. The renderer also uses only HeroUI v3 semantic utility names. The theme

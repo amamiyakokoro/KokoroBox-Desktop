@@ -537,6 +537,10 @@ input[type='number'] {
   outline: none;
 }
 
+:root[data-reduce-motion='true'] .settings-search-target {
+  animation-duration: 0.01ms;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .settings-search-target {
     animation-duration: 0.01ms;
@@ -800,6 +804,10 @@ input[type='number'] {
   font-size: 0.625rem;
   line-height: 0.875rem;
   opacity: 0.72;
+}
+
+:root[data-reduce-motion='true'] .rule-list-card {
+  transition-duration: 0.01ms;
 }
 
 @media (prefers-reduced-motion: reduce) {
