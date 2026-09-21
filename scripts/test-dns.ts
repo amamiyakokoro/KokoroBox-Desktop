@@ -55,7 +55,10 @@ test('anti-pollution DNS defaults respect rules and use redundant TLS bootstrap 
 test('global DNS rule routing hides redundant per-server connection selectors', () => {
   const component = readFileSync('src/renderer/src/components/dns/dns-server-list.tsx', 'utf8')
   const page = readFileSync('src/renderer/src/components/settings/network/dns-settings.tsx', 'utf8')
-  const advanced = readFileSync('src/renderer/src/components/dns/advanced-dns-setting.tsx', 'utf8')
+  const advanced = readFileSync(
+    'src/renderer/src/components/dns/advanced-dns-setting.tsx',
+    'utf8'
+  )
 
   assert.match(component, /followRoutingRules = false/)
   assert.match(component, /!ipOnly && !followRoutingRules/)
@@ -65,10 +68,7 @@ test('global DNS rule routing hides redundant per-server connection selectors', 
 
 test('DNS settings use sectioned, container-responsive list editors', () => {
   const page = readFileSync('src/renderer/src/components/settings/network/dns-settings.tsx', 'utf8')
-  const advanced = readFileSync(
-    'src/renderer/src/components/dns/advanced-dns-setting.tsx',
-    'utf8'
-  )
+  const advanced = readFileSync('src/renderer/src/components/dns/advanced-dns-setting.tsx', 'utf8')
   const servers = readFileSync('src/renderer/src/components/dns/dns-server-list.tsx', 'utf8')
   const editor = readFileSync(
     'src/renderer/src/components/base/base-list-editor.tsx',
@@ -78,8 +78,9 @@ test('DNS settings use sectioned, container-responsive list editors', () => {
 
   assert.match(
     page,
-    /<FeatureSettingsSection[\s\S]*?title=\{tr\('DNS behavior'\)\}[\s\S]*?action=\{embedded \? saveButton : undefined\}/
+    /<FeatureSettingsPanelAction action=\{embedded \? saveButton : undefined\} \/>/
   )
+  assert.match(page, /FeatureSettingsSection title=\{tr\('DNS behavior'\)\}/)
   assert.match(page, /FeatureSettingsSection title=\{tr\('Fake IP settings'\)\}/)
   assert.match(page, /FeatureSettingsSection title=\{tr\('DNS servers'\)\}/)
   assert.match(advanced, /FeatureSettingsSection title=\{tr\('DNS routing'\)\}/)

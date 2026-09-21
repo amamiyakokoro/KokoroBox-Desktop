@@ -2,19 +2,21 @@ import { tr } from '../../../shared/i18n'
 import { Button } from '@heroui/react'
 import BasePage from '@renderer/components/base/base-page'
 import { SettingCardModeProvider } from '@renderer/components/base/base-setting-card'
+import { SettingsPanelActionProvider } from '@renderer/components/base/base-settings-panel-action'
 import { KokoTabs } from '@renderer/components/base/base-controls'
 import {
   normalizeLegacySettingsSearchParams,
   resolveSettingsSelection
 } from '@renderer/components/settings/settings-navigation'
 import { getSettingsCategories } from '@renderer/components/settings/settings-registry'
-import React, { useCallback, useEffect, useMemo, useRef } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { IoLogoGithub } from 'react-icons/io5'
 import { useSearchParams } from 'react-router-dom'
 
 const Settings: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams()
   const contentRef = useRef<HTMLElement>(null)
+  const [panelActionTarget, setPanelActionTarget] = useState<HTMLDivElement | null>(null)
   const categories = useMemo(() => getSettingsCategories(), [])
   const { category, requestedSetting, selected, selectedPanel, selectedPanels } = useMemo(
     () => resolveSettingsSelection(categories, searchParams),
@@ -103,10 +105,10 @@ const Settings: React.FC = () => {
       <main ref={contentRef} className="settings-page min-h-full min-w-0 pb-4">
         {selectedPanels.length > 1 && (
           <header className="settings-context-header sticky top-0 z-10 w-full bg-surface/95">
-            <div className="settings-context-inner w-full max-w-[960px] px-6">
+            <div className="settings-context-inner flex min-h-10 w-full max-w-[960px] items-center gap-2 px-6">
               <nav
                 aria-label={tr('Settings panels')}
-                className="settings-panel-navigation no-scrollbar flex min-h-10 min-w-0 items-center overflow-x-auto"
+                className="settings-panel-navigation no-scrollbar flex min-h-10 min-w-0 flex-1 items-center overflow-x-auto"
               >
                 <KokoTabs
                   ariaLabel={tr('Settings panels')}
@@ -122,13 +124,20 @@ const Settings: React.FC = () => {
                   onChange={selectPanel}
                 />
               </nav>
+              <div
+                ref={setPanelActionTarget}
+                className="app-nodrag shrink-0"
+                data-settings-panel-actions
+              />
             </div>
           </header>
         )}
         <div className="settings-content-inner w-full max-w-[960px] px-6">
-          <SettingCardModeProvider value={false}>
-            {selectedPanel?.content() ?? selected.content?.()}
-          </SettingCardModeProvider>
+          <SettingsPanelActionProvider target={panelActionTarget}>
+            <SettingCardModeProvider value={false}>
+              {selectedPanel?.content() ?? selected.content?.()}
+            </SettingCardModeProvider>
+          </SettingsPanelActionProvider>
         </div>
       </main>
     </BasePage>

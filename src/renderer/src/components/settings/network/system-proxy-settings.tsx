@@ -6,6 +6,7 @@ import BasePage from '@renderer/components/base/base-page'
 import SettingItem from '@renderer/components/base/base-setting-item'
 import SettingSubgroup from '@renderer/components/base/base-setting-subgroup'
 import FeatureSettingsLayout, {
+  FeatureSettingsPanelAction,
   FeatureSettingsSaveButton,
   FeatureSettingsSection
 } from '@renderer/components/base/base-feature-settings'
@@ -237,11 +238,9 @@ const Sysproxy: React.FC<Props> = ({ embedded = false }) => {
           }}
         />
       )}
+      <FeatureSettingsPanelAction action={embedded ? saveButton : undefined} />
       <FeatureSettingsLayout>
-        <FeatureSettingsSection
-          title={tr('Proxy configuration')}
-          action={embedded ? saveButton : undefined}
-        >
+        <FeatureSettingsSection title={tr('Proxy configuration')}>
           <SettingItem
             title={tr('Proxy host')}
             description={tr('Leave empty to use 127.0.0.1')}

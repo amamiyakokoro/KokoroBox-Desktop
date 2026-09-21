@@ -3,6 +3,7 @@ import { Switch } from '@heroui/react'
 import BasePage from '@renderer/components/base/base-page'
 import SettingItem from '@renderer/components/base/base-setting-item'
 import FeatureSettingsLayout, {
+  FeatureSettingsPanelAction,
   FeatureSettingsSaveButton,
   FeatureSettingsSection
 } from '@renderer/components/base/base-feature-settings'
@@ -104,11 +105,9 @@ const Mihomo: React.FC<Props> = ({ embedded = false }) => {
 
   const content = (
     <>
+      <FeatureSettingsPanelAction action={embedded ? saveButton : undefined} />
       <FeatureSettingsLayout>
-        <FeatureSettingsSection
-          title={tr('Core network')}
-          action={embedded ? saveButton : undefined}
-        >
+        <FeatureSettingsSection title={tr('Core network')}>
           <SettingItem title="IPv6">
             <Switch size="sm" isSelected={ipv6} onChange={(value) => stageChange({ ipv6: value })}>
               <Switch.Content>

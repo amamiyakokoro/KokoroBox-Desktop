@@ -5,6 +5,7 @@ import { KokoSegmentedControl } from '@renderer/components/base/base-controls'
 import BasePage from '@renderer/components/base/base-page'
 import SettingItem from '@renderer/components/base/base-setting-item'
 import FeatureSettingsLayout, {
+  FeatureSettingsPanelAction,
   FeatureSettingsSaveButton,
   FeatureSettingsSection
 } from '@renderer/components/base/base-feature-settings'
@@ -113,12 +114,10 @@ const Tun: React.FC<Props> = ({ embedded = false }) => {
 
   const content = (
     <>
+      <FeatureSettingsPanelAction action={embedded ? saveButton : undefined} />
       <FeatureSettingsLayout>
         {(platform === 'win32' || platform === 'darwin') && (
-          <FeatureSettingsSection
-            title={tr('Platform integration')}
-            action={embedded ? saveButton : undefined}
-          >
+          <FeatureSettingsSection title={tr('Platform integration')}>
             {platform === 'win32' && (
               <SettingItem title={tr('Reset firewall')}>
                 <Button
@@ -161,12 +160,7 @@ const Tun: React.FC<Props> = ({ embedded = false }) => {
           </FeatureSettingsSection>
         )}
 
-        <FeatureSettingsSection
-          title={tr('TUN routing')}
-          action={
-            embedded && platform !== 'win32' && platform !== 'darwin' ? saveButton : undefined
-          }
-        >
+        <FeatureSettingsSection title={tr('TUN routing')}>
           <SettingItem title={tr('TUN network stack')} divider>
             <KokoSegmentedControl
               ariaLabel={tr('TUN network stack')}

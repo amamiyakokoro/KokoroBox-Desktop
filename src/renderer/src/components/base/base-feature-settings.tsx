@@ -2,6 +2,7 @@ import { tr } from '../../../../shared/i18n'
 import { Button } from '@heroui/react'
 import React, { type ReactNode } from 'react'
 import { SettingCardModeProvider } from './base-setting-card'
+import SettingsPanelAction from './base-settings-panel-action'
 import SettingsSection from './base-settings-section'
 
 interface FeatureSettingsLayoutProps {
@@ -11,7 +12,6 @@ interface FeatureSettingsLayoutProps {
 interface FeatureSettingsSectionProps {
   title: string
   description?: string
-  action?: ReactNode
   children: ReactNode
 }
 
@@ -45,14 +45,15 @@ export const FeatureSettingsSaveButton: React.FC<FeatureSettingsSaveButtonProps>
   )
 }
 
+export const FeatureSettingsPanelAction: React.FC<{ action?: ReactNode }> = ({ action }) =>
+  action ? <SettingsPanelAction>{action}</SettingsPanelAction> : null
+
 export const FeatureSettingsSection: React.FC<FeatureSettingsSectionProps> = ({
   title,
   description,
-  action,
   children
 }) => (
   <SettingsSection
-    action={action}
     className="feature-settings-section"
     contentClassName="feature-settings-section__content"
     description={description}
@@ -64,9 +65,7 @@ export const FeatureSettingsSection: React.FC<FeatureSettingsSectionProps> = ({
 
 const FeatureSettingsLayout: React.FC<FeatureSettingsLayoutProps> = ({ children }) => (
   <SettingCardModeProvider value={false}>
-    <div className="feature-settings-layout mx-auto w-full max-w-[960px] pb-4 pt-1">
-      {children}
-    </div>
+    <div className="feature-settings-layout mx-auto w-full max-w-[960px] pb-4 pt-1">{children}</div>
   </SettingCardModeProvider>
 )
 

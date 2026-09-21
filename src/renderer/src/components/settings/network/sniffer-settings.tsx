@@ -4,6 +4,7 @@ import { KokoTextField } from '@renderer/components/base/koko-form'
 import BasePage from '@renderer/components/base/base-page'
 import SettingItem from '@renderer/components/base/base-setting-item'
 import FeatureSettingsLayout, {
+  FeatureSettingsPanelAction,
   FeatureSettingsSaveButton,
   FeatureSettingsSection
 } from '@renderer/components/base/base-feature-settings'
@@ -133,11 +134,9 @@ const Sniffer: React.FC<Props> = ({ embedded = false }) => {
 
   const content = (
     <>
+      <FeatureSettingsPanelAction action={embedded ? saveButton : undefined} />
       <FeatureSettingsLayout>
-        <FeatureSettingsSection
-          title={tr('Sniffing behavior')}
-          action={embedded ? saveButton : undefined}
-        >
+        <FeatureSettingsSection title={tr('Sniffing behavior')}>
           <SettingItem title={tr('Override domain sniffing settings')} divider>
             <Switch
               size="sm"

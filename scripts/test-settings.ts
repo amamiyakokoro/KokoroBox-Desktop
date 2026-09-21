@@ -152,7 +152,7 @@ test('application settings keep one clear navigation hierarchy in compact deskto
   assert.match(settingsNavigation, /legacyCategoryAliases/)
   assert.match(settings, /settings-context-header sticky top-0 z-10 w-full bg-surface\/95/)
   assert.doesNotMatch(settings, /settings-context-header[^"\n]*border-b/)
-  assert.match(settings, /settings-context-inner w-full max-w-\[960px\] px-6/)
+  assert.match(settings, /settings-context-inner[^"\n]*w-full[^"\n]*max-w-\[960px\][^"\n]*px-6/)
   assert.match(settings, /settings-content-inner w-full max-w-\[960px\] px-6/)
   assert.doesNotMatch(settings, /settings-(?:context|content)-inner mx-auto/)
   assert.match(settings, /<main ref=\{contentRef\} className="settings-page min-h-full min-w-0 pb-4">/)
@@ -316,50 +316,55 @@ test('Mihomo settings belong to Core while legacy Network links normalize canoni
 
 test('feature settings only surface save actions for dirty embedded panels', () => {
   const shared = readFileSync('src/renderer/src/components/base/base-feature-settings.tsx', 'utf8')
-  const styles = readFileSync('src/renderer/src/assets/app-overrides.css', 'utf8')
-  const featurePages = new Map([
-    ['src/renderer/src/components/settings/network/system-proxy-settings.tsx', 'Proxy configuration'],
-    ['src/renderer/src/components/settings/network/dns-settings.tsx', 'DNS behavior'],
-    ['src/renderer/src/components/settings/network/sniffer-settings.tsx', 'Sniffing behavior'],
-    ['src/renderer/src/components/settings/network/mihomo-settings.tsx', 'Core network']
-  ])
-  const tun = readFileSync(
-    'src/renderer/src/components/settings/network/tun-settings.tsx',
+  const panelAction = readFileSync(
+    'src/renderer/src/components/base/base-settings-panel-action.tsx',
     'utf8'
   )
+  const settings = readFileSync('src/renderer/src/pages/settings.tsx', 'utf8')
+  const styles = readFileSync('src/renderer/src/assets/app-overrides.css', 'utf8')
+  const featurePages = [
+    'src/renderer/src/components/settings/network/system-proxy-settings.tsx',
+    'src/renderer/src/components/settings/network/tun-settings.tsx',
+    'src/renderer/src/components/settings/network/dns-settings.tsx',
+    'src/renderer/src/components/settings/network/sniffer-settings.tsx',
+    'src/renderer/src/components/settings/network/mihomo-settings.tsx'
+  ]
+  const sectionProps = shared.match(/interface FeatureSettingsSectionProps \{[\s\S]*?\}/)?.[0] ?? ''
   const layoutProps = shared.match(/interface FeatureSettingsLayoutProps \{[\s\S]*?\}/)?.[0] ?? ''
 
   assert.match(shared, /if \(!isDirty\) return null/)
-  assert.match(shared, /action\?: ReactNode/)
-  assert.match(shared, /<SettingsSection[\s\S]*action=\{action\}/)
+  assert.match(shared, /export const FeatureSettingsPanelAction/)
+  assert.match(shared, /<SettingsPanelAction>\{action\}<\/SettingsPanelAction>/)
+  assert.doesNotMatch(sectionProps, /action\?: ReactNode/)
+  assert.doesNotMatch(shared, /<SettingsSection[\s\S]{0,160}action=\{action\}/)
   assert.doesNotMatch(layoutProps, /action\?: ReactNode/)
-  assert.doesNotMatch(shared, /feature-settings-layout__(?:action)|feature-settings-layout--has-action/)
-  assert.doesNotMatch(styles, /\.feature-settings-layout__(?:action)|\.feature-settings-layout--has-action/)
+  assert.match(panelAction, /createContext<HTMLElement \| null>\(null\)/)
+  assert.match(panelAction, /createPortal\(children, target\)/)
+  assert.match(settings, /<SettingsPanelActionProvider target=\{panelActionTarget\}>/)
+  assert.match(settings, /data-settings-panel-actions/)
+  assert.match(settings, /className="app-nodrag shrink-0"/)
+  assert.doesNotMatch(
+    shared,
+    /feature-settings-layout__(?:action)|feature-settings-layout--has-action/
+  )
+  assert.doesNotMatch(
+    styles,
+    /\.feature-settings-layout__(?:action)|\.feature-settings-layout--has-action/
+  )
 
-  for (const [page, firstSectionTitle] of featurePages) {
+  for (const page of featurePages) {
     const source = readFileSync(page, 'utf8')
-    assert.match(source, /<FeatureSettingsLayout>/)
     assert.match(
       source,
-      new RegExp(
-        `<FeatureSettingsSection[\\s\\S]{0,160}title=\\{tr\\('${firstSectionTitle}'\\)\\}[\\s\\S]{0,160}action=\\{embedded \\? saveButton : undefined\\}`
-      )
+      /<FeatureSettingsPanelAction action=\{embedded \? saveButton : undefined\} \/>/
     )
+    assert.match(source, /<FeatureSettingsLayout>/)
+    assert.doesNotMatch(source, /<FeatureSettingsSection[^>]*\saction=/)
     assert.doesNotMatch(source, /<FeatureSettingsLayout[^>]*action=/)
     assert.doesNotMatch(source, /mx-auto flex w-full max-w-\[1040px\] justify-end/)
+    assert.match(source, /header=\{saveButton\}/)
     assert.match(source, /useUnsavedChangesGuard/)
   }
-
-  assert.match(
-    tun,
-    /title=\{tr\('Platform integration'\)\}[\s\S]{0,160}action=\{embedded \? saveButton : undefined\}/
-  )
-  assert.match(
-    tun,
-    /title=\{tr\('TUN routing'\)\}[\s\S]{0,240}embedded && platform !== 'win32' && platform !== 'darwin' \? saveButton : undefined/
-  )
-  assert.doesNotMatch(tun, /<FeatureSettingsLayout[^>]*action=/)
-  assert.match(tun, /useUnsavedChangesGuard/)
 })
 
 test('shared settings primitives isolate HeroUI v3 compound APIs', () => {

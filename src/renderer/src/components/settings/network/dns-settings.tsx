@@ -5,6 +5,7 @@ import { KokoSegmentedControl } from '@renderer/components/base/base-controls'
 import BasePage from '@renderer/components/base/base-page'
 import SettingItem from '@renderer/components/base/base-setting-item'
 import FeatureSettingsLayout, {
+  FeatureSettingsPanelAction,
   FeatureSettingsSaveButton,
   FeatureSettingsSection
 } from '@renderer/components/base/base-feature-settings'
@@ -263,11 +264,9 @@ const DNS: React.FC<Props> = ({ embedded = false }) => {
 
   const content = (
     <>
+      <FeatureSettingsPanelAction action={embedded ? saveButton : undefined} />
       <FeatureSettingsLayout>
-        <FeatureSettingsSection
-          title={tr('DNS behavior')}
-          action={embedded ? saveButton : undefined}
-        >
+        <FeatureSettingsSection title={tr('DNS behavior')}>
           <SettingItem title={tr('Override DNS settings')} divider>
             <Switch
               size="sm"
