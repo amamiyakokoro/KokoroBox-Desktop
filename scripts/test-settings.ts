@@ -296,7 +296,7 @@ test('Mihomo settings belong to Core while legacy Network links normalize canoni
     'network-behavior',
     'sniffer'
   ])
-  assert.deepEqual(panelKeys(corePanels), ['runtime', 'mihomo', 'service', 'environment'])
+  assert.deepEqual(panelKeys(corePanels), ['runtime', 'mihomo', 'environment'])
   assert.doesNotMatch(networkPanels, /key: 'mihomo'|mihomo-ipv6|<Mihomo embedded/)
   assert.match(corePanels, /key: 'mihomo'/)
   assert.match(corePanels, /entry\('mihomo-ipv6'/)
@@ -317,6 +317,8 @@ test('Mihomo settings belong to Core while legacy Network links normalize canoni
   assert.match(navigation, /searchParams\.get\('setting'\)\?\.startsWith\('mihomo-'\)/)
   assert.match(navigation, /nextParams\.set\('section', 'core'\)/)
   assert.match(navigation, /nextParams\.set\('panel', 'mihomo'\)/)
+  assert.match(navigation, /searchParams\.get\('panel'\) === 'service'/)
+  assert.match(navigation, /nextParams\.set\('panel', 'runtime'\)/)
   assert.match(settings, /normalizeLegacySettingsSearchParams\(searchParams\)/)
   assert.match(settings, /setSearchParams\(normalizedParams, \{ replace: true \}\)/)
   for (const file of collectTsxFiles('src/renderer/src')) {
@@ -2100,7 +2102,7 @@ test('common settings choices use the shared segmented control', () => {
   }
 })
 
-test('core settings separate runtime, service and environment concerns', () => {
+test('core settings combine service management with runtime while preserving its section', () => {
   const registry = readFileSync(
     'src/renderer/src/components/settings/settings-registry.tsx',
     'utf8'
@@ -2114,16 +2116,19 @@ test('core settings separate runtime, service and environment concerns', () => {
   assert.match(registry, /const corePanels:/)
   assert.match(registry, /key: 'runtime'/)
   assert.match(registry, /content: \(\) => <CoreExecutionSettings \/>/)
-  assert.match(registry, /key: 'service'/)
-  assert.match(registry, /content: \(\) => <ServiceManagementSettings \/>/)
+  assert.doesNotMatch(registry, /key: 'service'/)
+  assert.doesNotMatch(registry, /ServiceManagementSettings/)
+  assert.match(registry, /entry\('elevation-status'[\s\S]*panel: 'runtime'/)
+  assert.match(registry, /entry\('service-status'[\s\S]*panel: 'runtime'/)
   assert.match(registry, /key: 'environment'/)
   assert.match(registry, /content: \(\) => <EnvSetting \/>/)
   assert.match(registry, /entries: corePanels\.flatMap/)
   assert.match(registry, /panels: corePanels/)
   assert.match(runtime, /sections\.includes\('runtime'\)/)
   assert.match(runtime, /sections\.includes\('service'\)/)
-  assert.match(runtime, /showSectionHeadings\?: boolean/)
-  assert.match(runtime, /showSectionHeadings=\{false\}/)
+  assert.match(runtime, /sectionHeadings\?: Partial<Record<CoreRuntimeSection, boolean>>/)
+  assert.match(runtime, /sectionHeadings=\{\{ runtime: false \}\}/)
+  assert.match(runtime, /tr\('Service management'\)/)
   assert.match(runtime, /help=\{tr\([\s\S]*Higher priorities may improve responsiveness/)
   assert.match(runtime, /description: tr\('Recommended for most users'\)/)
   assert.doesNotMatch(environment, /<SettingCard header=\{tr\('Environment variables'\)\}>/)

@@ -24,16 +24,24 @@ export interface SettingsSearchResult {
 export const normalizeLegacySettingsSearchParams = (
   searchParams: URLSearchParams
 ): URLSearchParams | undefined => {
+  const nextParams = new URLSearchParams(searchParams)
+  let changed = false
   const isLegacyMihomoPanel =
     searchParams.get('section') === 'network' &&
     (searchParams.get('panel') === 'mihomo' || searchParams.get('setting')?.startsWith('mihomo-'))
 
-  if (!isLegacyMihomoPanel) return undefined
+  if (isLegacyMihomoPanel) {
+    nextParams.set('section', 'core')
+    nextParams.set('panel', 'mihomo')
+    changed = true
+  }
 
-  const nextParams = new URLSearchParams(searchParams)
-  nextParams.set('section', 'core')
-  nextParams.set('panel', 'mihomo')
-  return nextParams
+  if (searchParams.get('section') === 'core' && searchParams.get('panel') === 'service') {
+    nextParams.set('panel', 'runtime')
+    changed = true
+  }
+
+  return changed ? nextParams : undefined
 }
 
 export const resolveSettingsSelection = (

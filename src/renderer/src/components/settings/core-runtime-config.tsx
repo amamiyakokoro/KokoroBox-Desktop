@@ -52,12 +52,12 @@ type CoreRuntimeSection = 'runtime' | 'service'
 
 interface Props {
   sections?: CoreRuntimeSection[]
-  showSectionHeadings?: boolean
+  sectionHeadings?: Partial<Record<CoreRuntimeSection, boolean>>
 }
 
 const CoreRuntimeConfig: React.FC<Props> = ({
   sections = ['runtime', 'service'],
-  showSectionHeadings = true
+  sectionHeadings = {}
 }) => {
   const { appConfig, patchAppConfig } = useAppConfig()
   const { controledMihomoConfig } = useControledMihomoConfig()
@@ -180,7 +180,7 @@ const CoreRuntimeConfig: React.FC<Props> = ({
         />
       )}
       {sections.includes('runtime') && (
-        <SettingCard header={showSectionHeadings ? tr('Core runtime') : undefined}>
+        <SettingCard header={sectionHeadings.runtime === false ? undefined : tr('Core runtime')}>
           <SettingItem
             contentAlign="end"
             title={tr('Core version')}
@@ -342,7 +342,9 @@ const CoreRuntimeConfig: React.FC<Props> = ({
         </SettingCard>
       )}
       {sections.includes('service') && (
-        <SettingCard header={showSectionHeadings ? tr('Service management') : undefined}>
+        <SettingCard
+          header={sectionHeadings.service === false ? undefined : tr('Service management')}
+        >
           {!systemCoreOnlyBuild && platform !== 'darwin' && (
             <SettingItem contentAlign="end" title={tr('Elevation status')} divider>
               <Button size="sm" variant="secondary" onPress={() => setShowPermissionModal(true)}>
@@ -367,11 +369,7 @@ const CoreRuntimeConfig: React.FC<Props> = ({
 }
 
 export const CoreExecutionSettings: React.FC = () => (
-  <CoreRuntimeConfig sections={['runtime']} showSectionHeadings={false} />
-)
-
-export const ServiceManagementSettings: React.FC = () => (
-  <CoreRuntimeConfig sections={['service']} showSectionHeadings={false} />
+  <CoreRuntimeConfig sectionHeadings={{ runtime: false }} />
 )
 
 export default CoreRuntimeConfig

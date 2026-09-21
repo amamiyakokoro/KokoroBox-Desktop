@@ -17,7 +17,7 @@ import {
   IntegrationSettings,
   NetworkBehaviorSettings
 } from './behavior-settings'
-import { CoreExecutionSettings, ServiceManagementSettings } from './core-runtime-config'
+import { CoreExecutionSettings } from './core-runtime-config'
 import GeneralConfig, { PerformanceConfig } from './general-config'
 import ShortcutConfig from './shortcut-config'
 import SiderConfig from './sider-config'
@@ -458,6 +458,13 @@ export const getSettingsCategories = (): SettingsCategoryDefinition[] => {
         entry('startup-detection', tr('Startup detection method'), tr('Core runtime'), {
           panel: 'runtime',
           platforms: ['darwin', 'linux']
+        }),
+        entry('elevation-status', tr('Elevation status'), tr('Service management'), {
+          panel: 'runtime',
+          platforms: ['win32', 'linux']
+        }),
+        entry('service-status', tr('Service status'), tr('Service management'), {
+          panel: 'runtime'
         })
       ],
       content: () => <CoreExecutionSettings />
@@ -522,20 +529,6 @@ export const getSettingsCategories = (): SettingsCategoryDefinition[] => {
         })
       ],
       content: () => <Mihomo embedded />
-    },
-    {
-      key: 'service',
-      label: tr('Service management'),
-      entries: [
-        entry('elevation-status', tr('Elevation status'), tr('Service management'), {
-          panel: 'service',
-          platforms: ['win32', 'linux']
-        }),
-        entry('service-status', tr('Service status'), tr('Service management'), {
-          panel: 'service'
-        })
-      ],
-      content: () => <ServiceManagementSettings />
     },
     {
       key: 'environment',
