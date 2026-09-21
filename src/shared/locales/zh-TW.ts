@@ -1240,6 +1240,7 @@ export const messages: Readonly<Record<string, string>> = {
     '留空時使用預設 User Agent；部分訂閱服務會依此值回傳不同內容。',
   'Invalid subscription format: cannot parse a valid configuration\n':
     '訂閱格式錯誤，無法解析為有效的設定檔案\n',
+  Subscription: '訂閱',
   Subscriptions: '訂閱管理',
   'No subscriptions yet': '還沒有訂閱',
   'Paste a subscription URL or create a local profile.': '貼上訂閱連結或建立本機設定。',

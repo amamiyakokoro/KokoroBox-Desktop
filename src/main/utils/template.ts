@@ -47,10 +47,10 @@ export const defaultConfig: AppConfig = {
     'dns',
     'sniff',
     'kokoro',
+    'profile',
     'app-routing',
     'proxy',
     'connection',
-    'profile',
     'rule',
     'override',
     'log'

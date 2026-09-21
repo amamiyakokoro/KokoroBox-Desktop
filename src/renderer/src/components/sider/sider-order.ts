@@ -5,7 +5,7 @@ const siderGroupOrder: SiderGroup[] = ['quick', 'account', 'status', 'navigation
 export const siderKeysByGroup: Record<SiderGroup, readonly string[]> = {
   quick: ['sysproxy', 'tun', 'dns', 'sniff', 'mihomo'],
   account: ['kokoro'],
-  status: ['app-routing', 'proxy', 'connection', 'profile', 'rule', 'override', 'log'],
+  status: ['profile', 'app-routing', 'proxy', 'connection', 'rule', 'override', 'log'],
   navigation: []
 }
 
@@ -15,6 +15,32 @@ export const quickControlKeys = new Set<string>(siderKeysByGroup.quick)
 export const accountKeys = new Set<string>(siderKeysByGroup.account)
 export const currentStatusKeys = new Set<string>(siderKeysByGroup.status)
 export const navigationKeys = new Set<string>(siderKeysByGroup.navigation)
+
+const legacyDefaultStatusOrder = [
+  'app-routing',
+  'proxy',
+  'connection',
+  'profile',
+  'rule',
+  'override',
+  'log'
+]
+
+const promoteSubscriptionFromLegacyDefault = (order: string[]): string[] => {
+  const statusOrder = order.filter((key) => currentStatusKeys.has(key))
+  const comparableLegacyOrder = legacyDefaultStatusOrder.filter((key) => statusOrder.includes(key))
+  const usesLegacyDefault = statusOrder.every((key, index) => key === comparableLegacyOrder[index])
+  if (!usesLegacyDefault || !statusOrder.includes('profile')) return order
+
+  const withoutProfile = order.filter((key) => key !== 'profile')
+  const firstStatusIndex = withoutProfile.findIndex((key) => currentStatusKeys.has(key))
+  withoutProfile.splice(
+    firstStatusIndex < 0 ? withoutProfile.length : firstStatusIndex,
+    0,
+    'profile'
+  )
+  return withoutProfile
+}
 
 const legacyGroupForSiderKey = (key: string): SiderGroup | undefined => {
   if (['sysproxy', 'tun'].includes(key)) return 'quick'
@@ -50,18 +76,19 @@ export const normalizeSiderOrder = (configuredOrder?: string[]): string[] => {
 
   // Preserve all user ordering once the stored keys already follow the current group sequence.
   if (alreadyUsesCurrentGroups) {
-    return siderGroupOrder.flatMap((group) => {
+    const normalizedOrder = siderGroupOrder.flatMap((group) => {
       const configuredGroupKeys = uniqueConfigured.filter((key) => groupForSiderKey(key) === group)
       const missingGroupKeys = siderKeysByGroup[group].filter(
         (key) => !configuredGroupKeys.includes(key)
       )
       return [...configuredGroupKeys, ...missingGroupKeys]
     })
+    return promoteSubscriptionFromLegacyDefault(normalizedOrder)
   }
 
   // For legacy interleaved orders, keep cards that stayed in their group in the user's order and
   // place cards that changed groups at their new canonical positions.
-  return siderGroupOrder.flatMap((group) => {
+  const normalizedOrder = siderGroupOrder.flatMap((group) => {
     const configuredStableKeys = uniqueConfigured.filter(
       (key) => groupForSiderKey(key) === group && legacyGroupForSiderKey(key) === group
     )
@@ -72,6 +99,7 @@ export const normalizeSiderOrder = (configuredOrder?: string[]): string[] => {
 
     return [...configuredStableKeys, ...missingStableKeys, ...movedKeys]
   })
+  return promoteSubscriptionFromLegacyDefault(normalizedOrder)
 }
 
 export const resolveRulesCardStatus = (

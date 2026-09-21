@@ -68,7 +68,7 @@ const ProfileCard: React.FC<Props> = ({ iconOnly }) => {
       <div className={`${profileCardStatus} flex justify-center`}>
         <SiderIconButton
           active={match}
-          label={tr('Subscriptions')}
+          label={tr('Subscription')}
           placement="right"
           onPress={() => navigate('/profiles')}
         >
@@ -92,9 +92,8 @@ const ProfileCard: React.FC<Props> = ({ iconOnly }) => {
     >
       {showRuntimeConfig && <ConfigViewer onClose={() => setShowRuntimeConfig(false)} />}
       <SiderStatusCard
-        allowTextWrap
         icon={<TiFolder />}
-        title={info.name}
+        title={tr('Subscription')}
         status={
           isKokoroProfile ? (
             <Chip

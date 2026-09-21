@@ -88,6 +88,12 @@ const SiderConfig: React.FC = () => {
       title: tr('Current status'),
       entries: [
         {
+          id: 'profile',
+          key: 'profileCardStatus',
+          title: tr('Subscription'),
+          defaultStatus: 'col-span-2'
+        },
+        {
           id: 'app-routing',
           key: 'appRoutingCardStatus',
           title: tr('Application routing'),
@@ -104,12 +110,6 @@ const SiderConfig: React.FC = () => {
           id: 'connection',
           key: 'connectionCardStatus',
           title: tr('Connections'),
-          defaultStatus: 'col-span-2'
-        },
-        {
-          id: 'profile',
-          key: 'profileCardStatus',
-          title: tr('Subscriptions'),
           defaultStatus: 'col-span-2'
         },
         {

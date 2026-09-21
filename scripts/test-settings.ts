@@ -1183,7 +1183,7 @@ test('desktop sidebar separates controls, live status and navigation', () => {
   )
   assert.match(
     sidebarSettings,
-    /title: tr\('Current status'\)[\s\S]*id: 'app-routing'[\s\S]*id: 'proxy'[\s\S]*id: 'connection'[\s\S]*id: 'profile'[\s\S]*id: 'rule'[\s\S]*id: 'override'[\s\S]*id: 'log'/
+    /title: tr\('Current status'\)[\s\S]*id: 'profile'[\s\S]*id: 'app-routing'[\s\S]*id: 'proxy'[\s\S]*id: 'connection'[\s\S]*id: 'rule'[\s\S]*id: 'override'[\s\S]*id: 'log'/
   )
   assert.match(sidebarSettings, /moveSiderItem/)
   assert.match(sidebarSettings, /aria-label=\{`\$\{tr\('Move up'\)\}: \$\{item\.title\}`\}/)
@@ -1282,6 +1282,10 @@ test('desktop sidebar separates controls, live status and navigation', () => {
   assert.doesNotMatch(rules, /status=|statusTone=/)
   assert.doesNotMatch(rules, /tr\('\{0\} rules'/)
   assert.match(profile, /<SiderStatusCard/)
+  assert.match(profile, /title=\{tr\('Subscription'\)\}/)
+  assert.doesNotMatch(profile, /title=\{info\.name\}|allowTextWrap/)
+  assert.match(profile, /isKokoroProfile[\s\S]*Kokoro/)
+  assert.match(profile, /info\.type === 'remote'[\s\S]*tr\('Remote'\)[\s\S]*tr\('Local'\)/)
   assert.match(profile, /label=\{tr\('Runtime configuration'\)\}/)
   assert.match(profile, /label=\{tr\('Refresh'\)\}/)
   assert.match(outboundMode, /<Tabs\.List/)
@@ -1330,7 +1334,7 @@ test('desktop sidebar separates controls, live status and navigation', () => {
   assert.match(connections, /calcCompactTraffic\(upload\)/)
   assert.doesNotMatch(connections, /truncate/)
   assert.match(appRouting, /<SiderStatusCard[\s\S]*allowTextWrap/)
-  assert.match(profile, /<SiderStatusCard[\s\S]*allowTextWrap/)
+  assert.doesNotMatch(profile, /<SiderStatusCard[\s\S]*allowTextWrap/)
   assert.match(appOverrides, /container: sider-status-card \/ inline-size/)
   assert.match(appOverrides, /@container sider-status-card \(min-width: 15rem\)/)
   assert.match(connections, /<TrafficChart/)
@@ -1353,10 +1357,10 @@ test('desktop sidebar separates controls, live status and navigation', () => {
   assert.deepEqual([...quickControlKeys], ['sysproxy', 'tun', 'dns', 'sniff', 'mihomo'])
   assert.deepEqual([...accountKeys], ['kokoro'])
   assert.deepEqual([...currentStatusKeys], [
+    'profile',
     'app-routing',
     'proxy',
     'connection',
-    'profile',
     'rule',
     'override',
     'log'
@@ -1372,14 +1376,32 @@ test('desktop sidebar separates controls, live status and navigation', () => {
     'sniff',
     'mihomo',
     'kokoro',
+    'profile',
     'app-routing',
     'proxy',
     'connection',
-    'profile',
     'rule',
     'override',
     'log'
   ])
+  assert.deepEqual(
+    normalizeSiderOrder([
+      'sysproxy',
+      'tun',
+      'dns',
+      'sniff',
+      'mihomo',
+      'kokoro',
+      'app-routing',
+      'proxy',
+      'connection',
+      'profile',
+      'rule',
+      'override',
+      'log'
+    ]),
+    defaultSiderOrder
+  )
   assert.deepEqual(normalizeSiderOrder(['tun', 'sysproxy', 'tun', 'unknown']).slice(0, 3), [
     'tun',
     'sysproxy',

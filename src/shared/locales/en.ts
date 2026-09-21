@@ -1275,6 +1275,7 @@ export const messages: Readonly<Record<string, string>> = {
     'Leave empty to use the default user agent. Some providers return different content based on this value.',
   'Invalid subscription format: cannot parse a valid configuration\n':
     'Invalid subscription format: cannot parse a valid configuration\n',
+  Subscription: 'Subscription',
   Subscriptions: 'Subscriptions',
   'No subscriptions yet': 'No subscriptions yet',
   'Paste a subscription URL or create a local profile.':
