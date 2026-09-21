@@ -18,7 +18,7 @@ import { showFloatingWindow } from './resolve/floatingWindow'
 import { getAppConfigSync } from './config/app'
 import { createMainWindowStateManager } from './resolve/windowState'
 import { isHttpUrl } from './utils/url'
-import { applyWindowsGpuWorkaround, useLinuxCustomRelaunch } from './sys/startup'
+import { useLinuxCustomRelaunch } from './sys/startup'
 import { handleDeepLink } from './resolve/deepLink'
 import { createDeepLinkInbox, takeInitialDeepLinks } from './resolve/deepLinkInbox'
 import { initAppQuitLifecycle, isAppQuitting } from './resolve/appLifecycle'
@@ -233,9 +233,6 @@ function showWindow(): number {
   return 500
 }
 
-// GPU switches must be applied before app readiness, including while a Windows callback
-// process authenticates the elevated primary instance.
-applyWindowsGpuWorkaround()
 if (syncConfig.disableGPU) app.disableHardwareAcceleration()
 
 const windowsKokoroCallback =

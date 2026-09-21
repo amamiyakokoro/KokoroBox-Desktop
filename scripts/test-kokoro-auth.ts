@@ -921,6 +921,8 @@ test('Windows packaging runs as the current user and never self-elevates at star
 
   const startup = readFileSync('src/main/sys/startup.ts', 'utf8')
   assert.doesNotMatch(startup, /schtasks|stageElevatedDeepLinks|releaseSingleInstanceLock/)
+  assert.doesNotMatch(startup, /in-process-gpu|applyWindowsGpuWorkaround|electronMajor/)
+  assert.match(startup, /useLinuxCustomRelaunch/)
 
   const workflow = readFileSync('.github/workflows/build.yml', 'utf8')
   assert.doesNotMatch(workflow, /Setup Go for KokoroBox Runner/)
