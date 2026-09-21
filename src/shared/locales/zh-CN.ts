@@ -166,6 +166,7 @@ export const messages: Readonly<Record<string, string>> = {
   '{0} applications': '{0} 个应用程序',
   '{0} proxies': '{0} 个代理',
   '{0} rules': '{0} 条规则',
+  '{0} overrides': '{0} 个覆写',
   '{0} groups': '{0} 个组',
   'Quick controls': '快速控制',
   'Current status': '当前状态',

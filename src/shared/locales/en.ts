@@ -167,6 +167,7 @@ export const messages: Readonly<Record<string, string>> = {
   '{0} applications': '{0} applications',
   '{0} proxies': '{0} proxies',
   '{0} rules': '{0} rules',
+  '{0} overrides': '{0} overrides',
   '{0} groups': '{0} groups',
   'Quick controls': 'Quick controls',
   'Current status': 'Current status',

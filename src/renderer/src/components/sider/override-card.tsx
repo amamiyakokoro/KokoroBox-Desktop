@@ -5,6 +5,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
+import { useOverrideConfig } from '@renderer/hooks/use-override-config'
 import { SiderIconButton, SiderNavItem } from './sider-surfaces'
 
 interface Props {
@@ -13,6 +14,7 @@ interface Props {
 
 const OverrideCard: React.FC<Props> = (props) => {
   const { appConfig } = useAppConfig()
+  const { overrideConfig } = useOverrideConfig()
   const { iconOnly } = props
   const { overrideCardStatus = 'col-span-1', disableAnimation = false } = appConfig || {}
   const location = useLocation()
@@ -60,6 +62,7 @@ const OverrideCard: React.FC<Props> = (props) => {
         <SiderNavItem
           icon={<MdFormatOverline />}
           title={tr('Overrides')}
+          description={tr('{0} overrides', [overrideConfig?.items?.length ?? 0])}
           active={match}
           onPress={() => navigate('/override')}
         />

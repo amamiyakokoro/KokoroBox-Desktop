@@ -13,7 +13,6 @@ interface SiderNavItemProps {
   icon: React.ReactNode
   title: string
   description?: React.ReactNode
-  endMetadata?: React.ReactNode
   status?: React.ReactNode
   statusTone?: SiderStatusTone
   prominence?: SiderItemProminence
@@ -22,7 +21,7 @@ interface SiderNavItemProps {
   onPress: () => void
 }
 
-interface SiderStatusCardProps extends Omit<SiderNavItemProps, 'endMetadata' | 'onPress'> {
+interface SiderStatusCardProps extends Omit<SiderNavItemProps, 'onPress'> {
   actions?: React.ReactNode
   allowTextWrap?: boolean
   descriptionTitle?: string
@@ -288,7 +287,6 @@ export const SiderNavItem: React.FC<SiderNavItemProps> = ({
   icon,
   title,
   description,
-  endMetadata,
   status,
   statusTone = 'default',
   prominence = 'navigation',
@@ -312,11 +310,7 @@ export const SiderNavItem: React.FC<SiderNavItemProps> = ({
       data-card-primary-action
       className={cn(
         'grid min-w-0 flex-1 items-center gap-x-2.5 rounded-xl px-2.5 py-2 text-left focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-accent',
-        trailing
-          ? 'grid-cols-[2rem_minmax(0,1fr)]'
-          : endMetadata !== undefined && endMetadata !== null
-            ? 'grid-cols-[2rem_minmax(0,1fr)_auto_2rem]'
-            : 'grid-cols-[2rem_minmax(0,1fr)_2rem]'
+        trailing ? 'grid-cols-[2rem_minmax(0,1fr)]' : 'grid-cols-[2rem_minmax(0,1fr)_2rem]'
       )}
       aria-current={active ? 'page' : undefined}
       onClick={onPress}
@@ -340,11 +334,6 @@ export const SiderNavItem: React.FC<SiderNavItemProps> = ({
           ) : undefined
         }
       />
-      {!trailing && endMetadata !== undefined && endMetadata !== null ? (
-        <span className="shrink-0 text-xs tabular-nums text-muted" data-sider-end-metadata>
-          {endMetadata}
-        </span>
-      ) : null}
       {!trailing && (
         <SiderTrailingSlot>
           <LuChevronRight className="shrink-0 text-sm text-muted transition-all duration-150 group-hover:translate-x-0.5 group-hover:text-foreground group-focus-within:text-accent" />

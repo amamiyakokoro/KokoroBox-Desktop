@@ -68,7 +68,7 @@ const RuleCard: React.FC<Props> = (props) => {
         <SiderNavItem
           icon={<MdOutlineAltRoute />}
           title={tr('Rules')}
-          endMetadata={rules?.rules?.length ?? 0}
+          description={tr('{0} rules', [rules?.rules?.length ?? 0])}
           active={match}
           onPress={() => navigate('/rules')}
         />
