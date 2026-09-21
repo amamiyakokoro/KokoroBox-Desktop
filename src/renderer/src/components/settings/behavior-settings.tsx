@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react'
 import { Button, Switch, Tooltip } from '@heroui/react'
 import SettingCard from '../base/base-setting-card'
 import SettingItem from '../base/base-setting-item'
+import SettingSubgroup from '../base/base-setting-subgroup'
 import { KokoSelect, KokoTextField } from '../base/koko-form'
 import { KokoSegmentedControl } from '../base/base-controls'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
@@ -150,7 +151,7 @@ const BehaviorSettings: React.FC<Props> = ({
             help={tr(
               'Enter lightweight mode after the window has been closed for the specified time'
             )}
-            divider
+            divider={!autoLightweight}
           >
             <Switch
               size="sm"
@@ -167,7 +168,7 @@ const BehaviorSettings: React.FC<Props> = ({
             </Switch>
           </SettingItem>
           {autoLightweight && (
-            <>
+            <SettingSubgroup label={tr('Automatic lightweight mode')}>
               <SettingItem contentAlign="end" title={tr('Lightweight mode behavior')} divider>
                 <KokoSegmentedControl
                   ariaLabel={tr('Lightweight mode behavior')}
@@ -184,7 +185,7 @@ const BehaviorSettings: React.FC<Props> = ({
                   }}
                 />
               </SettingItem>
-              <SettingItem contentAlign="end" title={tr('Lightweight mode delay')} divider>
+              <SettingItem contentAlign="end" title={tr('Lightweight mode delay')}>
                 <KokoTextField
                   controlWidth="number"
                   type="number"
@@ -199,7 +200,7 @@ const BehaviorSettings: React.FC<Props> = ({
                   }}
                 />
               </SettingItem>
-            </>
+            </SettingSubgroup>
           )}
         </SettingCard>
       )}
@@ -211,7 +212,7 @@ const BehaviorSettings: React.FC<Props> = ({
             help={tr(
               'Stop the core when the network disconnects and restart it when connectivity returns'
             )}
-            divider
+            divider={!networkDetection}
           >
             <Switch
               size="sm"
@@ -233,7 +234,7 @@ const BehaviorSettings: React.FC<Props> = ({
             </Switch>
           </SettingItem>
           {networkDetection && (
-            <>
+            <SettingSubgroup label={tr('Stop core when offline')}>
               <SettingItem contentAlign="end" title={tr('Connectivity check interval')} divider>
                 <div className="flex items-center justify-end gap-2">
                   <KokoTextField
@@ -265,7 +266,7 @@ const BehaviorSettings: React.FC<Props> = ({
                 />
               </SettingItem>
               <EditableList items={bypass} onChange={(list) => setBypass(list as string[])} />
-            </>
+            </SettingSubgroup>
           )}
           <SettingItem
             contentAlign="end"

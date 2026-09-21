@@ -505,6 +505,38 @@ test('system proxy keeps bypass inspection on the page and editing in the modal'
   assert.match(proxy, /const setValues = \(v: typeof values\): void => \{[\s\S]*setChanged\(true\)/)
 })
 
+test('conditional settings use the shared dependent subgroup hierarchy', () => {
+  const behavior = readFileSync(
+    'src/renderer/src/components/settings/behavior-settings.tsx',
+    'utf8'
+  )
+  const integrations = readFileSync(
+    'src/renderer/src/components/settings/subscription-integration-settings.tsx',
+    'utf8'
+  )
+  const systemProxy = readFileSync(
+    'src/renderer/src/components/settings/network/system-proxy-settings.tsx',
+    'utf8'
+  )
+  const dns = readFileSync(
+    'src/renderer/src/components/settings/network/dns-settings.tsx',
+    'utf8'
+  )
+
+  assert.match(behavior, /autoLightweight && \([\s\S]*<SettingSubgroup/)
+  assert.match(behavior, /networkDetection && \([\s\S]*<SettingSubgroup/)
+  assert.equal(behavior.match(/<SettingSubgroup/g)?.length, 2)
+  assert.match(integrations, /gistSyncEnabled && \([\s\S]*<SettingSubgroup/)
+  assert.match(integrations, /gistEncrypted && \([\s\S]*<SettingSubgroup/)
+  assert.equal(integrations.match(/<SettingSubgroup/g)?.length, 2)
+  assert.match(systemProxy, /values\.mode === 'auto' && \([\s\S]*<SettingSubgroup/)
+  assert.match(systemProxy, /values\.settingMode === 'service' && \([\s\S]*<SettingSubgroup/)
+  assert.match(systemProxy, /values\.guard && \([\s\S]*<SettingSubgroup/)
+  assert.equal(systemProxy.match(/<SettingSubgroup/g)?.length, 3)
+  assert.match(dns, /values\.enhancedMode === 'fake-ip' && \([\s\S]*<FeatureSettingsSection/)
+  assert.doesNotMatch(dns, /SettingSubgroup/)
+})
+
 test('settings and Mihomo forms share the KokoroBox HeroUI v3 conventions', () => {
   const form = readFileSync('src/renderer/src/components/base/koko-form.tsx', 'utf8')
   const controls = readFileSync('src/renderer/src/components/base/base-controls.tsx', 'utf8')

@@ -4,6 +4,7 @@ import { KokoTextField } from '@renderer/components/base/koko-form'
 import { KokoSegmentedControl } from '@renderer/components/base/base-controls'
 import BasePage from '@renderer/components/base/base-page'
 import SettingItem from '@renderer/components/base/base-setting-item'
+import SettingSubgroup from '@renderer/components/base/base-setting-subgroup'
 import FeatureSettingsLayout, {
   FeatureSettingsSaveButton,
   FeatureSettingsSection
@@ -260,7 +261,7 @@ const Sysproxy: React.FC<Props> = ({ embedded = false }) => {
             help={tr(
               'Manual configures a fixed proxy endpoint. PAC uses a script to decide which requests use the proxy.'
             )}
-            divider={values.mode === 'auto'}
+            divider={values.mode !== 'auto'}
           >
             <KokoSegmentedControl
               ariaLabel={tr('Proxy mode')}
@@ -273,11 +274,13 @@ const Sysproxy: React.FC<Props> = ({ embedded = false }) => {
             />
           </SettingItem>
           {values.mode === 'auto' && (
-            <SettingItem title={tr('PAC script')}>
-              <Button size="sm" variant="secondary" onPress={() => setOpenPacEditor(true)}>
-                {tr('Edit')}
-              </Button>
-            </SettingItem>
+            <SettingSubgroup label={tr('Proxy mode')}>
+              <SettingItem title={tr('PAC script')}>
+                <Button size="sm" variant="secondary" onPress={() => setOpenPacEditor(true)}>
+                  {tr('Edit')}
+                </Button>
+              </SettingItem>
+            </SettingSubgroup>
           )}
         </FeatureSettingsSection>
 
@@ -300,7 +303,7 @@ const Sysproxy: React.FC<Props> = ({ embedded = false }) => {
             help={tr(
               'Run command applies proxy settings directly. Service mode uses KokoroBox Service for privileged and persistent changes.'
             )}
-            divider={platform === 'linux' || values.settingMode === 'service'}
+            divider={platform === 'linux'}
           >
             <KokoSegmentedControl
               ariaLabel={tr('Configuration method')}
@@ -343,27 +346,29 @@ const Sysproxy: React.FC<Props> = ({ embedded = false }) => {
             </SettingItem>
           )}
           {platform !== 'linux' && values.settingMode === 'service' && (
-            <SettingItem
-              title={tr('Active interfaces only')}
-              help={tr(
-                'Apply the system proxy only to active network interfaces. Requires service mode'
-              )}
-            >
-              <Switch
-                size="sm"
-                isSelected={onlyActiveDevice}
-                isDisabled={!values.settingMode || values.settingMode !== 'service'}
-                onChange={(v) => {
-                  patchAppConfig({ onlyActiveDevice: v })
-                }}
+            <SettingSubgroup label={tr('Configuration method')}>
+              <SettingItem
+                title={tr('Active interfaces only')}
+                help={tr(
+                  'Apply the system proxy only to active network interfaces. Requires service mode'
+                )}
               >
-                <Switch.Content>
-                  <Switch.Control>
-                    <Switch.Thumb />
-                  </Switch.Control>
-                </Switch.Content>
-              </Switch>
-            </SettingItem>
+                <Switch
+                  size="sm"
+                  isSelected={onlyActiveDevice}
+                  isDisabled={!values.settingMode || values.settingMode !== 'service'}
+                  onChange={(v) => {
+                    patchAppConfig({ onlyActiveDevice: v })
+                  }}
+                >
+                  <Switch.Content>
+                    <Switch.Control>
+                      <Switch.Thumb />
+                    </Switch.Control>
+                  </Switch.Content>
+                </Switch>
+              </SettingItem>
+            </SettingSubgroup>
           )}
         </FeatureSettingsSection>
 
@@ -375,7 +380,7 @@ const Sysproxy: React.FC<Props> = ({ embedded = false }) => {
                 help={tr(
                   'Restore the system proxy automatically if it is changed. Requires service mode'
                 )}
-                divider={values.guard || values.mode === 'manual'}
+                divider={!values.guard && values.mode === 'manual'}
               >
                 <Switch
                   size="sm"
@@ -393,26 +398,27 @@ const Sysproxy: React.FC<Props> = ({ embedded = false }) => {
               </SettingItem>
             )}
             {values.settingMode === 'service' && values.guard && (
-              <SettingItem
-                title={tr('Watchdog notifications')}
-                help={tr('Notify when system proxy restoration succeeds or fails')}
-                divider={values.mode === 'manual'}
-              >
-                <Switch
-                  size="sm"
-                  isSelected={values.guardNotify}
-                  isDisabled={!values.guard}
-                  onChange={(v) => {
-                    setValues({ ...values, guardNotify: v })
-                  }}
+              <SettingSubgroup label={tr('System proxy watchdog')}>
+                <SettingItem
+                  title={tr('Watchdog notifications')}
+                  help={tr('Notify when system proxy restoration succeeds or fails')}
                 >
-                  <Switch.Content>
-                    <Switch.Control>
-                      <Switch.Thumb />
-                    </Switch.Control>
-                  </Switch.Content>
-                </Switch>
-              </SettingItem>
+                  <Switch
+                    size="sm"
+                    isSelected={values.guardNotify}
+                    isDisabled={!values.guard}
+                    onChange={(v) => {
+                      setValues({ ...values, guardNotify: v })
+                    }}
+                  >
+                    <Switch.Content>
+                      <Switch.Control>
+                        <Switch.Thumb />
+                      </Switch.Control>
+                    </Switch.Content>
+                  </Switch>
+                </SettingItem>
+              </SettingSubgroup>
             )}
             {values.mode === 'manual' && (
               <SettingItem title={tr('Proxy bypass list')} align="start">

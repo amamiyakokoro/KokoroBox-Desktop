@@ -15,6 +15,7 @@ import { notify } from '@renderer/utils/notification'
 import debounce from '@renderer/utils/debounce'
 import SettingCard from '../base/base-setting-card'
 import SettingItem from '../base/base-setting-item'
+import SettingSubgroup from '../base/base-setting-subgroup'
 
 type IntegrationSection = 'subscription' | 'gist'
 
@@ -166,7 +167,7 @@ const SubscriptionIntegrationSettings: React.FC<Props> = ({
                 </Button>
               )
             }
-            divider={gistSyncEnabled}
+            divider={!gistSyncEnabled}
           >
             <Switch
               size="sm"
@@ -184,130 +185,130 @@ const SubscriptionIntegrationSettings: React.FC<Props> = ({
             </Switch>
           </SettingItem>
           {gistSyncEnabled && (
-            <SettingItem
-              contentAlign="end"
-              title={tr('Encrypt Gist configuration')}
-              divider={gistEncrypted}
-            >
-              <Switch
-                size="sm"
-                aria-label={tr('Encrypt Gist configuration')}
-                isSelected={gistEncrypted}
-                onChange={(value) => {
-                  patchAppConfig({ gistEncrypted: value })
-                }}
-              >
-                <Switch.Content>
-                  <Switch.Control>
-                    <Switch.Thumb />
-                  </Switch.Control>
-                </Switch.Content>
-              </Switch>
-            </SettingItem>
-          )}
-          {gistSyncEnabled && gistEncrypted && (
-            <SettingItem
-              contentAlign="end"
-              title={tr('Gist age public key')}
-              description={tr('Used to encrypt synchronized configuration.')}
-              divider
-            >
-              <KokoTextField
-                aria-label={tr('Gist age public key')}
-                data-setting-input="full"
-                value={gistAgeRecipient}
-                placeholder="age1..."
-                onChangeValue={(value) => {
-                  patchAppConfig({ gistAgeRecipient: value.trim() || undefined })
-                }}
-                suffix={
-                  <div className="flex items-center gap-1">
-                    <Tooltip delay={0}>
-                      <Tooltip.Trigger>
-                        <Button
-                          aria-label={tr('Derive a public key from the Gist age private key')}
-                          isIconOnly
-                          size="sm"
-                          variant="ghost"
-                          onPress={handleDeriveGistAgeRecipient}
-                        >
-                          <LuArrowRight className="text-lg" />
-                        </Button>
-                      </Tooltip.Trigger>
-                      <Tooltip.Content>{tr('Derive public key from private key')}</Tooltip.Content>
-                    </Tooltip>
-                    <Button
-                      aria-label={tr('Copy Gist age public key')}
-                      isIconOnly
-                      size="sm"
-                      variant="ghost"
-                      onPress={() => copyValue(gistAgeRecipient, tr('age public key copied'))}
-                    >
-                      <BiCopy className="text-lg" />
-                    </Button>
-                  </div>
-                }
-              />
-            </SettingItem>
-          )}
-          {gistSyncEnabled && gistEncrypted && (
-            <SettingItem
-              contentAlign="end"
-              title={tr('Gist age private key')}
-              description={tr(
-                'Required to decrypt synchronized configuration. Keep this key private.'
-              )}
-            >
-              <KokoTextField
-                aria-label={tr('Gist age private key')}
-                data-setting-input="full"
-                type={gistAgeIdentityVisible ? 'text' : 'password'}
-                value={gistAgeIdentity}
-                placeholder="AGE-SECRET-KEY-1..."
-                onChangeValue={(value) => {
-                  patchAppConfig({ gistAgeIdentity: value.trim() || undefined })
-                }}
-                suffix={
-                  <div className="flex items-center gap-1">
-                    <Button
-                      aria-label={tr('Generate Gist age private key')}
-                      isIconOnly
-                      size="sm"
-                      variant="ghost"
-                      onPress={handleGenerateGistAgeKeyPair}
-                    >
-                      <LuRefreshCw className="text-lg" />
-                    </Button>
-                    <Button
-                      aria-label={tr('Copy Gist age private key')}
-                      isIconOnly
-                      size="sm"
-                      variant="ghost"
-                      onPress={() => copyValue(gistAgeIdentity, tr('age private key copied'))}
-                    >
-                      <BiCopy className="text-lg" />
-                    </Button>
-                    <Button
-                      aria-label={
-                        gistAgeIdentityVisible
-                          ? tr('Hide Gist age private key')
-                          : tr('Show Gist age private key')
+            <SettingSubgroup label={tr('Sync runtime configuration to Gist')}>
+              <SettingItem contentAlign="end" title={tr('Encrypt Gist configuration')}>
+                <Switch
+                  size="sm"
+                  aria-label={tr('Encrypt Gist configuration')}
+                  isSelected={gistEncrypted}
+                  onChange={(value) => {
+                    patchAppConfig({ gistEncrypted: value })
+                  }}
+                >
+                  <Switch.Content>
+                    <Switch.Control>
+                      <Switch.Thumb />
+                    </Switch.Control>
+                  </Switch.Content>
+                </Switch>
+              </SettingItem>
+              {gistEncrypted && (
+                <SettingSubgroup label={tr('Encrypt Gist configuration')}>
+                  <SettingItem
+                    contentAlign="end"
+                    title={tr('Gist age public key')}
+                    description={tr('Used to encrypt synchronized configuration.')}
+                    divider
+                  >
+                    <KokoTextField
+                      aria-label={tr('Gist age public key')}
+                      data-setting-input="full"
+                      value={gistAgeRecipient}
+                      placeholder="age1..."
+                      onChangeValue={(value) => {
+                        patchAppConfig({ gistAgeRecipient: value.trim() || undefined })
+                      }}
+                      suffix={
+                        <div className="flex items-center gap-1">
+                          <Tooltip delay={0}>
+                            <Tooltip.Trigger>
+                              <Button
+                                aria-label={tr('Derive a public key from the Gist age private key')}
+                                isIconOnly
+                                size="sm"
+                                variant="ghost"
+                                onPress={handleDeriveGistAgeRecipient}
+                              >
+                                <LuArrowRight className="text-lg" />
+                              </Button>
+                            </Tooltip.Trigger>
+                            <Tooltip.Content>
+                              {tr('Derive public key from private key')}
+                            </Tooltip.Content>
+                          </Tooltip>
+                          <Button
+                            aria-label={tr('Copy Gist age public key')}
+                            isIconOnly
+                            size="sm"
+                            variant="ghost"
+                            onPress={() => copyValue(gistAgeRecipient, tr('age public key copied'))}
+                          >
+                            <BiCopy className="text-lg" />
+                          </Button>
+                        </div>
                       }
-                      isIconOnly
-                      size="sm"
-                      variant="ghost"
-                      onPress={() => setGistAgeIdentityVisible((visible) => !visible)}
-                    >
-                      {gistAgeIdentityVisible ? (
-                        <BiHide className="text-lg" />
-                      ) : (
-                        <BiShow className="text-lg" />
-                      )}
-                    </Button>
-                  </div>
-                }
-              />
-            </SettingItem>
+                    />
+                  </SettingItem>
+                  <SettingItem
+                    contentAlign="end"
+                    title={tr('Gist age private key')}
+                    description={tr(
+                      'Required to decrypt synchronized configuration. Keep this key private.'
+                    )}
+                  >
+                    <KokoTextField
+                      aria-label={tr('Gist age private key')}
+                      data-setting-input="full"
+                      type={gistAgeIdentityVisible ? 'text' : 'password'}
+                      value={gistAgeIdentity}
+                      placeholder="AGE-SECRET-KEY-1..."
+                      onChangeValue={(value) => {
+                        patchAppConfig({ gistAgeIdentity: value.trim() || undefined })
+                      }}
+                      suffix={
+                        <div className="flex items-center gap-1">
+                          <Button
+                            aria-label={tr('Generate Gist age private key')}
+                            isIconOnly
+                            size="sm"
+                            variant="ghost"
+                            onPress={handleGenerateGistAgeKeyPair}
+                          >
+                            <LuRefreshCw className="text-lg" />
+                          </Button>
+                          <Button
+                            aria-label={tr('Copy Gist age private key')}
+                            isIconOnly
+                            size="sm"
+                            variant="ghost"
+                            onPress={() => copyValue(gistAgeIdentity, tr('age private key copied'))}
+                          >
+                            <BiCopy className="text-lg" />
+                          </Button>
+                          <Button
+                            aria-label={
+                              gistAgeIdentityVisible
+                                ? tr('Hide Gist age private key')
+                                : tr('Show Gist age private key')
+                            }
+                            isIconOnly
+                            size="sm"
+                            variant="ghost"
+                            onPress={() => setGistAgeIdentityVisible((visible) => !visible)}
+                          >
+                            {gistAgeIdentityVisible ? (
+                              <BiHide className="text-lg" />
+                            ) : (
+                              <BiShow className="text-lg" />
+                            )}
+                          </Button>
+                        </div>
+                      }
+                    />
+                  </SettingItem>
+                </SettingSubgroup>
+              )}
+            </SettingSubgroup>
           )}
         </SettingCard>
       )}
