@@ -1,28 +1,25 @@
+/* eslint-disable react/prop-types */
 import { tr } from '../../../../shared/i18n'
-import {
-  mihomoRuleProviders,
-  mihomoUpdateRuleProviders,
-  getRuntimeConfig
-} from '@renderer/utils/ipc'
+import { getRuntimeConfig } from '@renderer/utils/ipc'
 import { getHash } from '@renderer/utils/hash'
 import Viewer from './viewer'
 import { useEffect, useMemo, useState } from 'react'
-import useSWR from 'swr'
 import { Button, Spinner, Surface } from '@heroui/react'
 import { LuRefreshCw } from 'react-icons/lu'
 import { CgLoadbarDoc } from 'react-icons/cg'
 import { MdEditDocument } from 'react-icons/md'
 import dayjs from 'dayjs'
-import { notify } from '@renderer/utils/notification'
 import { ResourceProviderRow } from './resource-surfaces'
-import { KokoSearchField } from '../base/koko-search-field'
-import { KokoToolbar, KokoToolbarIconButton } from '../base/koko-toolbar'
 import { includesIgnoreCase } from '@renderer/utils/includes'
+import type { RuleProvidersModel } from '@renderer/hooks/use-rule-providers'
 
-const RuleProvider: React.FC = () => {
-  const [filter, setFilter] = useState('')
-  const [updating, setUpdating] = useState<Set<string>>(() => new Set())
-  const [updatingAll, setUpdatingAll] = useState(false)
+interface RuleProviderProps {
+  filter: string
+  model: RuleProvidersModel
+}
+
+const RuleProvider: React.FC<RuleProviderProps> = ({ filter, model }) => {
+  const { data, providers, updating, onUpdate } = model
   const [showDetails, setShowDetails] = useState({
     show: false,
     path: '',
@@ -60,27 +57,6 @@ const RuleProvider: React.FC = () => {
     }
   }, [showDetails.title])
 
-  const { data, mutate } = useSWR('mihomoRuleProviders', mihomoRuleProviders, {
-    errorRetryInterval: 200,
-    errorRetryCount: 10
-  })
-
-  useEffect(() => {
-    const unsubscribeCoreStarted = window.electron.ipcRenderer.on('core-started', () => {
-      mutate()
-    })
-    return (): void => {
-      unsubscribeCoreStarted()
-    }
-  }, [])
-
-  const providers = useMemo(() => {
-    if (!data) return []
-    return Object.values(data.providers).sort((a, b) => {
-      const order = { File: 1, Inline: 2, HTTP: 3 }
-      return (order[a.vehicleType] || 4) - (order[b.vehicleType] || 4)
-    })
-  }, [data])
   const filteredProviders = useMemo(() => {
     const query = filter.trim()
     if (!query) return providers
@@ -90,36 +66,6 @@ const RuleProvider: React.FC = () => {
       )
     )
   }, [filter, providers])
-
-  const onUpdate = async (name: string): Promise<void> => {
-    setUpdating((prev) => {
-      const next = new Set(prev)
-      next.add(name)
-      return next
-    })
-    try {
-      await mihomoUpdateRuleProviders(name)
-      await mutate()
-    } catch (e) {
-      notify(tr('Failed to update {0}\n{1}', [name, e]), { variant: 'danger' })
-    } finally {
-      setUpdating((prev) => {
-        const next = new Set(prev)
-        next.delete(name)
-        return next
-      })
-    }
-  }
-
-  const updateAll = async (): Promise<void> => {
-    if (updatingAll || !providers.length) return
-    setUpdatingAll(true)
-    try {
-      await Promise.all(providers.map((provider) => onUpdate(provider.name)))
-    } finally {
-      setUpdatingAll(false)
-    }
-  }
 
   const openProviderDetails = (provider: ControllerRuleProviderDetail): void => {
     setShowDetails({
@@ -153,29 +99,6 @@ const RuleProvider: React.FC = () => {
           }
         />
       )}
-      <KokoToolbar
-        aria-label={tr('Rule collections')}
-        className="shrink-0 border-b border-separator"
-      >
-        <KokoSearchField
-          aria-label={tr('Search rule collections')}
-          className="min-w-0 flex-1"
-          placeholder={tr('Search rule collections')}
-          value={filter}
-          onClear={() => setFilter('')}
-          onChangeValue={setFilter}
-        />
-        <KokoToolbarIconButton
-          isDisabled={updatingAll || updating.size > 0 || !providers.length}
-          label={tr('Update all')}
-          onPress={updateAll}
-        >
-          <LuRefreshCw
-            aria-hidden="true"
-            className={`text-base ${updatingAll ? 'animate-spin' : ''}`}
-          />
-        </KokoToolbarIconButton>
-      </KokoToolbar>
       <div className="min-h-0 flex-1 overflow-y-auto custom-scrollbar">
         <main className="resource-page mx-auto w-full max-w-[68rem] px-5 py-4">
           {!data ? (

@@ -1749,6 +1749,10 @@ test('operational lists use compact hierarchy without changing their behavior', 
     'src/renderer/src/components/resources/rule-provider.tsx',
     'utf8'
   )
+  const ruleProvidersHook = readFileSync(
+    'src/renderer/src/hooks/use-rule-providers.ts',
+    'utf8'
+  )
   const resourceSurfaces = readFileSync(
     'src/renderer/src/components/resources/resource-surfaces.tsx',
     'utf8'
@@ -1773,16 +1777,34 @@ test('operational lists use compact hierarchy without changing their behavior', 
   assert.match(resourcesPage, /<RulesWorkspace view="collections" \/>/)
   assert.match(rulesWorkspace, /<BasePage title=\{tr\('Rules'\)\}/)
   assert.match(rulesWorkspace, /<KokoTabs/)
+  assert.match(rulesWorkspace, /<KokoToolbar aria-label=\{tr\('Rules'\)\}>/)
+  assert.match(rulesWorkspace, /<KokoSearchField/)
   assert.match(rulesWorkspace, /variant="secondary"/)
   assert.match(rulesWorkspace, /density="toolbar"/)
-  assert.match(rulesWorkspace, /selectionStyle="accent-underline"/)
+  assert.doesNotMatch(rulesWorkspace, /selectionStyle="accent-underline"/)
   assert.match(rulesWorkspace, /\{ id: 'routing', label: tr\('Routing rules'\) \}/)
   assert.match(rulesWorkspace, /\{ id: 'collections', label: tr\('Rule collections'\) \}/)
   assert.match(rulesWorkspace, /navigate\(key === 'collections' \? '\/resources' : '\/rules'\)/)
-  assert.match(rulesWorkspace, /view === 'routing' \? <RoutingRulesView \/> : <RuleProvider \/>/)
+  assert.match(rulesWorkspace, /const \[filter, setFilterState\] = useState/)
+  assert.match(rulesWorkspace, /rulesWorkspaceFilterCache = value/)
+  assert.match(
+    rulesWorkspace,
+    /view === 'routing' \? tr\('Search routing rules'\) : tr\('Search rule collections'\)/
+  )
+  assert.match(rulesWorkspace, /<RoutingRulesView filter=\{filter\} \/>/)
+  assert.match(rulesWorkspace, /<RuleProvider filter=\{filter\} model=\{providersModel\} \/>/)
+  assert.match(rulesWorkspace, /\{view === 'collections' && \(/)
+  assert.match(rulesWorkspace, /label=\{tr\('Update all'\)\}/)
+  assert.match(rulesWorkspace, /providersModel\.updateAll/)
+  assert.match(rulesWorkspace, /providersModel\.updatingAll \? 'animate-spin' : ''/)
+  assert.equal(rulesWorkspace.match(/<KokoToolbar(?:\s|>)/g)?.length, 1)
+  assert.equal(rulesWorkspace.match(/<KokoSearchField/g)?.length, 1)
+  assert.equal(rulesWorkspace.match(/<Separator \/>/g)?.length, 1)
+  assert.ok(rulesWorkspace.indexOf('<KokoToolbar') < rulesWorkspace.indexOf('<KokoTabs'))
+  assert.ok(rulesWorkspace.indexOf('<KokoTabs') < rulesWorkspace.indexOf('<KokoSearchField'))
   assert.match(routingRulesView, /<Virtuoso/)
-  assert.match(routingRulesView, /<KokoToolbar/)
-  assert.match(routingRulesView, /<KokoSearchField/)
+  assert.match(routingRulesView, /RoutingRulesViewProps/)
+  assert.doesNotMatch(routingRulesView, /<KokoToolbar|<KokoSearchField|useState/)
   assert.match(routingRulesView, /const query = filter\.trim\(\)/)
   assert.match(routingRulesView, /includesIgnoreCase\(rule\.payload, query\)/)
   assert.match(routingRulesView, /includesIgnoreCase\(rule\.type, query\)/)
@@ -1839,12 +1861,10 @@ test('operational lists use compact hierarchy without changing their behavior', 
   assert.match(ruleProvider, /<ResourceProviderRow/)
   assert.match(ruleProvider, /tr\('\{0\} rules', \[provider\.ruleCount\]\)/)
   assert.match(ruleProvider, /provider\.vehicleType\} · \$\{provider\.behavior\}/)
-  assert.match(ruleProvider, /<KokoToolbar/)
-  assert.match(ruleProvider, /<KokoSearchField/)
-  assert.match(ruleProvider, /<KokoToolbarIconButton/)
-  assert.match(ruleProvider, /label=\{tr\('Update all'\)\}/)
+  assert.match(ruleProvider, /RuleProviderProps/)
+  assert.match(ruleProvider, /\{ filter, model \}/)
+  assert.doesNotMatch(ruleProvider, /<KokoToolbar|<KokoSearchField|<KokoToolbarIconButton/)
   assert.match(ruleProvider, /<LuRefreshCw/)
-  assert.match(ruleProvider, /updatingAll \? 'animate-spin' : ''/)
   assert.match(
     ruleProvider,
     /\[provider\.name, provider\.vehicleType, provider\.behavior, provider\.format\]/
@@ -1855,7 +1875,10 @@ test('operational lists use compact hierarchy without changing their behavior', 
   assert.doesNotMatch(ruleProvider, /<ResourceSection/)
   assert.doesNotMatch(ruleProvider, /title=\{tr\('Rule providers'\)\}/)
   assert.doesNotMatch(ruleProvider, /SettingCard|SettingItem|<Chip|::/)
-  assert.match(ruleProvider, /mihomoUpdateRuleProviders/)
+  assert.match(ruleProvidersHook, /useSWR\(enabled \? 'mihomoRuleProviders' : null/)
+  assert.match(ruleProvidersHook, /mihomoUpdateRuleProviders\(name\)/)
+  assert.match(ruleProvidersHook, /Promise\.all\(providers\.map\(\(provider\) => onUpdate\(provider\.name\)\)\)/)
+  assert.match(ruleProvidersHook, /updatingAll/)
   assert.match(routes, /path: 'resources'[\s\S]*<Resources \/>/)
   assert.match(routes, /path: 'rules'[\s\S]*<Rules \/>/)
   assert.match(
