@@ -1,5 +1,5 @@
 import { tr } from '../../../../shared/i18n'
-import { Card, InputGroup, Switch } from '@heroui/react'
+import { InputGroup, Switch } from '@heroui/react'
 import { KokoActionMenu } from '../base/koko-collections'
 import { KokoSelect } from '../base/koko-form'
 import {
@@ -100,9 +100,9 @@ export function AppRoutingRuleRow({
     })
   }
   return (
-    <Card className="app-routing-rule-card p-3" data-enabled={rule.enabled}>
-      <Card.Content className="grid grid-cols-[2.75rem_minmax(0,1fr)] gap-x-3 gap-y-2">
-        <div className="row-span-2 flex size-11 items-center justify-center self-start overflow-hidden rounded-xl bg-surface-secondary p-1">
+    <div className="app-routing-rule-row" data-enabled={rule.enabled} role="listitem">
+      <div className="grid grid-cols-[2.25rem_minmax(0,1fr)] gap-x-3 gap-y-1.5 px-3 py-2">
+        <div className="row-span-2 flex size-9 items-center justify-center self-start overflow-hidden rounded-lg bg-surface-secondary p-1">
           <img
             src={icon || defaultApplicationIcon}
             alt=""
@@ -220,6 +220,7 @@ export function AppRoutingRuleRow({
               {isMacRule ? (
                 <KokoSelect
                   aria-label={tr('Match by')}
+                  density="compact"
                   variant="secondary"
                   className="w-full min-w-0"
                   disallowEmptySelection
@@ -234,6 +235,7 @@ export function AppRoutingRuleRow({
               ) : (
                 <KokoSelect
                   aria-label={tr('Match by')}
+                  density="compact"
                   variant="secondary"
                   className="w-full min-w-0"
                   disallowEmptySelection
@@ -255,6 +257,7 @@ export function AppRoutingRuleRow({
           <div className="min-w-0">
             <KokoSelect
               aria-label={tr('Protocol')}
+              density="compact"
               variant="secondary"
               className="w-full min-w-0"
               disallowEmptySelection
@@ -272,6 +275,7 @@ export function AppRoutingRuleRow({
               />
               <KokoSelect
                 aria-label={tr('Action')}
+                density="compact"
                 variant="secondary"
                 className="w-full min-w-0"
                 valueClassName="ps-3"
@@ -297,7 +301,7 @@ export function AppRoutingRuleRow({
             </Switch.Content>
           </Switch>
         </div>
-      </Card.Content>
-    </Card>
+      </div>
+    </div>
   )
 }

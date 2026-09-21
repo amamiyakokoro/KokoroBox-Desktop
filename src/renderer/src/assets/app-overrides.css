@@ -506,7 +506,7 @@ input[type='number'] {
   align-items: center;
   gap: calc(var(--spacing) * 4);
   border-block: 1px solid var(--separator);
-  background: color-mix(in oklab, var(--surface-secondary) 55%, transparent);
+  background: transparent;
   padding: calc(var(--spacing) * 2.5) calc(var(--spacing) * 3);
 }
 
@@ -514,11 +514,7 @@ input[type='number'] {
   display: flex;
   min-width: 0;
   flex-direction: column;
-  gap: calc(var(--spacing) * 2.5);
-  border: 1px solid var(--separator);
-  border-radius: var(--radius-xl);
-  background: var(--surface);
-  padding: calc(var(--spacing) * 3);
+  gap: calc(var(--spacing) * 1.5);
 }
 
 .app-routing-rule-example {
@@ -528,37 +524,38 @@ input[type='number'] {
   color: var(--muted);
 }
 
-.app-routing-rule-card {
+.app-routing-rule-list,
+.app-routing-group {
   width: 100%;
   min-width: 0;
+  overflow: hidden;
   border: 1px solid var(--separator);
+  border-radius: var(--radius-xl);
   background: var(--surface);
-  box-shadow: 0 1px 2px color-mix(in oklab, var(--foreground) 6%, transparent);
+}
+
+.app-routing-rule-row {
   transition:
-    border-color 150ms ease,
     background-color 150ms ease,
-    box-shadow 150ms ease,
     opacity 150ms ease;
 }
 
-.app-routing-rule-card:hover {
-  border-color: color-mix(in oklab, var(--separator) 65%, var(--accent) 35%);
-  box-shadow: 0 3px 10px color-mix(in oklab, var(--foreground) 8%, transparent);
+.app-routing-rule-row + .app-routing-rule-row {
+  border-top: 1px solid var(--separator);
 }
 
-.app-routing-rule-card:has(:focus-visible) {
-  border-color: color-mix(in oklab, var(--separator) 50%, var(--accent) 50%);
-  outline: 2px solid var(--focus);
-  outline-offset: 2px;
+.app-routing-rule-row:hover,
+.app-routing-rule-row:has(:focus-visible) {
+  background: color-mix(in oklab, var(--surface-secondary) 55%, transparent);
 }
 
-.app-routing-rule-card[data-enabled='false'] {
+.app-routing-rule-row[data-enabled='false'] {
   background: var(--surface-secondary);
   opacity: 0.68;
 }
 
-.app-routing-rule-card[data-enabled='false']:hover,
-.app-routing-rule-card[data-enabled='false']:has(:focus-visible) {
+.app-routing-rule-row[data-enabled='false']:hover,
+.app-routing-rule-row[data-enabled='false']:has(:focus-visible) {
   opacity: 0.84;
 }
 
@@ -567,8 +564,7 @@ input[type='number'] {
   min-width: 0;
   align-items: center;
   gap: calc(var(--spacing) * 2);
-  border-bottom: 1px solid var(--separator);
-  padding: calc(var(--spacing) * 2) calc(var(--spacing) * 1);
+  padding: calc(var(--spacing) * 2) calc(var(--spacing) * 3);
   transition:
     border-color 150ms ease,
     background-color 150ms ease,
@@ -587,6 +583,26 @@ input[type='number'] {
 
 .app-routing-group-header[data-enabled='false'] {
   opacity: 0.68;
+}
+
+.app-routing-group-rules {
+  border-top: 1px solid var(--separator);
+}
+
+.app-routing-group[data-enabled='false'] .app-routing-group-rules {
+  opacity: 0.72;
+}
+
+.app-routing-protection-summary {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: calc(var(--spacing) * 1.5);
+  border-top: 1px solid var(--separator);
+  padding: calc(var(--spacing) * 2.5) calc(var(--spacing) * 1);
+  color: var(--muted);
+  font-size: var(--text-xs);
 }
 
 /* Routing rules use a compact KokoroBox data-card contract: HeroUI supplies the

@@ -885,9 +885,13 @@ test('Phase 9 card-heavy surfaces use native v3 anatomy and semantic interaction
   assert.match(proxy, /<button[\s\S]*aria-pressed=\{selected\}[\s\S]*onClick=\{selectProxy\}/)
   assert.match(override, /<CollectionCard/)
   assert.match(override, /<button[\s\S]*disabled=\{disableOpen\}/)
-  assert.match(appRule, /<Card className="app-routing-rule-card p-3" data-enabled={rule\.enabled}>/)
-  assert.doesNotMatch(appRule, /<Card variant="secondary"/)
+  assert.match(
+    appRule,
+    /<div className="app-routing-rule-row" data-enabled=\{rule\.enabled\} role="listitem">/
+  )
+  assert.doesNotMatch(appRule, /<Card/)
   assert.match(appRule, /<InputGroup variant="secondary"/)
+  assert.equal(appRule.match(/density="compact"/g)?.length, 4)
 })
 
 test('page settings drawers use the shared compact inspector behavior', () => {

@@ -1128,12 +1128,12 @@ test('new application rules use the configured defaults', () => {
   assert.equal((hook.match(/protocol: config\.defaultProtocol/g) || []).length, 3)
 })
 
-test('application routing rules use a two-line identity-first card layout', () => {
+test('application routing rules use a compact identity-first list layout', () => {
   const page = readFileSync('src/renderer/src/pages/app-routing.tsx', 'utf8')
   const row = readFileSync('src/renderer/src/components/app-routing/rule-row.tsx', 'utf8')
   const styles = readFileSync('src/renderer/src/assets/app-overrides.css', 'utf8')
 
-  assert.match(row, /grid-cols-\[2\.75rem_minmax\(0,1fr\)\]/)
+  assert.match(row, /grid-cols-\[2\.25rem_minmax\(0,1fr\)\]/)
   assert.match(row, /row-span-2/)
   assert.match(row, /app-routing-default-icon\.svg\?url/)
   assert.match(row, /src=\{icon \|\| defaultApplicationIcon\}/)
@@ -1151,33 +1151,41 @@ test('application routing rules use a two-line identity-first card layout', () =
   assert.doesNotMatch(page, /<h2[^>]*>\{tr\('Application routing'\)\}<\/h2>/)
   assert.doesNotMatch(page, /<span[^>]*>\{tr\('or'\)\}<\/span>/)
   assert.match(page, /const isProxyTrafficBlocked =/)
-  assert.match(page, /border-separator bg-surface-secondary text-muted/)
+  assert.match(page, /isProxyTrafficBlocked \? \(/)
+  assert.match(page, /className="app-routing-protection-summary"/)
+  assert.match(page, /className="app-routing-rule-list" role="list"/)
+  assert.match(page, /className="app-routing-group"/)
   assert.match(row, /ariaLabel=\{tr\('Rule actions'\)\}/)
   assert.match(row, /isDisabled: index === 0/)
   assert.match(row, /isDisabled: index === count - 1/)
   assert.match(row, /if \(id === 'move-up'\) onMove\(-1\)/)
   assert.match(row, /if \(id === 'move-down'\) onMove\(1\)/)
   assert.match(row, /if \(id === 'delete'\) onDelete\(\)/)
-  assert.match(row, /<Card className="app-routing-rule-card p-3" data-enabled={rule\.enabled}>/)
-  assert.doesNotMatch(row, /<Card variant="secondary"/)
+  assert.match(
+    row,
+    /<div className="app-routing-rule-row" data-enabled=\{rule\.enabled\} role="listitem">/
+  )
+  assert.doesNotMatch(row, /<Card/)
   assert.match(row, /isEditingPattern \? \(/)
   assert.match(row, /<InputGroup variant="secondary"/)
+  assert.equal(row.match(/density="compact"/g)?.length, 4)
   assert.match(row, /onClick=\{\(\) => setIsEditingPattern\(true\)\}/)
   assert.match(row, /proxy: 'bg-accent'/)
   assert.match(row, /direct: 'bg-success'/)
   assert.match(row, /block: 'bg-danger'/)
-  assert.match(styles, /\.app-routing-rule-card\s*\{[\s\S]*?background: var\(--surface\)/)
-  assert.match(styles, /\.app-routing-rule-card\[data-enabled='false'\]/)
+  assert.match(styles, /\.app-routing-rule-list,[\s\S]*?background: var\(--surface\)/)
+  assert.match(styles, /\.app-routing-rule-row \+ \.app-routing-rule-row/)
+  assert.match(styles, /\.app-routing-rule-row\[data-enabled='false'\]/)
 })
 
-test('application rule composer keeps helper text, controls and actions in one workflow', () => {
+test('application rule composer uses a compact desktop toolbar workflow', () => {
   const page = readFileSync('src/renderer/src/pages/app-routing.tsx', 'utf8')
   const styles = readFileSync('src/renderer/src/assets/main.css', 'utf8')
   const overrides = readFileSync('src/renderer/src/assets/app-overrides.css', 'utf8')
 
   assert.match(
     styles,
-    /@container app-routing-rule-entry \(min-width: 30rem\)[\s\S]*grid-template-columns: minmax\(10rem, 12rem\) minmax\(0, 1fr\)/
+    /@container app-routing-rule-entry \(min-width: 30rem\)[\s\S]*grid-template-columns: minmax\(9rem, 12rem\) minmax\(0, 1fr\) auto/
   )
   const examplePosition = page.indexOf('className="app-routing-rule-example')
   const entryGridPosition = page.indexOf('className={`app-routing-rule-entry-grid')
@@ -1186,25 +1194,17 @@ test('application rule composer keeps helper text, controls and actions in one w
   assert.ok(examplePosition > entryGridPosition)
   assert.ok(actionsPosition > entryGridPosition)
   assert.ok(actionsPosition < entryGridEndPosition)
-  assert.match(styles, /\.app-routing-rule-entry-grid \{[^}]*align-items: start/)
-  assert.match(styles, /\.app-routing-composer-field \{[\s\S]*flex-direction: column/)
-  assert.match(styles, /\.app-routing-composer-label \{[\s\S]*line-height: 1rem/)
-  assert.match(
-    styles,
-    /\.app-routing-rule-entry-grid-with-kind > \.app-routing-rule-actions \{\s*grid-column: 2;/
-  )
-  assert.match(
-    styles,
-    /\.app-routing-rule-entry-grid-without-kind > \.app-routing-rule-actions \{\s*grid-column: 1;/
-  )
-  assert.doesNotMatch(styles, /\.app-routing-rule-entry-grid \{[^}]*align-items: center/)
-  assert.doesNotMatch(page, /app-routing-composer-field[^>]*\b(?:mt-|translate-y-)/)
+  assert.match(styles, /\.app-routing-rule-entry-grid \{[^}]*align-items: center/)
+  assert.doesNotMatch(styles, /\.app-routing-composer-(?:field|label)/)
   assert.match(overrides, /\.app-routing-rule-composer/)
-  assert.match(page, /aria-labelledby="app-routing-composer-title"/)
-  assert.match(page, /<Description className="app-routing-rule-example">/)
-  assert.match(page, /variant="primary"[\s\S]*tr\('Select applications'\)/)
-  assert.match(page, /variant="secondary"[\s\S]*tr\('Add pattern rule'\)/)
+  assert.doesNotMatch(overrides, /\.app-routing-rule-composer \{[^}]*border:/)
+  assert.match(page, /<KokoTextField/)
+  assert.match(page, /density="toolbar"/)
+  assert.match(page, /size="sm"[\s\S]*variant="secondary"[\s\S]*tr\('Select applications'\)/)
+  assert.match(page, /size="sm"[\s\S]*variant="primary"[\s\S]*tr\('Add pattern rule'\)/)
   assert.match(page, /if \(event\.key === 'Enter' && processPattern\.trim\(\)\) void submitPattern\(\)/)
+  assert.match(page, /className="flex w-full max-w-6xl flex-col gap-4 p-4"/)
+  assert.doesNotMatch(page, /mx-auto flex w-full max-w-5xl/)
 })
 
 test('application routing status and Windows groups retain compact semantic structure', () => {
@@ -1221,6 +1221,8 @@ test('application routing status and Windows groups retain compact semantic stru
   assert.match(page, /onClick=\{\(\) => toggleGroup\(group\.id\)\}/)
   assert.match(styles, /\.app-routing-group-header/)
   assert.match(styles, /\.app-routing-group-header\[data-enabled='false'\]/)
+  assert.match(styles, /\.app-routing-group-rules/)
+  assert.match(styles, /\.app-routing-protection-summary/)
 })
 
 test('Windows packaging rebuilds the architecture-matched process router payload', () => {

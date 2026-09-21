@@ -18,15 +18,16 @@ import {
   getAppRoutingStatusLabel,
   getAppRoutingStatusMessage
 } from '@renderer/utils/app-routing-status'
-import { Button, Card, Chip, Description, Input, Separator, Switch, TextField } from '@heroui/react'
+import { Button, Card, Chip, Separator, Switch } from '@heroui/react'
 import { KokoActionMenu } from '@renderer/components/base/koko-collections'
-import { KokoSelect } from '@renderer/components/base/koko-form'
+import { KokoSelect, KokoTextField } from '@renderer/components/base/koko-form'
 import {
   MdAdd,
   MdCreateNewFolder,
   MdDeleteOutline,
   MdDriveFileRenameOutline,
   MdFolderOpen,
+  MdInfoOutline,
   MdKeyboardArrowDown,
   MdMoreHoriz,
   MdOpenInNew,
@@ -132,11 +133,36 @@ const AppRouting: React.FC = () => {
     (status.state === 'degraded' || status.firewallReady === true) &&
     (status.protectedApplicationCount ?? 0) > 0
   const failureProtectionTone =
-    isProxyTrafficBlocked && status?.state === 'error'
+    status?.state === 'error'
       ? 'border-danger/30 bg-danger-soft/60 text-danger-soft-foreground'
-      : isProxyTrafficBlocked
-        ? 'border-warning/30 bg-warning-soft/60 text-warning-soft-foreground'
-        : 'border-separator bg-surface-secondary text-muted'
+      : 'border-warning/30 bg-warning-soft/60 text-warning-soft-foreground'
+  const patternLabel = isMac
+    ? macIdentifierKind === 'macos-process-name'
+      ? tr('Process name')
+      : tr('Signing identifier')
+    : isLinux
+      ? linuxIdentifierKind === 'linux-process-name'
+        ? tr('Process name')
+        : tr('Executable path')
+      : tr('Process pattern')
+  const patternPlaceholder = isMac
+    ? macIdentifierKind === 'macos-process-name'
+      ? 'codex'
+      : 'com.example.app'
+    : isLinux
+      ? linuxIdentifierKind === 'linux-process-name'
+        ? 'codex'
+        : '/usr/bin/example'
+      : 'example.exe'
+  const patternExample = isMac
+    ? macIdentifierKind === 'macos-process-name'
+      ? tr('For example: codex or Codex Helper*')
+      : tr('For example: com.openai.chat or com.openai.chat*')
+    : isLinux
+      ? linuxIdentifierKind === 'linux-process-name'
+        ? tr('For example: codex. Every executable with that name will match.')
+        : tr('For example: /usr/bin/firefox or /opt/example/example')
+      : tr('For example: ChatGPT.exe, ChatGPT*.exe, or C:\\Program Files\\*\\ChatGPT.exe')
   const submitPattern = async (): Promise<void> => {
     const identifierKind = isMac ? macIdentifierKind : isLinux ? linuxIdentifierKind : undefined
     if (await addPattern(processPattern, identifierKind)) {
@@ -255,7 +281,7 @@ const AppRouting: React.FC = () => {
           onChange={(open) => !open && setDeletingGroupId(undefined)}
         />
       )}
-      <div className="mx-auto flex w-full max-w-5xl flex-col gap-4 p-4">
+      <div className="flex w-full max-w-6xl flex-col gap-4 p-4">
         <section className="app-routing-status-strip" aria-live="polite">
           <div className="min-w-0 flex-1">
             <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
@@ -266,18 +292,16 @@ const AppRouting: React.FC = () => {
               <span className={`text-sm font-semibold ${currentStatusTone.label}`}>
                 {getAppRoutingStatusLabel(status)}
               </span>
-              <span className="text-sm text-muted">
-                {tr(
-                  'Route selected applications through local Mihomo without system proxy or TUN.'
-                )}
-              </span>
+              {config?.enabled && (
+                <span className="font-mono text-xs text-muted">
+                  {displayedProxyProtocol} · 127.0.0.1:{displayedProxyPort}
+                  {backendLabel ? ` · ${backendLabel}` : ''}
+                </span>
+              )}
             </div>
-            {config?.enabled && (
-              <p className="mt-1 pl-4 font-mono text-xs text-muted">
-                {tr('Upstream')} · {displayedProxyProtocol} · 127.0.0.1:{displayedProxyPort}
-                {backendLabel ? ` · ${backendLabel}` : ''}
-              </p>
-            )}
+            <p className="mt-1 pl-4 text-xs text-muted">
+              {tr('Route selected applications through local Mihomo without system proxy or TUN.')}
+            </p>
             {currentStatusMessage && !needsMacApproval && (
               <p
                 className={`mt-1 pl-4 text-xs ${status?.state === 'error' ? 'text-danger' : 'text-warning'}`}
@@ -326,8 +350,6 @@ const AppRouting: React.FC = () => {
           </Switch>
         </section>
 
-        <Separator />
-
         {needsMacApproval && (
           <Card className="border border-warning/40 bg-warning-soft/40">
             <Card.Content className="gap-3">
@@ -371,26 +393,35 @@ const AppRouting: React.FC = () => {
           </Card>
         )}
 
-        <div>
-          <h3 className="font-semibold">{tr('Application rules')}</h3>
-          <p className="text-sm text-muted">
-            {isMac
-              ? tr(
-                  'Rules match from top to bottom by process name or application signing identifier.'
-                )
-              : isLinux
-                ? tr('Rules match from top to bottom by executable path or process name.')
-                : tr('Rules match from top to bottom. Use a filename or a full path containing *.')}
-          </p>
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div className="min-w-0">
+            <h3 className="font-semibold">{tr('Application rules')}</h3>
+            <p className="text-sm text-muted">
+              {isMac
+                ? tr(
+                    'Rules match from top to bottom by process name or application signing identifier.'
+                  )
+                : isLinux
+                  ? tr('Rules match from top to bottom by executable path or process name.')
+                  : tr(
+                      'Rules match from top to bottom. Use a filename or a full path containing *.'
+                    )}
+            </p>
+          </div>
+          <Button
+            size="sm"
+            variant="secondary"
+            isDisabled={!supported || !config || saving}
+            onPress={() =>
+              void addApplications(undefined, isLinux ? linuxIdentifierKind : undefined)
+            }
+          >
+            <MdAdd className="text-base" />
+            {tr('Select applications')}
+          </Button>
         </div>
 
-        <section
-          className="app-routing-rule-entry app-routing-rule-composer"
-          aria-labelledby="app-routing-composer-title"
-        >
-          <h4 id="app-routing-composer-title" className="text-sm font-semibold text-foreground">
-            {tr('Add application rule')}
-          </h4>
+        <section className="app-routing-rule-entry app-routing-rule-composer">
           <div
             className={`app-routing-rule-entry-grid ${
               isMac || isLinux
@@ -399,116 +430,57 @@ const AppRouting: React.FC = () => {
             }`}
           >
             {(isMac || isLinux) && (
-              <div className="app-routing-composer-field">
-                <span className="app-routing-composer-label">{tr('Match by')}</span>
-                <KokoSelect
-                  aria-label={tr('Match by')}
-                  variant="secondary"
-                  disallowEmptySelection
-                  isDisabled={!supported || !config || saving}
-                  options={
-                    isMac
-                      ? [
-                          { id: 'macos-process-name', label: tr('Process name') },
-                          { id: 'macos-signing-identifier', label: tr('Signing identifier') }
-                        ]
-                      : [
-                          { id: 'linux-executable', label: tr('Executable path') },
-                          { id: 'linux-process-name', label: tr('Process name') }
-                        ]
-                  }
-                  value={isMac ? macIdentifierKind : linuxIdentifierKind}
-                  onChange={(value) => {
-                    if (isMac) setMacIdentifierKind(value as AppRoutingIdentifierKind)
-                    else setLinuxIdentifierKind(value as AppRoutingIdentifierKind)
-                  }}
-                />
-              </div>
-            )}
-            <div className="app-routing-composer-field">
-              <span className="app-routing-composer-label">
-                {isMac
-                  ? macIdentifierKind === 'macos-process-name'
-                    ? tr('Process name')
-                    : tr('Signing identifier')
-                  : isLinux
-                    ? linuxIdentifierKind === 'linux-process-name'
-                      ? tr('Process name')
-                      : tr('Executable path')
-                    : tr('Process pattern')}
-              </span>
-              <TextField
-                aria-label={
-                  isMac
-                    ? macIdentifierKind === 'macos-process-name'
-                      ? tr('Process name')
-                      : tr('Signing identifier')
-                    : isLinux
-                      ? linuxIdentifierKind === 'linux-process-name'
-                        ? tr('Process name')
-                        : tr('Executable path')
-                      : tr('Process pattern')
-                }
-                className="min-w-0"
+              <KokoSelect
+                aria-label={tr('Match by')}
+                density="toolbar"
                 variant="secondary"
-                value={processPattern}
+                className="min-w-0"
+                disallowEmptySelection
                 isDisabled={!supported || !config || saving}
-                onChange={setProcessPattern}
-              >
-                <Input
-                  placeholder={
-                    isMac
-                      ? macIdentifierKind === 'macos-process-name'
-                        ? 'codex'
-                        : 'com.example.app'
-                      : isLinux
-                        ? linuxIdentifierKind === 'linux-process-name'
-                          ? 'codex'
-                          : '/usr/bin/example'
-                        : 'example.exe'
-                  }
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter' && processPattern.trim()) void submitPattern()
-                  }}
-                />
-                <Description className="app-routing-rule-example">
-                  {isMac
-                    ? macIdentifierKind === 'macos-process-name'
-                      ? tr('For example: codex or Codex Helper*')
-                      : tr('For example: com.openai.chat or com.openai.chat*')
-                    : isLinux
-                      ? linuxIdentifierKind === 'linux-process-name'
-                        ? tr('For example: codex. Every executable with that name will match.')
-                        : tr('For example: /usr/bin/firefox or /opt/example/example')
-                      : tr(
-                          'For example: ChatGPT.exe, ChatGPT*.exe, or C:\\Program Files\\*\\ChatGPT.exe'
-                        )}
-                </Description>
-              </TextField>
-            </div>
+                options={
+                  isMac
+                    ? [
+                        { id: 'macos-process-name', label: tr('Process name') },
+                        { id: 'macos-signing-identifier', label: tr('Signing identifier') }
+                      ]
+                    : [
+                        { id: 'linux-executable', label: tr('Executable path') },
+                        { id: 'linux-process-name', label: tr('Process name') }
+                      ]
+                }
+                value={isMac ? macIdentifierKind : linuxIdentifierKind}
+                onChange={(value) => {
+                  if (isMac) setMacIdentifierKind(value as AppRoutingIdentifierKind)
+                  else setLinuxIdentifierKind(value as AppRoutingIdentifierKind)
+                }}
+              />
+            )}
+            <KokoTextField
+              aria-label={patternLabel}
+              className="min-w-0"
+              controlWidth="full"
+              placeholder={patternPlaceholder}
+              value={processPattern}
+              isDisabled={!supported || !config || saving}
+              onChangeValue={setProcessPattern}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' && processPattern.trim()) void submitPattern()
+              }}
+            />
             <div className="app-routing-rule-actions">
               <Button
+                size="sm"
                 className="app-routing-rule-action"
                 variant="primary"
-                isDisabled={!supported || !config || saving}
-                onPress={() =>
-                  void addApplications(undefined, isLinux ? linuxIdentifierKind : undefined)
-                }
-              >
-                <MdAdd className="text-lg" />
-                {tr('Select applications')}
-              </Button>
-              <Button
-                className="app-routing-rule-action"
-                variant="secondary"
                 isDisabled={!supported || !config || saving || !processPattern.trim()}
                 onPress={() => void submitPattern()}
               >
-                <MdAdd className="text-lg" />
+                <MdAdd className="text-base" />
                 {tr('Add pattern rule')}
               </Button>
             </div>
           </div>
+          <p className="app-routing-rule-example">{patternExample}</p>
         </section>
 
         {!supported ? (
@@ -561,19 +533,21 @@ const AppRouting: React.FC = () => {
                   {tr('No individual rules')}
                 </div>
               ) : (
-                ungroupedRules.map((rule, index) => (
-                  <AppRoutingRuleRow
-                    key={rule.id}
-                    rule={rule}
-                    index={index}
-                    count={ungroupedRules.length}
-                    icon={icons[rule.id]}
-                    disabled={saving}
-                    onChange={(patch) => updateRule(rule.id, patch)}
-                    onMove={(offset) => moveRule(rule.id, offset)}
-                    onDelete={() => deleteRule(rule.id)}
-                  />
-                ))
+                <div className="app-routing-rule-list" role="list">
+                  {ungroupedRules.map((rule, index) => (
+                    <AppRoutingRuleRow
+                      key={rule.id}
+                      rule={rule}
+                      index={index}
+                      count={ungroupedRules.length}
+                      icon={icons[rule.id]}
+                      disabled={saving}
+                      onChange={(patch) => updateRule(rule.id, patch)}
+                      onMove={(offset) => moveRule(rule.id, offset)}
+                      onDelete={() => deleteRule(rule.id)}
+                    />
+                  ))}
+                </div>
               )}
             </section>
 
@@ -629,7 +603,11 @@ const AppRouting: React.FC = () => {
                       const rules = config.rules.filter((rule) => rule.groupId === group.id)
                       const isCollapsed = collapsedGroups.has(group.id)
                       return (
-                        <section key={group.id} className="flex flex-col gap-2">
+                        <section
+                          key={group.id}
+                          className="app-routing-group"
+                          data-enabled={group.enabled}
+                        >
                           <div className="app-routing-group-header" data-enabled={group.enabled}>
                             <button
                               type="button"
@@ -715,11 +693,9 @@ const AppRouting: React.FC = () => {
                             </Switch>
                           </div>
                           {!isCollapsed && (
-                            <div
-                              className={`ml-4 flex flex-col gap-3 border-l-2 pl-3 transition-opacity duration-150 ${group.enabled ? 'border-accent/25' : 'border-separator opacity-70'}`}
-                            >
+                            <div className="app-routing-group-rules" role="list">
                               {rules.length === 0 ? (
-                                <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-dashed border-separator px-4 py-3 text-sm text-muted">
+                                <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 text-sm text-muted">
                                   <span>{tr('No applications in this rule group')}</span>
                                   <Button
                                     size="sm"
@@ -758,20 +734,32 @@ const AppRouting: React.FC = () => {
           </div>
         )}
 
-        <div className={`rounded-xl border p-4 text-sm ${failureProtectionTone}`}>
-          <div className="font-semibold">{tr('Proxy failure protection')}</div>
-          <p className="mt-1">
-            {tr(
-              'If the application-routing proxy endpoint is unavailable, Proxy connections are blocked to prevent accidental direct fallback. Direct rules remain direct.'
-            )}
-          </p>
-          {status?.proxyPort && (
+        {isProxyTrafficBlocked ? (
+          <div className={`rounded-xl border p-4 text-sm ${failureProtectionTone}`}>
+            <div className="font-semibold">{tr('Proxy failure protection')}</div>
+            <p className="mt-1">
+              {tr(
+                'If the application-routing proxy endpoint is unavailable, Proxy connections are blocked to prevent accidental direct fallback. Direct rules remain direct.'
+              )}
+            </p>
             <p className="mt-1 font-mono text-xs">
-              127.0.0.1:{status.proxyPort} ({displayedProxyProtocol})
+              127.0.0.1:{displayedProxyPort} ({displayedProxyProtocol})
               {backendLabel ? ` · ${backendLabel}` : ''}
             </p>
-          )}
-        </div>
+          </div>
+        ) : config?.enabled ? (
+          <div className="app-routing-protection-summary">
+            <MdInfoOutline aria-hidden="true" className="shrink-0 text-base" />
+            <span className="font-medium text-foreground">{tr('Proxy failure protection')}</span>
+            <span aria-hidden="true">·</span>
+            <span>{tr('Enabled')}</span>
+            <span aria-hidden="true">·</span>
+            <span className="font-mono">
+              {displayedProxyProtocol} 127.0.0.1:{displayedProxyPort}
+              {backendLabel ? ` · ${backendLabel}` : ''}
+            </span>
+          </div>
+        ) : null}
       </div>
     </BasePage>
   )

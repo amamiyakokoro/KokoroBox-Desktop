@@ -120,21 +120,8 @@
 .app-routing-rule-entry-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  align-items: start;
+  align-items: center;
   gap: 0.5rem;
-}
-
-.app-routing-composer-field {
-  display: flex;
-  min-width: 0;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.app-routing-composer-label {
-  font-size: var(--text-xs);
-  line-height: 1rem;
-  color: var(--muted);
 }
 
 .app-routing-rule-actions {
@@ -146,17 +133,17 @@
 }
 
 .app-routing-rule-action {
+  width: 100%;
   min-width: 0;
-  flex: 1 1 0;
 }
 
 @container app-routing-rule-entry (min-width: 30rem) {
   .app-routing-rule-entry-grid-with-kind {
-    grid-template-columns: minmax(10rem, 12rem) minmax(0, 1fr);
+    grid-template-columns: minmax(9rem, 12rem) minmax(0, 1fr) auto;
   }
 
   .app-routing-rule-entry-grid-without-kind {
-    grid-template-columns: minmax(12rem, 1fr);
+    grid-template-columns: minmax(12rem, 1fr) auto;
   }
 
   .app-routing-rule-actions {
@@ -165,16 +152,8 @@
     justify-content: flex-end;
   }
 
-  .app-routing-rule-entry-grid-with-kind > .app-routing-rule-actions {
-    grid-column: 2;
-  }
-
-  .app-routing-rule-entry-grid-without-kind > .app-routing-rule-actions {
-    grid-column: 1;
-  }
-
   .app-routing-rule-action {
-    flex: none;
+    width: auto;
   }
 }
 
