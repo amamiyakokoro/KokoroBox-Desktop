@@ -23,7 +23,15 @@ import TrayIconCropModal from './tray-icon-crop-modal'
 
 const rasterTrayIconPattern = /\.(png|jpe?g|webp)$/i
 
-const AppearanceConfig: React.FC = () => {
+type AppearanceSection = 'interface' | 'tray'
+
+interface AppearanceConfigProps {
+  sections?: AppearanceSection[]
+}
+
+const AppearanceConfig: React.FC<AppearanceConfigProps> = ({
+  sections = ['interface', 'tray']
+}) => {
   const { appConfig, patchAppConfig } = useAppConfig()
   const [trayIconCropDataURL, setTrayIconCropDataURL] = useState('')
   const { setTheme } = useTheme()
@@ -43,6 +51,8 @@ const AppearanceConfig: React.FC = () => {
   } = appConfig || {}
   const [localShowFloating, setLocalShowFloating] = useState(showFloating)
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const showInterface = sections.includes('interface')
+  const showTray = sections.includes('tray')
 
   useEffect(() => {
     return (): void => {
@@ -54,7 +64,7 @@ const AppearanceConfig: React.FC = () => {
 
   return (
     <>
-      {trayIconCropDataURL && (
+      {showTray && trayIconCropDataURL && (
         <TrayIconCropModal
           imageDataURL={trayIconCropDataURL}
           onCancel={() => setTrayIconCropDataURL('')}
@@ -65,251 +75,246 @@ const AppearanceConfig: React.FC = () => {
           }}
         />
       )}
-      <SettingCard header={tr('Appearance')}>
-        <SettingItem
-          contentAlign="end"
-          title={tr('Show floating window')}
-          help={tr('The floating window may crash the app unless GPU acceleration is disabled')}
-          divider
-        >
-          <Switch
-            size="sm"
-            isSelected={localShowFloating}
-            onChange={async (v) => {
-              if (timeoutRef.current) {
-                clearTimeout(timeoutRef.current)
-                timeoutRef.current = null
-              }
-
-              setLocalShowFloating(v)
-              if (v) {
-                await showFloatingWindow()
-                timeoutRef.current = setTimeout(async () => {
-                  await patchAppConfig({ showFloatingWindow: v })
-                  timeoutRef.current = null
-                }, 1000)
-              } else {
-                patchAppConfig({ showFloatingWindow: v })
-                await closeFloatingWindow()
-              }
-            }}
-          >
-            <Switch.Content>
-              <Switch.Control>
-                <Switch.Thumb />
-              </Switch.Control>
-            </Switch.Content>
-          </Switch>
-        </SettingItem>
-        {localShowFloating && (
-          <>
-            <SettingItem
-              contentAlign="end"
-              title={tr('Rotate floating icon based on network speed')}
-              divider
-            >
-              <Switch
-                size="sm"
-                isSelected={spinFloatingIcon}
-                onChange={async (v) => {
-                  await patchAppConfig({ spinFloatingIcon: v })
-                  window.electron.ipcRenderer.send('updateFloatingWindow')
-                }}
-              >
-                <Switch.Content>
-                  <Switch.Control>
-                    <Switch.Thumb />
-                  </Switch.Control>
-                </Switch.Content>
-              </Switch>
-            </SettingItem>
-            <SettingItem contentAlign="end" title={tr('Disable tray icon')} divider>
-              <Switch
-                size="sm"
-                isSelected={disableTray}
-                onChange={async (v) => {
-                  await patchAppConfig({ disableTray: v })
-                  if (v) {
-                    closeTrayIcon()
-                  } else {
-                    showTrayIcon()
-                  }
-                }}
-              >
-                <Switch.Content>
-                  <Switch.Control>
-                    <Switch.Thumb />
-                  </Switch.Control>
-                </Switch.Content>
-              </Switch>
-            </SettingItem>
-          </>
-        )}
-        {!disableTray && (
+      {showTray && (
+        <SettingCard header={tr('System tray and floating window')}>
           <SettingItem
             contentAlign="end"
-            title={tr('Custom tray icon')}
-            help={tr(
-              'Use this icon in the tray. PNG, JPG and WebP images are cropped before saving.'
-            )}
-            divider
-          >
-            <div className="flex min-w-0 max-w-[65%] items-center justify-end gap-2">
-              {customTrayIcon && (
-                <span className="truncate text-xs text-muted">
-                  {customTrayIcon.startsWith('data:image/')
-                    ? tr('Custom icon saved')
-                    : customTrayIcon}
-                </span>
-              )}
-              <Button
-                size="sm"
-                variant="secondary"
-                onPress={async () => {
-                  const files = await getFilePath(
-                    ['png', 'jpg', 'jpeg', 'webp', 'ico', 'icns'],
-                    tr('Choose tray icon'),
-                    tr('Tray icon')
-                  )
-                  if (!files?.[0]) return
-                  if (rasterTrayIconPattern.test(files[0])) {
-                    setTrayIconCropDataURL(await readImageFileDataURL(files[0]))
-                    return
-                  }
-                  await patchAppConfig({ customTrayIcon: await readImageFileDataURL(files[0]) })
-                  await updateTrayIcon()
-                }}
-              >
-                {customTrayIcon ? tr('Change icon') : tr('Choose icon')}
-              </Button>
-              {customTrayIcon && (
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onPress={async () => {
-                    await patchAppConfig({ customTrayIcon: '' })
-                    await updateTrayIcon()
-                  }}
-                >
-                  {tr('Restore defaults')}
-                </Button>
-              )}
-            </div>
-          </SettingItem>
-        )}
-        {platform !== 'linux' && (
-          <>
-            <SettingItem contentAlign="end" title={tr('Show proxy details in tray menu')} divider>
-              <Switch
-                size="sm"
-                isSelected={proxyInTray}
-                onChange={async (v) => {
-                  await patchAppConfig({ proxyInTray: v })
-                }}
-              >
-                <Switch.Content>
-                  <Switch.Control>
-                    <Switch.Thumb />
-                  </Switch.Control>
-                </Switch.Content>
-              </Switch>
-            </SettingItem>
-            {proxyInTray && (
-              <SettingItem contentAlign="end" title={tr('Tray menu latency layout')} divider>
-                <KokoSegmentedControl
-                  ariaLabel={tr('Tray menu latency layout')}
-                  selectedKey={trayProxyDelayLayout}
-                  options={[
-                    { id: 'same-line', label: tr('Same line') },
-                    { id: 'new-line', label: tr('New line') }
-                  ]}
-                  onChange={async (v) => {
-                    await patchAppConfig({
-                      trayProxyDelayLayout: v as 'same-line' | 'new-line'
-                    })
-                    window.electron.ipcRenderer.send('updateTrayMenu')
-                  }}
-                />
-              </SettingItem>
-            )}
-          </>
-        )}
-        <SettingItem
-          contentAlign="end"
-          title={tr('Show network speed in the {0}', [
-            platform === 'win32'
-              ? tr('Taskbar')
-              : platform === 'darwin'
-                ? tr('Menu bar')
-                : tr('System tray')
-          ])}
-          divider
-        >
-          <Switch
-            size="sm"
-            isSelected={showTraffic}
-            onChange={async (v) => {
-              await patchAppConfig({ showTraffic: v })
-              await startMonitor()
-            }}
-          >
-            <Switch.Content>
-              <Switch.Control>
-                <Switch.Thumb />
-              </Switch.Control>
-            </Switch.Content>
-          </Switch>
-        </SettingItem>
-        {platform === 'darwin' && (
-          <>
-            <SettingItem contentAlign="end" title={tr('Show Dock icon')} divider>
-              <Switch
-                size="sm"
-                isSelected={useDockIcon}
-                onChange={async (v) => {
-                  await patchAppConfig({ useDockIcon: v })
-                  setDockVisible(v)
-                }}
-              >
-                <Switch.Content>
-                  <Switch.Control>
-                    <Switch.Thumb />
-                  </Switch.Control>
-                </Switch.Content>
-              </Switch>
-            </SettingItem>
-          </>
-        )}
-        <SettingItem contentAlign="end" title={tr('Use system title bar')} divider>
-          <Switch
-            size="sm"
-            isSelected={useWindowFrame}
-            onChange={async (v) => {
-              await patchAppConfig({ useWindowFrame: v })
-              await relaunchApp()
-            }}
-          >
-            <Switch.Content>
-              <Switch.Control>
-                <Switch.Thumb />
-              </Switch.Control>
-            </Switch.Content>
-          </Switch>
-        </SettingItem>
-        {useWindowFrame && (
-          <SettingItem
-            contentAlign="end"
-            title={tr('Enable window drag area')}
-            help={tr(
-              'Drag the window using empty areas in page headers. Useful when the system does not provide a draggable title bar.'
-            )}
+            title={tr('Show floating window')}
+            help={tr('The floating window may crash the app unless GPU acceleration is disabled')}
             divider
           >
             <Switch
               size="sm"
-              isSelected={enableWindowDrag}
+              isSelected={localShowFloating}
               onChange={async (v) => {
-                await patchAppConfig({ enableWindowDrag: v })
+                if (timeoutRef.current) {
+                  clearTimeout(timeoutRef.current)
+                  timeoutRef.current = null
+                }
+
+                setLocalShowFloating(v)
+                if (v) {
+                  await showFloatingWindow()
+                  timeoutRef.current = setTimeout(async () => {
+                    await patchAppConfig({ showFloatingWindow: v })
+                    timeoutRef.current = null
+                  }, 1000)
+                } else {
+                  patchAppConfig({ showFloatingWindow: v })
+                  await closeFloatingWindow()
+                }
+              }}
+            >
+              <Switch.Content>
+                <Switch.Control>
+                  <Switch.Thumb />
+                </Switch.Control>
+              </Switch.Content>
+            </Switch>
+          </SettingItem>
+          {localShowFloating && (
+            <>
+              <SettingItem
+                contentAlign="end"
+                title={tr('Rotate floating icon based on network speed')}
+                divider
+              >
+                <Switch
+                  size="sm"
+                  isSelected={spinFloatingIcon}
+                  onChange={async (v) => {
+                    await patchAppConfig({ spinFloatingIcon: v })
+                    window.electron.ipcRenderer.send('updateFloatingWindow')
+                  }}
+                >
+                  <Switch.Content>
+                    <Switch.Control>
+                      <Switch.Thumb />
+                    </Switch.Control>
+                  </Switch.Content>
+                </Switch>
+              </SettingItem>
+              <SettingItem contentAlign="end" title={tr('Disable tray icon')} divider>
+                <Switch
+                  size="sm"
+                  isSelected={disableTray}
+                  onChange={async (v) => {
+                    await patchAppConfig({ disableTray: v })
+                    if (v) {
+                      closeTrayIcon()
+                    } else {
+                      showTrayIcon()
+                    }
+                  }}
+                >
+                  <Switch.Content>
+                    <Switch.Control>
+                      <Switch.Thumb />
+                    </Switch.Control>
+                  </Switch.Content>
+                </Switch>
+              </SettingItem>
+            </>
+          )}
+          {!disableTray && (
+            <SettingItem
+              contentAlign="end"
+              title={tr('Custom tray icon')}
+              help={tr(
+                'Use this icon in the tray. PNG, JPG and WebP images are cropped before saving.'
+              )}
+              divider
+            >
+              <div className="flex min-w-0 max-w-[65%] items-center justify-end gap-2">
+                {customTrayIcon && (
+                  <span className="truncate text-xs text-muted">
+                    {customTrayIcon.startsWith('data:image/')
+                      ? tr('Custom icon saved')
+                      : customTrayIcon}
+                  </span>
+                )}
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onPress={async () => {
+                    const files = await getFilePath(
+                      ['png', 'jpg', 'jpeg', 'webp', 'ico', 'icns'],
+                      tr('Choose tray icon'),
+                      tr('Tray icon')
+                    )
+                    if (!files?.[0]) return
+                    if (rasterTrayIconPattern.test(files[0])) {
+                      setTrayIconCropDataURL(await readImageFileDataURL(files[0]))
+                      return
+                    }
+                    await patchAppConfig({ customTrayIcon: await readImageFileDataURL(files[0]) })
+                    await updateTrayIcon()
+                  }}
+                >
+                  {customTrayIcon ? tr('Change icon') : tr('Choose icon')}
+                </Button>
+                {customTrayIcon && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onPress={async () => {
+                      await patchAppConfig({ customTrayIcon: '' })
+                      await updateTrayIcon()
+                    }}
+                  >
+                    {tr('Restore defaults')}
+                  </Button>
+                )}
+              </div>
+            </SettingItem>
+          )}
+          {platform !== 'linux' && (
+            <>
+              <SettingItem contentAlign="end" title={tr('Show proxy details in tray menu')} divider>
+                <Switch
+                  size="sm"
+                  isSelected={proxyInTray}
+                  onChange={async (v) => {
+                    await patchAppConfig({ proxyInTray: v })
+                  }}
+                >
+                  <Switch.Content>
+                    <Switch.Control>
+                      <Switch.Thumb />
+                    </Switch.Control>
+                  </Switch.Content>
+                </Switch>
+              </SettingItem>
+              {proxyInTray && (
+                <SettingItem contentAlign="end" title={tr('Tray menu latency layout')} divider>
+                  <KokoSegmentedControl
+                    ariaLabel={tr('Tray menu latency layout')}
+                    selectedKey={trayProxyDelayLayout}
+                    options={[
+                      { id: 'same-line', label: tr('Same line') },
+                      { id: 'new-line', label: tr('New line') }
+                    ]}
+                    onChange={async (v) => {
+                      await patchAppConfig({
+                        trayProxyDelayLayout: v as 'same-line' | 'new-line'
+                      })
+                      window.electron.ipcRenderer.send('updateTrayMenu')
+                    }}
+                  />
+                </SettingItem>
+              )}
+            </>
+          )}
+          <SettingItem
+            contentAlign="end"
+            title={tr('Show network speed in the {0}', [
+              platform === 'win32'
+                ? tr('Taskbar')
+                : platform === 'darwin'
+                  ? tr('Menu bar')
+                  : tr('System tray')
+            ])}
+          >
+            <Switch
+              size="sm"
+              isSelected={showTraffic}
+              onChange={async (v) => {
+                await patchAppConfig({ showTraffic: v })
+                await startMonitor()
+              }}
+            >
+              <Switch.Content>
+                <Switch.Control>
+                  <Switch.Thumb />
+                </Switch.Control>
+              </Switch.Content>
+            </Switch>
+          </SettingItem>
+        </SettingCard>
+      )}
+      {showInterface && (
+        <SettingCard header={tr('Interface and windows')}>
+          <SettingItem contentAlign="end" title={tr('Background color')} divider>
+            <KokoSegmentedControl
+              ariaLabel={tr('Background color')}
+              selectedKey={appTheme}
+              options={[
+                { id: 'system', label: tr('Automatic') },
+                { id: 'dark', label: tr('Dark') },
+                { id: 'light', label: tr('Light') }
+              ]}
+              onChange={(key) => {
+                setTheme(key)
+                patchAppConfig({ appTheme: key as AppTheme })
+              }}
+            />
+          </SettingItem>
+          {platform === 'darwin' && (
+            <>
+              <SettingItem contentAlign="end" title={tr('Show Dock icon')} divider>
+                <Switch
+                  size="sm"
+                  isSelected={useDockIcon}
+                  onChange={async (v) => {
+                    await patchAppConfig({ useDockIcon: v })
+                    setDockVisible(v)
+                  }}
+                >
+                  <Switch.Content>
+                    <Switch.Control>
+                      <Switch.Thumb />
+                    </Switch.Control>
+                  </Switch.Content>
+                </Switch>
+              </SettingItem>
+            </>
+          )}
+          <SettingItem contentAlign="end" title={tr('Use system title bar')} divider>
+            <Switch
+              size="sm"
+              isSelected={useWindowFrame}
+              onChange={async (v) => {
+                await patchAppConfig({ useWindowFrame: v })
                 await relaunchApp()
               }}
             >
@@ -320,38 +325,48 @@ const AppearanceConfig: React.FC = () => {
               </Switch.Content>
             </Switch>
           </SettingItem>
-        )}
-        <SettingItem contentAlign="end" title={tr('Show update button')} divider>
-          <Switch
-            size="sm"
-            isSelected={showUpdateButtonAfterNotification}
-            onChange={(v) => {
-              patchAppConfig({ showUpdateButtonAfterNotification: v })
-            }}
-          >
-            <Switch.Content>
-              <Switch.Control>
-                <Switch.Thumb />
-              </Switch.Control>
-            </Switch.Content>
-          </Switch>
-        </SettingItem>
-        <SettingItem contentAlign="end" title={tr('Background color')} divider>
-          <KokoSegmentedControl
-            ariaLabel={tr('Background color')}
-            selectedKey={appTheme}
-            options={[
-              { id: 'system', label: tr('Automatic') },
-              { id: 'dark', label: tr('Dark') },
-              { id: 'light', label: tr('Light') }
-            ]}
-            onChange={(key) => {
-              setTheme(key)
-              patchAppConfig({ appTheme: key as AppTheme })
-            }}
-          />
-        </SettingItem>
-      </SettingCard>
+          {useWindowFrame && (
+            <SettingItem
+              contentAlign="end"
+              title={tr('Enable window drag area')}
+              help={tr(
+                'Drag the window using empty areas in page headers. Useful when the system does not provide a draggable title bar.'
+              )}
+              divider
+            >
+              <Switch
+                size="sm"
+                isSelected={enableWindowDrag}
+                onChange={async (v) => {
+                  await patchAppConfig({ enableWindowDrag: v })
+                  await relaunchApp()
+                }}
+              >
+                <Switch.Content>
+                  <Switch.Control>
+                    <Switch.Thumb />
+                  </Switch.Control>
+                </Switch.Content>
+              </Switch>
+            </SettingItem>
+          )}
+          <SettingItem contentAlign="end" title={tr('Show update button')}>
+            <Switch
+              size="sm"
+              isSelected={showUpdateButtonAfterNotification}
+              onChange={(v) => {
+                patchAppConfig({ showUpdateButtonAfterNotification: v })
+              }}
+            >
+              <Switch.Content>
+                <Switch.Control>
+                  <Switch.Thumb />
+                </Switch.Control>
+              </Switch.Content>
+            </Switch>
+          </SettingItem>
+        </SettingCard>
+      )}
     </>
   )
 }

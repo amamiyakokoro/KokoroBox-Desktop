@@ -62,6 +62,8 @@ export const messages: Readonly<Record<string, string>> = {
   'Language and notifications': '語言與通知',
   'Startup and updates': '啟動與更新',
   'Background behavior': '背景行為',
+  'Interface and windows': '介面與視窗',
+  'System tray and floating window': '系統匣與浮動視窗',
   Performance: '效能',
   'Environment integration': '環境整合',
   'Network behavior': '網路行為',

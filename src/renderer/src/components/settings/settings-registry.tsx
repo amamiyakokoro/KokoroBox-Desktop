@@ -77,6 +77,121 @@ const availableOnCurrentPlatform = (setting: SettingsEntryDefinition): boolean =
   !setting.platforms || setting.platforms.includes(platform as SettingsPlatform)
 
 export const getSettingsCategories = (): SettingsCategoryDefinition[] => {
+  const appearancePanels: SettingsPanelDefinition[] = [
+    {
+      key: 'interface',
+      label: tr('Interface and windows'),
+      entries: [
+        entry('background-color', tr('Background color'), tr('Interface and windows'), {
+          panel: 'interface'
+        }),
+        entry('show-dock-icon', tr('Show Dock icon'), tr('Interface and windows'), {
+          panel: 'interface',
+          platforms: ['darwin']
+        }),
+        entry('system-title-bar', tr('Use system title bar'), tr('Interface and windows'), {
+          panel: 'interface'
+        }),
+        entry('window-drag-area', tr('Enable window drag area'), tr('Interface and windows'), {
+          panel: 'interface'
+        }),
+        entry('show-update-button', tr('Show update button'), tr('Interface and windows'), {
+          panel: 'interface'
+        })
+      ],
+      content: () => <AppearanceConfig sections={['interface']} />
+    },
+    {
+      key: 'tray-floating',
+      label: tr('System tray and floating window'),
+      entries: [
+        entry(
+          'show-floating-window',
+          tr('Show floating window'),
+          tr('System tray and floating window'),
+          { panel: 'tray-floating' }
+        ),
+        entry(
+          'spin-floating-icon',
+          tr('Rotate floating icon based on network speed'),
+          tr('System tray and floating window'),
+          { panel: 'tray-floating' }
+        ),
+        entry('disable-tray-icon', tr('Disable tray icon'), tr('System tray and floating window'), {
+          panel: 'tray-floating'
+        }),
+        entry('custom-tray-icon', tr('Custom tray icon'), tr('System tray and floating window'), {
+          panel: 'tray-floating'
+        }),
+        entry(
+          'tray-proxy-details',
+          tr('Show proxy details in tray menu'),
+          tr('System tray and floating window'),
+          { panel: 'tray-floating', platforms: ['win32', 'darwin'] }
+        ),
+        entry(
+          'tray-latency-layout',
+          tr('Tray menu latency layout'),
+          tr('System tray and floating window'),
+          { panel: 'tray-floating', platforms: ['win32', 'darwin'] }
+        ),
+        entry(
+          'show-network-speed',
+          tr('Show network speed in the {0}', [
+            platform === 'win32'
+              ? tr('Taskbar')
+              : platform === 'darwin'
+                ? tr('Menu bar')
+                : tr('System tray')
+          ]),
+          tr('System tray and floating window'),
+          { panel: 'tray-floating' }
+        )
+      ],
+      content: () => <AppearanceConfig sections={['tray']} />
+    },
+    {
+      key: 'sidebar',
+      label: tr('Sidebar'),
+      entries: [
+        entry('sidebar-settings', tr('Sidebar settings'), tr('Sidebar settings'), {
+          panel: 'sidebar'
+        }),
+        entry('system-proxy-card', tr('System proxy'), tr('Sidebar settings'), {
+          panel: 'sidebar'
+        }),
+        entry('tun-card', tr('TUN mode'), tr('Sidebar settings'), { panel: 'sidebar' }),
+        entry('application-routing-card', tr('Application routing'), tr('Sidebar settings'), {
+          panel: 'sidebar'
+        }),
+        entry('subscriptions-card', tr('Subscriptions'), tr('Sidebar settings'), {
+          panel: 'sidebar'
+        }),
+        entry('proxy-groups-card', tr('Proxy groups'), tr('Sidebar settings'), {
+          panel: 'sidebar'
+        }),
+        entry('rules-card', tr('Rules'), tr('Sidebar settings'), { panel: 'sidebar' }),
+        entry('connections-card', tr('Connections'), tr('Sidebar settings'), {
+          panel: 'sidebar'
+        })
+      ],
+      content: () => <SiderConfig />
+    },
+    {
+      key: 'performance',
+      label: tr('Performance'),
+      entries: [
+        entry('disable-gpu', tr('Disable GPU acceleration'), tr('Performance'), {
+          panel: 'performance'
+        }),
+        entry('reduce-animations', tr('Reduce animations'), tr('Performance'), {
+          panel: 'performance'
+        })
+      ],
+      content: () => <PerformanceConfig />
+    }
+  ]
+
   const networkPanels: SettingsPanelDefinition[] = [
     {
       key: 'system-proxy',
@@ -621,57 +736,8 @@ export const getSettingsCategories = (): SettingsCategoryDefinition[] => {
         key: 'appearance',
         label: tr('Appearance'),
         icon: LuBrush,
-        entries: [
-          entry('show-floating-window', tr('Show floating window'), tr('Appearance')),
-          entry(
-            'spin-floating-icon',
-            tr('Rotate floating icon based on network speed'),
-            tr('Appearance')
-          ),
-          entry('disable-tray-icon', tr('Disable tray icon'), tr('Appearance')),
-          entry('custom-tray-icon', tr('Custom tray icon'), tr('Appearance')),
-          entry('tray-proxy-details', tr('Show proxy details in tray menu'), tr('Appearance'), {
-            platforms: ['win32', 'darwin']
-          }),
-          entry('tray-latency-layout', tr('Tray menu latency layout'), tr('Appearance'), {
-            platforms: ['win32', 'darwin']
-          }),
-          entry(
-            'show-network-speed',
-            tr('Show network speed in the {0}', [
-              platform === 'win32'
-                ? tr('Taskbar')
-                : platform === 'darwin'
-                  ? tr('Menu bar')
-                  : tr('System tray')
-            ]),
-            tr('Appearance')
-          ),
-          entry('show-dock-icon', tr('Show Dock icon'), tr('Appearance'), {
-            platforms: ['darwin']
-          }),
-          entry('system-title-bar', tr('Use system title bar'), tr('Appearance')),
-          entry('window-drag-area', tr('Enable window drag area'), tr('Appearance')),
-          entry('show-update-button', tr('Show update button'), tr('Appearance')),
-          entry('background-color', tr('Background color'), tr('Appearance')),
-          entry('disable-gpu', tr('Disable GPU acceleration'), tr('Performance')),
-          entry('reduce-animations', tr('Reduce animations'), tr('Performance')),
-          entry('sidebar-settings', tr('Sidebar settings'), tr('Sidebar settings')),
-          entry('system-proxy-card', tr('System proxy'), tr('Sidebar settings')),
-          entry('tun-card', tr('TUN mode'), tr('Sidebar settings')),
-          entry('application-routing-card', tr('Application routing'), tr('Sidebar settings')),
-          entry('subscriptions-card', tr('Subscriptions'), tr('Sidebar settings')),
-          entry('proxy-groups-card', tr('Proxy groups'), tr('Sidebar settings')),
-          entry('rules-card', tr('Rules'), tr('Sidebar settings')),
-          entry('connections-card', tr('Connections'), tr('Sidebar settings'))
-        ],
-        content: () => (
-          <>
-            <AppearanceConfig />
-            <PerformanceConfig />
-            <SiderConfig />
-          </>
-        )
+        entries: appearancePanels.flatMap((panel) => panel.entries),
+        panels: appearancePanels
       },
       {
         key: 'network',

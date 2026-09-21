@@ -2181,7 +2181,24 @@ test('Appearance supports only the native application color scheme', () => {
   )
   const rendererIpc = readFileSync('src/renderer/src/utils/ipc.ts', 'utf8')
   const mainIpc = readFileSync('src/main/utils/ipc.ts', 'utf8')
+  const appearancePanels = registry.slice(
+    registry.indexOf('const appearancePanels:'),
+    registry.indexOf('const networkPanels:')
+  )
+  const panelKeys = [...appearancePanels.matchAll(/^ {4}\{\n {6}key: '([^']+)'/gm)].map(
+    (match) => match[1]
+  )
 
+  assert.deepEqual(panelKeys, ['interface', 'tray-floating', 'sidebar', 'performance'])
+  assert.match(registry, /entries: appearancePanels\.flatMap\(\(panel\) => panel\.entries\)/)
+  assert.match(registry, /panels: appearancePanels/)
+  assert.match(appearancePanels, /<AppearanceConfig sections=\{\['interface'\]\} \/>/)
+  assert.match(appearancePanels, /<AppearanceConfig sections=\{\['tray'\]\} \/>/)
+  assert.match(appearancePanels, /key: 'sidebar'[\s\S]*content: \(\) => <SiderConfig \/>/)
+  assert.match(appearancePanels, /key: 'performance'[\s\S]*content: \(\) => <PerformanceConfig \/>/)
+  assert.match(appearance, /sections = \['interface', 'tray'\]/)
+  assert.match(appearance, /showTray && \([\s\S]*System tray and floating window/)
+  assert.match(appearance, /showInterface && \([\s\S]*Interface and windows/)
   assert.match(appearance, /title=\{tr\('Background color'\)\}/)
   assert.match(appearance, /\{ id: 'system', label: tr\('Automatic'\) \}/)
   assert.match(appearance, /\{ id: 'dark', label: tr\('Dark'\) \}/)
