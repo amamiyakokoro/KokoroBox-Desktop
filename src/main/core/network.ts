@@ -1,5 +1,4 @@
-import { execFile } from 'child_process'
-import { promisify } from 'util'
+import * as native from 'kokorobox-native'
 import { getAppConfig, patchAppConfig } from '../config'
 import { setSysDns } from '../service/api'
 import { triggerSysProxy } from '../sys/sysproxy'
@@ -30,14 +29,21 @@ async function getOriginDNS(): Promise<void> {
 }
 
 async function setDNS(dns: string, mode: 'none' | 'exec' | 'service'): Promise<void> {
-  const service = await getDefaultService()
-  const dnsServers = dns.split(' ')
+  const dnsServers = dns === 'Empty' ? [] : dns.split(' ')
   if (mode === 'exec') {
-    const execFilePromise = promisify(execFile)
-    await execFilePromise('networksetup', ['-setdnsservers', service, ...dnsServers])
+    const setActiveNetworkDns = (
+      native as typeof native & {
+        setActiveNetworkDns?: (servers: string[]) => Promise<void>
+      }
+    ).setActiveNetworkDns
+    if (!setActiveNetworkDns) {
+      throw new Error('Installed kokorobox-native does not include DNS mutation')
+    }
+    await setActiveNetworkDns(dnsServers)
     return
   }
   if (mode === 'service') {
+    const service = await getDefaultService()
     await setSysDns(service, dnsServers)
     return
   }
