@@ -449,7 +449,7 @@ for (const arch of ['x64', 'arm64']) {
         receipt.dmg.checksum,
         createHash('sha256').update('signed disk image with stapled ticket').digest('hex')
       )
-      assert.equal(mock.calls.filter((label) => label === 'Verify App/helper signature').length, 9)
+      assert.equal(mock.calls.filter((label) => label === 'Verify App/helper signature').length, 8)
       assert.ok(
         mock.calls.indexOf('Submit PKG for notarization') < mock.calls.indexOf('Staple PKG ticket')
       )
@@ -597,15 +597,11 @@ test('generated signing config passes electron-builder validation with required 
   const config = await getConfig(process.cwd(), undefined, signingConfig(process.cwd(), teamId))
   await validateConfiguration(config)
   assert.equal(config.forceCodeSigning, true)
-  assert.equal(config.mac.binaries.length, 6)
+  assert.equal(config.mac.binaries.length, 5)
   assert.ok(
     config.mac.binaries.includes('Contents/Resources/traffic-presenter/kokorobox-traffic-presenter')
   )
-  assert.ok(
-    config.mac.binaries.includes(
-      'Contents/Resources/files/macos-app-routing/kokorobox-app-routing.node'
-    )
-  )
+  assert.ok(!config.mac.binaries.some((binary) => binary.includes('macos-app-routing')))
   assert.ok(config.mac.binaries.includes('Contents/Frameworks/kokorobox-updater.node'))
   assert.match(config.afterPack, /macos-after-pack\.cjs$/)
   assert.equal(config.mac.entitlementsInherit, 'build/entitlements.mac.helper.plist')

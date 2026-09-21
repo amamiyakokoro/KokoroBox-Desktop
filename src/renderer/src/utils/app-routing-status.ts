@@ -87,9 +87,6 @@ export function getAppRoutingStatusMessage(
   if (message === '请在系统设置中允许 KokoroBox 网络扩展') {
     return tr('Allow the KokoroBox network extension in System Settings.')
   }
-  if (message === 'macOS application-routing bridge is not installed') {
-    return tr('The macOS application-routing bridge is not installed')
-  }
   if (message === 'macOS application-routing system extension is not installed') {
     return tr('The macOS system extension is not installed')
   }

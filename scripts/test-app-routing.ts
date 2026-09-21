@@ -734,11 +734,10 @@ test('parses only the canonical process-pattern schema', () => {
   )
 })
 
-test('macOS native build is pinned to the controlled KokoroBox ProxyBridge fork', () => {
+test('macOS routing packages the pinned data plane and uses the native control plane', () => {
   const sourceManifest = JSON.parse(readFileSync('build/proxybridge/source-manifest.json', 'utf8'))
   const macBuild = readFileSync('scripts/prepare-macos-routing.ts', 'utf8')
   const buildWorkflow = readFileSync('.github/workflows/build.yml', 'utf8')
-  const macBridge = readFileSync('native/macos-app-routing/KokoroBoxAppRoutingBridge.mm', 'utf8')
   const macCoordinator = readFileSync('src/main/app-routing/macos.ts', 'utf8')
   const manager = readFileSync('src/main/app-routing/manager.ts', 'utf8')
   assert.equal(sourceManifest.proxyBridgeRepository, proxyBridgeRepository)
@@ -765,9 +764,7 @@ test('macOS native build is pinned to the controlled KokoroBox ProxyBridge fork'
   assert.match(macBuild, /CFBundleShortVersionString/)
   assert.match(macBuild, /CFBundleVersion/)
   assert.doesNotMatch(macBuild, /GENERATE_INFOPLIST_FILE=YES/)
-  assert.match(macBuild, /node-gyp\.js/)
-  assert.match(macBuild, /electronjs\.org\/headers/)
-  assert.match(macBuild, /kokorobox-app-routing\.node/)
+  assert.doesNotMatch(macBuild, /node-gyp\.js|electronjs\.org\/headers|kokorobox-app-routing\.node/)
   assert.match(macBuild, /replaceKokoroBoxConfiguration/)
   assert.match(macBuild, /installKokoroBoxConfiguration/)
   assert.match(macBuild, /configuration\.proxyUdpDns/)
@@ -776,52 +773,15 @@ test('macOS native build is pinned to the controlled KokoroBox ProxyBridge fork'
   assert.match(buildWorkflow, /pnpm prepare:macos-routing/)
   assert.doesNotMatch(buildWorkflow, /git -C .*ProxyBridge.* checkout --detach/)
   assert.doesNotMatch(buildWorkflow, /002864ff606ddeb4c6dce6dc1247596a3d317fc5/)
-  assert.match(macBridge, /NAPI_MODULE/)
-  assert.match(macBridge, /napi_create_async_work/)
-  assert.match(macBridge, /OSSystemExtensionRequest/)
-  assert.match(macBridge, /NETransparentProxyManager/)
-  assert.match(macBridge, /const NSUInteger maximumAttempts = 3/)
-  assert.match(macBridge, /The network extension rejected the application-routing policy/)
-  assert.match(
-    macBridge,
-    /The network extension did not acknowledge the application-routing policy/
-  )
-  assert.match(macBridge, /containerURLForSecurityApplicationGroupIdentifier/)
-  assert.match(macBridge, /sendProviderMessage:messageData/)
-  assert.doesNotMatch(macBridge, /CFNotificationCenterPostNotification/)
-  assert.match(macBridge, /application-routing-policy-ack\.json/)
-  assert.match(macBridge, /@"action" : @"replaceKokoroBoxConfiguration"/)
-  assert.match(macBridge, /configuration\[@"proxyUdpDns"\]/)
-  assert.match(macBridge, /configuration\[@"dnsPort"\]/)
-  assert.match(macBridge, /activationRequestForExtension:KBExtensionIdentifier/)
-  assert.match(macBridge, /propertiesRequestForExtension:KBExtensionIdentifier/)
-  assert.match(macBridge, /properties\.isEnabled/)
-  assert.match(macBridge, /properties\.isAwaitingUserApproval/)
-  assert.match(macBridge, /queue:dispatch_get_main_queue\(\)/)
-  assert.match(macBridge, /openURLs:@\[KBSystemSettingsURL\(\)\]/)
-  assert.match(macBridge, /withApplicationAtURL:applicationURL/)
-  assert.match(macBridge, /com\.apple\.LoginItems-Settings\.extension\?ExtensionItems/)
-  assert.doesNotMatch(macBridge, /@"x-help-action/)
-  assert.match(macBridge, /KBStoredConfiguration/)
-  assert.match(macBridge, /KBClearSharedPolicy/)
-  assert.match(macBridge, /isEqualToDictionary:configuration/)
-  assert.match(macBridge, /KBExtensionReplacementPendingDefaultsKey/)
-  assert.match(
-    macBridge,
-    /actionForReplacingExtension:[\s\S]*?KBSetExtensionReplacementPending\(YES\)/
-  )
-  assert.match(macBridge, /KBRecycleManagerAfterExtensionReplacement/)
-  assert.match(macBridge, /KBStopManagerConnection/)
-  assert.match(macBridge, /NEVPNStatusDidChangeNotification/)
+  assert.match(macCoordinator, /import \{ invokeMacosApplicationRouting \} from 'kokorobox-native'/)
+  assert.match(macCoordinator, /invokeMacosApplicationRouting\(request\)/)
   assert.match(macCoordinator, /providerHealthCheckIntervalMs = 15_000/)
   assert.match(macCoordinator, /providerHealthCheckDue/)
   assert.match(macCoordinator, /activePolicyKey = response\.state === 'running' \? policyKey : ''/)
   assert.match(manager, /while \(reconcileRequested\)/)
   assert.match(manager, /void reconcileAppRouting\(\)/)
   assert.doesNotMatch(manager, /await reconcileAppRouting\(\)\s+monitor = setInterval/)
-  assert.doesNotMatch(macBridge, /SecCodeCheckValidity|certificate leaf/)
-  assert.match(macCoordinator, /process\.dlopen/)
-  assert.doesNotMatch(macCoordinator, /spawn\(|child_process/)
+  assert.doesNotMatch(macCoordinator, /process\.dlopen|spawn\(|child_process/)
 })
 
 test('Windows and Linux application routing use only the privileged service lifecycle', () => {
@@ -874,7 +834,6 @@ test('Windows and Linux application routing use only the privileged service life
 })
 
 test('macOS approval guidance returns promptly and remains visible across app restarts', () => {
-  const bridge = readFileSync('native/macos-app-routing/KokoroBoxAppRoutingBridge.mm', 'utf8')
   const coordinator = readFileSync('src/main/app-routing/macos.ts', 'utf8')
   const page = readFileSync('src/renderer/src/pages/app-routing.tsx', 'utf8')
   const statusMessages = readFileSync('src/renderer/src/utils/app-routing-status.ts', 'utf8')
@@ -884,30 +843,9 @@ test('macOS approval guidance returns promptly and remains visible across app re
   )
   const hook = readFileSync('src/renderer/src/hooks/use-app-routing.ts', 'utf8')
 
-  assert.match(bridge, /KBUserApprovalPendingDefaultsKey/)
-  assert.match(bridge, /KBExtensionReplacementPendingDefaultsKey/)
-  assert.match(bridge, /KBExtensionActivationConfirmedThisProcess/)
-  assert.match(bridge, /KBCheckExtensionEnabled/)
-  assert.match(bridge, /- \(void\)requestNeedsUserApproval[\s\S]*?\[self signalOnce\]/)
-  assert.match(bridge, /KBApprovalSettingsOpenedThisProcess\.exchange\(true\)/)
-  assert.match(bridge, /requestNeedsUserApproval[\s\S]*?KBOpenSystemSettingsAsync/)
-  assert.match(bridge, /state = needsUserApproval \? @"starting" : KBApply/)
-  assert.match(bridge, /queue:dispatch_get_main_queue\(\)/)
-  assert.match(bridge, /KBOpenSystemSettings\(error\)/)
-  const settingsCommand = bridge.slice(
-    bridge.indexOf('else if ([command isEqualToString:@"open-settings"])')
-  )
-  assert.ok(
-    settingsCommand.indexOf('KBOpenSystemSettings(error)') <
-      settingsCommand.indexOf('KBActivateExtension(')
-  )
   assert.match(page, /isPending=\{openingSettings\}/)
   assert.match(page, /notify\(error, \{ variant: 'danger' \}\)/)
-  assert.match(bridge, /needsUserApproval = KBUserApprovalPending\(\)/)
-  assert.match(
-    bridge,
-    /BOOL mustActivate = !KBExtensionActivationConfirmedThisProcess\.load\(\) \|\|[\s\S]*?KBActivateExtension/
-  )
+  assert.match(coordinator, /invokeBridge\('open-settings'\)/)
   assert.match(coordinator, /needsUserApproval: response\.needsUserApproval/)
   assert.match(hook, /refreshAppRoutingStatus/)
   assert.match(page, /needsMacApproval/)

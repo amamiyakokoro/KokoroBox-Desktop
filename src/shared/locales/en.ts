@@ -291,8 +291,6 @@ export const messages: Readonly<Record<string, string>> = {
   'Open System Settings and Request Approval': 'Open System Settings and Request Approval',
   'Open System Settings': 'Open System Settings',
   'I enabled it — check now': 'I enabled it — check now',
-  'The macOS application-routing bridge is not installed':
-    'The macOS application-routing bridge is not installed',
   'The macOS system extension is not installed': 'The macOS system extension is not installed',
   'The Network Extension rejected the application-routing rules. Check the rules and try again.':
     'The Network Extension rejected the application-routing rules. Check the rules and try again.',

@@ -283,7 +283,6 @@ export const messages: Readonly<Record<string, string>> = {
   'Open System Settings and Request Approval': '打开系统设置并请求批准',
   'Open System Settings': '打开系统设置',
   'I enabled it — check now': '我已启用，立即检查',
-  'The macOS application-routing bridge is not installed': 'macOS 应用分流组件未安装',
   'The macOS system extension is not installed': 'macOS 系统扩展未安装',
   'The Network Extension rejected the application-routing rules. Check the rules and try again.':
     '网络扩展拒绝了应用分流规则。请检查规则后重试。',

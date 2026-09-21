@@ -6,17 +6,17 @@ minimum OS version of unrelated KokoroBox features.
 
 ## Architecture
 
-The Electron main process loads the bundled `kokorobox-app-routing.node` Node-API module. The
-module runs Apple API work asynchronously inside the already entitled and provisioned main app
-process. It is the only component that calls `OSSystemExtensionRequest` and
+The Electron main process calls the macOS control-plane API exported by `kokorobox-native`. The
+native package runs Apple API work asynchronously inside the already entitled and provisioned
+main app process. It is the only component that calls `OSSystemExtensionRequest` and
 `NETransparentProxyManager`, and it installs and controls
 `com.amamiyakokoro.app.proxy-extension`, a KokoroBox-specific build of ProxyBridge's
 `NETransparentProxyProvider`.
 
-The module is not a standalone executable and carries no restricted entitlement or embedded
-provisioning profile of its own. Apple authorizes the hosting `com.amamiyakokoro.app` process
-using the main app's provisioning profile. This avoids an invalid standalone-helper design while
-keeping the System Extension in its separately provisioned bundle.
+The native package is not a standalone executable and carries no restricted entitlement or
+embedded provisioning profile of its own. Apple authorizes the hosting
+`com.amamiyakokoro.app` process using the main app's provisioning profile while the System
+Extension remains in its separately provisioned bundle.
 
 The extension receives the complete policy atomically. Every rule has an explicit identity kind:
 
@@ -44,17 +44,17 @@ Ordinary UDP/53, QUIC, DoH, and DoT traffic follows the selected application's T
 ## Source and build
 
 `scripts/prepare-macos-routing.ts` checks out the exact ProxyBridge fork revision declared in
-`src/main/app-routing/integrity-manifest.ts`, builds the app-proxy System Extension, builds the
-Node-API module against the matching Electron headers, and stages both for electron-builder. For
-local development, an already checked-out fork can be used without network access:
+`src/main/app-routing/integrity-manifest.ts`, builds the app-proxy System Extension, and stages it
+for electron-builder. The control plane is built and released by `kokorobox-native`. For local
+development, an already checked-out ProxyBridge fork can be used without network access:
 
 ```bash
 PROXYBRIDGE_SOURCE_DIR=/path/to/ProxyBridge npm_config_target_arch=arm64 \
   pnpm prepare:macos-routing
 ```
 
-The generated payload is intentionally unsigned. Release packaging signs the native module as
-nested code and embeds the Extension profile before signing the containing app.
+The generated System Extension payload is intentionally unsigned. Release packaging embeds its
+provisioning profile and signs it before signing the containing app.
 
 The System Extension version is pinned alongside the ProxyBridge revision in
 `build/proxybridge/source-manifest.json`. It intentionally does not follow the Desktop app or
@@ -78,17 +78,17 @@ GitHub Secrets named `MACOS_APP_PROVISIONING_PROFILE` and
 `MACOS_EXTENSION_PROVISIONING_PROFILE`. Provisioning profiles contain no private key, but they
 are kept out of the repository and temporary files are deleted after signing.
 
-Only these two provisioning profiles are required. No third bridge profile exists. Signing order
-is enforced by `scripts/macos-after-pack.cjs` and electron-builder: embed the Extension profile,
-sign the System Extension, sign the Node-API module as ordinary nested code, sign the Electron
-app with its main-app profile, then build the PKG and DMG. The existing notarization, stapling,
-Gatekeeper, and checksum receipt checks remain mandatory for both installers.
+Only these two provisioning profiles are required. Signing order is enforced by
+`scripts/macos-after-pack.cjs` and electron-builder: embed the Extension profile, sign the System
+Extension, sign the Electron app and its bundled native dependencies with the main-app profile,
+then build the PKG and DMG. The existing notarization, stapling, Gatekeeper, and checksum receipt
+checks remain mandatory for both installers.
 
 ## Verification status
 
 Automated checks cover typed identity validation and migration, Windows schema migration,
 ordered policy translation, fail-closed Proxy conversion, entitlement/build configuration,
-Node-API compilation, and unsigned arm64 payload creation. Actual activation and packet routing
+native package compilation, and unsigned arm64 payload creation. Actual activation and packet routing
 require the approved Apple capabilities, matching provisioning profiles, a signed installer, and a
 physical Mac.
 

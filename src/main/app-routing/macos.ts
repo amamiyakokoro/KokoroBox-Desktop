@@ -1,6 +1,7 @@
 import { existsSync } from 'fs'
+import { invokeMacosApplicationRouting } from 'kokorobox-native'
 import { isAppRoutingRuleEffectivelyEnabled } from '../../shared/app-routing'
-import { macAppRoutingExtensionPath, macAppRoutingModulePath } from '../utils/dirs'
+import { macAppRoutingExtensionPath } from '../utils/dirs'
 import { appRoutingSocksPort } from './profile'
 import { buildMacAppRoutingConfiguration, type MacBridgeConfiguration } from './macos-profile'
 
@@ -10,12 +11,6 @@ const bridgeTimeoutMs = 90_000
 const providerHealthCheckIntervalMs = 15_000
 let activePolicyKey = ''
 let lastProviderHealthCheckAt = 0
-let nativeBridge: MacNativeBridge | undefined
-
-interface MacNativeBridge {
-  invoke(request: string): Promise<string>
-}
-
 interface MacBridgeResponse {
   version: 1
   ok: boolean
@@ -24,25 +19,11 @@ interface MacBridgeResponse {
   message?: string
 }
 
-function loadNativeBridge(): MacNativeBridge {
-  if (nativeBridge) return nativeBridge
-  const modulePath = macAppRoutingModulePath()
-  if (!existsSync(modulePath)) throw new Error('macOS application-routing module is not installed')
-  const nativeModule = { exports: {} } as NodeModule
-  process.dlopen(nativeModule, modulePath)
-  const candidate = nativeModule.exports as Partial<MacNativeBridge>
-  if (typeof candidate.invoke !== 'function') {
-    throw new Error('macOS application-routing module has an unsupported interface')
-  }
-  nativeBridge = candidate as MacNativeBridge
-  return nativeBridge
-}
-
 async function invokeWithTimeout(request: string): Promise<string> {
   let timeout: NodeJS.Timeout | undefined
   try {
     return await Promise.race([
-      loadNativeBridge().invoke(request),
+      invokeMacosApplicationRouting(request),
       new Promise<never>((_, reject) => {
         timeout = setTimeout(
           () => reject(new Error('macOS application-routing module timed out')),
@@ -126,14 +107,10 @@ export async function reconcileMacAppRouting(
 export async function stopMacAppRouting(): Promise<void> {
   activePolicyKey = ''
   lastProviderHealthCheckAt = 0
-  if (!existsSync(macAppRoutingModulePath())) return
   await invokeBridge('stop')
 }
 
 export async function openMacAppRoutingSystemSettings(): Promise<void> {
-  if (!existsSync(macAppRoutingModulePath())) {
-    throw new Error('macOS application-routing module is not installed')
-  }
   if (!existsSync(macAppRoutingExtensionPath())) {
     throw new Error('macOS application-routing system extension is not installed')
   }

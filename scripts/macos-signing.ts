@@ -145,7 +145,6 @@ export function signingConfig(
         'Contents/Resources/sidecar/mihomo-alpha',
         'Contents/Resources/files/kokorobox-service',
         'Contents/Resources/traffic-presenter/kokorobox-traffic-presenter',
-        'Contents/Resources/files/macos-app-routing/kokorobox-app-routing.node',
         'Contents/Frameworks/kokorobox-updater.node'
       ]
     },
