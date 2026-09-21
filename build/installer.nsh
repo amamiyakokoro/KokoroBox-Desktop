@@ -106,37 +106,6 @@
   ${EndIf}
 !macroend
 
-!macro EnsureAppRoutingFirewall
-  StrCpy $R0 "$INSTDIR\resources\files\process-router\kokorobox-process-router.exe"
-  ${If} ${FileExists} "$R0"
-    StrCpy $R1 "$INSTDIR\resources\files\kokorobox-service.exe"
-    ${IfNot} ${FileExists} "$R1"
-      MessageBox MB_ICONSTOP "KokoroBox application-routing firewall setup is unavailable because the privileged service helper is missing."
-      Abort
-    ${EndIf}
-    DetailPrint "Creating KokoroBox application-routing firewall rules"
-    nsExec::ExecToStack '"$R1" process-router firewall ensure'
-    Pop $R2
-    Pop $R3
-    ${If} $R2 != 0
-      MessageBox MB_ICONSTOP "KokoroBox could not create or verify the application-routing firewall rules. Installation cannot continue safely.$\r$\n$\r$\n$R3"
-      Abort
-    ${EndIf}
-  ${EndIf}
-!macroend
-
-!macro RemoveAppRoutingFirewall
-  StrCpy $R1 "$INSTDIR\resources\files\kokorobox-service.exe"
-  ${If} ${FileExists} "$R1"
-    DetailPrint "Removing KokoroBox application-routing firewall rules"
-    nsExec::ExecToLog '"$R1" process-router firewall remove'
-    Pop $R2
-    ${If} $R2 != 0
-      DetailPrint "Application-routing firewall cleanup exited with code $R2"
-    ${EndIf}
-  ${EndIf}
-!macroend
-
 !macro RemoveLegacyElevationArtifacts
   DetailPrint "Removing obsolete KokoroBox elevation tasks and launcher files"
     nsExec::ExecToLog '"$SYSDIR\schtasks.exe" /Delete /TN "${KOKOROBOX_ELEVATED_TASK_NAME}" /F'
@@ -171,8 +140,6 @@
   ${endIf}
 
   ${If} $installMode == "all"
-    !insertmacro EnsureAppRoutingFirewall
-
     StrCpy $R1 "$INSTDIR\resources\files\kokorobox-service.exe"
     ${If} ${FileExists} "$R1"
       DetailPrint "Installing and starting KokoroBox service: $R1"
@@ -191,7 +158,15 @@
 !macro customUnInstall
   !insertmacro RemoveLegacyElevationArtifacts
   ${If} $installMode == "all"
-    !insertmacro RemoveAppRoutingFirewall
+    StrCpy $R1 "$INSTDIR\resources\files\kokorobox-service.exe"
+    ${If} ${FileExists} "$R1"
+      DetailPrint "Stopping and uninstalling KokoroBox service"
+      nsExec::ExecToLog '"$R1" service uninstall'
+      Pop $R2
+      ${If} $R2 != 0
+        DetailPrint "KokoroBox service uninstall exited with code $R2"
+      ${EndIf}
+    ${EndIf}
   ${EndIf}
 !macroend
 

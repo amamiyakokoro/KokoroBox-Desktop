@@ -826,7 +826,6 @@ test('macOS native build is pinned to the controlled KokoroBox ProxyBridge fork'
 
 test('Windows and Linux application routing use only the privileged service lifecycle', () => {
   const manager = readFileSync('src/main/app-routing/manager.ts', 'utf8')
-  const firewall = readFileSync('src/main/app-routing/firewall.ts', 'utf8')
   const serviceProtocol = readFileSync('src/main/app-routing/service-protocol.ts', 'utf8')
   const serviceApi = readFileSync('src/main/service/api.ts', 'utf8')
   const settingsDrawer = readFileSync(
@@ -835,7 +834,6 @@ test('Windows and Linux application routing use only the privileged service life
   )
   const installer = readFileSync('build/installer.nsh', 'utf8')
 
-  assert.match(firewall, /\['process-router', 'firewall', command\]/)
   assert.match(
     manager,
     /if \(!config\.enabled \|\| enabledRules\.length === 0\)[\s\S]*await disableServiceRouter\(true\)/
@@ -866,20 +864,12 @@ test('Windows and Linux application routing use only the privileged service life
   assert.match(page, /tr\('Repair service'\)/)
   assert.match(serviceProtocol, /typeof value\.firewall_ready !== 'boolean'/)
   assert.match(serviceProtocol, /application routing without firewall protection/)
-  assert.match(installer, /process-router firewall ensure/)
-  assert.match(installer, /process-router firewall remove/)
-  assert.match(
-    installer,
-    /customInstall[\s\S]*\$installMode == "all"[\s\S]*EnsureAppRoutingFirewall/
-  )
+  assert.doesNotMatch(installer, /process-router firewall/)
   assert.match(installer, /Installing and starting KokoroBox service/)
   assert.match(installer, /'"\$R1" service install'/)
   assert.doesNotMatch(installer, /'"\$R1" service start'/)
   assert.doesNotMatch(installer, /kokoroboxServiceWasRunning/)
-  assert.match(
-    installer,
-    /customUnInstall[\s\S]*\$installMode == "all"[\s\S]*RemoveAppRoutingFirewall/
-  )
+  assert.match(installer, /customUnInstall[\s\S]*'"\$R1" service uninstall'/)
   assert.match(installer, /!macro customUnInstall/)
 })
 

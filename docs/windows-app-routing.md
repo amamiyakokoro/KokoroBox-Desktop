@@ -100,10 +100,9 @@ The service uses a short client lease. Authenticated status polling renews it wh
 running. A normal exit stops the router immediately; if the UI crashes, lease expiry stops the
 router, removes the firewall rule group, and releases WinDivert while retaining the canonical
 rules for the next application start. Disabling or cleaning up application routing also removes
-the rules. An all-users NSIS installation prepares and removes these rules during package
-lifecycle operations. A current-user or portable installation invokes the service helper with
-elevation when application routing is first enabled; the service then verifies or repairs its
-rules before starting interception.
+the rules. The service creates, verifies, repairs, and removes these rules as part of its Process
+Router lifecycle. The NSIS installer only installs or uninstalls the service and never mutates the
+application-routing firewall itself.
 
 The same installer supports current-user and all-users scopes. Current-user application files
 remain below `%LOCALAPPDATA%`, but an explicitly installed privileged service is copied together
