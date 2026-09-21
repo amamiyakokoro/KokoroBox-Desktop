@@ -22,6 +22,8 @@ import { GroupedVirtuoso, GroupedVirtuosoHandle } from 'react-virtuoso'
 import ProxyItem from '@renderer/components/proxies/proxy-item'
 import ProxySettingDrawer from '@renderer/components/proxies/proxy-setting-drawer'
 import ProxyGroupHeader from '@renderer/components/proxies/proxy-group-header'
+import { KokoSearchField } from '@renderer/components/base/koko-search-field'
+import { KokoToolbar } from '@renderer/components/base/koko-toolbar'
 import { MdDoubleArrow, MdTune } from 'react-icons/md'
 import { useGroups } from '@renderer/hooks/use-groups'
 import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'
@@ -103,6 +105,7 @@ const Proxies: React.FC = () => {
   const [delaying, setDelaying] = useState(Array(groups.length).fill(false))
   const [isSettingDrawerOpen, setIsSettingDrawerOpen] = useState(false)
   const [settingDrawerReopenSignal, setSettingDrawerReopenSignal] = useState(0)
+  const [filter, setFilter] = useState('')
   const [initialScrollTop] = useState(() =>
     rememberProxyGroupOpenState ? proxyGroupPageCache.scrollTop : 0
   )
@@ -184,6 +187,19 @@ const Proxies: React.FC = () => {
     })
     return { groupCounts, allProxies }
   }, [groups, isOpenContent, proxyDisplayOrder, cols])
+  const normalizedFilter = filter.trim().toLocaleLowerCase()
+  const visibleGroupIndices = useMemo(
+    () =>
+      groups.flatMap((group, index) => {
+        const searchableText = [group.name, group.type, group.now].filter(Boolean).join(' ')
+        return searchableText.toLocaleLowerCase().includes(normalizedFilter) ? [index] : []
+      }),
+    [groups, normalizedFilter]
+  )
+  const visibleGroupCounts = useMemo(
+    () => visibleGroupIndices.map((index) => groupCounts[index] ?? 0),
+    [groupCounts, visibleGroupIndices]
+  )
 
   const onChangeProxy = useCallback(
     async (group: string, proxy: string): Promise<void> => {
@@ -315,8 +331,10 @@ const Proxies: React.FC = () => {
   const doScrollToCurrentProxy = useCallback(
     (index: number) => {
       let i = 0
-      for (let j = 0; j < index; j++) {
-        i += groupCounts[j]
+      const visibleIndex = visibleGroupIndices.indexOf(index)
+      if (visibleIndex < 0) return
+      for (let j = 0; j < visibleIndex; j++) {
+        i += visibleGroupCounts[j]
       }
       const proxies = allProxies[index].length > 0 ? allProxies[index] : groups[index].all
       i += Math.floor(proxies.findIndex((proxy) => proxy.name === groups[index].now) / cols)
@@ -326,7 +344,7 @@ const Proxies: React.FC = () => {
         behavior: 'smooth'
       })
     },
-    [groupCounts, allProxies, groups, cols]
+    [allProxies, cols, groups, visibleGroupCounts, visibleGroupIndices]
   )
 
   useEffect(() => {
@@ -383,6 +401,10 @@ const Proxies: React.FC = () => {
   groupCountsRef.current = groupCounts
   const allProxiesRef = useRef(allProxies)
   allProxiesRef.current = allProxies
+  const visibleGroupIndicesRef = useRef(visibleGroupIndices)
+  visibleGroupIndicesRef.current = visibleGroupIndices
+  const visibleGroupCountsRef = useRef(visibleGroupCounts)
+  visibleGroupCountsRef.current = visibleGroupCounts
   const colsRef = useRef(cols)
   colsRef.current = cols
   const mutateRef = useRef(mutate)
@@ -433,14 +455,15 @@ const Proxies: React.FC = () => {
   }, [mode, proxyCols])
 
   const groupContent = useCallback(
-    (index: number) => {
+    (visibleIndex: number) => {
       const g = groupsRef.current
+      const index = visibleGroupIndicesRef.current[visibleIndex]
       return g[index] ? (
         <ProxyGroupHeader
           index={index}
           group={g[index]}
           isOpen={isOpen[index]}
-          isLast={index === g.length - 1}
+          isLast={visibleIndex === visibleGroupIndicesRef.current.length - 1}
           groupDisplayLayout={groupDisplayLayoutRef.current}
           delaying={delayingRef.current[index]}
           isRelevant={mode === 'global' && g[index].name.toUpperCase() === 'GLOBAL'}
@@ -455,8 +478,10 @@ const Proxies: React.FC = () => {
     [isOpen, mode, scrollToCurrentProxyStable, onGroupDelayStable]
   )
 
-  const itemContent = useCallback((index: number, groupIndex: number) => {
+  const itemContent = useCallback((index: number, visibleGroupIndex: number) => {
     const gc = groupCountsRef.current
+    const visibleGc = visibleGroupCountsRef.current
+    const groupIndex = visibleGroupIndicesRef.current[visibleGroupIndex]
     const ap = allProxiesRef.current
     const grps = groupsRef.current
     const c = colsRef.current
@@ -465,8 +490,8 @@ const Proxies: React.FC = () => {
     const showGroupSelected = showGroupSelectedProxyRef.current
     const showTooltip = showProxyDetailTooltipRef.current
     let innerIndex = index
-    for (let i = 0; i < groupIndex; i++) {
-      innerIndex -= gc[i]
+    for (let i = 0; i < visibleGroupIndex; i++) {
+      innerIndex -= visibleGc[i]
     }
     const proxies = ap[groupIndex]
     const items: ReactNode[] = []
@@ -538,17 +563,38 @@ const Proxies: React.FC = () => {
           </div>
         </div>
       ) : (
-        <div ref={proxyListRef} className="h-[calc(100vh-50px)] min-w-0">
-          <GroupedVirtuoso
-            ref={virtuosoRef}
-            scrollerRef={scrollerRef}
-            initialScrollTop={initialScrollTop}
-            groupCounts={groupCounts}
-            groupContent={groupContent}
-            itemContent={itemContent}
-            defaultItemHeight={64}
-            overscan={200}
-          />
+        <div className="flex h-[calc(100vh-50px)] min-w-0 flex-col">
+          <KokoToolbar
+            aria-label={tr('Proxy groups')}
+            className="shrink-0 border-b border-separator"
+          >
+            <KokoSearchField
+              value={filter}
+              aria-label={tr('Search proxy groups')}
+              placeholder={tr('Search proxy groups')}
+              className="min-w-0 flex-1"
+              onChangeValue={setFilter}
+              onClear={() => setFilter('')}
+            />
+          </KokoToolbar>
+          <div ref={proxyListRef} className="min-h-0 min-w-0 flex-1">
+            {normalizedFilter && visibleGroupIndices.length === 0 ? (
+              <div className="flex h-full items-center justify-center px-4 text-sm text-muted">
+                {tr('No proxy groups match this search.')}
+              </div>
+            ) : (
+              <GroupedVirtuoso
+                ref={virtuosoRef}
+                scrollerRef={scrollerRef}
+                initialScrollTop={initialScrollTop}
+                groupCounts={visibleGroupCounts}
+                groupContent={groupContent}
+                itemContent={itemContent}
+                defaultItemHeight={64}
+                overscan={200}
+              />
+            )}
+          </div>
         </div>
       )}
     </BasePage>

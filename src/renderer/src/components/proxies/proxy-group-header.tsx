@@ -77,7 +77,7 @@ const ProxyGroupHeader = memo(function ProxyGroupHeader({
             ? 'border-accent/40 bg-accent-soft/35'
             : isOpen
               ? 'border-accent/25 bg-accent-soft/20'
-              : 'border-separator/70 bg-surface/65 hover:border-accent/25 hover:bg-surface-secondary/70'
+              : 'border-separator/70 bg-background hover:border-accent/25 hover:bg-surface-secondary/50'
         }`}
         data-current={isRelevant || undefined}
         data-expanded={isOpen || undefined}
