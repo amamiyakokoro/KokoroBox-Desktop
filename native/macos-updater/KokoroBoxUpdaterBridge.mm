@@ -9,6 +9,8 @@
 
 static SPUStandardUpdaterController *KBUpdaterController = nil;
 static NSString *KBUpdateChannel = nil;
+static napi_env KBNodeEnv = nullptr;
+static napi_ref KBRelaunchHandler = nullptr;
 
 static void KBThrow(napi_env env, NSString *message) {
   napi_throw_error(env, nullptr, message.UTF8String);
@@ -18,6 +20,23 @@ static BOOL KBRequireMainThread(napi_env env) {
   if ([NSThread isMainThread]) return YES;
   KBThrow(env, @"The macOS updater must be called from Electron's main thread");
   return NO;
+}
+
+static void KBNotifyRelaunch(void) {
+  if (!KBNodeEnv || !KBRelaunchHandler) return;
+
+  napi_handle_scope scope = nullptr;
+  if (napi_open_handle_scope(KBNodeEnv, &scope) != napi_ok) return;
+
+  napi_value callback;
+  napi_value global;
+  napi_value result;
+  if (napi_get_reference_value(KBNodeEnv, KBRelaunchHandler, &callback) == napi_ok &&
+      napi_get_global(KBNodeEnv, &global) == napi_ok) {
+    napi_call_function(KBNodeEnv, global, callback, 0, nullptr, &result);
+  }
+
+  napi_close_handle_scope(KBNodeEnv, scope);
 }
 
 static NSString *KBAppcastName(void) {
@@ -76,6 +95,11 @@ static NSString *KBReadChannel(napi_env env, napi_callback_info info) {
 @implementation KBUpdaterDelegate
 - (NSString *)feedURLStringForUpdater:(SPUUpdater *)updater {
   return KBFeedURLStringForChannel(KBUpdateChannel ?: @"stable");
+}
+
+- (void)updaterWillRelaunchApplication:(SPUUpdater *)updater {
+  (void)updater;
+  KBNotifyRelaunch();
 }
 @end
 
@@ -203,12 +227,41 @@ static napi_value KBConfigureUpdater(napi_env env, napi_callback_info info) {
   }
 }
 
+static napi_value KBSetRelaunchHandler(napi_env env, napi_callback_info info) {
+  if (!KBRequireMainThread(env)) return nullptr;
+
+  size_t argc = 1;
+  napi_value args[1];
+  napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+  napi_valuetype type = napi_undefined;
+  if (argc != 1 || napi_typeof(env, args[0], &type) != napi_ok || type != napi_function) {
+    napi_throw_type_error(env, nullptr, "relaunch handler must be a function");
+    return nullptr;
+  }
+
+  if (KBRelaunchHandler) {
+    napi_delete_reference(env, KBRelaunchHandler);
+    KBRelaunchHandler = nullptr;
+  }
+  if (napi_create_reference(env, args[0], 1, &KBRelaunchHandler) != napi_ok) {
+    KBThrow(env, @"Unable to retain the relaunch handler");
+    return nullptr;
+  }
+  KBNodeEnv = env;
+
+  napi_value result;
+  napi_get_undefined(env, &result);
+  return result;
+}
+
 static napi_value KBInitialize(napi_env env, napi_value exports) {
   napi_property_descriptor properties[] = {
       {"state", nullptr, KBState, nullptr, nullptr, nullptr, napi_default, nullptr},
       {"initialize", nullptr, KBInitializeUpdater, nullptr, nullptr, nullptr, napi_default, nullptr},
       {"configure", nullptr, KBConfigureUpdater, nullptr, nullptr, nullptr, napi_default, nullptr},
       {"checkForUpdates", nullptr, KBCheckForUpdates, nullptr, nullptr, nullptr, napi_default, nullptr},
+      {"setRelaunchHandler", nullptr, KBSetRelaunchHandler, nullptr, nullptr, nullptr, napi_default,
+       nullptr},
   };
   napi_define_properties(env, exports, sizeof(properties) / sizeof(properties[0]), properties);
   return exports;

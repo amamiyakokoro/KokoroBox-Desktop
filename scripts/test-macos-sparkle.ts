@@ -191,4 +191,19 @@ test('native bridge restricts the feed and validates the 32-byte public key', ()
   assert.match(source, /automaticallyChecksForUpdates = enabled/)
   assert.match(source, /resetUpdateCycleAfterShortDelay/)
   assert.match(source, /\{"configure", nullptr, KBConfigureUpdater/)
+  assert.match(source, /updaterWillRelaunchApplication/)
+  assert.match(source, /KBNotifyRelaunch\(\)/)
+  assert.match(source, /\{"setRelaunchHandler", nullptr, KBSetRelaunchHandler/)
+})
+
+test('Sparkle relaunches bypass only the update-triggered quit confirmation', () => {
+  const adapter = readFileSync('src/main/resolve/macosNativeUpdater.ts', 'utf8')
+
+  assert.match(adapter, /setRelaunchHandler\(handler: \(\) => void\): void/)
+  assert.match(adapter, /bridge\.setRelaunchHandler\(setNotQuitDialog\)/)
+  assert.match(
+    adapter,
+    /const bridge = bridgeOverride \?\? loadNativeBridge\(\)[\s\S]*registerRelaunchHandler\(bridge\)[\s\S]*runNativeMacOSUpdater/
+  )
+  assert.doesNotMatch(adapter, /showNativeMacOSUpdate[\s\S]*setNotQuitDialog\(\)/)
 })

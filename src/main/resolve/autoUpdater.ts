@@ -297,6 +297,10 @@ export async function downloadAndInstallUpdate(
         }
       ).unref()
       appUpdateInstalling = true
+    }
+    if (appUpdateInstalling) {
+      // Installing an update is already an explicit user-approved restart.
+      // Keep the normal cleanup lifecycle, but do not ask for a second quit confirmation.
       setNotQuitDialog()
       app.quit()
     }

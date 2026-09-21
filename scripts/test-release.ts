@@ -187,6 +187,22 @@ test('packaged macOS copies move to Applications before initialization', () => {
   )
 })
 
+test('launched application updates use the confirmed quit lifecycle', () => {
+  const updater = readFileSync('src/main/resolve/autoUpdater.ts', 'utf8')
+  const installerLaunch = updater.indexOf("if (file.endsWith('.exe'))")
+  const archiveLaunch = updater.indexOf("if (!systemCoreOnlyBuild && file.endsWith('.7z'))")
+  const confirmedQuit = updater.indexOf('if (appUpdateInstalling) {', archiveLaunch)
+
+  assert.ok(installerLaunch >= 0)
+  assert.ok(archiveLaunch > installerLaunch)
+  assert.ok(confirmedQuit > archiveLaunch)
+  assert.match(
+    updater.slice(confirmedQuit),
+    /if \(appUpdateInstalling\) \{[\s\S]*setNotQuitDialog\(\)[\s\S]*app\.quit\(\)/
+  )
+  assert.equal(updater.match(/setNotQuitDialog\(\)/g)?.length, 1)
+})
+
 test('desktop uses the independently maintained KokoroBox native packages', () => {
   const packageJson = JSON.parse(readFileSync('package.json', 'utf8'))
   const nativeSpecifier = packageJson.dependencies['kokorobox-native']
