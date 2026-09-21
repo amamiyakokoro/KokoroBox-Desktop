@@ -75,6 +75,7 @@ export const messages: Readonly<Record<string, string>> = {
   'Danger zone': '危险操作',
   'Remove KokoroBox Service from this system.': '从此系统移除 KokoroBox Service。',
   'Version information': '版本信息',
+  'Version and lifecycle': '版本与生命周期',
   'Search settings': '搜索设置',
   'No settings found': '未找到设置',
   'Move KokoroBox to Applications?': '将 KokoroBox 移到“应用程序”文件夹？',

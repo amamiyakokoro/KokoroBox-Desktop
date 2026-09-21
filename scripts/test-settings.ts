@@ -2205,6 +2205,8 @@ test('diagnostics settings separate logs, maintenance and lifecycle actions', ()
   assert.match(registry, /key: 'maintenance'/)
   assert.match(registry, /<Actions sections=\{\['application', 'diagnostics'\]\} \/>/)
   assert.match(registry, /key: 'lifecycle'/)
+  assert.match(registry, /key: 'lifecycle',[\s\S]{0,80}label: tr\('Version and lifecycle'\)/)
+  assert.match(registry, /entry\('app-version', tr\('App version'\), tr\('Version information'\)/)
   assert.match(
     registry,
     /<Actions sections=\{\['version', 'danger'\]\} showVersionHeading=\{false\} \/>/

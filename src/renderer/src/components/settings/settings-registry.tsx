@@ -689,7 +689,7 @@ export const getSettingsCategories = (): SettingsCategoryDefinition[] => {
     },
     {
       key: 'lifecycle',
-      label: tr('Version information'),
+      label: tr('Version and lifecycle'),
       entries: [
         entry('app-version', tr('App version'), tr('Version information'), {
           panel: 'lifecycle'
