@@ -12,85 +12,37 @@ A cross-platform [Mihomo](https://github.com/MetaCubeX/mihomo) desktop client wi
 
 ## Features
 
-- Stable and preview Mihomo cores, system proxy, TUN, DNS, sniffing, routing, and profiles
-- Kokoro account with osu! sign-in, custom rules, and automatically refreshed subscriptions
-- Subscription cards distinguish Kokoro imports from manually added remote subscriptions
+- Mihomo profiles, system proxy, TUN, DNS, and sniffing
+- Kokoro account and subscriptions with osu! sign-in, custom rules, and automatic refresh
 - Per-application **Proxy**, **Direct**, and **Block** rules
-- Searchable application settings and compact sidebar controls
-- WebDAV backup and restore; English, Simplified Chinese, and Traditional Chinese UI
+- Searchable settings, WebDAV backup, and English, Simplified Chinese, and Traditional Chinese UI
 
 ## Application routing
 
-Route selected applications without enabling the system proxy or TUN. Proxy rules fail closed when Mihomo is unavailable, preventing a silent fallback to direct connections.
+Application routing supports Windows 10/11 x64, macOS 13+, and Linux x64/arm64. See the
+[Windows](docs/windows-app-routing.md), [macOS](docs/macos-app-routing.md), and
+[Linux](docs/linux-app-routing.md) guides for setup requirements.
 
-| Platform          | Backend                                        | Availability                    |
-| ----------------- | ---------------------------------------------- | ------------------------------- |
-| Windows 10/11 x64 | ProxyBridge + WinDivert                        | Supported                       |
-| macOS 13+         | ProxyBridge transparent-proxy System Extension | Experimental; approval required |
-| Linux x64/arm64   | cgroup v2, with cgroup v1 fallback; TPROXY     | Experimental; no TUN required   |
+## Install and update
 
-See the [Windows](docs/windows-app-routing.md), [macOS](docs/macos-app-routing.md), and [Linux](docs/linux-app-routing.md) guides for setup and limitations.
+Get the Windows installer, macOS DMG, or Linux package from [GitHub Releases](https://github.com/amamiyakokoro/KokoroBox-Desktop/releases).
+On macOS, drag KokoroBox into Applications. Windows installers are currently unsigned.
 
-## Install
-
-Download the appropriate package from [GitHub Releases](https://github.com/amamiyakokoro/KokoroBox-Desktop/releases). Each release includes `SHA256SUMS`:
-
-```sh
-shasum -a 256 -c SHA256SUMS --ignore-missing
-```
-
-Linux packages and `SHA256SUMS` are signed with the KokoroBox Linux package signing key. Verify
-the included `kokorobox-linux-signing-key.asc` fingerprint before importing it:
-
-```text
-72B1 5D00 8F40 5210 5E23  8DD5 576C 2811 308E D996
-```
-
-```sh
-gpg --show-keys --with-fingerprint kokorobox-linux-signing-key.asc
-gpg --import kokorobox-linux-signing-key.asc
-gpg --verify SHA256SUMS.asc SHA256SUMS
-```
-
-RPM signatures are embedded in the package. Debian packages include `.deb.asc`, Arch packages
-include `.pkg.tar.zst.sig`, and the checksum manifest includes `SHA256SUMS.asc`.
-
-Windows packages are currently unsigned. On macOS, use the DMG for normal installation: drag
-KokoroBox to Applications, launch the installed copy, then follow the system-service and optional
-application-routing approval prompts. The PKG is retained for recovery and managed deployment.
-
-## Application updates
-
-Choose the **Stable** or **Rolling** channel in Application settings. You can check manually there
-or enable automatic checks.
-
-- **macOS:** Sparkle handles update checks, prompts, downloads, installation, and relaunch for the
-  installed app. See the [macOS update guide](docs/macos-updates.md).
-- **Windows:** The in-app updater checks the selected channel and downloads the matching installer.
-- **Linux:** KokoroBox can report available updates; install them through your system package
-  manager.
+Choose **Stable** or **Rolling** in Application settings. macOS updates through Sparkle, Windows
+through the in-app updater, and Linux through the system package manager. See the
+[macOS update guide](docs/macos-updates.md) or the [release guide](docs/releases.md) for download
+verification and signing details.
 
 ## Development
 
-Requires Node.js 22.12+ and pnpm 11. Windows builds also need Go 1.23+; macOS application-routing builds need Xcode.
+Requires Node.js 22.12+ and pnpm 11.
 
 ```sh
-git clone https://github.com/amamiyakokoro/KokoroBox-Desktop.git
-cd KokoroBox-Desktop
 pnpm install
 pnpm dev
 ```
 
-Useful checks:
-
-```sh
-pnpm typecheck
-pnpm test:release
-pnpm test:app-routing
-pnpm build:win # or build:mac / build:linux
-```
-
-For packaging, signing, Linux system-core builds, and release publication, see the [release guide](docs/releases.md). The [native integration guide](docs/native-integration.md) documents the Rust boundary and migration rules. UI work follows the [HeroUI v3 UI contract](docs/ui-native-first.md); text and translation contributions should follow the [localization guide](docs/localization.md).
+Build and packaging instructions are in the [release guide](docs/releases.md).
 
 ## License
 

@@ -10,6 +10,12 @@ The workflows build KokoroBox's supported package matrix, prepare the target nat
 | macOS    | Intel x64, Apple Silicon ARM64 | `.dmg`, recovery `.pkg`, Sparkle `.zip` |
 | Linux    | x64, ARM64                     | `.deb`, `.rpm`, `.pkg.tar.zst`          |
 
+To verify a downloaded package against the release checksums, run:
+
+```sh
+shasum -a 256 -c SHA256SUMS --ignore-missing
+```
+
 The build matrix contains 10 platform jobs. Each macOS job publishes a normal-install DMG, a
 recovery PKG, a signed Sparkle application archive, and an appcast. Publication also adds
 `latest.yml`, `SHA256SUMS`, and `SHA256SUMS.asc`. Linux RPMs contain an OpenPGP signature; Debian
@@ -60,7 +66,7 @@ The RPM dependency declarations target openSUSE, Fedora, and Rocky Linux using s
 Install with `sudo zypper install ./package.rpm` on openSUSE or `sudo dnf install ./package.rpm` on Fedora/Rocky Linux so the package manager resolves dependencies.
 
 Before the first RPM installation, download `kokorobox-linux-signing-key.asc` from the same release,
-compare its complete fingerprint with the value documented above, and import it:
+check that its fingerprint is `72B15D008F4052105E238DD5576C2811308ED996`, and import it:
 
 ```sh
 gpg --show-keys --with-fingerprint kokorobox-linux-signing-key.asc
