@@ -21,7 +21,7 @@ interface SiderNavItemProps {
   onPress: () => void
 }
 
-interface SiderStatusCardProps extends SiderNavItemProps {
+interface SiderStatusCardProps extends Omit<SiderNavItemProps, 'onPress'> {
   actions?: React.ReactNode
   allowTextWrap?: boolean
   descriptionTitle?: string
@@ -33,6 +33,7 @@ interface SiderStatusCardProps extends SiderNavItemProps {
   showChevron?: boolean
   statusIndicator?: boolean
   stackStatus?: boolean
+  onPress?: () => void
 }
 
 const statusToneClasses: Record<SiderStatusTone, string> = {
@@ -185,6 +186,29 @@ export const SiderIconButton: React.FC<SiderIconButtonProps> = ({
   </Tooltip>
 )
 
+export const SiderIconDisplay: React.FC<{
+  children: React.ReactNode
+  className?: string
+  label: string
+  placement?: 'top' | 'right' | 'bottom' | 'left'
+}> = ({ children, className, label, placement = 'top' }) => (
+  <Tooltip delay={0}>
+    <Tooltip.Trigger className="inline-flex">
+      <span
+        aria-label={label}
+        className={cn(
+          'app-nodrag flex size-8 items-center justify-center rounded-xl bg-surface-secondary text-muted',
+          className
+        )}
+        role="img"
+      >
+        {children}
+      </span>
+    </Tooltip.Trigger>
+    <Tooltip.Content placement={placement}>{label}</Tooltip.Content>
+  </Tooltip>
+)
+
 export const SiderIconGroup: React.FC<{
   children: React.ReactNode
   label: string
@@ -300,110 +324,127 @@ export const SiderStatusCard: React.FC<SiderStatusCardProps> = ({
   statusIndicator = false,
   stackStatus = false,
   onPress
-}) => (
-  <div
-    className={cn(
-      'group overflow-hidden rounded-xl border bg-surface/85 shadow-none transition-[background-color,border-color,box-shadow] duration-150',
-      active
-        ? siderActiveSurfaceClassName
-        : 'border-separator hover:border-accent/25 hover:bg-surface-secondary/70 hover:shadow-sm'
-    )}
-  >
-    <div className="flex min-h-14 items-center">
-      <button
-        type="button"
-        data-card-primary-action
-        className={cn(
-          'sider-status-card__primary min-w-0 flex-1 px-2.5 py-2 text-left focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-accent',
-          metadata
-            ? 'grid grid-cols-[2rem_minmax(0,1fr)_2rem] grid-rows-[1.25rem_1rem] items-center gap-x-2.5 gap-y-0.5'
-            : 'flex items-center gap-2.5'
-        )}
-        aria-current={active ? 'page' : undefined}
-        onClick={onPress}
+}) => {
+  const primaryClassName = cn(
+    'sider-status-card__primary min-w-0 flex-1 px-2.5 py-2 text-left',
+    onPress &&
+      'focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-accent',
+    metadata
+      ? 'grid grid-cols-[2rem_minmax(0,1fr)_2rem] grid-rows-[1.25rem_1rem] items-center gap-x-2.5 gap-y-0.5'
+      : 'flex items-center gap-2.5'
+  )
+  const primaryContent = (
+    <>
+      <SiderItemIcon
+        active={active}
+        className={metadata ? 'row-span-2 self-center' : undefined}
+        prominence="status"
       >
-        <SiderItemIcon
-          active={active}
-          className={metadata ? 'row-span-2 self-center' : undefined}
-          prominence="status"
-        >
-          {icon}
-        </SiderItemIcon>
-        {metadata ? (
-          <>
-            <span className={cn(siderItemTitleClassName, 'h-5 truncate')} title={title}>
-              {title}
-            </span>
-            <div className="col-[2/4] row-start-2 min-w-0">{metadata}</div>
-          </>
-        ) : (
-          <SiderItemContent
-            allowTextWrap={allowTextWrap}
-            stackStatus={stackStatus}
-            title={title}
-            subtitle={
-              description || status ? (
-                <>
-                  {description && (
-                    <span
-                      title={descriptionTitle}
-                      className={cn(
-                        allowTextWrap ? 'whitespace-nowrap text-muted' : 'truncate text-muted',
-                        prioritizeDescription && 'max-w-[60%] shrink-0'
-                      )}
-                    >
-                      {description}
-                    </span>
-                  )}
-                  {status && (
-                    <span className="inline-flex shrink-0 items-center gap-1">
-                      {description && !stackStatus && (
-                        <span className="text-muted">{metadataSeparator}</span>
-                      )}
-                      {statusIndicator ? (
-                        <KokoStatusIndicator
-                          className={prioritizeDescription ? 'min-w-0' : 'shrink-0'}
-                          title={statusTitle}
-                          tone={kokoStatusTone(statusTone)}
-                        >
-                          {status}
-                        </KokoStatusIndicator>
-                      ) : (
-                        <span
-                          title={statusTitle}
-                          className={cn(
-                            prioritizeDescription ? 'min-w-0 truncate' : 'shrink-0',
-                            statusToneClasses[statusTone]
-                          )}
-                        >
-                          {status}
-                        </span>
-                      )}
-                    </span>
-                  )}
-                </>
-              ) : undefined
-            }
-          />
-        )}
-        {(showChevron ?? !actions) && (
-          <SiderTrailingSlot>
-            <LuChevronRight className="shrink-0 text-sm text-muted transition-all duration-150 group-hover:translate-x-0.5 group-hover:text-foreground group-focus-within:text-accent" />
-          </SiderTrailingSlot>
-        )}
-      </button>
-      {actions && (
-        <SiderTrailingSlot
-          className="gap-0.5 pr-2"
-          onPointerDown={(event) => event.stopPropagation()}
-        >
-          {actions}
+        {icon}
+      </SiderItemIcon>
+      {metadata ? (
+        <>
+          <span className={cn(siderItemTitleClassName, 'h-5 truncate')} title={title}>
+            {title}
+          </span>
+          <div className="col-[2/4] row-start-2 min-w-0">{metadata}</div>
+        </>
+      ) : (
+        <SiderItemContent
+          allowTextWrap={allowTextWrap}
+          stackStatus={stackStatus}
+          title={title}
+          subtitle={
+            description || status ? (
+              <>
+                {description && (
+                  <span
+                    title={descriptionTitle}
+                    className={cn(
+                      allowTextWrap ? 'whitespace-nowrap text-muted' : 'truncate text-muted',
+                      prioritizeDescription && 'max-w-[60%] shrink-0'
+                    )}
+                  >
+                    {description}
+                  </span>
+                )}
+                {status && (
+                  <span className="inline-flex shrink-0 items-center gap-1">
+                    {description && !stackStatus && (
+                      <span className="text-muted">{metadataSeparator}</span>
+                    )}
+                    {statusIndicator ? (
+                      <KokoStatusIndicator
+                        className={prioritizeDescription ? 'min-w-0' : 'shrink-0'}
+                        title={statusTitle}
+                        tone={kokoStatusTone(statusTone)}
+                      >
+                        {status}
+                      </KokoStatusIndicator>
+                    ) : (
+                      <span
+                        title={statusTitle}
+                        className={cn(
+                          prioritizeDescription ? 'min-w-0 truncate' : 'shrink-0',
+                          statusToneClasses[statusTone]
+                        )}
+                      >
+                        {status}
+                      </span>
+                    )}
+                  </span>
+                )}
+              </>
+            ) : undefined
+          }
+        />
+      )}
+      {(showChevron ?? !actions) && (
+        <SiderTrailingSlot>
+          <LuChevronRight className="shrink-0 text-sm text-muted transition-all duration-150 group-hover:translate-x-0.5 group-hover:text-foreground group-focus-within:text-accent" />
         </SiderTrailingSlot>
       )}
+    </>
+  )
+
+  return (
+    <div
+      className={cn(
+        'group overflow-hidden rounded-xl border bg-surface/85 shadow-none transition-[background-color,border-color,box-shadow] duration-150',
+        active
+          ? siderActiveSurfaceClassName
+          : onPress
+            ? 'border-separator hover:border-accent/25 hover:bg-surface-secondary/70 hover:shadow-sm'
+            : 'border-separator'
+      )}
+    >
+      <div className="flex min-h-14 items-center">
+        {onPress ? (
+          <button
+            type="button"
+            data-card-primary-action
+            className={primaryClassName}
+            aria-current={active ? 'page' : undefined}
+            onClick={onPress}
+          >
+            {primaryContent}
+          </button>
+        ) : (
+          <div className={primaryClassName}>{primaryContent}</div>
+        )}
+        {actions && (
+          <SiderTrailingSlot
+            className="gap-0.5 pr-2"
+            onPointerDown={(event) => event.stopPropagation()}
+          >
+            {actions}
+          </SiderTrailingSlot>
+        )}
+      </div>
+      {details && <div className="border-t border-separator/70 px-2.5 py-2">{details}</div>}
     </div>
-    {details && <div className="border-t border-separator/70 px-2.5 py-2">{details}</div>}
-  </div>
-)
+  )
+}
 
 interface SiderQuickControlProps {
   icon: React.ReactNode

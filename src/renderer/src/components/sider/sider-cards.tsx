@@ -37,7 +37,6 @@ const siderCardRouteMap = {
   'app-routing-card': '/app-routing',
   'profile-card': '/profiles',
   'proxy-card': '/proxies',
-  'mihomo-core-card': '/settings?section=network&panel=mihomo',
   'conn-card': '/connections',
   'kokoro-setting-card': '/kokoro',
   'log-card': '/logs',
