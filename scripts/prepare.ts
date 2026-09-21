@@ -5,7 +5,11 @@ import zlib from 'zlib'
 import { extract } from 'tar'
 import { execSync } from 'child_process'
 import { systemCoreOnlyBuild } from './build-env.ts'
-import { kokoroboxServiceAsset, verifyKokoroBoxServiceChecksum } from './kokorobox-service.ts'
+import {
+  extractKokoroBoxServiceProcessRouterBundle,
+  kokoroboxServiceAsset,
+  verifyKokoroBoxServiceChecksum
+} from './kokorobox-service.ts'
 
 const cwd = process.cwd()
 const TEMP_DIR = path.join(cwd, 'node_modules/.temp')
@@ -328,16 +332,45 @@ const resolveEnableLoopback = () =>
     file: 'enableLoopback.exe',
     downloadURL: `https://github.com/Kuingsmile/uwp-tool/releases/download/latest/enableLoopback.exe`
   })
-const resolveKokoroBoxService = () => {
+const resolveKokoroBoxService = async () => {
   const asset = kokoroboxServiceAsset(platform, arch, process.env.RELEASE_CHANNEL)
   const ext = platform === 'win32' ? '.exe' : ''
 
-  return resolveResource({
+  await resolveResource({
     file: `kokorobox-service${ext}`,
     downloadURL: asset.downloadURL,
     sha256URL: asset.sha256URL,
     needExecutable: true
   })
+
+  const outputDir = path.join(cwd, 'extra', 'files', 'process-router')
+  fs.rmSync(outputDir, { recursive: true, force: true })
+  if (!asset.processRouter) return
+
+  const tempDir = path.join(TEMP_DIR, 'kokorobox-service-process-router')
+  const archivePath = path.join(tempDir, asset.processRouter.filename)
+  fs.rmSync(tempDir, { recursive: true, force: true })
+  fs.mkdirSync(tempDir, { recursive: true })
+  try {
+    await downloadFile(asset.processRouter.downloadURL, archivePath)
+    const checksumResponse = await fetch(asset.processRouter.sha256URL)
+    if (!checksumResponse.ok) {
+      throw new Error(`Process Router checksum download failed: HTTP ${checksumResponse.status}`)
+    }
+    verifyKokoroBoxServiceChecksum(
+      asset.processRouter.filename,
+      fs.readFileSync(archivePath),
+      await checksumResponse.text()
+    )
+
+    extractKokoroBoxServiceProcessRouterBundle(fs.readFileSync(archivePath), outputDir)
+    console.log('[INFO]: KokoroBox Service Process Router bundle finished')
+  } catch (error) {
+    fs.rmSync(outputDir, { recursive: true, force: true })
+    throw error
+  } finally {
+    fs.rmSync(tempDir, { recursive: true, force: true })
+  }
 }
 const removeLegacyRunner = async () => {
   const legacyRunner = path.join(cwd, 'extra', 'files', 'kokorobox-run.exe')

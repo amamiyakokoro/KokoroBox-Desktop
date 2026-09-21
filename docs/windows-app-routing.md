@@ -138,14 +138,15 @@ the current routing architecture.
 
 ## Reproducible native build
 
-Every Windows x64 package runs `scripts/build-proxybridge.ps1` first. It checks out an exact commit
-from the controlled KokoroBox ProxyBridge fork, verifies the WinDivert archive SHA-256, and
-packages only the KokoroBox router, core DLL, WinDivert runtime, and license files. See
-[`THIRD_PARTY_NOTICES.md`](../THIRD_PARTY_NOTICES.md) for attribution.
+The `kokorobox-service` release builds the Windows x64 Process Router from its pinned ProxyBridge
+revision and SHA-256-verified WinDivert archive. It publishes a checksum-protected archive
+containing only the KokoroBox router, core DLL, WinDivert runtime, manifests, and license files.
+Desktop packaging downloads and verifies that service-owned archive; it does not compile the
+Windows routing runtime. See [`THIRD_PARTY_NOTICES.md`](../THIRD_PARTY_NOTICES.md) for attribution.
 
 The packaged files live under `extra/files/process-router/`; the upstream `.sys` payload is
-copied byte-for-byte from the pinned, SHA-256-verified WinDivert archive. The runtime verifies a
-build manifest before launching the sidecar. Release collection validates the CycloneDX SBOM in
+copied byte-for-byte from the service's pinned, SHA-256-verified WinDivert archive. The service
+verifies the build manifest before launching the sidecar. Release collection validates the CycloneDX SBOM in
 the private CI artifact but does not publish it as a release download; the SBOM records the
 pinned ProxyBridge source revision.
 

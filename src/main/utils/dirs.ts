@@ -147,14 +147,6 @@ export function appRoutingIconDir(): string {
   return path.join(appRoutingDir(), 'icons')
 }
 
-export function processRouterDir(): string {
-  return path.join(resourcesFilesDir(), 'process-router')
-}
-
-export function processRouterPath(): string {
-  return path.join(processRouterDir(), 'kokorobox-process-router.exe')
-}
-
 export function macAppRoutingModulePath(): string {
   return (
     process.env.KOKOROBOX_MACOS_ROUTING_MODULE ||

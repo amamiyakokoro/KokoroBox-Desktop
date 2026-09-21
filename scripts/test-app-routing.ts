@@ -26,21 +26,15 @@ import {
   appRoutingDnsHost,
   appRoutingDnsPort,
   applyAppRoutingListener,
-  buildProcessRouterCommand,
   protectedNetworkTargets,
   protectedProcessNames
 } from '../src/main/app-routing/profile'
 import { isSuccessfulSocks5Greeting } from '../src/main/app-routing/health'
-import { parseProcessRouterEvent } from '../src/main/app-routing/protocol'
 import {
   macOSSystemExtensionBundleVersion,
   macOSSystemExtensionVersion,
-  processRouterBinaryNames,
   proxyBridgeRepository,
-  proxyBridgeSourceRevision,
-  validateProcessRouterManifest,
-  winDivertArchiveSha256,
-  winDivertVersion
+  proxyBridgeSourceRevision
 } from '../src/main/app-routing/integrity-manifest'
 import {
   buildServiceProcessRouterRules,
@@ -494,76 +488,6 @@ test('requires a complete no-auth SOCKS5 handshake response', () => {
   assert.equal(isSuccessfulSocks5Greeting(Uint8Array.from([0x04, 0x00])), false)
 })
 
-test('rejects malformed or mismatched sidecar protocol events', () => {
-  assert.deepEqual(parseProcessRouterEvent('{"version":1,"event":"rules_replaced"}'), {
-    version: 1,
-    event: 'rules_replaced'
-  })
-  assert.throws(() => parseProcessRouterEvent('{"version":2,"event":"rules_replaced"}'))
-  assert.throws(() => parseProcessRouterEvent('{"version":1,"event":"unknown"}'))
-  assert.throws(() => parseProcessRouterEvent('not-json'))
-})
-
-test('generates an ordered local-only process-router command', () => {
-  const config: AppRoutingConfig = {
-    version: 1,
-    enabled: true,
-    failClosed: true,
-    proxyUdpDns: true,
-    defaultAction: 'direct',
-    defaultProtocol: 'tcp',
-    diagnosticLogging: true,
-    rules: [
-      rule(),
-      rule({
-        id: 'rule-2',
-        processPattern: 'blocked*.exe',
-        sourcePath: 'D:\\Tools\\blocked.exe',
-        action: 'block',
-        protocol: 'udp',
-        priority: 2
-      }),
-      rule({
-        id: 'rule-3',
-        processPattern: '\\\\server\\apps\\*\\direct.exe',
-        sourcePath: '\\\\server\\apps\\direct.exe',
-        action: 'direct',
-        protocol: 'tcp',
-        enabled: false,
-        priority: 3
-      })
-    ]
-  }
-  const command = JSON.parse(buildProcessRouterCommand(config, true))
-  assert.deepEqual(command.proxy, { host: '127.0.0.1', port: 7891 })
-  assert.equal(command.version, 1)
-  assert.equal(command.command, 'replace_rules')
-  assert.equal(command.proxyUdpDns, true)
-  assert.equal(command.diagnosticLogging, true)
-  assert.deepEqual(
-    command.rules.map((item: Record<string, unknown>) => [
-      item.processPattern,
-      item.action,
-      item.protocol,
-      item.enabled,
-      item.priority
-    ]),
-    [
-      ['example.exe', 'PROXY', 'BOTH', true, 1],
-      ['blocked*.exe', 'BLOCK', 'UDP', true, 2],
-      ['\\\\server\\apps\\*\\direct.exe', 'DIRECT', 'TCP', false, 3]
-    ]
-  )
-  const failClosed = JSON.parse(buildProcessRouterCommand(config, false))
-  assert.equal(failClosed.failClosed, true)
-  assert.deepEqual(
-    failClosed.rules.map((item: Record<string, unknown>) => item.action),
-    ['BLOCK', 'BLOCK', 'DIRECT']
-  )
-  assert.ok(protectedProcessNames.includes('kokorobox-process-router.exe'))
-  assert.ok(protectedNetworkTargets.includes('::1'))
-})
-
 test('generates and validates the authenticated service protocol', () => {
   const config: AppRoutingConfig = {
     version: 1,
@@ -594,6 +518,8 @@ test('generates and validates the authenticated service protocol', () => {
       }
     ]
   })
+  assert.ok(protectedProcessNames.includes('kokorobox-process-router.exe'))
+  assert.ok(protectedNetworkTargets.includes('::1'))
   const status = {
     version: 1 as const,
     supported: true,
@@ -671,7 +597,6 @@ test('rule groups preserve child state while controlling effective routing', () 
   validateAppRoutingConfig(config)
   assert.equal(groupedRule.enabled, true)
   assert.equal(isAppRoutingRuleEffectivelyEnabled(config, groupedRule), false)
-  assert.equal(JSON.parse(buildProcessRouterCommand(config, true)).rules[0].enabled, false)
   assert.equal(buildServiceProcessRouterRules(config, 7891).rules[0].enabled, false)
 
   const manualGroupConfig: AppRoutingConfig = {
@@ -809,49 +734,20 @@ test('parses only the canonical process-pattern schema', () => {
   )
 })
 
-test('requires every pinned native binary to match its build manifest', () => {
-  const hash = 'a'.repeat(64)
-  const hashes = Object.fromEntries(processRouterBinaryNames.map((name) => [name, hash]))
-  const manifest = {
-    version: 1 as const,
-    proxyBridgeRevision: proxyBridgeSourceRevision,
-    winDivertVersion,
-    winDivertArchiveSha256,
-    sha256: hashes
-  }
-  validateProcessRouterManifest(manifest, hashes)
-  assert.throws(
-    () =>
-      validateProcessRouterManifest(manifest, { ...hashes, 'ProxyBridgeCore.dll': 'b'.repeat(64) }),
-    /checksum mismatch/
-  )
-  assert.throws(
-    () =>
-      validateProcessRouterManifest({ ...manifest, proxyBridgeRevision: '0'.repeat(40) }, hashes),
-    /source provenance/
-  )
-})
-
-test('native build is pinned to the controlled KokoroBox ProxyBridge fork', () => {
+test('macOS native build is pinned to the controlled KokoroBox ProxyBridge fork', () => {
   const sourceManifest = JSON.parse(readFileSync('build/proxybridge/source-manifest.json', 'utf8'))
-  const build = readFileSync('scripts/build-proxybridge.ps1', 'utf8')
   const macBuild = readFileSync('scripts/prepare-macos-routing.ts', 'utf8')
   const buildWorkflow = readFileSync('.github/workflows/build.yml', 'utf8')
   const macBridge = readFileSync('native/macos-app-routing/KokoroBoxAppRoutingBridge.mm', 'utf8')
   const macCoordinator = readFileSync('src/main/app-routing/macos.ts', 'utf8')
   const manager = readFileSync('src/main/app-routing/manager.ts', 'utf8')
-  const router = readFileSync('build/proxybridge/kokorobox_process_router.c', 'utf8')
   assert.equal(sourceManifest.proxyBridgeRepository, proxyBridgeRepository)
   assert.equal(sourceManifest.proxyBridgeRevision, proxyBridgeSourceRevision)
   assert.equal(sourceManifest.macOSSystemExtensionVersion, macOSSystemExtensionVersion)
   assert.equal(sourceManifest.macOSSystemExtensionBundleVersion, macOSSystemExtensionBundleVersion)
   assert.match(macOSSystemExtensionVersion, /^\d+\.\d+\.\d+$/)
   assert.match(macOSSystemExtensionBundleVersion, /^[1-9]\d*$/)
-  assert.equal(sourceManifest.winDivertVersion, winDivertVersion)
-  assert.equal(sourceManifest.winDivertArchiveSha256, winDivertArchiveSha256)
   assert.match(proxyBridgeRepository, /https:\/\/github\.com\/amamiyakokoro\/ProxyBridge\.git/)
-  assert.match(build, /build\/proxybridge\/source-manifest\.json/)
-  assert.match(build, /SourceManifest\.proxyBridgeRevision/)
   assert.match(macBuild, /proxyBridgeRepository/)
   assert.match(macBuild, /proxyBridgeSourceRevision/)
   assert.match(macBuild, /extensionBundleIdentifier = 'com\.amamiyakokoro\.app\.proxy-extension'/)
@@ -926,31 +822,6 @@ test('native build is pinned to the controlled KokoroBox ProxyBridge fork', () =
   assert.doesNotMatch(macBridge, /SecCodeCheckValidity|certificate leaf/)
   assert.match(macCoordinator, /process\.dlopen/)
   assert.doesNotMatch(macCoordinator, /spawn\(|child_process/)
-  assert.match(build, /SourceManifest\.winDivertArchiveSha256/)
-  assert.doesNotMatch(build, /git -C \$SourceRoot apply/)
-  assert.match(build, /kokorobox-process-router\.exe/)
-  assert.match(router, /version != PROTOCOL_VERSION/)
-  assert.match(router, /argc != 1/)
-  assert.doesNotMatch(router, /--profile|--update|WinHttp/)
-  assert.match(router, /atomic replacement guard/)
-  assert.match(router, /ProxyBridge_MoveRuleToPosition\(guard_id, 1\)/)
-  assert.match(router, /ProxyBridge_DeleteRule\(guard_id\)/)
-  assert.match(router, /read_string\(object, "processPattern"/)
-  assert.match(router, /read_bool\(command, "proxyUdpDns"/)
-  assert.match(router, /ProxyBridge_SetProxyUdpDnsEnabled\(proxy_udp_dns\)/)
-  assert.match(router, /read_bool\(command, "diagnosticLogging"/)
-  assert.match(router, /ProxyBridge_SetLogCallback\(diagnostic_log\)/)
-  assert.match(router, /ProxyBridge_SetConnectionCallback\(diagnostic_connection\)/)
-  assert.match(router, /ProxyBridge_SetFailClosedOnUnknownOwner\(fail_closed\)/)
-  assert.match(router, /if \(!replace_rules\(command\)\) \{\s*exit_code = 6;\s*break;/)
-  assert.doesNotMatch(router, /read_string\(object, "executablePath"/)
-  assert.match(
-    router,
-    /KokoroBox\.exe;mihomo\.exe;mihomo-alpha\.exe;kokorobox-service\.exe;sparkle-service\.exe/
-  )
-  assert.match(router, /127\.\*\.\*\.\*.*fe80::\/10/s)
-  assert.match(build, /manifest\.json/)
-  assert.match(build, /process-router-sbom\.cdx\.json/)
 })
 
 test('Windows and Linux application routing use only the privileged service lifecycle', () => {
@@ -1232,19 +1103,22 @@ test('application routing status and Windows groups retain compact semantic stru
   assert.match(styles, /\.app-routing-protection-summary/)
 })
 
-test('Windows packaging rebuilds the architecture-matched process router payload', () => {
+test('Windows packaging consumes the service-owned process router payload', () => {
   const packageJson = JSON.parse(readFileSync('package.json', 'utf8')) as {
     scripts: Record<string, string>
   }
-  const prepare = readFileSync('scripts/prepare-windows-routing.ts', 'utf8')
+  const prepare = readFileSync('scripts/prepare.ts', 'utf8')
+  const serviceAssets = readFileSync('scripts/kokorobox-service.ts', 'utf8')
   const workflow = readFileSync('.github/workflows/build.yml', 'utf8')
+  const sourceManifest = JSON.parse(readFileSync('build/proxybridge/source-manifest.json', 'utf8'))
 
-  assert.match(packageJson.scripts['build:win'], /^pnpm run prepare:windows-routing &&/)
+  assert.doesNotMatch(packageJson.scripts['build:win'], /prepare:windows-routing/)
   assert.doesNotMatch(packageJson.scripts['build:win'], /auto-elevate|manual-elevation/)
-  assert.match(packageJson.scripts['prepare:windows-routing'], /prepare-windows-routing\.ts/)
-  assert.match(prepare, /npm_config_target_arch \|\| process\.arch/)
-  assert.match(prepare, /targetArch !== 'x64'/)
-  assert.match(prepare, /'pwsh\.exe'/)
-  assert.match(prepare, /build-proxybridge\.ps1/)
+  assert.equal(packageJson.scripts['prepare:windows-routing'], undefined)
+  assert.match(prepare, /asset\.processRouter/)
+  assert.match(serviceAssets, /Unexpected files in KokoroBox Service Process Router bundle/)
+  assert.equal(sourceManifest.winDivertVersion, undefined)
+  assert.equal(sourceManifest.winDivertArchiveSha256, undefined)
   assert.doesNotMatch(workflow, /Build Windows x64 Application Routing Sidecar/)
+  assert.doesNotMatch(workflow, /build-proxybridge\.ps1/)
 })

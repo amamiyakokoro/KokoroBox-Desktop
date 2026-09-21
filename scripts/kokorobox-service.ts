@@ -1,6 +1,19 @@
 import { createHash } from 'node:crypto'
+import { mkdirSync, writeFileSync } from 'node:fs'
+import path from 'node:path'
+import AdmZip from 'adm-zip'
 
-export const KOKOROBOX_SERVICE_STABLE_TAG = 'v0.2.4'
+export const KOKOROBOX_SERVICE_STABLE_TAG = 'v0.3.0'
+export const KOKOROBOX_PROCESS_ROUTER_FILES = Object.freeze([
+  'kokorobox-process-router.exe',
+  'ProxyBridgeCore.dll',
+  'WinDivert.dll',
+  'WinDivert64.sys',
+  'LICENSE.ProxyBridge',
+  'LICENSE.WinDivert',
+  'manifest.json',
+  'process-router-sbom.cdx.json'
+])
 
 const targets: Record<string, string> = {
   'win32-x64': 'kokorobox-service-windows-amd64-v3',
@@ -24,11 +37,21 @@ export function kokoroboxServiceAsset(platform: string, arch: string, channel?: 
   const tag = channel === 'stable' ? KOKOROBOX_SERVICE_STABLE_TAG : 'pre-release'
   const downloadURL = `https://github.com/amamiyakokoro/kokorobox-service/releases/download/${tag}/${filename}`
 
+  const processRouterFilename =
+    platform === 'win32' && arch === 'x64' ? `${base}-process-router.zip` : undefined
+
   return {
     downloadURL,
     filename,
     sha256URL: `${downloadURL}.sha256`,
-    tag
+    tag,
+    processRouter: processRouterFilename
+      ? {
+          downloadURL: `https://github.com/amamiyakokoro/kokorobox-service/releases/download/${tag}/${processRouterFilename}`,
+          filename: processRouterFilename,
+          sha256URL: `https://github.com/amamiyakokoro/kokorobox-service/releases/download/${tag}/${processRouterFilename}.sha256`
+        }
+      : undefined
   }
 }
 
@@ -47,5 +70,32 @@ export function verifyKokoroBoxServiceChecksum(
     throw new Error(
       `kokorobox-service SHA-256 mismatch: expected ${match[1]}, received ${actualSha256}`
     )
+  }
+}
+
+export function extractKokoroBoxServiceProcessRouterBundle(
+  archive: Uint8Array,
+  outputDirectory: string
+): void {
+  const entries = new AdmZip(Buffer.from(archive))
+    .getEntries()
+    .filter((entry) => !entry.isDirectory)
+  const expectedEntries = KOKOROBOX_PROCESS_ROUTER_FILES.map(
+    (name) => `process-router/${name}`
+  ).sort()
+  const actualEntries = entries.map((entry) => entry.entryName.replaceAll('\\', '/')).sort()
+  if (
+    actualEntries.length !== expectedEntries.length ||
+    actualEntries.some((name, index) => name !== expectedEntries[index])
+  ) {
+    throw new Error('Unexpected files in KokoroBox Service Process Router bundle')
+  }
+
+  mkdirSync(outputDirectory, { recursive: true })
+  for (const entry of entries) {
+    const name = path.posix.basename(entry.entryName.replaceAll('\\', '/'))
+    const contents = entry.getData()
+    if (contents.length === 0) throw new Error(`Empty Process Router bundle file: ${name}`)
+    writeFileSync(path.join(outputDirectory, name), contents)
   }
 }

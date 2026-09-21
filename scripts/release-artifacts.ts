@@ -12,10 +12,6 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { stringify } from 'yaml'
 import {
-  proxyBridgeSourceRevision,
-  winDivertArchiveSha256
-} from '../src/main/app-routing/integrity-manifest.ts'
-import {
   sparkleAppcastName,
   sparkleDownloadURLPrefix,
   sparkleFeedURL,
@@ -60,13 +56,11 @@ interface ProcessRouterSbomReceipt {
   proxyBridgeRevision: string
 }
 
-const proxyBridgeRevision = proxyBridgeSourceRevision
-
 function processRouterSbomName(version: string): string {
   return `kokorobox-process-router-${version}.cdx.json`
 }
 
-function validateProcessRouterSbom(file: string): void {
+function validateProcessRouterSbom(file: string): string {
   const sbom = JSON.parse(readFileSync(file, 'utf8')) as {
     bomFormat?: string
     specVersion?: string
@@ -81,11 +75,12 @@ function validateProcessRouterSbom(file: string): void {
   if (
     sbom.bomFormat !== 'CycloneDX' ||
     sbom.specVersion !== '1.6' ||
-    revision !== proxyBridgeRevision ||
-    winDivertHash !== winDivertArchiveSha256
+    !/^[0-9a-f]{40}$/.test(revision || '') ||
+    !/^[0-9a-f]{64}$/.test(winDivertHash || '')
   ) {
     throw new Error('Invalid process router SBOM provenance')
   }
+  return revision!
 }
 
 export function validateMacReceipt(
@@ -225,7 +220,7 @@ export function stageArtifact(
   let sbom: ProcessRouterSbomReceipt | undefined
   if (includesProcessRouterSbom) {
     if (!processRouterSbom) throw new Error('Missing Windows x64 process router SBOM')
-    validateProcessRouterSbom(processRouterSbom)
+    const proxyBridgeRevision = validateProcessRouterSbom(processRouterSbom)
     sbom = {
       filename: processRouterSbomName(version),
       checksum: digest(processRouterSbom),
@@ -300,15 +295,18 @@ export function collectArtifacts(
     const includesProcessRouterSbom = target.os === 'windows-latest' && target.arch === 'x64'
     if (includesProcessRouterSbom) {
       const sbomName = processRouterSbomName(version)
+      const sbomPath = path.join(source, sbomName)
+      const proxyBridgeRevision = existsSync(sbomPath)
+        ? validateProcessRouterSbom(sbomPath)
+        : undefined
       if (
-        !existsSync(path.join(source, sbomName)) ||
+        !proxyBridgeRevision ||
         manifest.sbom?.filename !== sbomName ||
         manifest.sbom?.proxyBridgeRevision !== proxyBridgeRevision ||
-        digest(path.join(source, sbomName)) !== manifest.sbom?.checksum
+        digest(sbomPath) !== manifest.sbom?.checksum
       ) {
         throw new Error('Missing or mismatched process router SBOM')
       }
-      validateProcessRouterSbom(path.join(source, sbomName))
       expectedFiles.add(sbomName)
     } else if (manifest.sbom) {
       throw new Error(`Unexpected process router SBOM: ${manifestName}`)

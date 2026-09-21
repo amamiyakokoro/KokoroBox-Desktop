@@ -1,8 +1,3 @@
-import {
-  isAppRoutingRuleEffectivelyEnabled,
-  validateAppRoutingConfig
-} from '../../shared/app-routing'
-
 export const appRoutingListenerName = 'kokorobox-app-routing'
 export const appRoutingSocksPort = 7891
 export const appRoutingTProxyPort = 7894
@@ -31,38 +26,6 @@ export const protectedNetworkTargets = Object.freeze([
 
 export function appRoutingProxyPort(platform: NodeJS.Platform): number {
   return platform === 'linux' ? appRoutingTProxyPort : appRoutingSocksPort
-}
-
-function toRouterProtocol(protocol: AppRoutingProtocol): 'TCP' | 'UDP' | 'BOTH' {
-  return protocol.toUpperCase() as 'TCP' | 'UDP' | 'BOTH'
-}
-
-function toRouterAction(action: AppRoutingAction): 'PROXY' | 'DIRECT' | 'BLOCK' {
-  return action.toUpperCase() as 'PROXY' | 'DIRECT' | 'BLOCK'
-}
-
-export function buildProcessRouterCommand(
-  config: AppRoutingConfig,
-  proxyAvailable: boolean
-): string {
-  validateAppRoutingConfig(config)
-  return JSON.stringify({
-    version: 1,
-    command: 'replace_rules',
-    proxy: { host: '127.0.0.1', port: appRoutingSocksPort },
-    failClosed: true,
-    proxyUdpDns: config.proxyUdpDns,
-    diagnosticLogging: config.diagnosticLogging,
-    rules: [...config.rules]
-      .sort((a, b) => a.priority - b.priority)
-      .map((rule) => ({
-        processPattern: rule.processPattern,
-        protocol: toRouterProtocol(rule.protocol),
-        action: toRouterAction(rule.action === 'proxy' && !proxyAvailable ? 'block' : rule.action),
-        enabled: isAppRoutingRuleEffectivelyEnabled(config, rule),
-        priority: rule.priority
-      }))
-  })
 }
 
 export function applyAppRoutingListener(

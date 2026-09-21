@@ -13,6 +13,7 @@ import os from 'node:os'
 import { createRequire } from 'node:module'
 import path from 'node:path'
 import { test } from 'node:test'
+import AdmZip from 'adm-zip'
 import { parse } from 'yaml'
 import {
   artifactName,
@@ -30,10 +31,8 @@ import {
   sparkleUpdateArchiveName
 } from './macos-sparkle.ts'
 import {
-  proxyBridgeSourceRevision,
-  winDivertArchiveSha256
-} from '../src/main/app-routing/integrity-manifest.ts'
-import {
+  extractKokoroBoxServiceProcessRouterBundle,
+  KOKOROBOX_PROCESS_ROUTER_FILES,
   KOKOROBOX_SERVICE_STABLE_TAG,
   kokoroboxServiceAsset,
   verifyKokoroBoxServiceChecksum
@@ -151,7 +150,7 @@ test('build matrix exactly matches the 10 required platform jobs', () => {
 
   const packageJson = JSON.parse(readFileSync('package.json', 'utf8'))
   const builder = parse(readFileSync('electron-builder.yml', 'utf8'))
-  assert.match(packageJson.scripts['build:win'], /^pnpm run prepare:windows-routing &&/)
+  assert.doesNotMatch(packageJson.scripts['build:win'], /prepare:windows-routing/)
   assert.doesNotMatch(packageJson.scripts['build:win'], /auto-elevate|manual-elevation/)
   assert.equal(packageJson.scripts['build:win:auto-elevate'], undefined)
   assert.equal(packageJson.scripts['build:win:manual-elevation'], undefined)
@@ -257,15 +256,23 @@ test('update drawer keeps package-manager guidance exclusive to Linux', () => {
 })
 
 test('stable builds pin verified service releases while rolling builds follow pre-release', () => {
-  assert.equal(KOKOROBOX_SERVICE_STABLE_TAG, 'v0.2.4')
+  assert.equal(KOKOROBOX_SERVICE_STABLE_TAG, 'v0.3.0')
   assert.deepEqual(kokoroboxServiceAsset('win32', 'x64', 'stable'), {
     downloadURL:
-      'https://github.com/amamiyakokoro/kokorobox-service/releases/download/v0.2.4/kokorobox-service-windows-amd64-v3.exe',
+      'https://github.com/amamiyakokoro/kokorobox-service/releases/download/v0.3.0/kokorobox-service-windows-amd64-v3.exe',
     filename: 'kokorobox-service-windows-amd64-v3.exe',
     sha256URL:
-      'https://github.com/amamiyakokoro/kokorobox-service/releases/download/v0.2.4/kokorobox-service-windows-amd64-v3.exe.sha256',
-    tag: 'v0.2.4'
+      'https://github.com/amamiyakokoro/kokorobox-service/releases/download/v0.3.0/kokorobox-service-windows-amd64-v3.exe.sha256',
+    tag: 'v0.3.0',
+    processRouter: {
+      downloadURL:
+        'https://github.com/amamiyakokoro/kokorobox-service/releases/download/v0.3.0/kokorobox-service-windows-amd64-v3-process-router.zip',
+      filename: 'kokorobox-service-windows-amd64-v3-process-router.zip',
+      sha256URL:
+        'https://github.com/amamiyakokoro/kokorobox-service/releases/download/v0.3.0/kokorobox-service-windows-amd64-v3-process-router.zip.sha256'
+    }
   })
+  assert.equal(kokoroboxServiceAsset('win32', 'arm64', 'stable').processRouter, undefined)
   assert.equal(kokoroboxServiceAsset('linux', 'arm64', 'rolling').tag, 'pre-release')
   assert.equal(kokoroboxServiceAsset('darwin', 'arm64').tag, 'pre-release')
   assert.throws(() => kokoroboxServiceAsset('win32', 'ia32', 'stable'))
@@ -289,6 +296,26 @@ test('stable builds pin verified service releases while rolling builds follow pr
   const prepare = readFileSync('scripts/prepare.ts', 'utf8')
   assert.match(prepare, /sha256URL: asset\.sha256URL/)
   assert.match(prepare, /verifyKokoroBoxServiceChecksum/)
+})
+
+test('service-owned Process Router archives extract only the fixed runtime bundle', () => {
+  const archive = new AdmZip()
+  for (const name of KOKOROBOX_PROCESS_ROUTER_FILES) {
+    archive.addFile(`process-router/${name}`, Buffer.from(`fixture:${name}`))
+  }
+  const output = mkdtempSync(path.join(os.tmpdir(), 'kokorobox-process-router-'))
+  try {
+    extractKokoroBoxServiceProcessRouterBundle(archive.toBuffer(), output)
+    assert.deepEqual(readdirSync(output).sort(), [...KOKOROBOX_PROCESS_ROUTER_FILES].sort())
+
+    archive.addFile('process-router/unexpected.exe', Buffer.from('unexpected'))
+    assert.throws(
+      () => extractKokoroBoxServiceProcessRouterBundle(archive.toBuffer(), output),
+      /Unexpected files/
+    )
+  } finally {
+    rmSync(output, { recursive: true, force: true })
+  }
 })
 
 test('stable Mihomo builds pin the requested release', () => {
@@ -358,11 +385,11 @@ function fixtures(fn: (source: string, output: string) => void, version = '2.26.
           properties: [
             {
               name: 'kokorobox:proxybridge-revision',
-              value: proxyBridgeSourceRevision
+              value: 'a'.repeat(40)
             },
             {
               name: 'kokorobox:windivert-archive-sha256',
-              value: winDivertArchiveSha256
+              value: 'b'.repeat(64)
             }
           ]
         }
@@ -484,7 +511,7 @@ test('collects complete builds, generates hashes and concise updater-compatible 
   })
 })
 
-for (const problem of ['missing', 'tampered', 'wrong-revision']) {
+for (const problem of ['missing', 'tampered', 'malformed-provenance']) {
   test(`refuses ${problem} process router SBOM before producing publishable output`, () => {
     fixtures((source, output) => {
       const sbomName = 'kokorobox-process-router-2.26.8.cdx.json'
@@ -493,7 +520,7 @@ for (const problem of ['missing', 'tampered', 'wrong-revision']) {
       else if (problem === 'tampered') writeFileSync(sbomFile, '{}')
       else {
         const sbom = JSON.parse(readFileSync(sbomFile, 'utf8'))
-        sbom.metadata.properties[0].value = 'a'.repeat(40)
+        sbom.metadata.properties[0].value = 'not-a-revision'
         writeFileSync(sbomFile, JSON.stringify(sbom))
         const manifestFile = path.join(source, 'manifest-windows-latest-x64-nsis.json')
         const manifest = JSON.parse(readFileSync(manifestFile, 'utf8'))
