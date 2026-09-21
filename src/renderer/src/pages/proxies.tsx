@@ -533,6 +533,7 @@ const Proxies: React.FC = () => {
   return (
     <BasePage
       title={tr('Proxy groups')}
+      contentClassName="bg-surface"
       header={
         <Button
           size="sm"
@@ -563,10 +564,10 @@ const Proxies: React.FC = () => {
           </div>
         </div>
       ) : (
-        <div className="flex h-[calc(100vh-50px)] min-w-0 flex-col">
+        <div className="flex h-[calc(100vh-50px)] min-w-0 flex-col bg-surface">
           <KokoToolbar
             aria-label={tr('Proxy groups')}
-            className="shrink-0 border-b border-separator"
+            className="shrink-0 border-b border-separator bg-surface"
           >
             <KokoSearchField
               value={filter}
@@ -577,7 +578,7 @@ const Proxies: React.FC = () => {
               onClear={() => setFilter('')}
             />
           </KokoToolbar>
-          <div ref={proxyListRef} className="min-h-0 min-w-0 flex-1">
+          <div ref={proxyListRef} className="min-h-0 min-w-0 flex-1 bg-surface">
             {normalizedFilter && visibleGroupIndices.length === 0 ? (
               <div className="flex h-full items-center justify-center px-4 text-sm text-muted">
                 {tr('No proxy groups match this search.')}

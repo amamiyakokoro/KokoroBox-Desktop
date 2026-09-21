@@ -180,7 +180,7 @@ const ProxyItem: React.FC<Props> = (props) => {
             ? 'border-accent/45 bg-accent-soft/40'
             : fixed
               ? 'border-separator/70 bg-surface-secondary/60'
-              : 'border-separator/60 bg-surface-secondary/40 hover:border-accent/25 hover:bg-accent-soft/15'
+              : 'border-separator/60 bg-surface hover:border-accent/25 hover:bg-accent-soft/15'
         }`}
         data-selected={selected || undefined}
       >

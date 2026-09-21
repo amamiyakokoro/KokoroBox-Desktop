@@ -70,14 +70,14 @@ const ProxyGroupHeader = memo(function ProxyGroupHeader({
   onGroupDelay
 }: ProxyGroupHeaderProps) {
   return (
-    <div className={`w-full bg-background px-2 pt-1.5 ${isLast && !isOpen ? 'pb-1.5' : ''}`}>
+    <div className={`w-full bg-surface px-2 pt-1.5 ${isLast && !isOpen ? 'pb-1.5' : ''}`}>
       <div
         className={`group/proxy relative min-w-0 rounded-lg border transition-[background-color,border-color] duration-150 focus-within:ring-2 focus-within:ring-accent/35 ${
           isRelevant
             ? 'border-accent/40 bg-accent-soft/35'
             : isOpen
               ? 'border-accent/25 bg-accent-soft/20'
-              : 'border-separator/70 bg-background hover:border-accent/25 hover:bg-surface-secondary/50'
+              : 'border-separator/70 bg-surface hover:border-accent/25 hover:bg-surface-secondary/50'
         }`}
         data-current={isRelevant || undefined}
         data-expanded={isOpen || undefined}
