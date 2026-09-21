@@ -3,6 +3,7 @@ import React, { useEffect, useState, useRef } from 'react'
 import { Button, Switch } from '@heroui/react'
 import SettingCard from '../base/base-setting-card'
 import SettingItem from '../base/base-setting-item'
+import SettingSubgroup from '../base/base-setting-subgroup'
 import { KokoSegmentedControl } from '../base/base-controls'
 import {
   closeFloatingWindow,
@@ -81,7 +82,7 @@ const AppearanceConfig: React.FC<AppearanceConfigProps> = ({
             contentAlign="end"
             title={tr('Show floating window')}
             help={tr('The floating window may crash the app unless GPU acceleration is disabled')}
-            divider
+            divider={!localShowFloating}
           >
             <Switch
               size="sm"
@@ -113,7 +114,7 @@ const AppearanceConfig: React.FC<AppearanceConfigProps> = ({
             </Switch>
           </SettingItem>
           {localShowFloating && (
-            <>
+            <SettingSubgroup label={tr('Show floating window')}>
               <SettingItem
                 contentAlign="end"
                 title={tr('Rotate floating icon based on network speed')}
@@ -134,7 +135,7 @@ const AppearanceConfig: React.FC<AppearanceConfigProps> = ({
                   </Switch.Content>
                 </Switch>
               </SettingItem>
-              <SettingItem contentAlign="end" title={tr('Disable tray icon')} divider>
+              <SettingItem contentAlign="end" title={tr('Disable tray icon')}>
                 <Switch
                   size="sm"
                   isSelected={disableTray}
@@ -154,7 +155,7 @@ const AppearanceConfig: React.FC<AppearanceConfigProps> = ({
                   </Switch.Content>
                 </Switch>
               </SettingItem>
-            </>
+            </SettingSubgroup>
           )}
           {!disableTray && (
             <SettingItem
@@ -210,7 +211,11 @@ const AppearanceConfig: React.FC<AppearanceConfigProps> = ({
           )}
           {platform !== 'linux' && (
             <>
-              <SettingItem contentAlign="end" title={tr('Show proxy details in tray menu')} divider>
+              <SettingItem
+                contentAlign="end"
+                title={tr('Show proxy details in tray menu')}
+                divider={!proxyInTray}
+              >
                 <Switch
                   size="sm"
                   isSelected={proxyInTray}
@@ -226,22 +231,24 @@ const AppearanceConfig: React.FC<AppearanceConfigProps> = ({
                 </Switch>
               </SettingItem>
               {proxyInTray && (
-                <SettingItem contentAlign="end" title={tr('Tray menu latency layout')} divider>
-                  <KokoSegmentedControl
-                    ariaLabel={tr('Tray menu latency layout')}
-                    selectedKey={trayProxyDelayLayout}
-                    options={[
-                      { id: 'same-line', label: tr('Same line') },
-                      { id: 'new-line', label: tr('New line') }
-                    ]}
-                    onChange={async (v) => {
-                      await patchAppConfig({
-                        trayProxyDelayLayout: v as 'same-line' | 'new-line'
-                      })
-                      window.electron.ipcRenderer.send('updateTrayMenu')
-                    }}
-                  />
-                </SettingItem>
+                <SettingSubgroup label={tr('Show proxy details in tray menu')}>
+                  <SettingItem contentAlign="end" title={tr('Tray menu latency layout')}>
+                    <KokoSegmentedControl
+                      ariaLabel={tr('Tray menu latency layout')}
+                      selectedKey={trayProxyDelayLayout}
+                      options={[
+                        { id: 'same-line', label: tr('Same line') },
+                        { id: 'new-line', label: tr('New line') }
+                      ]}
+                      onChange={async (v) => {
+                        await patchAppConfig({
+                          trayProxyDelayLayout: v as 'same-line' | 'new-line'
+                        })
+                        window.electron.ipcRenderer.send('updateTrayMenu')
+                      }}
+                    />
+                  </SettingItem>
+                </SettingSubgroup>
               )}
             </>
           )}

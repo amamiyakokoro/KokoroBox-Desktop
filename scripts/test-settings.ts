@@ -411,6 +411,10 @@ test('shared settings primitives isolate HeroUI v3 compound APIs', () => {
 test('SettingItem has one canonical layout without legacy compatibility paths', () => {
   const settingHelp = readFileSync('src/renderer/src/components/base/base-setting-help.tsx', 'utf8')
   const settingItem = readFileSync('src/renderer/src/components/base/base-setting-item.tsx', 'utf8')
+  const settingSubgroup = readFileSync(
+    'src/renderer/src/components/base/base-setting-subgroup.tsx',
+    'utf8'
+  )
   const settingCard = readFileSync('src/renderer/src/components/base/base-setting-card.tsx', 'utf8')
   const settingsSection = readFileSync(
     'src/renderer/src/components/base/base-settings-section.tsx',
@@ -447,6 +451,10 @@ test('SettingItem has one canonical layout without legacy compatibility paths', 
   assert.match(settingItem, /setting-item__title-line/)
   assert.match(settingItem, /setting-item__description/)
   assert.match(settingItem, /\{actions\}/)
+  assert.match(settingSubgroup, /<Surface/)
+  assert.match(settingSubgroup, /variant="secondary"/)
+  assert.match(settingSubgroup, /role=\{label \? 'group' : undefined\}/)
+  assert.match(settingSubgroup, /setting-subgroup[\s\S]*border-l-2/)
   assert.match(settingHelp, /<Tooltip delay=\{200\}>/)
   assert.match(settingHelp, /ariaLabel = tr\('Description'\)/)
   assert.match(settingHelp, /<LuCircleHelp aria-hidden="true"/)
@@ -2199,6 +2207,9 @@ test('Appearance supports only the native application color scheme', () => {
   assert.match(appearance, /sections = \['interface', 'tray'\]/)
   assert.match(appearance, /showTray && \([\s\S]*System tray and floating window/)
   assert.match(appearance, /showInterface && \([\s\S]*Interface and windows/)
+  assert.equal(appearance.match(/<SettingSubgroup/g)?.length, 2)
+  assert.match(appearance, /divider=\{!localShowFloating\}/)
+  assert.match(appearance, /divider=\{!proxyInTray\}/)
   assert.match(appearance, /title=\{tr\('Background color'\)\}/)
   assert.match(appearance, /\{ id: 'system', label: tr\('Automatic'\) \}/)
   assert.match(appearance, /\{ id: 'dark', label: tr\('Dark'\) \}/)
