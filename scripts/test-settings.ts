@@ -1276,9 +1276,14 @@ test('desktop sidebar separates controls, live status and navigation', () => {
     sidebarSettings,
     /title: tr\('Current status'\)[\s\S]*id: 'profile'[\s\S]*id: 'app-routing'[\s\S]*id: 'proxy'[\s\S]*id: 'connection'[\s\S]*id: 'rule'[\s\S]*id: 'override'[\s\S]*id: 'log'/
   )
-  assert.match(sidebarSettings, /moveSiderItem/)
-  assert.match(sidebarSettings, /aria-label=\{`\$\{tr\('Move up'\)\}: \$\{item\.title\}`\}/)
-  assert.match(sidebarSettings, /aria-label=\{`\$\{tr\('Move down'\)\}: \$\{item\.title\}`\}/)
+  assert.match(sidebarSettings, /reorderSiderGroup/)
+  assert.match(sidebarSettings, /<DndContext/)
+  assert.match(sidebarSettings, /<SortableContext/)
+  assert.match(sidebarSettings, /useSortable\(\{ id: item\.id, disabled: !canReorder \}\)/)
+  assert.match(sidebarSettings, /sortableKeyboardCoordinates/)
+  assert.match(sidebarSettings, /data-sider-order-handle/)
+  assert.match(sidebarSettings, /aria-label=\{`\$\{tr\('Reorder'\)\}: \$\{item\.title\}`\}/)
+  assert.doesNotMatch(sidebarSettings, /LuArrowUp|LuArrowDown|tr\('Move up'\)|tr\('Move down'\)/)
   assert.match(sidebarSettings, /patchAppConfig\(\{ siderOrder: nextOrder \}\)/)
   assert.match(sidebarSettings, /isSelected=\{status !== 'hidden'\}/)
   assert.match(sidebarSettings, /group\.reorderable !== false && entries\.length > 1/)

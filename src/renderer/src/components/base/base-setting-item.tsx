@@ -13,6 +13,9 @@ export interface SettingItemProps {
   align?: 'start' | 'center'
   variant?: 'default' | 'compact'
   contentAlign?: 'start' | 'end'
+  rootRef?: React.Ref<HTMLDivElement>
+  rootStyle?: React.CSSProperties
+  rootClassName?: string
 }
 
 const SettingItem: React.FC<SettingItemProps> = (props) => {
@@ -25,7 +28,10 @@ const SettingItem: React.FC<SettingItemProps> = (props) => {
     divider = false,
     align = 'center',
     variant = 'default',
-    contentAlign = 'start'
+    contentAlign = 'start',
+    rootRef,
+    rootStyle,
+    rootClassName
   } = props
   const isCompact = variant === 'compact'
   const hasTitle = title !== null && title !== undefined && title !== false
@@ -35,13 +41,16 @@ const SettingItem: React.FC<SettingItemProps> = (props) => {
   return (
     <>
       <div
+        ref={rootRef}
+        style={rootStyle}
         className={cn(
           'setting-item select-text',
           align === 'start' ? 'setting-item--start' : 'setting-item--center',
           isCompact && 'setting-item--compact',
           isTitleless && 'setting-item--titleless',
           description && 'setting-item--described',
-          contentAlign === 'end' && 'setting-item--content-end'
+          contentAlign === 'end' && 'setting-item--content-end',
+          rootClassName
         )}
         data-setting-label={searchableLabel}
         tabIndex={searchableLabel ? -1 : undefined}

@@ -381,6 +381,7 @@ export const messages: Readonly<Record<string, string>> = {
     'Edit only the default rule set used by Kokoro profiles. Rules run in this order.',
   'Move up': 'Move up',
   'Move down': 'Move down',
+  Reorder: 'Reorder',
   'Save rules': 'Save rules',
   'Select an available RULE-SET provider': 'Select an available RULE-SET provider',
   'Select an available rule type and target': 'Select an available rule type and target',

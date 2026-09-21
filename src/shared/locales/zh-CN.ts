@@ -363,6 +363,7 @@ export const messages: Readonly<Record<string, string>> = {
     '仅编辑应用于 Kokoro 配置的 default 规则集，规则将按此顺序执行。',
   'Move up': '上移',
   'Move down': '下移',
+  Reorder: '调整顺序',
   'Save rules': '保存规则',
   'Select an available RULE-SET provider': '请选择可用的 RULE-SET provider',
   'Select an available rule type and target': '请选择可用的规则类型与目标',
