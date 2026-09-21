@@ -23,11 +23,13 @@ import useSWR from 'swr'
 import { useUnsavedChanges } from '@renderer/hooks/use-unsaved-changes'
 import { SiderIconButton } from '@renderer/components/sider/sider-surfaces'
 import { isSettingsFocusRoute } from '@renderer/components/sider/sider-presentation'
+import { loadSettingsSidebar } from '@renderer/components/settings/settings-sidebar-loader'
+import SettingsSidebarSkeleton from '@renderer/components/settings/settings-sidebar-skeleton'
 
 const ConfirmModal = lazy(() => import('@renderer/components/base/base-confirm'))
 const siderCardsPromise = import('@renderer/components/sider/sider-cards')
 const SiderCards = lazy(() => siderCardsPromise)
-const SettingsSidebar = lazy(() => import('@renderer/components/settings/settings-sidebar'))
+const SettingsSidebar = lazy(loadSettingsSidebar)
 const UpdaterButton = lazy(() => import('@renderer/components/updater/updater-button'))
 const MacOSServiceSetup = lazy(() => import('@renderer/components/mihomo/macos-service-setup'))
 
@@ -355,7 +357,9 @@ const App: React.FC = () => {
       {siderWidthValue === narrowWidth ? (
         <div style={{ width: `${narrowWidth}px` }} className="side h-full flex flex-col">
           {settingsFocusMode ? (
-            <Suspense fallback={<div className="min-h-0 flex-1" />}>
+            <Suspense
+              fallback={<SettingsSidebarSkeleton iconOnly useWindowFrame={useWindowFrame} />}
+            >
               <SettingsSidebar iconOnly leaveSettings={leaveSettings} />
             </Suspense>
           ) : (
@@ -380,6 +384,8 @@ const App: React.FC = () => {
                 <SiderIconButton
                   label={tr('Application settings')}
                   placement="right"
+                  onFocus={() => void loadSettingsSidebar()}
+                  onPointerEnter={() => void loadSettingsSidebar()}
                   onPress={() => navigate('/settings')}
                 >
                   <IoSettings aria-hidden="true" className="text-[20px]" />
@@ -394,7 +400,7 @@ const App: React.FC = () => {
           className="side h-full overflow-y-auto no-scrollbar"
         >
           {settingsFocusMode ? (
-            <Suspense fallback={null}>
+            <Suspense fallback={<SettingsSidebarSkeleton useWindowFrame={useWindowFrame} />}>
               <SettingsSidebar leaveSettings={leaveSettings} />
             </Suspense>
           ) : (
@@ -427,6 +433,8 @@ const App: React.FC = () => {
                         className="app-nodrag"
                         isIconOnly
                         variant="ghost"
+                        onFocus={() => void loadSettingsSidebar()}
+                        onPointerEnter={() => void loadSettingsSidebar()}
                         onPress={() => navigate('/settings')}
                       >
                         <IoSettings aria-hidden="true" className="text-[20px]" />

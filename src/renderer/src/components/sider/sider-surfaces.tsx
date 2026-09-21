@@ -148,6 +148,8 @@ interface SiderIconButtonProps {
   isDisabled?: boolean
   isPending?: boolean
   label: string
+  onFocus?: ButtonProps['onFocus']
+  onPointerEnter?: ButtonProps['onPointerEnter']
   onPress: NonNullable<ButtonProps['onPress']>
   placement?: 'top' | 'right' | 'bottom' | 'left'
   tooltip?: React.ReactNode
@@ -161,6 +163,8 @@ export const SiderIconButton: React.FC<SiderIconButtonProps> = ({
   isDisabled,
   isPending,
   label,
+  onFocus,
+  onPointerEnter,
   onPress,
   placement = 'top',
   tooltip,
@@ -177,6 +181,8 @@ export const SiderIconButton: React.FC<SiderIconButtonProps> = ({
         isPending={isPending}
         size="sm"
         variant={active ? 'secondary' : variant}
+        onFocus={onFocus}
+        onPointerEnter={onPointerEnter}
         onPress={onPress}
       >
         {children}

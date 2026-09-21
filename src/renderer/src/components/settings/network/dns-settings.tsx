@@ -10,9 +10,8 @@ import FeatureSettingsLayout, {
   FeatureSettingsSection
 } from '@renderer/components/base/base-feature-settings'
 import EditableList from '@renderer/components/base/base-list-editor'
-import AdvancedDnsSetting, {
-  advancedDnsSettingIds
-} from '@renderer/components/dns/advanced-dns-setting'
+import AdvancedDnsSetting from '@renderer/components/dns/advanced-dns-setting'
+import { advancedDnsSettingIds } from '@renderer/components/dns/advanced-dns-setting-ids'
 import DnsServerList from '@renderer/components/dns/dns-server-list'
 import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'
 import { useAppConfig } from '@renderer/hooks/use-app-config'

@@ -140,7 +140,7 @@ test('application settings keep one clear navigation hierarchy in compact deskto
     'utf8'
   )
 
-  assert.match(settingsSidebar, /getSettingsCategories\(\)/)
+  assert.match(settingsSidebar, /getSettingsSchema\(\)/)
   assert.match(settingsSidebar, /resolveSettingsSelection\(categories, searchParams\)/)
   assert.match(settingsSidebar, /aria-current=\{active \? 'page' : undefined\}/)
   assert.match(settingsSidebar, /event\.key\.toLowerCase\(\) === 'f'/)
@@ -266,7 +266,59 @@ test('Application Settings swaps sidebar content without changing its width', ()
   assert.doesNotMatch(presentation, /resolveSiderPresentationWidth|narrowWidth|userWidth/)
 })
 
+test('Settings sidebar preloads without importing the panel component tree', () => {
+  const app = readFileSync('src/renderer/src/App.tsx', 'utf8')
+  const routes = readFileSync('src/renderer/src/routes/route-pages.tsx', 'utf8')
+  const sidebar = readFileSync(
+    'src/renderer/src/components/settings/settings-sidebar.tsx',
+    'utf8'
+  )
+  const loader = readFileSync(
+    'src/renderer/src/components/settings/settings-sidebar-loader.ts',
+    'utf8'
+  )
+  const skeleton = readFileSync(
+    'src/renderer/src/components/settings/settings-sidebar-skeleton.tsx',
+    'utf8'
+  )
+  const schema = readFileSync(
+    'src/renderer/src/components/settings/settings-schema.ts',
+    'utf8'
+  )
+  const registry = readFileSync(
+    'src/renderer/src/components/settings/settings-registry.tsx',
+    'utf8'
+  )
+
+  assert.match(loader, /settingsSidebarPromise \?\?=/)
+  assert.match(loader, /import\('@renderer\/components\/settings\/settings-sidebar'\)/)
+  assert.match(app, /const SettingsSidebar = lazy\(loadSettingsSidebar\)/)
+  assert.equal(app.match(/onFocus=\{\(\) => void loadSettingsSidebar\(\)\}/g)?.length, 2)
+  assert.equal(app.match(/onPointerEnter=\{\(\) => void loadSettingsSidebar\(\)\}/g)?.length, 2)
+  assert.equal(app.match(/fallback=\{<SettingsSidebarSkeleton/g)?.length, 2)
+  assert.match(routes, /preloadSettingsSidebar,[\s\S]*SettingsPage\.preload/)
+
+  assert.match(sidebar, /from '\.\/settings-schema'/)
+  assert.match(sidebar, /getSettingsSchema\(\)/)
+  assert.doesNotMatch(sidebar, /settings-registry|getSettingsCategories/)
+  assert.match(registry, /getSettingsSchema\(\)\.map/)
+  assert.doesNotMatch(
+    schema,
+    /\.\/network\/(?:dns|tun|mihomo|sniffer|system-proxy)-settings|AppearanceConfig|GeneralConfig|GeoDataSettings/
+  )
+  assert.doesNotMatch(schema, /content:\s*\(\)/)
+
+  assert.match(skeleton, /h-12\.25/)
+  assert.match(skeleton, /h-9 w-full/)
+  assert.match(skeleton, /Array\.from\(\{ length: 7 \}/)
+  assert.doesNotMatch(skeleton, /animate-|spinner|Spinner|shimmer/i)
+})
+
 test('Mihomo settings belong to Core while legacy Network links normalize canonically', () => {
+  const schema = readFileSync(
+    'src/renderer/src/components/settings/settings-schema.ts',
+    'utf8'
+  )
   const registry = readFileSync(
     'src/renderer/src/components/settings/settings-registry.tsx',
     'utf8'
@@ -277,18 +329,18 @@ test('Mihomo settings belong to Core while legacy Network links normalize canoni
     'utf8'
   )
   const routes = readFileSync('src/renderer/src/routes/index.tsx', 'utf8')
-  const networkPanels = registry.slice(
-    registry.indexOf('const networkPanels:'),
-    registry.indexOf('const corePanels:')
+  const networkPanels = schema.slice(
+    schema.indexOf('const networkPanels:'),
+    schema.indexOf('const corePanels:')
   )
-  const corePanels = registry.slice(
-    registry.indexOf('const corePanels:'),
-    registry.indexOf('const dataPanels:')
+  const corePanels = schema.slice(
+    schema.indexOf('const corePanels:'),
+    schema.indexOf('const dataPanels:')
   )
   const panelKeys = (source: string): string[] =>
     [...source.matchAll(/^ {4}\{\n {6}key: '([^']+)'/gm)].map((match) => match[1])
 
-  assert.match(registry, /key: 'network'/)
+  assert.match(schema, /key: 'network'/)
   assert.deepEqual(panelKeys(networkPanels), [
     'system-proxy',
     'tun',
@@ -297,18 +349,18 @@ test('Mihomo settings belong to Core while legacy Network links normalize canoni
     'sniffer'
   ])
   assert.deepEqual(panelKeys(corePanels), ['runtime', 'mihomo', 'environment'])
-  assert.doesNotMatch(networkPanels, /key: 'mihomo'|mihomo-ipv6|<Mihomo embedded/)
+  assert.doesNotMatch(networkPanels, /key: 'mihomo'|mihomo-ipv6/)
   assert.match(corePanels, /key: 'mihomo'/)
   assert.match(corePanels, /entry\('mihomo-ipv6'/)
   assert.match(corePanels, /entry\('mihomo-interface'/)
   assert.match(corePanels, /entry\('mihomo-ipv6', 'IPv6', tr\('Network and ports'\)/)
   assert.doesNotMatch(corePanels, /Core network|Port settings/)
-  assert.match(corePanels, /content: \(\) => <Mihomo embedded \/>/)
-  assert.match(registry, /content: \(\) => <Sysproxy embedded \/>/)
-  assert.match(registry, /content: \(\) => <Tun embedded \/>/)
-  assert.match(registry, /content: \(\) => <DNS embedded \/>/)
-  assert.match(registry, /content: \(\) => <NetworkBehaviorSettings \/>/)
-  assert.match(registry, /content: \(\) => <Sniffer embedded \/>/)
+  assert.match(registry, /mihomo: \(\) => <Mihomo embedded \/>/)
+  assert.match(registry, /'system-proxy': \(\) => <Sysproxy embedded \/>/)
+  assert.match(registry, /tun: \(\) => <Tun embedded \/>/)
+  assert.match(registry, /dns: \(\) => <DNS embedded \/>/)
+  assert.match(registry, /'network-behavior': \(\) => <NetworkBehaviorSettings \/>/)
+  assert.match(registry, /sniffer: \(\) => <Sniffer embedded \/>/)
   assert.match(settings, /selectedPanels/)
   assert.match(settings, /selectedPanel\?\.content\(\)/)
   assert.match(routes, /settings\?section=core&panel=mihomo/)
@@ -2123,6 +2175,10 @@ test('common settings choices use the shared segmented control', () => {
 })
 
 test('core settings combine service management with runtime while preserving its section', () => {
+  const schema = readFileSync(
+    'src/renderer/src/components/settings/settings-schema.ts',
+    'utf8'
+  )
   const registry = readFileSync(
     'src/renderer/src/components/settings/settings-registry.tsx',
     'utf8'
@@ -2133,17 +2189,17 @@ test('core settings combine service management with runtime while preserving its
   )
   const environment = readFileSync('src/renderer/src/components/mihomo/env-setting.tsx', 'utf8')
 
-  assert.match(registry, /const corePanels:/)
-  assert.match(registry, /key: 'runtime'/)
-  assert.match(registry, /content: \(\) => <CoreExecutionSettings \/>/)
-  assert.doesNotMatch(registry, /key: 'service'/)
+  assert.match(schema, /const corePanels:/)
+  assert.match(schema, /key: 'runtime'/)
+  assert.match(registry, /runtime: \(\) => <CoreExecutionSettings \/>/)
+  assert.doesNotMatch(schema, /key: 'service'/)
   assert.doesNotMatch(registry, /ServiceManagementSettings/)
-  assert.match(registry, /entry\('elevation-status'[\s\S]*panel: 'runtime'/)
-  assert.match(registry, /entry\('service-status'[\s\S]*panel: 'runtime'/)
-  assert.match(registry, /key: 'environment'/)
-  assert.match(registry, /content: \(\) => <EnvSetting \/>/)
-  assert.match(registry, /entries: corePanels\.flatMap/)
-  assert.match(registry, /panels: corePanels/)
+  assert.match(schema, /entry\('elevation-status'[\s\S]*panel: 'runtime'/)
+  assert.match(schema, /entry\('service-status'[\s\S]*panel: 'runtime'/)
+  assert.match(schema, /key: 'environment'/)
+  assert.match(registry, /environment: \(\) => <EnvSetting \/>/)
+  assert.match(schema, /entries: corePanels\.flatMap/)
+  assert.match(schema, /panels: corePanels/)
   assert.match(runtime, /sections\.includes\('runtime'\)/)
   assert.match(runtime, /sections\.includes\('service'\)/)
   assert.match(runtime, /sectionHeadings\?: Partial<Record<CoreRuntimeSection, boolean>>/)
@@ -2155,6 +2211,10 @@ test('core settings combine service management with runtime while preserving its
 })
 
 test('data settings separate subscriptions, backups, integrations and Geo databases', () => {
+  const schema = readFileSync(
+    'src/renderer/src/components/settings/settings-schema.ts',
+    'utf8'
+  )
   const registry = readFileSync(
     'src/renderer/src/components/settings/settings-registry.tsx',
     'utf8'
@@ -2164,16 +2224,16 @@ test('data settings separate subscriptions, backups, integrations and Geo databa
     'utf8'
   )
 
-  assert.match(registry, /const dataPanels:/)
-  assert.match(registry, /key: 'subscriptions'/)
-  assert.match(registry, /content: \(\) => <SubscriptionDataSettings \/>/)
-  assert.match(registry, /key: 'backup'/)
-  assert.match(registry, /content: \(\) => <WebdavConfig \/>/)
-  assert.match(registry, /key: 'integrations'/)
+  assert.match(schema, /const dataPanels:/)
+  assert.match(schema, /key: 'subscriptions'/)
+  assert.match(registry, /subscriptions: \(\) => <SubscriptionDataSettings \/>/)
+  assert.match(schema, /key: 'backup'/)
+  assert.match(registry, /backup: \(\) => <WebdavConfig \/>/)
+  assert.match(schema, /key: 'integrations'/)
   assert.match(registry, /<GistIntegrationSettings \/>/)
-  assert.match(registry, /key: 'geo-data'/)
-  assert.match(registry, /label: tr\('Geo databases'\)/)
-  assert.match(registry, /content: \(\) => <GeoDataSettings \/>/)
+  assert.match(schema, /key: 'geo-data'/)
+  assert.match(schema, /label: tr\('Geo databases'\)/)
+  assert.match(registry, /'geo-data': \(\) => <GeoDataSettings \/>/)
   for (const settingId of [
     'geoip-dat-url',
     'geoip-mmdb-url',
@@ -2184,10 +2244,10 @@ test('data settings separate subscriptions, backups, integrations and Geo databa
     'geo-update-interval',
     'geo-update-now'
   ]) {
-    assert.match(registry, new RegExp(`entry\\('${settingId}'`))
+    assert.match(schema, new RegExp(`entry\\('${settingId}'`))
   }
-  assert.match(registry, /entries: dataPanels\.flatMap/)
-  assert.match(registry, /panels: dataPanels/)
+  assert.match(schema, /entries: dataPanels\.flatMap/)
+  assert.match(schema, /panels: dataPanels/)
   assert.match(integrations, /showSubscriptionHeading\?: boolean/)
   assert.match(integrations, /showSubscriptionHeading=\{false\}/)
   assert.match(integrations, /hasSubscriptionSection = sections\.includes\('subscription'\)/)
@@ -2199,13 +2259,13 @@ test('keyboard shortcuts are grouped by application concern', () => {
     'src/renderer/src/components/settings/shortcut-config.tsx',
     'utf8'
   )
-  const registry = readFileSync(
-    'src/renderer/src/components/settings/settings-registry.tsx',
+  const schema = readFileSync(
+    'src/renderer/src/components/settings/settings-schema.ts',
     'utf8'
   )
-  const shortcutRegistry = registry.slice(
-    registry.indexOf("key: 'shortcuts'"),
-    registry.indexOf("key: 'diagnostics'")
+  const shortcutSchema = schema.slice(
+    schema.indexOf("key: 'shortcuts'"),
+    schema.indexOf("key: 'diagnostics'")
   )
 
   assert.match(shortcuts, /const shortcutGroups: ShortcutGroup\[\] =/)
@@ -2216,33 +2276,37 @@ test('keyboard shortcuts are grouped by application concern', () => {
   assert.match(shortcuts, /shortcutGroups\.map\(\(group\) =>/)
   assert.match(shortcuts, /divider=\{index < group\.shortcuts\.length - 1\}/)
   assert.doesNotMatch(shortcuts, /header=\{tr\('Keyboard shortcuts'\)\}/)
-  assert.match(shortcutRegistry, /shortcut-toggle-window'[\s\S]*tr\('Window'\)/)
-  assert.match(shortcutRegistry, /shortcut-toggle-system-proxy'[\s\S]*tr\('Network'\)/)
-  assert.match(shortcutRegistry, /shortcut-rule-mode'[\s\S]*tr\('Proxy mode'\)/)
-  assert.match(shortcutRegistry, /shortcut-keep-core'[\s\S]*tr\('Application'\)/)
+  assert.match(shortcutSchema, /shortcut-toggle-window'[\s\S]*tr\('Window'\)/)
+  assert.match(shortcutSchema, /shortcut-toggle-system-proxy'[\s\S]*tr\('Network'\)/)
+  assert.match(shortcutSchema, /shortcut-rule-mode'[\s\S]*tr\('Proxy mode'\)/)
+  assert.match(shortcutSchema, /shortcut-keep-core'[\s\S]*tr\('Application'\)/)
 })
 
 test('diagnostics settings separate logs, maintenance and lifecycle actions', () => {
+  const schema = readFileSync(
+    'src/renderer/src/components/settings/settings-schema.ts',
+    'utf8'
+  )
   const registry = readFileSync(
     'src/renderer/src/components/settings/settings-registry.tsx',
     'utf8'
   )
   const actions = readFileSync('src/renderer/src/components/settings/actions.tsx', 'utf8')
 
-  assert.match(registry, /const diagnosticsPanels:/)
-  assert.match(registry, /key: 'logs'/)
-  assert.match(registry, /content: \(\) => <LogSetting \/>/)
-  assert.match(registry, /key: 'maintenance'/)
+  assert.match(schema, /const diagnosticsPanels:/)
+  assert.match(schema, /key: 'logs'/)
+  assert.match(registry, /logs: \(\) => <LogSetting \/>/)
+  assert.match(schema, /key: 'maintenance'/)
   assert.match(registry, /<Actions sections=\{\['application', 'diagnostics'\]\} \/>/)
-  assert.match(registry, /key: 'lifecycle'/)
-  assert.match(registry, /key: 'lifecycle',[\s\S]{0,80}label: tr\('Version and lifecycle'\)/)
-  assert.match(registry, /entry\('app-version', tr\('App version'\), tr\('Version information'\)/)
+  assert.match(schema, /key: 'lifecycle'/)
+  assert.match(schema, /key: 'lifecycle',[\s\S]{0,80}label: tr\('Version and lifecycle'\)/)
+  assert.match(schema, /entry\('app-version', tr\('App version'\), tr\('Version information'\)/)
   assert.match(
     registry,
     /<Actions sections=\{\['version', 'danger'\]\} showVersionHeading=\{false\} \/>/
   )
-  assert.match(registry, /entries: diagnosticsPanels\.flatMap/)
-  assert.match(registry, /panels: diagnosticsPanels/)
+  assert.match(schema, /entries: diagnosticsPanels\.flatMap/)
+  assert.match(schema, /panels: diagnosticsPanels/)
   assert.match(actions, /export type ActionSection/)
   assert.match(actions, /sections\.includes\('application'\)/)
   assert.match(actions, /sections\.includes\('diagnostics'\)/)
@@ -2290,27 +2354,31 @@ test('Appearance supports only the native application color scheme', () => {
     'src/renderer/src/components/settings/appearance-confis.tsx',
     'utf8'
   )
+  const schema = readFileSync(
+    'src/renderer/src/components/settings/settings-schema.ts',
+    'utf8'
+  )
   const registry = readFileSync(
     'src/renderer/src/components/settings/settings-registry.tsx',
     'utf8'
   )
   const rendererIpc = readFileSync('src/renderer/src/utils/ipc.ts', 'utf8')
   const mainIpc = readFileSync('src/main/utils/ipc.ts', 'utf8')
-  const appearancePanels = registry.slice(
-    registry.indexOf('const appearancePanels:'),
-    registry.indexOf('const networkPanels:')
+  const appearancePanels = schema.slice(
+    schema.indexOf('const appearancePanels:'),
+    schema.indexOf('const networkPanels:')
   )
   const panelKeys = [...appearancePanels.matchAll(/^ {4}\{\n {6}key: '([^']+)'/gm)].map(
     (match) => match[1]
   )
 
   assert.deepEqual(panelKeys, ['interface', 'tray-floating', 'sidebar', 'performance'])
-  assert.match(registry, /entries: appearancePanels\.flatMap\(\(panel\) => panel\.entries\)/)
-  assert.match(registry, /panels: appearancePanels/)
-  assert.match(appearancePanels, /<AppearanceConfig sections=\{\['interface'\]\} \/>/)
-  assert.match(appearancePanels, /<AppearanceConfig sections=\{\['tray'\]\} \/>/)
-  assert.match(appearancePanels, /key: 'sidebar'[\s\S]*content: \(\) => <SiderConfig \/>/)
-  assert.match(appearancePanels, /key: 'performance'[\s\S]*content: \(\) => <PerformanceConfig \/>/)
+  assert.match(schema, /entries: appearancePanels\.flatMap\(\(panel\) => panel\.entries\)/)
+  assert.match(schema, /panels: appearancePanels/)
+  assert.match(registry, /interface: \(\) => <AppearanceConfig sections=\{\['interface'\]\} \/>/)
+  assert.match(registry, /'tray-floating': \(\) => <AppearanceConfig sections=\{\['tray'\]\} \/>/)
+  assert.match(registry, /sidebar: \(\) => <SiderConfig \/>/)
+  assert.match(registry, /performance: \(\) => <PerformanceConfig \/>/)
   assert.match(appearance, /sections = \['interface', 'tray'\]/)
   assert.match(appearance, /showTray && \([\s\S]*System tray and floating window/)
   assert.match(appearance, /showInterface && \([\s\S]*Interface and windows/)
@@ -2322,7 +2390,7 @@ test('Appearance supports only the native application color scheme', () => {
   assert.match(appearance, /\{ id: 'dark', label: tr\('Dark'\) \}/)
   assert.match(appearance, /\{ id: 'light', label: tr\('Light'\) \}/)
   assert.doesNotMatch(appearance, /customTheme|Custom theme|importThemes|writeTheme|applyTheme/)
-  assert.doesNotMatch(registry, /entry\('theme'|Custom theme/)
+  assert.doesNotMatch(schema, /entry\('theme'|Custom theme/)
   assert.doesNotMatch(
     rendererIpc,
     /export async function (?:resolveThemes|importThemes|readTheme|writeTheme|applyTheme)/

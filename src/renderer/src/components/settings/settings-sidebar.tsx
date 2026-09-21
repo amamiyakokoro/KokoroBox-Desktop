@@ -7,7 +7,7 @@ import { platform } from '@renderer/utils/init'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { LuArrowLeft, LuChevronRight, LuSearch } from 'react-icons/lu'
 import { useSearchParams } from 'react-router-dom'
-import { getSettingsCategories, type SettingsCategory } from './settings-registry'
+import { getSettingsSchema, type SettingsCategory } from './settings-schema'
 import {
   resolveSettingsSelection,
   searchSettings,
@@ -72,7 +72,7 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = ({ iconOnly = false, lea
   const [search, setSearch] = useState('')
   const [searchOpen, setSearchOpen] = useState(false)
   const searchInputRef = useRef<HTMLInputElement>(null)
-  const categories = useMemo(() => getSettingsCategories(), [])
+  const categories = useMemo(() => getSettingsSchema(), [])
   const { category } = useMemo(
     () => resolveSettingsSelection(categories, searchParams),
     [categories, searchParams]

@@ -2,21 +2,26 @@ import {
   findSettingsEntry,
   legacyCategoryAliases,
   type SettingsCategory,
-  type SettingsCategoryDefinition,
-  type SettingsEntryDefinition,
-  type SettingsPanelDefinition
-} from './settings-registry'
+  type SettingsCategorySchema,
+  type SettingsEntryDefinition
+} from './settings-schema'
 
-export interface SettingsSelection {
+type SettingsPanelOf<TCategory extends SettingsCategorySchema> = NonNullable<
+  TCategory['panels']
+>[number]
+
+export interface SettingsSelection<
+  TCategory extends SettingsCategorySchema = SettingsCategorySchema
+> {
   category: SettingsCategory
   requestedSetting: ReturnType<typeof findSettingsEntry>
-  selected: SettingsCategoryDefinition
-  selectedPanel?: SettingsPanelDefinition
-  selectedPanels: SettingsPanelDefinition[]
+  selected: TCategory
+  selectedPanel?: SettingsPanelOf<TCategory>
+  selectedPanels: SettingsPanelOf<TCategory>[]
 }
 
 export interface SettingsSearchResult {
-  category: SettingsCategoryDefinition
+  category: SettingsCategorySchema
   entry: SettingsEntryDefinition
   panelLabel?: string
 }
@@ -44,10 +49,10 @@ export const normalizeLegacySettingsSearchParams = (
   return changed ? nextParams : undefined
 }
 
-export const resolveSettingsSelection = (
-  categories: SettingsCategoryDefinition[],
+export const resolveSettingsSelection = <TCategory extends SettingsCategorySchema>(
+  categories: TCategory[],
   searchParams: URLSearchParams
-): SettingsSelection => {
+): SettingsSelection<TCategory> => {
   const resolvedSearchParams = normalizeLegacySettingsSearchParams(searchParams) ?? searchParams
   const requestedCategory = resolvedSearchParams.get('section')
   const requestedSetting = findSettingsEntry(categories, resolvedSearchParams.get('setting'))
@@ -60,7 +65,7 @@ export const resolveSettingsSelection = (
       : (requestedSetting?.category.key ?? 'general')
   const selected = categories.find((item) => item.key === category) ?? categories[0]
   const requestedPanel = resolvedSearchParams.get('panel') ?? requestedSetting?.entry.panel
-  const selectedPanels = selected.panels ?? []
+  const selectedPanels = (selected.panels ?? []) as SettingsPanelOf<TCategory>[]
   const selectedPanel =
     selectedPanels.find((panel) => panel.key === requestedPanel) ?? selectedPanels[0]
 
@@ -68,7 +73,7 @@ export const resolveSettingsSelection = (
 }
 
 export const searchSettings = (
-  categories: SettingsCategoryDefinition[],
+  categories: SettingsCategorySchema[],
   search: string
 ): SettingsSearchResult[] => {
   const normalizedSearch = search.trim().toLocaleLowerCase()

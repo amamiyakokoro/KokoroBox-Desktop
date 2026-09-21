@@ -75,7 +75,7 @@ test('DNS settings use sectioned, container-responsive list editors', () => {
     'utf8'
   )
   const registry = readFileSync(
-    'src/renderer/src/components/settings/settings-registry.tsx',
+    'src/renderer/src/components/settings/settings-schema.ts',
     'utf8'
   )
   const styles = readFileSync('src/renderer/src/assets/app-overrides.css', 'utf8')

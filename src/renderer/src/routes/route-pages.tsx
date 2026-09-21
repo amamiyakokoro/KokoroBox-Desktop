@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { onInitialContentReady } from '@renderer/utils/startup'
 import { createPreloadablePage } from './preloadable-page'
+import { preloadSettingsSidebar } from '@renderer/components/settings/settings-sidebar-loader'
 
 const OverridePage = createPreloadablePage(() => import('@renderer/pages/override'))
 const ProxiesPage = createPreloadablePage(() => import('@renderer/pages/proxies'))
@@ -27,6 +28,7 @@ export const AppRouting = AppRoutingPage.Page
 void ProxiesPage.preload().catch(() => {})
 
 const remainingPageLoaders: Array<() => Promise<unknown>> = [
+  preloadSettingsSidebar,
   SettingsPage.preload,
   ProfilesPage.preload,
   KokoroPage.preload,

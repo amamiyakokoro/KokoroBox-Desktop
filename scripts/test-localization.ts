@@ -304,7 +304,7 @@ test('Application settings search supports stable deep links to concrete rows', 
     'utf8'
   )
   const settingsRegistry = readFileSync(
-    'src/renderer/src/components/settings/settings-registry.tsx',
+    'src/renderer/src/components/settings/settings-schema.ts',
     'utf8'
   )
   const settingItem = readFileSync('src/renderer/src/components/base/base-setting-item.tsx', 'utf8')
