@@ -146,6 +146,11 @@ test('KokoroBox-owned surfaces share the native wind-chime brand mark', () => {
   assert.match(icon, /SVGProps<SVGSVGElement>/)
   assert.equal(icon.match(/<path /g)?.length, 1)
   assert.equal(app.match(/<KokoroBoxIcon /g)?.length, 2)
+  assert.equal(
+    app.match(/platform !== 'darwin' && (?:\(\s*)?<KokoroBoxIcon/g)?.length,
+    2
+  )
+  assert.match(app, /<h3 className="text-lg font-bold leading-8">KokoroBox<\/h3>/)
   assert.equal(floatingApp.match(/<KokoroBoxIcon /g)?.length, 1)
   assert.doesNotMatch(app, /MihomoIcon/)
   assert.doesNotMatch(floatingApp, /MihomoIcon/)

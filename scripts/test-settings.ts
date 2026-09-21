@@ -243,6 +243,13 @@ test('Application Settings swaps sidebar content without changing its width', ()
   assert.match(settingsSidebar, /aria-label=\{tr\('Back to application'\)\}/)
   assert.match(settingsSidebar, /onPress=\{leaveSettings\}/)
   assert.match(settingsSidebar, /<LuArrowLeft/)
+  assert.match(settingsSidebar, /'app-drag flex h-12\.25 shrink-0 items-center px-2'/)
+  assert.match(settingsSidebar, /platform === 'darwin' && 'pl-18'/)
+  assert.match(
+    settingsSidebar,
+    /className="app-nodrag h-9 w-full min-w-0 justify-start gap-2 rounded-lg px-2\.5 font-semibold"/
+  )
+  assert.match(settingsSidebar, /<Button[\s\S]*?size="sm"[\s\S]*?variant="ghost"/)
   assert.match(settingsSidebar, /iconOnly \? \(/)
   assert.match(settingsSidebar, /<Popover isOpen=\{searchOpen\}/)
   assert.match(app, /calc\(100% - \$\{siderWidthValue \+ 1\}px\)/)

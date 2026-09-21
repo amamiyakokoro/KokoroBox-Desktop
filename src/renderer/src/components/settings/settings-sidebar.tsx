@@ -235,8 +235,9 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = ({ iconOnly = false, lea
         )}
       >
         <Button
+          size="sm"
           variant="ghost"
-          className="app-nodrag min-w-0 justify-start px-2 font-semibold"
+          className="app-nodrag h-9 w-full min-w-0 justify-start gap-2 rounded-lg px-2.5 font-semibold"
           aria-label={tr('Back to application')}
           onPress={leaveSettings}
         >
