@@ -37,6 +37,8 @@ The active backend is returned by the process-router status API and shown next t
 
 The official deb, rpm and pacman package definitions declare the user-space dependencies. Kernel configuration remains distribution-specific.
 
+The Desktop sends authenticated policy and lifecycle requests to the service. It never starts or supervises the privileged Linux Process Router directly.
+
 ## Rule and lifecycle semantics
 
 - Linux rules can match either an exact, absolute executable path or an exact executable name. Name matching uses the basename reported by `/proc/<pid>/exe`, so it remains stable across symlinks and versioned installation directories. Wildcards are rejected.

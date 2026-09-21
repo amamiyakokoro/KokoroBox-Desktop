@@ -1,20 +1,14 @@
 import { BrowserWindow } from 'electron'
-import { spawn, type ChildProcess } from 'child_process'
 import {
   appRoutingSupported,
   isAppRoutingRuleEffectivelyEnabled,
   validateAppRoutingConfig
 } from '../../shared/app-routing'
-import { getAppConfig } from '../config/app'
 import { appendAppLog } from '../utils/log'
-import { isRunningAsAdmin } from '../utils/elevation'
-import { processRouterDir, processRouterPath } from '../utils/dirs'
 import { getAppRoutingConfig, saveAppRoutingConfig } from './config'
-import { appRoutingProxyPort, appRoutingSocksPort, buildProcessRouterCommand } from './profile'
+import { appRoutingProxyPort, appRoutingSocksPort } from './profile'
 import { prepareAppRoutingConfig } from './rules'
 import { canConnectToAppRoutingListener } from './health'
-import { verifyProcessRouterIntegrity } from './integrity'
-import { parseProcessRouterEvent } from './protocol'
 import {
   getProcessRouterStatus,
   repairProcessRouterFirewall,
@@ -31,35 +25,16 @@ import {
 } from './service-protocol'
 import { reconcileMacAppRouting, stopMacAppRouting } from './macos'
 import { macAppRoutingOperatingSystemSupported } from './macos-profile'
-import {
-  appRoutingFirewallProbeIntervalMs,
-  checkAppRoutingFirewall,
-  ensureAppRoutingFirewall,
-  removeAppRoutingFirewall
-} from './firewall'
 
 const probeIntervalMs = 3000
-const restartDelayMs = 1500
-const commandTimeoutMs = 5000
-let child: ChildProcess | undefined
-let activePort: number | undefined
-let rulesApplied = false
-let activePolicyKey = ''
-let pendingPolicyKey = ''
-let pendingPolicyStartedAt = 0
 let monitor: NodeJS.Timeout | undefined
-let restartTimer: NodeJS.Timeout | undefined
 let stopping = false
-const expectedExits = new WeakSet<ChildProcess>()
 let operation: Promise<void> | undefined
 let reconcileRequested = false
 let configGeneration = 0
-let activeBackend: 'direct' | 'service' | undefined
 let servicePolicyKey = ''
 let serviceStopped = false
 let serviceAuthenticationBlocked = false
-let directFirewallReady = false
-let lastDirectFirewallCheck = 0
 let status: AppRoutingStatus = {
   supported: appRoutingSupported(process.platform, process.arch),
   state: appRoutingSupported(process.platform, process.arch) ? 'disabled' : 'unsupported',
@@ -153,8 +128,6 @@ async function reconcileService(config: AppRoutingConfig): Promise<void> {
   if (serviceAuthenticationBlocked) {
     throw new Error('KokoroBox Service 认证已失效，请在内核设置中重置认证')
   }
-  if (activeBackend === 'direct') await stopDirectRouter()
-  else await stopChild()
   const policyKey = String(configGeneration)
   const platform = process.platform === 'linux' ? 'linux' : 'windows'
   const proxyPort = appRoutingProxyPort(process.platform)
@@ -210,199 +183,6 @@ async function disableServiceRouter(allowUnavailable = false): Promise<void> {
   servicePolicyKey = ''
 }
 
-function clearRestartTimer(): void {
-  if (restartTimer) clearTimeout(restartTimer)
-  restartTimer = undefined
-}
-
-function sendRouterCommand(target: ChildProcess, command: string): void {
-  if (!target.stdin?.writable) throw new Error('Packet interception control channel is unavailable')
-  target.stdin.write(`${command}\n`)
-}
-
-async function stopChild(): Promise<void> {
-  clearRestartTimer()
-  const runningChild = child
-  if (!runningChild || runningChild.exitCode !== null) {
-    child = undefined
-    activePort = undefined
-    rulesApplied = false
-    activePolicyKey = ''
-    pendingPolicyKey = ''
-    pendingPolicyStartedAt = 0
-    return
-  }
-  expectedExits.add(runningChild)
-  if (runningChild.stdin?.writable) {
-    sendRouterCommand(runningChild, '{"version":1,"command":"shutdown"}')
-  }
-  await new Promise<void>((resolve, reject) => {
-    const timeout = setTimeout(
-      () => reject(new Error('Timed out while stopping the packet interception sidecar')),
-      2000
-    )
-    runningChild.once('exit', () => {
-      clearTimeout(timeout)
-      resolve()
-    })
-    setTimeout(() => {
-      if (runningChild.exitCode === null) runningChild.kill()
-    }, 500).unref()
-  })
-  if (child === runningChild) child = undefined
-  activePort = undefined
-  rulesApplied = false
-  activePolicyKey = ''
-  pendingPolicyKey = ''
-  pendingPolicyStartedAt = 0
-}
-
-async function ensureDirectFirewall(force = false): Promise<void> {
-  if (
-    !force &&
-    directFirewallReady &&
-    Date.now() - lastDirectFirewallCheck < appRoutingFirewallProbeIntervalMs
-  ) {
-    return
-  }
-  lastDirectFirewallCheck = Date.now()
-  try {
-    await checkAppRoutingFirewall()
-    directFirewallReady = true
-    return
-  } catch {
-    directFirewallReady = false
-  }
-  await ensureAppRoutingFirewall()
-  directFirewallReady = true
-}
-
-async function stopDirectRouter(): Promise<void> {
-  const stopError = await stopChild().then(
-    () => undefined,
-    (error: unknown) => error
-  )
-  directFirewallReady = false
-  lastDirectFirewallCheck = 0
-  const firewallError = await removeAppRoutingFirewall().then(
-    () => undefined,
-    (error: unknown) => error
-  )
-  if (stopError || firewallError) {
-    throw new AggregateError(
-      [stopError, firewallError].filter((error) => error !== undefined),
-      '停止 Windows 应用分流失败'
-    )
-  }
-}
-
-async function startChild(
-  config: AppRoutingConfig,
-  port: number,
-  requiresMihomo: boolean,
-  mihomoAvailable: boolean,
-  policyKey: string
-): Promise<void> {
-  publishStatus({
-    supported: true,
-    state: 'starting',
-    proxyPort: requiresMihomo ? port : undefined,
-    mihomoAvailable,
-    firewallReady: directFirewallReady,
-    protectedApplicationCount: requiresMihomo
-      ? config.rules.filter(
-          (rule) => isAppRoutingRuleEffectivelyEnabled(config, rule) && rule.action === 'proxy'
-        ).length
-      : 0
-  })
-  const executable = processRouterPath()
-  const nextChild = spawn(executable, [], {
-    cwd: processRouterDir(),
-    windowsHide: true,
-    shell: false,
-    stdio: ['pipe', 'pipe', 'pipe']
-  })
-  child = nextChild
-  rulesApplied = false
-  activePolicyKey = ''
-  pendingPolicyKey = policyKey
-  pendingPolicyStartedAt = Date.now()
-  activePort = port
-  let outputBuffer = ''
-  nextChild.stdout?.setEncoding('utf8')
-  nextChild.stdout?.on('data', (chunk: string) => {
-    outputBuffer += chunk
-    const lines = outputBuffer.split('\n')
-    outputBuffer = lines.pop() || ''
-    for (const line of lines) {
-      if (!line.trim()) continue
-      try {
-        const event = parseProcessRouterEvent(line)
-        if (event.event === 'rules_replaced') {
-          rulesApplied = true
-          activePolicyKey = pendingPolicyKey
-          pendingPolicyKey = ''
-          pendingPolicyStartedAt = 0
-          void reconcileAppRouting()
-        }
-        if (event.event === 'error') {
-          rulesApplied = false
-          pendingPolicyKey = ''
-          pendingPolicyStartedAt = 0
-          void appendAppLog(`[App routing]: router command failed, ${event.message || 'unknown'}\n`)
-        }
-      } catch {
-        void appendAppLog('[App routing]: rejected incompatible router output\n')
-        if (nextChild.exitCode === null) nextChild.kill()
-      }
-    }
-  })
-  nextChild.stderr?.setEncoding('utf8')
-  let errorBuffer = ''
-  nextChild.stderr?.on('data', (chunk: string) => {
-    errorBuffer += chunk
-    const lines = errorBuffer.split('\n')
-    errorBuffer = lines.pop() || ''
-    for (const rawLine of lines) {
-      const line = rawLine.trim()
-      if (!line) continue
-      if (line.startsWith('diagnostic ')) {
-        void appendAppLog(`[App routing diagnostic]: ${line.slice('diagnostic '.length, 1000)}\n`)
-      } else {
-        void appendAppLog(`[App routing]: router error, ${line.slice(0, 1000)}\n`)
-      }
-    }
-  })
-  let terminationHandled = false
-  const handleTermination = (message: string): void => {
-    if (terminationHandled) return
-    terminationHandled = true
-    if (child === nextChild) child = undefined
-    if (stopping || expectedExits.has(nextChild)) return
-    publishStatus({
-      supported: true,
-      state: 'error',
-      message,
-      proxyPort: requiresMihomo ? port : undefined,
-      mihomoAvailable: status.mihomoAvailable
-    })
-    restartTimer = setTimeout(() => {
-      void reconcileAppRouting()
-    }, restartDelayMs)
-  }
-  nextChild.once('error', (error) => {
-    void appendAppLog(`[App routing]: sidecar failed to start, ${error.message}\n`)
-    handleTermination('封包拦截组件启动失败')
-  })
-  nextChild.once('exit', () => {
-    handleTermination('封包拦截组件意外停止，正在重试')
-  })
-  nextChild.stdin?.on('error', () => {
-    if (nextChild.exitCode === null) nextChild.kill()
-  })
-  sendRouterCommand(nextChild, buildProcessRouterCommand(config, mihomoAvailable))
-}
-
 async function reconcile(): Promise<void> {
   if (!appRoutingSupported(process.platform, process.arch)) {
     publishStatus({ supported: false, state: 'unsupported', mihomoAvailable: false })
@@ -417,7 +197,7 @@ async function reconcile(): Promise<void> {
     })
     return
   }
-  const [config, appConfig] = await Promise.all([getAppRoutingConfig(), getAppConfig()])
+  const config = await getAppRoutingConfig()
   validateAppRoutingConfig(config)
   const enabledRules = config.rules.filter((rule) =>
     isAppRoutingRuleEffectivelyEnabled(config, rule)
@@ -441,18 +221,9 @@ async function reconcile(): Promise<void> {
     return
   }
   if (!config.enabled || enabledRules.length === 0) {
-    if (activeBackend === 'direct') await stopDirectRouter()
-    else await stopChild()
-    if (
-      process.platform === 'linux' ||
-      appConfig.corePermissionMode === 'service' ||
-      activeBackend === 'service'
-    ) {
-      await disableServiceRouter().catch((error) =>
-        appendAppLog(`[App routing]: failed to stop service router, ${error}\n`)
-      )
-    }
-    activeBackend = undefined
+    await disableServiceRouter(true).catch((error) =>
+      appendAppLog(`[App routing]: failed to stop service router, ${error}\n`)
+    )
     publishStatus({
       supported: true,
       state: 'disabled',
@@ -461,86 +232,7 @@ async function reconcile(): Promise<void> {
     })
     return
   }
-  const { corePermissionMode = 'elevated' } = appConfig
-  const ordinaryWindowsProcess = process.platform === 'win32' && !(await isRunningAsAdmin())
-  if (process.platform === 'linux' || corePermissionMode === 'service' || ordinaryWindowsProcess) {
-    await reconcileService(config)
-    activeBackend = 'service'
-    return
-  }
-  if (activeBackend === 'service' || !serviceStopped) {
-    await disableServiceRouter(activeBackend !== 'service')
-  }
-  activeBackend = 'direct'
-  const requiresMihomo = enabledRules.some((rule) => rule.action === 'proxy')
-  const proxyPort = appRoutingSocksPort
-  const mihomoAvailable = requiresMihomo ? await canConnectToAppRoutingListener(proxyPort) : false
-  const policyKey = `${configGeneration}:${requiresMihomo ? Number(mihomoAvailable) : 'direct'}`
-  if (
-    child &&
-    child.exitCode === null &&
-    pendingPolicyKey &&
-    Date.now() - pendingPolicyStartedAt > commandTimeoutMs
-  ) {
-    await appendAppLog('[App routing]: process router command timed out\n')
-    child.kill()
-    return
-  }
-  if (!child || child.exitCode !== null || activePort !== proxyPort) {
-    await stopChild()
-    try {
-      await verifyProcessRouterIntegrity()
-    } catch (error) {
-      await appendAppLog(`[App routing]: process router integrity check failed, ${error}\n`)
-      publishStatus({
-        supported: true,
-        state: 'error',
-        message: 'Windows 封包拦截组件缺失或已损坏',
-        mihomoAvailable,
-        protectedApplicationCount: config.rules.filter(
-          (rule) => isAppRoutingRuleEffectivelyEnabled(config, rule) && rule.action === 'proxy'
-        ).length
-      })
-      return
-    }
-    await ensureDirectFirewall(true)
-    await startChild(config, proxyPort, requiresMihomo, mihomoAvailable, policyKey)
-  } else {
-    await ensureDirectFirewall()
-  }
-  if (activePolicyKey !== policyKey && pendingPolicyKey !== policyKey) {
-    if (!child || child.exitCode !== null) {
-      throw new Error('封包拦截组件在规则更新前已停止')
-    }
-    rulesApplied = false
-    pendingPolicyKey = policyKey
-    pendingPolicyStartedAt = Date.now()
-    publishStatus({
-      supported: true,
-      state: 'starting',
-      proxyPort: requiresMihomo ? proxyPort : undefined,
-      mihomoAvailable,
-      protectedApplicationCount: config.rules.filter(
-        (rule) => isAppRoutingRuleEffectivelyEnabled(config, rule) && rule.action === 'proxy'
-      ).length
-    })
-    sendRouterCommand(child, buildProcessRouterCommand(config, mihomoAvailable))
-  }
-  const protectedApplicationCount = config.rules.filter(
-    (rule) => isAppRoutingRuleEffectivelyEnabled(config, rule) && rule.action === 'proxy'
-  ).length
-  publishStatus({
-    supported: true,
-    state: !rulesApplied ? 'starting' : requiresMihomo && !mihomoAvailable ? 'degraded' : 'running',
-    message:
-      !rulesApplied || !requiresMihomo || mihomoAvailable
-        ? undefined
-        : '代理核心不可用，受保护应用的网络连接已封锁',
-    proxyPort: requiresMihomo ? proxyPort : undefined,
-    mihomoAvailable,
-    firewallReady: directFirewallReady,
-    protectedApplicationCount
-  })
+  await reconcileService(config)
 }
 
 export function reconcileAppRouting(): Promise<void> {
@@ -553,16 +245,10 @@ export function reconcileAppRouting(): Promise<void> {
       try {
         await reconcile()
       } catch (error) {
-        if (activeBackend === 'direct') {
-          await stopDirectRouter().catch((cleanupError) =>
-            appendAppLog(`[App routing]: failed to clean up direct router, ${cleanupError}\n`)
-          )
-        }
         publishStatus({
           supported: appRoutingSupported(process.platform, process.arch),
           state: 'error',
           message: error instanceof Error ? error.message : String(error),
-          proxyPort: activePort,
           mihomoAvailable: false,
           firewallReady: false
         })
@@ -616,28 +302,15 @@ export async function repairAppRoutingFirewall(): Promise<AppRoutingStatus> {
   // Avoid racing a repair against a scheduled reconciliation pass.
   if (operation) await operation
 
-  const [config, appConfig] = await Promise.all([getAppRoutingConfig(), getAppConfig()])
-  const ordinaryWindowsProcess = !(await isRunningAsAdmin())
-  const useService =
-    activeBackend === 'service' ||
-    appConfig.corePermissionMode === 'service' ||
-    ordinaryWindowsProcess
+  const config = await getAppRoutingConfig()
   const hasActiveRules =
     config.enabled && config.rules.some((rule) => isAppRoutingRuleEffectivelyEnabled(config, rule))
 
-  if (useService) {
-    try {
-      const repaired = validateServiceProcessRouterStatus(await repairProcessRouterFirewall())
-      publishServiceStatus(repaired)
-      if (hasActiveRules) activeBackend = 'service'
-    } catch (error) {
-      throw serviceModeError(error)
-    }
-  } else {
-    await verifyProcessRouterIntegrity()
-    await ensureDirectFirewall(true)
-    publishStatus({ ...status, firewallReady: true })
-    if (hasActiveRules) activeBackend = 'direct'
+  try {
+    const repaired = validateServiceProcessRouterStatus(await repairProcessRouterFirewall())
+    publishServiceStatus(repaired)
+  } catch (error) {
+    throw serviceModeError(error)
   }
 
   if (hasActiveRules) await reconcileAppRouting()
@@ -655,7 +328,5 @@ export async function stopAppRouting(): Promise<void> {
   if (monitor) clearInterval(monitor)
   monitor = undefined
   if (process.platform === 'darwin') await stopMacAppRouting()
-  else if (activeBackend === 'service') await disableServiceRouter(true)
-  else if (activeBackend === 'direct') await stopDirectRouter()
-  else await stopChild()
+  else await disableServiceRouter(true)
 }

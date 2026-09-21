@@ -953,7 +953,7 @@ test('native build is pinned to the controlled KokoroBox ProxyBridge fork', () =
   assert.match(build, /process-router-sbom\.cdx\.json/)
 })
 
-test('Windows application routing requires the privileged firewall lifecycle', () => {
+test('Windows and Linux application routing use only the privileged service lifecycle', () => {
   const manager = readFileSync('src/main/app-routing/manager.ts', 'utf8')
   const firewall = readFileSync('src/main/app-routing/firewall.ts', 'utf8')
   const serviceProtocol = readFileSync('src/main/app-routing/service-protocol.ts', 'utf8')
@@ -965,25 +965,15 @@ test('Windows application routing requires the privileged firewall lifecycle', (
   const installer = readFileSync('build/installer.nsh', 'utf8')
 
   assert.match(firewall, /\['process-router', 'firewall', command\]/)
-  assert.match(manager, /ordinaryWindowsProcess = process\.platform === 'win32'/)
   assert.match(
     manager,
-    /corePermissionMode === 'service' \|\| ordinaryWindowsProcess\)[\s\S]*await reconcileService\(config\)/
+    /if \(!config\.enabled \|\| enabledRules\.length === 0\)[\s\S]*await disableServiceRouter\(true\)/
   )
-  assert.match(
-    manager,
-    /if \(activeBackend === 'service'\) await disableServiceRouter\(true\)[\s\S]*else if \(activeBackend === 'direct'\) await stopDirectRouter\(\)[\s\S]*else await stopChild\(\)/
-  )
-  assert.match(manager, /await ensureDirectFirewall\(true\)[\s\S]*await startChild\(/)
-  const firewallProbe = manager.slice(
-    manager.indexOf('async function ensureDirectFirewall'),
-    manager.indexOf('async function stopDirectRouter')
-  )
-  assert.ok(
-    firewallProbe.indexOf('await checkAppRoutingFirewall()') <
-      firewallProbe.indexOf('await ensureAppRoutingFirewall()')
-  )
-  assert.match(manager, /await stopDirectRouter\(\)/)
+  assert.match(manager, /await reconcileService\(config\)/)
+  assert.match(manager, /else await disableServiceRouter\(true\)/)
+  assert.doesNotMatch(manager, /child_process|spawn\(|startChild|stopChild|stopDirectRouter/)
+  assert.doesNotMatch(manager, /activeBackend|corePermissionMode|isRunningAsAdmin/)
+  assert.doesNotMatch(manager, /verifyProcessRouterIntegrity|ensureDirectFirewall/)
   assert.match(manager, /firewallReady: serviceStatus\.firewall_ready/)
   assert.match(manager, /repairProcessRouterFirewall\(\)/)
   assert.match(serviceApi, /post\('\/process-router\/firewall\/repair'\)/)
@@ -1216,7 +1206,10 @@ test('application rule composer uses a compact desktop toolbar workflow', () => 
   assert.match(page, /density="toolbar"/)
   assert.match(page, /size="sm"[\s\S]*variant="secondary"[\s\S]*tr\('Select applications'\)/)
   assert.match(page, /size="sm"[\s\S]*variant="primary"[\s\S]*tr\('Add pattern rule'\)/)
-  assert.match(page, /if \(event\.key === 'Enter' && processPattern\.trim\(\)\) void submitPattern\(\)/)
+  assert.match(
+    page,
+    /if \(event\.key === 'Enter' && processPattern\.trim\(\)\) void submitPattern\(\)/
+  )
   assert.match(page, /className="flex w-full max-w-6xl flex-col gap-4 p-4"/)
   assert.doesNotMatch(page, /mx-auto flex w-full max-w-5xl/)
 })

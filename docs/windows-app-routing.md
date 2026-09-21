@@ -88,13 +88,13 @@ helpers, and the router's own process. Loopback, IPv4 link-local, multicast, bro
 link-local, and IPv6 multicast destinations are also Direct to prevent loops and avoid
 intercepting local network control traffic.
 
-ProxyBridge requires administrator access for WinDivert. A normally launched Windows app
-therefore always uses the service backend, even when the Mihomo core itself runs directly.
-KokoroBox calls `/process-router/start`, `/stop`, `/rules`, `/status`, and `/cleanup` over the
-existing SID-bound, Ed25519-authenticated service connection. The service launches only the fixed
-packaged router path, never a caller-supplied executable or command line. Older or unavailable
-services are rejected without silently requesting UAC during application startup. The Direct
-backend is available only when the user explicitly launches KokoroBox as administrator.
+ProxyBridge requires administrator access for WinDivert. Windows application routing always uses
+the service backend, regardless of the Desktop or Mihomo core permission mode. KokoroBox calls
+`/process-router/start`, `/stop`, `/rules`, `/status`, and `/cleanup` over the existing SID-bound,
+Ed25519-authenticated service connection. The service launches and supervises only the fixed
+packaged router path, never a caller-supplied executable or command line. The Desktop never starts
+or supervises Process Router directly. Older or unavailable services are rejected without silently
+requesting UAC during application startup.
 
 The service uses a short client lease. Authenticated status polling renews it while KokoroBox is
 running. A normal exit stops the router immediately; if the UI crashes, lease expiry stops the
