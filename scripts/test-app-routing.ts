@@ -1133,8 +1133,15 @@ test('application routing rules use a compact identity-first list layout', () =>
   const row = readFileSync('src/renderer/src/components/app-routing/rule-row.tsx', 'utf8')
   const styles = readFileSync('src/renderer/src/assets/app-overrides.css', 'utf8')
 
-  assert.match(row, /grid-cols-\[2\.25rem_minmax\(0,1fr\)\]/)
-  assert.match(row, /row-span-2/)
+  assert.match(row, /className="app-routing-rule-row__layout"/)
+  assert.match(row, /className="app-routing-rule-row__icon/)
+  assert.match(row, /className="app-routing-rule-row__controls"/)
+  assert.match(row, /data-has-identifier-kind=\{hasIdentifierKindSelector\}/)
+  assert.match(
+    row,
+    /className="app-routing-rule-row__trailing"[\s\S]*<Switch[\s\S]*<KokoActionMenu/
+  )
+  assert.doesNotMatch(row, /grid-cols-\[2\.25rem_minmax\(0,1fr\)\]|row-span-2/)
   assert.match(row, /app-routing-default-icon\.svg\?url/)
   assert.match(row, /src=\{icon \|\| defaultApplicationIcon\}/)
   assert.doesNotMatch(page, /grid-cols-\[1fr_9rem_9rem_9rem\]/)
@@ -1174,6 +1181,13 @@ test('application routing rules use a compact identity-first list layout', () =>
   assert.match(row, /direct: 'bg-success'/)
   assert.match(row, /block: 'bg-danger'/)
   assert.match(styles, /\.app-routing-rule-list,[\s\S]*?background: var\(--surface\)/)
+  assert.match(styles, /container: app-routing-rule-row \/ inline-size/)
+  assert.match(
+    styles,
+    /\.app-routing-rule-row__layout[\s\S]*?'icon identity trailing'[\s\S]*?'icon controls controls'/
+  )
+  assert.match(styles, /@container app-routing-rule-row \(min-width: 48rem\)/)
+  assert.match(styles, /grid-template-areas: 'icon identity controls trailing'/)
   assert.match(styles, /\.app-routing-rule-row \+ \.app-routing-rule-row/)
   assert.match(styles, /\.app-routing-rule-row\[data-enabled='false'\]/)
 })
