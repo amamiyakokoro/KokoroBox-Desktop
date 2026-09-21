@@ -1,6 +1,6 @@
 import { tr } from '../../../../shared/i18n'
 import React, { useState } from 'react'
-import { Switch } from '@heroui/react'
+import { Disclosure, Switch } from '@heroui/react'
 import SettingItem from '../base/base-setting-item'
 import EditableList from '../base/base-list-editor'
 import { FeatureSettingsSection } from '../base/base-feature-settings'
@@ -8,7 +8,18 @@ import { KokoSelect, KokoTextField } from '../base/koko-form'
 import { isValidDnsServer, isValidDomainWildcard } from '@renderer/utils/validate'
 import DnsServerList from './dns-server-list'
 
+export const advancedDnsSettingIds = {
+  routingRules: 'dns-routing-rules',
+  directServers: 'dns-direct-servers',
+  proxyServers: 'dns-proxy-servers',
+  fallbackServers: 'dns-fallback-servers',
+  cache: 'dns-cache',
+  systemHosts: 'dns-system-hosts',
+  customHosts: 'dns-custom-hosts'
+} as const
+
 interface AdvancedDnsSettingProps {
+  expandForSetting?: string | null
   respectRules: boolean
   directNameserverFollowPolicy: boolean
   preferH3: boolean
@@ -41,6 +52,7 @@ interface AdvancedDnsSettingProps {
 }
 
 const AdvancedDnsSetting: React.FC<AdvancedDnsSettingProps> = ({
+  expandForSetting,
   respectRules,
   directNameserverFollowPolicy,
   preferH3,
@@ -71,12 +83,17 @@ const AdvancedDnsSetting: React.FC<AdvancedDnsSettingProps> = ({
   onHostsChange,
   onErrorChange
 }) => {
+  const [isExpanded, setIsExpanded] = useState(Boolean(expandForSetting))
   const [directNameserverError, setDirectNameserverError] = useState<string | null>(null)
   const [proxyNameserverError, setProxyNameserverError] = useState<string | null>(null)
   const [fallbackError, setFallbackError] = useState<string | null>(null)
   const [nameserverPolicyError, setNameserverPolicyError] = useState<string | null>(null)
   const [proxyNameserverPolicyError, setProxyNameserverPolicyError] = useState<string | null>(null)
   const [hostsError, setHostsError] = useState<string | null>(null)
+
+  React.useEffect(() => {
+    if (expandForSetting) setIsExpanded(true)
+  }, [expandForSetting])
 
   React.useEffect(() => {
     const hasError = Boolean(
@@ -98,7 +115,7 @@ const AdvancedDnsSetting: React.FC<AdvancedDnsSettingProps> = ({
     onErrorChange
   ])
 
-  return (
+  const content = (
     <>
       <FeatureSettingsSection title={tr('DNS routing')}>
         <SettingItem title={tr('Follow routing rules for connections')} divider>
@@ -405,6 +422,27 @@ const AdvancedDnsSetting: React.FC<AdvancedDnsSettingProps> = ({
         )}
       </FeatureSettingsSection>
     </>
+  )
+
+  return (
+    <Disclosure
+      className="mx-3 my-1.5 overflow-hidden rounded-xl border border-separator/70 bg-surface"
+      isExpanded={isExpanded}
+      onExpandedChange={setIsExpanded}
+    >
+      <Disclosure.Heading>
+        <Disclosure.Trigger
+          className="flex min-h-11 w-full items-center gap-3 px-4 py-2 text-left text-base font-semibold text-foreground"
+          data-setting-label={tr('Advanced DNS settings')}
+        >
+          <span className="min-w-0 flex-1">{tr('Advanced DNS settings')}</span>
+          <Disclosure.Indicator className="text-muted" />
+        </Disclosure.Trigger>
+      </Disclosure.Heading>
+      <Disclosure.Content>
+        <div className="border-t border-separator">{content}</div>
+      </Disclosure.Content>
+    </Disclosure>
   )
 }
 

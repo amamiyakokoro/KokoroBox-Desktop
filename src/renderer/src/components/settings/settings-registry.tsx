@@ -34,6 +34,7 @@ import DNS from './network/dns-settings'
 import Mihomo from './network/mihomo-settings'
 import Sniffer from './network/sniffer-settings'
 import GeoDataSettings from './geo-data-settings'
+import { advancedDnsSettingIds } from '../dns/advanced-dns-setting'
 
 export type SettingsCategory =
   'general' | 'appearance' | 'network' | 'core' | 'data' | 'shortcuts' | 'diagnostics'
@@ -307,7 +308,7 @@ export const getSettingsCategories = (): SettingsCategoryDefinition[] => {
           panel: 'dns'
         }),
         entry(
-          'dns-routing-rules',
+          advancedDnsSettingIds.routingRules,
           tr('Follow routing rules for connections'),
           tr('Advanced DNS settings'),
           {
@@ -315,26 +316,41 @@ export const getSettingsCategories = (): SettingsCategoryDefinition[] => {
           }
         ),
         entry(
-          'dns-direct-servers',
+          advancedDnsSettingIds.directServers,
           tr('Direct-connection DNS servers'),
           tr('Advanced DNS settings'),
           {
             panel: 'dns'
           }
         ),
-        entry('dns-proxy-servers', tr('Proxy DNS servers'), tr('Advanced DNS settings'), {
+        entry(
+          advancedDnsSettingIds.proxyServers,
+          tr('Proxy DNS servers'),
+          tr('Advanced DNS settings'),
+          {
+            panel: 'dns'
+          }
+        ),
+        entry(
+          advancedDnsSettingIds.fallbackServers,
+          tr('Fallback DNS servers'),
+          tr('Advanced DNS settings'),
+          {
+            panel: 'dns'
+          }
+        ),
+        entry(advancedDnsSettingIds.cache, tr('DNS cache algorithm'), tr('Advanced DNS settings'), {
           panel: 'dns'
         }),
-        entry('dns-fallback-servers', tr('Fallback DNS servers'), tr('Advanced DNS settings'), {
-          panel: 'dns'
-        }),
-        entry('dns-cache', tr('DNS cache algorithm'), tr('Advanced DNS settings'), {
-          panel: 'dns'
-        }),
-        entry('dns-system-hosts', tr('Use system hosts'), tr('Advanced DNS settings'), {
-          panel: 'dns'
-        }),
-        entry('dns-custom-hosts', tr('Custom hosts'), tr('Advanced DNS settings'), {
+        entry(
+          advancedDnsSettingIds.systemHosts,
+          tr('Use system hosts'),
+          tr('Advanced DNS settings'),
+          {
+            panel: 'dns'
+          }
+        ),
+        entry(advancedDnsSettingIds.customHosts, tr('Custom hosts'), tr('Advanced DNS settings'), {
           panel: 'dns'
         })
       ],

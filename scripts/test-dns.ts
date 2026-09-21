@@ -74,6 +74,10 @@ test('DNS settings use sectioned, container-responsive list editors', () => {
     'src/renderer/src/components/base/base-list-editor.tsx',
     'utf8'
   )
+  const registry = readFileSync(
+    'src/renderer/src/components/settings/settings-registry.tsx',
+    'utf8'
+  )
   const styles = readFileSync('src/renderer/src/assets/app-overrides.css', 'utf8')
 
   assert.match(
@@ -85,7 +89,19 @@ test('DNS settings use sectioned, container-responsive list editors', () => {
   assert.match(page, /FeatureSettingsSection title=\{tr\('DNS servers'\)\}/)
   assert.match(advanced, /FeatureSettingsSection title=\{tr\('DNS routing'\)\}/)
   assert.match(advanced, /FeatureSettingsSection title=\{tr\('Advanced options'\)\}/)
-  assert.doesNotMatch(advanced, /SettingCard|Advanced DNS settings/)
+  assert.match(advanced, /<Disclosure/)
+  assert.match(advanced, /<Disclosure\.Trigger/)
+  assert.match(advanced, /<Disclosure\.Indicator/)
+  assert.match(advanced, /<Disclosure\.Content>/)
+  assert.match(advanced, /useState\(Boolean\(expandForSetting\)\)/)
+  assert.match(advanced, /if \(expandForSetting\) setIsExpanded\(true\)/)
+  assert.match(advanced, /tr\('Advanced DNS settings'\)/)
+  assert.match(advanced, /data-setting-label=\{tr\('Advanced DNS settings'\)\}/)
+  assert.doesNotMatch(advanced, /SettingCard|data-slot/)
+  assert.match(page, /Object\.values\(advancedDnsSettingIds\)\.some/)
+  assert.match(page, /expandForSetting=\{advancedSetting\}/)
+  assert.match(registry, /advancedDnsSettingIds\.routingRules/)
+  assert.match(registry, /advancedDnsSettingIds\.customHosts/)
 
   assert.match(advanced, /layout="key-value"/)
   assert.match(advanced, /part1Label=\{tr\('Domain or rule'\)\}/)

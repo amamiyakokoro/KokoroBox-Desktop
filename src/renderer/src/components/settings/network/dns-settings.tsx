@@ -10,7 +10,9 @@ import FeatureSettingsLayout, {
   FeatureSettingsSection
 } from '@renderer/components/base/base-feature-settings'
 import EditableList from '@renderer/components/base/base-list-editor'
-import AdvancedDnsSetting from '@renderer/components/dns/advanced-dns-setting'
+import AdvancedDnsSetting, {
+  advancedDnsSettingIds
+} from '@renderer/components/dns/advanced-dns-setting'
 import DnsServerList from '@renderer/components/dns/dns-server-list'
 import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
@@ -25,6 +27,7 @@ import {
 } from '@renderer/utils/validate'
 import { useSettingsSave } from '@renderer/hooks/use-settings-save'
 import { useUnsavedChangesGuard } from '@renderer/hooks/use-unsaved-changes'
+import { useSearchParams } from 'react-router-dom'
 
 const defaultFakeIpFilter = ['+.lan', '+.local', 'time.*.com', 'ntp.*.com', '+.market.xiaomi.com']
 
@@ -52,6 +55,13 @@ interface Props {
 }
 
 const DNS: React.FC<Props> = ({ embedded = false }) => {
+  const [searchParams] = useSearchParams()
+  const requestedSetting = searchParams.get('setting')
+  const advancedSetting = Object.values(advancedDnsSettingIds).some(
+    (settingId) => settingId === requestedSetting
+  )
+    ? requestedSetting
+    : null
   const { controledMihomoConfig, patchControledMihomoConfig, patchControledMihomoConfigOrThrow } =
     useControledMihomoConfig()
   const { appConfig, patchAppConfig } = useAppConfig()
@@ -499,6 +509,7 @@ const DNS: React.FC<Props> = ({ embedded = false }) => {
         </FeatureSettingsSection>
         <AdvancedDnsSetting
           key={draftRevision}
+          expandForSetting={advancedSetting}
           respectRules={values.respectRules}
           directNameserverFollowPolicy={values.directNameserverFollowPolicy}
           preferH3={values.preferH3}
