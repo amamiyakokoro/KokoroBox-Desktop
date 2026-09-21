@@ -2164,6 +2164,34 @@ test('data settings separate subscriptions, backups, integrations and Geo databa
   assert.match(integrations, /hasGistSection = sections\.includes\('gist'\)/)
 })
 
+test('keyboard shortcuts are grouped by application concern', () => {
+  const shortcuts = readFileSync(
+    'src/renderer/src/components/settings/shortcut-config.tsx',
+    'utf8'
+  )
+  const registry = readFileSync(
+    'src/renderer/src/components/settings/settings-registry.tsx',
+    'utf8'
+  )
+  const shortcutRegistry = registry.slice(
+    registry.indexOf("key: 'shortcuts'"),
+    registry.indexOf("key: 'diagnostics'")
+  )
+
+  assert.match(shortcuts, /const shortcutGroups: ShortcutGroup\[\] =/)
+  assert.match(shortcuts, /title: tr\('Window'\)[\s\S]*showWindowShortcut[\s\S]*showFloatingWindowShortcut/)
+  assert.match(shortcuts, /title: tr\('Network'\)[\s\S]*triggerSysProxyShortcut[\s\S]*triggerTunShortcut/)
+  assert.match(shortcuts, /title: tr\('Proxy mode'\)[\s\S]*ruleModeShortcut[\s\S]*globalModeShortcut[\s\S]*directModeShortcut/)
+  assert.match(shortcuts, /title: tr\('Application'\)[\s\S]*quitWithoutCoreShortcut[\s\S]*restartAppShortcut/)
+  assert.match(shortcuts, /shortcutGroups\.map\(\(group\) =>/)
+  assert.match(shortcuts, /divider=\{index < group\.shortcuts\.length - 1\}/)
+  assert.doesNotMatch(shortcuts, /header=\{tr\('Keyboard shortcuts'\)\}/)
+  assert.match(shortcutRegistry, /shortcut-toggle-window'[\s\S]*tr\('Window'\)/)
+  assert.match(shortcutRegistry, /shortcut-toggle-system-proxy'[\s\S]*tr\('Network'\)/)
+  assert.match(shortcutRegistry, /shortcut-rule-mode'[\s\S]*tr\('Proxy mode'\)/)
+  assert.match(shortcutRegistry, /shortcut-keep-core'[\s\S]*tr\('Application'\)/)
+})
+
 test('diagnostics settings separate logs, maintenance and lifecycle actions', () => {
   const registry = readFileSync(
     'src/renderer/src/components/settings/settings-registry.tsx',

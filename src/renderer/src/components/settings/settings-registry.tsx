@@ -773,23 +773,15 @@ export const getSettingsCategories = (): SettingsCategoryDefinition[] => {
         label: tr('Shortcuts'),
         icon: LuCommand,
         entries: [
-          entry('shortcut-toggle-window', tr('Toggle window'), tr('Keyboard shortcuts')),
-          entry(
-            'shortcut-toggle-floating-window',
-            tr('Toggle floating window'),
-            tr('Keyboard shortcuts')
-          ),
-          entry(
-            'shortcut-toggle-system-proxy',
-            tr('Toggle system proxy'),
-            tr('Keyboard shortcuts')
-          ),
-          entry('shortcut-toggle-tun', tr('Toggle TUN mode'), tr('Keyboard shortcuts')),
-          entry('shortcut-rule-mode', tr('Switch to rule mode'), tr('Keyboard shortcuts')),
-          entry('shortcut-global-mode', tr('Switch to global mode'), tr('Keyboard shortcuts')),
-          entry('shortcut-direct-mode', tr('Switch to direct mode'), tr('Keyboard shortcuts')),
-          entry('shortcut-keep-core', tr('Quit and keep core running'), tr('Keyboard shortcuts')),
-          entry('shortcut-restart-app', tr('Restart app'), tr('Keyboard shortcuts'))
+          entry('shortcut-toggle-window', tr('Toggle window'), tr('Window')),
+          entry('shortcut-toggle-floating-window', tr('Toggle floating window'), tr('Window')),
+          entry('shortcut-toggle-system-proxy', tr('Toggle system proxy'), tr('Network')),
+          entry('shortcut-toggle-tun', tr('Toggle TUN mode'), tr('Network')),
+          entry('shortcut-rule-mode', tr('Switch to rule mode'), tr('Proxy mode')),
+          entry('shortcut-global-mode', tr('Switch to global mode'), tr('Proxy mode')),
+          entry('shortcut-direct-mode', tr('Switch to direct mode'), tr('Proxy mode')),
+          entry('shortcut-keep-core', tr('Quit and keep core running'), tr('Application')),
+          entry('shortcut-restart-app', tr('Restart app'), tr('Application'))
         ],
         content: () => <ShortcutConfig />
       },

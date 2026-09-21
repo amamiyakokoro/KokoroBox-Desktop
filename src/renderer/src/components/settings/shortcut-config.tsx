@@ -42,6 +42,24 @@ const keyMap = {
   Suspend: 'Suspend'
 }
 
+type ShortcutAction =
+  | 'showWindowShortcut'
+  | 'showFloatingWindowShortcut'
+  | 'triggerSysProxyShortcut'
+  | 'triggerTunShortcut'
+  | 'ruleModeShortcut'
+  | 'globalModeShortcut'
+  | 'directModeShortcut'
+  | 'quitWithoutCoreShortcut'
+  | 'restartAppShortcut'
+
+type ShortcutEntry = [title: string, value: string, action: ShortcutAction]
+
+interface ShortcutGroup {
+  title: string
+  shortcuts: ShortcutEntry[]
+}
+
 const ShortcutConfig: React.FC = () => {
   const { appConfig, patchAppConfig } = useAppConfig()
   const {
@@ -56,42 +74,64 @@ const ShortcutConfig: React.FC = () => {
     restartAppShortcut = ''
   } = appConfig || {}
 
-  const shortcuts = [
-    [tr('Toggle window'), showWindowShortcut, 'showWindowShortcut'],
-    [tr('Toggle floating window'), showFloatingWindowShortcut, 'showFloatingWindowShortcut'],
-    [tr('Toggle system proxy'), triggerSysProxyShortcut, 'triggerSysProxyShortcut'],
-    [tr('Toggle TUN mode'), triggerTunShortcut, 'triggerTunShortcut'],
-    [tr('Switch to rule mode'), ruleModeShortcut, 'ruleModeShortcut'],
-    [tr('Switch to global mode'), globalModeShortcut, 'globalModeShortcut'],
-    [tr('Switch to direct mode'), directModeShortcut, 'directModeShortcut'],
-    [tr('Quit and keep core running'), quitWithoutCoreShortcut, 'quitWithoutCoreShortcut'],
-    [tr('Restart app'), restartAppShortcut, 'restartAppShortcut']
-  ] as const
+  const shortcutGroups: ShortcutGroup[] = [
+    {
+      title: tr('Window'),
+      shortcuts: [
+        [tr('Toggle window'), showWindowShortcut, 'showWindowShortcut'],
+        [tr('Toggle floating window'), showFloatingWindowShortcut, 'showFloatingWindowShortcut']
+      ]
+    },
+    {
+      title: tr('Network'),
+      shortcuts: [
+        [tr('Toggle system proxy'), triggerSysProxyShortcut, 'triggerSysProxyShortcut'],
+        [tr('Toggle TUN mode'), triggerTunShortcut, 'triggerTunShortcut']
+      ]
+    },
+    {
+      title: tr('Proxy mode'),
+      shortcuts: [
+        [tr('Switch to rule mode'), ruleModeShortcut, 'ruleModeShortcut'],
+        [tr('Switch to global mode'), globalModeShortcut, 'globalModeShortcut'],
+        [tr('Switch to direct mode'), directModeShortcut, 'directModeShortcut']
+      ]
+    },
+    {
+      title: tr('Application'),
+      shortcuts: [
+        [tr('Quit and keep core running'), quitWithoutCoreShortcut, 'quitWithoutCoreShortcut'],
+        [tr('Restart app'), restartAppShortcut, 'restartAppShortcut']
+      ]
+    }
+  ]
 
   return (
-    <SettingCard
-      header={tr('Keyboard shortcuts')}
-      description={tr(
-        'Click a shortcut field and press a new key combination. Press Backspace to clear it.'
-      )}
-    >
-      {shortcuts.map(([title, value, action], index) => (
-        <SettingItem
-          key={action}
-          contentAlign="end"
-          title={title}
-          divider={index < shortcuts.length - 1}
-        >
-          <ShortcutInput value={value} patchAppConfig={patchAppConfig} action={action} />
-        </SettingItem>
+    <>
+      <p className="px-1 pb-2 pt-3 text-sm text-muted">
+        {tr('Click a shortcut field and press a new key combination. Press Backspace to clear it.')}
+      </p>
+      {shortcutGroups.map((group) => (
+        <SettingCard key={group.title} header={group.title}>
+          {group.shortcuts.map(([title, value, action], index) => (
+            <SettingItem
+              key={action}
+              contentAlign="end"
+              title={title}
+              divider={index < group.shortcuts.length - 1}
+            >
+              <ShortcutInput value={value} patchAppConfig={patchAppConfig} action={action} />
+            </SettingItem>
+          ))}
+        </SettingCard>
       ))}
-    </SettingCard>
+    </>
   )
 }
 
 const ShortcutInput: React.FC<{
   value: string
-  action: string
+  action: ShortcutAction
   patchAppConfig: (value: Partial<AppConfig>) => Promise<unknown>
 }> = (props) => {
   const { value, action, patchAppConfig } = props
