@@ -145,14 +145,13 @@ const Tun: React.FC<Props> = ({ embedded = false }) => {
               <SettingItem title={tr('Configure system DNS automatically')}>
                 <KokoSegmentedControl
                   ariaLabel={tr('Configure system DNS automatically')}
-                  selectedKey={autoSetDNSMode}
+                  selectedKey={autoSetDNSMode === 'exec' ? 'service' : autoSetDNSMode}
                   options={[
                     { id: 'none', label: tr('Do not configure automatically') },
-                    { id: 'exec', label: tr('Run command') },
                     { id: 'service', label: tr('Service mode') }
                   ]}
                   onChange={async (key) => {
-                    await patchAppConfig({ autoSetDNSMode: key as 'none' | 'exec' | 'service' })
+                    await patchAppConfig({ autoSetDNSMode: key as 'none' | 'service' })
                   }}
                 />
               </SettingItem>

@@ -937,3 +937,15 @@ export const setSysDns = async (device?: string, servers?: string[]): Promise<vo
   const instance = getServiceAxios()
   return await instance.post('/sys/dns/set', { servers, device })
 }
+
+export const setDnsLease = async (servers: string[]): Promise<void> => {
+  await getServiceAxios().post('/network/dns/lease', { servers })
+}
+
+export const renewDnsLease = async (): Promise<void> => {
+  await getServiceAxios().post('/network/dns/renew')
+}
+
+export const releaseDnsLease = async (): Promise<void> => {
+  await getServiceAxios().delete('/network/dns/lease')
+}

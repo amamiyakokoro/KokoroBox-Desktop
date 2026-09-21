@@ -1,6 +1,11 @@
-import * as native from 'kokorobox-native'
 import { getAppConfig, patchAppConfig } from '../config'
-import { setSysDns } from '../service/api'
+import {
+  releaseDnsLease,
+  renewDnsLease,
+  ServiceAPIError,
+  setDnsLease,
+  setSysDns
+} from '../service/api'
 import { triggerSysProxy } from '../sys/sysproxy'
 import { appendAppLog } from '../utils/log'
 import { observeNetworkContext, readNetworkContext } from '../sys/network-context'
@@ -12,7 +17,8 @@ export interface NetworkCoreController {
 }
 
 let setPublicDNSTimer: NodeJS.Timeout | null = null
-let recoverDNSTimer: NodeJS.Timeout | null = null
+let dnsLeaseRenewTimer: NodeJS.Timeout | null = null
+let dnsLeaseGeneration = 0
 let stopNetworkContextObserver: (() => void) | null = null
 let networkDetectionGeneration = 0
 let networkDownHandled = false
@@ -23,58 +29,78 @@ async function getDefaultService(): Promise<string> {
   return defaultService
 }
 
-async function getOriginDNS(): Promise<void> {
-  const { dnsServers } = await readNetworkContext()
-  await patchAppConfig({ originDNS: dnsServers.length > 0 ? dnsServers.join(' ') : 'Empty' })
+async function restoreLegacyDNS(originDNS: string): Promise<void> {
+  const context = await readNetworkContext()
+  // Older Desktop builds stored the original DNS locally. Restore it only when
+  // the service still has the DNS value that those builds installed.
+  if (context.dnsServers.length === 1 && context.dnsServers[0] === '223.5.5.5') {
+    const service = await getDefaultService()
+    await setSysDns(service, originDNS === 'Empty' ? [] : originDNS.split(' ').filter(Boolean))
+  }
+  await patchAppConfig({ originDNS: undefined })
 }
 
-async function setDNS(dns: string, mode: 'none' | 'exec' | 'service'): Promise<void> {
-  const dnsServers = dns === 'Empty' ? [] : dns.split(' ')
-  if (mode === 'exec') {
-    const setActiveNetworkDns = (
-      native as typeof native & {
-        setActiveNetworkDns?: (servers: string[]) => Promise<void>
+function stopDnsLeaseRenewal(): void {
+  dnsLeaseGeneration++
+  if (dnsLeaseRenewTimer) clearTimeout(dnsLeaseRenewTimer)
+  dnsLeaseRenewTimer = null
+}
+
+function startDnsLeaseRenewal(): void {
+  stopDnsLeaseRenewal()
+  const generation = dnsLeaseGeneration
+  const renew = async (): Promise<void> => {
+    if (generation !== dnsLeaseGeneration) return
+    try {
+      await renewDnsLease()
+    } catch (error) {
+      if (error instanceof ServiceAPIError && error.status === 409) {
+        try {
+          await setDnsLease(['223.5.5.5'])
+        } catch (recoveryError) {
+          await appendAppLog(`[Network]: DNS lease recovery failed, ${recoveryError}\n`).catch(
+            () => {}
+          )
+        }
+      } else {
+        await appendAppLog(`[Network]: DNS lease renewal failed, ${error}\n`).catch(() => {})
       }
-    ).setActiveNetworkDns
-    if (!setActiveNetworkDns) {
-      throw new Error('Installed kokorobox-native does not include DNS mutation')
     }
-    await setActiveNetworkDns(dnsServers)
-    return
+    if (generation === dnsLeaseGeneration) {
+      dnsLeaseRenewTimer = setTimeout(() => void renew(), 20_000)
+    }
   }
-  if (mode === 'service') {
-    const service = await getDefaultService()
-    await setSysDns(service, dnsServers)
-    return
-  }
+  dnsLeaseRenewTimer = setTimeout(() => void renew(), 20_000)
 }
 
 export async function setPublicDNS(): Promise<void> {
   if (process.platform !== 'darwin') return
+  if (setPublicDNSTimer) clearTimeout(setPublicDNSTimer)
+  setPublicDNSTimer = null
   if ((await readNetworkContext()).online) {
     const { originDNS, autoSetDNSMode = 'none' } = await getAppConfig()
-    if (!originDNS) {
-      await getOriginDNS()
-      await setDNS('223.5.5.5', autoSetDNSMode)
-    }
+    if (originDNS) await restoreLegacyDNS(originDNS)
+    if (autoSetDNSMode === 'none') return
+    if (autoSetDNSMode === 'exec') await patchAppConfig({ autoSetDNSMode: 'service' })
+    await setDnsLease(['223.5.5.5'])
+    startDnsLeaseRenewal()
   } else {
-    if (setPublicDNSTimer) clearTimeout(setPublicDNSTimer)
-    setPublicDNSTimer = setTimeout(() => setPublicDNS(), 5000)
+    setPublicDNSTimer = setTimeout(() => {
+      void setPublicDNS().catch((error) => {
+        void appendAppLog(`[Network]: DNS lease setup failed, ${error}\n`).catch(() => {})
+      })
+    }, 5000)
   }
 }
 
 export async function recoverDNS(): Promise<void> {
   if (process.platform !== 'darwin') return
-  if ((await readNetworkContext()).online) {
-    const { originDNS, autoSetDNSMode = 'none' } = await getAppConfig()
-    if (originDNS) {
-      await setDNS(originDNS, autoSetDNSMode)
-      await patchAppConfig({ originDNS: undefined })
-    }
-  } else {
-    if (recoverDNSTimer) clearTimeout(recoverDNSTimer)
-    recoverDNSTimer = setTimeout(() => recoverDNS(), 5000)
-  }
+  if (setPublicDNSTimer) clearTimeout(setPublicDNSTimer)
+  setPublicDNSTimer = null
+  stopDnsLeaseRenewal()
+  const { originDNS } = await getAppConfig()
+  if (originDNS) await restoreLegacyDNS(originDNS)
+  await releaseDnsLease()
 }
 
 export async function startNetworkDetectionController(
