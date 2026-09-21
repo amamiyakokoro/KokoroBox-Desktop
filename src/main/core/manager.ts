@@ -30,6 +30,7 @@ import { uploadRuntimeConfig } from '../resolve/gistApi'
 import { stopTrafficPresenter } from '../resolve/trafficPresenter'
 import {
   getCoreStatus,
+  getCoreDesiredStatus,
   startCore as startServiceCore,
   stopCore as stopServiceCore,
   isServiceConnectionError,
@@ -314,6 +315,21 @@ async function waitForServiceCoreConnection(
   return { reachable: false, running: false, error: lastError }
 }
 
+async function waitForDesiredServiceCore(): Promise<void> {
+  const deadline = Date.now() + 45_000
+  let lastError: unknown
+  while (Date.now() < deadline) {
+    try {
+      await getCoreStatus()
+      return
+    } catch (error) {
+      lastError = error
+    }
+    await delay(serviceConnectionRetryInterval)
+  }
+  throw new Error(`Service could not restore its desired core state: ${lastError}`)
+}
+
 async function getServiceStatusAfterConnectionError(): Promise<
   Awaited<ReturnType<typeof serviceStatus>> | undefined
 > {
@@ -390,8 +406,14 @@ export async function startCore(detached = false): Promise<Promise<void>[]> {
         serviceCoreRunning = probe.running
       }
     }
+    if (!serviceCoreRunning) {
+      if ((await getCoreDesiredStatus()).desired_state === 'running') {
+        await waitForDesiredServiceCore()
+        serviceCoreRunning = true
+      }
+    }
   }
-  if (!serviceCoreRunning) {
+  if (!serviceCoreRunning && !useServiceCore) {
     await stopCore()
   }
   setMihomoLogSource('out')

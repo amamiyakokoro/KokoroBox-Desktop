@@ -16,7 +16,6 @@ import {
 } from './mihomoApi'
 import {
   getCoreStatus,
-  isServiceConnectionError,
   setServiceUnavailableFallbackHandler,
   startServiceCoreEventStream,
   stopServiceCoreEventStream,
@@ -314,7 +313,6 @@ export function createServiceCoreRuntime(options: ServiceCoreRuntimeOptions) {
   }
 
   async function resumeServiceCoreAfterReconnect(): Promise<void> {
-    await delay(500)
     if (serviceCoreState.startupActive || serviceCoreState.autoResumePaused) {
       return
     }
@@ -326,21 +324,18 @@ export function createServiceCoreRuntime(options: ServiceCoreRuntimeOptions) {
 
     try {
       await getCoreStatus()
-      return
     } catch (error) {
-      if (isServiceConnectionError(error)) {
-        return
-      }
-    }
-
-    if (serviceCoreState.autoResumePaused) {
+      clearStreams()
+      mainWindow?.webContents.send('core-stopped')
+      await appendAppLog(`[Manager]: Service core status after reconnect: ${error}\n`)
       return
     }
-
-    await appendAppLog(`[Manager]: Service reconnected without running core, starting core\n`)
-    const promises = await options.startCore()
-    await Promise.all(promises)
+    serviceCoreState.managed = true
     mainWindow?.webContents.send('core-started')
+    mainWindow?.webContents.send('groupsUpdated')
+    mainWindow?.webContents.send('rulesUpdated')
+    ipcMain.emit('updateTrayMenu')
+    await ensureStreamsStarted()
   }
 
   function isDuplicateServiceCoreEvent(event: ServiceCoreEvent): boolean {
@@ -408,10 +403,4 @@ export function createServiceCoreRuntime(options: ServiceCoreRuntimeOptions) {
       serviceCoreState.streamsRestartTimer = null
     }
   }
-}
-
-function delay(ms: number): Promise<void> {
-  return new Promise((resolve) => {
-    setTimeout(resolve, ms)
-  })
 }

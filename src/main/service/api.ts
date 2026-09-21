@@ -434,6 +434,10 @@ export const getCoreStatus = async (): Promise<Record<string, unknown>> => {
   return await instance.get('/core')
 }
 
+export const getCoreDesiredStatus = async (): Promise<{ desired_state: 'running' | 'stopped' }> => {
+  return await getServiceAxios().get('/core/desired')
+}
+
 export interface ServiceProcessRouterRules {
   version: 1
   platform: 'windows' | 'linux'
