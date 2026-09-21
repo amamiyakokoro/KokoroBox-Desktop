@@ -450,6 +450,34 @@ test('interactive cards use native buttons with independent sibling actions', ()
   assert.match(profile, /aria-label=\{tr\('Refresh'\)\}/)
 })
 
+test('sidebar quick controls use one native toggle target', () => {
+  const surfaces = readFileSync(
+    'src/renderer/src/components/sider/sider-surfaces.tsx',
+    'utf8'
+  )
+  const quickControl = surfaces.slice(surfaces.indexOf('export const SiderQuickControl'))
+  const controls = [
+    'src/renderer/src/components/sider/sysproxy-switcher.tsx',
+    'src/renderer/src/components/sider/tun-switcher.tsx',
+    'src/renderer/src/components/sider/dns-card.tsx',
+    'src/renderer/src/components/sider/sniff-card.tsx'
+  ]
+
+  assert.match(surfaces, /import \{[\s\S]*ToggleButton[\s\S]*\} from '@heroui\/react'/)
+  assert.match(quickControl, /<ToggleButton[\s\S]*isSelected=\{enabled\}/)
+  assert.match(quickControl, /isDisabled=\{disabled\}/)
+  assert.match(quickControl, /onChange=\{\(selected\) => \{[\s\S]*onToggle\(selected\)/)
+  assert.doesNotMatch(quickControl, /<button|control: React\.ReactNode|data-sider-control-slot/)
+  assert.match(surfaces, /export const SiderIconToggleButton/)
+
+  for (const file of controls) {
+    const source = readFileSync(file, 'utf8')
+    assert.match(source, /<SiderQuickControl/)
+    assert.match(source, /<SiderIconToggleButton/)
+    assert.doesNotMatch(source, /<Switch|<SiderIconButton|control=\{/)
+  }
+})
+
 test('sortable cards keep pointer dragging without fake nested button roles', () => {
   const sensor = readFileSync('src/renderer/src/hooks/use-card-dnd-sensors.ts', 'utf8')
   const profile = readFileSync('src/renderer/src/components/profiles/profile-item.tsx', 'utf8')

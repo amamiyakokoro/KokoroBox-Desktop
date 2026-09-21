@@ -1,5 +1,4 @@
 import { tr } from '../../../../shared/i18n'
-import { Switch } from '@heroui/react'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'
 import { triggerSysProxy } from '@renderer/utils/ipc'
@@ -8,7 +7,7 @@ import React from 'react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { notify } from '@renderer/utils/notification'
-import { SiderIconButton, SiderQuickControl } from './sider-surfaces'
+import { SiderIconToggleButton, SiderQuickControl } from './sider-surfaces'
 
 interface Props {
   iconOnly?: boolean
@@ -54,14 +53,15 @@ const SysproxySwitcher: React.FC<Props> = (props) => {
   if (iconOnly) {
     return (
       <div className={`${sysproxyCardStatus} flex justify-center`}>
-        <SiderIconButton
+        <SiderIconToggleButton
           isDisabled={mode === 'manual' && disabled}
+          isSelected={selected}
           label={`${tr('System proxy')} — ${selected ? tr('Enabled') : tr('Disabled')}`}
           placement="right"
-          onPress={() => void onChange(!selected)}
+          onChange={onChange}
         >
           <AiOutlineGlobal className="text-[20px]" />
-        </SiderIconButton>
+        </SiderIconToggleButton>
       </div>
     )
   }
@@ -84,24 +84,11 @@ const SysproxySwitcher: React.FC<Props> = (props) => {
         <SiderQuickControl
           icon={<AiOutlineGlobal />}
           title={tr('System proxy')}
+          status={selected ? tr('Enabled') : tr('Disabled')}
           enabled={selected}
           disabled={mode === 'manual' && disabled}
-          onToggle={() => onChange(!selected)}
-          control={
-            <Switch
-              size="sm"
-              aria-label={tr('System proxy')}
-              isSelected={selected}
-              isDisabled={mode == 'manual' && disabled}
-              onChange={onChange}
-            >
-              <Switch.Content>
-                <Switch.Control>
-                  <Switch.Thumb />
-                </Switch.Control>
-              </Switch.Content>
-            </Switch>
-          }
+          isDragging={isDragging}
+          onToggle={onChange}
         />
       </div>
     </div>

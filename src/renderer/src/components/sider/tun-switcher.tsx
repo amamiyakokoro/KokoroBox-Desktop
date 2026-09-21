@@ -1,13 +1,12 @@
 import { tr } from '../../../../shared/i18n'
 import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'
-import { Switch } from '@heroui/react'
 import { TbDeviceIpadHorizontalBolt } from 'react-icons/tb'
 import { restartCore } from '@renderer/utils/ipc'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import React from 'react'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
-import { SiderIconButton, SiderQuickControl } from './sider-surfaces'
+import { SiderIconToggleButton, SiderQuickControl } from './sider-surfaces'
 
 interface Props {
   iconOnly?: boolean
@@ -44,13 +43,14 @@ const TunSwitcher: React.FC<Props> = (props) => {
   if (iconOnly) {
     return (
       <div className={`${tunCardStatus} flex justify-center`}>
-        <SiderIconButton
+        <SiderIconToggleButton
+          isSelected={Boolean(enable)}
           label={`${tr('TUN mode')} — ${enable ? tr('Enabled') : tr('Disabled')}`}
           placement="right"
-          onPress={() => void onChange(!enable)}
+          onChange={onChange}
         >
           <TbDeviceIpadHorizontalBolt className="text-[20px]" />
-        </SiderIconButton>
+        </SiderIconToggleButton>
       </div>
     )
   }
@@ -73,17 +73,10 @@ const TunSwitcher: React.FC<Props> = (props) => {
         <SiderQuickControl
           icon={<TbDeviceIpadHorizontalBolt />}
           title={tr('TUN mode')}
+          status={enable ? tr('Enabled') : tr('Disabled')}
           enabled={Boolean(enable)}
-          onToggle={() => onChange(!enable)}
-          control={
-            <Switch size="sm" aria-label={tr('TUN mode')} isSelected={enable} onChange={onChange}>
-              <Switch.Content>
-                <Switch.Control>
-                  <Switch.Thumb />
-                </Switch.Control>
-              </Switch.Content>
-            </Switch>
-          }
+          isDragging={isDragging}
+          onToggle={onChange}
         />
       </div>
     </div>

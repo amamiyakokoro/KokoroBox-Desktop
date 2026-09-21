@@ -1,5 +1,4 @@
 import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'
-import { Switch } from '@heroui/react'
 import { LuServer } from 'react-icons/lu'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
@@ -8,7 +7,7 @@ import { restartCore } from '@renderer/utils/ipc'
 import { notify } from '@renderer/utils/notification'
 import React from 'react'
 import { tr } from '../../../../shared/i18n'
-import { SiderIconButton, SiderQuickControl } from './sider-surfaces'
+import { SiderIconToggleButton, SiderQuickControl } from './sider-surfaces'
 
 interface Props {
   iconOnly?: boolean
@@ -45,13 +44,14 @@ const DNSCard: React.FC<Props> = (props) => {
   if (iconOnly) {
     return (
       <div className={`${dnsCardStatus} flex justify-center`}>
-        <SiderIconButton
+        <SiderIconToggleButton
+          isSelected={controlDns}
           label={`DNS — ${controlDns ? tr('Enabled') : tr('Disabled')}`}
           placement="right"
-          onPress={() => void onChange(!controlDns)}
+          onChange={onChange}
         >
           <LuServer className="text-[20px]" />
-        </SiderIconButton>
+        </SiderIconToggleButton>
       </div>
     )
   }
@@ -74,17 +74,10 @@ const DNSCard: React.FC<Props> = (props) => {
         <SiderQuickControl
           icon={<LuServer />}
           title="DNS"
+          status={controlDns ? tr('Enabled') : tr('Disabled')}
           enabled={controlDns}
-          onToggle={() => onChange(!controlDns)}
-          control={
-            <Switch size="sm" aria-label="DNS" isSelected={controlDns} onChange={onChange}>
-              <Switch.Content>
-                <Switch.Control>
-                  <Switch.Thumb />
-                </Switch.Control>
-              </Switch.Content>
-            </Switch>
-          }
+          isDragging={isDragging}
+          onToggle={onChange}
         />
       </div>
     </div>

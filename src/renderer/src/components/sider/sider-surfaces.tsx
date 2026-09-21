@@ -1,4 +1,4 @@
-import { Button, cn, Tooltip, type ButtonProps } from '@heroui/react'
+import { Button, cn, ToggleButton, Tooltip, type ButtonProps } from '@heroui/react'
 import {
   KokoStatusIndicator,
   type KokoStatusTone
@@ -181,6 +181,49 @@ export const SiderIconButton: React.FC<SiderIconButtonProps> = ({
       >
         {children}
       </Button>
+    </Tooltip.Trigger>
+    <Tooltip.Content placement={placement}>{tooltip ?? label}</Tooltip.Content>
+  </Tooltip>
+)
+
+interface SiderIconToggleButtonProps {
+  children: React.ReactNode
+  className?: string
+  isDisabled?: boolean
+  isSelected: boolean
+  label: string
+  onChange: (selected: boolean) => void | Promise<void>
+  placement?: 'top' | 'right' | 'bottom' | 'left'
+  tooltip?: React.ReactNode
+}
+
+export const SiderIconToggleButton: React.FC<SiderIconToggleButtonProps> = ({
+  children,
+  className,
+  isDisabled,
+  isSelected,
+  label,
+  onChange,
+  placement = 'top',
+  tooltip
+}) => (
+  <Tooltip delay={0}>
+    <Tooltip.Trigger className="inline-flex">
+      <ToggleButton
+        aria-label={label}
+        className={cn(
+          'app-nodrag border border-transparent text-muted data-[selected=true]:border-accent/45 data-[selected=true]:bg-accent-soft/55 data-[selected=true]:text-accent-soft-foreground data-[selected=true]:ring-1 data-[selected=true]:ring-inset data-[selected=true]:ring-accent/15',
+          className
+        )}
+        isDisabled={isDisabled}
+        isIconOnly
+        isSelected={isSelected}
+        size="sm"
+        variant="ghost"
+        onChange={(selected) => void onChange(selected)}
+      >
+        {children}
+      </ToggleButton>
     </Tooltip.Trigger>
     <Tooltip.Content placement={placement}>{tooltip ?? label}</Tooltip.Content>
   </Tooltip>
@@ -449,55 +492,56 @@ export const SiderStatusCard: React.FC<SiderStatusCardProps> = ({
 interface SiderQuickControlProps {
   icon: React.ReactNode
   title: string
+  status: string
   enabled: boolean
   disabled?: boolean
-  control: React.ReactNode
-  onToggle: () => void | Promise<void>
+  isDragging?: boolean
+  onToggle: (enabled: boolean) => void | Promise<void>
 }
 
 export const SiderQuickControl: React.FC<SiderQuickControlProps> = ({
   icon,
   title,
+  status,
   enabled,
   disabled = false,
-  control,
+  isDragging = false,
   onToggle
 }) => (
   <div data-sider-quick-control className="sider-quick-control-container w-full min-w-0">
-    <div
+    <ToggleButton
+      data-card-primary-action
+      aria-label={title}
       className={cn(
-        'sider-quick-control group rounded-2xl border px-2.5 py-2 transition-[background-color,border-color,box-shadow] duration-150',
+        'sider-quick-control app-nodrag group h-auto w-full min-w-0 justify-start rounded-2xl border px-2.5 py-2 text-left text-foreground shadow-sm transition-[background-color,border-color,box-shadow] duration-150 data-[selected=true]:text-foreground',
         disabled
           ? 'border-separator bg-surface-secondary opacity-60 shadow-none'
-          : 'border-separator bg-surface shadow-sm hover:border-accent/25 hover:bg-surface-secondary/70 hover:shadow-md'
+          : enabled
+            ? 'border-accent/35 bg-accent-soft/20 hover:border-accent/45 hover:bg-accent-soft/30 hover:shadow-md'
+            : 'border-separator bg-surface hover:border-accent/25 hover:bg-surface-secondary/70 hover:shadow-md'
       )}
+      isDisabled={disabled}
+      isSelected={enabled}
+      variant="ghost"
+      onChange={(selected) => {
+        if (!isDragging) void onToggle(selected)
+      }}
     >
-      <button
-        type="button"
-        data-card-primary-action
-        aria-label={title}
-        aria-pressed={enabled}
-        disabled={disabled}
-        className="sider-quick-control__primary min-w-0 rounded-xl text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-        onClick={() => void onToggle()}
+      <span className="sider-quick-control__icon flex size-8 items-center justify-center rounded-lg text-xl text-muted transition-colors duration-150 group-hover:text-foreground group-data-[selected=true]:text-accent-soft-foreground">
+        {icon}
+      </span>
+      <span
+        className={cn('sider-quick-control__title whitespace-nowrap', siderItemTitleClassName)}
+        title={title}
       >
-        <span className="sider-quick-control__icon flex size-8 items-center justify-center rounded-lg text-xl text-muted transition-colors duration-150 group-hover:text-foreground">
-          {icon}
-        </span>
-        <span
-          className={cn('sider-quick-control__title whitespace-nowrap', siderItemTitleClassName)}
-          title={title}
-        >
-          {title}
-        </span>
-      </button>
-      <div
-        data-sider-control-slot
-        className="sider-quick-control__control flex min-w-10 items-center justify-center"
-        onPointerDown={(event) => event.stopPropagation()}
+        {title}
+      </span>
+      <SiderStatusRow
+        className="sider-quick-control__status min-w-0 text-xs"
+        tone={enabled ? 'success' : 'danger'}
       >
-        {control}
-      </div>
-    </div>
+        <span className="truncate">{status}</span>
+      </SiderStatusRow>
+    </ToggleButton>
   </div>
 )

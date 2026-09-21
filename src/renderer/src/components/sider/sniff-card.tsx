@@ -1,14 +1,13 @@
 import { tr } from '../../../../shared/i18n'
 import { RiScan2Fill } from 'react-icons/ri'
 import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'
-import { Switch } from '@heroui/react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { restartCore } from '@renderer/utils/ipc'
 import { notify } from '@renderer/utils/notification'
 import React from 'react'
-import { SiderIconButton, SiderQuickControl } from './sider-surfaces'
+import { SiderIconToggleButton, SiderQuickControl } from './sider-surfaces'
 
 interface Props {
   iconOnly?: boolean
@@ -45,13 +44,14 @@ const SniffCard: React.FC<Props> = (props) => {
   if (iconOnly) {
     return (
       <div className={`${sniffCardStatus} flex justify-center`}>
-        <SiderIconButton
+        <SiderIconToggleButton
+          isSelected={controlSniff}
           label={`${tr('Sniffing')} — ${controlSniff ? tr('Enabled') : tr('Disabled')}`}
           placement="right"
-          onPress={() => void onChange(!controlSniff)}
+          onChange={onChange}
         >
           <RiScan2Fill className="text-[20px]" />
-        </SiderIconButton>
+        </SiderIconToggleButton>
       </div>
     )
   }
@@ -74,22 +74,10 @@ const SniffCard: React.FC<Props> = (props) => {
         <SiderQuickControl
           icon={<RiScan2Fill />}
           title={tr('Sniffing')}
+          status={controlSniff ? tr('Enabled') : tr('Disabled')}
           enabled={controlSniff}
-          onToggle={() => onChange(!controlSniff)}
-          control={
-            <Switch
-              size="sm"
-              aria-label={tr('Sniffing')}
-              isSelected={controlSniff}
-              onChange={onChange}
-            >
-              <Switch.Content>
-                <Switch.Control>
-                  <Switch.Thumb />
-                </Switch.Control>
-              </Switch.Content>
-            </Switch>
-          }
+          isDragging={isDragging}
+          onToggle={onChange}
         />
       </div>
     </div>

@@ -31,7 +31,7 @@ import {
 } from './sider-order'
 
 const interactiveSelector =
-  'button:not(.pointer-events-none), [role="switch"], [data-sider-control-slot]'
+  'button:not(.pointer-events-none), [role="switch"]'
 
 const siderCardRouteMap = {
   'app-routing-card': '/app-routing',
