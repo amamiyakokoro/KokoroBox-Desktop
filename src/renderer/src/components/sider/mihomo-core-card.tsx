@@ -1,14 +1,16 @@
 import { tr } from '../../../../shared/i18n'
 import { calcTraffic } from '@renderer/utils/calc'
-import { mihomoVersion } from '@renderer/utils/ipc'
+import { mihomoVersion, restartCore } from '@renderer/utils/ipc'
 import React, { useEffect, useState } from 'react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import PubSub from 'pubsub-js'
 import useSWR from 'swr'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
+import { notify } from '@renderer/utils/notification'
+import { IoMdRefresh } from 'react-icons/io'
 import { LuCpu } from 'react-icons/lu'
-import { SiderIconDisplay, SiderStatusCard } from './sider-surfaces'
+import { SiderIconButton, SiderIconDisplay, SiderStatusCard } from './sider-surfaces'
 import { normalizeCoreVersion } from './core-version'
 
 interface Props {
@@ -37,6 +39,7 @@ const MihomoCoreCard: React.FC<Props> = ({ iconOnly }) => {
     ? { x: sortableTransform.x, y: sortableTransform.y, scaleX: 1, scaleY: 1 }
     : null
   const [mem, setMem] = useState(0)
+  const [restarting, setRestarting] = useState(false)
   const coreVersion = normalizeCoreVersion(version?.version)
   const originalVersion = coreVersion ? version?.version.trim() : undefined
   const versionLabel = versionError
@@ -98,6 +101,28 @@ const MihomoCoreCard: React.FC<Props> = ({ iconOnly }) => {
         statusTone={versionError ? 'danger' : 'default'}
         prioritizeDescription
         showChevron={false}
+        actions={
+          <SiderIconButton
+            isDisabled={restarting}
+            label={tr('Restart')}
+            onPress={async () => {
+              try {
+                setRestarting(true)
+                await restartCore()
+                await new Promise((resolve) => {
+                  setTimeout(resolve, 2000)
+                })
+              } catch (error) {
+                notify(error, { variant: 'danger' })
+              } finally {
+                setRestarting(false)
+                void mutate()
+              }
+            }}
+          >
+            <IoMdRefresh className={restarting ? 'animate-spin' : undefined} />
+          </SiderIconButton>
+        }
       />
     </div>
   )
