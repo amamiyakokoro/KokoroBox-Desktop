@@ -6,8 +6,10 @@ import { promisify } from 'util'
 import { execFile, execFileSync } from 'child_process'
 import { servicePath } from '../utils/dirs'
 import { net } from 'electron'
+import { isAxiosError } from 'axios'
 import {
   disableProxy,
+  renewSysProxyLease,
   setPac,
   setProxy,
   startServiceSysproxyEventStream,
@@ -21,6 +23,7 @@ import { disableTerminalProxy, enableTerminalProxy } from './terminal-proxy'
 
 let defaultBypass: string[]
 let triggerSysProxyTimer: NodeJS.Timeout | null = null
+let sysproxyLeaseTimer: NodeJS.Timeout | null = null
 let triggerSysProxyTask = Promise.resolve()
 let triggerSysProxyRequest = 0
 let sysproxyGuardEventsStartedAt = 0
@@ -34,6 +37,55 @@ export interface TriggerSysProxyOptions {
 
 function registryArgs(useRegistry: boolean): string[] {
   return process.platform === 'win32' && useRegistry ? ['--use-registry'] : []
+}
+
+function stopSysproxyLeaseRenewal(): void {
+  if (sysproxyLeaseTimer) clearTimeout(sysproxyLeaseTimer)
+  sysproxyLeaseTimer = null
+}
+
+function startSysproxyLeaseRenewal(onlyActiveDevice: boolean, useRegistry: boolean): void {
+  stopSysproxyLeaseRenewal()
+  const request = triggerSysProxyRequest
+  const schedule = (): void => {
+    if (request !== triggerSysProxyRequest) return
+    sysproxyLeaseTimer = setTimeout(
+      () =>
+        void renew().catch((error) => {
+          appendAppLog(`[Sysproxy]: lease renewal failed, ${error}\n`).catch(() => {})
+        }),
+      20_000
+    )
+    sysproxyLeaseTimer.unref()
+  }
+  const renew = async (): Promise<void> => {
+    if (request !== triggerSysProxyRequest) return
+    let restored = false
+    try {
+      await renewSysProxyLease()
+    } catch (error) {
+      appendAppLog(`[Sysproxy]: service lease renewal failed, ${error}\n`).catch(() => {})
+      if (
+        request === triggerSysProxyRequest &&
+        isAxiosError(error) &&
+        error.response?.status === 409
+      ) {
+        try {
+          const { sysProxy } = await getAppConfig()
+          if (sysProxy.enable && sysProxy.settingMode === 'service') {
+            await setSysProxy(onlyActiveDevice, useRegistry)
+            restored = true
+          }
+        } catch (restoreError) {
+          appendAppLog(`[Sysproxy]: restore service lease failed, ${restoreError}\n`).catch(
+            () => {}
+          )
+        }
+      }
+    }
+    if (!restored) schedule()
+  }
+  schedule()
 }
 
 export function triggerSysProxy(
@@ -148,7 +200,9 @@ async function setSysProxy(onlyActiveDevice: boolean, useRegistry = false): Prom
           guard
         )
         updateSysproxyGuardEventStream(guardNotify)
+        startSysproxyLeaseRenewal(onlyActiveDevice, useRegistry)
       } else {
+        stopSysproxyLeaseRenewal()
         updateSysproxyGuardEventStream(false)
         await execFilePromise(
           servicePath(),
@@ -177,7 +231,9 @@ async function setSysProxy(onlyActiveDevice: boolean, useRegistry = false): Prom
             guard
           )
           updateSysproxyGuardEventStream(guardNotify)
+          startSysproxyLeaseRenewal(onlyActiveDevice, useRegistry)
         } else {
+          stopSysproxyLeaseRenewal()
           updateSysproxyGuardEventStream(false)
           await execFilePromise(
             servicePath(),
@@ -195,6 +251,7 @@ async function setSysProxy(onlyActiveDevice: boolean, useRegistry = false): Prom
         }
       } else {
         updateSysproxyGuardEventStream(false)
+        stopSysproxyLeaseRenewal()
       }
       break
     }
@@ -214,6 +271,7 @@ async function disableSysProxy(
   useRegistry = false,
   options: TriggerSysProxyOptions = {}
 ): Promise<void> {
+  stopSysproxyLeaseRenewal()
   await stopPacServer()
   updateSysproxyGuardEventStream(false)
   const { sysProxy } = await getAppConfig()

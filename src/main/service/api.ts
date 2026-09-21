@@ -928,6 +928,11 @@ export const disableProxy = async (
   )
 }
 
+export const renewSysProxyLease = async (): Promise<void> => {
+  const instance = getServiceAxios()
+  await instance.post('/sysproxy/renew')
+}
+
 export const setSysDns = async (device?: string, servers?: string[]): Promise<void> => {
   const instance = getServiceAxios()
   return await instance.post('/sys/dns/set', { servers, device })
