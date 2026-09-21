@@ -3,7 +3,10 @@ import { Button } from '@heroui/react'
 import BasePage from '@renderer/components/base/base-page'
 import { SettingCardModeProvider } from '@renderer/components/base/base-setting-card'
 import { KokoTabs } from '@renderer/components/base/base-controls'
-import { resolveSettingsSelection } from '@renderer/components/settings/settings-navigation'
+import {
+  normalizeLegacySettingsSearchParams,
+  resolveSettingsSelection
+} from '@renderer/components/settings/settings-navigation'
 import { getSettingsCategories } from '@renderer/components/settings/settings-registry'
 import React, { useCallback, useEffect, useMemo, useRef } from 'react'
 import { IoLogoGithub } from 'react-icons/io5'
@@ -36,6 +39,11 @@ const Settings: React.FC = () => {
   useEffect(() => {
     resetContentScroll()
   }, [category, resetContentScroll])
+
+  useEffect(() => {
+    const normalizedParams = normalizeLegacySettingsSearchParams(searchParams)
+    if (normalizedParams) setSearchParams(normalizedParams, { replace: true })
+  }, [searchParams, setSearchParams])
 
   useEffect(() => {
     if (!requestedSetting || requestedSetting.category.key !== category) return

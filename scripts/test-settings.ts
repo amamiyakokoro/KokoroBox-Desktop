@@ -258,40 +258,60 @@ test('Application Settings swaps sidebar content without changing its width', ()
   assert.doesNotMatch(presentation, /resolveSiderPresentationWidth|narrowWidth|userWidth/)
 })
 
-test('network settings use nested panels and preserve legacy routes', () => {
+test('Mihomo settings belong to Core while legacy Network links normalize canonically', () => {
   const registry = readFileSync(
     'src/renderer/src/components/settings/settings-registry.tsx',
     'utf8'
   )
   const settings = readFileSync('src/renderer/src/pages/settings.tsx', 'utf8')
+  const navigation = readFileSync(
+    'src/renderer/src/components/settings/settings-navigation.ts',
+    'utf8'
+  )
   const routes = readFileSync('src/renderer/src/routes/index.tsx', 'utf8')
-  const sider = readFileSync('src/renderer/src/components/sider/sider-cards.tsx', 'utf8')
+  const networkPanels = registry.slice(
+    registry.indexOf('const networkPanels:'),
+    registry.indexOf('const corePanels:')
+  )
+  const corePanels = registry.slice(
+    registry.indexOf('const corePanels:'),
+    registry.indexOf('const dataPanels:')
+  )
+  const panelKeys = (source: string): string[] =>
+    [...source.matchAll(/^ {4}\{\n {6}key: '([^']+)'/gm)].map((match) => match[1])
 
   assert.match(registry, /key: 'network'/)
-  assert.match(registry, /key: 'system-proxy'/)
+  assert.deepEqual(panelKeys(networkPanels), [
+    'system-proxy',
+    'tun',
+    'dns',
+    'network-behavior',
+    'sniffer'
+  ])
+  assert.deepEqual(panelKeys(corePanels), ['runtime', 'mihomo', 'service', 'environment'])
+  assert.doesNotMatch(networkPanels, /key: 'mihomo'|mihomo-ipv6|<Mihomo embedded/)
+  assert.match(corePanels, /key: 'mihomo'/)
+  assert.match(corePanels, /entry\('mihomo-ipv6'/)
+  assert.match(corePanels, /entry\('mihomo-interface'/)
+  assert.match(corePanels, /content: \(\) => <Mihomo embedded \/>/)
   assert.match(registry, /content: \(\) => <Sysproxy embedded \/>/)
-  assert.match(registry, /key: 'tun'/)
   assert.match(registry, /content: \(\) => <Tun embedded \/>/)
-  assert.match(registry, /key: 'dns'/)
   assert.match(registry, /content: \(\) => <DNS embedded \/>/)
-  assert.match(registry, /key: 'mihomo'/)
-  assert.match(registry, /content: \(\) => <Mihomo embedded \/>/)
-  assert.match(registry, /key: 'network-behavior'/)
   assert.match(registry, /content: \(\) => <NetworkBehaviorSettings \/>/)
-  assert.match(registry, /key: 'sniffer'/)
   assert.match(registry, /content: \(\) => <Sniffer embedded \/>/)
   assert.match(settings, /selectedPanels/)
   assert.match(settings, /selectedPanel\?\.content\(\)/)
-  assert.match(routes, /settings\?section=network&panel=system-proxy/)
-  assert.match(routes, /settings\?section=network&panel=tun/)
-  assert.match(routes, /settings\?section=network&panel=dns/)
-  assert.match(routes, /settings\?section=network&panel=mihomo/)
-  assert.match(routes, /settings\?section=network&panel=sniffer/)
-  assert.doesNotMatch(sider, /settings\?section=network&panel=system-proxy/)
-  assert.doesNotMatch(sider, /settings\?section=network&panel=tun/)
-  assert.doesNotMatch(sider, /settings\?section=network&panel=dns/)
-  assert.doesNotMatch(sider, /settings\?section=network&panel=mihomo/)
-  assert.doesNotMatch(sider, /settings\?section=network&panel=sniffer/)
+  assert.match(routes, /settings\?section=core&panel=mihomo/)
+  assert.match(navigation, /searchParams\.get\('section'\) === 'network'/)
+  assert.match(navigation, /searchParams\.get\('panel'\) === 'mihomo'/)
+  assert.match(navigation, /searchParams\.get\('setting'\)\?\.startsWith\('mihomo-'\)/)
+  assert.match(navigation, /nextParams\.set\('section', 'core'\)/)
+  assert.match(navigation, /nextParams\.set\('panel', 'mihomo'\)/)
+  assert.match(settings, /normalizeLegacySettingsSearchParams\(searchParams\)/)
+  assert.match(settings, /setSearchParams\(normalizedParams, \{ replace: true \}\)/)
+  for (const file of collectTsxFiles('src/renderer/src')) {
+    assert.doesNotMatch(readFileSync(file, 'utf8'), /section=network&panel=mihomo/)
+  }
 })
 
 test('feature settings only surface save actions for dirty embedded panels', () => {
@@ -1260,13 +1280,18 @@ test('desktop sidebar separates controls, live status and navigation', () => {
   assert.match(core, /<SiderStatusCard/)
   assert.match(core, /status=\{version \? memoryLabel : undefined\}/)
   assert.match(core, /statusTitle=\{version \? `\$\{tr\('Memory'\)\}/)
-  assert.match(core, /<SiderIconDisplay label=\{tr\('Core'\)\} placement="right">/)
+  assert.match(core, /const settingsPath = '\/settings\?section=core&panel=runtime'/)
+  assert.match(core, /isSettingsFocusRoute\(location\.pathname\)/)
+  assert.match(core, /searchParams\.get\('section'\) === 'core'/)
+  assert.match(core, /<SiderIconButton[\s\S]*active=\{active\}/)
+  assert.match(core, /label=\{tr\('Core settings'\)\}/)
+  assert.match(core, /onPress=\{\(\) => navigate\(settingsPath\)\}/)
   assert.match(core, /showChevron=\{false\}/)
   assert.match(core, /actions=\{[\s\S]*<SiderIconButton/)
   assert.match(core, /label=\{tr\('Restart'\)\}/)
   assert.match(core, /await restartCore\(\)/)
   assert.match(core, /IoMdRefresh className=\{restarting \? 'animate-spin'/)
-  assert.doesNotMatch(core, /useNavigate|useLocation|settingsPath|navigate\(/)
+  assert.doesNotMatch(core, /section=network&panel=mihomo/)
   assert.match(dns, /<SiderQuickControl/)
   assert.match(dns, /<SiderIconToggleButton/)
   assert.match(dns, /\sstatus=\{controlDns \? tr\('Enabled'\)/)

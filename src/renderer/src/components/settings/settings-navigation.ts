@@ -21,12 +21,28 @@ export interface SettingsSearchResult {
   panelLabel?: string
 }
 
+export const normalizeLegacySettingsSearchParams = (
+  searchParams: URLSearchParams
+): URLSearchParams | undefined => {
+  const isLegacyMihomoPanel =
+    searchParams.get('section') === 'network' &&
+    (searchParams.get('panel') === 'mihomo' || searchParams.get('setting')?.startsWith('mihomo-'))
+
+  if (!isLegacyMihomoPanel) return undefined
+
+  const nextParams = new URLSearchParams(searchParams)
+  nextParams.set('section', 'core')
+  nextParams.set('panel', 'mihomo')
+  return nextParams
+}
+
 export const resolveSettingsSelection = (
   categories: SettingsCategoryDefinition[],
   searchParams: URLSearchParams
 ): SettingsSelection => {
-  const requestedCategory = searchParams.get('section')
-  const requestedSetting = findSettingsEntry(categories, searchParams.get('setting'))
+  const resolvedSearchParams = normalizeLegacySettingsSearchParams(searchParams) ?? searchParams
+  const requestedCategory = resolvedSearchParams.get('section')
+  const requestedSetting = findSettingsEntry(categories, resolvedSearchParams.get('setting'))
   const isSettingsCategory = (value: string | null): value is SettingsCategory =>
     categories.some((item) => item.key === value)
   const category: SettingsCategory = isSettingsCategory(requestedCategory)
@@ -35,7 +51,7 @@ export const resolveSettingsSelection = (
       ? (legacyCategoryAliases[requestedCategory] ?? 'general')
       : (requestedSetting?.category.key ?? 'general')
   const selected = categories.find((item) => item.key === category) ?? categories[0]
-  const requestedPanel = searchParams.get('panel') ?? requestedSetting?.entry.panel
+  const requestedPanel = resolvedSearchParams.get('panel') ?? requestedSetting?.entry.panel
   const selectedPanels = selected.panels ?? []
   const selectedPanel =
     selectedPanels.find((panel) => panel.key === requestedPanel) ?? selectedPanels[0]

@@ -226,59 +226,6 @@ export const getSettingsCategories = (): SettingsCategoryDefinition[] => {
       content: () => <DNS embedded />
     },
     {
-      key: 'mihomo',
-      label: 'Mihomo',
-      entries: [
-        entry('mihomo-ipv6', 'IPv6', tr('Core network'), { panel: 'mihomo' }),
-        entry('mihomo-mixed-port', tr('Mixed port'), tr('Port settings'), { panel: 'mihomo' }),
-        entry('mihomo-socks-port', tr('SOCKS port'), tr('Port settings'), { panel: 'mihomo' }),
-        entry('mihomo-http-port', tr('HTTP port'), tr('Port settings'), { panel: 'mihomo' }),
-        entry('mihomo-redir-port', tr('Redir port'), tr('Port settings'), { panel: 'mihomo' }),
-        entry('mihomo-tproxy-port', tr('TProxy port'), tr('Port settings'), { panel: 'mihomo' }),
-        entry('mihomo-allow-lan', tr('Allow LAN connections'), tr('Port settings'), {
-          panel: 'mihomo'
-        }),
-        entry('mihomo-authentication', tr('User authentication'), tr('Port settings'), {
-          panel: 'mihomo'
-        }),
-        entry('mihomo-controller', tr('Listen address'), tr('External controller'), {
-          panel: 'mihomo'
-        }),
-        entry('mihomo-controller-key', tr('Access key'), tr('External controller'), {
-          panel: 'mihomo'
-        }),
-        entry('mihomo-dashboard', tr('Enable controller dashboard'), tr('External controller'), {
-          panel: 'mihomo'
-        }),
-        entry('mihomo-controller-cors', tr('CORS configuration'), tr('External controller'), {
-          panel: 'mihomo'
-        }),
-        entry('mihomo-log-level', tr('Log level'), tr('Core logging'), { panel: 'mihomo' }),
-        entry('mihomo-find-process', tr('Find process'), tr('Advanced settings'), {
-          panel: 'mihomo'
-        }),
-        entry('mihomo-store-selected', tr('Remember selected proxies'), tr('Advanced settings'), {
-          panel: 'mihomo'
-        }),
-        entry('mihomo-store-fake-ip', tr('Persist FakeIP mappings'), tr('Advanced settings'), {
-          panel: 'mihomo'
-        }),
-        entry('mihomo-unified-delay', tr('Use RTT latency tests'), tr('Advanced settings'), {
-          panel: 'mihomo'
-        }),
-        entry('mihomo-tcp-concurrent', tr('Concurrent TCP connections'), tr('Advanced settings'), {
-          panel: 'mihomo'
-        }),
-        entry('mihomo-keep-alive', tr('Disable TCP keep-alive'), tr('Advanced settings'), {
-          panel: 'mihomo'
-        }),
-        entry('mihomo-interface', tr('Set outbound interface'), tr('Advanced settings'), {
-          panel: 'mihomo'
-        })
-      ],
-      content: () => <Mihomo embedded />
-    },
-    {
       key: 'network-behavior',
       label: tr('Network behavior'),
       entries: [
@@ -383,6 +330,59 @@ export const getSettingsCategories = (): SettingsCategoryDefinition[] => {
         })
       ],
       content: () => <CoreExecutionSettings />
+    },
+    {
+      key: 'mihomo',
+      label: 'Mihomo',
+      entries: [
+        entry('mihomo-ipv6', 'IPv6', tr('Core network'), { panel: 'mihomo' }),
+        entry('mihomo-mixed-port', tr('Mixed port'), tr('Port settings'), { panel: 'mihomo' }),
+        entry('mihomo-socks-port', tr('SOCKS port'), tr('Port settings'), { panel: 'mihomo' }),
+        entry('mihomo-http-port', tr('HTTP port'), tr('Port settings'), { panel: 'mihomo' }),
+        entry('mihomo-redir-port', tr('Redir port'), tr('Port settings'), { panel: 'mihomo' }),
+        entry('mihomo-tproxy-port', tr('TProxy port'), tr('Port settings'), { panel: 'mihomo' }),
+        entry('mihomo-allow-lan', tr('Allow LAN connections'), tr('Port settings'), {
+          panel: 'mihomo'
+        }),
+        entry('mihomo-authentication', tr('User authentication'), tr('Port settings'), {
+          panel: 'mihomo'
+        }),
+        entry('mihomo-controller', tr('Listen address'), tr('External controller'), {
+          panel: 'mihomo'
+        }),
+        entry('mihomo-controller-key', tr('Access key'), tr('External controller'), {
+          panel: 'mihomo'
+        }),
+        entry('mihomo-dashboard', tr('Enable controller dashboard'), tr('External controller'), {
+          panel: 'mihomo'
+        }),
+        entry('mihomo-controller-cors', tr('CORS configuration'), tr('External controller'), {
+          panel: 'mihomo'
+        }),
+        entry('mihomo-log-level', tr('Log level'), tr('Core logging'), { panel: 'mihomo' }),
+        entry('mihomo-find-process', tr('Find process'), tr('Advanced settings'), {
+          panel: 'mihomo'
+        }),
+        entry('mihomo-store-selected', tr('Remember selected proxies'), tr('Advanced settings'), {
+          panel: 'mihomo'
+        }),
+        entry('mihomo-store-fake-ip', tr('Persist FakeIP mappings'), tr('Advanced settings'), {
+          panel: 'mihomo'
+        }),
+        entry('mihomo-unified-delay', tr('Use RTT latency tests'), tr('Advanced settings'), {
+          panel: 'mihomo'
+        }),
+        entry('mihomo-tcp-concurrent', tr('Concurrent TCP connections'), tr('Advanced settings'), {
+          panel: 'mihomo'
+        }),
+        entry('mihomo-keep-alive', tr('Disable TCP keep-alive'), tr('Advanced settings'), {
+          panel: 'mihomo'
+        }),
+        entry('mihomo-interface', tr('Set outbound interface'), tr('Advanced settings'), {
+          panel: 'mihomo'
+        })
+      ],
+      content: () => <Mihomo embedded />
     },
     {
       key: 'service',

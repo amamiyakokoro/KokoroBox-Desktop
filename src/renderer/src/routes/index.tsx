@@ -30,7 +30,7 @@ function startupRoute(element: ReactNode): ReactNode {
 const routes = [
   {
     path: 'mihomo',
-    element: startupRoute(<Navigate to="/settings?section=network&panel=mihomo" replace />)
+    element: startupRoute(<Navigate to="/settings?section=core&panel=mihomo" replace />)
   },
   {
     path: 'sysproxy',
