@@ -10,16 +10,12 @@ import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { notify } from '@renderer/utils/notification'
 import { IoMdRefresh } from 'react-icons/io'
 import { LuCpu } from 'react-icons/lu'
-import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
-import { SiderIconButton, SiderStatusCard } from './sider-surfaces'
+import { SiderIconButton, SiderIconDisplay, SiderStatusCard } from './sider-surfaces'
 import { normalizeCoreVersion } from './core-version'
-import { isSettingsFocusRoute } from './sider-presentation'
 
 interface Props {
   iconOnly?: boolean
 }
-
-const settingsPath = '/settings?section=core&panel=runtime'
 
 const MihomoCoreCard: React.FC<Props> = ({ iconOnly }) => {
   const { appConfig } = useAppConfig()
@@ -32,10 +28,6 @@ const MihomoCoreCard: React.FC<Props> = ({ iconOnly }) => {
     errorRetryInterval: 200,
     errorRetryCount: 10
   })
-  const location = useLocation()
-  const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
-  const active = isSettingsFocusRoute(location.pathname) && searchParams.get('section') === 'core'
   const {
     listeners,
     setNodeRef,
@@ -80,14 +72,9 @@ const MihomoCoreCard: React.FC<Props> = ({ iconOnly }) => {
   if (iconOnly) {
     return (
       <div className={`${mihomoCoreCardStatus} flex justify-center`}>
-        <SiderIconButton
-          active={active}
-          label={tr('Core settings')}
-          placement="right"
-          onPress={() => navigate(settingsPath)}
-        >
+        <SiderIconDisplay label={tr('Core')} placement="right">
           <LuCpu className="text-[20px]" />
-        </SiderIconButton>
+        </SiderIconDisplay>
       </div>
     )
   }
@@ -113,8 +100,6 @@ const MihomoCoreCard: React.FC<Props> = ({ iconOnly }) => {
         statusTitle={version ? `${tr('Memory')} ${memoryLabel}` : undefined}
         statusTone={versionError ? 'danger' : 'default'}
         prioritizeDescription
-        active={active}
-        onPress={() => navigate(settingsPath)}
         showChevron={false}
         actions={
           <SiderIconButton
