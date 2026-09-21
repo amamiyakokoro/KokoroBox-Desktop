@@ -1643,6 +1643,8 @@ test('Kokoro account options and default rules use clear desktop sections and sa
     'src/renderer/src/components/profiles/kokoro-subscription-modal.tsx',
     'utf8'
   )
+  const profileConfig = readFileSync('src/main/config/profile.ts', 'utf8')
+  const rendererIpc = readFileSync('src/renderer/src/utils/ipc.ts', 'utf8')
   const rules = readFileSync(
     'src/renderer/src/components/profiles/kokoro-default-rules.tsx',
     'utf8'
@@ -1670,6 +1672,14 @@ test('Kokoro account options and default rules use clear desktop sections and sa
   assert.match(page, /bg-surface transition-colors focus-within:border-accent\/35/)
   assert.doesNotMatch(page, /(?:bg|text)-primary(?:\/|\b)/)
   assert.match(page, /footer=\{[\s\S]*tr\('Fetch and add'\)/)
+  assert.match(
+    profileConfig,
+    /export async function addKokoroProfile[\s\S]*const newProfileId = await addProfileItem[\s\S]*current !== newProfileId[\s\S]*await changeCurrentProfile\(newProfileId\)[\s\S]*return newProfileId/
+  )
+  assert.match(
+    rendererIpc,
+    /export async function addKokoroProfile\(settings: KokoroSubscriptionSettings\): Promise<string>/
+  )
   assert.match(page, /aria-label=\{tr\('Update rule sets automatically'\)\}/)
   assert.match(page, /aria-label=\{tr\('Update subscription automatically'\)\}/)
   assert.equal(page.match(/labelPlacement="inside"/g)?.length, 6)

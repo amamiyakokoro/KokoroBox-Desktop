@@ -89,7 +89,7 @@ export async function updateProfileItem(item: ProfileItem): Promise<void> {
   }
 }
 
-export async function addProfileItem(item: Partial<ProfileItem>): Promise<void> {
+export async function addProfileItem(item: Partial<ProfileItem>): Promise<string> {
   const newItem = await createProfile(item)
   const config = await getProfileConfig()
   if (await getProfileItem(newItem.id)) {
@@ -103,6 +103,7 @@ export async function addProfileItem(item: Partial<ProfileItem>): Promise<void> 
     await changeCurrentProfile(newItem.id)
   }
   await addProfileUpdater(newItem)
+  return newItem.id
 }
 
 export async function removeProfileItem(id: string): Promise<void> {
@@ -282,8 +283,8 @@ export async function getProfileStr(id: string | undefined): Promise<string> {
   }
 }
 
-export async function addKokoroProfile(settings: KokoroSubscriptionSettings): Promise<void> {
-  await addProfileItem({
+export async function addKokoroProfile(settings: KokoroSubscriptionSettings): Promise<string> {
+  const newProfileId = await addProfileItem({
     type: 'remote',
     name: '',
     verify: true,
@@ -291,6 +292,11 @@ export async function addKokoroProfile(settings: KokoroSubscriptionSettings): Pr
     interval: settings.profile_auto_update ? settings.profile_update_hours * 60 : 0,
     kokoro: { settings: { ...settings, format: 'mihomo' } }
   })
+  const { current } = await getProfileConfig()
+  if (current !== newProfileId) {
+    await changeCurrentProfile(newProfileId)
+  }
+  return newProfileId
 }
 
 export async function clearKokoroProfiles(): Promise<void> {

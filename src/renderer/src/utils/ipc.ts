@@ -247,7 +247,7 @@ export async function replaceKokoroDefaultRules(
   )
 }
 
-export async function addKokoroProfile(settings: KokoroSubscriptionSettings): Promise<void> {
+export async function addKokoroProfile(settings: KokoroSubscriptionSettings): Promise<string> {
   return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('addKokoroProfile', settings))
 }
 
