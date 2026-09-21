@@ -109,3 +109,20 @@ test('application quit cannot wait indefinitely for cleanup or renderer confirma
   assert.match(source, /webContents\.once\('destroyed', handleRendererUnavailable\)/)
   assert.match(source, /if \(quitPromise\) return quitPromise/)
 })
+
+test('service-mode system proxy cleanup never falls back to direct CLI mutation', () => {
+  const sysproxy = readFileSync(resolve('src/main/sys/sysproxy.ts'), 'utf8')
+  const coreRuntime = readFileSync(resolve('src/main/core/service-core-runtime.ts'), 'utf8')
+  const ipc = readFileSync(resolve('src/main/utils/ipc.ts'), 'utf8')
+  const settings = readFileSync(
+    resolve('src/renderer/src/components/settings/network/system-proxy-settings.tsx'),
+    'utf8'
+  )
+
+  assert.match(sysproxy, /if \(settingMode === 'service'\) \{\s*await disableProxy\(/)
+  assert.match(sysproxy, /getAppConfigSync\(\)\.sysProxy\?\.settingMode === 'service'\) return/)
+  assert.doesNotMatch(sysproxy, /fallback to exec/)
+  assert.doesNotMatch(coreRuntime, /settingMode: 'exec'/)
+  assert.doesNotMatch(ipc, /settingMode: 'exec'/)
+  assert.doesNotMatch(settings, /settingMode: 'exec' as const/)
+})

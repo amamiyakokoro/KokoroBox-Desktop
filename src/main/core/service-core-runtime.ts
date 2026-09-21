@@ -181,22 +181,14 @@ export function createServiceCoreRuntime(options: ServiceCoreRuntimeOptions) {
 
     const preserveMacOSServiceCore = process.platform === 'darwin' && useServiceCore
 
-    await patchAppConfig({
-      ...(useServiceCore && !preserveMacOSServiceCore
-        ? { corePermissionMode: 'elevated' as const }
-        : {}),
-      ...(useServiceSysProxy && sysProxy
-        ? {
-            sysProxy: {
-              ...sysProxy,
-              settingMode: 'exec' as const,
-              guard: false,
-              guardNotify: false
-            }
-          }
-        : {}),
-      ...(useServiceDNS ? { autoSetDNSMode: 'exec' as const } : {})
-    })
+    if ((useServiceCore && !preserveMacOSServiceCore) || useServiceDNS) {
+      await patchAppConfig({
+        ...(useServiceCore && !preserveMacOSServiceCore
+          ? { corePermissionMode: 'elevated' as const }
+          : {}),
+        ...(useServiceDNS ? { autoSetDNSMode: 'exec' as const } : {})
+      })
+    }
 
     mainWindow?.webContents.send('appConfigUpdated')
     floatingWindow?.webContents.send('appConfigUpdated')
@@ -209,7 +201,9 @@ export function createServiceCoreRuntime(options: ServiceCoreRuntimeOptions) {
     void showNotification({
       title: preserveMacOSServiceCore
         ? tr('macOS privileged features require KokoroBox Service. Install or repair the service.')
-        : tr('Service unavailable. Switched to non-service mode')
+        : useServiceCore || useServiceDNS
+          ? tr('Service unavailable. Switched to non-service mode')
+          : tr('The service may not be installed')
     })
   }
 

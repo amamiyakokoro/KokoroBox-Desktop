@@ -164,15 +164,7 @@ const Sysproxy: React.FC<Props> = ({ embedded = false }) => {
       return values
     }
 
-    notify(tr('Service unavailable. Switched to command execution mode'))
-    const nextValues = {
-      ...values,
-      settingMode: 'exec' as const,
-      guard: false,
-      guardNotify: false
-    }
-    originSetValues(nextValues)
-    return nextValues
+    throw new Error(tr('The service may not be installed'))
   }
 
   const onSave = async (): Promise<boolean> => {

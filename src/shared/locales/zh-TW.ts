@@ -958,7 +958,6 @@ export const messages: Readonly<Record<string, string>> = {
   'Last allowed': '最後放行',
   Minimize: '最小化',
   'Service API is not initialized': '服務 API 未初始化',
-  'Service unavailable. Switched to command execution mode': '服務不可用，已切換到執行命令模式',
   'Service unavailable. Switched to non-service mode': '服務不可用，已切換到非服務模式',
   'Failed to stop service: {0}': '服務停止失敗：{0}',
   'Service initialization failed: {0}': '服務初始化失敗：{0}',

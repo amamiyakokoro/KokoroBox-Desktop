@@ -244,16 +244,7 @@ async function normalizeServiceModePatch(patch: Partial<AppConfig>): Promise<Par
     return patch
   }
 
-  void showNotification({ title: tr('Service unavailable. Switched to command execution mode') })
-  return {
-    ...patch,
-    sysProxy: {
-      ...patch.sysProxy,
-      settingMode: 'exec',
-      guard: false,
-      guardNotify: false
-    }
-  }
+  throw new Error(tr('The service may not be installed'))
 }
 
 export function registerIpcMainHandlers(): void {

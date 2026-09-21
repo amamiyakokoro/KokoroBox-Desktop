@@ -1,5 +1,6 @@
 import { tr } from '../../shared/i18n'
 import { getAppConfig, getControledMihomoConfig } from '../config'
+import { getAppConfigSync } from '../config/app'
 import { pacPort, startPacServer, stopPacServer } from '../resolve/server'
 import { promisify } from 'util'
 import { execFile, execFileSync } from 'child_process'
@@ -139,18 +140,14 @@ async function setSysProxy(onlyActiveDevice: boolean, useRegistry = false): Prom
   switch (mode || 'manual') {
     case 'auto': {
       if (settingMode === 'service') {
-        try {
-          await setPac(
-            `http://${host || '127.0.0.1'}:${pacPort}/pac`,
-            '',
-            onlyActiveDevice,
-            useRegistry,
-            guard
-          )
-          updateSysproxyGuardEventStream(guardNotify)
-        } catch {
-          throw new Error(tr('The service may not be installed'))
-        }
+        await setPac(
+          `http://${host || '127.0.0.1'}:${pacPort}/pac`,
+          '',
+          onlyActiveDevice,
+          useRegistry,
+          guard
+        )
+        updateSysproxyGuardEventStream(guardNotify)
       } else {
         updateSysproxyGuardEventStream(false)
         await execFilePromise(
@@ -171,19 +168,15 @@ async function setSysProxy(onlyActiveDevice: boolean, useRegistry = false): Prom
     case 'manual': {
       if (port != 0) {
         if (settingMode === 'service') {
-          try {
-            await setProxy(
-              `${host || '127.0.0.1'}:${port}`,
-              bypass.join(','),
-              '',
-              onlyActiveDevice,
-              useRegistry,
-              guard
-            )
-            updateSysproxyGuardEventStream(guardNotify)
-          } catch {
-            throw new Error(tr('The service may not be installed'))
-          }
+          await setProxy(
+            `${host || '127.0.0.1'}:${port}`,
+            bypass.join(','),
+            '',
+            onlyActiveDevice,
+            useRegistry,
+            guard
+          )
+          updateSysproxyGuardEventStream(guardNotify)
         } else {
           updateSysproxyGuardEventStream(false)
           await execFilePromise(
@@ -234,12 +227,7 @@ async function disableSysProxy(
 
   try {
     if (settingMode === 'service') {
-      try {
-        await disableProxy('', onlyActiveDevice, useRegistry, options.serviceRequestTimeoutMs)
-      } catch (e) {
-        await appendAppLog(`[Sysproxy]: disable via service failed, fallback to exec, ${e}\n`)
-        await disableWithExec()
-      }
+      await disableProxy('', onlyActiveDevice, useRegistry, options.serviceRequestTimeoutMs)
     } else {
       await disableWithExec()
     }
@@ -299,6 +287,7 @@ async function shouldNotifySysproxyGuardEvent(event: ServiceSysproxyEvent): Prom
 
 export function disableSysProxySync(useRegistry = false): void {
   if (process.platform !== 'win32') return
+  if (getAppConfigSync().sysProxy?.settingMode === 'service') return
 
   try {
     execFileSync(servicePath(), ['sysproxy', 'disable', ...registryArgs(useRegistry)], {

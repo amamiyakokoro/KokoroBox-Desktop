@@ -987,8 +987,6 @@ export const messages: Readonly<Record<string, string>> = {
   'Last allowed': 'Last allowed',
   Minimize: 'Minimize',
   'Service API is not initialized': 'Service API is not initialized',
-  'Service unavailable. Switched to command execution mode':
-    'Service unavailable. Switched to command execution mode',
   'Service unavailable. Switched to non-service mode':
     'Service unavailable. Switched to non-service mode',
   'Failed to stop service: {0}': 'Failed to stop service: {0}',
