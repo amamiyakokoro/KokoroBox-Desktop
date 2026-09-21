@@ -73,7 +73,6 @@ const TunSwitcher: React.FC<Props> = (props) => {
         <SiderQuickControl
           icon={<TbDeviceIpadHorizontalBolt />}
           title={tr('TUN mode')}
-          status={enable ? tr('Enabled') : tr('Disabled')}
           enabled={Boolean(enable)}
           onToggle={() => onChange(!enable)}
           control={

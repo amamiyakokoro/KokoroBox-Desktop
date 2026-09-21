@@ -84,7 +84,6 @@ const SysproxySwitcher: React.FC<Props> = (props) => {
         <SiderQuickControl
           icon={<AiOutlineGlobal />}
           title={tr('System proxy')}
-          status={selected ? tr('Enabled') : tr('Disabled')}
           enabled={selected}
           disabled={mode === 'manual' && disabled}
           onToggle={() => onChange(!selected)}

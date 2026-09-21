@@ -408,7 +408,6 @@ export const SiderStatusCard: React.FC<SiderStatusCardProps> = ({
 interface SiderQuickControlProps {
   icon: React.ReactNode
   title: string
-  status: string
   enabled: boolean
   disabled?: boolean
   control: React.ReactNode
@@ -418,7 +417,6 @@ interface SiderQuickControlProps {
 export const SiderQuickControl: React.FC<SiderQuickControlProps> = ({
   icon,
   title,
-  status,
   enabled,
   disabled = false,
   control,
@@ -451,12 +449,6 @@ export const SiderQuickControl: React.FC<SiderQuickControlProps> = ({
         >
           {title}
         </span>
-        <SiderStatusRow
-          className="sider-quick-control__status w-full"
-          tone={enabled ? 'success' : 'danger'}
-        >
-          {status}
-        </SiderStatusRow>
       </button>
       <div
         data-sider-control-slot

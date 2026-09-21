@@ -74,7 +74,6 @@ const SniffCard: React.FC<Props> = (props) => {
         <SiderQuickControl
           icon={<RiScan2Fill />}
           title={tr('Sniffing')}
-          status={controlSniff ? tr('Enabled') : tr('Disabled')}
           enabled={controlSniff}
           onToggle={() => onChange(!controlSniff)}
           control={

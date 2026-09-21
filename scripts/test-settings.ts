@@ -1130,10 +1130,7 @@ test('desktop sidebar separates controls, live status and navigation', () => {
   assert.match(quickControl, /sider-quick-control__primary/)
   assert.match(quickControl, /sider-quick-control__icon flex size-8 items-center justify-center/)
   assert.match(quickControl, /sider-quick-control__title whitespace-nowrap/)
-  assert.match(
-    quickControl,
-    /className="sider-quick-control__status w-full"[\s\S]*tone=\{enabled \? 'success' : 'danger'\}/
-  )
+  assert.doesNotMatch(quickControl, /status: string|sider-quick-control__status|<SiderStatusRow/)
   assert.match(quickControl, /data-sider-control-slot/)
   assert.match(sider, /interactiveSelector[\s\S]*\[data-sider-control-slot\]/)
   assert.match(
@@ -1167,10 +1164,9 @@ test('desktop sidebar separates controls, live status and navigation', () => {
     quickControlStyles,
     /\.sider-quick-control__title\s*\{[\s\S]*grid-column:\s*1 \/ -1;[\s\S]*grid-row:\s*2/
   )
-  assert.match(
-    quickControlStyles,
-    /\.sider-quick-control__status\s*\{[\s\S]*grid-column:\s*1 \/ -1;[\s\S]*grid-row:\s*3/
-  )
+  assert.doesNotMatch(quickControlStyles, /sider-quick-control__status/)
+  assert.match(quickControlStyles, /grid-template-rows:\s*2rem 1\.25rem/)
+  assert.match(quickControlStyles, /min-height:\s*4\.5rem/)
   assert.match(quickControlStyles, /@container \(min-width:\s*10rem\)/)
   assert.match(
     quickControlStyles,
@@ -1205,6 +1201,7 @@ test('desktop sidebar separates controls, live status and navigation', () => {
   assert.match(systemProxy, /onChange=\{onChange\}/)
   assert.doesNotMatch(systemProxy, /BorderSwitch|border-2|isShowBorder/)
   assert.doesNotMatch(systemProxy, /\.\.\.attributes/)
+  assert.doesNotMatch(systemProxy, /\sstatus=\{selected \? tr\('Enabled'\)/)
   assert.doesNotMatch(systemProxy, /useNavigate|useLocation|settingsPath|navigate\(/)
   assert.match(tun, /<SiderQuickControl/)
   assert.match(tun, /onToggle=\{\(\) => onChange\(!enable\)\}/)
@@ -1214,6 +1211,7 @@ test('desktop sidebar separates controls, live status and navigation', () => {
   assert.match(tun, /onChange=\{onChange\}/)
   assert.doesNotMatch(tun, /BorderSwitch|border-2|isShowBorder/)
   assert.doesNotMatch(tun, /\.\.\.attributes/)
+  assert.doesNotMatch(tun, /\sstatus=\{enable \? tr\('Enabled'\)/)
   assert.doesNotMatch(tun, /useNavigate|useLocation|settingsPath|navigate\(/)
   assert.match(appRouting, /getAppRoutingStatus/)
   assert.match(appRouting, /getAppRoutingStatusMessage/)
@@ -1248,7 +1246,7 @@ test('desktop sidebar separates controls, live status and navigation', () => {
   assert.match(core, /label=\{tr\('Restart'\)\}/)
   assert.match(dns, /<SiderQuickControl/)
   assert.match(dns, /<SiderIconButton/)
-  assert.match(dns, /status=\{controlDns \? tr\('Enabled'\) : tr\('Disabled'\)\}/)
+  assert.doesNotMatch(dns, /\sstatus=\{controlDns \? tr\('Enabled'\)/)
   assert.match(dns, /enabled=\{controlDns\}/)
   assert.match(dns, /onToggle=\{\(\) => onChange\(!controlDns\)\}/)
   assert.match(dns, /onPress=\{\(\) => void onChange\(!controlDns\)\}/)
@@ -1263,7 +1261,7 @@ test('desktop sidebar separates controls, live status and navigation', () => {
   assert.doesNotMatch(dns, /useNavigate|useLocation|settingsPath|navigate\(/)
   assert.match(sniff, /<SiderQuickControl/)
   assert.match(sniff, /<SiderIconButton/)
-  assert.match(sniff, /status=\{controlSniff \? tr\('Enabled'\) : tr\('Disabled'\)\}/)
+  assert.doesNotMatch(sniff, /\sstatus=\{controlSniff \? tr\('Enabled'\)/)
   assert.match(sniff, /enabled=\{controlSniff\}/)
   assert.match(sniff, /onToggle=\{\(\) => onChange\(!controlSniff\)\}/)
   assert.match(sniff, /onPress=\{\(\) => void onChange\(!controlSniff\)\}/)

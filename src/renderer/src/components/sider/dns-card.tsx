@@ -74,7 +74,6 @@ const DNSCard: React.FC<Props> = (props) => {
         <SiderQuickControl
           icon={<LuServer />}
           title="DNS"
-          status={controlDns ? tr('Enabled') : tr('Disabled')}
           enabled={controlDns}
           onToggle={() => onChange(!controlDns)}
           control={
