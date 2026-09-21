@@ -450,16 +450,24 @@ export const getSettingsCategories = (): SettingsCategoryDefinition[] => {
       key: 'mihomo',
       label: 'Mihomo',
       entries: [
-        entry('mihomo-ipv6', 'IPv6', tr('Core network'), { panel: 'mihomo' }),
-        entry('mihomo-mixed-port', tr('Mixed port'), tr('Port settings'), { panel: 'mihomo' }),
-        entry('mihomo-socks-port', tr('SOCKS port'), tr('Port settings'), { panel: 'mihomo' }),
-        entry('mihomo-http-port', tr('HTTP port'), tr('Port settings'), { panel: 'mihomo' }),
-        entry('mihomo-redir-port', tr('Redir port'), tr('Port settings'), { panel: 'mihomo' }),
-        entry('mihomo-tproxy-port', tr('TProxy port'), tr('Port settings'), { panel: 'mihomo' }),
-        entry('mihomo-allow-lan', tr('Allow LAN connections'), tr('Port settings'), {
+        entry('mihomo-ipv6', 'IPv6', tr('Network and ports'), { panel: 'mihomo' }),
+        entry('mihomo-mixed-port', tr('Mixed port'), tr('Network and ports'), {
           panel: 'mihomo'
         }),
-        entry('mihomo-authentication', tr('User authentication'), tr('Port settings'), {
+        entry('mihomo-socks-port', tr('SOCKS port'), tr('Network and ports'), {
+          panel: 'mihomo'
+        }),
+        entry('mihomo-http-port', tr('HTTP port'), tr('Network and ports'), { panel: 'mihomo' }),
+        entry('mihomo-redir-port', tr('Redir port'), tr('Network and ports'), {
+          panel: 'mihomo'
+        }),
+        entry('mihomo-tproxy-port', tr('TProxy port'), tr('Network and ports'), {
+          panel: 'mihomo'
+        }),
+        entry('mihomo-allow-lan', tr('Allow LAN connections'), tr('Network and ports'), {
+          panel: 'mihomo'
+        }),
+        entry('mihomo-authentication', tr('User authentication'), tr('Network and ports'), {
           panel: 'mihomo'
         }),
         entry('mihomo-controller', tr('Listen address'), tr('External controller'), {

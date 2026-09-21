@@ -355,12 +355,21 @@ test('core feature settings pages use the shared desktop layout', () => {
     /\.settings-section__content > \.setting-item__divider:last-child[\s\S]*display: none/
   )
 
-  for (const page of pages) {
+  for (const [index, page] of pages.entries()) {
     const source = readFileSync(page, 'utf8')
     assert.match(source, /base-feature-settings/)
     assert.match(source, /<FeatureSettingsLayout(?:\s|>)/)
-    assert.match(source, /<FeatureSettingsSection/)
+    if (index < pages.length - 1) assert.match(source, /<FeatureSettingsSection/)
   }
+
+  const mihomo = readFileSync(pages.at(-1)!, 'utf8')
+  const portSetting = readFileSync(
+    'src/renderer/src/components/mihomo/port-setting.tsx',
+    'utf8'
+  )
+  assert.match(mihomo, /<PortSetting/)
+  assert.doesNotMatch(mihomo, /<FeatureSettingsSection/)
+  assert.match(portSetting, /<SettingCard header=\{tr\('Network and ports'\)\}>/)
 })
 
 test('migrated feature settings use modern rows and stable save actions', () => {

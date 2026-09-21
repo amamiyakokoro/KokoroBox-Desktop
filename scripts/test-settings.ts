@@ -57,6 +57,10 @@ test('Mihomo settings stage edits and restart the core once from the page', () =
     'src/renderer/src/components/settings/network/mihomo-settings.tsx',
     'utf8'
   )
+  const portSetting = readFileSync(
+    'src/renderer/src/components/mihomo/port-setting.tsx',
+    'utf8'
+  )
   const stagedComponents = [
     'src/renderer/src/components/mihomo/port-setting.tsx',
     'src/renderer/src/components/mihomo/controller-setting.tsx',
@@ -67,6 +71,10 @@ test('Mihomo settings stage edits and restart the core once from the page', () =
   assert.match(page, /<FeatureSettingsSaveButton/)
   assert.match(page, /setDraftPatch/)
   assert.match(page, /await restartCore\(\)/)
+  assert.doesNotMatch(page, /Core network/)
+  assert.match(portSetting, /<SettingCard header=\{tr\('Network and ports'\)\}>/)
+  assert.match(portSetting, /<SettingItem title="IPv6" divider>/)
+  assert.match(portSetting, /onChange\(\{ ipv6: value \}\)/)
 
   for (const file of stagedComponents) {
     const source = readFileSync(file, 'utf8')
@@ -293,6 +301,8 @@ test('Mihomo settings belong to Core while legacy Network links normalize canoni
   assert.match(corePanels, /key: 'mihomo'/)
   assert.match(corePanels, /entry\('mihomo-ipv6'/)
   assert.match(corePanels, /entry\('mihomo-interface'/)
+  assert.match(corePanels, /entry\('mihomo-ipv6', 'IPv6', tr\('Network and ports'\)/)
+  assert.doesNotMatch(corePanels, /Core network|Port settings/)
   assert.match(corePanels, /content: \(\) => <Mihomo embedded \/>/)
   assert.match(registry, /content: \(\) => <Sysproxy embedded \/>/)
   assert.match(registry, /content: \(\) => <Tun embedded \/>/)

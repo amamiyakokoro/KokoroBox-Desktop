@@ -21,6 +21,7 @@ interface PortSettingProps {
 
 const PortSetting: React.FC<PortSettingProps> = ({ config, onChange, onValidationChange }) => {
   const {
+    ipv6,
     authentication = emptyStringList,
     'skip-auth-prefixes': skipAuthPrefixes = defaultSkipAuthPrefixes,
     'allow-lan': allowLan,
@@ -83,7 +84,16 @@ const PortSetting: React.FC<PortSettingProps> = ({ config, onChange, onValidatio
   return (
     <>
       {lanOpen && <InterfaceModal onClose={() => setLanOpen(false)} />}
-      <SettingCard header={tr('Port settings')}>
+      <SettingCard header={tr('Network and ports')}>
+        <SettingItem title="IPv6" divider>
+          <Switch isSelected={ipv6} size="sm" onChange={(value) => onChange({ ipv6: value })}>
+            <Switch.Content>
+              <Switch.Control>
+                <Switch.Thumb />
+              </Switch.Control>
+            </Switch.Content>
+          </Switch>
+        </SettingItem>
         <SettingItem title={tr('Mixed port')} divider>
           <KokoTextField
             type="number"

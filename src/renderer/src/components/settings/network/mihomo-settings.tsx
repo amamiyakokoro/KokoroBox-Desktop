@@ -1,11 +1,8 @@
 import { tr } from '../../../../../shared/i18n'
-import { Switch } from '@heroui/react'
 import BasePage from '@renderer/components/base/base-page'
-import SettingItem from '@renderer/components/base/base-setting-item'
 import FeatureSettingsLayout, {
   FeatureSettingsPanelAction,
-  FeatureSettingsSaveButton,
-  FeatureSettingsSection
+  FeatureSettingsSaveButton
 } from '@renderer/components/base/base-feature-settings'
 import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'
 import PortSetting from '@renderer/components/mihomo/port-setting'
@@ -35,7 +32,6 @@ const Mihomo: React.FC<Props> = ({ embedded = false }) => {
     () => mergeSettingsPatch(controledMihomoConfig || {}, draftPatch),
     [controledMihomoConfig, draftPatch]
   )
-  const { ipv6 } = values
   const isDirty = Object.keys(draftPatch).length > 0
 
   const stageChange = useCallback((patch: Partial<MihomoConfig>): void => {
@@ -107,17 +103,6 @@ const Mihomo: React.FC<Props> = ({ embedded = false }) => {
     <>
       <FeatureSettingsPanelAction action={embedded ? saveButton : undefined} />
       <FeatureSettingsLayout>
-        <FeatureSettingsSection title={tr('Core network')}>
-          <SettingItem title="IPv6">
-            <Switch size="sm" isSelected={ipv6} onChange={(value) => stageChange({ ipv6: value })}>
-              <Switch.Content>
-                <Switch.Control>
-                  <Switch.Thumb />
-                </Switch.Control>
-              </Switch.Content>
-            </Switch>
-          </SettingItem>
-        </FeatureSettingsSection>
         <PortSetting
           config={values}
           onChange={stageChange}
