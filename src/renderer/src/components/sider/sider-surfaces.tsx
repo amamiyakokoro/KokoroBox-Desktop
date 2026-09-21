@@ -411,9 +411,8 @@ interface SiderQuickControlProps {
   status: string
   enabled: boolean
   disabled?: boolean
-  active?: boolean
   control: React.ReactNode
-  onPress: () => void
+  onToggle: () => void | Promise<void>
 }
 
 export const SiderQuickControl: React.FC<SiderQuickControlProps> = ({
@@ -422,9 +421,8 @@ export const SiderQuickControl: React.FC<SiderQuickControlProps> = ({
   status,
   enabled,
   disabled = false,
-  active = false,
   control,
-  onPress
+  onToggle
 }) => (
   <div data-sider-quick-control className="sider-quick-control-container w-full min-w-0">
     <div
@@ -432,25 +430,19 @@ export const SiderQuickControl: React.FC<SiderQuickControlProps> = ({
         'sider-quick-control group rounded-2xl border px-2.5 py-2 transition-[background-color,border-color,box-shadow] duration-150',
         disabled
           ? 'border-separator bg-surface-secondary opacity-60 shadow-none'
-          : active
-            ? cn(siderActiveSurfaceClassName, 'shadow-sm')
-            : 'border-separator bg-surface shadow-sm hover:border-accent/25 hover:bg-surface-secondary/70 hover:shadow-md'
+          : 'border-separator bg-surface shadow-sm hover:border-accent/25 hover:bg-surface-secondary/70 hover:shadow-md'
       )}
     >
       <button
         type="button"
         data-card-primary-action
         aria-label={title}
-        aria-current={active ? 'page' : undefined}
+        aria-pressed={enabled}
+        disabled={disabled}
         className="sider-quick-control__primary min-w-0 rounded-xl text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-        onClick={onPress}
+        onClick={() => void onToggle()}
       >
-        <span
-          className={cn(
-            'sider-quick-control__icon flex size-8 items-center justify-center rounded-lg text-xl transition-colors duration-150',
-            active ? siderActiveIconClassName : 'text-muted group-hover:text-foreground'
-          )}
-        >
+        <span className="sider-quick-control__icon flex size-8 items-center justify-center rounded-lg text-xl text-muted transition-colors duration-150 group-hover:text-foreground">
           {icon}
         </span>
         <span

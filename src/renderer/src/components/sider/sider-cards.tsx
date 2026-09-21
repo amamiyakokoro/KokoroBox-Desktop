@@ -34,15 +34,11 @@ const interactiveSelector =
   'button:not(.pointer-events-none), [role="switch"], [data-sider-control-slot]'
 
 const siderCardRouteMap = {
-  'sysproxy-card': '/settings?section=network&panel=system-proxy',
-  'tun-card': '/settings?section=network&panel=tun',
   'app-routing-card': '/app-routing',
   'profile-card': '/profiles',
   'proxy-card': '/proxies',
   'mihomo-core-card': '/settings?section=network&panel=mihomo',
   'conn-card': '/connections',
-  'dns-card': '/settings?section=network&panel=dns',
-  'sniff-card': '/settings?section=network&panel=sniffer',
   'kokoro-setting-card': '/kokoro',
   'log-card': '/logs',
   'rule-card': '/rules',

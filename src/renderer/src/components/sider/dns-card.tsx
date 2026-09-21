@@ -1,7 +1,6 @@
 import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'
 import { Switch } from '@heroui/react'
 import { LuServer } from 'react-icons/lu'
-import { useLocation, useNavigate } from 'react-router-dom'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
@@ -14,8 +13,6 @@ import { SiderIconButton, SiderQuickControl } from './sider-surfaces'
 interface Props {
   iconOnly?: boolean
 }
-const settingsPath = '/settings?section=network&panel=dns'
-
 const DNSCard: React.FC<Props> = (props) => {
   const { appConfig, patchAppConfig } = useAppConfig()
   const { iconOnly } = props
@@ -24,13 +21,6 @@ const DNSCard: React.FC<Props> = (props) => {
     controlDns = true,
     disableAnimation = false
   } = appConfig || {}
-  const location = useLocation()
-  const navigate = useNavigate()
-  const match =
-    location.pathname.includes('/dns') ||
-    (location.pathname.includes('/settings') &&
-      location.search.includes('section=network') &&
-      location.search.includes('panel=dns'))
   const { patchControledMihomoConfig } = useControledMihomoConfig()
   const {
     listeners,
@@ -56,10 +46,9 @@ const DNSCard: React.FC<Props> = (props) => {
     return (
       <div className={`${dnsCardStatus} flex justify-center`}>
         <SiderIconButton
-          active={match}
-          label="DNS"
+          label={`DNS — ${controlDns ? tr('Enabled') : tr('Disabled')}`}
           placement="right"
-          onPress={() => navigate(settingsPath)}
+          onPress={() => void onChange(!controlDns)}
         >
           <LuServer className="text-[20px]" />
         </SiderIconButton>
@@ -87,8 +76,7 @@ const DNSCard: React.FC<Props> = (props) => {
           title="DNS"
           status={controlDns ? tr('Enabled') : tr('Disabled')}
           enabled={controlDns}
-          active={match}
-          onPress={() => navigate(settingsPath)}
+          onToggle={() => onChange(!controlDns)}
           control={
             <Switch size="sm" aria-label="DNS" isSelected={controlDns} onChange={onChange}>
               <Switch.Content>

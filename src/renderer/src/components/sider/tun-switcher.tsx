@@ -2,7 +2,6 @@ import { tr } from '../../../../shared/i18n'
 import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'
 import { Switch } from '@heroui/react'
 import { TbDeviceIpadHorizontalBolt } from 'react-icons/tb'
-import { useLocation, useNavigate } from 'react-router-dom'
 import { restartCore } from '@renderer/utils/ipc'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
@@ -14,15 +13,8 @@ interface Props {
   iconOnly?: boolean
 }
 
-const settingsPath = '/settings?section=network&panel=tun'
-
 const TunSwitcher: React.FC<Props> = (props) => {
   const { iconOnly } = props
-  const location = useLocation()
-  const navigate = useNavigate()
-  const match =
-    location.pathname.includes('/tun') ||
-    (location.pathname.includes('/settings') && location.search.includes('panel=tun'))
   const { appConfig } = useAppConfig()
   const { tunCardStatus = 'col-span-1', disableAnimation = false } = appConfig || {}
   const { controledMihomoConfig, patchControledMihomoConfig } = useControledMihomoConfig()
@@ -53,10 +45,9 @@ const TunSwitcher: React.FC<Props> = (props) => {
     return (
       <div className={`${tunCardStatus} flex justify-center`}>
         <SiderIconButton
-          active={match}
-          label={tr('TUN mode')}
+          label={`${tr('TUN mode')} — ${enable ? tr('Enabled') : tr('Disabled')}`}
           placement="right"
-          onPress={() => navigate(settingsPath)}
+          onPress={() => void onChange(!enable)}
         >
           <TbDeviceIpadHorizontalBolt className="text-[20px]" />
         </SiderIconButton>
@@ -84,15 +75,9 @@ const TunSwitcher: React.FC<Props> = (props) => {
           title={tr('TUN mode')}
           status={enable ? tr('Enabled') : tr('Disabled')}
           enabled={Boolean(enable)}
-          active={match}
-          onPress={() => navigate(settingsPath)}
+          onToggle={() => onChange(!enable)}
           control={
-            <Switch
-              size="sm"
-              aria-label={tr('TUN mode')}
-              isSelected={enable}
-              onChange={onChange}
-            >
+            <Switch size="sm" aria-label={tr('TUN mode')} isSelected={enable} onChange={onChange}>
               <Switch.Content>
                 <Switch.Control>
                   <Switch.Thumb />

@@ -1,6 +1,5 @@
 import { tr } from '../../../../shared/i18n'
 import { Switch } from '@heroui/react'
-import { useLocation, useNavigate } from 'react-router-dom'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'
 import { triggerSysProxy } from '@renderer/utils/ipc'
@@ -15,15 +14,8 @@ interface Props {
   iconOnly?: boolean
 }
 
-const settingsPath = '/settings?section=network&panel=system-proxy'
-
 const SysproxySwitcher: React.FC<Props> = (props) => {
   const { iconOnly } = props
-  const location = useLocation()
-  const navigate = useNavigate()
-  const match =
-    location.pathname.includes('/sysproxy') ||
-    (location.pathname.includes('/settings') && location.search.includes('panel=system-proxy'))
   const { appConfig, patchAppConfig } = useAppConfig()
   const {
     sysProxy,
@@ -46,6 +38,7 @@ const SysproxySwitcher: React.FC<Props> = (props) => {
 
   const transform = tf ? { x: tf.x, y: tf.y, scaleX: 1, scaleY: 1 } : null
   const disabled = mixedPort == 0
+  const selected = Boolean(!(mode !== 'auto' && disabled) && enable)
   const onChange = async (enable: boolean): Promise<void> => {
     if (mode == 'manual' && disabled) return
     try {
@@ -62,10 +55,10 @@ const SysproxySwitcher: React.FC<Props> = (props) => {
     return (
       <div className={`${sysproxyCardStatus} flex justify-center`}>
         <SiderIconButton
-          active={match}
-          label={tr('System proxy')}
+          isDisabled={mode === 'manual' && disabled}
+          label={`${tr('System proxy')} — ${selected ? tr('Enabled') : tr('Disabled')}`}
           placement="right"
-          onPress={() => navigate(settingsPath)}
+          onPress={() => void onChange(!selected)}
         >
           <AiOutlineGlobal className="text-[20px]" />
         </SiderIconButton>
@@ -91,16 +84,15 @@ const SysproxySwitcher: React.FC<Props> = (props) => {
         <SiderQuickControl
           icon={<AiOutlineGlobal />}
           title={tr('System proxy')}
-          status={enable ? tr('Enabled') : tr('Disabled')}
-          enabled={Boolean(enable)}
+          status={selected ? tr('Enabled') : tr('Disabled')}
+          enabled={selected}
           disabled={mode === 'manual' && disabled}
-          active={match}
-          onPress={() => navigate(settingsPath)}
+          onToggle={() => onChange(!selected)}
           control={
             <Switch
               size="sm"
               aria-label={tr('System proxy')}
-              isSelected={!(mode != 'auto' && disabled) && enable}
+              isSelected={selected}
               isDisabled={mode == 'manual' && disabled}
               onChange={onChange}
             >

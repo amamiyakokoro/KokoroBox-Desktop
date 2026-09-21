@@ -13,10 +13,7 @@ import {
   resolveRulesCardStatus
 } from '../src/renderer/src/components/sider/sider-order.ts'
 import { normalizeCoreVersion } from '../src/renderer/src/components/sider/core-version.ts'
-import {
-  isSettingsFocusRoute,
-  resolveSiderPresentationWidth
-} from '../src/renderer/src/components/sider/sider-presentation.ts'
+import { isSettingsFocusRoute } from '../src/renderer/src/components/sider/sider-presentation.ts'
 import {
   formatLogTimestamp,
   parseLogMessage
@@ -126,51 +123,41 @@ test('application settings keep one clear navigation hierarchy in compact deskto
   const kokoForm = readFileSync('src/renderer/src/components/base/koko-form.tsx', 'utf8')
   const searchField = readFileSync('src/renderer/src/components/base/koko-search-field.tsx', 'utf8')
   const general = readFileSync('src/renderer/src/components/settings/general-config.tsx', 'utf8')
+  const settingsSidebar = readFileSync(
+    'src/renderer/src/components/settings/settings-sidebar.tsx',
+    'utf8'
+  )
+  const settingsNavigation = readFileSync(
+    'src/renderer/src/components/settings/settings-navigation.ts',
+    'utf8'
+  )
 
-  assert.match(settings, /aria-current=\{active \? 'page' : undefined\}/)
-  assert.match(settings, /event\.key\.toLowerCase\(\) === 'f'/)
-  assert.match(settings, /const \[searchExpanded, setSearchExpanded\] = useState\(false\)/)
-  assert.match(settings, /const openSearch = useCallback/)
-  assert.match(settings, /searchInputRef\.current\?\.focus\(\)/)
-  assert.match(settings, /event\.key === 'Escape'/)
+  assert.match(settingsSidebar, /getSettingsCategories\(\)/)
+  assert.match(settingsSidebar, /resolveSettingsSelection\(categories, searchParams\)/)
+  assert.match(settingsSidebar, /aria-current=\{active \? 'page' : undefined\}/)
+  assert.match(settingsSidebar, /event\.key\.toLowerCase\(\) === 'f'/)
+  assert.match(settingsSidebar, /searchInputRef\.current\?\.focus\(\)/)
+  assert.match(settingsSidebar, /event\.key === 'Escape'/)
+  assert.match(settingsSidebar, /bg-surface-secondary\/65/)
+  assert.match(settingsSidebar, /bg-accent-soft\/55 text-accent-soft-foreground/)
+  assert.match(settingsSidebar, /<KokoSearchField/)
+  assert.match(settingsSidebar, /<Popover isOpen=\{searchOpen\}/)
+  assert.match(settingsSidebar, /<SiderIconButton[\s\S]*active=\{active\}/)
+  assert.match(settingsSidebar, /nextParams\.set\('section', nextCategory\)/)
+  assert.match(settingsSidebar, /nextParams\.set\('setting', entry\.id\)/)
+  assert.match(settingsNavigation, /entry\.fallbackLabel/)
+  assert.match(settingsNavigation, /entry\.keywords/)
+  assert.match(settingsNavigation, /category\.label/)
+  assert.match(settingsNavigation, /panelLabel/)
+  assert.match(settingsNavigation, /legacyCategoryAliases/)
   assert.match(settings, /settings-context-header sticky top-0 z-10 w-full bg-surface\/95/)
   assert.doesNotMatch(settings, /settings-context-header[^"\n]*border-b/)
-  assert.match(settings, /settings-navigation[^"\n]*bg-surface-secondary\/65/)
-  assert.match(settings, /border-r border-separator\/70/)
-  assert.match(settings, /bg-accent-soft\/55 text-accent-soft-foreground/)
-  assert.match(settings, /settings-navigation-search mb-3 flex justify-start/)
   assert.match(settings, /settings-context-inner w-full max-w-\[960px\] px-6/)
   assert.match(settings, /settings-content-inner w-full max-w-\[960px\] px-6/)
   assert.doesNotMatch(settings, /settings-(?:context|content)-inner mx-auto/)
-  assert.match(settings, /<main className="min-w-0 pb-4">/)
+  assert.match(settings, /<main ref=\{contentRef\} className="settings-page min-h-full min-w-0 pb-4">/)
   assert.match(settings, /scrollTo\(\{ top: 0, left: 0 \}\)/)
-  assert.equal(settings.match(/setSearchParams\(nextParams\)\s*resetContentScroll\(\)/g)?.length, 2)
-  assert.match(settings, /settings-navigation-list/)
-  assert.match(settings, /settings-navigation-strip/)
-  assert.match(settings, /settings-navigation-search/)
-  assert.match(settings, /<ScrollShadow/)
-  assert.match(settings, /orientation="horizontal"/)
-  assert.match(settings, /const \[categoryScrollState, setCategoryScrollState\]/)
-  assert.match(settings, /navigation\.scrollWidth - navigation\.clientWidth/)
-  assert.match(settings, /new ResizeObserver\(updateCategoryScrollState\)/)
-  assert.match(settings, /resizeObserver\.observe\(navigation\)/)
-  assert.match(settings, /onScroll=\{updateCategoryScrollState\}/)
-  assert.match(settings, /categoryScrollState\.hasOverflow &&/)
-  assert.match(settings, /isDisabled=\{!categoryScrollState\.canScrollLeft\}/)
-  assert.match(settings, /isDisabled=\{!categoryScrollState\.canScrollRight\}/)
-  assert.match(settings, /<LuChevronLeft aria-hidden="true"/)
-  assert.match(settings, /<LuChevronRight aria-hidden="true"/)
-  assert.match(settings, /navigation\.scrollBy\(\{/)
-  assert.match(settings, /navigation\.clientWidth \* 0\.7/)
-  assert.match(settings, /behavior: 'smooth'/)
-  assert.doesNotMatch(settings, /onWheel=/)
-  assert.doesNotMatch(settings, /activeCategory\.scrollIntoView/)
-  assert.match(settings, /const itemStart = activeCategory\.offsetLeft/)
-  assert.match(settings, /const itemEnd = itemStart \+ activeCategory\.offsetWidth/)
-  assert.match(settings, /const visibleStart = navigation\.scrollLeft/)
-  assert.match(settings, /const visibleEnd = visibleStart \+ navigation\.clientWidth/)
-  assert.match(settings, /navigation\.scrollTo\(\{ left: itemStart \}\)/)
-  assert.match(settings, /navigation\.scrollTo\(\{ left: itemEnd - navigation\.clientWidth \}\)/)
+  assert.doesNotMatch(settings, /<ScrollShadow|<KokoSearchField|className="settings-navigation/)
   assert.match(settings, /<KokoTabs/)
   assert.match(settings, /variant="secondary"/)
   assert.match(settings, /density="toolbar"/)
@@ -179,56 +166,18 @@ test('application settings keep one clear navigation hierarchy in compact deskto
   assert.match(settings, /settings-panel-navigation[^"\n]*min-h-10[^"\n]*overflow-x-auto/)
   assert.doesNotMatch(settings, /settings-panel-navigation[^"\n]*overflow-x-auto[^"\n]*px-3/)
   assert.match(settings, /onChange=\{selectPanel\}/)
-  assert.match(settings, /\{\(normalizedSearch \|\| selectedPanels\.length > 1\) && \(/)
-  assert.match(settings, /\{normalizedSearch \? \([\s\S]*?<h1[\s\S]*?tr\('Search settings'\)/)
+  assert.match(settings, /\{selectedPanels\.length > 1 && \(/)
   assert.doesNotMatch(settings, /<h1[^>]*>[\s\S]*?selectedPanel\?\.label[\s\S]*?<\/h1>/)
   assert.doesNotMatch(settings, /selectedPanel\?\.label \?\? selected\.label/)
   assert.match(settings, /nextParams\.set\('panel', panelKey\)/)
   assert.doesNotMatch(settings, /settings-panel-button/)
-  assert.match(settings, /settings-container min-h-full/)
+  assert.match(settings, /title=\{selected\.label\}/)
   assert.match(settings, /contentClassName="overflow-x-clip"/)
   assert.match(settings, /max-w-\[960px\]/)
-  assert.match(settings, /entry\.fallbackLabel/)
-  assert.match(settings, /panelLabel/)
-  assert.match(settings, /item\.panels\?\.find\(\(panel\) => panel\.key === entry\.panel\)/)
-  assert.match(
-    styles,
-    /\.settings-container \{[\s\S]*overflow-x: clip;[\s\S]*container-type: inline-size/
-  )
-  assert.match(styles, /\.settings-layout \{[\s\S]*width: 100%;[\s\S]*min-width: 0;/)
-  assert.match(styles, /grid-template-columns: 12rem minmax\(0, 1fr\)/)
-  assert.match(styles, /@container settings \(max-width: 50rem\)/)
-  assert.doesNotMatch(styles, /@media \(max-width: 1050px\)/)
-  assert.match(styles, /\.settings-navigation-list \{[\s\S]*flex-direction: row/)
-  assert.match(styles, /\.settings-navigation-list \{[\s\S]*overflow-x: auto/)
-  assert.match(styles, /\.settings-navigation-strip \{[\s\S]*display: flex;/)
-  assert.match(styles, /\.settings-navigation-scroll-control \{[\s\S]*display: none;/)
-  assert.match(
-    styles,
-    /@container settings \(max-width: 50rem\)[\s\S]*\.settings-navigation-scroll-control \{[\s\S]*display: inline-flex;/
-  )
-  assert.match(styles, /\.settings-navigation \{[\s\S]*min-height: 3rem;/)
-  assert.match(
-    styles,
-    /\.settings-navigation \{[\s\S]*padding-block: calc\(var\(--spacing\) \* 1\.5\)/
-  )
-  assert.doesNotMatch(
-    styles,
-    /@container settings \(max-width: 50rem\)[\s\S]*?\.settings-navigation \{[^}]*border-bottom/
-  )
   assert.match(settings, /settings-panel-navigation[^"\n]*overflow-x-auto/)
-  assert.match(styles, /\.settings-navigation-search \{[\s\S]*flex: 0 0 auto;[\s\S]*width: auto;/)
-  assert.doesNotMatch(styles, /clamp\(10rem, 30cqi, 15rem\)/)
-  assert.match(styles, /\.settings-navigation-search-field \{[\s\S]*width: 12rem;/)
-  assert.match(styles, /\.settings-navigation-list::-webkit-scrollbar/)
-  assert.doesNotMatch(styles, /\.settings-content-search\s*\{[\s\S]*display:\s*block/)
-  assert.doesNotMatch(styles, /\.settings-panel-button/)
-  assert.doesNotMatch(styles, /\.settings-category-label \{[\s\S]*display: none/)
-  assert.match(settings, /<KokoSearchField/)
-  assert.match(settings, /searchExpanded \|\| normalizedSearch/)
-  assert.match(settings, /settings-search-trigger[\s\S]*aria-label=\{tr\('Search settings'\)\}/)
-  assert.match(settings, /<LuSearch aria-hidden="true"/)
-  assert.match(settings, /onBlur=\{\(event\) => \{[\s\S]*setSearchExpanded\(false\)/)
+  assert.match(styles, /\.settings-page \{[\s\S]*overflow-x: clip;/)
+  assert.doesNotMatch(styles, /\.settings-container|\.settings-layout|\.settings-navigation/)
+  assert.doesNotMatch(styles, /@container settings/)
   assert.doesNotMatch(settings, /<KokoTextField/)
   assert.match(searchField, /<InputGroup/)
   assert.match(searchField, /inputRef\?: React\.Ref<HTMLInputElement>/)
@@ -256,9 +205,13 @@ test('application settings keep one clear navigation hierarchy in compact deskto
   assert.match(general, /header=\{tr\('Startup and updates'\)\}/)
 })
 
-test('Application Settings uses a route-level sidebar focus mode without changing preferences', () => {
+test('Application Settings swaps sidebar content without changing its width', () => {
   const app = readFileSync('src/renderer/src/App.tsx', 'utf8')
   const settings = readFileSync('src/renderer/src/pages/settings.tsx', 'utf8')
+  const settingsSidebar = readFileSync(
+    'src/renderer/src/components/settings/settings-sidebar.tsx',
+    'utf8'
+  )
   const presentation = readFileSync(
     'src/renderer/src/components/sider/sider-presentation.ts',
     'utf8'
@@ -267,15 +220,14 @@ test('Application Settings uses a route-level sidebar focus mode without changin
   assert.equal(isSettingsFocusRoute('/settings'), true)
   assert.equal(isSettingsFocusRoute('/settings/network'), true)
   assert.equal(isSettingsFocusRoute('/profiles'), false)
-  assert.equal(resolveSiderPresentationWidth('/settings', 250, 70), 70)
-  assert.equal(resolveSiderPresentationWidth('/settings/network', 400, 60), 60)
-  assert.equal(resolveSiderPresentationWidth('/profiles', 250, 70), 250)
-  assert.equal(resolveSiderPresentationWidth('/profiles', 70, 70), 70)
 
   assert.match(app, /const settingsFocusMode = isSettingsFocusRoute\(location\.pathname\)/)
-  assert.match(app, /const presentedSiderWidth = resolveSiderPresentationWidth\(/)
-  assert.match(app, /presentedSiderWidth === narrowWidth/)
-  assert.match(app, /<SiderCards iconOnly \/>/)
+  assert.doesNotMatch(app, /resolveSiderPresentationWidth|presentedSiderWidth/)
+  assert.match(app, /siderWidthValue === narrowWidth/)
+  assert.match(app, /<SettingsSidebar iconOnly leaveSettings=\{leaveSettings\} \/>/)
+  assert.match(app, /<SettingsSidebar leaveSettings=\{leaveSettings\} \/>/)
+  assert.match(app, /settingsFocusMode \? \([\s\S]*<SettingsSidebar[\s\S]*<SiderCards iconOnly \/>/)
+  assert.match(app, /settingsFocusMode \? \([\s\S]*<SettingsSidebar[\s\S]*<SiderCards \/>/)
   assert.match(app, /const lastNonSettingsRouteRef = useRef\('\/proxies'\)/)
   assert.match(
     app,
@@ -285,23 +237,18 @@ test('Application Settings uses a route-level sidebar focus mode without changin
     app,
     /const leaveSettings = useCallback\([\s\S]*navigate\(lastNonSettingsRouteRef\.current\)/
   )
-  assert.match(app, /<Outlet context=\{\{ leaveSettings \}\} \/>/)
-  assert.match(
-    app,
-    /const settingsActionLabel = settingsFocusMode[\s\S]*tr\('Back to application'\)[\s\S]*tr\('Application settings'\)/
-  )
-  assert.match(app, /label=\{settingsActionLabel\}/)
-  assert.match(app, /onPress=\{settingsFocusMode \? leaveSettings : \(\) => navigate\('\/settings'\)\}/)
-  assert.match(app, /settingsFocusMode \? \([\s\S]*<LuArrowLeft/)
+  assert.match(app, /const page = <Outlet \/>/)
   assert.doesNotMatch(app, /navigate\(-1\)/)
-  assert.match(settings, /useOutletContext<\{ leaveSettings: \(\) => void \}>\(\)/)
-  assert.match(settings, /aria-label=\{tr\('Back to application'\)\}/)
-  assert.match(settings, /className="app-nodrag"[\s\S]*onPress=\{leaveSettings\}/)
-  assert.match(settings, /<LuArrowLeft aria-hidden="true" \/>/)
-  assert.match(app, /!settingsFocusMode && \(/)
-  assert.match(app, /calc\(100% - \$\{presentedSiderWidth \+ 1\}px\)/)
+  assert.doesNotMatch(settings, /useOutletContext|leaveSettings|Back to application/)
+  assert.match(settingsSidebar, /aria-label=\{tr\('Back to application'\)\}/)
+  assert.match(settingsSidebar, /onPress=\{leaveSettings\}/)
+  assert.match(settingsSidebar, /<LuArrowLeft/)
+  assert.match(settingsSidebar, /iconOnly \? \(/)
+  assert.match(settingsSidebar, /<Popover isOpen=\{searchOpen\}/)
+  assert.match(app, /calc\(100% - \$\{siderWidthValue \+ 1\}px\)/)
+  assert.doesNotMatch(app, /!settingsFocusMode && \(/)
   assert.equal(app.match(/patchAppConfig\(\{ siderWidth:/g)?.length, 1)
-  assert.doesNotMatch(presentation, /patchAppConfig|localStorage|setSiderWidthValue/)
+  assert.doesNotMatch(presentation, /resolveSiderPresentationWidth|narrowWidth|userWidth/)
 })
 
 test('network settings use nested panels and preserve legacy routes', () => {
@@ -326,18 +273,18 @@ test('network settings use nested panels and preserve legacy routes', () => {
   assert.match(registry, /content: \(\) => <NetworkBehaviorSettings \/>/)
   assert.match(registry, /key: 'sniffer'/)
   assert.match(registry, /content: \(\) => <Sniffer embedded \/>/)
-  assert.match(settings, /selected\.panels/)
+  assert.match(settings, /selectedPanels/)
   assert.match(settings, /selectedPanel\?\.content\(\)/)
   assert.match(routes, /settings\?section=network&panel=system-proxy/)
   assert.match(routes, /settings\?section=network&panel=tun/)
   assert.match(routes, /settings\?section=network&panel=dns/)
   assert.match(routes, /settings\?section=network&panel=mihomo/)
   assert.match(routes, /settings\?section=network&panel=sniffer/)
-  assert.match(sider, /settings\?section=network&panel=system-proxy/)
-  assert.match(sider, /settings\?section=network&panel=tun/)
-  assert.match(sider, /settings\?section=network&panel=dns/)
+  assert.doesNotMatch(sider, /settings\?section=network&panel=system-proxy/)
+  assert.doesNotMatch(sider, /settings\?section=network&panel=tun/)
+  assert.doesNotMatch(sider, /settings\?section=network&panel=dns/)
   assert.match(sider, /settings\?section=network&panel=mihomo/)
-  assert.match(sider, /settings\?section=network&panel=sniffer/)
+  assert.doesNotMatch(sider, /settings\?section=network&panel=sniffer/)
 })
 
 test('feature settings only surface save actions for dirty embedded panels', () => {
@@ -486,11 +433,11 @@ test('SettingItem has one canonical layout without legacy compatibility paths', 
   assert.match(styles, /\.setting-item__title-line\s*\{[\s\S]*align-items: center/)
   assert.match(
     styles,
-    /\.settings-layout \.setting-item,[\s\S]*padding-block: calc\(var\(--spacing\) \* 1\.25\)/
+    /\.settings-page \.setting-item,[\s\S]*padding-block: calc\(var\(--spacing\) \* 1\.25\)/
   )
   assert.match(
     styles,
-    /\.settings-layout \.setting-item__title-wrap,[\s\S]*min-height: calc\(var\(--spacing\) \* 8\)/
+    /\.settings-page \.setting-item__title-wrap,[\s\S]*min-height: calc\(var\(--spacing\) \* 8\)/
   )
   assert.match(styles, /:root:lang\(en\) \.setting-item:not\(\.setting-item--titleless\)/)
   assert.match(styles, /:root:lang\(en\) \.setting-item__title[\s\S]*overflow-wrap: anywhere/)
@@ -1153,7 +1100,10 @@ test('desktop sidebar separates controls, live status and navigation', () => {
   assert.match(navItem, /hover:border-accent\/25 hover:bg-surface-secondary\/70 hover:shadow-sm/)
   assert.match(navItem, /active\s*\? siderActiveSurfaceClassName/)
   assert.match(statusCard, /active\s*\? siderActiveSurfaceClassName/)
-  assert.match(quickControl, /active[\s\S]*cn\(siderActiveSurfaceClassName, 'shadow-sm'\)/)
+  assert.match(quickControl, /aria-pressed=\{enabled\}/)
+  assert.match(quickControl, /disabled=\{disabled\}/)
+  assert.match(quickControl, /onClick=\{\(\) => void onToggle\(\)\}/)
+  assert.doesNotMatch(quickControl, /aria-current|siderActiveSurfaceClassName/)
   assert.doesNotMatch(navItem, /border-transparent/)
   assert.match(surfaces, /prominence === 'navigation'[\s\S]*bg-transparent text-base/)
   assert.match(surfaces, /hover:border-accent\/25/)
@@ -1166,7 +1116,7 @@ test('desktop sidebar separates controls, live status and navigation', () => {
     /const siderActiveIconClassName =[\s\S]*bg-accent-soft text-accent-soft-foreground/
   )
   assert.match(surfaces, /active && siderActiveIconClassName/)
-  assert.match(quickControl, /active\s*\? siderActiveIconClassName/)
+  assert.doesNotMatch(quickControl, /active\s*\?|siderActiveIconClassName/)
   assert.match(surfaces, /className=\{cn\(siderItemTitleClassName, 'h-5 truncate'\)\}/)
   assert.doesNotMatch(surfaces, /\b(?:border|bg|ring|text)-primary(?:\/\d+)?\b/)
   assert.match(surfaces, /focus-visible:outline-accent/)
@@ -1186,8 +1136,18 @@ test('desktop sidebar separates controls, live status and navigation', () => {
   )
   assert.match(quickControl, /data-sider-control-slot/)
   assert.match(sider, /interactiveSelector[\s\S]*\[data-sider-control-slot\]/)
+  assert.match(
+    sider,
+    /onClickCapture[\s\S]*if \(suppressClickRef\.current\) \{[\s\S]*event\.preventDefault\(\)[\s\S]*event\.stopPropagation\(\)[\s\S]*return/
+  )
+  assert.match(sider, /onDragStart=\{\(\) => \{[\s\S]*suppressClickRef\.current = true/)
+  assert.match(sider, /onDragCancel=\{releaseClickSuppression\}/)
+  assert.match(sider, /onDragEnd[\s\S]*finally\(releaseClickSuppression\)/)
+  assert.doesNotMatch(
+    sider,
+    /'(?:sysproxy|tun|dns|sniff)-card': '\/settings\?section=network&panel=/
+  )
   assert.match(quickControl, /disabled[\s\S]*shadow-none/)
-  assert.match(quickControl, /active[\s\S]*siderActiveSurfaceClassName[\s\S]*shadow-sm/)
   assert.match(quickControl, /shadow-sm hover:border-accent\/25[\s\S]*hover:shadow-md/)
   assert.match(statusCard, /shadow-none[\s\S]*hover:shadow-sm/)
   assert.doesNotMatch(statusCard, /shadow-md/)
@@ -1237,20 +1197,24 @@ test('desktop sidebar separates controls, live status and navigation', () => {
   assert.match(sidebarSettings, /group\.reorderable !== false && entries\.length > 1/)
   assert.doesNotMatch(sidebarSettings, /<Radio/)
   assert.match(systemProxy, /<SiderQuickControl/)
-  assert.match(systemProxy, /onPress=\{\(\) => navigate\(settingsPath\)\}/)
+  assert.match(systemProxy, /onToggle=\{\(\) => onChange\(!selected\)\}/)
+  assert.match(systemProxy, /onPress=\{\(\) => void onChange\(!selected\)\}/)
   assert.match(systemProxy, /control=\{[\s\S]*<Switch[\s\S]*size="sm"/)
   assert.match(systemProxy, /<Switch\.Content>[\s\S]*<Switch\.Control>[\s\S]*<Switch\.Thumb \/>/)
   assert.match(systemProxy, /isDisabled=\{mode == 'manual' && disabled\}/)
   assert.match(systemProxy, /onChange=\{onChange\}/)
   assert.doesNotMatch(systemProxy, /BorderSwitch|border-2|isShowBorder/)
   assert.doesNotMatch(systemProxy, /\.\.\.attributes/)
+  assert.doesNotMatch(systemProxy, /useNavigate|useLocation|settingsPath|navigate\(/)
   assert.match(tun, /<SiderQuickControl/)
-  assert.match(tun, /onPress=\{\(\) => navigate\(settingsPath\)\}/)
+  assert.match(tun, /onToggle=\{\(\) => onChange\(!enable\)\}/)
+  assert.match(tun, /onPress=\{\(\) => void onChange\(!enable\)\}/)
   assert.match(tun, /control=\{[\s\S]*<Switch[\s\S]*size="sm"/)
   assert.match(tun, /<Switch\.Content>[\s\S]*<Switch\.Control>[\s\S]*<Switch\.Thumb \/>/)
   assert.match(tun, /onChange=\{onChange\}/)
   assert.doesNotMatch(tun, /BorderSwitch|border-2|isShowBorder/)
   assert.doesNotMatch(tun, /\.\.\.attributes/)
+  assert.doesNotMatch(tun, /useNavigate|useLocation|settingsPath|navigate\(/)
   assert.match(appRouting, /getAppRoutingStatus/)
   assert.match(appRouting, /getAppRoutingStatusMessage/)
   assert.match(appRouting, /isAppRoutingRuleEffectivelyEnabled/)
@@ -1286,24 +1250,32 @@ test('desktop sidebar separates controls, live status and navigation', () => {
   assert.match(dns, /<SiderIconButton/)
   assert.match(dns, /status=\{controlDns \? tr\('Enabled'\) : tr\('Disabled'\)\}/)
   assert.match(dns, /enabled=\{controlDns\}/)
+  assert.match(dns, /onToggle=\{\(\) => onChange\(!controlDns\)\}/)
+  assert.match(dns, /onPress=\{\(\) => void onChange\(!controlDns\)\}/)
   assert.match(dns, /isSelected=\{controlDns\}/)
+  assert.match(dns, /onChange=\{onChange\}/)
   assert.match(dns, /patchAppConfig\(\{ controlDns: value \}\)/)
   assert.match(dns, /patchControledMihomoConfig\(\{\}\)/)
   assert.match(dns, /restartCore\(\)/)
   assert.doesNotMatch(dns, /<SiderNavItem/)
   assert.doesNotMatch(dns, /\bmt-|translate-y/)
   assert.doesNotMatch(dns, /patchMihomoConfig/)
+  assert.doesNotMatch(dns, /useNavigate|useLocation|settingsPath|navigate\(/)
   assert.match(sniff, /<SiderQuickControl/)
   assert.match(sniff, /<SiderIconButton/)
   assert.match(sniff, /status=\{controlSniff \? tr\('Enabled'\) : tr\('Disabled'\)\}/)
   assert.match(sniff, /enabled=\{controlSniff\}/)
+  assert.match(sniff, /onToggle=\{\(\) => onChange\(!controlSniff\)\}/)
+  assert.match(sniff, /onPress=\{\(\) => void onChange\(!controlSniff\)\}/)
   assert.match(sniff, /isSelected=\{controlSniff\}/)
+  assert.match(sniff, /onChange=\{onChange\}/)
   assert.match(sniff, /patchAppConfig\(\{ controlSniff: value \}\)/)
   assert.match(sniff, /patchControledMihomoConfig\(\{\}\)/)
   assert.match(sniff, /restartCore\(\)/)
   assert.doesNotMatch(sniff, /<SiderNavItem/)
   assert.doesNotMatch(sniff, /\bmt-|translate-y/)
   assert.doesNotMatch(sniff, /patchMihomoConfig/)
+  assert.doesNotMatch(sniff, /useNavigate|useLocation|settingsPath|navigate\(/)
   assert.match(kokoro, /<SiderNavItem/)
   assert.match(kokoro, /prominence="account"/)
   assert.doesNotMatch(kokoro, /useSortable|listeners|setNodeRef/)

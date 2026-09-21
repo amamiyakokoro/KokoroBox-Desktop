@@ -299,6 +299,10 @@ test('global subscription settings are owned by Application settings', () => {
 
 test('Application settings search supports stable deep links to concrete rows', () => {
   const settingsPage = readFileSync('src/renderer/src/pages/settings.tsx', 'utf8')
+  const settingsSidebar = readFileSync(
+    'src/renderer/src/components/settings/settings-sidebar.tsx',
+    'utf8'
+  )
   const settingsRegistry = readFileSync(
     'src/renderer/src/components/settings/settings-registry.tsx',
     'utf8'
@@ -307,7 +311,7 @@ test('Application settings search supports stable deep links to concrete rows', 
 
   assert.match(settingsRegistry, /interface SettingsEntryDefinition/)
   assert.match(settingsRegistry, /id: string/)
-  assert.match(settingsPage, /nextParams\.set\('setting', settingId\)/)
+  assert.match(settingsSidebar, /nextParams\.set\('setting', entry\.id\)/)
   assert.match(settingsPage, /scrollIntoView/)
   assert.match(settingItem, /data-setting-label=/)
 })

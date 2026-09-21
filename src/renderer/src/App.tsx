@@ -5,7 +5,6 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import OutboundModeSwitcher from '@renderer/components/sider/outbound-mode-switcher'
 import { Button, Separator, Tooltip } from '@heroui/react'
 import { IoSettings } from 'react-icons/io5'
-import { LuArrowLeft } from 'react-icons/lu'
 import { useDeferredRoutePreload } from '@renderer/routes'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import {
@@ -23,14 +22,12 @@ import KokoroBoxIcon from './components/base/kokorobox-icon'
 import useSWR from 'swr'
 import { useUnsavedChanges } from '@renderer/hooks/use-unsaved-changes'
 import { SiderIconButton } from '@renderer/components/sider/sider-surfaces'
-import {
-  isSettingsFocusRoute,
-  resolveSiderPresentationWidth
-} from '@renderer/components/sider/sider-presentation'
+import { isSettingsFocusRoute } from '@renderer/components/sider/sider-presentation'
 
 const ConfirmModal = lazy(() => import('@renderer/components/base/base-confirm'))
 const siderCardsPromise = import('@renderer/components/sider/sider-cards')
 const SiderCards = lazy(() => siderCardsPromise)
+const SettingsSidebar = lazy(() => import('@renderer/components/settings/settings-sidebar'))
 const UpdaterButton = lazy(() => import('@renderer/components/updater/updater-button'))
 const MacOSServiceSetup = lazy(() => import('@renderer/components/mihomo/macos-service-setup'))
 
@@ -56,14 +53,6 @@ const App: React.FC = () => {
   const location = useLocation()
   const lastNonSettingsRouteRef = useRef('/proxies')
   const settingsFocusMode = isSettingsFocusRoute(location.pathname)
-  const settingsActionLabel = settingsFocusMode
-    ? tr('Back to application')
-    : tr('Application settings')
-  const presentedSiderWidth = resolveSiderPresentationWidth(
-    location.pathname,
-    siderWidthValue,
-    narrowWidth
-  )
   const { hasUnsavedChanges, confirmUnsavedChanges } = useUnsavedChanges()
   useDeferredRoutePreload()
 
@@ -77,7 +66,7 @@ const App: React.FC = () => {
     navigate(lastNonSettingsRouteRef.current)
   }, [navigate])
 
-  const page = <Outlet context={{ leaveSettings }} />
+  const page = <Outlet />
 
   const setTitlebar = (): void => {
     if (!useWindowFrame && platform !== 'darwin') {
@@ -363,116 +352,126 @@ const App: React.FC = () => {
           />
         )}
       </Suspense>
-      {presentedSiderWidth === narrowWidth ? (
+      {siderWidthValue === narrowWidth ? (
         <div style={{ width: `${narrowWidth}px` }} className="side h-full flex flex-col">
-          <div className="app-drag flex shrink-0 justify-center items-center z-40 bg-transparent h-12.25">
-            {platform !== 'darwin' && <KokoroBoxIcon className="size-7 text-foreground" />}
-          </div>
-          <Suspense fallback={<div className="min-h-0 flex-1" />}>
-            <SiderCards iconOnly />
-          </Suspense>
-          <div className="flex shrink-0 flex-col items-center gap-2 border-t border-separator/60 px-2 pb-4 pt-2.5">
-            {latest && latest.version && (
-              <Suspense fallback={null}>
-                <UpdaterButton
-                  iconOnly={true}
-                  latest={latest}
-                  showButtonAfterNotification={showUpdateButtonAfterNotification}
-                />
+          {settingsFocusMode ? (
+            <Suspense fallback={<div className="min-h-0 flex-1" />}>
+              <SettingsSidebar iconOnly leaveSettings={leaveSettings} />
+            </Suspense>
+          ) : (
+            <>
+              <div className="app-drag flex shrink-0 justify-center items-center z-40 bg-transparent h-12.25">
+                {platform !== 'darwin' && <KokoroBoxIcon className="size-7 text-foreground" />}
+              </div>
+              <Suspense fallback={<div className="min-h-0 flex-1" />}>
+                <SiderCards iconOnly />
               </Suspense>
-            )}
-            <OutboundModeSwitcher iconOnly />
-            <SiderIconButton
-              label={settingsActionLabel}
-              placement="right"
-              onPress={settingsFocusMode ? leaveSettings : () => navigate('/settings')}
-            >
-              {settingsFocusMode ? (
-                <LuArrowLeft aria-hidden="true" className="text-[20px]" />
-              ) : (
-                <IoSettings aria-hidden="true" className="text-[20px]" />
-              )}
-            </SiderIconButton>
-          </div>
+              <div className="flex shrink-0 flex-col items-center gap-2 border-t border-separator/60 px-2 pb-4 pt-2.5">
+                {latest && latest.version && (
+                  <Suspense fallback={null}>
+                    <UpdaterButton
+                      iconOnly={true}
+                      latest={latest}
+                      showButtonAfterNotification={showUpdateButtonAfterNotification}
+                    />
+                  </Suspense>
+                )}
+                <OutboundModeSwitcher iconOnly />
+                <SiderIconButton
+                  label={tr('Application settings')}
+                  placement="right"
+                  onPress={() => navigate('/settings')}
+                >
+                  <IoSettings aria-hidden="true" className="text-[20px]" />
+                </SiderIconButton>
+              </div>
+            </>
+          )}
         </div>
       ) : (
         <div
           style={{ width: `${siderWidthValue}px` }}
           className="side h-full overflow-y-auto no-scrollbar"
         >
-          <div
-            className={`app-drag sticky top-0 z-40 ${disableAnimation ? 'bg-background/95 backdrop-blur-sm' : 'bg-transparent backdrop-blur'} h-12.25`}
-          >
-            <div
-              className={`flex justify-between p-2 ${!useWindowFrame && platform === 'darwin' ? 'ml-16.5' : ''}`}
-            >
-              <div className="ml-2 flex items-center gap-2">
-                <KokoroBoxIcon className="size-7 shrink-0 text-foreground" />
-                <h3 className="text-lg font-bold leading-8">KokoroBox</h3>
+          {settingsFocusMode ? (
+            <Suspense fallback={null}>
+              <SettingsSidebar leaveSettings={leaveSettings} />
+            </Suspense>
+          ) : (
+            <>
+              <div
+                className={`app-drag sticky top-0 z-40 ${disableAnimation ? 'bg-background/95 backdrop-blur-sm' : 'bg-transparent backdrop-blur'} h-12.25`}
+              >
+                <div
+                  className={`flex justify-between p-2 ${!useWindowFrame && platform === 'darwin' ? 'ml-16.5' : ''}`}
+                >
+                  <div className="ml-2 flex items-center gap-2">
+                    <KokoroBoxIcon className="size-7 shrink-0 text-foreground" />
+                    <h3 className="text-lg font-bold leading-8">KokoroBox</h3>
+                  </div>
+                  {latest && latest.version && (
+                    <Suspense fallback={null}>
+                      <UpdaterButton
+                        latest={latest}
+                        showButtonAfterNotification={showUpdateButtonAfterNotification}
+                      />
+                    </Suspense>
+                  )}
+                  <Tooltip delay={0}>
+                    <Tooltip.Trigger>
+                      <Button
+                        aria-label={tr('Application settings')}
+                        size="sm"
+                        className="app-nodrag"
+                        isIconOnly
+                        variant="ghost"
+                        onPress={() => navigate('/settings')}
+                      >
+                        <IoSettings aria-hidden="true" className="text-[20px]" />
+                      </Button>
+                    </Tooltip.Trigger>
+                    <Tooltip.Content>{tr('Application settings')}</Tooltip.Content>
+                  </Tooltip>
+                </div>
               </div>
-              {latest && latest.version && (
-                <Suspense fallback={null}>
-                  <UpdaterButton
-                    latest={latest}
-                    showButtonAfterNotification={showUpdateButtonAfterNotification}
-                  />
-                </Suspense>
-              )}
-              <Tooltip delay={0}>
-                <Tooltip.Trigger>
-                  <Button
-                    aria-label={tr('Application settings')}
-                    size="sm"
-                    className="app-nodrag"
-                    isIconOnly
-                    variant="ghost"
-                    onPress={() => navigate('/settings')}
-                  >
-                    <IoSettings aria-hidden="true" className="text-[20px]" />
-                  </Button>
-                </Tooltip.Trigger>
-                <Tooltip.Content>{tr('Application settings')}</Tooltip.Content>
-              </Tooltip>
-            </div>
-          </div>
-          <div className="mt-2 mx-2">
-            <OutboundModeSwitcher />
-          </div>
-          <Suspense fallback={null}>
-            <SiderCards />
-          </Suspense>
+              <div className="mt-2 mx-2">
+                <OutboundModeSwitcher />
+              </div>
+              <Suspense fallback={null}>
+                <SiderCards />
+              </Suspense>
+            </>
+          )}
         </div>
       )}
 
-      {!settingsFocusMode && (
+      <div
+        onPointerDown={(event) => {
+          resizePointerIdRef.current = event.pointerId
+          event.currentTarget.setPointerCapture(event.pointerId)
+          updateSiderWidthFromClientX(event.clientX)
+          setResizing(true)
+        }}
+        style={{
+          position: 'fixed',
+          zIndex: 50,
+          left: `${siderWidthValue - 6}px`,
+          width: '12px',
+          height: '100vh',
+          cursor: 'ew-resize',
+          touchAction: 'none'
+        }}
+        className="group flex justify-center"
+      >
         <div
-          onPointerDown={(event) => {
-            resizePointerIdRef.current = event.pointerId
-            event.currentTarget.setPointerCapture(event.pointerId)
-            updateSiderWidthFromClientX(event.clientX)
-            setResizing(true)
-          }}
-          style={{
-            position: 'fixed',
-            zIndex: 50,
-            left: `${siderWidthValue - 6}px`,
-            width: '12px',
-            height: '100vh',
-            cursor: 'ew-resize',
-            touchAction: 'none'
-          }}
-          className="group flex justify-center"
-        >
-          <div
-            className={`h-full w-0.5 transition-colors ${
-              resizing ? 'bg-accent' : 'bg-transparent group-hover:bg-accent/60'
-            }`}
-          />
-        </div>
-      )}
+          className={`h-full w-0.5 transition-colors ${
+            resizing ? 'bg-accent' : 'bg-transparent group-hover:bg-accent/60'
+          }`}
+        />
+      </div>
       <Separator orientation="vertical" />
       <div
-        style={{ width: `calc(100% - ${presentedSiderWidth + 1}px)` }}
+        style={{ width: `calc(100% - ${siderWidthValue + 1}px)` }}
         className="main grow h-full overflow-y-auto"
       >
         <Suspense fallback={null}>{page}</Suspense>

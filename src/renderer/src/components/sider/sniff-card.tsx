@@ -1,6 +1,5 @@
 import { tr } from '../../../../shared/i18n'
 import { RiScan2Fill } from 'react-icons/ri'
-import { useLocation, useNavigate } from 'react-router-dom'
 import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'
 import { Switch } from '@heroui/react'
 import { useSortable } from '@dnd-kit/sortable'
@@ -14,8 +13,6 @@ import { SiderIconButton, SiderQuickControl } from './sider-surfaces'
 interface Props {
   iconOnly?: boolean
 }
-const settingsPath = '/settings?section=network&panel=sniffer'
-
 const SniffCard: React.FC<Props> = (props) => {
   const { appConfig, patchAppConfig } = useAppConfig()
   const { iconOnly } = props
@@ -24,13 +21,6 @@ const SniffCard: React.FC<Props> = (props) => {
     controlSniff = true,
     disableAnimation = false
   } = appConfig || {}
-  const location = useLocation()
-  const navigate = useNavigate()
-  const match =
-    location.pathname.includes('/sniffer') ||
-    (location.pathname.includes('/settings') &&
-      location.search.includes('section=network') &&
-      location.search.includes('panel=sniffer'))
   const { patchControledMihomoConfig } = useControledMihomoConfig()
   const {
     listeners,
@@ -56,10 +46,9 @@ const SniffCard: React.FC<Props> = (props) => {
     return (
       <div className={`${sniffCardStatus} flex justify-center`}>
         <SiderIconButton
-          active={match}
-          label={tr('Sniffing')}
+          label={`${tr('Sniffing')} — ${controlSniff ? tr('Enabled') : tr('Disabled')}`}
           placement="right"
-          onPress={() => navigate(settingsPath)}
+          onPress={() => void onChange(!controlSniff)}
         >
           <RiScan2Fill className="text-[20px]" />
         </SiderIconButton>
@@ -87,8 +76,7 @@ const SniffCard: React.FC<Props> = (props) => {
           title={tr('Sniffing')}
           status={controlSniff ? tr('Enabled') : tr('Disabled')}
           enabled={controlSniff}
-          active={match}
-          onPress={() => navigate(settingsPath)}
+          onToggle={() => onChange(!controlSniff)}
           control={
             <Switch
               size="sm"

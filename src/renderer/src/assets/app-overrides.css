@@ -437,47 +437,23 @@ input[type='number'] {
   margin-block: 0;
 }
 
-.settings-container {
+.settings-page {
   min-width: 0;
   overflow-x: clip;
-  container-name: settings;
-  container-type: inline-size;
 }
 
-.settings-layout {
-  width: 100%;
-  min-width: 0;
-  grid-template-columns: 12rem minmax(0, 1fr);
-}
-
-.settings-navigation-search {
-  flex: none;
-  width: 100%;
-}
-
-.settings-navigation-strip {
-  display: flex;
-  min-width: 0;
-  min-height: 0;
-  flex: 1 1 auto;
-}
-
-.settings-navigation-scroll-control {
-  display: none;
-}
-
-.settings-layout .setting-item,
+.settings-page .setting-item,
 .feature-settings-layout .setting-item {
   grid-template-columns: minmax(10rem, 34%) minmax(0, 1fr);
   padding-block: calc(var(--spacing) * 1.25);
 }
 
-.settings-layout .setting-item__title-wrap,
+.settings-page .setting-item__title-wrap,
 .feature-settings-layout .setting-item__title-wrap {
   min-height: calc(var(--spacing) * 8);
 }
 
-.settings-layout .setting-item__title,
+.settings-page .setting-item__title,
 .feature-settings-layout .setting-item__title {
   height: auto;
   color: var(--foreground);
@@ -487,7 +463,7 @@ input[type='number'] {
   overflow-wrap: anywhere;
 }
 
-.settings-layout .setting-item__content,
+.settings-page .setting-item__content,
 .feature-settings-layout .setting-item__content {
   display: flex;
   align-items: center;
@@ -530,81 +506,6 @@ input[type='number'] {
 @media (prefers-reduced-motion: reduce) {
   .settings-search-target {
     animation-duration: 0.01ms;
-  }
-}
-
-/* Compact desktop windows move the labeled settings navigation above the
- * content instead of introducing a second icon-only rail beside the app nav. */
-@container settings (max-width: 50rem) {
-  .settings-layout {
-    display: block;
-  }
-
-  .settings-navigation {
-    position: relative;
-    top: auto;
-    min-height: 3rem;
-    height: auto;
-    flex-direction: row;
-    align-items: center;
-    gap: calc(var(--spacing) * 2);
-    border-right-width: 0;
-    padding-block: calc(var(--spacing) * 1.5);
-    padding-inline: calc(var(--spacing) * 3);
-  }
-
-  .settings-navigation-strip {
-    order: 1;
-    min-width: 0;
-    flex: 1 1 auto;
-    align-items: center;
-    gap: calc(var(--spacing) * 0.5);
-  }
-
-  .settings-navigation-scroll-control {
-    display: inline-flex;
-  }
-
-  .settings-navigation-list {
-    min-width: 0;
-    flex-direction: row;
-    flex: 1 1 auto;
-    gap: calc(var(--spacing) * 0.5);
-    overflow-x: auto;
-    overflow-y: hidden;
-    padding-bottom: 0;
-    scrollbar-color: color-mix(in oklab, var(--muted) 35%, transparent) transparent;
-    scrollbar-width: thin;
-  }
-
-  .settings-navigation-search {
-    order: 2;
-    min-width: 0;
-    flex: 0 0 auto;
-    width: auto;
-    margin-bottom: 0;
-  }
-
-  .settings-navigation-search-field {
-    width: 12rem;
-    max-width: min(12rem, 45cqi);
-  }
-
-  .settings-navigation-list::-webkit-scrollbar {
-    display: block;
-    height: 4px;
-  }
-
-  .settings-navigation-list::-webkit-scrollbar-thumb {
-    border-radius: 9999px;
-    background: color-mix(in oklab, var(--muted) 35%, transparent);
-  }
-
-  .settings-category-button {
-    width: auto;
-    min-width: max-content;
-    justify-content: flex-start;
-    padding-inline: calc(var(--spacing) * 2.5);
   }
 }
 
