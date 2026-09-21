@@ -429,9 +429,12 @@ export const SiderQuickControl: React.FC<SiderQuickControlProps> = ({
   <div data-sider-quick-control className="sider-quick-control-container w-full min-w-0">
     <div
       className={cn(
-        'sider-quick-control group rounded-2xl border border-separator bg-surface px-2.5 py-2 shadow-sm transition-[background-color,border-color,box-shadow] duration-150 hover:border-accent/25 hover:bg-surface-secondary/70 hover:shadow-md',
-        active && siderActiveSurfaceClassName,
-        disabled && 'opacity-60'
+        'sider-quick-control group rounded-2xl border px-2.5 py-2 transition-[background-color,border-color,box-shadow] duration-150',
+        disabled
+          ? 'border-separator bg-surface-secondary opacity-60 shadow-none'
+          : active
+            ? cn(siderActiveSurfaceClassName, 'shadow-sm')
+            : 'border-separator bg-surface shadow-sm hover:border-accent/25 hover:bg-surface-secondary/70 hover:shadow-md'
       )}
     >
       <button

@@ -1,9 +1,9 @@
 export type SiderGroup = 'quick' | 'account' | 'status' | 'navigation'
 
-const siderGroupOrder: SiderGroup[] = ['account', 'quick', 'status', 'navigation']
+const siderGroupOrder: SiderGroup[] = ['quick', 'account', 'status', 'navigation']
 
 export const siderKeysByGroup: Record<SiderGroup, readonly string[]> = {
-  quick: ['sysproxy', 'tun', 'mihomo', 'dns', 'sniff'],
+  quick: ['sysproxy', 'tun', 'dns', 'sniff', 'mihomo'],
   account: ['kokoro'],
   status: ['app-routing', 'proxy', 'connection', 'profile', 'rule', 'override', 'log'],
   navigation: []
@@ -51,9 +51,7 @@ export const normalizeSiderOrder = (configuredOrder?: string[]): string[] => {
   // Preserve all user ordering once the stored keys already follow the current group sequence.
   if (alreadyUsesCurrentGroups) {
     return siderGroupOrder.flatMap((group) => {
-      const configuredGroupKeys = uniqueConfigured.filter(
-        (key) => groupForSiderKey(key) === group
-      )
+      const configuredGroupKeys = uniqueConfigured.filter((key) => groupForSiderKey(key) === group)
       const missingGroupKeys = siderKeysByGroup[group].filter(
         (key) => !configuredGroupKeys.includes(key)
       )
@@ -70,9 +68,7 @@ export const normalizeSiderOrder = (configuredOrder?: string[]): string[] => {
     const missingStableKeys = siderKeysByGroup[group].filter(
       (key) => legacyGroupForSiderKey(key) === group && !configuredStableKeys.includes(key)
     )
-    const movedKeys = siderKeysByGroup[group].filter(
-      (key) => legacyGroupForSiderKey(key) !== group
-    )
+    const movedKeys = siderKeysByGroup[group].filter((key) => legacyGroupForSiderKey(key) !== group)
 
     return [...configuredStableKeys, ...missingStableKeys, ...movedKeys]
   })

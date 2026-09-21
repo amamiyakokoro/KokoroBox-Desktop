@@ -43,18 +43,6 @@ const SiderConfig: React.FC = () => {
   const { appConfig, patchAppConfig } = useAppConfig()
   const groups: SiderConfigGroup[] = [
     {
-      title: 'Kokoro',
-      reorderable: false,
-      entries: [
-        {
-          id: 'kokoro',
-          key: 'kokoroCardStatus',
-          title: tr('Kokoro account'),
-          defaultStatus: 'col-span-2'
-        }
-      ]
-    },
-    {
       title: tr('Quick controls'),
       entries: [
         {
@@ -69,18 +57,30 @@ const SiderConfig: React.FC = () => {
           title: tr('TUN mode'),
           defaultStatus: 'col-span-1'
         },
-        {
-          id: 'mihomo',
-          key: 'mihomoCoreCardStatus',
-          title: tr('Core'),
-          defaultStatus: 'col-span-2'
-        },
         { id: 'dns', key: 'dnsCardStatus', title: 'DNS', defaultStatus: 'col-span-1' },
         {
           id: 'sniff',
           key: 'sniffCardStatus',
           title: tr('Sniffing'),
           defaultStatus: 'col-span-1'
+        },
+        {
+          id: 'mihomo',
+          key: 'mihomoCoreCardStatus',
+          title: tr('Core'),
+          defaultStatus: 'col-span-2'
+        }
+      ]
+    },
+    {
+      title: 'Kokoro',
+      reorderable: false,
+      entries: [
+        {
+          id: 'kokoro',
+          key: 'kokoroCardStatus',
+          title: tr('Kokoro account'),
+          defaultStatus: 'col-span-2'
         }
       ]
     },

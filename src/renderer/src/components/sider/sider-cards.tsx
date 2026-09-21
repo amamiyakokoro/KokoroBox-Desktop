@@ -170,14 +170,14 @@ export default function SiderCards({ iconOnly = false }: Props): React.JSX.Eleme
     return (
       <div className="min-h-0 flex-1 overflow-y-auto no-scrollbar">
         <div className="flex min-h-full w-full flex-col items-center px-2 pb-2">
+          <SiderIconGroup label={tr('Quick controls')}>
+            {renderCards(quickControlKeys)}
+          </SiderIconGroup>
           {isAccountVisible && (
-            <SiderIconGroup label="Kokoro">
+            <SiderIconGroup label="Kokoro" separated>
               {renderCards(accountKeys)}
             </SiderIconGroup>
           )}
-          <SiderIconGroup label={tr('Quick controls')} separated={isAccountVisible}>
-            {renderCards(quickControlKeys)}
-          </SiderIconGroup>
           <SiderIconGroup label={tr('Current status')} separated>
             {renderCards(currentStatusKeys)}
           </SiderIconGroup>
@@ -205,14 +205,14 @@ export default function SiderCards({ iconOnly = false }: Props): React.JSX.Eleme
         }}
       >
         <div className="m-2 flex flex-col gap-3" onClickCapture={onClickCapture}>
-          {isAccountVisible && (
-            <SiderSection title="Kokoro">{renderCards(accountKeys)}</SiderSection>
-          )}
           <SortableContext items={orderedKeys(quickControlKeys)}>
             <SiderSection title={tr('Quick controls')} columns={2}>
               {renderCards(quickControlKeys)}
             </SiderSection>
           </SortableContext>
+          {isAccountVisible && (
+            <SiderSection title="Kokoro">{renderCards(accountKeys)}</SiderSection>
+          )}
           <SortableContext items={orderedKeys(currentStatusKeys)}>
             <SiderSection title={tr('Current status')}>
               {renderCards(currentStatusKeys)}

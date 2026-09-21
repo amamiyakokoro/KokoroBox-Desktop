@@ -1071,8 +1071,8 @@ test('desktop sidebar separates controls, live status and navigation', () => {
   const quickSectionPosition = sider.indexOf("SiderSection title={tr('Quick controls')}")
   const statusSectionPosition = sider.indexOf("SiderSection title={tr('Current status')}")
   const navigationSectionPosition = sider.indexOf("SiderSection title={tr('Navigation')}")
-  assert.ok(accountEntryPosition < quickSectionPosition)
-  assert.ok(quickSectionPosition < statusSectionPosition)
+  assert.ok(quickSectionPosition < accountEntryPosition)
+  assert.ok(accountEntryPosition < statusSectionPosition)
   assert.ok(statusSectionPosition < navigationSectionPosition)
   assert.match(sider, /groupForSiderKey\(String\(active\.id\)\)/)
   assert.match(sider, /const configuredOrder = useMemo/)
@@ -1083,11 +1083,11 @@ test('desktop sidebar separates controls, live status and navigation', () => {
   assert.match(sider, /const hasNavigationItems = orderedKeys\(navigationKeys\)\.length > 0/)
   assert.match(
     sider,
-    /renderCards\(accountKeys\)[\s\S]*renderCards\(quickControlKeys\)[\s\S]*renderCards\(currentStatusKeys\)[\s\S]*renderCards\(navigationKeys\)/
+    /renderCards\(quickControlKeys\)[\s\S]*renderCards\(accountKeys\)[\s\S]*renderCards\(currentStatusKeys\)[\s\S]*renderCards\(navigationKeys\)/
   )
   assert.equal(sider.match(/<SiderIconGroup/g)?.length, 4)
-  assert.match(sider, /<SiderIconGroup label="Kokoro">/)
-  assert.match(sider, /<SiderIconGroup label=\{tr\('Quick controls'\)\} separated=\{isAccountVisible\}>/)
+  assert.match(sider, /<SiderIconGroup label=\{tr\('Quick controls'\)\}>/)
+  assert.match(sider, /<SiderIconGroup label="Kokoro" separated>/)
   assert.match(sider, /<SiderIconGroup label=\{tr\('Current status'\)\} separated>/)
   assert.match(sider, /<SiderIconGroup label=\{tr\('Navigation'\)\} separated>/)
   assert.match(sider, /isAccountVisible && \([\s\S]*renderCards\(accountKeys\)/)
@@ -1153,7 +1153,7 @@ test('desktop sidebar separates controls, live status and navigation', () => {
   assert.match(navItem, /hover:border-accent\/25 hover:bg-surface-secondary\/70 hover:shadow-sm/)
   assert.match(navItem, /active\s*\? siderActiveSurfaceClassName/)
   assert.match(statusCard, /active\s*\? siderActiveSurfaceClassName/)
-  assert.match(quickControl, /active && siderActiveSurfaceClassName/)
+  assert.match(quickControl, /active[\s\S]*cn\(siderActiveSurfaceClassName, 'shadow-sm'\)/)
   assert.doesNotMatch(navItem, /border-transparent/)
   assert.match(surfaces, /prominence === 'navigation'[\s\S]*bg-transparent text-base/)
   assert.match(surfaces, /hover:border-accent\/25/)
@@ -1186,6 +1186,11 @@ test('desktop sidebar separates controls, live status and navigation', () => {
   )
   assert.match(quickControl, /data-sider-control-slot/)
   assert.match(sider, /interactiveSelector[\s\S]*\[data-sider-control-slot\]/)
+  assert.match(quickControl, /disabled[\s\S]*shadow-none/)
+  assert.match(quickControl, /active[\s\S]*siderActiveSurfaceClassName[\s\S]*shadow-sm/)
+  assert.match(quickControl, /shadow-sm hover:border-accent\/25[\s\S]*hover:shadow-md/)
+  assert.match(statusCard, /shadow-none[\s\S]*hover:shadow-sm/)
+  assert.doesNotMatch(statusCard, /shadow-md/)
   assert.match(
     quickControl,
     /sider-quick-control__control flex min-w-10 items-center justify-center/
@@ -1218,7 +1223,7 @@ test('desktop sidebar separates controls, live status and navigation', () => {
   assert.doesNotMatch(sidebarSettings, /title: tr\('Navigation'\)/)
   assert.match(
     sidebarSettings,
-    /title: 'Kokoro'[\s\S]*id: 'kokoro'[\s\S]*title: tr\('Quick controls'\)[\s\S]*id: 'sysproxy'[\s\S]*id: 'tun'[\s\S]*id: 'mihomo'[\s\S]*id: 'dns'[\s\S]*id: 'sniff'/
+    /title: tr\('Quick controls'\)[\s\S]*id: 'sysproxy'[\s\S]*id: 'tun'[\s\S]*id: 'dns'[\s\S]*id: 'sniff'[\s\S]*id: 'mihomo'[\s\S]*title: 'Kokoro'[\s\S]*id: 'kokoro'/
   )
   assert.match(
     sidebarSettings,
@@ -1375,7 +1380,7 @@ test('desktop sidebar separates controls, live status and navigation', () => {
   assert.equal(groupForSiderKey('rule'), 'status')
   assert.equal(groupForSiderKey('override'), 'status')
   assert.equal(groupForSiderKey('log'), 'status')
-  assert.deepEqual([...quickControlKeys], ['sysproxy', 'tun', 'mihomo', 'dns', 'sniff'])
+  assert.deepEqual([...quickControlKeys], ['sysproxy', 'tun', 'dns', 'sniff', 'mihomo'])
   assert.deepEqual([...accountKeys], ['kokoro'])
   assert.deepEqual([...currentStatusKeys], [
     'app-routing',
@@ -1391,12 +1396,12 @@ test('desktop sidebar separates controls, live status and navigation', () => {
   assert.equal(navigationKeys.has('resource'), false)
   assert.notEqual(groupForSiderKey('sysproxy'), groupForSiderKey('profile'))
   assert.deepEqual(defaultSiderOrder, [
-    'kokoro',
     'sysproxy',
     'tun',
-    'mihomo',
     'dns',
     'sniff',
+    'mihomo',
+    'kokoro',
     'app-routing',
     'proxy',
     'connection',
@@ -1406,9 +1411,9 @@ test('desktop sidebar separates controls, live status and navigation', () => {
     'log'
   ])
   assert.deepEqual(normalizeSiderOrder(['tun', 'sysproxy', 'tun', 'unknown']).slice(0, 3), [
-    'kokoro',
     'tun',
-    'sysproxy'
+    'sysproxy',
+    'dns'
   ])
   assert.deepEqual(
     normalizeSiderOrder([
@@ -1429,12 +1434,12 @@ test('desktop sidebar separates controls, live status and navigation', () => {
     defaultSiderOrder
   )
   const customizedCurrentOrder = [
-    'kokoro',
     'tun',
     'sysproxy',
     'sniff',
     'dns',
     'mihomo',
+    'kokoro',
     'profile',
     'connection',
     'proxy',
@@ -1444,7 +1449,7 @@ test('desktop sidebar separates controls, live status and navigation', () => {
     'rule'
   ]
   assert.deepEqual(normalizeSiderOrder(customizedCurrentOrder), customizedCurrentOrder)
-  const partialCurrentOrder = ['kokoro', 'tun', 'sysproxy', 'profile', 'proxy']
+  const partialCurrentOrder = ['tun', 'sysproxy', 'kokoro', 'profile', 'proxy']
   assert.deepEqual(
     normalizeSiderOrder(partialCurrentOrder).filter((key) => partialCurrentOrder.includes(key)),
     partialCurrentOrder
