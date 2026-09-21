@@ -1674,8 +1674,9 @@ test('Kokoro account options and default rules use clear desktop sections and sa
   assert.match(page, /footer=\{[\s\S]*tr\('Fetch and add'\)/)
   assert.match(
     profileConfig,
-    /export async function addKokoroProfile[\s\S]*const newProfileId = await addProfileItem[\s\S]*current !== newProfileId[\s\S]*await changeCurrentProfile\(newProfileId\)[\s\S]*return newProfileId/
+    /export async function addKokoroProfile[\s\S]*downloadKokoroProfile\(normalizedSettings\)[\s\S]*item\.kokoro && item\.name === downloaded\.profileName[\s\S]*matchingProfiles\.find\(\(item\) => item\.id === config\.current\)[\s\S]*\.\.\.existingProfile[\s\S]*downloadedKokoroProfile: downloaded[\s\S]*await changeCurrentProfile\(newProfileId\)[\s\S]*return newProfileId/
   )
+  assert.match(profileConfig, /duplicate\.id !== existingProfile\?\.id[\s\S]*removeProfileItem/)
   assert.match(
     rendererIpc,
     /export async function addKokoroProfile\(settings: KokoroSubscriptionSettings\): Promise<string>/

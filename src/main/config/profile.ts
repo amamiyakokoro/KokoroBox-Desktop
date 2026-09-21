@@ -17,7 +17,7 @@ import { getUserAgent } from '../utils/userAgent'
 import { execWithElevation } from '../utils/elevation'
 import { decryptAgeText, encryptAgeText, isAgeEncryptedText } from '../utils/age'
 import { isHttpUrl } from '../utils/url'
-import { downloadKokoroProfile } from '../kokoro/client'
+import { downloadKokoroProfile, type DownloadedKokoroProfile } from '../kokoro/client'
 import { validateMihomoProfileContent } from '../kokoro/profile-check'
 import { createPinnedHttpsAgent } from '../utils/pinnedHttpsAgent'
 
@@ -89,8 +89,17 @@ export async function updateProfileItem(item: ProfileItem): Promise<void> {
   }
 }
 
-export async function addProfileItem(item: Partial<ProfileItem>): Promise<string> {
-  const newItem = await createProfile(item)
+interface AddProfileItemOptions {
+  downloadedKokoroProfile?: DownloadedKokoroProfile
+  restartCurrent?: boolean
+  selectIfEmpty?: boolean
+}
+
+async function addProfileItemWithOptions(
+  item: Partial<ProfileItem>,
+  options: AddProfileItemOptions = {}
+): Promise<string> {
+  const newItem = await createProfile(item, options)
   const config = await getProfileConfig()
   if (await getProfileItem(newItem.id)) {
     await updateProfileItem(newItem)
@@ -99,11 +108,15 @@ export async function addProfileItem(item: Partial<ProfileItem>): Promise<string
   }
   await setProfileConfig(config)
 
-  if (!config.current) {
+  if (options.selectIfEmpty !== false && !config.current) {
     await changeCurrentProfile(newItem.id)
   }
   await addProfileUpdater(newItem)
   return newItem.id
+}
+
+export async function addProfileItem(item: Partial<ProfileItem>): Promise<string> {
+  return await addProfileItemWithOptions(item)
 }
 
 export async function removeProfileItem(id: string): Promise<void> {
@@ -138,7 +151,10 @@ export async function getCurrentProfileItem(): Promise<ProfileItem> {
   )
 }
 
-export async function createProfile(item: Partial<ProfileItem>): Promise<ProfileItem> {
+export async function createProfile(
+  item: Partial<ProfileItem>,
+  options: AddProfileItemOptions = {}
+): Promise<ProfileItem> {
   const id = item.id || new Date().getTime().toString(16)
   const newItem = {
     id,
@@ -160,7 +176,8 @@ export async function createProfile(item: Partial<ProfileItem>): Promise<Profile
   switch (newItem.type) {
     case 'remote': {
       if (newItem.kokoro) {
-        const downloaded = await downloadKokoroProfile(newItem.kokoro.settings)
+        const downloaded =
+          options.downloadedKokoroProfile ?? (await downloadKokoroProfile(newItem.kokoro.settings))
         parseYaml<MihomoConfig>(downloaded.content)
         await validateMihomoProfileContent(downloaded.content)
         newItem.name = item.name || downloaded.profileName
@@ -172,7 +189,7 @@ export async function createProfile(item: Partial<ProfileItem>): Promise<Profile
         if (downloaded.subscriptionUserinfo) {
           newItem.extra = parseSubinfo(downloaded.subscriptionUserinfo)
         }
-        await setProfileStr(id, downloaded.content, newItem)
+        await writeProfileContent(id, downloaded.content, newItem, options.restartCurrent !== false)
         break
       }
 
@@ -284,18 +301,37 @@ export async function getProfileStr(id: string | undefined): Promise<string> {
 }
 
 export async function addKokoroProfile(settings: KokoroSubscriptionSettings): Promise<string> {
-  const newProfileId = await addProfileItem({
-    type: 'remote',
-    name: '',
-    verify: true,
-    autoUpdate: settings.profile_auto_update,
-    interval: settings.profile_auto_update ? settings.profile_update_hours * 60 : 0,
-    kokoro: { settings: { ...settings, format: 'mihomo' } }
-  })
-  const { current } = await getProfileConfig()
-  if (current !== newProfileId) {
-    await changeCurrentProfile(newProfileId)
+  const normalizedSettings = { ...settings, format: 'mihomo' } as const
+  const downloaded = await downloadKokoroProfile(normalizedSettings)
+  const config = await getProfileConfig()
+  const matchingProfiles = config.items.filter(
+    (item) => item.kokoro && item.name === downloaded.profileName
+  )
+  const existingProfile =
+    matchingProfiles.find((item) => item.id === config.current) ?? matchingProfiles[0]
+
+  const newProfileId = await addProfileItemWithOptions(
+    {
+      ...existingProfile,
+      type: 'remote',
+      name: downloaded.profileName,
+      verify: true,
+      autoUpdate: settings.profile_auto_update,
+      interval: settings.profile_auto_update ? settings.profile_update_hours * 60 : 0,
+      kokoro: { settings: normalizedSettings }
+    },
+    {
+      downloadedKokoroProfile: downloaded,
+      restartCurrent: false,
+      selectIfEmpty: false
+    }
+  )
+  for (const duplicate of matchingProfiles) {
+    if (duplicate.id !== existingProfile?.id) {
+      await removeProfileItem(duplicate.id)
+    }
   }
+  await changeCurrentProfile(newProfileId)
   return newProfileId
 }
 
