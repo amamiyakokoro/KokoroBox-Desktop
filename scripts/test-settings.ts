@@ -1185,6 +1185,7 @@ test('desktop sidebar separates controls, live status and navigation', () => {
     /className="sider-quick-control__status w-full"[\s\S]*tone=\{enabled \? 'success' : 'danger'\}/
   )
   assert.match(quickControl, /data-sider-control-slot/)
+  assert.match(sider, /interactiveSelector[\s\S]*\[data-sider-control-slot\]/)
   assert.match(
     quickControl,
     /sider-quick-control__control flex min-w-10 items-center justify-center/

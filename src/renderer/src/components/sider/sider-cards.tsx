@@ -30,7 +30,8 @@ import {
   quickControlKeys
 } from './sider-order'
 
-const interactiveSelector = 'button:not(.pointer-events-none), [role="switch"]'
+const interactiveSelector =
+  'button:not(.pointer-events-none), [role="switch"], [data-sider-control-slot]'
 
 const siderCardRouteMap = {
   'sysproxy-card': '/settings?section=network&panel=system-proxy',
