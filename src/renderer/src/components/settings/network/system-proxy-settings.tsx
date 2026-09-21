@@ -300,8 +300,8 @@ const Sysproxy: React.FC<Props> = ({ embedded = false }) => {
               ariaLabel={tr('Configuration method')}
               selectedKey={values.settingMode}
               options={[
-                { id: 'exec', label: tr('Run command') },
-                { id: 'service', label: tr('Service mode') }
+                { id: 'service', label: tr('Service mode') },
+                { id: 'exec', label: tr('Run command') }
               ]}
               onChange={(key) => {
                 const settingMode = key as 'exec' | 'service'
