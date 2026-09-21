@@ -101,8 +101,8 @@ export function AppRoutingRuleRow({
   }
   return (
     <div className="app-routing-rule-row" data-enabled={rule.enabled} role="listitem">
-      <div className="grid grid-cols-[2.25rem_minmax(0,1fr)] gap-x-3 gap-y-1.5 px-3 py-2">
-        <div className="row-span-2 flex size-9 items-center justify-center self-start overflow-hidden rounded-lg bg-surface-secondary p-1">
+      <div className="app-routing-rule-row__layout">
+        <div className="app-routing-rule-row__icon flex size-9 items-center justify-center overflow-hidden rounded-lg bg-surface-secondary p-1">
           <img
             src={icon || defaultApplicationIcon}
             alt=""
@@ -113,107 +113,68 @@ export function AppRoutingRuleRow({
             }}
           />
         </div>
-        <div className="flex min-w-0 items-center gap-1">
-          <div
-            className="min-w-0 flex-1"
-            title={
-              rule.sourcePath ? `${rule.processPattern}\n${rule.sourcePath}` : rule.processPattern
-            }
-          >
-            {isEditingPattern ? (
-              <InputGroup variant="secondary" className="min-h-9 min-w-0">
-                <InputGroup.Input
-                  key={rule.processPattern}
-                  autoFocus
-                  aria-label={tr('Process pattern')}
-                  disabled={disabled}
-                  defaultValue={rule.processPattern}
-                  className="cursor-text truncate text-base font-semibold"
-                  onBlur={(event) => {
-                    const processPattern = event.currentTarget.value.trim()
-                    if (processPattern && processPattern !== rule.processPattern) {
-                      onChange({
-                        processPattern,
-                        ...(rule.identifierKind === 'linux-executable'
-                          ? { sourcePath: processPattern }
-                          : {})
-                      })
-                    }
-                    setIsEditingPattern(false)
-                  }}
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter') event.currentTarget.blur()
-                    if (event.key === 'Escape') {
-                      event.currentTarget.value = rule.processPattern
-                      event.currentTarget.blur()
-                    }
-                  }}
-                />
-              </InputGroup>
-            ) : (
-              <button
-                type="button"
-                className="group/title flex max-w-full min-w-0 items-center gap-1.5 rounded-md text-left outline-none"
+        <div
+          className="app-routing-rule-row__identity min-w-0"
+          title={
+            rule.sourcePath ? `${rule.processPattern}\n${rule.sourcePath}` : rule.processPattern
+          }
+        >
+          {isEditingPattern ? (
+            <InputGroup variant="secondary" className="min-h-9 min-w-0">
+              <InputGroup.Input
+                key={rule.processPattern}
+                autoFocus
+                aria-label={tr('Process pattern')}
                 disabled={disabled}
-                title={tr('Edit')}
-                onClick={() => setIsEditingPattern(true)}
-              >
-                <span className="min-w-0">
-                  <span className="block truncate text-sm font-semibold leading-5 text-foreground">
-                    {rule.processPattern}
-                  </span>
-                  <span className="block truncate text-xs leading-4 text-muted">
-                    {identifierLabel}
-                  </span>
+                defaultValue={rule.processPattern}
+                className="cursor-text truncate text-base font-semibold"
+                onBlur={(event) => {
+                  const processPattern = event.currentTarget.value.trim()
+                  if (processPattern && processPattern !== rule.processPattern) {
+                    onChange({
+                      processPattern,
+                      ...(rule.identifierKind === 'linux-executable'
+                        ? { sourcePath: processPattern }
+                        : {})
+                    })
+                  }
+                  setIsEditingPattern(false)
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') event.currentTarget.blur()
+                  if (event.key === 'Escape') {
+                    event.currentTarget.value = rule.processPattern
+                    event.currentTarget.blur()
+                  }
+                }}
+              />
+            </InputGroup>
+          ) : (
+            <button
+              type="button"
+              className="group/title flex max-w-full min-w-0 items-center gap-1.5 rounded-md text-left outline-none"
+              disabled={disabled}
+              title={tr('Edit')}
+              onClick={() => setIsEditingPattern(true)}
+            >
+              <span className="min-w-0">
+                <span className="block truncate text-sm font-semibold leading-5 text-foreground">
+                  {rule.processPattern}
                 </span>
-                <MdEdit
-                  aria-hidden="true"
-                  className="shrink-0 text-sm text-muted opacity-45 transition-opacity group-hover/title:opacity-100 group-focus-visible/title:opacity-100"
-                />
-              </button>
-            )}
-          </div>
-          <KokoActionMenu
-            ariaLabel={tr('Rule actions')}
-            isDisabled={disabled}
-            items={[
-              {
-                id: 'move-up',
-                label: tr('Move up'),
-                textValue: tr('Move up'),
-                startContent: <MdArrowUpward />,
-                isDisabled: index === 0
-              },
-              {
-                id: 'move-down',
-                label: tr('Move down'),
-                textValue: tr('Move down'),
-                startContent: <MdArrowDownward />,
-                isDisabled: index === count - 1
-              },
-              {
-                id: 'delete',
-                label: tr('Delete'),
-                textValue: tr('Delete'),
-                startContent: <MdDeleteOutline />,
-                tone: 'danger'
-              }
-            ]}
-            onAction={(id) => {
-              if (id === 'move-up') onMove(-1)
-              if (id === 'move-down') onMove(1)
-              if (id === 'delete') onDelete()
-            }}
-          >
-            <MdMoreHoriz className="text-lg" />
-          </KokoActionMenu>
+                <span className="block truncate text-xs leading-4 text-muted">
+                  {identifierLabel}
+                </span>
+              </span>
+              <MdEdit
+                aria-hidden="true"
+                className="shrink-0 text-sm text-muted opacity-45 transition-opacity group-hover/title:opacity-100 group-focus-visible/title:opacity-100"
+              />
+            </button>
+          )}
         </div>
         <div
-          className={`grid min-w-0 items-center gap-2 ${
-            hasIdentifierKindSelector
-              ? 'grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto]'
-              : 'grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]'
-          }`}
+          className="app-routing-rule-row__controls"
+          data-has-identifier-kind={hasIdentifierKindSelector}
         >
           {hasIdentifierKindSelector && (
             <div className="min-w-0">
@@ -287,6 +248,8 @@ export function AppRoutingRuleRow({
               />
             </div>
           </div>
+        </div>
+        <div className="app-routing-rule-row__trailing">
           <Switch
             size="sm"
             aria-label={tr('Enable rule')}
@@ -300,6 +263,40 @@ export function AppRoutingRuleRow({
               </Switch.Control>
             </Switch.Content>
           </Switch>
+          <KokoActionMenu
+            ariaLabel={tr('Rule actions')}
+            isDisabled={disabled}
+            items={[
+              {
+                id: 'move-up',
+                label: tr('Move up'),
+                textValue: tr('Move up'),
+                startContent: <MdArrowUpward />,
+                isDisabled: index === 0
+              },
+              {
+                id: 'move-down',
+                label: tr('Move down'),
+                textValue: tr('Move down'),
+                startContent: <MdArrowDownward />,
+                isDisabled: index === count - 1
+              },
+              {
+                id: 'delete',
+                label: tr('Delete'),
+                textValue: tr('Delete'),
+                startContent: <MdDeleteOutline />,
+                tone: 'danger'
+              }
+            ]}
+            onAction={(id) => {
+              if (id === 'move-up') onMove(-1)
+              if (id === 'move-down') onMove(1)
+              if (id === 'delete') onDelete()
+            }}
+          >
+            <MdMoreHoriz className="text-lg" />
+          </KokoActionMenu>
         </div>
       </div>
     </div>

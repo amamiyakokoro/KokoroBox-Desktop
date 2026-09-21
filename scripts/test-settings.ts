@@ -955,6 +955,7 @@ test('Phase 9 card-heavy surfaces use native v3 anatomy and semantic interaction
   const proxy = readFileSync('src/renderer/src/components/proxies/proxy-item.tsx', 'utf8')
   const override = readFileSync('src/renderer/src/components/override/override-item.tsx', 'utf8')
   const appRule = readFileSync('src/renderer/src/components/app-routing/rule-row.tsx', 'utf8')
+  const styles = readFileSync('src/renderer/src/assets/app-overrides.css', 'utf8')
 
   assert.match(rule, /<Card className="rule-list-card" data-enabled=\{isEnabled\}>/)
   assert.match(rule, /<Card\.Content/)
@@ -969,6 +970,12 @@ test('Phase 9 card-heavy surfaces use native v3 anatomy and semantic interaction
   assert.doesNotMatch(appRule, /<Card/)
   assert.match(appRule, /<InputGroup variant="secondary"/)
   assert.equal(appRule.match(/density="compact"/g)?.length, 4)
+  assert.match(appRule, /className="app-routing-rule-row__trailing"[\s\S]*<Switch[\s\S]*<KokoActionMenu/)
+  assert.match(appRule, /data-has-identifier-kind=\{hasIdentifierKindSelector\}/)
+  assert.match(styles, /\.app-routing-rule-list,[\s\S]*background: var\(--surface\)/)
+  assert.match(styles, /\.app-routing-rule-row__layout[\s\S]*'icon identity trailing'[\s\S]*'icon controls controls'/)
+  assert.match(styles, /@container app-routing-rule-row \(min-width: 48rem\)/)
+  assert.match(styles, /grid-template-areas: 'icon identity controls trailing'/)
 })
 
 test('page settings drawers use the shared compact inspector behavior', () => {

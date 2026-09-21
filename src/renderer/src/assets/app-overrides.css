@@ -510,9 +510,64 @@ input[type='number'] {
 }
 
 .app-routing-rule-row {
+  container: app-routing-rule-row / inline-size;
   transition:
     background-color 150ms ease,
     opacity 150ms ease;
+}
+
+.app-routing-rule-row__layout {
+  display: grid;
+  grid-template-areas:
+    'icon identity trailing'
+    'icon controls controls';
+  grid-template-columns: 2.25rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: calc(var(--spacing) * 1.5) calc(var(--spacing) * 3);
+  padding: calc(var(--spacing) * 2) calc(var(--spacing) * 3);
+}
+
+.app-routing-rule-row__icon {
+  grid-area: icon;
+  align-self: start;
+}
+
+.app-routing-rule-row__identity {
+  grid-area: identity;
+}
+
+.app-routing-rule-row__controls {
+  display: grid;
+  grid-area: controls;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  min-width: 0;
+  align-items: center;
+  gap: calc(var(--spacing) * 2);
+}
+
+.app-routing-rule-row__controls[data-has-identifier-kind='true'] {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.app-routing-rule-row__trailing {
+  display: flex;
+  grid-area: trailing;
+  align-items: center;
+  align-self: start;
+  gap: calc(var(--spacing) * 1);
+}
+
+@container app-routing-rule-row (min-width: 48rem) {
+  .app-routing-rule-row__layout {
+    grid-template-areas: 'icon identity controls trailing';
+    grid-template-columns: 2.25rem minmax(10rem, 1fr) minmax(16rem, 1.35fr) auto;
+    gap: calc(var(--spacing) * 3);
+  }
+
+  .app-routing-rule-row__icon,
+  .app-routing-rule-row__trailing {
+    align-self: center;
+  }
 }
 
 .app-routing-rule-row + .app-routing-rule-row {
