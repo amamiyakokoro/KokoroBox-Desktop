@@ -14,9 +14,9 @@ import {
   fileToDataUrl,
   inspectApplication,
   isRunningAsAdmin,
-  launchElevated,
-  launchUnelevated,
+  relaunchCurrentApplicationWithPrivilege,
   scanWindowsApplications,
+  setLaunchAtLogin,
   setupFirewallRules
 } from 'kokorobox-native'
 import {
@@ -30,7 +30,6 @@ import {
   appRoutingIconDir
 } from '../utils/dirs'
 import { rmSync } from 'fs'
-import { execWithElevation } from '../utils/elevation'
 import { prepareAppForRelaunch } from '../resolve/appLifecycle'
 import { windowsRelaunchWaitArgument } from '../../shared/windows-relaunch'
 
@@ -217,7 +216,10 @@ function taskReceiptPath(): string {
 export async function deleteElevateTask(): Promise<void> {
   for (const name of [WINDOWS_ELEVATE_TASK_NAME, LEGACY_WINDOWS_ELEVATE_TASK_NAME]) {
     try {
-      await execWithElevation('schtasks.exe', ['/delete', '/tn', name, '/f'])
+      await setLaunchAtLogin(
+        { identifier: name, displayName: 'KokoroBox', executablePath: exePath() },
+        false
+      )
     } catch {
       // Ignore tasks that do not exist.
     }
@@ -246,8 +248,7 @@ async function relaunchWindowsWithPrivilege(elevated: boolean): Promise<void> {
   // the single-instance lock or starting Mihomo. This avoids both pipe races and
   // stopping the current core when the user cancels the UAC prompt.
   const relaunchArguments = [windowsRelaunchWaitArgument(process.pid)]
-  if (elevated) launchElevated(exePath(), relaunchArguments)
-  else launchUnelevated(exePath(), relaunchArguments)
+  relaunchCurrentApplicationWithPrivilege(relaunchArguments, elevated)
 
   await prepareAppForRelaunch()
   app.releaseSingleInstanceLock()

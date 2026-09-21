@@ -5,7 +5,6 @@ import {
   serviceIdentityFallbackPath,
   servicePath
 } from '../utils/dirs'
-import { execWithElevation } from '../utils/elevation'
 import { KeyManager, openNativeServiceIdentity, validateKeyPair } from './key'
 import {
   bootstrapMacOSServiceAuth,
@@ -26,10 +25,13 @@ import {
 } from './auth-store'
 import {
   getCurrentUserSid,
+  cleanupLegacyMacosService,
   getMacosManagedServiceStatus,
   openMacosLoginItemsSettings,
   registerMacosManagedService,
   reloadMacosManagedService,
+  runServiceLifecycleElevated,
+  stopMacosManagedService,
   unregisterMacosManagedService,
   type MacOSManagedServiceStatus
 } from 'kokorobox-native'
@@ -229,14 +231,14 @@ function isServiceAuthenticationStateError(error: unknown): boolean {
   )
 }
 
-async function getAuthorizedPrincipalArgs(): Promise<string[]> {
+function getAuthorizedPrincipal(): { authorizedSid?: string; authorizedUid?: number } {
   if (process.platform === 'win32') {
     const sid = getCurrentUserSid()
     if (!sid.startsWith('S-')) {
       throw new Error(tr('Failed to read the current user SID'))
     }
 
-    return ['--authorized-sid', sid]
+    return { authorizedSid: sid }
   }
 
   const uid = process.getuid?.()
@@ -244,7 +246,7 @@ async function getAuthorizedPrincipalArgs(): Promise<string[]> {
     throw new Error(tr('Failed to read the current user UID'))
   }
 
-  return ['--authorized-uid', String(uid)]
+  return { authorizedUid: uid }
 }
 
 export function exportPublicKey(): string {
@@ -279,16 +281,8 @@ async function waitForServiceReady(timeoutMs = 15000): Promise<void> {
 }
 
 async function removeLegacyMacOSService(): Promise<void> {
-  if (existsSync(macOSServicePlistPath())) {
-    try {
-      await execWithElevation('/bin/launchctl', ['bootout', 'system/KokoroBoxService'])
-    } catch {
-      // The legacy service may already be stopped or unloaded.
-    }
-    await execWithElevation('/bin/rm', ['-f', macOSServicePlistPath()])
-  }
-  if (existsSync(macOSServiceRuntimePath())) {
-    await execWithElevation('/bin/rm', ['-f', macOSServiceRuntimePath()])
+  if (existsSync(macOSServicePlistPath()) || existsSync(macOSServiceRuntimePath())) {
+    await cleanupLegacyMacosService()
   }
 }
 
@@ -330,14 +324,12 @@ export async function initService(allowInteractiveRecovery = false): Promise<voi
             if (!allowInteractiveRecovery) {
               throw new Error('The service is initialized for a different client key')
             }
-            const principalArgs = await getAuthorizedPrincipalArgs()
-            await execWithElevation(execPath, [
-              'service',
-              'init',
-              '--public-key',
-              secret.publicKey,
-              ...principalArgs
-            ])
+            await runServiceLifecycleElevated({
+              executablePath: execPath,
+              action: 'init',
+              publicKey: secret.publicKey,
+              ...getAuthorizedPrincipal()
+            })
             await waitForServiceReady()
             await finalizeServiceAuthMigration()
             return
@@ -353,14 +345,12 @@ export async function initService(allowInteractiveRecovery = false): Promise<voi
       return
     }
 
-    const principalArgs = await getAuthorizedPrincipalArgs()
-    await execWithElevation(execPath, [
-      'service',
-      'init',
-      '--public-key',
-      secret.publicKey,
-      ...principalArgs
-    ])
+    await runServiceLifecycleElevated({
+      executablePath: execPath,
+      action: 'init',
+      publicKey: secret.publicKey,
+      ...getAuthorizedPrincipal()
+    })
   } catch (error) {
     if (isUserCancelledError(error)) {
       throw new UserCancelledError()
@@ -379,7 +369,7 @@ export async function installService(): Promise<void> {
     if (process.platform === 'darwin') {
       await installMacOSService()
     } else {
-      await execWithElevation(execPath, ['service', 'install'])
+      await runServiceLifecycleElevated({ executablePath: execPath, action: 'install' })
     }
   } catch (error) {
     if (isUserCancelledError(error)) {
@@ -420,7 +410,7 @@ export async function uninstallService(): Promise<void> {
       unregisterMacOSService()
       await removeLegacyMacOSService()
     } else {
-      await execWithElevation(execPath, ['service', 'uninstall'])
+      await runServiceLifecycleElevated({ executablePath: execPath, action: 'uninstall' })
     }
   } catch (error) {
     if (isUserCancelledError(error)) {
@@ -437,7 +427,7 @@ export async function startService(): Promise<void> {
     if (process.platform === 'darwin') {
       await installMacOSService()
     } else {
-      await execWithElevation(execPath, ['service', 'start'])
+      await runServiceLifecycleElevated({ executablePath: execPath, action: 'start' })
     }
   } catch (error) {
     if (isUserCancelledError(error)) {
@@ -452,9 +442,9 @@ export async function stopService(): Promise<void> {
 
   try {
     if (process.platform === 'darwin') {
-      await execWithElevation('/bin/launchctl', ['kill', 'SIGTERM', 'system/KokoroBoxService'])
+      await stopMacosManagedService()
     } else {
-      await execWithElevation(execPath, ['service', 'stop'])
+      await runServiceLifecycleElevated({ executablePath: execPath, action: 'stop' })
     }
   } catch (error) {
     if (isUserCancelledError(error)) {
@@ -471,7 +461,7 @@ export async function restartService(): Promise<void> {
     if (process.platform === 'darwin') {
       await installMacOSService()
     } else {
-      await execWithElevation(execPath, ['service', 'restart'])
+      await runServiceLifecycleElevated({ executablePath: execPath, action: 'restart' })
     }
   } catch (error) {
     if (isUserCancelledError(error)) {

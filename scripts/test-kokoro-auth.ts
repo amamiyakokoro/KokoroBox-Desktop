@@ -932,14 +932,13 @@ test('Windows privilege changes use explicit non-persistent native relaunches', 
   const lifecycle = readFileSync('src/main/resolve/appLifecycle.ts', 'utf8')
   const startup = readFileSync('src/main/index.ts', 'utf8')
 
-  assert.match(misc, /if \(elevated\) launchElevated\(exePath\(\), relaunchArguments\)/)
-  assert.match(misc, /else launchUnelevated\(exePath\(\), relaunchArguments\)/)
+  assert.match(misc, /relaunchCurrentApplicationWithPrivilege\(relaunchArguments, elevated\)/)
   assert.match(misc, /app\.releaseSingleInstanceLock\(\)/)
   assert.match(
     misc,
     /await prepareAppForRelaunch\(\)[\s\S]*app\.releaseSingleInstanceLock\(\)[\s\S]*app\.quit\(\)/
   )
-  assert.doesNotMatch(misc, /launch(?:Un)?elevated\([^\n]*process\.argv/)
+  assert.doesNotMatch(misc, /launchElevated|launchUnelevated|runElevated/)
   assert.match(misc, /await prepareAppForRelaunch\(\)/)
   assert.match(lifecycle, /isQuitting = true\s+await cleanupBeforeExit\(false\)/)
   assert.match(

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import crypto from 'node:crypto'
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { test } from 'node:test'
 import { computeKeyId, generateKeyPair, signData, validateKeyPair } from '../src/main/service/key'
@@ -95,9 +95,8 @@ test('startup migrates legacy authentication into an opaque native signer', () =
   assert.match(routingSource, /重置认证/)
 })
 
-test('Windows service probes and elevated commands never open a console window', () => {
+test('Windows service probes hide consoles and privileged actions use constrained native APIs', () => {
   const managerSource = readFileSync(resolve('src/main/service/manager.ts'), 'utf8')
-  const elevationSource = readFileSync(resolve('src/main/utils/elevation.ts'), 'utf8')
   const autoRunSource = readFileSync(resolve('src/main/sys/autoRun.ts'), 'utf8')
   const sysproxySource = readFileSync(resolve('src/main/sys/sysproxy.ts'), 'utf8')
   const dirsSource = readFileSync(resolve('src/main/utils/dirs.ts'), 'utf8')
@@ -111,7 +110,7 @@ test('Windows service probes and elevated commands never open a console window',
   const updaterSource = readFileSync(resolve('src/main/resolve/autoUpdater.ts'), 'utf8')
 
   assert.match(managerSource, /\['service', 'status'\],[\s\S]*windowsHide: true/)
-  assert.match(elevationSource, /timeout: 30000, windowsHide: true/)
+  assert.equal(existsSync(resolve('src/main/utils/elevation.ts')), false)
   assert.match(autoRunSource, /schtasks\.exe[\s\S]*windowsHide: true/)
   assert.equal(
     (sysproxySource.match(/windowsHide: process\.platform === 'win32'/g) || []).length,
@@ -194,7 +193,7 @@ test('macOS registers the bundled daemon through SMAppService', () => {
   assert.match(initSource, /initService\(allowInteractiveRecovery = false\)/)
   assert.match(
     initSource,
-    /status === 409[\s\S]*?!allowInteractiveRecovery[\s\S]*?execWithElevation\(execPath, \[[\s\S]*?'service',[\s\S]*?'init'/
+    /status === 409[\s\S]*?!allowInteractiveRecovery[\s\S]*?runServiceLifecycleElevated\(\{[\s\S]*?action: 'init'/
   )
   assert.match(
     ipcSource,
@@ -229,18 +228,10 @@ test('macOS registers the bundled daemon through SMAppService', () => {
       managerSource.indexOf('export async function serviceStatus')
     )
   assert.match(automaticRecoverySource, /installMacOSService\(\)/)
-  assert.doesNotMatch(automaticRecoverySource, /execWithElevation\('\/bin\/launchctl'/)
-  assert.match(
-    managerSource,
-    /execWithElevation\('\/bin\/launchctl', \['bootout', 'system\/KokoroBoxService'\]\)/
-  )
-  assert.match(
-    managerSource,
-    /execWithElevation\('\/bin\/rm', \['-f', macOSServiceRuntimePath\(\)\]\)/
-  )
-  assert.match(managerSource, /'kill',[\s\S]*'SIGTERM',[\s\S]*'system\/KokoroBoxService'/)
-  assert.doesNotMatch(managerSource, /(?:sh|bash)', \['-c'/)
-  assert.doesNotMatch(managerSource, /execWithElevation\('\/usr\/bin\/install'/)
+  assert.doesNotMatch(automaticRecoverySource, /stopMacosManagedService/)
+  assert.match(managerSource, /cleanupLegacyMacosService\(\)/)
+  assert.match(managerSource, /stopMacosManagedService\(\)/)
+  assert.doesNotMatch(managerSource, /execWithElevation|runElevated|launchctl|\/bin\/rm/)
   assert.match(preinstallSource, /launchctl kill SIGTERM "system\/\$service_name"/)
   assert.match(preinstallSource, /rm -f "\$KOKOROBOX_SERVICE_RUNTIME_BIN"/)
   assert.match(postinstallSource, /launchctl kickstart -k system\/KokoroBoxService/)

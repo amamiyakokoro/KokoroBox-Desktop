@@ -44,10 +44,15 @@ existing executable files whose canonical filename is `mihomo` or
 validated paths are passed directly to `chown` and `chmod`.
 
 Windows privilege state remains process-scoped. Desktop checks the current
-token with `isRunningAsAdmin`, uses `launchElevated` for an explicit UAC-backed
-restart, and uses `launchUnelevated` to return to the interactive desktop user's
-token. These operations do not recreate the removed elevation task or make an
-administrator launch persistent.
+token with `isRunningAsAdmin` and asks
+`relaunchCurrentApplicationWithPrivilege` to restart the current executable at
+the requested integrity level. The API does not accept an executable path and
+does not recreate the removed elevation task or make an administrator launch
+persistent.
+
+Service lifecycle actions, fixed macOS service maintenance, and managed-file
+permission repair each use a separate native API. Desktop has no arbitrary
+elevated-command helper.
 
 ## Adding another native function
 

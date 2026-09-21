@@ -1,16 +1,11 @@
 import { exePath, homeDir, taskDir } from '../utils/dirs'
-import { execWithElevation } from '../utils/elevation'
 import { rm } from 'fs/promises'
 import { execFile } from 'child_process'
 import { existsSync } from 'fs'
 import { promisify } from 'util'
 import path from 'path'
 import { LEGACY_WINDOWS_ELEVATE_TASK_NAME } from './misc'
-import {
-  getLaunchAtLogin,
-  openMacosLoginItemsSettings,
-  setLaunchAtLogin
-} from 'kokorobox-native'
+import { getLaunchAtLogin, openMacosLoginItemsSettings, setLaunchAtLogin } from 'kokorobox-native'
 
 export const WINDOWS_AUTO_RUN_TASK_NAME = 'KokoroBox'
 export const LEGACY_WINDOWS_AUTO_RUN_TASK_NAME = 'sparkle'
@@ -85,7 +80,10 @@ export async function disableAutoRun(): Promise<AutoRunStatus> {
   if (process.platform === 'win32') {
     for (const name of [LEGACY_WINDOWS_AUTO_RUN_TASK_NAME]) {
       if (await windowsTaskExists(name))
-        await execWithElevation('schtasks.exe', ['/delete', '/tn', name, '/f'])
+        await setLaunchAtLogin(
+          { identifier: name, displayName: 'KokoroBox', executablePath: exePath() },
+          false
+        )
     }
   }
   if (process.platform === 'linux') {
@@ -112,7 +110,10 @@ export async function migrateLegacyWindowsTasks(): Promise<void> {
 
   for (const name of [LEGACY_WINDOWS_AUTO_RUN_TASK_NAME, LEGACY_WINDOWS_ELEVATE_TASK_NAME]) {
     if (await windowsTaskExists(name))
-      await execWithElevation('schtasks.exe', ['/delete', '/tn', name, '/f'])
+      await setLaunchAtLogin(
+        { identifier: name, displayName: 'KokoroBox', executablePath: exePath() },
+        false
+      )
   }
 
   await Promise.all(

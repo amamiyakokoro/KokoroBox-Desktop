@@ -1153,7 +1153,6 @@ export const messages: Readonly<Record<string, string>> = {
   'Existing terminals do not update automatically after enabling or disabling this setting. Fully close and reopen the terminal; some desktop environments may require signing in again.':
     '啟用或停用後，已開啟的終端機不會自動更新；請完全關閉並重新啟動終端機，部分桌面環境可能需要重新登入',
   'System core': '系統核心',
-  'System-core builds do not support elevation': '系統核心建置不支援提權操作',
   'System core path': '系統核心路徑',
   'System core path is invalid or missing: {0}': '系統核心路徑無效或不存在: {0}',
   'System core path is not set': '系統核心路徑未設定',

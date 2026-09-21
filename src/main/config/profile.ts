@@ -3,7 +3,7 @@ import { getControledMihomoConfig } from './controledMihomo'
 import { mihomoProfileWorkDir, mihomoWorkDir, profileConfigPath, profilePath } from '../utils/dirs'
 import { addProfileUpdater, delProfileUpdater } from '../core/profileUpdater'
 import { readFile, writeFile, rm, mkdir, rename } from 'fs/promises'
-import { fileToStr } from 'kokorobox-native'
+import { fileToStr, repairManagedFilePermissions } from 'kokorobox-native'
 import { restartCore } from '../core/manager'
 import { getAppConfig } from './app'
 import { existsSync } from 'fs'
@@ -14,7 +14,6 @@ import { defaultProfile } from '../utils/template'
 import { dirname, isAbsolute, join, relative, resolve } from 'path'
 import { deepMerge } from '../utils/merge'
 import { getUserAgent } from '../utils/userAgent'
-import { execWithElevation } from '../utils/elevation'
 import { decryptAgeText, encryptAgeText, isAgeEncryptedText } from '../utils/age'
 import { isHttpUrl } from '../utils/url'
 import { downloadKokoroProfile, type DownloadedKokoroProfile } from '../kokoro/client'
@@ -472,39 +471,17 @@ function isPermissionError(error: unknown): boolean {
   return code === 'EACCES' || code === 'EPERM'
 }
 
-function shellQuote(value: string): string {
-  return `'${value.replace(/'/g, `'\\''`)}'`
-}
-
-function isManagedEditableFile(target: string, current: string | undefined): boolean {
-  return [mihomoWorkDir(), mihomoProfileWorkDir(current)].some((root) => isSubPath(root, target))
-}
-
-function buildPermissionRepairCommand(
-  target: string,
-  uid: number,
-  gid: number,
-  repairParent: boolean
-): string {
-  const parts = [`t=${shellQuote(target)}`]
-
-  if (repairParent) {
-    parts.push(`p=${shellQuote(dirname(target))}`)
-    parts.push(`mkdir -p "$p"`)
-    parts.push(`chown ${uid}:${gid} "$p"`)
-    parts.push(`chmod u+rwx "$p"`)
-  }
-
-  parts.push(`[ ! -e "$t" ] || { chown ${uid}:${gid} "$t" && chmod u+rw "$t"; }`)
-  return parts.join('; ')
+function managedEditableRoot(target: string, current: string | undefined): string | undefined {
+  return [mihomoWorkDir(), mihomoProfileWorkDir(current)].find((root) => isSubPath(root, target))
 }
 
 async function repairEditableFilePermissions(
   target: string,
   current: string | undefined
 ): Promise<void> {
-  const repairParent = process.platform !== 'win32' && isManagedEditableFile(target, current)
-  if (!repairParent) {
+  const managedRoot =
+    process.platform !== 'win32' ? managedEditableRoot(target, current) : undefined
+  if (!managedRoot) {
     return
   }
 
@@ -514,10 +491,7 @@ async function repairEditableFilePermissions(
     return
   }
 
-  await execWithElevation('sh', [
-    '-c',
-    buildPermissionRepairCommand(target, uid, gid, repairParent)
-  ])
+  await repairManagedFilePermissions(target, managedRoot, uid, gid)
 }
 
 async function attemptWriteFile(target: string, content: string): Promise<void> {
@@ -539,7 +513,7 @@ async function writeEditableFile(
     }
 
     if (!elevate) {
-      if (process.platform !== 'win32' && isManagedEditableFile(target, current)) {
+      if (process.platform !== 'win32' && managedEditableRoot(target, current)) {
         throw new Error(FILE_PERMISSION_ELEVATION_REQUIRED)
       }
       throw error

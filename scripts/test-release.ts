@@ -234,7 +234,6 @@ test('desktop uses the independently maintained KokoroBox native packages', () =
     'src/main/core/permission.ts',
     'src/main/service/manager.ts',
     'src/main/sys/misc.ts',
-    'src/main/utils/elevation.ts',
     'src/main/utils/icon.ts',
     'src/main/utils/ipc.ts'
   ]) {
@@ -242,6 +241,10 @@ test('desktop uses the independently maintained KokoroBox native packages', () =
     assert.match(source, /from 'kokorobox-native'/, file)
     assert.doesNotMatch(source, /sparkle-native/, file)
   }
+  assert.equal(existsSync('src/main/utils/elevation.ts'), false)
+  const serviceManager = readFileSync('src/main/service/manager.ts', 'utf8')
+  assert.match(serviceManager, /runServiceLifecycleElevated/)
+  assert.doesNotMatch(serviceManager, /execWithElevation|runElevated/)
 })
 
 test('update drawer keeps package-manager guidance exclusive to Linux', () => {

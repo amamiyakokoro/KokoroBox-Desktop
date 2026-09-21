@@ -1187,7 +1187,6 @@ export const messages: Readonly<Record<string, string>> = {
   'Existing terminals do not update automatically after enabling or disabling this setting. Fully close and reopen the terminal; some desktop environments may require signing in again.':
     'Existing terminals do not update automatically after enabling or disabling this setting. Fully close and reopen the terminal; some desktop environments may require signing in again.',
   'System core': 'System core',
-  'System-core builds do not support elevation': 'System-core builds do not support elevation',
   'System core path': 'System core path',
   'System core path is invalid or missing: {0}': 'System core path is invalid or missing: {0}',
   'System core path is not set': 'System core path is not set',
