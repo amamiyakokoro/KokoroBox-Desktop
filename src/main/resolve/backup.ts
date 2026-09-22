@@ -1,4 +1,5 @@
 import { getAppConfig } from '../config'
+import { getWebdavPassword } from '../config/webdav-password'
 import dayjs from 'dayjs'
 import AdmZip from 'adm-zip'
 import {
@@ -18,9 +19,9 @@ export async function webdavBackup(): Promise<boolean> {
   const {
     webdavUrl = '',
     webdavUsername = '',
-    webdavPassword = '',
     webdavDir = DEFAULT_WEBDAV_DIR
   } = await getAppConfig()
+  const webdavPassword = await getWebdavPassword()
   const zip = new AdmZip()
 
   zip.addLocalFile(appConfigPath())
@@ -50,9 +51,9 @@ export async function webdavRestore(filename: string): Promise<void> {
   const {
     webdavUrl = '',
     webdavUsername = '',
-    webdavPassword = '',
     webdavDir = DEFAULT_WEBDAV_DIR
   } = await getAppConfig()
+  const webdavPassword = await getWebdavPassword()
 
   const client = createClient(webdavUrl, {
     username: webdavUsername,
@@ -68,9 +69,9 @@ export async function listWebdavBackups(): Promise<string[]> {
   const {
     webdavUrl = '',
     webdavUsername = '',
-    webdavPassword = '',
     webdavDir = DEFAULT_WEBDAV_DIR
   } = await getAppConfig()
+  const webdavPassword = await getWebdavPassword()
 
   const client = createClient(webdavUrl, {
     username: webdavUsername,
@@ -85,9 +86,9 @@ export async function webdavDelete(filename: string): Promise<void> {
   const {
     webdavUrl = '',
     webdavUsername = '',
-    webdavPassword = '',
     webdavDir = DEFAULT_WEBDAV_DIR
   } = await getAppConfig()
+  const webdavPassword = await getWebdavPassword()
 
   const client = createClient(webdavUrl, {
     username: webdavUsername,

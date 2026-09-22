@@ -186,6 +186,50 @@ test('failed app config writes do not commit cache changes or mutate defaults', 
   assert.equal(loaded.persisted().sysProxy.enable, true)
 })
 
+test('secret migration removes WebDAV password from primary config and recovery backup', async () => {
+  const defaultConfig = { sysProxy: { enable: false }, webdavPassword: 'old-password' } as AppConfig
+  let primary = structuredClone(defaultConfig)
+  let backup = structuredClone(defaultConfig)
+  const source = ts.transpileModule(readFileSync('src/main/config/app.ts', 'utf8'), {
+    compilerOptions: {
+      module: ts.ModuleKind.CommonJS,
+      target: ts.ScriptTarget.ES2022,
+      esModuleInterop: true
+    }
+  }).outputText
+  const dependencies: Record<string, unknown> = {
+    '../utils/dirs': { appConfigPath: () => '/mock/config.yaml' },
+    '../utils/yaml': { stringifyYaml: JSON.stringify },
+    '../utils/merge': { deepMerge },
+    '../utils/template': { defaultConfig },
+    '../../shared/build-flags': { systemCoreDefaultPath: '', systemCoreOnlyBuild: false },
+    './app-loader': {
+      loadAppConfigFile: async () => structuredClone(primary),
+      loadAppConfigFileSync: () => structuredClone(primary),
+      parseValidAppConfig: (content: string) => JSON.parse(content) as AppConfig,
+      writeAppConfigFile: async (_path: string, content: string) => {
+        backup = structuredClone(primary)
+        primary = JSON.parse(content) as AppConfig
+      }
+    },
+    'node:fs/promises': { readFile: async () => JSON.stringify(backup) },
+    './atomic-file': {
+      writePrivateTextFileAtomic: async (_path: string, content: string) => {
+        backup = JSON.parse(content) as AppConfig
+      }
+    }
+  }
+  const module = { exports: {} as typeof import('../src/main/config/app') }
+  new Function('require', 'module', 'exports', source)(
+    (name: string) => dependencies[name],
+    module,
+    module.exports
+  )
+  await module.exports.removeLegacyAppSecret('webdavPassword')
+  assert.equal(primary.webdavPassword, undefined)
+  assert.equal(backup.webdavPassword, undefined)
+})
+
 function loadTransactionalControlledConfigModule() {
   const defaultConfig = {
     dns: { enable: true, ipv6: true, nameserver: ['default.example'] },

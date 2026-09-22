@@ -137,6 +137,14 @@ export async function setGitHubToken(token: string): Promise<void> {
   return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('setGitHubToken', token))
 }
 
+export async function getWebdavPasswordConfigured(): Promise<boolean> {
+  return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('getWebdavPasswordConfigured'))
+}
+
+export async function setWebdavPassword(password: string): Promise<void> {
+  return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('setWebdavPassword', password))
+}
+
 export async function getAppRoutingConfig(force = false): Promise<AppRoutingConfig> {
   return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('getAppRoutingConfig', force))
 }

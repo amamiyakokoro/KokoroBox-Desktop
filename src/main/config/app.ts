@@ -54,22 +54,24 @@ export async function patchAppConfig(patch: Partial<AppConfig>): Promise<AppConf
   return appConfig
 }
 
-export async function removeLegacyGitHubToken(): Promise<void> {
+export type LegacyAppSecretKey = 'githubToken' | 'webdavPassword' | 'gistAgeIdentity'
+
+export async function removeLegacyAppSecret(key: LegacyAppSecretKey): Promise<void> {
   const previousPromise = writePromise
   const currentPromise = (async () => {
     await previousPromise
     const currentConfig = await getAppConfig()
-    if (currentConfig.githubToken) {
+    if (currentConfig[key]) {
       const nextConfig = structuredClone(currentConfig)
-      delete nextConfig.githubToken
+      delete nextConfig[key]
       await writeAppConfigFile(appConfigPath(), stringifyYaml(nextConfig))
       appConfig = nextConfig
     }
     const backupPath = `${appConfigPath()}.backup`
     try {
       const backup = parseValidAppConfig(await readFile(backupPath, 'utf8'))
-      if (backup?.githubToken) {
-        delete backup.githubToken
+      if (backup?.[key]) {
+        delete backup[key]
         await writePrivateTextFileAtomic(backupPath, stringifyYaml(backup))
       }
     } catch (error) {
