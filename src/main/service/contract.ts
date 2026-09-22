@@ -20,6 +20,16 @@ export interface ServiceMeta {
   capabilities: ServiceCapabilities
 }
 
+export const supportedServiceApiVersion = 1
+
+const capabilityNames = [
+  'coreDesiredState',
+  'sysproxyLease',
+  'sysproxyEvents',
+  'dnsLease',
+  'processRouter'
+] as const satisfies readonly (keyof ServiceCapabilities)[]
+
 export const legacyServiceMeta: ServiceMeta = {
   serviceVersion: 'legacy',
   apiVersion: 0,
@@ -33,23 +43,40 @@ export const legacyServiceMeta: ServiceMeta = {
 }
 
 export function validateServiceMeta(value: unknown): ServiceMeta {
-  if (!value || typeof value !== 'object') throw new Error('Invalid Service metadata')
-  const meta = value as Partial<ServiceMeta>
-  const capabilities = meta.capabilities
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    throw new Error('Invalid Service metadata')
+  }
+  const meta = value as Record<string, unknown>
+  const rawCapabilities = meta.capabilities
   if (
     typeof meta.serviceVersion !== 'string' ||
+    !meta.serviceVersion.trim() ||
     !Number.isInteger(meta.apiVersion) ||
-    (meta.apiVersion ?? 0) < 1 ||
-    !capabilities ||
-    typeof capabilities.coreDesiredState !== 'boolean' ||
-    typeof capabilities.sysproxyLease !== 'boolean' ||
-    typeof capabilities.sysproxyEvents !== 'boolean' ||
-    typeof capabilities.dnsLease !== 'boolean' ||
-    typeof capabilities.processRouter !== 'boolean'
+    !rawCapabilities ||
+    typeof rawCapabilities !== 'object' ||
+    Array.isArray(rawCapabilities)
   ) {
     throw new Error('Invalid Service metadata')
   }
-  return meta as ServiceMeta
+  if (meta.apiVersion !== supportedServiceApiVersion) {
+    throw new Error(`Unsupported Service API version: ${meta.apiVersion}`)
+  }
+
+  const raw = rawCapabilities as Record<string, unknown>
+  const capabilities = {} as ServiceCapabilities
+  for (const name of capabilityNames) {
+    const entry = raw[name]
+    if (entry !== undefined && typeof entry !== 'boolean') {
+      throw new Error(`Invalid Service capability: ${name}`)
+    }
+    capabilities[name] = entry === true
+  }
+
+  return {
+    serviceVersion: meta.serviceVersion,
+    apiVersion: supportedServiceApiVersion,
+    capabilities
+  }
 }
 
 export interface CoreDesiredStatus {

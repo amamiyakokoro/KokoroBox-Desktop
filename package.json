@@ -27,6 +27,7 @@
     "test:settings": "tsx --test scripts/test-settings.ts",
     "test:ui-native": "tsx --test scripts/test-ui-native-contract.ts",
     "test:service-auth": "tsx --test scripts/test-service-auth.ts",
+    "test:service-contract": "tsx --test scripts/test-service-contract.ts",
     "test:native-migrations": "tsx --test scripts/test-native-migrations.ts",
     "test:traffic-presenter": "tsx --test scripts/test-traffic-presenter.ts",
     "test:release": "tsx --test scripts/test-release.ts",
