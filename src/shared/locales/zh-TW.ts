@@ -19,6 +19,7 @@ export const messages: Readonly<Record<string, string>> = {
     '允許選定的 Windows 應用程式連線至本機代理。',
   'Administrator access is required to change loopback exemptions.':
     '變更迴環豁免需要系統管理員權限。',
+  'Loading...': '載入中...',
   'No UWP apps found': '找不到 UWP 應用程式',
   'Configure the system proxy and choose a proxy mode here. On Windows, manage UWP loopback exemptions here when an app cannot connect to the local proxy.':
     '在這裡設定系統代理與代理模式。Windows 應用程式無法連線至本機代理時，可在這裡管理 UWP 迴環豁免。',
