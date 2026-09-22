@@ -1,13 +1,14 @@
 import { tr } from '../../shared/i18n'
 import { overrideConfigPath, overridePath } from '../utils/dirs'
 import { getControledMihomoConfig } from './controledMihomo'
-import { readFile, rename, writeFile, rm, unlink } from 'fs/promises'
+import { readFile, writeFile, rm } from 'fs/promises'
 import { existsSync } from 'fs'
 import axios, { AxiosResponse } from 'axios'
 import https from 'https'
 import { parseYaml, stringifyYaml } from '../utils/yaml'
 import { getUserAgent } from '../utils/userAgent'
 import { createPinnedHttpsAgent } from '../utils/pinnedHttpsAgent'
+import { writePrivateTextFileAtomic } from './atomic-file'
 
 let overrideConfig: OverrideConfig // override.yaml
 let writePromise: Promise<void> = Promise.resolve()
@@ -28,16 +29,8 @@ export async function setOverrideConfig(config: OverrideConfig): Promise<void> {
   const currentPromise = (async () => {
     await previousPromise
     const configPath = overrideConfigPath()
-    const temporaryPath = `${configPath}.tmp`
-    try {
-      await writeFile(temporaryPath, stringifyYaml(nextConfig), 'utf-8')
-      if (process.platform === 'win32' && existsSync(configPath)) await unlink(configPath)
-      await rename(temporaryPath, configPath)
-      overrideConfig = nextConfig
-    } catch (error) {
-      await unlink(temporaryPath).catch(() => {})
-      throw error
-    }
+    await writePrivateTextFileAtomic(configPath, stringifyYaml(nextConfig))
+    overrideConfig = nextConfig
   })()
   writePromise = currentPromise.catch(() => {})
   await currentPromise

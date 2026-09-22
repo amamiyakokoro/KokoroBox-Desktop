@@ -1,10 +1,11 @@
 import { controledMihomoConfigPath } from '../utils/dirs'
-import { readFile, writeFile } from 'fs/promises'
+import { readFile } from 'fs/promises'
 import { parseYaml, stringifyYaml } from '../utils/yaml'
 import { generateProfile } from '../core/factory'
 import { getAppConfig } from './app'
 import { defaultControledMihomoConfig } from '../utils/template'
 import { deepMerge } from '../utils/merge'
+import { writePrivateTextFileAtomic } from './atomic-file'
 
 let controledMihomoConfig: Partial<MihomoConfig> // mihomo.yaml
 let writePromise: Promise<void> = Promise.resolve()
@@ -23,7 +24,10 @@ export async function getControledMihomoConfig(force = false): Promise<Partial<M
         throw error
       }
       controledMihomoConfig = cloneDefaultConfig()
-      await writeFile(controledMihomoConfigPath(), stringifyYaml(controledMihomoConfig), 'utf-8')
+      await writePrivateTextFileAtomic(
+        controledMihomoConfigPath(),
+        stringifyYaml(controledMihomoConfig)
+      )
     }
   }
   if (typeof controledMihomoConfig !== 'object') controledMihomoConfig = cloneDefaultConfig()
@@ -67,7 +71,7 @@ export async function patchControledMihomoConfig(patch: Partial<MihomoConfig>): 
     }
     const nextConfig = deepMerge(currentConfig, structuredClone(patch))
     await generateProfile(nextConfig)
-    await writeFile(controledMihomoConfigPath(), stringifyYaml(nextConfig), 'utf-8')
+    await writePrivateTextFileAtomic(controledMihomoConfigPath(), stringifyYaml(nextConfig))
     controledMihomoConfig = nextConfig
   })()
   writePromise = currentPromise.catch(() => {})

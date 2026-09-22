@@ -19,22 +19,32 @@ import { isHttpUrl } from '../utils/url'
 import { downloadKokoroProfile, type DownloadedKokoroProfile } from '../kokoro/client'
 import { validateMihomoProfileContent } from '../kokoro/profile-check'
 import { createPinnedHttpsAgent } from '../utils/pinnedHttpsAgent'
+import { writePrivateTextFileAtomic } from './atomic-file'
 
 let profileConfig: ProfileConfig // profile.yaml
+let profileConfigWritePromise: Promise<void> = Promise.resolve()
 const FILE_PERMISSION_ELEVATION_REQUIRED = 'FILE_PERMISSION_ELEVATION_REQUIRED'
 
 export async function getProfileConfig(force = false): Promise<ProfileConfig> {
+  await profileConfigWritePromise
   if (force || !profileConfig) {
     const data = await readFile(profileConfigPath(), 'utf-8')
     profileConfig = parseYaml(data) || { items: [] }
   }
   if (typeof profileConfig !== 'object') profileConfig = { items: [] }
-  return profileConfig
+  return structuredClone(profileConfig)
 }
 
 export async function setProfileConfig(config: ProfileConfig): Promise<void> {
-  profileConfig = config
-  await writeFile(profileConfigPath(), stringifyYaml(config), 'utf-8')
+  const nextConfig = structuredClone(config)
+  const previousPromise = profileConfigWritePromise
+  const currentPromise = (async () => {
+    await previousPromise
+    await writePrivateTextFileAtomic(profileConfigPath(), stringifyYaml(nextConfig))
+    profileConfig = nextConfig
+  })()
+  profileConfigWritePromise = currentPromise.catch(() => {})
+  await currentPromise
 }
 
 export async function getProfileItem(id: string | undefined): Promise<ProfileItem | undefined> {
@@ -104,10 +114,11 @@ async function addProfileItemWithOptions(
     await updateProfileItem(newItem)
   } else {
     config.items.push(newItem)
+    await setProfileConfig(config)
   }
-  await setProfileConfig(config)
 
-  if (options.selectIfEmpty !== false && !config.current) {
+  const savedConfig = await getProfileConfig()
+  if (options.selectIfEmpty !== false && !savedConfig.current) {
     await changeCurrentProfile(newItem.id)
   }
   await addProfileUpdater(newItem)

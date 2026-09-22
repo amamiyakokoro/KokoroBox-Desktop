@@ -45,6 +45,10 @@ function loadOverrideModule(
       stringifyYaml: () => ''
     },
     '../utils/pinnedHttpsAgent': { createPinnedHttpsAgent: () => ({}) },
+    './atomic-file': {
+      writePrivateTextFileAtomic: async (path: string, content: string) =>
+        writeFile(`${path}.tmp`, content, 'utf-8')
+    },
     '../utils/userAgent': {
       getUserAgent: async () => {
         defaultUserAgentCalls++

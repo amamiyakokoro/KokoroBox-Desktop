@@ -20,6 +20,7 @@ import {
   writeAppConfigFile
 } from '../src/main/config/app-loader'
 import { deepMerge } from '../src/main/utils/merge'
+import { writePrivateTextFileAtomic } from '../src/main/config/atomic-file'
 
 const validMain = 'language: en\nsysProxy:\n  enable: true\n'
 const validBackup = 'language: zh-Hant\nsysProxy:\n  enable: false\n'
@@ -218,7 +219,13 @@ function loadTransactionalControlledConfigModule() {
       getAppConfig: async () => ({ controlDns: true, controlSniff: true })
     },
     '../utils/template': { defaultControledMihomoConfig: defaultConfig },
-    '../utils/merge': { deepMerge }
+    '../utils/merge': { deepMerge },
+    './atomic-file': {
+      writePrivateTextFileAtomic: async (_path: string, content: string) => {
+        if (writeError) throw writeError
+        persistedConfig = JSON.parse(content) as Partial<MihomoConfig>
+      }
+    }
   }
   const module = { exports: {} as typeof import('../src/main/config/controledMihomo') }
   new Function('require', 'module', 'exports', source)(
@@ -263,4 +270,117 @@ test('controlled Mihomo writes are serialized without mutating defaults or faile
   await loaded.api.patchControledMihomoConfig({ dns: { nameserver: ['saved.example'] } })
   assert.deepEqual((await loaded.api.getControledMihomoConfig()).dns?.nameserver, ['saved.example'])
   assert.deepEqual(loaded.persisted().dns?.nameserver, ['saved.example'])
+})
+
+test('shared private atomic writer replaces files with owner-only permissions', async (t) => {
+  const configPath = withConfigPath(t)
+  writeFileSync(configPath, 'old', { mode: 0o644 })
+
+  await writePrivateTextFileAtomic(configPath, 'new', 'linux')
+
+  assert.equal(readFileSync(configPath, 'utf8'), 'new')
+  assert.equal(statSync(configPath).mode & 0o777, 0o600)
+})
+
+function loadTransactionalProfileConfigModule() {
+  let persistedConfig = { items: [] } as ProfileConfig
+  let writeError: Error | undefined
+  const source = ts.transpileModule(readFileSync('src/main/config/profile.ts', 'utf8'), {
+    compilerOptions: {
+      module: ts.ModuleKind.CommonJS,
+      target: ts.ScriptTarget.ES2022,
+      esModuleInterop: true
+    }
+  }).outputText
+  const noOp = async () => undefined
+  const dependencies: Record<string, unknown> = {
+    '../../shared/i18n': { tr: (message: string) => message },
+    './controledMihomo': { getControledMihomoConfig: async () => ({}) },
+    '../utils/dirs': {
+      mihomoProfileWorkDir: (id: string) => `/mock/work/${id}`,
+      mihomoWorkDir: () => '/mock/work',
+      profileConfigPath: () => '/mock/profile.yaml',
+      profilePath: (id: string) => `/mock/${id}.yaml`
+    },
+    '../core/profileUpdater': { addProfileUpdater: noOp, delProfileUpdater: noOp },
+    'fs/promises': {
+      readFile: async () => JSON.stringify(persistedConfig),
+      writeFile: noOp,
+      rm: noOp,
+      mkdir: noOp,
+      rename: noOp
+    },
+    'kokorobox-native': {
+      fileToStr: () => ({ outputs: {} }),
+      repairManagedFilePermissions: noOp
+    },
+    '../core/manager': { restartCore: noOp },
+    './app': { getAppConfig: async () => ({}) },
+    fs: { existsSync: () => false },
+    axios: { __esModule: true, default: { get: noOp, isAxiosError: () => false } },
+    https: { __esModule: true, default: { Agent: class {} } },
+    '../utils/yaml': {
+      parseYaml: (content: string) => JSON.parse(content),
+      stringifyYaml: (value: ProfileConfig) => JSON.stringify(value)
+    },
+    '../utils/template': { defaultProfile: {} },
+    path,
+    '../utils/merge': { deepMerge },
+    '../utils/userAgent': { getUserAgent: async () => 'KokoroBox/test' },
+    '../utils/age': {
+      decryptAgeText: async (value: string) => value,
+      encryptAgeText: async (value: string) => value,
+      isAgeEncryptedText: () => false
+    },
+    '../utils/url': { isHttpUrl: () => true },
+    '../kokoro/client': { downloadKokoroProfile: noOp },
+    '../kokoro/profile-check': { validateMihomoProfileContent: noOp },
+    '../utils/pinnedHttpsAgent': { createPinnedHttpsAgent: () => ({}) },
+    './atomic-file': {
+      writePrivateTextFileAtomic: async (_path: string, content: string) => {
+        if (writeError) throw writeError
+        persistedConfig = JSON.parse(content) as ProfileConfig
+      }
+    }
+  }
+  const module = { exports: {} as typeof import('../src/main/config/profile') }
+  new Function('require', 'module', 'exports', source)(
+    (name: string) => {
+      assert.ok(Object.hasOwn(dependencies, name), `Unexpected dependency: ${name}`)
+      return dependencies[name]
+    },
+    module,
+    module.exports
+  )
+
+  return {
+    api: module.exports,
+    failWrites(error: Error) {
+      writeError = error
+    },
+    allowWrites() {
+      writeError = undefined
+    },
+    persisted: () => structuredClone(persistedConfig)
+  }
+}
+
+test('profile config commits cloned cache only after an atomic write succeeds', async () => {
+  const loaded = loadTransactionalProfileConfigModule()
+  const mutableRead = await loaded.api.getProfileConfig()
+  mutableRead.current = 'caller-mutation'
+  assert.equal((await loaded.api.getProfileConfig()).current, undefined)
+
+  loaded.failWrites(new Error('profile write failure'))
+  await assert.rejects(
+    loaded.api.setProfileConfig({ items: [], current: 'failed' }),
+    /profile write failure/
+  )
+  assert.equal((await loaded.api.getProfileConfig()).current, undefined)
+  assert.equal(loaded.persisted().current, undefined)
+
+  loaded.allowWrites()
+  await loaded.api.setProfileConfig({ items: [], current: 'saved' })
+  assert.equal((await loaded.api.getProfileConfig()).current, 'saved')
+  assert.equal(loaded.persisted().current, 'saved')
 })
