@@ -724,6 +724,19 @@ test('service release download tolerates GitHub asset publication delay', () => 
   )
 })
 
+test('Mihomo Alpha release lookup authenticates CI requests and backs off retries', () => {
+  const prepare = readFileSync('scripts/prepare.ts', 'utf8')
+  const build = workflow('build')
+  const prepareStep = build.jobs.build.steps.find(
+    (step: { name?: string }) => step.name === 'Install Dependencies and Prepare'
+  )
+
+  assert.equal(prepareStep.env.GITHUB_TOKEN, githubExpression('github.token'))
+  assert.match(prepare, /headers\.Authorization = `Bearer \$\{token\}`/)
+  assert.match(prepare, /'User-Agent': 'KokoroBox-Desktop-prepare'/)
+  assert.match(prepare, /name: 'mihomo-alpha',[\s\S]*retry: 5,[\s\S]*retryDelayMs: 5000/)
+})
+
 test('traffic status uses the first-party cross-platform native presenter', () => {
   const prepare = readFileSync('scripts/prepare.ts', 'utf8')
   const runtime = readFileSync('src/main/resolve/trafficPresenter.ts', 'utf8')

@@ -38,6 +38,22 @@ function getErrorMessage(error: unknown) {
 const MIHOMO_ALPHA_RELEASE_URL =
   'https://api.github.com/repos/MetaCubeX/mihomo/releases/tags/Prerelease-Alpha'
 
+function githubApiHeaders() {
+  const token = process.env.GITHUB_TOKEN?.trim() || process.env.GH_TOKEN?.trim()
+  const headers: Record<string, string> = {
+    Accept: 'application/vnd.github+json',
+    'Cache-Control': 'no-cache',
+    'User-Agent': 'KokoroBox-Desktop-prepare',
+    'X-GitHub-Api-Version': '2022-11-28'
+  }
+
+  if (token) {
+    headers.Authorization = `Bearer ${token}`
+  }
+
+  return headers
+}
+
 const MIHOMO_ALPHA_MAP = {
   'win32-x64': 'mihomo-windows-amd64-v3',
   'win32-ia32': 'mihomo-windows-386',
@@ -104,7 +120,7 @@ async function MihomoAlpha(): Promise<SidecarInfo> {
   const isWin = platform === 'win32'
   const extension = isWin ? 'zip' : 'gz'
   const response = await fetch(MIHOMO_ALPHA_RELEASE_URL, {
-    headers: { Accept: 'application/vnd.github+json', 'Cache-Control': 'no-cache' }
+    headers: githubApiHeaders()
   })
   if (!response.ok) throw new Error(`Mihomo Alpha release request failed: HTTP ${response.status}`)
   const asset = selectMihomoAlphaAsset(await response.json(), name, extension)
@@ -393,7 +409,8 @@ const tasks: Task[] = [
   {
     name: 'mihomo-alpha',
     func: async () => resolveSidecar(await MihomoAlpha()),
-    retry: 5
+    retry: 5,
+    retryDelayMs: 5000
   },
   {
     name: 'mihomo',

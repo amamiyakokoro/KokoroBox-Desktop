@@ -208,6 +208,7 @@ jobs:
 
       - name: Install Dependencies and Prepare
         env:
+          GITHUB_TOKEN: ${{ github.token }}
           npm_config_arch: ${{ matrix.arch }}
           npm_config_target_arch: ${{ matrix.arch }}
         shell: bash
