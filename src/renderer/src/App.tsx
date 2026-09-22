@@ -50,7 +50,7 @@ const App: React.FC = () => {
   const [resizing, setResizing] = useState(false)
   const resizingRef = useRef(resizing)
   const resizePointerIdRef = useRef<number | null>(null)
-  const { systemTheme } = useTheme()
+  const { resolvedTheme } = useTheme()
   const navigate = useNavigate()
   const location = useLocation()
   const lastNonSettingsRouteRef = useRef('/proxies')
@@ -72,11 +72,13 @@ const App: React.FC = () => {
 
   const setTitlebar = (): void => {
     if (!useWindowFrame && platform !== 'darwin') {
-      const options = { height: 48 } as TitleBarOverlayOptions
+      const options: TitleBarOverlayOptions = {
+        height: 48,
+        symbolColor: resolvedTheme === 'dark' ? '#fdfdfd' : '#363638'
+      }
       try {
         options.color = window.getComputedStyle(document.documentElement).backgroundColor
-        options.symbolColor = window.getComputedStyle(document.documentElement).color
-        setTitleBarOverlay(options)
+        void setTitleBarOverlay(options)
       } catch {
         // ignore
       }
@@ -112,9 +114,9 @@ const App: React.FC = () => {
   }, [])
 
   useEffect(() => {
-    setNativeTheme(appTheme)
+    void setNativeTheme(appTheme)
     setTitlebar()
-  }, [appTheme, systemTheme])
+  }, [appTheme, resolvedTheme, useWindowFrame])
 
   useEffect(() => {
     window.addEventListener('pointermove', onResizeMove)

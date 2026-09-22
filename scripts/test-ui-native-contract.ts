@@ -132,6 +132,15 @@ test('the shared application preference controls next-themes in every renderer',
   }
 })
 
+test('native title bar controls keep contrast with the resolved color scheme', () => {
+  const app = readFileSync('src/renderer/src/App.tsx', 'utf8')
+
+  assert.match(app, /const \{ resolvedTheme \} = useTheme\(\)/)
+  assert.match(app, /symbolColor: resolvedTheme === 'dark' \? '#fdfdfd' : '#363638'/)
+  assert.match(app, /\[appTheme, resolvedTheme, useWindowFrame\]/)
+  assert.doesNotMatch(app, /window\.getComputedStyle\(document\.documentElement\)\.color/)
+})
+
 test('KokoroBox-owned surfaces share the native wind-chime brand mark', () => {
   const icon = readFileSync(
     'src/renderer/src/components/base/kokorobox-icon.tsx',
