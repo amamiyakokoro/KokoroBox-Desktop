@@ -105,7 +105,7 @@ export function getServiceMeta(): Promise<ServiceMeta> {
 async function requireServiceCapability(capability: keyof ServiceCapabilities): Promise<void> {
   if (!(await getServiceMeta()).capabilities[capability]) {
     throw new ServiceAPIError(`Service does not support ${capability}; update KokoroBox Service`, {
-      status: 426
+      status: 501
     })
   }
 }
@@ -551,28 +551,34 @@ export interface ServiceProcessRouterStatus {
 // These calls define the authenticated service boundary required by application routing.
 // The bundled service must advertise and implement them before service mode is enabled.
 export const startProcessRouter = async (): Promise<ServiceProcessRouterStatus> => {
+  await requireServiceCapability('processRouter')
   return await getServiceAxios().post('/process-router/start')
 }
 
 export const stopProcessRouter = async (): Promise<void> => {
+  if (!(await getServiceMeta()).capabilities.processRouter) return
   await getServiceAxios().post('/process-router/stop')
 }
 
 export const replaceProcessRouterRules = async (
   payload: ServiceProcessRouterRules
 ): Promise<ServiceProcessRouterStatus> => {
+  await requireServiceCapability('processRouter')
   return await getServiceAxios().put('/process-router/rules', payload)
 }
 
 export const getProcessRouterStatus = async (): Promise<ServiceProcessRouterStatus> => {
+  await requireServiceCapability('processRouter')
   return await getServiceAxios().get('/process-router/status')
 }
 
 export const repairProcessRouterFirewall = async (): Promise<ServiceProcessRouterStatus> => {
+  await requireServiceCapability('processRouter')
   return await getServiceAxios().post('/process-router/firewall/repair')
 }
 
 export const cleanupProcessRouter = async (): Promise<void> => {
+  if (!(await getServiceMeta()).capabilities.processRouter) return
   await getServiceAxios().post('/process-router/cleanup')
 }
 
@@ -963,6 +969,7 @@ export const setPac = async (
   useRegistry?: boolean,
   guard?: boolean
 ): Promise<void> => {
+  if (guard) await requireServiceCapability('sysproxyLease')
   const instance = getServiceAxios()
   return await instance.post('/sysproxy/pac', {
     url,
@@ -981,6 +988,7 @@ export const setProxy = async (
   useRegistry?: boolean,
   guard?: boolean
 ): Promise<void> => {
+  if (guard) await requireServiceCapability('sysproxyLease')
   const instance = getServiceAxios()
   return await instance.post('/sysproxy/proxy', {
     server,
