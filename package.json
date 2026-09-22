@@ -21,6 +21,7 @@
     "test:gist-filenames": "tsx --test scripts/test-gist-filenames.ts",
     "test:core-hook-path": "tsx --test scripts/test-core-hook-path.ts",
     "test:user-data-migration": "tsx --test scripts/test-user-data-migration.ts",
+    "test:app-config": "tsx --test scripts/test-app-config-recovery.ts",
     "test:app-routing": "tsx --test scripts/test-app-routing.ts",
     "test:dns": "tsx --test scripts/test-dns.ts",
     "test:settings": "tsx --test scripts/test-settings.ts",

@@ -89,6 +89,7 @@ jobs:
       - run: pnpm test:dns
       - run: pnpm test:settings
       - run: pnpm test:service-auth
+      - run: pnpm test:app-config
       - run: pnpm test:traffic-presenter
       - run: pnpm typecheck
 
