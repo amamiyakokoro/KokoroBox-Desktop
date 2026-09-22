@@ -54,13 +54,13 @@ export const KokoTextField: React.FC<KokoTextFieldProps> = ({
     <InputGroup.Input
       {...inputProps}
       aria-invalid={isInvalid || undefined}
-      className={inputClassName}
+      className={cn('min-w-0', inputClassName)}
       disabled={isDisabled}
       value={value}
       onChange={(event) => onChangeValue?.(event.target.value)}
     />
     {(suffix || (onClear && value)) && (
-      <InputGroup.Suffix className="gap-1">
+      <InputGroup.Suffix className="shrink-0 gap-1 whitespace-nowrap">
         {suffix}
         {onClear && value ? (
           <Button
