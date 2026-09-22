@@ -134,3 +134,12 @@ test('system proxy uses KokoroBox Service as its only mutation authority', () =>
   assert.doesNotMatch(types, /settingMode/)
   assert.doesNotMatch(settings, /settingMode|Configuration method|Run command/)
 })
+
+test('system proxy reacquires a stale service lease after a conflict', () => {
+  const sysproxy = readFileSync(resolve('src/main/sys/sysproxy.ts'), 'utf8')
+
+  assert.match(sysproxy, /error instanceof ServiceAPIError/)
+  assert.match(sysproxy, /error\.status === 409/)
+  assert.match(sysproxy, /await setSysProxy\(onlyActiveDevice, useRegistry\)/)
+  assert.doesNotMatch(sysproxy, /isAxiosError/)
+})

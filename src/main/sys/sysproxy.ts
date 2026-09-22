@@ -4,8 +4,8 @@ import { startPacServer, stopPacServer } from '../resolve/server'
 import { localPacUrl } from '../resolve/pac-http-server'
 import { defaultSystemProxyBypass, normalizeProxyHost } from '../../shared/system-proxy'
 import { net } from 'electron'
-import { isAxiosError } from 'axios'
 import {
+  ServiceAPIError,
   disableProxy,
   renewSysProxyLease,
   setPac,
@@ -59,8 +59,8 @@ function startSysproxyLeaseRenewal(onlyActiveDevice: boolean, useRegistry: boole
       appendAppLog(`[Sysproxy]: service lease renewal failed, ${error}\n`).catch(() => {})
       if (
         request === triggerSysProxyRequest &&
-        isAxiosError(error) &&
-        error.response?.status === 409
+        error instanceof ServiceAPIError &&
+        error.status === 409
       ) {
         try {
           const { sysProxy } = await getAppConfig()
