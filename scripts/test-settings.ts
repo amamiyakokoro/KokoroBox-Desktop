@@ -209,6 +209,8 @@ test('application settings keep one clear navigation hierarchy in compact deskto
   assert.match(logSetting, /suffix="MB"/)
   assert.match(logSetting, /suffix=\{tr\('entries'\)\}/)
   assert.match(kokoForm, /<InputGroup\.Suffix[^>]*>[\s\S]*\{suffix\}/)
+  assert.match(kokoForm, /className=\{cn\('min-w-0', inputClassName\)\}/)
+  assert.match(kokoForm, /<InputGroup\.Suffix className="shrink-0 gap-1 whitespace-nowrap">/)
   assert.match(general, /header=\{tr\('Language and notifications'\)\}/)
   assert.match(general, /header=\{tr\('Startup and updates'\)\}/)
 })
