@@ -6,10 +6,13 @@ import { BiCopy, BiHide, BiShow } from 'react-icons/bi'
 import { LuArrowRight, LuRefreshCw } from 'react-icons/lu'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import {
-  ageIdentityToRecipient,
-  generateAgeKeyPair,
+  deriveStoredGistAgeRecipient,
+  generateAndSaveGistAgeIdentity,
+  getGistAgeIdentityConfigured,
   getGistRawUrl,
-  getUserAgent
+  getUserAgent,
+  revealGistAgeIdentity,
+  setGistAgeIdentity
 } from '@renderer/utils/ipc'
 import { notify } from '@renderer/utils/notification'
 import debounce from '@renderer/utils/debounce'
@@ -30,19 +33,21 @@ const SubscriptionIntegrationSettings: React.FC<Props> = ({
 }) => {
   const hasSubscriptionSection = sections.includes('subscription')
   const hasGistSection = sections.includes('gist')
-  const { appConfig, patchAppConfig } = useAppConfig()
+  const { appConfig, patchAppConfig, mutateAppConfig } = useAppConfig()
   const {
     userAgent,
     diffWorkDir = false,
     gistSyncEnabled = false,
     gistEncrypted = false,
-    gistAgeRecipient = '',
-    gistAgeIdentity = ''
+    gistAgeRecipient = ''
   } = appConfig || {}
 
   const [ua, setUa] = useState(userAgent ?? '')
   const [defaultUserAgent, setDefaultUserAgent] = useState('')
   const [gistAgeIdentityVisible, setGistAgeIdentityVisible] = useState(false)
+  const [gistAgeIdentityDraft, setGistAgeIdentityDraft] = useState('')
+  const [gistAgeIdentityConfigured, setGistAgeIdentityConfigured] = useState(false)
+  const [gistAgeIdentitySaving, setGistAgeIdentitySaving] = useState(false)
   const userAgentFetched = useRef(false)
   const setUaDebounce = useRef(
     debounce((value: string) => {
@@ -62,6 +67,15 @@ const SubscriptionIntegrationSettings: React.FC<Props> = ({
     setUa(userAgent ?? '')
   }, [hasSubscriptionSection, userAgent])
 
+  useEffect(() => {
+    if (!hasGistSection) return
+    void getGistAgeIdentityConfigured()
+      .then(setGistAgeIdentityConfigured)
+      .catch((error) => {
+        notify(error, { variant: 'danger' })
+      })
+  }, [hasGistSection])
+
   const copyValue = async (value: string | undefined, title: string): Promise<void> => {
     if (!value) return
     await navigator.clipboard.writeText(value)
@@ -69,25 +83,76 @@ const SubscriptionIntegrationSettings: React.FC<Props> = ({
   }
 
   const handleGenerateGistAgeKeyPair = async (): Promise<void> => {
+    setGistAgeIdentitySaving(true)
     try {
-      const keyPair = await generateAgeKeyPair()
-      await patchAppConfig({
-        gistAgeIdentity: keyPair.identity,
-        gistAgeRecipient: keyPair.recipient
-      })
+      await generateAndSaveGistAgeIdentity()
+      setGistAgeIdentityConfigured(true)
+      setGistAgeIdentityDraft('')
+      setGistAgeIdentityVisible(false)
+      mutateAppConfig()
       notify(tr('age keys generated'), { variant: 'success' })
     } catch (e) {
       notify(e, { variant: 'danger' })
+    } finally {
+      setGistAgeIdentitySaving(false)
     }
   }
 
   const handleDeriveGistAgeRecipient = async (): Promise<void> => {
+    setGistAgeIdentitySaving(true)
     try {
-      const recipient = await ageIdentityToRecipient(gistAgeIdentity)
-      await patchAppConfig({ gistAgeRecipient: recipient })
+      if (gistAgeIdentityDraft.trim()) {
+        await setGistAgeIdentity(gistAgeIdentityDraft)
+        setGistAgeIdentityConfigured(true)
+        setGistAgeIdentityDraft('')
+        setGistAgeIdentityVisible(false)
+      } else {
+        await deriveStoredGistAgeRecipient()
+      }
+      mutateAppConfig()
       notify(tr('age public key generated'), { variant: 'success' })
     } catch (e) {
       notify(e, { variant: 'danger' })
+    } finally {
+      setGistAgeIdentitySaving(false)
+    }
+  }
+
+  const handleSaveGistAgeIdentity = async (identity: string): Promise<void> => {
+    setGistAgeIdentitySaving(true)
+    try {
+      await setGistAgeIdentity(identity)
+      setGistAgeIdentityConfigured(Boolean(identity.trim()))
+      setGistAgeIdentityDraft('')
+      setGistAgeIdentityVisible(false)
+      mutateAppConfig()
+    } catch (error) {
+      notify(error, { variant: 'danger' })
+    } finally {
+      setGistAgeIdentitySaving(false)
+    }
+  }
+
+  const handleRevealGistAgeIdentity = async (): Promise<void> => {
+    if (gistAgeIdentityVisible) {
+      setGistAgeIdentityVisible(false)
+      return
+    }
+    try {
+      const identity = await revealGistAgeIdentity()
+      setGistAgeIdentityDraft((draft) => draft || identity)
+      setGistAgeIdentityVisible(true)
+    } catch (error) {
+      notify(error, { variant: 'danger' })
+    }
+  }
+
+  const handleCopyGistAgeIdentity = async (): Promise<void> => {
+    try {
+      const identity = gistAgeIdentityDraft || (await revealGistAgeIdentity())
+      await copyValue(identity, tr('age private key copied'))
+    } catch (error) {
+      notify(error, { variant: 'danger' })
     }
   }
 
@@ -226,6 +291,7 @@ const SubscriptionIntegrationSettings: React.FC<Props> = ({
                                 isIconOnly
                                 size="sm"
                                 variant="ghost"
+                                isDisabled={gistAgeIdentitySaving}
                                 onPress={handleDeriveGistAgeRecipient}
                               >
                                 <LuArrowRight className="text-lg" />
@@ -251,59 +317,79 @@ const SubscriptionIntegrationSettings: React.FC<Props> = ({
                   <SettingItem
                     contentAlign="end"
                     title={tr('Gist age private key')}
-                    description={tr(
-                      'Required to decrypt synchronized configuration. Keep this key private.'
-                    )}
+                    description={`${tr('Required to decrypt synchronized configuration. Keep this key private.')} ${tr('Back up this key separately. New WebDAV backups do not include it.')}`}
                   >
-                    <KokoTextField
-                      aria-label={tr('Gist age private key')}
-                      data-setting-input="full"
-                      type={gistAgeIdentityVisible ? 'text' : 'password'}
-                      value={gistAgeIdentity}
-                      placeholder="AGE-SECRET-KEY-1..."
-                      onChangeValue={(value) => {
-                        patchAppConfig({ gistAgeIdentity: value.trim() || undefined })
-                      }}
-                      suffix={
-                        <div className="flex items-center gap-1">
-                          <Button
-                            aria-label={tr('Generate Gist age private key')}
-                            isIconOnly
-                            size="sm"
-                            variant="ghost"
-                            onPress={handleGenerateGistAgeKeyPair}
-                          >
-                            <LuRefreshCw className="text-lg" />
-                          </Button>
-                          <Button
-                            aria-label={tr('Copy Gist age private key')}
-                            isIconOnly
-                            size="sm"
-                            variant="ghost"
-                            onPress={() => copyValue(gistAgeIdentity, tr('age private key copied'))}
-                          >
-                            <BiCopy className="text-lg" />
-                          </Button>
-                          <Button
-                            aria-label={
-                              gistAgeIdentityVisible
-                                ? tr('Hide Gist age private key')
-                                : tr('Show Gist age private key')
-                            }
-                            isIconOnly
-                            size="sm"
-                            variant="ghost"
-                            onPress={() => setGistAgeIdentityVisible((visible) => !visible)}
-                          >
-                            {gistAgeIdentityVisible ? (
-                              <BiHide className="text-lg" />
-                            ) : (
-                              <BiShow className="text-lg" />
-                            )}
-                          </Button>
-                        </div>
-                      }
-                    />
+                    <div className="flex w-full items-center gap-2">
+                      {gistAgeIdentityConfigured && !gistAgeIdentityDraft && (
+                        <span className="shrink-0 text-xs text-muted">{tr('Configured')}</span>
+                      )}
+                      <KokoTextField
+                        aria-label={tr('Gist age private key')}
+                        className="min-w-0 flex-1"
+                        data-setting-input="full"
+                        type={gistAgeIdentityVisible ? 'text' : 'password'}
+                        value={gistAgeIdentityDraft}
+                        placeholder="AGE-SECRET-KEY-1..."
+                        onChangeValue={setGistAgeIdentityDraft}
+                        suffix={
+                          <div className="flex items-center gap-1">
+                            <Button
+                              aria-label={tr('Generate Gist age private key')}
+                              isIconOnly
+                              size="sm"
+                              variant="ghost"
+                              isDisabled={gistAgeIdentitySaving}
+                              onPress={handleGenerateGistAgeKeyPair}
+                            >
+                              <LuRefreshCw className="text-lg" />
+                            </Button>
+                            <Button
+                              aria-label={tr('Copy Gist age private key')}
+                              isIconOnly
+                              size="sm"
+                              variant="ghost"
+                              onPress={() => void handleCopyGistAgeIdentity()}
+                            >
+                              <BiCopy className="text-lg" />
+                            </Button>
+                            <Button
+                              aria-label={
+                                gistAgeIdentityVisible
+                                  ? tr('Hide Gist age private key')
+                                  : tr('Show Gist age private key')
+                              }
+                              isIconOnly
+                              size="sm"
+                              variant="ghost"
+                              onPress={() => void handleRevealGistAgeIdentity()}
+                            >
+                              {gistAgeIdentityVisible ? (
+                                <BiHide className="text-lg" />
+                              ) : (
+                                <BiShow className="text-lg" />
+                              )}
+                            </Button>
+                          </div>
+                        }
+                      />
+                      <Button
+                        size="sm"
+                        isDisabled={!gistAgeIdentityDraft.trim() || gistAgeIdentitySaving}
+                        onPress={() => void handleSaveGistAgeIdentity(gistAgeIdentityDraft)}
+                      >
+                        {tr('Save')}
+                      </Button>
+                      {gistAgeIdentityConfigured && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          isDisabled={gistAgeIdentitySaving}
+                          onPress={() => void handleSaveGistAgeIdentity('')}
+                        >
+                          {tr('Clear field')}
+                        </Button>
+                      )}
+                    </div>
                   </SettingItem>
                 </SettingSubgroup>
               )}

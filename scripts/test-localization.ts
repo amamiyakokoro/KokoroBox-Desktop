@@ -284,12 +284,14 @@ test('global subscription settings are owned by Application settings', () => {
     'userAgent',
     'gistSyncEnabled',
     'gistEncrypted',
-    'gistAgeRecipient',
-    'gistAgeIdentity'
+    'gistAgeRecipient'
   ]) {
     assert.doesNotMatch(profileDrawer, new RegExp(`\\b${key}\\b`))
     assert.match(subscriptionSettings, new RegExp(`\\b${key}\\b`))
   }
+  assert.doesNotMatch(profileDrawer, /\bgistAgeIdentity\b/)
+  assert.match(subscriptionSettings, /getGistAgeIdentityConfigured/)
+  assert.match(subscriptionSettings, /setGistAgeIdentity/)
 
   assert.match(profileDrawer, /navigate\('\/settings\?section=data'\)/)
   assert.match(settingsPage, /getSettingsCategories/)
@@ -363,10 +365,7 @@ test('core feature settings pages use the shared desktop layout', () => {
   }
 
   const mihomo = readFileSync(pages.at(-1)!, 'utf8')
-  const portSetting = readFileSync(
-    'src/renderer/src/components/mihomo/port-setting.tsx',
-    'utf8'
-  )
+  const portSetting = readFileSync('src/renderer/src/components/mihomo/port-setting.tsx', 'utf8')
   assert.match(mihomo, /<PortSetting/)
   assert.doesNotMatch(mihomo, /<FeatureSettingsSection/)
   assert.match(portSetting, /<SettingCard header=\{tr\('Network and ports'\)\}>/)

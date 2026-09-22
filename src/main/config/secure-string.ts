@@ -3,7 +3,7 @@ import { dirname, join } from 'node:path'
 import { safeStorage } from 'electron'
 import { dataDir } from '../utils/dirs'
 
-export type SecureStringName = 'github-token' | 'webdav-password'
+export type SecureStringName = 'github-token' | 'webdav-password' | 'gist-age-identity'
 
 interface StoredString {
   version: 1

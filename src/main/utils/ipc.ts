@@ -1,6 +1,13 @@
 import { tr } from '../../shared/i18n'
 import { isGitHubTokenConfigured, setGitHubToken } from '../config/github-token'
 import { isWebdavPasswordConfigured, setWebdavPassword } from '../config/webdav-password'
+import {
+  deriveStoredGistAgeRecipient,
+  generateAndSaveGistAgeIdentity,
+  getGistAgeIdentity,
+  isGistAgeIdentityConfigured,
+  setGistAgeIdentity
+} from '../config/gist-age-identity'
 import { app, ipcMain } from 'electron'
 import {
   mihomoChangeProxy,
@@ -192,6 +199,9 @@ async function patchAppConfigWithServiceSync(patch: Partial<AppConfig>): Promise
   if (Object.hasOwn(patch, 'webdavPassword')) {
     throw new Error('Use the WebDAV password setting to update this credential')
   }
+  if (Object.hasOwn(patch, 'gistAgeIdentity')) {
+    throw new Error('Use the Gist age private key setting to update this credential')
+  }
   const nextConfig = await patchAppConfig(await validateSystemProxyServicePatch(patch))
 
   if (
@@ -303,6 +313,7 @@ export function registerIpcMainHandlers(): void {
       const {
         githubToken: _githubToken,
         webdavPassword: _webdavPassword,
+        gistAgeIdentity: _gistAgeIdentity,
         ...config
       } = await getAppConfig(force)
       return config
@@ -314,6 +325,13 @@ export function registerIpcMainHandlers(): void {
   ipcMain.handle('setWebdavPassword', (_e, password) =>
     ipcErrorWrapper(setWebdavPassword)(password)
   )
+  ipcMain.handle('getGistAgeIdentityConfigured', ipcErrorWrapper(isGistAgeIdentityConfigured))
+  ipcMain.handle('revealGistAgeIdentity', ipcErrorWrapper(getGistAgeIdentity))
+  ipcMain.handle('setGistAgeIdentity', (_e, identity) =>
+    ipcErrorWrapper(setGistAgeIdentity)(identity)
+  )
+  ipcMain.handle('generateAndSaveGistAgeIdentity', ipcErrorWrapper(generateAndSaveGistAgeIdentity))
+  ipcMain.handle('deriveStoredGistAgeRecipient', ipcErrorWrapper(deriveStoredGistAgeRecipient))
   ipcMain.handle('getCachedMihomoLogs', () => getCachedMihomoLogs())
   ipcMain.handle('clearCachedMihomoLogs', () => clearCachedMihomoLogs())
   ipcMain.handle('patchAppConfig', (_e, config) =>
@@ -321,6 +339,7 @@ export function registerIpcMainHandlers(): void {
       const {
         githubToken: _githubToken,
         webdavPassword: _webdavPassword,
+        gistAgeIdentity: _gistAgeIdentity,
         ...nextConfig
       } = await patchAppConfigWithServiceSync(config)
       return nextConfig

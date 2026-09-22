@@ -5,6 +5,7 @@ import { app, dialog, shell, BrowserWindow, Menu, type IpcMainEvent } from 'elec
 import { getAppConfig } from './config'
 import { getGitHubToken } from './config/github-token'
 import { getWebdavPassword } from './config/webdav-password'
+import { getGistAgeIdentity } from './config/gist-age-identity'
 import { quitWithoutCore, startCore, stopCore } from './core/manager'
 import { stopNetworkDetection } from './core/network'
 import { triggerSysProxy } from './sys/sysproxy'
@@ -421,6 +422,7 @@ function startPrimaryInstance(initialDeepLinks: string[]): void {
       registerIpcMainHandlers()
       runStartupTask('GitHub token migration', getGitHubToken())
       runStartupTask('WebDAV password migration', getWebdavPassword())
+      runStartupTask('Gist age identity migration', getGistAgeIdentity())
       runStartupTask('Windows scheduled task migration', migrateLegacyWindowsTasks())
       runStartupTask('Windows application routing', initializeAppRouting())
 

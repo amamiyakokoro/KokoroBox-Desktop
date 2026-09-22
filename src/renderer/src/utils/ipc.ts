@@ -145,6 +145,26 @@ export async function setWebdavPassword(password: string): Promise<void> {
   return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('setWebdavPassword', password))
 }
 
+export async function getGistAgeIdentityConfigured(): Promise<boolean> {
+  return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('getGistAgeIdentityConfigured'))
+}
+
+export async function revealGistAgeIdentity(): Promise<string> {
+  return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('revealGistAgeIdentity'))
+}
+
+export async function setGistAgeIdentity(identity: string): Promise<string> {
+  return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('setGistAgeIdentity', identity))
+}
+
+export async function generateAndSaveGistAgeIdentity(): Promise<string> {
+  return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('generateAndSaveGistAgeIdentity'))
+}
+
+export async function deriveStoredGistAgeRecipient(): Promise<string> {
+  return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('deriveStoredGistAgeRecipient'))
+}
+
 export async function getAppRoutingConfig(force = false): Promise<AppRoutingConfig> {
   return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('getAppRoutingConfig', force))
 }

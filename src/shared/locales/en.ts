@@ -1450,6 +1450,8 @@ export const messages: Readonly<Record<string, string>> = {
   'Used to encrypt synchronized configuration.': 'Used to encrypt synchronized configuration.',
   'Required to decrypt synchronized configuration. Keep this key private.':
     'Required to decrypt synchronized configuration. Keep this key private.',
+  'Back up this key separately. New WebDAV backups do not include it.':
+    'Back up this key separately. New WebDAV backups do not include it.',
   'Stable receives tested releases. Rolling receives newer builds more frequently.':
     'Stable receives tested releases. Rolling receives newer builds more frequently.',
   'Manual configures a fixed proxy endpoint. PAC uses a script to decide which requests use the proxy.':

@@ -1407,6 +1407,8 @@ export const messages: Readonly<Record<string, string>> = {
   'Used to encrypt synchronized configuration.': '用于加密同步的设置。',
   'Required to decrypt synchronized configuration. Keep this key private.':
     '解密同步设置所必需。请妥善保管，不要分享此密钥。',
+  'Back up this key separately. New WebDAV backups do not include it.':
+    '请单独备份此密钥；新的 WebDAV 备份不包含它。',
   'Stable receives tested releases. Rolling receives newer builds more frequently.':
     '稳定版提供经过测试的版本；滚动版会更频繁地获取较新的构建。',
   'Manual configures a fixed proxy endpoint. PAC uses a script to decide which requests use the proxy.':
