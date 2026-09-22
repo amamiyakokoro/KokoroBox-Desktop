@@ -17,7 +17,10 @@ fi
 
 cp scripts/service-contract/route/desktop_contract_test.go "$service_dir/route/"
 cp scripts/service-contract/dnsapi/desktop_contract_test.go "$service_dir/route/dnsapi/"
+cp scripts/service-contract/sysproxyapi/desktop_contract_test.go "$service_dir/route/sysproxyapi/"
+cp scripts/service-contract/processrouter/desktop_contract_test.go "$service_dir/processrouter/"
 DESKTOP_SERVICE_CONTRACT="$contract_dir/request.json" \
 DESKTOP_SERVICE_CONTRACT_RESPONSES="$contract_dir" \
-  go -C "$service_dir" test ./route ./route/dnsapi -run '^TestDesktopContract' -count=1
+  go -C "$service_dir" test ./route ./route/dnsapi ./route/sysproxyapi ./processrouter \
+    -run '^TestDesktopContract' -count=1
 node --import tsx scripts/service-contract.ts verify "$contract_dir"

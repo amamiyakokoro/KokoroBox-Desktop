@@ -3,7 +3,19 @@ export const serviceContract = {
   coreDesired: { method: 'GET', path: '/core/desired' },
   dnsLease: { method: 'POST', path: '/network/dns/lease' },
   dnsRenew: { method: 'POST', path: '/network/dns/renew' },
-  dnsRelease: { method: 'DELETE', path: '/network/dns/lease' }
+  dnsRelease: { method: 'DELETE', path: '/network/dns/lease' },
+  sysproxyStatus: { method: 'GET', path: '/sysproxy/status' },
+  sysproxyEvents: { method: 'GET', path: '/sysproxy/events' },
+  sysproxyPac: { method: 'POST', path: '/sysproxy/pac' },
+  sysproxyProxy: { method: 'POST', path: '/sysproxy/proxy' },
+  sysproxyDisable: { method: 'POST', path: '/sysproxy/disable' },
+  sysproxyRenew: { method: 'POST', path: '/sysproxy/renew' },
+  processRouterStart: { method: 'POST', path: '/process-router/start' },
+  processRouterStop: { method: 'POST', path: '/process-router/stop' },
+  processRouterRules: { method: 'PUT', path: '/process-router/rules' },
+  processRouterStatus: { method: 'GET', path: '/process-router/status' },
+  processRouterFirewallRepair: { method: 'POST', path: '/process-router/firewall/repair' },
+  processRouterCleanup: { method: 'POST', path: '/process-router/cleanup' }
 } as const
 
 export interface ServiceCapabilities {

@@ -17,11 +17,23 @@ type desktopEndpoint struct {
 }
 
 type desktopContract struct {
-	Meta        desktopEndpoint `json:"meta"`
-	CoreDesired desktopEndpoint `json:"coreDesired"`
-	DNSLease    desktopEndpoint `json:"dnsLease"`
-	DNSRenew    desktopEndpoint `json:"dnsRenew"`
-	DNSRelease  desktopEndpoint `json:"dnsRelease"`
+	Meta                        desktopEndpoint `json:"meta"`
+	CoreDesired                 desktopEndpoint `json:"coreDesired"`
+	DNSLease                    desktopEndpoint `json:"dnsLease"`
+	DNSRenew                    desktopEndpoint `json:"dnsRenew"`
+	DNSRelease                  desktopEndpoint `json:"dnsRelease"`
+	SysproxyStatus              desktopEndpoint `json:"sysproxyStatus"`
+	SysproxyEvents              desktopEndpoint `json:"sysproxyEvents"`
+	SysproxyPAC                 desktopEndpoint `json:"sysproxyPac"`
+	SysproxyProxy               desktopEndpoint `json:"sysproxyProxy"`
+	SysproxyDisable             desktopEndpoint `json:"sysproxyDisable"`
+	SysproxyRenew               desktopEndpoint `json:"sysproxyRenew"`
+	ProcessRouterStart          desktopEndpoint `json:"processRouterStart"`
+	ProcessRouterStop           desktopEndpoint `json:"processRouterStop"`
+	ProcessRouterRules          desktopEndpoint `json:"processRouterRules"`
+	ProcessRouterStatus         desktopEndpoint `json:"processRouterStatus"`
+	ProcessRouterFirewallRepair desktopEndpoint `json:"processRouterFirewallRepair"`
+	ProcessRouterCleanup        desktopEndpoint `json:"processRouterCleanup"`
 }
 
 func loadDesktopContract(t *testing.T) desktopContract {
@@ -48,6 +60,11 @@ func TestDesktopContractRoutesAndResponses(t *testing.T) {
 	for _, endpoint := range []desktopEndpoint{
 		contract.Meta, contract.CoreDesired, contract.DNSLease,
 		contract.DNSRenew, contract.DNSRelease,
+		contract.SysproxyStatus, contract.SysproxyEvents, contract.SysproxyPAC,
+		contract.SysproxyProxy, contract.SysproxyDisable, contract.SysproxyRenew,
+		contract.ProcessRouterStart, contract.ProcessRouterStop,
+		contract.ProcessRouterRules, contract.ProcessRouterStatus,
+		contract.ProcessRouterFirewallRepair, contract.ProcessRouterCleanup,
 	} {
 		request := httptest.NewRequest(endpoint.Method, endpoint.Path, nil)
 		response := httptest.NewRecorder()

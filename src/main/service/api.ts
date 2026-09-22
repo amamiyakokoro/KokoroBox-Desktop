@@ -521,34 +521,53 @@ export interface ServiceProcessRouterStatus {
 // The bundled service must advertise and implement them before service mode is enabled.
 export const startProcessRouter = async (): Promise<ServiceProcessRouterStatus> => {
   await requireServiceCapability('processRouter')
-  return await getServiceAxios().post('/process-router/start')
+  return await getServiceAxios().request({
+    method: serviceContract.processRouterStart.method,
+    url: serviceContract.processRouterStart.path
+  })
 }
 
 export const stopProcessRouter = async (): Promise<void> => {
   if (!(await getServiceMeta()).capabilities.processRouter) return
-  await getServiceAxios().post('/process-router/stop')
+  await getServiceAxios().request({
+    method: serviceContract.processRouterStop.method,
+    url: serviceContract.processRouterStop.path
+  })
 }
 
 export const replaceProcessRouterRules = async (
   payload: ServiceProcessRouterRules
 ): Promise<ServiceProcessRouterStatus> => {
   await requireServiceCapability('processRouter')
-  return await getServiceAxios().put('/process-router/rules', payload)
+  return await getServiceAxios().request({
+    method: serviceContract.processRouterRules.method,
+    url: serviceContract.processRouterRules.path,
+    data: payload
+  })
 }
 
 export const getProcessRouterStatus = async (): Promise<ServiceProcessRouterStatus> => {
   await requireServiceCapability('processRouter')
-  return await getServiceAxios().get('/process-router/status')
+  return await getServiceAxios().request({
+    method: serviceContract.processRouterStatus.method,
+    url: serviceContract.processRouterStatus.path
+  })
 }
 
 export const repairProcessRouterFirewall = async (): Promise<ServiceProcessRouterStatus> => {
   await requireServiceCapability('processRouter')
-  return await getServiceAxios().post('/process-router/firewall/repair')
+  return await getServiceAxios().request({
+    method: serviceContract.processRouterFirewallRepair.method,
+    url: serviceContract.processRouterFirewallRepair.path
+  })
 }
 
 export const cleanupProcessRouter = async (): Promise<void> => {
   if (!(await getServiceMeta()).capabilities.processRouter) return
-  await getServiceAxios().post('/process-router/cleanup')
+  await getServiceAxios().request({
+    method: serviceContract.processRouterCleanup.method,
+    url: serviceContract.processRouterCleanup.path
+  })
 }
 
 export interface ServiceCoreLaunchProfile {
@@ -618,7 +637,7 @@ export const createCoreEventsWebSocket = (): WebSocket => {
 }
 
 export const createSysproxyEventsWebSocket = (): WebSocket => {
-  return createServiceWebSocket('/sysproxy/events')
+  return createServiceWebSocket(serviceContract.sysproxyEvents.path)
 }
 
 type ServiceCoreEventHandler = (event: ServiceCoreEvent) => void | Promise<void>
@@ -918,7 +937,10 @@ export const patchCoreProfile = async (
 
 export const getProxyStatus = async (): Promise<Record<string, unknown>> => {
   const instance = getServiceAxios()
-  return await instance.get('/sysproxy/status')
+  return await instance.request({
+    method: serviceContract.sysproxyStatus.method,
+    url: serviceContract.sysproxyStatus.path
+  })
 }
 
 export const stopServiceApi = async (): Promise<Record<string, unknown>> => {
@@ -940,12 +962,16 @@ export const setPac = async (
 ): Promise<void> => {
   if (guard) await requireServiceCapability('sysproxyLease')
   const instance = getServiceAxios()
-  return await instance.post('/sysproxy/pac', {
-    url,
-    device,
-    only_active_device: onlyActiveDevice,
-    use_registry: useRegistry,
-    guard
+  return await instance.request({
+    method: serviceContract.sysproxyPac.method,
+    url: serviceContract.sysproxyPac.path,
+    data: {
+      url,
+      device,
+      only_active_device: onlyActiveDevice,
+      use_registry: useRegistry,
+      guard
+    }
   })
 }
 
@@ -959,13 +985,17 @@ export const setProxy = async (
 ): Promise<void> => {
   if (guard) await requireServiceCapability('sysproxyLease')
   const instance = getServiceAxios()
-  return await instance.post('/sysproxy/proxy', {
-    server,
-    bypass,
-    device,
-    only_active_device: onlyActiveDevice,
-    use_registry: useRegistry,
-    guard
+  return await instance.request({
+    method: serviceContract.sysproxyProxy.method,
+    url: serviceContract.sysproxyProxy.path,
+    data: {
+      server,
+      bypass,
+      device,
+      only_active_device: onlyActiveDevice,
+      use_registry: useRegistry,
+      guard
+    }
   })
 }
 
@@ -976,21 +1006,25 @@ export const disableProxy = async (
   timeoutMs?: number
 ): Promise<void> => {
   const instance = getServiceAxios()
-  return await instance.post(
-    '/sysproxy/disable',
-    {
+  return await instance.request({
+    method: serviceContract.sysproxyDisable.method,
+    url: serviceContract.sysproxyDisable.path,
+    data: {
       device,
       only_active_device: onlyActiveDevice,
       use_registry: useRegistry
     },
-    timeoutMs ? { timeout: timeoutMs } : undefined
-  )
+    ...(timeoutMs ? { timeout: timeoutMs } : {})
+  })
 }
 
 export const renewSysProxyLease = async (): Promise<void> => {
   if (!(await getServiceMeta()).capabilities.sysproxyLease) return
   const instance = getServiceAxios()
-  await instance.post('/sysproxy/renew')
+  await instance.request({
+    method: serviceContract.sysproxyRenew.method,
+    url: serviceContract.sysproxyRenew.path
+  })
 }
 
 export const setSysDns = async (device?: string, servers?: string[]): Promise<void> => {
