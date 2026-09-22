@@ -7,7 +7,11 @@ type RequestConfig = {
   headers?: Record<string, string>
 }
 
-function loadOverrideModule(defaultUserAgent = 'KokoroBox/default') {
+function loadOverrideModule(
+  defaultUserAgent = 'KokoroBox/default',
+  writeFile: (path: string, content: string, encoding: string) => Promise<void> = async () =>
+    undefined
+) {
   let request: { url: string; config: RequestConfig } | undefined
   let defaultUserAgentCalls = 0
   const axios = {
@@ -28,7 +32,7 @@ function loadOverrideModule(defaultUserAgent = 'KokoroBox/default') {
     },
     'fs/promises': {
       readFile: async () => '',
-      writeFile: async () => undefined,
+      writeFile,
       rm: async () => undefined
     },
     fs: { existsSync: () => false },
@@ -96,4 +100,26 @@ test('remote overrides use the application User-Agent when left blank', async ()
   assert.equal(item.ua, undefined)
   assert.equal(loaded.getRequest()?.config.headers?.['User-Agent'], 'KokoroBox/fallback')
   assert.equal(loaded.getDefaultUserAgentCalls(), 1)
+})
+
+test('local override creation waits for persistent content writes', async () => {
+  const loaded = loadOverrideModule('KokoroBox/default', async () => {
+    throw new Error('write failure')
+  })
+
+  await assert.rejects(
+    loaded.api.createOverride({
+      type: 'local',
+      ext: 'yaml',
+      file: 'rules: []'
+    }),
+    /write failure/
+  )
+})
+
+test('override updates are awaited and do not trigger a duplicate config write', () => {
+  const source = readFileSync('src/main/config/override.ts', 'utf8')
+
+  assert.match(source, /await updateOverrideItem\(newItem\)\s+return/)
+  assert.match(source, /case 'local':[\s\S]*?await setOverride\(id, newItem\.ext, data\)/)
 })
