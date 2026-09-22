@@ -21,6 +21,11 @@ export const messages: Readonly<Record<string, string>> = {
     'Administrator access is required to change loopback exemptions.',
   'Loading...': 'Loading...',
   'No UWP apps found': 'No UWP apps found',
+  'Search apps': 'Search apps',
+  Apps: 'Apps',
+  'Microsoft apps': 'Microsoft apps',
+  'System components and runtimes': 'System components and runtimes',
+  'No apps match this search.': 'No apps match this search.',
   'Configure the system proxy and choose a proxy mode here. On Windows, manage UWP loopback exemptions here when an app cannot connect to the local proxy.':
     'Configure the system proxy and choose a proxy mode here. On Windows, manage UWP loopback exemptions here when an app cannot connect to the local proxy.',
   'Reliability and exclusions': 'Reliability and exclusions',

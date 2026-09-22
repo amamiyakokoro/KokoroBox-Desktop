@@ -1,4 +1,5 @@
 import { TitleBarOverlayOptions } from 'electron'
+import { normalizeUwpLoopbackApps, type UwpLoopbackApp } from '../../../shared/types/uwp-loopback'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function ipcErrorWrapper(response: any): any {
@@ -493,13 +494,15 @@ export async function getPlatform(): Promise<NodeJS.Platform> {
   return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('platform'))
 }
 
-export async function listUwpLoopbackApps(): Promise<import('kokorobox-native').UwpLoopbackApp[]> {
-  return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('listUwpLoopbackApps'))
+export async function listUwpLoopbackApps(): Promise<UwpLoopbackApp[]> {
+  return normalizeUwpLoopbackApps(
+    ipcErrorWrapper(await window.electron.ipcRenderer.invoke('listUwpLoopbackApps'))
+  )
 }
 
-export async function setUwpLoopbackExemption(sid: string, enabled: boolean): Promise<void> {
+export async function setUwpLoopbackExemption(id: string, enabled: boolean): Promise<void> {
   return ipcErrorWrapper(
-    await window.electron.ipcRenderer.invoke('setUwpLoopbackExemption', sid, enabled)
+    await window.electron.ipcRenderer.invoke('setUwpLoopbackExemption', id, enabled)
   )
 }
 
