@@ -1,6 +1,8 @@
 import { tr } from '../../shared/i18n'
 import { getAppConfig, getControledMihomoConfig } from '../config'
-import { pacPort, startPacServer, stopPacServer } from '../resolve/server'
+import { startPacServer, stopPacServer } from '../resolve/server'
+import { localPacUrl } from '../resolve/pac-http-server'
+import { defaultSystemProxyBypass, normalizeProxyHost } from '../../shared/system-proxy'
 import { net } from 'electron'
 import { isAxiosError } from 'axios'
 import {
@@ -17,7 +19,6 @@ import { appendAppLog } from '../utils/log'
 import { showNotification } from '../utils/notification'
 import { disableTerminalProxy, enableTerminalProxy } from './terminal-proxy'
 
-let defaultBypass: string[]
 let triggerSysProxyTimer: NodeJS.Timeout | null = null
 let sysproxyLeaseTimer: NodeJS.Timeout | null = null
 let triggerSysProxyTask = Promise.resolve()
@@ -121,52 +122,8 @@ async function triggerSysProxyImpl(
 }
 
 async function setSysProxy(onlyActiveDevice: boolean, useRegistry = false): Promise<void> {
-  if (process.platform === 'linux')
-    defaultBypass = [
-      'localhost',
-      '.local',
-      '127.0.0.1/8',
-      '192.168.0.0/16',
-      '10.0.0.0/8',
-      '172.16.0.0/12',
-      '::1'
-    ]
-  if (process.platform === 'darwin')
-    defaultBypass = [
-      '127.0.0.1/8',
-      '192.168.0.0/16',
-      '10.0.0.0/8',
-      '172.16.0.0/12',
-      'localhost',
-      '*.local',
-      '*.crashlytics.com',
-      '<local>'
-    ]
-  if (process.platform === 'win32')
-    defaultBypass = [
-      'localhost',
-      '127.*',
-      '192.168.*',
-      '10.*',
-      '172.16.*',
-      '172.17.*',
-      '172.18.*',
-      '172.19.*',
-      '172.20.*',
-      '172.21.*',
-      '172.22.*',
-      '172.23.*',
-      '172.24.*',
-      '172.25.*',
-      '172.26.*',
-      '172.27.*',
-      '172.28.*',
-      '172.29.*',
-      '172.30.*',
-      '172.31.*',
-      '<local>'
-    ]
-  await startPacServer()
+  const defaultBypass = defaultSystemProxyBypass(process.platform)
+  const pacPort = await startPacServer()
   const { sysProxy } = await getAppConfig()
   const { mode, host, bypass = defaultBypass, terminalProxy = false } = sysProxy
   const guard = !!sysProxy.guard
@@ -175,13 +132,8 @@ async function setSysProxy(onlyActiveDevice: boolean, useRegistry = false): Prom
 
   switch (mode || 'manual') {
     case 'auto': {
-      await setPac(
-        `http://${host || '127.0.0.1'}:${pacPort}/pac`,
-        '',
-        onlyActiveDevice,
-        useRegistry,
-        guard
-      )
+      if (pacPort === undefined) throw new Error('PAC server did not start')
+      await setPac(localPacUrl(pacPort), '', onlyActiveDevice, useRegistry, guard)
       updateSysproxyGuardEventStream(guardNotify)
       startSysproxyLeaseRenewal(onlyActiveDevice, useRegistry)
       break
@@ -190,7 +142,7 @@ async function setSysProxy(onlyActiveDevice: boolean, useRegistry = false): Prom
     case 'manual': {
       if (port != 0) {
         await setProxy(
-          `${host || '127.0.0.1'}:${port}`,
+          `${normalizeProxyHost(host || '')}:${port}`,
           bypass.join(','),
           '',
           onlyActiveDevice,
@@ -209,7 +161,7 @@ async function setSysProxy(onlyActiveDevice: boolean, useRegistry = false): Prom
 
   if (process.platform === 'linux') {
     if (terminalProxy && port !== 0) {
-      await enableTerminalProxy(host || '127.0.0.1', port, bypass)
+      await enableTerminalProxy(normalizeProxyHost(host || ''), port, bypass)
     } else {
       await disableTerminalProxy()
     }

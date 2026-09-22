@@ -92,7 +92,7 @@ interface AppConfig {
   coreStartupMode?: 'post-up' | 'log'
   mihomoCpuPriority?: Priority
   diffWorkDir?: boolean
-  autoSetDNSMode?: 'none' | 'exec' | 'service'
+  autoSetDNSMode?: 'none' | 'service'
   originDNS?: string
   useWindowFrame: boolean
   enableWindowDrag: boolean

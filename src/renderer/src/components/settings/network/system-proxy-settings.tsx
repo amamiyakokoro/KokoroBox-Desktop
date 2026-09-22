@@ -20,6 +20,7 @@ import ByPassEditorModal from '@renderer/components/sysproxy/bypass-editor-modal
 import { notify } from '@renderer/utils/notification'
 import { useSettingsSave } from '@renderer/hooks/use-settings-save'
 import { useUnsavedChangesGuard } from '@renderer/hooks/use-unsaved-changes'
+import { defaultSystemProxyBypass, normalizeProxyHost } from '../../../../../shared/system-proxy'
 
 const defaultPacScript = `
 function FindProxyForURL(url, host) {
@@ -68,51 +69,7 @@ const BypassListPreview: React.FC<{ items: string[] }> = ({ items }) => {
 }
 
 const Sysproxy: React.FC<Props> = ({ embedded = false }) => {
-  const defaultBypass: string[] =
-    platform === 'linux'
-      ? [
-          'localhost',
-          '.local',
-          '127.0.0.1/8',
-          '192.168.0.0/16',
-          '10.0.0.0/8',
-          '172.16.0.0/12',
-          '::1'
-        ]
-      : platform === 'darwin'
-        ? [
-            '127.0.0.1/8',
-            '192.168.0.0/16',
-            '10.0.0.0/8',
-            '172.16.0.0/12',
-            'localhost',
-            '*.local',
-            '*.crashlytics.com',
-            '<local>'
-          ]
-        : [
-            'localhost',
-            '127.*',
-            '192.168.*',
-            '10.*',
-            '172.16.*',
-            '172.17.*',
-            '172.18.*',
-            '172.19.*',
-            '172.20.*',
-            '172.21.*',
-            '172.22.*',
-            '172.23.*',
-            '172.24.*',
-            '172.25.*',
-            '172.26.*',
-            '172.27.*',
-            '172.28.*',
-            '172.29.*',
-            '172.30.*',
-            '172.31.*',
-            '<local>'
-          ]
+  const defaultBypass = defaultSystemProxyBypass(platform)
 
   const { appConfig, patchAppConfig, mutateAppConfig } = useAppConfig()
   const { sysProxy, onlyActiveDevice = false } =
@@ -169,10 +126,15 @@ const Sysproxy: React.FC<Props> = ({ embedded = false }) => {
 
   const onSave = async (): Promise<boolean> => {
     const saved = await runSave(async () => {
-      // check valid TODO
       const nextValues = await validateServiceAvailability()
+      const nextHost =
+        nextValues.enable &&
+        (nextValues.mode === 'manual' || (platform === 'linux' && nextValues.terminalProxy))
+          ? normalizeProxyHost(nextValues.host)
+          : nextValues.host
       let nextConfig =
-        (await patchAppConfig({ sysProxy: nextValues })) ?? (await getAppConfig(true))
+        (await patchAppConfig({ sysProxy: { ...nextValues, host: nextHost } })) ??
+        (await getAppConfig(true))
       if (nextConfig.sysProxy.enable) {
         try {
           await triggerSysProxy(nextConfig.sysProxy.enable, onlyActiveDevice)
@@ -234,20 +196,22 @@ const Sysproxy: React.FC<Props> = ({ embedded = false }) => {
       <FeatureSettingsPanelAction action={embedded ? saveButton : undefined} />
       <FeatureSettingsLayout>
         <FeatureSettingsSection title={tr('Proxy configuration')}>
-          <SettingItem
-            title={tr('Proxy host')}
-            description={tr('Leave empty to use 127.0.0.1')}
-            divider
-          >
-            <KokoTextField
-              controlWidth="short"
-              value={values.host}
-              placeholder="127.0.0.1"
-              onChangeValue={(v) => {
-                setValues({ ...values, host: v })
-              }}
-            />
-          </SettingItem>
+          {(values.mode === 'manual' || (platform === 'linux' && values.terminalProxy)) && (
+            <SettingItem
+              title={tr('Proxy host')}
+              description={tr('Leave empty to use 127.0.0.1')}
+              divider
+            >
+              <KokoTextField
+                controlWidth="short"
+                value={values.host}
+                placeholder="127.0.0.1"
+                onChangeValue={(v) => {
+                  setValues({ ...values, host: v })
+                }}
+              />
+            </SettingItem>
+          )}
           <SettingItem
             title={tr('Proxy mode')}
             help={tr(

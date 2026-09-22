@@ -1,8 +1,5 @@
 import { getAppConfig, getControledMihomoConfig } from '../config'
-import http from 'http'
-import net from 'net'
-
-export let pacPort: number
+import { PacHttpServer } from './pac-http-server'
 
 const defaultPacScript = `
 function FindProxyForURL(url, host) {
@@ -10,49 +7,21 @@ function FindProxyForURL(url, host) {
 }
 `
 
-export function findAvailablePort(startPort: number): Promise<number> {
-  return new Promise((resolve, reject) => {
-    const server = net.createServer()
-    server.on('error', (err) => {
-      if (startPort <= 65535) {
-        resolve(findAvailablePort(startPort + 1))
-      } else {
-        reject(err)
-      }
-    })
-    server.on('listening', () => {
-      server.close(() => {
-        resolve(startPort)
-      })
-    })
-    server.listen(startPort, '127.0.0.1')
-  })
-}
+const pacServer = new PacHttpServer()
 
-let pacServer: http.Server
-
-export async function startPacServer(): Promise<void> {
-  await stopPacServer()
+export async function startPacServer(): Promise<number | undefined> {
   const { sysProxy } = await getAppConfig()
-  const { mode = 'manual', host: cHost, pacScript } = sysProxy
+  const { mode = 'manual', pacScript } = sysProxy
   if (mode !== 'auto') {
-    return
+    await pacServer.stop()
+    return undefined
   }
-  const host = cHost || '127.0.0.1'
   let script = pacScript || defaultPacScript
   const { 'mixed-port': port = 7890 } = await getControledMihomoConfig()
   script = script.replaceAll('%mixed-port%', port.toString())
-  pacPort = await findAvailablePort(10000)
-  pacServer = http
-    .createServer(async (_req, res) => {
-      res.writeHead(200, { 'Content-Type': 'application/x-ns-proxy-autoconfig' })
-      res.end(script)
-    })
-    .listen(pacPort, host)
+  return await pacServer.start(script)
 }
 
 export async function stopPacServer(): Promise<void> {
-  if (pacServer) {
-    pacServer.close()
-  }
+  await pacServer.stop()
 }

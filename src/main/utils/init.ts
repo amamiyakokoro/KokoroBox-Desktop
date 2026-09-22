@@ -245,6 +245,10 @@ async function migration(): Promise<void> {
     } as AppConfig['sysProxy']
   }
 
+  if ((appConfig as { autoSetDNSMode?: string }).autoSetDNSMode === 'exec') {
+    appConfigPatch.autoSetDNSMode = 'service'
+  }
+
   if (Array.isArray(appConfig.siderOrder) && !appConfig.siderOrder.includes('kokoro')) {
     const siderOrder = [...appConfig.siderOrder]
     const legacySubStoreIndex = siderOrder.indexOf('substore')

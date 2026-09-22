@@ -81,7 +81,6 @@ export async function setPublicDNS(): Promise<void> {
     const { originDNS, autoSetDNSMode = 'none' } = await getAppConfig()
     if (originDNS) await restoreLegacyDNS(originDNS)
     if (autoSetDNSMode === 'none') return
-    if (autoSetDNSMode === 'exec') await patchAppConfig({ autoSetDNSMode: 'service' })
     await setDnsLease(['223.5.5.5'])
     startDnsLeaseRenewal()
   } else {
