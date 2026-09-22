@@ -327,11 +327,6 @@ const resolveBundleMRS = () =>
     file: 'BundleMRS.7z',
     downloadURL: `https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/BundleMRS.7z`
   })
-const resolveEnableLoopback = () =>
-  resolveResource({
-    file: 'enableLoopback.exe',
-    downloadURL: `https://github.com/Kuingsmile/uwp-tool/releases/download/latest/enableLoopback.exe`
-  })
 const resolveKokoroBoxService = async () => {
   const asset = kokoroboxServiceAsset(platform, arch, process.env.RELEASE_CHANNEL)
   const ext = platform === 'win32' ? '.exe' : ''
@@ -429,12 +424,6 @@ const tasks: Task[] = [
     name: 'font',
     func: resolveFont,
     retry: 5
-  },
-  {
-    name: 'enableLoopback',
-    func: resolveEnableLoopback,
-    retry: 5,
-    winOnly: true
   },
   {
     name: 'kokorobox-service',

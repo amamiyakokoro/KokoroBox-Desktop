@@ -24,6 +24,7 @@ extraResources:
     filter:
       - '**/*'
       - '!files/kokorobox-run.exe'
+      - '!files/enableLoopback.exe'
       - '!macos-app-routing-system-extension{,/**/*}'
       - '!macos-updater{,/**/*}'
   - from: './THIRD_PARTY_NOTICES.md'

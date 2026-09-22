@@ -76,7 +76,6 @@ import {
   deleteElevateTask,
   getFilePath,
   openFile,
-  openUWPTool,
   readImageFileDataURL,
   readTextFile,
   relaunchWindowsElevated,
@@ -85,6 +84,7 @@ import {
   setNativeTheme,
   setupFirewall
 } from '../sys/misc'
+import { listUwpLoopbackApps, setUwpLoopbackExemption } from 'kokorobox-native'
 import {
   serviceStatus,
   installService,
@@ -402,7 +402,8 @@ export function registerIpcMainHandlers(): void {
   ipcMain.handle('cancelUpdate', ipcErrorWrapper(cancelUpdate))
   ipcMain.handle('getVersion', () => app.getVersion())
   ipcMain.handle('platform', () => process.platform)
-  ipcMain.handle('openUWPTool', ipcErrorWrapper(openUWPTool))
+  ipcMain.handle('listUwpLoopbackApps', ipcErrorWrapper(listUwpLoopbackApps))
+  ipcMain.handle('setUwpLoopbackExemption', ipcErrorWrapper(setUwpLoopbackExemption))
   ipcMain.handle('setupFirewall', ipcErrorWrapper(setupFirewall))
   ipcMain.handle('getInterfaces', getInterfaces)
   ipcMain.handle('webdavBackup', ipcErrorWrapper(webdavBackup))

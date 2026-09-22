@@ -485,8 +485,14 @@ export async function getPlatform(): Promise<NodeJS.Platform> {
   return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('platform'))
 }
 
-export async function openUWPTool(): Promise<void> {
-  return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('openUWPTool'))
+export async function listUwpLoopbackApps(): Promise<import('kokorobox-native').UwpLoopbackApp[]> {
+  return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('listUwpLoopbackApps'))
+}
+
+export async function setUwpLoopbackExemption(sid: string, enabled: boolean): Promise<void> {
+  return ipcErrorWrapper(
+    await window.electron.ipcRenderer.invoke('setUwpLoopbackExemption', sid, enabled)
+  )
 }
 
 export async function setupFirewall(): Promise<void> {

@@ -4,12 +4,10 @@ import {
   normalizeWindowsExecutablePath,
   protectedAppRoutingProcessNames
 } from '../../shared/app-routing'
-import { execFile } from 'child_process'
 import { app, dialog, nativeImage, nativeTheme, shell } from 'electron'
 import { mkdir, readFile, realpath, writeFile } from 'fs/promises'
 import path from 'path'
 import crypto from 'crypto'
-import { promisify } from 'util'
 import {
   fileToDataUrl,
   inspectApplication,
@@ -24,7 +22,6 @@ import {
   mihomoCorePath,
   overridePath,
   profilePath,
-  resourcesDir,
   taskDir,
   appRoutingIconDir
 } from '../utils/dirs'
@@ -186,12 +183,6 @@ export function openFile(type: 'profile' | 'override', id: string, ext?: 'yaml' 
   if (type === 'override') {
     shell.openPath(overridePath(id, ext || 'js'))
   }
-}
-
-export async function openUWPTool(): Promise<void> {
-  const execFilePromise = promisify(execFile)
-  const uwpToolPath = path.join(resourcesDir(), 'files', 'enableLoopback.exe')
-  await execFilePromise(uwpToolPath, [], { windowsHide: process.platform === 'win32' })
 }
 
 export async function setupFirewall(): Promise<void> {

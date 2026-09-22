@@ -157,7 +157,7 @@ export async function createDriver(navigate: NavigateFunction): Promise<Driver> 
         popover: {
           title: tr('System proxy settings'),
           description: tr(
-            'Configure the system proxy and choose a proxy mode here. If some Windows apps do not use the system proxy, the UWP tool can remove their loopback restrictions. Consult documentation on manual and PAC proxy modes if you are unsure which to use.'
+            'Configure the system proxy and choose a proxy mode here. On Windows, manage UWP loopback exemptions here when an app cannot connect to the local proxy.'
           ),
           side: 'top',
           align: 'start'

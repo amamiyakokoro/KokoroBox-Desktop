@@ -13,6 +13,15 @@ export const messages: Readonly<Record<string, string>> = {
   'Proxy configuration': 'Proxy configuration',
   'PAC script': 'PAC script',
   'System integration': 'System integration',
+  'UWP loopback': 'UWP loopback',
+  'Manage apps': 'Manage apps',
+  'Allow selected Windows apps to connect to the local proxy.':
+    'Allow selected Windows apps to connect to the local proxy.',
+  'Administrator access is required to change loopback exemptions.':
+    'Administrator access is required to change loopback exemptions.',
+  'No UWP apps found': 'No UWP apps found',
+  'Configure the system proxy and choose a proxy mode here. On Windows, manage UWP loopback exemptions here when an app cannot connect to the local proxy.':
+    'Configure the system proxy and choose a proxy mode here. On Windows, manage UWP loopback exemptions here when an app cannot connect to the local proxy.',
   'Reliability and exclusions': 'Reliability and exclusions',
   'Platform integration': 'Platform integration',
   'TUN routing': 'TUN routing',
@@ -414,7 +423,6 @@ export const messages: Readonly<Record<string, string>> = {
   'TProxy port': 'TProxy port',
   'TUN network stack': 'TUN network stack',
   'TUN interface name': 'TUN interface name',
-  'UWP tool': 'UWP tool',
   'VMess always uses relay mode': 'VMess always uses relay mode',
   'WebDAV URL': 'WebDAV URL',
   'WebDAV backup': 'WebDAV backup',
@@ -688,8 +696,6 @@ export const messages: Readonly<Record<string, string>> = {
   '4 columns': '4 columns',
   'Fixed selection': 'Fixed selection',
   'Corner radius': 'Corner radius',
-  'Configure the system proxy and choose a proxy mode here. If some Windows apps do not use the system proxy, the UWP tool can remove their loopback restrictions. Consult documentation on manual and PAC proxy modes if you are unsure which to use.':
-    'Configure the system proxy and choose a proxy mode here. If some Windows apps do not use the system proxy, the UWP tool can remove their loopback restrictions. Consult documentation on manual and PAC proxy modes if you are unsure which to use.',
   'Use direct connections on specified Wi-Fi SSIDs':
     'Use direct connections on specified Wi-Fi SSIDs',
   Online: 'Online',
@@ -864,7 +870,6 @@ export const messages: Readonly<Record<string, string>> = {
   'All connections': 'All connections',
   Manual: 'Manual',
   Open: 'Open',
-  'Open UWP tool': 'Open UWP tool',
   'Toggle floating window': 'Toggle floating window',
   'Toggle window': 'Toggle window',
   'Toggle system proxy': 'Toggle system proxy',

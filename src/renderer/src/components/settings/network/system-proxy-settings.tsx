@@ -11,9 +11,10 @@ import FeatureSettingsLayout, {
   FeatureSettingsSection
 } from '@renderer/components/base/base-feature-settings'
 import PacEditorModal from '@renderer/components/sysproxy/pac-editor-modal'
+import UwpLoopbackModal from '@renderer/components/sysproxy/uwp-loopback-modal'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { platform } from '@renderer/utils/init'
-import { getAppConfig, openUWPTool, serviceStatus, triggerSysProxy } from '@renderer/utils/ipc'
+import { getAppConfig, serviceStatus, triggerSysProxy } from '@renderer/utils/ipc'
 import React, { useEffect, useState } from 'react'
 import ByPassEditorModal from '@renderer/components/sysproxy/bypass-editor-modal'
 import { notify } from '@renderer/utils/notification'
@@ -148,6 +149,7 @@ const Sysproxy: React.FC<Props> = ({ embedded = false }) => {
   }, [sysProxy])
   const [openEditor, setOpenEditor] = useState(false)
   const [openPacEditor, setOpenPacEditor] = useState(false)
+  const [openUwpLoopback, setOpenUwpLoopback] = useState(false)
 
   const setValues = (v: typeof values): void => {
     originSetValues(v)
@@ -217,6 +219,7 @@ const Sysproxy: React.FC<Props> = ({ embedded = false }) => {
           }}
         />
       )}
+      {openUwpLoopback && <UwpLoopbackModal onClose={() => setOpenUwpLoopback(false)} />}
       {openEditor && (
         <ByPassEditorModal
           bypass={values.bypass}
@@ -277,15 +280,9 @@ const Sysproxy: React.FC<Props> = ({ embedded = false }) => {
 
         <FeatureSettingsSection title={tr('System integration')}>
           {platform === 'win32' && (
-            <SettingItem title={tr('UWP tool')} divider>
-              <Button
-                size="sm"
-                variant="secondary"
-                onPress={async () => {
-                  await openUWPTool()
-                }}
-              >
-                {tr('Open UWP tool')}
+            <SettingItem title={tr('UWP loopback')} divider>
+              <Button size="sm" variant="secondary" onPress={() => setOpenUwpLoopback(true)}>
+                {tr('Manage apps')}
               </Button>
             </SettingItem>
           )}

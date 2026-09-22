@@ -123,7 +123,7 @@ test('Windows service probes hide consoles and privileged actions use constraine
   assert.match(coreProfileSource, /windowsHide: process\.platform === 'win32'/)
   assert.match(kokoroProfileSource, /windowsHide: process\.platform === 'win32'/)
   assert.match(trafficPresenterSource, /spawn\(executable,[\s\S]*windowsHide: true/)
-  assert.match(miscSource, /execFilePromise\(uwpToolPath, \[\], \{ windowsHide:/)
+  assert.doesNotMatch(miscSource, /enableLoopback\.exe|openUWPTool/)
   assert.equal((updaterSource.match(/windowsHide: true/g) || []).length, 3)
   assert.match(updaterSource, /portable-update[\s\S]*--parent-pid/)
   assert.doesNotMatch(updaterSource, /shell: true|\['\/C'/)

@@ -13,6 +13,15 @@ export const messages: Readonly<Record<string, string>> = {
   'Proxy configuration': '代理設定',
   'PAC script': 'PAC 指令碼',
   'System integration': '系統整合',
+  'UWP loopback': 'UWP 迴環存取',
+  'Manage apps': '管理應用程式',
+  'Allow selected Windows apps to connect to the local proxy.':
+    '允許選定的 Windows 應用程式連線至本機代理。',
+  'Administrator access is required to change loopback exemptions.':
+    '變更迴環豁免需要系統管理員權限。',
+  'No UWP apps found': '找不到 UWP 應用程式',
+  'Configure the system proxy and choose a proxy mode here. On Windows, manage UWP loopback exemptions here when an app cannot connect to the local proxy.':
+    '在這裡設定系統代理與代理模式。Windows 應用程式無法連線至本機代理時，可在這裡管理 UWP 迴環豁免。',
   'Reliability and exclusions': '可靠性與排除項目',
   'Platform integration': '平台整合',
   'TUN routing': 'TUN 路由',
@@ -397,7 +406,6 @@ export const messages: Readonly<Record<string, string>> = {
   'TProxy port': 'TProxy 連接埠',
   'TUN network stack': 'TUN 網路堆疊',
   'TUN interface name': 'TUN 網路卡名稱',
-  'UWP tool': 'UWP 工具',
   'VMess always uses relay mode': 'VMess 固定使用中繼模式',
   'WebDAV URL': 'WebDAV 地址',
   'WebDAV backup': 'WebDAV 備份',
@@ -665,8 +673,6 @@ export const messages: Readonly<Record<string, string>> = {
   '4 columns': '四欄',
   'Fixed selection': '固定選擇',
   'Corner radius': '圓角',
-  'Configure the system proxy and choose a proxy mode here. If some Windows apps do not use the system proxy, the UWP tool can remove their loopback restrictions. Consult documentation on manual and PAC proxy modes if you are unsure which to use.':
-    '在此您可以進行系統代理相關設定，選擇代理模式，如果某些 Windows 應用程式不遵循系統代理，還可以使用"UWP 工具"解除本機迴環限制，對於"手動代理模式"和"PAC 代理模式"的區別，請自行百度',
   'Use direct connections on specified Wi-Fi SSIDs': '在特定的 WiFi SSID 下直連',
   Online: '線上',
   Domain: '網域名稱',
@@ -838,7 +844,6 @@ export const messages: Readonly<Record<string, string>> = {
   'All connections': '所有連線',
   Manual: '手動',
   Open: '開啟',
-  'Open UWP tool': '開啟 UWP 工具',
   'Toggle floating window': '開啟/關閉懸浮窗',
   'Toggle window': '開啟/關閉視窗',
   'Toggle system proxy': '開啟/關閉系統代理',
