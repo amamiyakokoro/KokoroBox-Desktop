@@ -1,10 +1,19 @@
 import assert from 'node:assert/strict'
-import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import {
+  chmodSync,
+  mkdtempSync,
+  mkdirSync,
+  readFileSync,
+  rmSync,
+  statSync,
+  writeFileSync
+} from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { test, type TestContext } from 'node:test'
 import ts from 'typescript'
 import {
+  hardenAppConfigPermissions,
   loadAppConfigFile,
   loadAppConfigFileSync,
   shouldSeedDefaultAppConfig,
@@ -64,6 +73,36 @@ test('writing after backup recovery preserves the valid backup', async (t) => {
 
   assert.equal(readFileSync(`${configPath}.backup`, 'utf8'), validBackup)
   await assertBothLoaders(configPath, 'en')
+})
+
+test('app config writes and backups use owner-only permissions on Unix', async (t) => {
+  const configPath = withConfigPath(t)
+  writeFileSync(configPath, validBackup, { mode: 0o644 })
+
+  await writeAppConfigFile(configPath, validMain, 'linux')
+
+  assert.equal(statSync(configPath).mode & 0o777, 0o600)
+  assert.equal(statSync(`${configPath}.backup`).mode & 0o777, 0o600)
+})
+
+test('existing app config files are hardened to owner-only permissions', async (t) => {
+  const configPath = withConfigPath(t)
+  writeFileSync(configPath, validMain)
+  writeFileSync(`${configPath}.backup`, validBackup)
+  chmodSync(configPath, 0o644)
+  chmodSync(`${configPath}.backup`, 0o644)
+
+  await hardenAppConfigPermissions(configPath, 'linux')
+
+  assert.equal(statSync(configPath).mode & 0o777, 0o600)
+  assert.equal(statSync(`${configPath}.backup`).mode & 0o777, 0o600)
+})
+
+test('initial app config creation uses the hardened atomic writer', () => {
+  const init = readFileSync('src/main/utils/init.ts', 'utf8')
+
+  assert.match(init, /writeAppConfigFile\(appConfigPath\(\), stringifyYaml\(defaultConfig\)\)/)
+  assert.match(init, /await hardenAppConfigPermissions\(appConfigPath\(\)\)/)
 })
 
 function loadTransactionalAppConfigModule() {

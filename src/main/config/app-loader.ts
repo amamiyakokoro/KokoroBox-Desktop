@@ -1,4 +1,4 @@
-import { copyFile, readFile, rename, unlink, writeFile } from 'node:fs/promises'
+import { chmod, copyFile, readFile, rename, unlink, writeFile } from 'node:fs/promises'
 import { existsSync, readFileSync } from 'node:fs'
 import { parseYaml } from '../utils/yaml'
 
@@ -44,6 +44,17 @@ export function shouldSeedDefaultAppConfig(configPath: string): boolean {
   return !existsSync(configPath) && !existsSync(`${configPath}.backup`)
 }
 
+export async function hardenAppConfigPermissions(
+  configPath: string,
+  platform = process.platform
+): Promise<void> {
+  if (platform === 'win32') return
+
+  for (const candidate of [configPath, `${configPath}.backup`]) {
+    if (existsSync(candidate)) await chmod(candidate, 0o600)
+  }
+}
+
 export async function writeAppConfigFile(
   configPath: string,
   content: string,
@@ -53,7 +64,12 @@ export async function writeAppConfigFile(
   const backupPath = `${configPath}.backup`
 
   try {
-    await writeFile(tmpPath, content, 'utf8')
+    await writeFile(
+      tmpPath,
+      content,
+      platform === 'win32' ? 'utf8' : { encoding: 'utf8', mode: 0o600 }
+    )
+    if (platform !== 'win32') await chmod(tmpPath, 0o600)
     if (existsSync(configPath)) {
       let primaryIsValid = false
       try {
@@ -61,7 +77,10 @@ export async function writeAppConfigFile(
       } catch {
         // Preserve the existing backup when the primary cannot be read.
       }
-      if (primaryIsValid) await copyFile(configPath, backupPath)
+      if (primaryIsValid) {
+        await copyFile(configPath, backupPath)
+        if (platform !== 'win32') await chmod(backupPath, 0o600)
+      }
       if (platform === 'win32') await unlink(configPath)
     }
     await rename(tmpPath, configPath)
