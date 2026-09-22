@@ -31,11 +31,11 @@ let runtimeConfigStr: string,
   overrideProfileStr: string,
   runtimeConfig: MihomoConfig
 
-export async function generateProfile(): Promise<void> {
+export async function generateProfile(controlledConfig?: Partial<MihomoConfig>): Promise<void> {
   const [profileConfig, appConfig, controledMihomoConfig, appRoutingConfig] = await Promise.all([
     getProfileConfig(),
     getAppConfig(),
-    getControledMihomoConfig(),
+    controlledConfig ? Promise.resolve(controlledConfig) : getControledMihomoConfig(),
     getAppRoutingConfig()
   ])
   const { current } = profileConfig

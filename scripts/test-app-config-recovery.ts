@@ -177,3 +177,90 @@ test('failed app config writes do not commit cache changes or mutate defaults', 
   assert.equal((await loaded.api.getAppConfig()).sysProxy.enable, true)
   assert.equal(loaded.persisted().sysProxy.enable, true)
 })
+
+function loadTransactionalControlledConfigModule() {
+  const defaultConfig = {
+    dns: { enable: true, ipv6: true, nameserver: ['default.example'] },
+    sniffer: { enable: true }
+  } as Partial<MihomoConfig>
+  let persistedConfig = {
+    dns: { enable: true },
+    sniffer: { enable: true }
+  } as Partial<MihomoConfig>
+  let writeError: Error | undefined
+  const generatedConfigs: Partial<MihomoConfig>[] = []
+  const source = ts.transpileModule(readFileSync('src/main/config/controledMihomo.ts', 'utf8'), {
+    compilerOptions: {
+      module: ts.ModuleKind.CommonJS,
+      target: ts.ScriptTarget.ES2022,
+      esModuleInterop: true
+    }
+  }).outputText
+  const dependencies: Record<string, unknown> = {
+    '../utils/dirs': { controledMihomoConfigPath: () => '/mock/mihomo.yaml' },
+    'fs/promises': {
+      readFile: async () => JSON.stringify(persistedConfig),
+      writeFile: async (_path: string, content: string) => {
+        if (writeError) throw writeError
+        persistedConfig = JSON.parse(content) as Partial<MihomoConfig>
+      }
+    },
+    '../utils/yaml': {
+      parseYaml: (content: string) => JSON.parse(content),
+      stringifyYaml: (value: Partial<MihomoConfig>) => JSON.stringify(value)
+    },
+    '../core/factory': {
+      generateProfile: async (config: Partial<MihomoConfig>) => {
+        generatedConfigs.push(structuredClone(config))
+      }
+    },
+    './app': {
+      getAppConfig: async () => ({ controlDns: true, controlSniff: true })
+    },
+    '../utils/template': { defaultControledMihomoConfig: defaultConfig },
+    '../utils/merge': { deepMerge }
+  }
+  const module = { exports: {} as typeof import('../src/main/config/controledMihomo') }
+  new Function('require', 'module', 'exports', source)(
+    (name: string) => {
+      assert.ok(Object.hasOwn(dependencies, name), `Unexpected dependency: ${name}`)
+      return dependencies[name]
+    },
+    module,
+    module.exports
+  )
+
+  return {
+    api: module.exports,
+    defaultConfig,
+    generatedConfigs,
+    failWrites(error: Error) {
+      writeError = error
+    },
+    allowWrites() {
+      writeError = undefined
+    },
+    persisted: () => structuredClone(persistedConfig)
+  }
+}
+
+test('controlled Mihomo writes are serialized without mutating defaults or failed-write cache', async () => {
+  const loaded = loadTransactionalControlledConfigModule()
+  await loaded.api.getControledMihomoConfig()
+  loaded.failWrites(new Error('write failure'))
+
+  await assert.rejects(
+    loaded.api.patchControledMihomoConfig({ dns: { nameserver: ['changed.example'] } }),
+    /write failure/
+  )
+
+  assert.deepEqual((await loaded.api.getControledMihomoConfig()).dns, { enable: true })
+  assert.deepEqual(loaded.persisted().dns, { enable: true })
+  assert.deepEqual(loaded.defaultConfig.dns?.nameserver, ['default.example'])
+  assert.deepEqual(loaded.generatedConfigs.at(-1)?.dns?.nameserver, ['changed.example'])
+
+  loaded.allowWrites()
+  await loaded.api.patchControledMihomoConfig({ dns: { nameserver: ['saved.example'] } })
+  assert.deepEqual((await loaded.api.getControledMihomoConfig()).dns?.nameserver, ['saved.example'])
+  assert.deepEqual(loaded.persisted().dns?.nameserver, ['saved.example'])
+})
