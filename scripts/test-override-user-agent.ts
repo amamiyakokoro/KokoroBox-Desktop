@@ -33,6 +33,8 @@ function loadOverrideModule(
     'fs/promises': {
       readFile: async () => '',
       writeFile,
+      rename: async () => undefined,
+      unlink: async () => undefined,
       rm: async () => undefined
     },
     fs: { existsSync: () => false },
@@ -122,4 +124,44 @@ test('override updates are awaited and do not trigger a duplicate config write',
 
   assert.match(source, /await updateOverrideItem\(newItem\)\s+return/)
   assert.match(source, /case 'local':[\s\S]*?await setOverride\(id, newItem\.ext, data\)/)
+})
+
+test('failed override config writes do not mutate the shared cache', async () => {
+  const loaded = loadOverrideModule('KokoroBox/default', async () => {
+    throw new Error('config write failure')
+  })
+  const initial = await loaded.api.getOverrideConfig()
+
+  await assert.rejects(
+    loaded.api.setOverrideConfig({
+      items: [
+        {
+          id: 'new',
+          name: 'New override',
+          type: 'local',
+          ext: 'yaml',
+          global: false,
+          updated: 1
+        }
+      ]
+    }),
+    /config write failure/
+  )
+
+  assert.deepEqual(await loaded.api.getOverrideConfig(), initial)
+})
+
+test('override config reads return clones rather than mutable cache references', async () => {
+  const loaded = loadOverrideModule()
+  const first = await loaded.api.getOverrideConfig()
+  first.items.push({
+    id: 'mutated',
+    name: 'Mutated',
+    type: 'local',
+    ext: 'yaml',
+    global: false,
+    updated: 1
+  })
+
+  assert.deepEqual((await loaded.api.getOverrideConfig()).items, [])
 })

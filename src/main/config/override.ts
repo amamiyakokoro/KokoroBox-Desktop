@@ -1,7 +1,7 @@
 import { tr } from '../../shared/i18n'
 import { overrideConfigPath, overridePath } from '../utils/dirs'
 import { getControledMihomoConfig } from './controledMihomo'
-import { readFile, writeFile, rm } from 'fs/promises'
+import { readFile, rename, writeFile, rm, unlink } from 'fs/promises'
 import { existsSync } from 'fs'
 import axios, { AxiosResponse } from 'axios'
 import https from 'https'
@@ -10,19 +10,37 @@ import { getUserAgent } from '../utils/userAgent'
 import { createPinnedHttpsAgent } from '../utils/pinnedHttpsAgent'
 
 let overrideConfig: OverrideConfig // override.yaml
+let writePromise: Promise<void> = Promise.resolve()
 
 export async function getOverrideConfig(force = false): Promise<OverrideConfig> {
+  await writePromise
   if (force || !overrideConfig) {
     const data = await readFile(overrideConfigPath(), 'utf-8')
     overrideConfig = parseYaml<OverrideConfig>(data) || { items: [] }
   }
   if (typeof overrideConfig !== 'object') overrideConfig = { items: [] }
-  return overrideConfig
+  return structuredClone(overrideConfig)
 }
 
 export async function setOverrideConfig(config: OverrideConfig): Promise<void> {
-  overrideConfig = config
-  await writeFile(overrideConfigPath(), stringifyYaml(overrideConfig), 'utf-8')
+  const nextConfig = structuredClone(config)
+  const previousPromise = writePromise
+  const currentPromise = (async () => {
+    await previousPromise
+    const configPath = overrideConfigPath()
+    const temporaryPath = `${configPath}.tmp`
+    try {
+      await writeFile(temporaryPath, stringifyYaml(nextConfig), 'utf-8')
+      if (process.platform === 'win32' && existsSync(configPath)) await unlink(configPath)
+      await rename(temporaryPath, configPath)
+      overrideConfig = nextConfig
+    } catch (error) {
+      await unlink(temporaryPath).catch(() => {})
+      throw error
+    }
+  })()
+  writePromise = currentPromise.catch(() => {})
+  await currentPromise
 }
 
 export async function getOverrideItem(id: string | undefined): Promise<OverrideItem | undefined> {
