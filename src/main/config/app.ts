@@ -3,7 +3,14 @@ import { stringifyYaml } from '../utils/yaml'
 import { deepMerge } from '../utils/merge'
 import { defaultConfig } from '../utils/template'
 import { systemCoreDefaultPath, systemCoreOnlyBuild } from '../../shared/build-flags'
-import { loadAppConfigFile, loadAppConfigFileSync, writeAppConfigFile } from './app-loader'
+import {
+  loadAppConfigFile,
+  loadAppConfigFileSync,
+  parseValidAppConfig,
+  writeAppConfigFile
+} from './app-loader'
+import { readFile } from 'node:fs/promises'
+import { writePrivateTextFileAtomic } from './atomic-file'
 
 let appConfig: AppConfig
 let writePromise: Promise<void> = Promise.resolve()
@@ -45,6 +52,32 @@ export async function patchAppConfig(patch: Partial<AppConfig>): Promise<AppConf
   writePromise = currentPromise.catch(() => {})
   await currentPromise
   return appConfig
+}
+
+export async function removeLegacyGitHubToken(): Promise<void> {
+  const previousPromise = writePromise
+  const currentPromise = (async () => {
+    await previousPromise
+    const currentConfig = await getAppConfig()
+    if (currentConfig.githubToken) {
+      const nextConfig = structuredClone(currentConfig)
+      delete nextConfig.githubToken
+      await writeAppConfigFile(appConfigPath(), stringifyYaml(nextConfig))
+      appConfig = nextConfig
+    }
+    const backupPath = `${appConfigPath()}.backup`
+    try {
+      const backup = parseValidAppConfig(await readFile(backupPath, 'utf8'))
+      if (backup?.githubToken) {
+        delete backup.githubToken
+        await writePrivateTextFileAtomic(backupPath, stringifyYaml(backup))
+      }
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error
+    }
+  })()
+  writePromise = currentPromise.catch(() => {})
+  await currentPromise
 }
 
 export function getAppConfigSync(): AppConfig {

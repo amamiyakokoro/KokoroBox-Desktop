@@ -130,13 +130,20 @@ function loadTransactionalAppConfigModule() {
       systemCoreOnlyBuild: false
     },
     './app-loader': {
+      parseValidAppConfig: (content: string) => JSON.parse(content) as AppConfig,
       loadAppConfigFile: async () => structuredClone(persistedConfig),
       loadAppConfigFileSync: () => structuredClone(persistedConfig),
       writeAppConfigFile: async (_path: string, content: string) => {
         if (writeError) throw writeError
         persistedConfig = JSON.parse(content) as AppConfig
       }
-    }
+    },
+    'node:fs/promises': {
+      readFile: async () => {
+        throw Object.assign(new Error('missing'), { code: 'ENOENT' })
+      }
+    },
+    './atomic-file': { writePrivateTextFileAtomic: async () => {} }
   }
   const module = { exports: {} as typeof import('../src/main/config/app') }
   new Function('require', 'module', 'exports', source)(

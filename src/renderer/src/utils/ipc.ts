@@ -128,6 +128,14 @@ export async function getAppConfig(force = false): Promise<AppConfig> {
   return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('getAppConfig', force))
 }
 
+export async function getGitHubTokenConfigured(): Promise<boolean> {
+  return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('getGitHubTokenConfigured'))
+}
+
+export async function setGitHubToken(token: string): Promise<void> {
+  return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('setGitHubToken', token))
+}
+
 export async function getAppRoutingConfig(force = false): Promise<AppRoutingConfig> {
   return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('getAppRoutingConfig', force))
 }

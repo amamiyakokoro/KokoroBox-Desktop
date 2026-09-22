@@ -3,6 +3,7 @@ import axios, { AxiosRequestConfig, CancelTokenSource } from 'axios'
 import { parseYaml } from '../utils/yaml'
 import { app, shell } from 'electron'
 import { getAppConfig, getControledMihomoConfig } from '../config'
+import { getGitHubToken } from '../config/github-token'
 import { dataDir, exePath, isPortable, resourcesFilesDir, servicePath } from '../utils/dirs'
 import { copyFile, rm, writeFile, readFile, statfs } from 'fs/promises'
 import path from 'path'
@@ -88,7 +89,8 @@ export async function checkUpdate(): Promise<AppVersion | undefined> {
   }
 
   const { 'mixed-port': mixedPort = 7890 } = await getControledMihomoConfig()
-  const { updateChannel = 'stable', githubToken } = await getAppConfig()
+  const { updateChannel = 'stable' } = await getAppConfig()
+  const githubToken = await getGitHubToken()
   const url = UPDATE_MANIFEST_URLS[updateChannel]
   const res = await axios.get(url, {
     headers: {
@@ -169,7 +171,7 @@ export async function downloadAndInstallUpdate(
     }
   }
   const { 'mixed-port': mixedPort = 7890 } = await getControledMihomoConfig()
-  const { githubToken } = await getAppConfig()
+  const githubToken = await getGitHubToken()
   const baseUrl = `https://github.com/amamiyakokoro/KokoroBox-Desktop/releases/download/${releaseTag}/`
   const fileMap: Record<string, string> = {
     'win32-x64': `kokorobox-desktop-windows-${version}-x64-setup.exe`,

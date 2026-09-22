@@ -34,8 +34,7 @@ const SubscriptionIntegrationSettings: React.FC<Props> = ({
   const {
     userAgent,
     diffWorkDir = false,
-    githubToken = '',
-    gistSyncEnabled = githubToken !== '',
+    gistSyncEnabled = false,
     gistEncrypted = false,
     gistAgeRecipient = '',
     gistAgeIdentity = ''

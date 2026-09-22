@@ -7,7 +7,13 @@ import SettingSubgroup from '../base/base-setting-subgroup'
 import { KokoSelect, KokoTextField } from '../base/koko-form'
 import { KokoSegmentedControl } from '../base/base-controls'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
-import { copyEnv, startNetworkDetection, stopNetworkDetection } from '@renderer/utils/ipc'
+import {
+  copyEnv,
+  getGitHubTokenConfigured,
+  setGitHubToken,
+  startNetworkDetection,
+  stopNetworkDetection
+} from '@renderer/utils/ipc'
 import { platform } from '@renderer/utils/init'
 import { BiCopy, BiHide, BiShow } from 'react-icons/bi'
 import EditableList from '../base/base-list-editor'
@@ -36,14 +42,39 @@ const BehaviorSettings: React.FC<Props> = ({
     envType = [platform === 'win32' ? 'powershell' : 'bash'],
     networkDetection = false,
     networkDetectionBypass = ['VMware', 'vEthernet'],
-    networkDetectionInterval = 10,
-    githubToken = ''
+    networkDetectionInterval = 10
   } = appConfig || {}
 
   const pauseSSIDArray = pauseSSID ?? emptyArray
 
   const [pauseSSIDInput, setPauseSSIDInput] = useState(pauseSSIDArray)
   const [githubTokenVisible, setGithubTokenVisible] = useState(false)
+  const [githubTokenDraft, setGithubTokenDraft] = useState('')
+  const [githubTokenConfigured, setGithubTokenConfigured] = useState(false)
+  const [githubTokenSaving, setGithubTokenSaving] = useState(false)
+  const hasIntegrationSection = sections.includes('integration')
+
+  useEffect(() => {
+    if (!hasIntegrationSection) return
+    void getGitHubTokenConfigured()
+      .then(setGithubTokenConfigured)
+      .catch((error) => {
+        notify(error, { variant: 'danger' })
+      })
+  }, [hasIntegrationSection])
+
+  const saveGitHubToken = async (token: string): Promise<void> => {
+    setGithubTokenSaving(true)
+    try {
+      await setGitHubToken(token)
+      setGithubTokenConfigured(Boolean(token.trim()))
+      setGithubTokenDraft('')
+    } catch (error) {
+      notify(error, { variant: 'danger' })
+    } finally {
+      setGithubTokenSaving(false)
+    }
+  }
 
   const [bypass, setBypass] = useState(networkDetectionBypass)
   const [interval, setInterval] = useState(Math.max(networkDetectionInterval || 10, 1))
@@ -65,32 +96,52 @@ const BehaviorSettings: React.FC<Props> = ({
               )}
               divider
             >
-              <KokoTextField
-                className="w-60"
-                type={githubTokenVisible ? 'text' : 'password'}
-                value={githubToken}
-                placeholder="GitHub Personal Access Token"
-                onChangeValue={(value) => {
-                  void patchAppConfig({ githubToken: value })
-                }}
-                suffix={
+              <div className="flex items-center gap-2">
+                {githubTokenConfigured && !githubTokenDraft && (
+                  <span className="text-xs text-muted">{tr('Configured')}</span>
+                )}
+                <KokoTextField
+                  className="w-60"
+                  type={githubTokenVisible ? 'text' : 'password'}
+                  value={githubTokenDraft}
+                  placeholder="GitHub Personal Access Token"
+                  onChangeValue={setGithubTokenDraft}
+                  suffix={
+                    <Button
+                      aria-label={
+                        githubTokenVisible ? tr('Hide GitHub token') : tr('Show GitHub token')
+                      }
+                      isIconOnly
+                      size="sm"
+                      variant="ghost"
+                      onPress={() => setGithubTokenVisible((visible) => !visible)}
+                    >
+                      {githubTokenVisible ? (
+                        <BiHide className="text-lg" />
+                      ) : (
+                        <BiShow className="text-lg" />
+                      )}
+                    </Button>
+                  }
+                />
+                <Button
+                  size="sm"
+                  isDisabled={!githubTokenDraft.trim() || githubTokenSaving}
+                  onPress={() => void saveGitHubToken(githubTokenDraft)}
+                >
+                  {tr('Save')}
+                </Button>
+                {githubTokenConfigured && (
                   <Button
-                    aria-label={
-                      githubTokenVisible ? tr('Hide GitHub token') : tr('Show GitHub token')
-                    }
-                    isIconOnly
                     size="sm"
                     variant="ghost"
-                    onPress={() => setGithubTokenVisible((visible) => !visible)}
+                    isDisabled={githubTokenSaving}
+                    onPress={() => void saveGitHubToken('')}
                   >
-                    {githubTokenVisible ? (
-                      <BiHide className="text-lg" />
-                    ) : (
-                      <BiShow className="text-lg" />
-                    )}
+                    {tr('Clear field')}
                   </Button>
-                }
-              />
+                )}
+              </div>
             </SettingItem>
           </SettingCard>
           <SettingCard header={tr('Environment integration')}>

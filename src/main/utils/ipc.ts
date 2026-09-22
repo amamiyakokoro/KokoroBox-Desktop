@@ -1,4 +1,5 @@
 import { tr } from '../../shared/i18n'
+import { isGitHubTokenConfigured, setGitHubToken } from '../config/github-token'
 import { app, ipcMain } from 'electron'
 import {
   mihomoChangeProxy,
@@ -184,6 +185,9 @@ async function startTrafficPresenterAndRestoreTray(): Promise<void> {
 }
 
 async function patchAppConfigWithServiceSync(patch: Partial<AppConfig>): Promise<AppConfig> {
+  if (Object.hasOwn(patch, 'githubToken')) {
+    throw new Error('Use the GitHub token setting to update this credential')
+  }
   const nextConfig = await patchAppConfig(await validateSystemProxyServicePatch(patch))
 
   if (
@@ -290,11 +294,22 @@ export function registerIpcMainHandlers(): void {
   ipcMain.handle('enableAutoRun', ipcErrorWrapper(enableAutoRun))
   ipcMain.handle('disableAutoRun', ipcErrorWrapper(disableAutoRun))
   ipcMain.handle('openAutoRunSystemSettings', ipcErrorWrapper(openAutoRunSystemSettings))
-  ipcMain.handle('getAppConfig', (_e, force) => ipcErrorWrapper(getAppConfig)(force))
+  ipcMain.handle('getAppConfig', (_e, force) =>
+    ipcErrorWrapper(async () => {
+      const { githubToken: _githubToken, ...config } = await getAppConfig(force)
+      return config
+    })()
+  )
+  ipcMain.handle('getGitHubTokenConfigured', ipcErrorWrapper(isGitHubTokenConfigured))
+  ipcMain.handle('setGitHubToken', (_e, token) => ipcErrorWrapper(setGitHubToken)(token))
   ipcMain.handle('getCachedMihomoLogs', () => getCachedMihomoLogs())
   ipcMain.handle('clearCachedMihomoLogs', () => clearCachedMihomoLogs())
   ipcMain.handle('patchAppConfig', (_e, config) =>
-    ipcErrorWrapper(patchAppConfigWithServiceSync)(config)
+    ipcErrorWrapper(async () => {
+      const { githubToken: _githubToken, ...nextConfig } =
+        await patchAppConfigWithServiceSync(config)
+      return nextConfig
+    })()
   )
   ipcMain.handle('getControledMihomoConfig', (_e, force) =>
     ipcErrorWrapper(getControledMihomoConfig)(force)

@@ -3,6 +3,7 @@ import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { registerIpcMainHandlers } from './utils/ipc'
 import { app, dialog, shell, BrowserWindow, Menu, type IpcMainEvent } from 'electron'
 import { getAppConfig } from './config'
+import { getGitHubToken } from './config/github-token'
 import { quitWithoutCore, startCore, stopCore } from './core/manager'
 import { stopNetworkDetection } from './core/network'
 import { triggerSysProxy } from './sys/sysproxy'
@@ -417,6 +418,7 @@ function startPrimaryInstance(initialDeepLinks: string[]): void {
       })
       const { showFloatingWindow: showFloating = false, disableTray = false } = appConfig
       registerIpcMainHandlers()
+      runStartupTask('GitHub token migration', getGitHubToken())
       runStartupTask('Windows scheduled task migration', migrateLegacyWindowsTasks())
       runStartupTask('Windows application routing', initializeAppRouting())
 

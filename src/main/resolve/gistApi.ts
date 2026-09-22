@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { getAppConfig, getControledMihomoConfig } from '../config'
+import { getGitHubToken } from '../config/github-token'
 import { getRuntimeConfigStr } from '../core/factory'
 import { encryptAgeText } from '../utils/age'
 import { buildGistRawUrl, resolveGistFileNames } from '../../shared/gist-filenames'
@@ -112,7 +113,8 @@ async function updateGist(
 }
 
 export async function getGistUrl(): Promise<string> {
-  const { githubToken, gistSyncEnabled = Boolean(githubToken) } = await getAppConfig()
+  const githubToken = await getGitHubToken()
+  const { gistSyncEnabled = Boolean(githubToken) } = await getAppConfig()
   if (!gistSyncEnabled) return ''
   if (!githubToken) return ''
   const gists = await listGists(githubToken)
@@ -129,11 +131,8 @@ export async function getGistUrl(): Promise<string> {
 }
 
 export async function getGistRawUrl(): Promise<string> {
-  const {
-    githubToken,
-    gistSyncEnabled = Boolean(githubToken),
-    gistEncrypted = false
-  } = await getAppConfig()
+  const githubToken = await getGitHubToken()
+  const { gistSyncEnabled = Boolean(githubToken), gistEncrypted = false } = await getAppConfig()
   if (!gistSyncEnabled || !githubToken) return ''
 
   let gists = await listGists(githubToken)
@@ -149,7 +148,8 @@ export async function getGistRawUrl(): Promise<string> {
 }
 
 export async function uploadRuntimeConfig(): Promise<void> {
-  const { githubToken, gistSyncEnabled = Boolean(githubToken) } = await getAppConfig()
+  const githubToken = await getGitHubToken()
+  const { gistSyncEnabled = Boolean(githubToken) } = await getAppConfig()
   if (!gistSyncEnabled) return
   if (!githubToken) return
   const gists = await listGists(githubToken)
