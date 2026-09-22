@@ -8,6 +8,10 @@ import { loadAppConfigFile, loadAppConfigFileSync, writeAppConfigFile } from './
 let appConfig: AppConfig
 let writePromise: Promise<void> = Promise.resolve()
 
+function cloneDefaultConfig(): AppConfig {
+  return structuredClone(defaultConfig)
+}
+
 function applyBuildConfig(config: AppConfig): AppConfig {
   if (!systemCoreOnlyBuild) return config
 
@@ -20,9 +24,9 @@ function applyBuildConfig(config: AppConfig): AppConfig {
 
 export async function getAppConfig(force = false): Promise<AppConfig> {
   if (force || !appConfig) {
-    appConfig = (await loadAppConfigFile(appConfigPath())) ?? defaultConfig
+    appConfig = (await loadAppConfigFile(appConfigPath())) ?? cloneDefaultConfig()
   }
-  if (typeof appConfig !== 'object') appConfig = defaultConfig
+  if (typeof appConfig !== 'object') appConfig = cloneDefaultConfig()
   appConfig = applyBuildConfig(appConfig)
   return appConfig
 }
@@ -31,8 +35,12 @@ export async function patchAppConfig(patch: Partial<AppConfig>): Promise<AppConf
   const previousPromise = writePromise
   const currentPromise = (async () => {
     await previousPromise
-    appConfig = applyBuildConfig(deepMerge(appConfig, patch))
-    await writeAppConfigFile(appConfigPath(), stringifyYaml(appConfig))
+    const currentConfig = await getAppConfig()
+    const nextConfig = applyBuildConfig(
+      deepMerge(structuredClone(currentConfig), structuredClone(patch))
+    )
+    await writeAppConfigFile(appConfigPath(), stringifyYaml(nextConfig))
+    appConfig = nextConfig
   })()
   writePromise = currentPromise.catch(() => {})
   await currentPromise
@@ -40,5 +48,5 @@ export async function patchAppConfig(patch: Partial<AppConfig>): Promise<AppConf
 }
 
 export function getAppConfigSync(): AppConfig {
-  return applyBuildConfig(loadAppConfigFileSync(appConfigPath()) ?? defaultConfig)
+  return applyBuildConfig(loadAppConfigFileSync(appConfigPath()) ?? cloneDefaultConfig())
 }
