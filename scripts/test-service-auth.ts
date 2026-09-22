@@ -319,3 +319,26 @@ test('service core startup tolerates pre-desired-state service releases', () => 
   assert.match(coreManagerSource, /desiredStatus\?\.desired_state === 'running'/)
   assert.match(coreManagerSource, /await startServiceCore\(serviceProfile\)/)
 })
+
+test('service core handoff removes legacy direct processes and repairs occupied listeners', () => {
+  const coreManagerSource = readFileSync(resolve('src/main/core/manager.ts'), 'utf8')
+
+  assert.match(coreManagerSource, /async function stopLegacyDirectCore\(\): Promise<boolean>/)
+  assert.match(
+    coreManagerSource,
+    /await ensureMacOSServiceReady\(\)[\s\S]*stoppedLegacyDirectCore = await stopLegacyDirectCore\(\)/
+  )
+  assert.match(
+    coreManagerSource,
+    /stoppedLegacyDirectCore && serviceCoreRunning[\s\S]*await restartServiceCore\(serviceProfile\)/
+  )
+  assert.match(
+    coreManagerSource,
+    /directCoreState\.child = child[\s\S]*writeFile\(path\.join\(dataDir\(\), 'core\.pid'\), child\.pid\.toString\(\)\)/
+  )
+  assert.match(coreManagerSource, /pid > 0 && pid !== process\.pid/)
+  assert.match(
+    coreManagerSource,
+    /export async function stopCore[\s\S]*await stopLegacyDirectCore\(\)/
+  )
+})

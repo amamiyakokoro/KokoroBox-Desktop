@@ -25,12 +25,12 @@ import { readFile, rm, writeFile } from 'fs/promises'
 import { mainWindow } from '..'
 import path from 'path'
 import os from 'os'
-import { existsSync } from 'fs'
 import { uploadRuntimeConfig } from '../resolve/gistApi'
 import { stopTrafficPresenter } from '../resolve/trafficPresenter'
 import {
   getCoreStatus,
   getCoreDesiredStatus,
+  restartCore as restartServiceCore,
   startCore as startServiceCore,
   stopCore as stopServiceCore,
   isServiceConnectionError,
@@ -341,6 +341,49 @@ async function getServiceStatusAfterConnectionError(): Promise<
   }
 }
 
+async function stopLegacyDirectCore(): Promise<boolean> {
+  let stopped = false
+  const stoppedPids = new Set<number>()
+  const child = directCoreState.child
+  if (child) {
+    directCoreState.child = undefined
+    if (child.pid) stoppedPids.add(child.pid)
+    await stopChildProcess(child)
+    stopped = true
+  }
+
+  const pidPath = path.join(dataDir(), 'core.pid')
+  let pidString: string
+  try {
+    pidString = await readFile(pidPath, 'utf-8')
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
+      await appendAppLog(`[Manager]: read legacy core pid failed, ${error}\n`)
+    }
+    return stopped
+  }
+
+  const pid = parseInt(pidString.trim())
+  if (Number.isInteger(pid) && pid > 0 && pid !== process.pid && !stoppedPids.has(pid)) {
+    try {
+      process.kill(pid, 0)
+      stopped = true
+      process.kill(pid, 'SIGINT')
+      await delay(1000)
+      try {
+        process.kill(pid, 0)
+        process.kill(pid, 'SIGKILL')
+      } catch {
+        // already stopped
+      }
+    } catch {
+      // stale pid file or process is no longer accessible
+    }
+  }
+  await rm(pidPath).catch(() => {})
+  return stopped
+}
+
 export async function startCore(detached = false): Promise<Promise<void>[]> {
   const [appConfig, controlledMihomoConfig, profileConfig] = await Promise.all([
     getAppConfig(),
@@ -389,10 +432,17 @@ export async function startCore(detached = false): Promise<Promise<void>[]> {
   if (useServiceCore || detached) {
     await checkProfile()
   }
+  let stoppedLegacyDirectCore = false
   let serviceCoreRunning = false
   if (useServiceCore) {
     if (process.platform === 'darwin') {
       await ensureMacOSServiceReady()
+    }
+    stoppedLegacyDirectCore = await stopLegacyDirectCore()
+    if (stoppedLegacyDirectCore) {
+      await appendAppLog(
+        '[Manager]: stopped legacy direct core before handing ownership to Service\n'
+      )
     }
     try {
       await getCoreStatus()
@@ -473,7 +523,9 @@ export async function startCore(detached = false): Promise<Promise<void>[]> {
     serviceCoreRuntime.beginStartup()
     try {
       await serviceCoreRuntime.startEventStream()
-      if (!serviceCoreRunning) {
+      if (stoppedLegacyDirectCore && serviceCoreRunning) {
+        await restartServiceCore(serviceProfile)
+      } else if (!serviceCoreRunning) {
         await startServiceCore(serviceProfile)
       }
       serviceCoreRuntime.setManaged(true)
@@ -484,7 +536,9 @@ export async function startCore(detached = false): Promise<Promise<void>[]> {
           return serviceCoreRuntime.fallbackToElevatedCore(detached, probe.error)
         }
         await serviceCoreRuntime.startEventStream()
-        if (!probe.running) {
+        if (stoppedLegacyDirectCore && probe.running) {
+          await restartServiceCore(serviceProfile)
+        } else if (!probe.running) {
           await startServiceCore(serviceProfile)
         }
         serviceCoreRuntime.setManaged(true)
@@ -511,6 +565,11 @@ export async function startCore(detached = false): Promise<Promise<void>[]> {
     windowsHide: process.platform === 'win32'
   })
   directCoreState.child = child
+  if (child.pid) {
+    await writeFile(path.join(dataDir(), 'core.pid'), child.pid.toString()).catch((error) =>
+      appendAppLog(`[Manager]: persist direct core pid failed, ${error}\n`)
+    )
+  }
   let startupOutput = ''
   let configurationRejected = false
   let spawnError: Error | undefined
@@ -680,34 +739,9 @@ export async function stopCore(force = false, serviceRequestTimeoutMs?: number):
     }
   }
 
-  const child = directCoreState.child
-  if (child) {
-    directCoreState.child = undefined
-    await stopChildProcess(child)
-  }
+  await stopLegacyDirectCore()
 
   await getAxios(true).catch(() => {})
-
-  if (existsSync(path.join(dataDir(), 'core.pid'))) {
-    const pidString = await readFile(path.join(dataDir(), 'core.pid'), 'utf-8')
-    const pid = parseInt(pidString.trim())
-    if (!isNaN(pid)) {
-      try {
-        process.kill(pid, 0)
-        process.kill(pid, 'SIGINT')
-        await delay(1000)
-        try {
-          process.kill(pid, 0)
-          process.kill(pid, 'SIGKILL')
-        } catch {
-          // ignore
-        }
-      } catch {
-        // ignore
-      }
-    }
-    await rm(path.join(dataDir(), 'core.pid')).catch(() => {})
-  }
 }
 
 function notifyCoreLog(source: CoreLogNotificationSource): void {
@@ -804,9 +838,6 @@ export async function keepCoreAlive(): Promise<void> {
     }
 
     await startCore(true)
-    if (directCoreState.child?.pid) {
-      await writeFile(path.join(dataDir(), 'core.pid'), directCoreState.child.pid.toString())
-    }
   } catch (e) {
     void showNotification({ title: tr('Failed to start core'), body: `${e}`, variant: 'danger' })
   }
