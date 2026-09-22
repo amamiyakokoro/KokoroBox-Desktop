@@ -40,6 +40,10 @@ export function loadAppConfigFileSync(configPath: string): AppConfig | undefined
   return undefined
 }
 
+export function shouldSeedDefaultAppConfig(configPath: string): boolean {
+  return !existsSync(configPath) && !existsSync(`${configPath}.backup`)
+}
+
 export async function writeAppConfigFile(
   configPath: string,
   content: string,

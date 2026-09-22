@@ -24,6 +24,7 @@ import { mkdir, writeFile, cp, rm, readdir } from 'fs/promises'
 import { existsSync } from 'fs'
 import path from 'path'
 import { startPacServer } from '../resolve/server'
+import { shouldSeedDefaultAppConfig } from '../config/app-loader'
 import { triggerSysProxy } from '../sys/sysproxy'
 import {
   getAppConfig,
@@ -56,7 +57,7 @@ async function initDirs(): Promise<void> {
 async function initConfig(): Promise<void> {
   const configTasks: Promise<void>[] = []
 
-  if (!existsSync(appConfigPath())) {
+  if (shouldSeedDefaultAppConfig(appConfigPath())) {
     configTasks.push(writeFile(appConfigPath(), stringifyYaml(defaultConfig)))
   }
   if (!existsSync(profileConfigPath())) {

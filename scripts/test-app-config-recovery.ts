@@ -6,6 +6,7 @@ import { test, type TestContext } from 'node:test'
 import {
   loadAppConfigFile,
   loadAppConfigFileSync,
+  shouldSeedDefaultAppConfig,
   writeAppConfigFile
 } from '../src/main/config/app-loader'
 
@@ -32,7 +33,9 @@ test('valid primary config takes precedence over backup', async (t) => {
 
 test('missing, corrupt, and unreadable primary configs recover from a valid backup', async (t) => {
   const configPath = withConfigPath(t)
+  assert.equal(shouldSeedDefaultAppConfig(configPath), true)
   writeFileSync(`${configPath}.backup`, validBackup)
+  assert.equal(shouldSeedDefaultAppConfig(configPath), false)
   await assertBothLoaders(configPath, 'zh-Hant')
 
   writeFileSync(configPath, 'language: en\nsysProxy: [invalid]\n')
