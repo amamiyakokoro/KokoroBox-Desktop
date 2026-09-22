@@ -1,11 +1,6 @@
-import { execFile } from 'node:child_process'
-import { mkdir, readFile, rename, unlink, writeFile } from 'node:fs/promises'
-import { homedir } from 'node:os'
-import { dirname, isAbsolute, join } from 'node:path'
-import { promisify } from 'node:util'
+import { clearTerminalProxyEnvironment, setTerminalProxyEnvironment } from 'kokorobox-native'
 import { appendAppLog } from '../utils/log'
 
-const execFilePromise = promisify(execFile)
 const environmentNames = [
   'http_proxy',
   'https_proxy',
@@ -16,39 +11,6 @@ const environmentNames = [
   'ALL_PROXY',
   'NO_PROXY'
 ] as const
-
-function terminalProxyConfigPath(): string {
-  const configured = process.env.XDG_CONFIG_HOME
-  const configHome = configured && isAbsolute(configured) ? configured : join(homedir(), '.config')
-  return join(configHome, 'environment.d', '90-kokorobox-proxy.conf')
-}
-
-function quoteEnvironmentValue(value: string): string {
-  if (/[\0\r\n]/.test(value)) {
-    throw new Error('Terminal proxy environment contains an invalid line break')
-  }
-  return `"${value
-    .replaceAll('\\', '\\\\')
-    .replaceAll('"', '\\"')
-    .replaceAll('`', '\\`')
-    .replaceAll('$', '$$')}"`
-}
-
-async function updateUserManagerEnvironment(values?: Record<string, string>): Promise<void> {
-  try {
-    if (values) {
-      await execFilePromise('systemctl', [
-        '--user',
-        'set-environment',
-        ...environmentNames.map((name) => `${name}=${values[name]}`)
-      ])
-    } else {
-      await execFilePromise('systemctl', ['--user', 'unset-environment', ...environmentNames])
-    }
-  } catch (error) {
-    await appendAppLog(`[Sysproxy]: update terminal proxy session environment failed, ${error}\n`)
-  }
-}
 
 function updateCurrentProcessEnvironment(values?: Record<string, string>): void {
   for (const name of environmentNames) {
@@ -76,37 +38,21 @@ export async function enableTerminalProxy(
     ALL_PROXY: proxy,
     NO_PROXY: noProxy
   }
-  const configPath = terminalProxyConfigPath()
-  const temporaryPath = `${configPath}.${process.pid}.tmp`
-  const content = [
-    '# Managed by KokoroBox. Changes will be overwritten.',
-    ...environmentNames.map((name) => `${name}=${quoteEnvironmentValue(values[name])}`),
-    ''
-  ].join('\n')
 
-  await mkdir(dirname(configPath), { recursive: true })
-  await writeFile(temporaryPath, content, { encoding: 'utf8', mode: 0o600 })
-  await rename(temporaryPath, configPath)
+  const sessionUpdated = await setTerminalProxyEnvironment(host, port, bypass)
   updateCurrentProcessEnvironment(values)
-  await updateUserManagerEnvironment(values)
+  if (!sessionUpdated) {
+    await appendAppLog('[Sysproxy]: systemd user manager unavailable for terminal proxy\n')
+  }
 }
 
 export async function disableTerminalProxy(): Promise<void> {
   if (process.platform !== 'linux') return
 
-  const configPath = terminalProxyConfigPath()
-  let managedConfig = false
-  try {
-    managedConfig = (await readFile(configPath, 'utf8')).startsWith('# Managed by KokoroBox.')
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error
-  }
-  if (!managedConfig) return
-  try {
-    await unlink(configPath)
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error
-  }
+  const sessionUpdated = await clearTerminalProxyEnvironment()
+  if (sessionUpdated === null) return
   updateCurrentProcessEnvironment()
-  await updateUserManagerEnvironment()
+  if (!sessionUpdated) {
+    await appendAppLog('[Sysproxy]: systemd user manager unavailable for terminal proxy\n')
+  }
 }
