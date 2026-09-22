@@ -11,6 +11,7 @@ import { createTray } from './resolve/tray'
 import { createApplicationMenu } from './resolve/menu'
 import { init } from './utils/init'
 import { join } from 'path'
+import { rmSync } from 'fs'
 import { initShortcut } from './resolve/shortcut'
 import { initProfileUpdater } from './core/profileUpdater'
 import { startTrafficPresenter } from './resolve/trafficPresenter'
@@ -40,6 +41,8 @@ import {
   isExpectedNetworkTransition
 } from './utils/earlyTlsDisconnect'
 import { migrateUserDataDirectory } from './utils/userDataMigration'
+import { dataDir, isPortable } from './utils/dirs'
+import { productIdentity } from '../shared/product-identity'
 import { getWindowsRelaunchWaitPid } from '../shared/windows-relaunch'
 
 export { setNotQuitDialog } from './resolve/appLifecycle'
@@ -117,8 +120,30 @@ async function scheduleLightweightMode(): Promise<void> {
 // This must happen before configuration, credentials, or the single-instance lock
 // can read userData.  On an upgrade we atomically move the old Sparkle directory;
 // conflicts intentionally keep using the legacy directory rather than merging data.
+const resetArgumentIndex = process.argv.indexOf('--kokorobox-reset-app')
+if (resetArgumentIndex !== -1) {
+  const parentPid =
+    process.platform === 'linux' ? getWindowsRelaunchWaitPid(process.argv) : undefined
+  if (parentPid && parentPid !== process.pid) {
+    const waitCell = new Int32Array(new SharedArrayBuffer(4))
+    const deadline = Date.now() + 120_000
+    while (isProcessRunning(parentPid) && Date.now() < deadline) {
+      Atomics.wait(waitCell, 0, 0, 100)
+    }
+    if (isProcessRunning(parentPid)) throw new Error('Reset parent did not exit')
+  }
+}
 const userDataMigration = migrateUserDataDirectory(app.getPath('appData'))
 app.setPath('userData', userDataMigration.userDataPath)
+if (resetArgumentIndex !== -1) {
+  const resetDirectories = isPortable()
+    ? [dataDir()]
+    : [productIdentity.userDataDirectory, ...productIdentity.legacyUserDataDirectories].map(
+        (name) => join(app.getPath('appData'), name)
+      )
+  for (const directory of resetDirectories) rmSync(directory, { recursive: true, force: true })
+  process.argv.splice(resetArgumentIndex, 1)
+}
 if (userDataMigration.status === 'conflict' || userDataMigration.status === 'failed') {
   console.warn(
     `[KokoroBox] user-data migration ${userDataMigration.status}; continuing with ${userDataMigration.legacyPath}${userDataMigration.error ? `: ${userDataMigration.error.message}` : ''}`
@@ -238,7 +263,9 @@ if (syncConfig.disableGPU) app.disableHardwareAcceleration()
 const windowsKokoroCallback =
   process.platform === 'win32' ? process.argv.find(isKokoroURI) : undefined
 const windowsRelaunchWaitPid =
-  process.platform === 'win32' ? getWindowsRelaunchWaitPid(process.argv) : undefined
+  process.platform === 'win32' || process.platform === 'linux'
+    ? getWindowsRelaunchWaitPid(process.argv)
+    : undefined
 
 function isProcessRunning(pid: number): boolean {
   try {

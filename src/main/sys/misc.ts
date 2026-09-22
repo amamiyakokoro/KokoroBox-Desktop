@@ -4,7 +4,7 @@ import {
   normalizeWindowsExecutablePath,
   protectedAppRoutingProcessNames
 } from '../../shared/app-routing'
-import { execFile, spawn } from 'child_process'
+import { execFile } from 'child_process'
 import { app, dialog, nativeImage, nativeTheme, shell } from 'electron'
 import { mkdir, readFile, realpath, writeFile } from 'fs/promises'
 import path from 'path'
@@ -20,7 +20,6 @@ import {
   setupFirewallRules
 } from 'kokorobox-native'
 import {
-  dataDir,
   exePath,
   mihomoCorePath,
   overridePath,
@@ -30,8 +29,11 @@ import {
   appRoutingIconDir
 } from '../utils/dirs'
 import { rmSync } from 'fs'
-import { prepareAppForRelaunch } from '../resolve/appLifecycle'
-import { windowsRelaunchWaitArgument } from '../../shared/windows-relaunch'
+import { prepareAppForRelaunch, setNotQuitDialog } from '../resolve/appLifecycle'
+import {
+  windowsRelaunchWaitArgument,
+  windowsRelaunchWaitArgumentPrefix
+} from '../../shared/windows-relaunch'
 
 export function getFilePath(
   ext: string[],
@@ -264,33 +266,12 @@ export async function relaunchWindowsUnelevated(): Promise<void> {
 }
 
 export function resetAppConfig(): void {
-  if (process.platform === 'win32') {
-    spawn(
-      'cmd',
-      [
-        '/C',
-        `"timeout /t 2 /nobreak >nul && rmdir /s /q "${dataDir()}" && start "" "${exePath()}""`
-      ],
-      {
-        shell: true,
-        detached: true,
-        stdio: 'ignore',
-        windowsHide: true
-      }
-    ).unref()
-  } else {
-    const script = `while kill -0 ${process.pid} 2>/dev/null; do
-  sleep 0.1
-done
-  rm -rf '${dataDir()}'
-  ${process.argv.join(' ')} & disown
-exit
-`
-    spawn('sh', ['-c', `"${script}"`], {
-      shell: true,
-      detached: true,
-      stdio: 'ignore'
-    })
-  }
+  app.relaunch({
+    args: [
+      ...process.argv.slice(1).filter((arg) => !arg.startsWith(windowsRelaunchWaitArgumentPrefix)),
+      '--kokorobox-reset-app'
+    ]
+  })
+  setNotQuitDialog()
   app.quit()
 }

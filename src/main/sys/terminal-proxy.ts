@@ -101,11 +101,12 @@ export async function disableTerminalProxy(): Promise<void> {
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error
   }
+  if (!managedConfig) return
   try {
     await unlink(configPath)
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error
   }
-  if (managedConfig) updateCurrentProcessEnvironment()
+  updateCurrentProcessEnvironment()
   await updateUserManagerEnvironment()
 }

@@ -1,23 +1,22 @@
 import { app } from 'electron'
 import { spawn } from 'child_process'
+import {
+  windowsRelaunchWaitArgument,
+  windowsRelaunchWaitArgumentPrefix
+} from '../../shared/windows-relaunch'
 
 export function useLinuxCustomRelaunch(): void {
   if (process.platform !== 'linux') return
 
-  // Electron can still fail to relaunch Linux apps started from a desktop file or
-  // terminal. Keep this fallback until https://github.com/electron/electron/issues/48280
-  // has a released fix that works for packaged applications.
-  app.relaunch = (): void => {
-    const script = `while kill -0 ${process.pid} 2>/dev/null; do
-  sleep 0.1
-done
-${process.argv.join(' ')} & disown
-exit
-`
-    spawn('sh', ['-c', `"${script}"`], {
-      shell: true,
+  // Wait until the old process has released its single-instance lock before
+  // starting the replacement. Pass arguments as an array, without a shell.
+  app.relaunch = (options): void => {
+    const args = (options?.args ?? process.argv.slice(1)).filter(
+      (argument) => !argument.startsWith(windowsRelaunchWaitArgumentPrefix)
+    )
+    spawn(process.execPath, [...args, windowsRelaunchWaitArgument(process.pid)], {
       detached: true,
       stdio: 'ignore'
-    })
+    }).unref()
   }
 }

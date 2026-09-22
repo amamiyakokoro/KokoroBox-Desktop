@@ -1,8 +1,6 @@
 import { exePath, homeDir, taskDir } from '../utils/dirs'
 import { rm } from 'fs/promises'
-import { execFile } from 'child_process'
 import { existsSync } from 'fs'
-import { promisify } from 'util'
 import path from 'path'
 import { LEGACY_WINDOWS_ELEVATE_TASK_NAME } from './misc'
 import { getLaunchAtLogin, openMacosLoginItemsSettings, setLaunchAtLogin } from 'kokorobox-native'
@@ -30,10 +28,14 @@ function launchAtLoginOptions() {
 }
 
 async function windowsTaskExists(name: string): Promise<boolean> {
-  const execFilePromise = promisify(execFile)
   try {
-    await execFilePromise('schtasks.exe', ['/query', '/tn', name], { windowsHide: true })
-    return true
+    return (
+      await getLaunchAtLogin({
+        identifier: name,
+        displayName: 'KokoroBox',
+        executablePath: exePath()
+      })
+    ).enabled
   } catch {
     return false
   }

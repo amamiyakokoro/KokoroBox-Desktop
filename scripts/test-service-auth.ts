@@ -111,7 +111,8 @@ test('Windows service probes hide consoles and privileged actions use constraine
 
   assert.match(managerSource, /\['service', 'status'\],[\s\S]*windowsHide: true/)
   assert.equal(existsSync(resolve('src/main/utils/elevation.ts')), false)
-  assert.match(autoRunSource, /schtasks\.exe[\s\S]*windowsHide: true/)
+  assert.match(autoRunSource, /getLaunchAtLogin\(\{\s*identifier: name/)
+  assert.doesNotMatch(autoRunSource, /schtasks\.exe|child_process/)
   assert.equal(
     (sysproxySource.match(/windowsHide: process\.platform === 'win32'/g) || []).length,
     3
@@ -123,7 +124,9 @@ test('Windows service probes hide consoles and privileged actions use constraine
   assert.match(kokoroProfileSource, /windowsHide: process\.platform === 'win32'/)
   assert.match(trafficPresenterSource, /spawn\(executable,[\s\S]*windowsHide: true/)
   assert.match(miscSource, /execFilePromise\(uwpToolPath, \[\], \{ windowsHide:/)
-  assert.equal((updaterSource.match(/windowsHide: true/g) || []).length, 2)
+  assert.equal((updaterSource.match(/windowsHide: true/g) || []).length, 3)
+  assert.match(updaterSource, /portable-update[\s\S]*--parent-pid/)
+  assert.doesNotMatch(updaterSource, /shell: true|\['\/C'/)
 })
 
 test('macOS registers the bundled daemon through SMAppService', () => {

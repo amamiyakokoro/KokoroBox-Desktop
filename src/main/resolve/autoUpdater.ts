@@ -3,11 +3,12 @@ import axios, { AxiosRequestConfig, CancelTokenSource } from 'axios'
 import { parseYaml } from '../utils/yaml'
 import { app, shell } from 'electron'
 import { getAppConfig, getControledMihomoConfig } from '../config'
-import { dataDir, exeDir, exePath, isPortable, resourcesFilesDir } from '../utils/dirs'
+import { dataDir, exePath, isPortable, resourcesFilesDir, servicePath } from '../utils/dirs'
 import { copyFile, rm, writeFile, readFile, statfs } from 'fs/promises'
 import path from 'path'
 import { existsSync } from 'fs'
-import { spawn } from 'child_process'
+import { execFile, spawn } from 'child_process'
+import { promisify } from 'util'
 import { createHash } from 'crypto'
 import os from 'os'
 import { setNotQuitDialog, mainWindow } from '..'
@@ -279,23 +280,35 @@ export async function downloadAndInstallUpdate(
       appUpdateInstalling = true
     }
     if (!systemCoreOnlyBuild && file.endsWith('.7z')) {
+      await promisify(execFile)(servicePath(), ['portable-update', '--help'], {
+        windowsHide: true
+      })
       await pauseSysProxy()
       await pauseServiceFallbackForAppUpdate()
       await stopServiceForPortableUpdate()
       await copyFile(path.join(resourcesFilesDir(), '7za.exe'), path.join(dataDir(), '7za.exe'))
-      spawn(
-        'cmd',
+      const updaterPath = path.join(dataDir(), 'kokorobox-portable-update.exe')
+      await copyFile(servicePath(), updaterPath)
+      const updater = spawn(
+        updaterPath,
         [
-          '/C',
-          `"timeout /t 2 /nobreak >nul && "${path.join(dataDir(), '7za.exe')}" x -o"${exeDir()}" -y "${path.join(dataDir(), file)}" & start "" "${exePath()}""`
+          'portable-update',
+          '--parent-pid',
+          String(process.pid),
+          '--archive',
+          path.join(dataDir(), file),
+          '--extractor',
+          path.join(dataDir(), '7za.exe'),
+          '--application',
+          exePath()
         ],
-        {
-          shell: true,
-          detached: true,
-          stdio: 'ignore',
-          windowsHide: true
-        }
-      ).unref()
+        { detached: true, stdio: 'ignore', windowsHide: true }
+      )
+      await new Promise<void>((resolve, reject) => {
+        updater.once('spawn', resolve)
+        updater.once('error', reject)
+      })
+      updater.unref()
       appUpdateInstalling = true
     }
     if (appUpdateInstalling) {
