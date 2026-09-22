@@ -407,7 +407,8 @@ export async function startCore(detached = false): Promise<Promise<void>[]> {
       }
     }
     if (!serviceCoreRunning) {
-      if ((await getCoreDesiredStatus()).desired_state === 'running') {
+      const desiredStatus = await getCoreDesiredStatus()
+      if (desiredStatus?.desired_state === 'running') {
         await waitForDesiredServiceCore()
         serviceCoreRunning = true
       }

@@ -299,3 +299,18 @@ test('Desktop signs service requests with Auth V3 and retries a legacy service o
   assert.match(apiSource, /config\.__kokoroboxServiceAuthVersion = '2'/)
   assert.match(apiSource, /config\.__kokoroboxServiceAuthFallbackAttempted = true/)
 })
+
+test('service core startup tolerates pre-desired-state service releases', () => {
+  const apiSource = readFileSync(resolve('src/main/service/api.ts'), 'utf8')
+  const coreManagerSource = readFileSync(resolve('src/main/core/manager.ts'), 'utf8')
+
+  const desiredStatusSource = apiSource.slice(
+    apiSource.indexOf('export const getCoreDesiredStatus'),
+    apiSource.indexOf('export interface ServiceProcessRouterRules')
+  )
+  assert.match(desiredStatusSource, /error instanceof ServiceAPIError && error\.status === 404/)
+  assert.match(desiredStatusSource, /return undefined/)
+  assert.match(desiredStatusSource, /throw error/)
+  assert.match(coreManagerSource, /desiredStatus\?\.desired_state === 'running'/)
+  assert.match(coreManagerSource, /await startServiceCore\(serviceProfile\)/)
+})

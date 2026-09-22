@@ -434,8 +434,21 @@ export const getCoreStatus = async (): Promise<Record<string, unknown>> => {
   return await instance.get('/core')
 }
 
-export const getCoreDesiredStatus = async (): Promise<{ desired_state: 'running' | 'stopped' }> => {
-  return await getServiceAxios().get('/core/desired')
+export const getCoreDesiredStatus = async (): Promise<
+  { desired_state: 'running' | 'stopped' } | undefined
+> => {
+  try {
+    return await getServiceAxios().get('/core/desired')
+  } catch (error) {
+    // Desired-state recovery was added after service-managed core launch. An
+    // older service can still start Mihomo normally, but does not advertise
+    // this optional endpoint. Treat only a missing route as unsupported;
+    // authentication, transport, and service failures must still propagate.
+    if (error instanceof ServiceAPIError && error.status === 404) {
+      return undefined
+    }
+    throw error
+  }
 }
 
 export interface ServiceProcessRouterRules {
