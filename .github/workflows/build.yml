@@ -60,6 +60,23 @@ jobs:
           node-version: 24
       - run: npm install -g pnpm@11.1.1
       - run: pnpm install --frozen-lockfile --ignore-scripts
+      - name: Select pinned Service source
+        id: service-contract
+        run: node --import tsx scripts/service-contract.ts github-output >> "$GITHUB_OUTPUT"
+      - name: Checkout pinned Service source
+        uses: actions/checkout@v7
+        with:
+          repository: amamiyakokoro/kokorobox-service
+          ref: ${{ steps.service-contract.outputs.tag }}
+          path: service-contract-source
+          fetch-tags: true
+          persist-credentials: false
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: service-contract-source/go.mod
+          cache-dependency-path: service-contract-source/go.sum
+      - name: Test Desktop and pinned Service API contract
+        run: bash scripts/check-service-contract.sh service-contract-source
       - run: pnpm test:release
       - run: pnpm test:macos-signing
       - run: pnpm test:macos-sparkle

@@ -6,6 +6,18 @@ import { KeyManager } from './key'
 import { serviceIpcPath } from '../utils/dirs'
 import { appendAppLog } from '../utils/log'
 import { shouldSkipServiceUnavailableFallback } from './fallback'
+import {
+  dnsLeasePayload,
+  legacyServiceMeta,
+  serviceContract,
+  validateCoreDesiredStatus,
+  validateServiceMeta,
+  type CoreDesiredStatus,
+  type ServiceCapabilities,
+  type ServiceMeta
+} from './contract'
+
+export type { ServiceCapabilities, ServiceMeta } from './contract'
 
 let serviceAxios: AxiosInstance | null = null
 let serviceMetaPromise: Promise<ServiceMeta> | null = null
@@ -39,52 +51,6 @@ export class ServiceAPIError extends Error {
   }
 }
 
-export interface ServiceCapabilities {
-  coreDesiredState: boolean
-  sysproxyLease: boolean
-  sysproxyEvents: boolean
-  dnsLease: boolean
-  processRouter: boolean
-}
-
-export interface ServiceMeta {
-  serviceVersion: string
-  apiVersion: number
-  capabilities: ServiceCapabilities
-}
-
-const legacyServiceMeta: ServiceMeta = {
-  serviceVersion: 'legacy',
-  apiVersion: 0,
-  capabilities: {
-    coreDesiredState: false,
-    sysproxyLease: false,
-    sysproxyEvents: false,
-    dnsLease: false,
-    processRouter: false
-  }
-}
-
-function validateServiceMeta(value: unknown): ServiceMeta {
-  if (!value || typeof value !== 'object') throw new Error('Invalid Service metadata')
-  const meta = value as Partial<ServiceMeta>
-  const capabilities = meta.capabilities
-  if (
-    typeof meta.serviceVersion !== 'string' ||
-    !Number.isInteger(meta.apiVersion) ||
-    (meta.apiVersion ?? 0) < 1 ||
-    !capabilities ||
-    typeof capabilities.coreDesiredState !== 'boolean' ||
-    typeof capabilities.sysproxyLease !== 'boolean' ||
-    typeof capabilities.sysproxyEvents !== 'boolean' ||
-    typeof capabilities.dnsLease !== 'boolean' ||
-    typeof capabilities.processRouter !== 'boolean'
-  ) {
-    throw new Error('Invalid Service metadata')
-  }
-  return meta as ServiceMeta
-}
-
 export function invalidateServiceMeta(): void {
   serviceMetaPromise = null
 }
@@ -92,7 +58,7 @@ export function invalidateServiceMeta(): void {
 export function getServiceMeta(): Promise<ServiceMeta> {
   if (serviceMetaPromise) return serviceMetaPromise
   serviceMetaPromise = getServiceAxios()
-    .get('/meta')
+    .request({ method: serviceContract.meta.method, url: serviceContract.meta.path })
     .then(validateServiceMeta)
     .catch((error: unknown) => {
       if (error instanceof ServiceAPIError && error.status === 404) return legacyServiceMeta
@@ -508,11 +474,14 @@ export const getCoreStatus = async (): Promise<Record<string, unknown>> => {
   return await instance.get('/core')
 }
 
-export const getCoreDesiredStatus = async (): Promise<
-  { desired_state: 'running' | 'stopped' } | undefined
-> => {
+export const getCoreDesiredStatus = async (): Promise<CoreDesiredStatus | undefined> => {
   if (!(await getServiceMeta()).capabilities.coreDesiredState) return undefined
-  return await getServiceAxios().get('/core/desired')
+  return validateCoreDesiredStatus(
+    await getServiceAxios().request({
+      method: serviceContract.coreDesired.method,
+      url: serviceContract.coreDesired.path
+    })
+  )
 }
 
 export interface ServiceProcessRouterRules {
@@ -1031,15 +1000,25 @@ export const setSysDns = async (device?: string, servers?: string[]): Promise<vo
 
 export const setDnsLease = async (servers: string[]): Promise<void> => {
   await requireServiceCapability('dnsLease')
-  await getServiceAxios().post('/network/dns/lease', { servers })
+  await getServiceAxios().request({
+    method: serviceContract.dnsLease.method,
+    url: serviceContract.dnsLease.path,
+    data: dnsLeasePayload(servers)
+  })
 }
 
 export const renewDnsLease = async (): Promise<void> => {
   await requireServiceCapability('dnsLease')
-  await getServiceAxios().post('/network/dns/renew')
+  await getServiceAxios().request({
+    method: serviceContract.dnsRenew.method,
+    url: serviceContract.dnsRenew.path
+  })
 }
 
 export const releaseDnsLease = async (): Promise<void> => {
   if (!(await getServiceMeta()).capabilities.dnsLease) return
-  await getServiceAxios().delete('/network/dns/lease')
+  await getServiceAxios().request({
+    method: serviceContract.dnsRelease.method,
+    url: serviceContract.dnsRelease.path
+  })
 }
