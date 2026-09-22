@@ -10,6 +10,8 @@ import {
   bootstrapMacOSServiceAuth,
   initServiceAPI,
   getServiceAxios,
+  getServiceMeta,
+  invalidateServiceMeta,
   ping,
   test,
   ServiceAPIError,
@@ -258,6 +260,7 @@ export function getAxios() {
 }
 
 async function waitForServiceReady(timeoutMs = 15000): Promise<void> {
+  invalidateServiceMeta()
   const startedAt = Date.now()
   let lastError: unknown = null
 
@@ -265,6 +268,7 @@ async function waitForServiceReady(timeoutMs = 15000): Promise<void> {
     try {
       await ping()
       await test()
+      await getServiceMeta()
       return
     } catch (error) {
       lastError = error
@@ -538,11 +542,14 @@ export function openServiceSystemSettings(): void {
 }
 
 export async function testServiceConnection(): Promise<boolean> {
+  invalidateServiceMeta()
   try {
     await test()
+    await getServiceMeta()
     await finalizeServiceAuthMigration()
     return true
   } catch {
+    invalidateServiceMeta()
     return false
   }
 }

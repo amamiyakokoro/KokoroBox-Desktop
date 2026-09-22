@@ -8,6 +8,7 @@ import { appendAppLog } from '../utils/log'
 import { shouldSkipServiceUnavailableFallback } from './fallback'
 
 let serviceAxios: AxiosInstance | null = null
+let serviceMetaPromise: Promise<ServiceMeta> | null = null
 let keyManager: KeyManager | null = null
 let serviceUnavailableFallbackHandler: ((reason: unknown) => Promise<void>) | null = null
 let serviceUnavailableFallbackTimer: NodeJS.Timeout | null = null
@@ -35,6 +36,77 @@ export class ServiceAPIError extends Error {
     this.name = 'ServiceAPIError'
     this.status = options?.status
     this.responseData = options?.responseData
+  }
+}
+
+export interface ServiceCapabilities {
+  coreDesiredState: boolean
+  sysproxyLease: boolean
+  sysproxyEvents: boolean
+  dnsLease: boolean
+  processRouter: boolean
+}
+
+export interface ServiceMeta {
+  serviceVersion: string
+  apiVersion: number
+  capabilities: ServiceCapabilities
+}
+
+const legacyServiceMeta: ServiceMeta = {
+  serviceVersion: 'legacy',
+  apiVersion: 0,
+  capabilities: {
+    coreDesiredState: false,
+    sysproxyLease: false,
+    sysproxyEvents: false,
+    dnsLease: false,
+    processRouter: false
+  }
+}
+
+function validateServiceMeta(value: unknown): ServiceMeta {
+  if (!value || typeof value !== 'object') throw new Error('Invalid Service metadata')
+  const meta = value as Partial<ServiceMeta>
+  const capabilities = meta.capabilities
+  if (
+    typeof meta.serviceVersion !== 'string' ||
+    !Number.isInteger(meta.apiVersion) ||
+    (meta.apiVersion ?? 0) < 1 ||
+    !capabilities ||
+    typeof capabilities.coreDesiredState !== 'boolean' ||
+    typeof capabilities.sysproxyLease !== 'boolean' ||
+    typeof capabilities.sysproxyEvents !== 'boolean' ||
+    typeof capabilities.dnsLease !== 'boolean' ||
+    typeof capabilities.processRouter !== 'boolean'
+  ) {
+    throw new Error('Invalid Service metadata')
+  }
+  return meta as ServiceMeta
+}
+
+export function invalidateServiceMeta(): void {
+  serviceMetaPromise = null
+}
+
+export function getServiceMeta(): Promise<ServiceMeta> {
+  if (serviceMetaPromise) return serviceMetaPromise
+  serviceMetaPromise = getServiceAxios()
+    .get('/meta')
+    .then(validateServiceMeta)
+    .catch((error: unknown) => {
+      if (error instanceof ServiceAPIError && error.status === 404) return legacyServiceMeta
+      serviceMetaPromise = null
+      throw error
+    })
+  return serviceMetaPromise
+}
+
+async function requireServiceCapability(capability: keyof ServiceCapabilities): Promise<void> {
+  if (!(await getServiceMeta()).capabilities[capability]) {
+    throw new ServiceAPIError(`Service does not support ${capability}; update KokoroBox Service`, {
+      status: 426
+    })
   }
 }
 
@@ -311,6 +383,7 @@ function handleServiceAxiosError(error: unknown): Promise<never> {
   const serviceError = createServiceAPIError(error)
 
   if (isServiceUnavailableError(error) || isServiceUnavailableError(serviceError)) {
+    invalidateServiceMeta()
     scheduleServiceUnavailableFallback(serviceError)
   }
 
@@ -319,6 +392,7 @@ function handleServiceAxiosError(error: unknown): Promise<never> {
 
 export const initServiceAPI = (km: KeyManager): void => {
   keyManager = km
+  invalidateServiceMeta()
 
   serviceAxios = axios.create({
     baseURL: 'http://localhost',
@@ -437,18 +511,8 @@ export const getCoreStatus = async (): Promise<Record<string, unknown>> => {
 export const getCoreDesiredStatus = async (): Promise<
   { desired_state: 'running' | 'stopped' } | undefined
 > => {
-  try {
-    return await getServiceAxios().get('/core/desired')
-  } catch (error) {
-    // Desired-state recovery was added after service-managed core launch. An
-    // older service can still start Mihomo normally, but does not advertise
-    // this optional endpoint. Treat only a missing route as unsupported;
-    // authentication, transport, and service failures must still propagate.
-    if (error instanceof ServiceAPIError && error.status === 404) {
-      return undefined
-    }
-    throw error
-  }
+  if (!(await getServiceMeta()).capabilities.coreDesiredState) return undefined
+  return await getServiceAxios().get('/core/desired')
 }
 
 export interface ServiceProcessRouterRules {
@@ -701,6 +765,7 @@ export function stopServiceCoreEventStream(): void {
 }
 
 export async function startServiceSysproxyEventStream(): Promise<void> {
+  if (!(await getServiceMeta()).capabilities.sysproxyEvents) return
   serviceSysproxyEventsManualClose = false
   if (
     serviceSysproxyEventsWs &&
@@ -946,6 +1011,7 @@ export const disableProxy = async (
 }
 
 export const renewSysProxyLease = async (): Promise<void> => {
+  if (!(await getServiceMeta()).capabilities.sysproxyLease) return
   const instance = getServiceAxios()
   await instance.post('/sysproxy/renew')
 }
@@ -956,13 +1022,16 @@ export const setSysDns = async (device?: string, servers?: string[]): Promise<vo
 }
 
 export const setDnsLease = async (servers: string[]): Promise<void> => {
+  await requireServiceCapability('dnsLease')
   await getServiceAxios().post('/network/dns/lease', { servers })
 }
 
 export const renewDnsLease = async (): Promise<void> => {
+  await requireServiceCapability('dnsLease')
   await getServiceAxios().post('/network/dns/renew')
 }
 
 export const releaseDnsLease = async (): Promise<void> => {
+  if (!(await getServiceMeta()).capabilities.dnsLease) return
   await getServiceAxios().delete('/network/dns/lease')
 }

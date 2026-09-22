@@ -308,9 +308,14 @@ test('service core startup tolerates pre-desired-state service releases', () => 
     apiSource.indexOf('export const getCoreDesiredStatus'),
     apiSource.indexOf('export interface ServiceProcessRouterRules')
   )
-  assert.match(desiredStatusSource, /error instanceof ServiceAPIError && error\.status === 404/)
+  assert.match(
+    apiSource,
+    /error instanceof ServiceAPIError && error\.status === 404\) return legacyServiceMeta/
+  )
+  assert.match(desiredStatusSource, /getServiceMeta\(\)\)\.capabilities\.coreDesiredState/)
   assert.match(desiredStatusSource, /return undefined/)
-  assert.match(desiredStatusSource, /throw error/)
+  assert.match(apiSource, /await requireServiceCapability\('dnsLease'\)/)
+  assert.match(apiSource, /capabilities\.sysproxyLease\) return/)
   assert.match(coreManagerSource, /desiredStatus\?\.desired_state === 'running'/)
   assert.match(coreManagerSource, /await startServiceCore\(serviceProfile\)/)
 })
