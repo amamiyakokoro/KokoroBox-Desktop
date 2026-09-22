@@ -18,6 +18,7 @@ export const messages: Readonly<Record<string, string>> = {
   'Allow selected Windows apps to connect to the local proxy.':
     '允许所选 Windows 应用连接到本地代理。',
   'Administrator access is required to change loopback exemptions.': '更改回环豁免需要管理员权限。',
+  'Loading...': '加载中...',
   'No UWP apps found': '未找到 UWP 应用',
   'Configure the system proxy and choose a proxy mode here. On Windows, manage UWP loopback exemptions here when an app cannot connect to the local proxy.':
     '在这里设置系统代理和代理模式。Windows 应用无法连接到本地代理时，可在这里管理 UWP 回环豁免。',

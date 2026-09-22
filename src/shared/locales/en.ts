@@ -19,6 +19,7 @@ export const messages: Readonly<Record<string, string>> = {
     'Allow selected Windows apps to connect to the local proxy.',
   'Administrator access is required to change loopback exemptions.':
     'Administrator access is required to change loopback exemptions.',
+  'Loading...': 'Loading...',
   'No UWP apps found': 'No UWP apps found',
   'Configure the system proxy and choose a proxy mode here. On Windows, manage UWP loopback exemptions here when an app cannot connect to the local proxy.':
     'Configure the system proxy and choose a proxy mode here. On Windows, manage UWP loopback exemptions here when an app cannot connect to the local proxy.',
