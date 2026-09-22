@@ -219,11 +219,15 @@ test('validates typed macOS identities and translates rules atomically', () => {
   const macConfiguration = buildMacAppRoutingConfiguration(config, true)
   assert.deepEqual(
     {
+      proxyAvailable: macConfiguration.proxyAvailable,
       proxyUdpDns: macConfiguration.proxyUdpDns,
-      dnsHost: macConfiguration.dnsHost,
-      dnsPort: macConfiguration.dnsPort
+      diagnosticLogging: macConfiguration.diagnosticLogging
     },
-    { proxyUdpDns: true, dnsHost: '127.0.0.1', dnsPort: 7892 }
+    { proxyAvailable: true, proxyUdpDns: true, diagnosticLogging: false }
+  )
+  assert.doesNotMatch(
+    JSON.stringify(macConfiguration),
+    /failClosed|proxyHost|proxyPort|dnsHost|dnsPort/
   )
   assert.deepEqual(macConfiguration.rules, [
     {
@@ -773,8 +777,12 @@ test('macOS routing packages the pinned data plane and uses the native control p
   assert.match(buildWorkflow, /pnpm prepare:macos-routing/)
   assert.doesNotMatch(buildWorkflow, /git -C .*ProxyBridge.* checkout --detach/)
   assert.doesNotMatch(buildWorkflow, /002864ff606ddeb4c6dce6dc1247596a3d317fc5/)
-  assert.match(macCoordinator, /import \{ invokeMacosApplicationRouting \} from 'kokorobox-native'/)
-  assert.match(macCoordinator, /invokeMacosApplicationRouting\(request\)/)
+  assert.match(macCoordinator, /applyMacosApplicationRouting/)
+  assert.match(macCoordinator, /getMacosApplicationRoutingStatus/)
+  assert.match(macCoordinator, /stopMacosApplicationRouting/)
+  assert.match(macCoordinator, /openMacosApplicationRoutingSettings/)
+  assert.doesNotMatch(macCoordinator, /invokeMacosApplicationRouting|JSON\.parse\(output\)/)
+  assert.doesNotMatch(macCoordinator, /command: 'apply'|command: 'status'|version: 1/)
   assert.match(macCoordinator, /providerHealthCheckIntervalMs = 15_000/)
   assert.match(macCoordinator, /providerHealthCheckDue/)
   assert.match(macCoordinator, /activePolicyKey = response\.state === 'running' \? policyKey : ''/)
@@ -845,7 +853,7 @@ test('macOS approval guidance returns promptly and remains visible across app re
 
   assert.match(page, /isPending=\{openingSettings\}/)
   assert.match(page, /notify\(error, \{ variant: 'danger' \}\)/)
-  assert.match(coordinator, /invokeBridge\('open-settings'\)/)
+  assert.match(coordinator, /openMacosApplicationRoutingSettings\(\)/)
   assert.match(coordinator, /needsUserApproval: response\.needsUserApproval/)
   assert.match(hook, /refreshAppRoutingStatus/)
   assert.match(page, /needsMacApproval/)
