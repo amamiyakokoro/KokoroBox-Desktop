@@ -78,6 +78,7 @@ jobs:
       - name: Test Desktop and pinned Service API contract
         run: bash scripts/check-service-contract.sh service-contract-source
       - run: pnpm test:release
+      - run: pnpm test:mihomo-alpha
       - run: pnpm test:macos-signing
       - run: pnpm test:macos-sparkle
       - run: pnpm test:kokoro

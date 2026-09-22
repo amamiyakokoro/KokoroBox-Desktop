@@ -10,6 +10,7 @@ import {
   kokoroboxServiceAsset,
   verifyKokoroBoxServiceChecksum
 } from './kokorobox-service.ts'
+import { selectMihomoAlphaAsset } from './mihomo-alpha-release.ts'
 
 const cwd = process.cwd()
 const TEMP_DIR = path.join(cwd, 'node_modules/.temp')
@@ -34,10 +35,8 @@ function getErrorMessage(error: unknown) {
 }
 
 /* ======= mihomo alpha======= */
-const MIHOMO_ALPHA_VERSION_URL =
-  'https://github.com/MetaCubeX/mihomo/releases/download/Prerelease-Alpha/version.txt'
-const MIHOMO_ALPHA_URL_PREFIX = `https://github.com/MetaCubeX/mihomo/releases/download/Prerelease-Alpha`
-let MIHOMO_ALPHA_VERSION: string
+const MIHOMO_ALPHA_RELEASE_URL =
+  'https://api.github.com/repos/MetaCubeX/mihomo/releases/tags/Prerelease-Alpha'
 
 const MIHOMO_ALPHA_MAP = {
   'win32-x64': 'mihomo-windows-amd64-v3',
@@ -47,23 +46,6 @@ const MIHOMO_ALPHA_MAP = {
   'darwin-arm64': 'mihomo-darwin-arm64',
   'linux-x64': 'mihomo-linux-amd64-v3',
   'linux-arm64': 'mihomo-linux-arm64'
-}
-
-// Fetch the latest alpha release version from the version.txt file
-async function getLatestAlphaVersion() {
-  try {
-    const response = await fetch(MIHOMO_ALPHA_VERSION_URL, {
-      method: 'GET'
-    })
-    if (!response.ok)
-      throw new Error(`Mihomo alpha version request failed: HTTP ${response.status}`)
-    const v = await response.text()
-    MIHOMO_ALPHA_VERSION = v.trim() // Trim to remove extra whitespaces
-    console.log(`Latest alpha version: ${MIHOMO_ALPHA_VERSION}`)
-  } catch (error) {
-    console.error('Error fetching latest alpha version:', getErrorMessage(error))
-    process.exit(1)
-  }
 }
 
 /* ======= mihomo release ======= */
@@ -117,20 +99,24 @@ if (!MIHOMO_ALPHA_MAP[`${platform}-${arch}`]) {
 /**
  * core info
  */
-function MihomoAlpha() {
+async function MihomoAlpha(): Promise<SidecarInfo> {
   const name = MIHOMO_ALPHA_MAP[`${platform}-${arch}`]
   const isWin = platform === 'win32'
-  const urlExt = isWin ? 'zip' : 'gz'
-  const downloadURL = `${MIHOMO_ALPHA_URL_PREFIX}/${name}-${MIHOMO_ALPHA_VERSION}.${urlExt}`
+  const extension = isWin ? 'zip' : 'gz'
+  const response = await fetch(MIHOMO_ALPHA_RELEASE_URL, {
+    headers: { Accept: 'application/vnd.github+json', 'Cache-Control': 'no-cache' }
+  })
+  if (!response.ok) throw new Error(`Mihomo Alpha release request failed: HTTP ${response.status}`)
+  const asset = selectMihomoAlphaAsset(await response.json(), name, extension)
+  console.log(`Latest alpha asset: ${asset.name}`)
   const exeFile = `${name}${isWin ? '.exe' : ''}`
-  const zipFile = `${name}-${MIHOMO_ALPHA_VERSION}.${urlExt}`
 
   return {
     name: 'mihomo-alpha',
     targetFile: `mihomo-alpha${isWin ? '.exe' : ''}`,
     exeFile,
-    zipFile,
-    downloadURL
+    zipFile: asset.name,
+    downloadURL: asset.browser_download_url
   }
 }
 
@@ -176,7 +162,7 @@ async function resolveSidecar(binInfo: SidecarInfo) {
 
   fs.mkdirSync(sidecarDir, { recursive: true })
   if (fs.existsSync(sidecarPath)) {
-    fs.rmSync(sidecarPath)
+    fs.rmSync(sidecarPath, { force: true })
   }
   const tempDir = path.join(TEMP_DIR, name)
   const tempZip = path.join(tempDir, zipFile)
@@ -406,7 +392,7 @@ type Task = {
 const tasks: Task[] = [
   {
     name: 'mihomo-alpha',
-    func: () => getLatestAlphaVersion().then(() => resolveSidecar(MihomoAlpha())),
+    func: async () => resolveSidecar(await MihomoAlpha()),
     retry: 5
   },
   {
