@@ -35,6 +35,7 @@ import { app } from 'electron'
 import { startSSIDCheck } from '../sys/ssid'
 import { startNetworkDetection } from '../core/manager'
 import { initKeyManager } from '../service/manager'
+import { getServiceMeta, isServiceConnectionError } from '../service/api'
 import { appendAppLog } from './log'
 import { configUriSchemes } from '../../shared/product-identity'
 
@@ -42,13 +43,7 @@ async function initDirs(): Promise<void> {
   if (!existsSync(dataDir())) {
     await mkdir(dataDir())
   }
-  const dirs = [
-    profilesDir(),
-    overrideDir(),
-    mihomoWorkDir(),
-    logDir(),
-    mihomoTestDir()
-  ]
+  const dirs = [profilesDir(), overrideDir(), mihomoWorkDir(), logDir(), mihomoTestDir()]
   await Promise.all(
     dirs.map(async (dir) => {
       if (!existsSync(dir)) {
@@ -321,6 +316,14 @@ export async function init(): Promise<AppConfig> {
   ])
 
   initDeeplink()
+  runBackgroundInitTask(
+    'service contract',
+    getServiceMeta()
+      .then(() => {})
+      .catch((error) => {
+        if (!isServiceConnectionError(error)) throw error
+      })
+  )
   startBackgroundInit(appConfig)
   return appConfig
 }
