@@ -77,21 +77,6 @@
   ${EndIf}
 !macroend
 
-!macro DisableSysProxy
-  StrCpy $R1 "$INSTDIR\resources\files\kokorobox-service.exe"
-  ${IfNot} ${FileExists} "$R1"
-    StrCpy $R1 "$INSTDIR\resources\files\sparkle-service.exe"
-  ${EndIf}
-  ${If} ${FileExists} "$R1"
-    DetailPrint "Disabling system proxy: $R1"
-    nsExec::ExecToLog '"$R1" sysproxy disable'
-    Pop $R2
-    ${If} $R2 != 0
-      DetailPrint "Disable system proxy exited with code $R2"
-    ${EndIf}
-  ${EndIf}
-!macroend
-
 !macro StopServiceIfRunning NAME
   !insertmacro QueryServiceState "${NAME}" $R1
 
@@ -102,7 +87,8 @@
     Pop $R2
     Pop $R3
     !insertmacro WaitServiceStopped "${NAME}"
-    !insertmacro DisableSysProxy
+    ; The service releases its own proxy lease during shutdown. A standalone
+    ; sysproxy disable here could overwrite a proxy changed by the user.
   ${EndIf}
 !macroend
 
