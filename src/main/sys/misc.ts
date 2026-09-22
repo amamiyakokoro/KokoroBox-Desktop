@@ -15,7 +15,7 @@ import {
   relaunchCurrentApplicationWithPrivilege,
   scanWindowsApplications,
   setLaunchAtLogin,
-  setupFirewallRules
+  ensureKokoroBoxCoreFirewall
 } from 'kokorobox-native'
 import {
   exePath,
@@ -187,11 +187,11 @@ export function openFile(type: 'profile' | 'override', id: string, ext?: 'yaml' 
 
 export async function setupFirewall(): Promise<void> {
   if (process.platform === 'win32') {
-    setupFirewallRules([
-      { name: 'mihomo', applicationPath: mihomoCorePath('mihomo') },
-      { name: 'mihomo-alpha', applicationPath: mihomoCorePath('mihomo-alpha') },
-      { name: 'KokoroBox', applicationPath: exePath() }
-    ])
+    ensureKokoroBoxCoreFirewall(
+      mihomoCorePath('mihomo'),
+      mihomoCorePath('mihomo-alpha'),
+      exePath()
+    )
   }
 }
 
