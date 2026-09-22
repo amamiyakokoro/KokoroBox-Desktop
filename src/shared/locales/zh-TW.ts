@@ -806,8 +806,8 @@ export const messages: Readonly<Record<string, string>> = {
     '開啟後，應用程式將減輕絕大部分動畫效果，可能會提高效能',
   'Disable GPU acceleration. This may improve stability but reduce performance':
     '開啟後，應用程式將停用 GPU 加速，可能會提高穩定性，但會降低效能',
-  'Apply the system proxy only to active network interfaces. Requires service mode':
-    '開啟後，系統代理僅會為目前活躍的網路介面設定，僅服務模式下生效',
+  'Apply the system proxy only to active network interfaces':
+    '開啟後，系統代理僅會為目前活躍的網路介面設定',
   'Running script': '開始執行指令碼',
   'Launch at startup': '開機自動啟動',
   'Force domain sniffing': '強制網域名稱嗅探',
@@ -858,7 +858,6 @@ export const messages: Readonly<Record<string, string>> = {
   'Tray icon': '系統匣圖示',
   'Show proxy details in tray menu': '系統匣選單顯示節點資訊',
   'Tray menu latency layout': '系統匣選單節點延遲顯示方式',
-  'Run command': '執行命令',
   'Execution log': '執行日誌',
   'Report an issue': '報告問題',
   'Custom user agent': '指定 UA',
@@ -1030,8 +1029,7 @@ export const messages: Readonly<Record<string, string>> = {
   'Check for updates': '檢查更新',
   Detecting: '檢測中',
   'Detecting...': '檢測中...',
-  'Restore the system proxy automatically if it is changed. Requires service mode':
-    '檢測到系統代理被修改後自動恢復，僅服務模式下生效',
+  'Restore the system proxy automatically if it is changed': '檢測到系統代理被修改後自動恢復',
   'Welcome to KokoroBox': '歡迎使用 KokoroBox',
   'Searching for a system core...': '正在查詢系統核心...',
   'Reading configuration...': '正在讀取設定...',
@@ -1264,9 +1262,6 @@ export const messages: Readonly<Record<string, string>> = {
   'Remember expanded proxy groups': '記住代理組展開狀態',
   'Use this icon in the tray. PNG, JPG and WebP images are cropped before saving.':
     '設定後系統匣會使用此圖示。PNG、JPG、WebP 會先裁切後儲存。',
-  'Configuration method': '設定方式',
-  'Run command applies proxy settings directly. Service mode uses KokoroBox Service for privileged and persistent changes.':
-    '執行命令會直接套用代理設定；服務模式則透過 KokoroBox Service 執行需要權限且持續生效的變更。',
   'Access key': '存取金鑰',
   'Certificate fingerprint': '憑證指紋',
   'Certificate fingerprint mismatch': '憑證指紋不匹配',

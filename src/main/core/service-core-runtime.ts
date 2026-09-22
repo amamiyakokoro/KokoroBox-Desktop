@@ -159,7 +159,7 @@ export function createServiceCoreRuntime(options: ServiceCoreRuntimeOptions) {
     const appConfig = await getAppConfig()
     const { sysProxy, corePermissionMode = 'elevated', autoSetDNSMode = 'none' } = appConfig
     const useServiceCore = corePermissionMode === 'service'
-    const useServiceSysProxy = sysProxy?.settingMode === 'service'
+    const useServiceSysProxy = sysProxy.enable
     const useServiceDNS = autoSetDNSMode !== 'none'
 
     if (!useServiceCore && !useServiceSysProxy && !useServiceDNS) {

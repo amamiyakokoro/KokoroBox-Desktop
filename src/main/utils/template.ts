@@ -59,7 +59,6 @@ export const defaultConfig: AppConfig = {
   sysProxy: {
     enable: false,
     mode: 'manual',
-    settingMode: 'service',
     terminalProxy: false,
     guard: false,
     guardNotify: false

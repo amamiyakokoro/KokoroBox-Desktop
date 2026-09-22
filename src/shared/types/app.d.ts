@@ -24,7 +24,6 @@ interface ISysProxyConfig {
   mode?: SysProxyMode
   bypass?: string[]
   pacScript?: string
-  settingMode?: 'exec' | 'service'
   terminalProxy?: boolean
   guard?: boolean
   guardNotify?: boolean

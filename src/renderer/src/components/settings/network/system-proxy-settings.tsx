@@ -125,7 +125,6 @@ const Sysproxy: React.FC<Props> = ({ embedded = false }) => {
     bypass: sysProxy.bypass ?? defaultBypass,
     mode: sysProxy.mode ?? 'manual',
     pacScript: sysProxy.pacScript ?? defaultPacScript,
-    settingMode: sysProxy.settingMode ?? 'exec',
     terminalProxy: sysProxy.terminalProxy ?? false,
     guard: sysProxy.guard ?? false,
     guardNotify: sysProxy.guardNotify ?? false
@@ -138,7 +137,6 @@ const Sysproxy: React.FC<Props> = ({ embedded = false }) => {
       bypass: nextSysProxy.bypass ?? defaultBypass,
       mode: nextSysProxy.mode ?? 'manual',
       pacScript: nextSysProxy.pacScript ?? defaultPacScript,
-      settingMode: nextSysProxy.settingMode ?? 'exec',
       terminalProxy: nextSysProxy.terminalProxy ?? false,
       guard: nextSysProxy.guard ?? false,
       guardNotify: nextSysProxy.guardNotify ?? false
@@ -156,8 +154,8 @@ const Sysproxy: React.FC<Props> = ({ embedded = false }) => {
     setChanged(true)
   }
 
-  const normalizeServiceModeValues = async (): Promise<typeof values> => {
-    if (values.settingMode !== 'service') {
+  const validateServiceAvailability = async (): Promise<typeof values> => {
+    if (!values.enable) {
       return values
     }
 
@@ -172,7 +170,7 @@ const Sysproxy: React.FC<Props> = ({ embedded = false }) => {
   const onSave = async (): Promise<boolean> => {
     const saved = await runSave(async () => {
       // check valid TODO
-      const nextValues = await normalizeServiceModeValues()
+      const nextValues = await validateServiceAvailability()
       let nextConfig =
         (await patchAppConfig({ sysProxy: nextValues })) ?? (await getAppConfig(true))
       if (nextConfig.sysProxy.enable) {
@@ -286,31 +284,6 @@ const Sysproxy: React.FC<Props> = ({ embedded = false }) => {
               </Button>
             </SettingItem>
           )}
-          <SettingItem
-            title={tr('Configuration method')}
-            help={tr(
-              'Run command applies proxy settings directly. Service mode uses KokoroBox Service for privileged and persistent changes.'
-            )}
-            divider={platform === 'linux'}
-          >
-            <KokoSegmentedControl
-              ariaLabel={tr('Configuration method')}
-              selectedKey={values.settingMode}
-              options={[
-                { id: 'service', label: tr('Service mode') },
-                { id: 'exec', label: tr('Run command') }
-              ]}
-              onChange={(key) => {
-                const settingMode = key as 'exec' | 'service'
-                setValues({
-                  ...values,
-                  settingMode,
-                  guard: settingMode === 'service' ? values.guard : false,
-                  guardNotify: settingMode === 'service' ? values.guardNotify : false
-                })
-              }}
-            />
-          </SettingItem>
           {platform === 'linux' && (
             <SettingItem
               title={tr('Terminal proxy')}
@@ -333,20 +306,60 @@ const Sysproxy: React.FC<Props> = ({ embedded = false }) => {
               </Switch>
             </SettingItem>
           )}
-          {platform !== 'linux' && values.settingMode === 'service' && (
-            <SettingSubgroup label={tr('Configuration method')}>
+          {platform !== 'linux' && (
+            <SettingItem
+              title={tr('Active interfaces only')}
+              help={tr('Apply the system proxy only to active network interfaces')}
+            >
+              <Switch
+                size="sm"
+                isSelected={onlyActiveDevice}
+                onChange={(v) => {
+                  patchAppConfig({ onlyActiveDevice: v })
+                }}
+              >
+                <Switch.Content>
+                  <Switch.Control>
+                    <Switch.Thumb />
+                  </Switch.Control>
+                </Switch.Content>
+              </Switch>
+            </SettingItem>
+          )}
+        </FeatureSettingsSection>
+
+        <FeatureSettingsSection title={tr('Reliability and exclusions')}>
+          <SettingItem
+            title={tr('System proxy watchdog')}
+            help={tr('Restore the system proxy automatically if it is changed')}
+            divider={!values.guard && values.mode === 'manual'}
+          >
+            <Switch
+              size="sm"
+              isSelected={values.guard}
+              onChange={(v) => {
+                setValues({ ...values, guard: v, guardNotify: v ? values.guardNotify : false })
+              }}
+            >
+              <Switch.Content>
+                <Switch.Control>
+                  <Switch.Thumb />
+                </Switch.Control>
+              </Switch.Content>
+            </Switch>
+          </SettingItem>
+          {values.guard && (
+            <SettingSubgroup label={tr('System proxy watchdog')}>
               <SettingItem
-                title={tr('Active interfaces only')}
-                help={tr(
-                  'Apply the system proxy only to active network interfaces. Requires service mode'
-                )}
+                title={tr('Watchdog notifications')}
+                help={tr('Notify when system proxy restoration succeeds or fails')}
               >
                 <Switch
                   size="sm"
-                  isSelected={onlyActiveDevice}
-                  isDisabled={!values.settingMode || values.settingMode !== 'service'}
+                  isSelected={values.guardNotify}
+                  isDisabled={!values.guard}
                   onChange={(v) => {
-                    patchAppConfig({ onlyActiveDevice: v })
+                    setValues({ ...values, guardNotify: v })
                   }}
                 >
                   <Switch.Content>
@@ -358,87 +371,36 @@ const Sysproxy: React.FC<Props> = ({ embedded = false }) => {
               </SettingItem>
             </SettingSubgroup>
           )}
-        </FeatureSettingsSection>
-
-        {(values.settingMode === 'service' || values.mode === 'manual') && (
-          <FeatureSettingsSection title={tr('Reliability and exclusions')}>
-            {values.settingMode === 'service' && (
-              <SettingItem
-                title={tr('System proxy watchdog')}
-                help={tr(
-                  'Restore the system proxy automatically if it is changed. Requires service mode'
-                )}
-                divider={!values.guard && values.mode === 'manual'}
-              >
-                <Switch
-                  size="sm"
-                  isSelected={values.guard}
-                  onChange={(v) => {
-                    setValues({ ...values, guard: v, guardNotify: v ? values.guardNotify : false })
-                  }}
-                >
-                  <Switch.Content>
-                    <Switch.Control>
-                      <Switch.Thumb />
-                    </Switch.Control>
-                  </Switch.Content>
-                </Switch>
-              </SettingItem>
-            )}
-            {values.settingMode === 'service' && values.guard && (
-              <SettingSubgroup label={tr('System proxy watchdog')}>
-                <SettingItem
-                  title={tr('Watchdog notifications')}
-                  help={tr('Notify when system proxy restoration succeeds or fails')}
-                >
-                  <Switch
-                    size="sm"
-                    isSelected={values.guardNotify}
-                    isDisabled={!values.guard}
-                    onChange={(v) => {
-                      setValues({ ...values, guardNotify: v })
-                    }}
-                  >
-                    <Switch.Content>
-                      <Switch.Control>
-                        <Switch.Thumb />
-                      </Switch.Control>
-                    </Switch.Content>
-                  </Switch>
-                </SettingItem>
-              </SettingSubgroup>
-            )}
-            {values.mode === 'manual' && (
-              <SettingItem title={tr('Proxy bypass list')} align="start">
-                <div className="flex w-full min-w-0 flex-col gap-2">
-                  <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
-                    <span className="text-xs leading-5 text-muted tabular-nums">
-                      {tr('{0} items', [values.bypass.length])}
-                    </span>
-                    <div className="flex shrink-0 flex-wrap items-center justify-end gap-1">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onPress={() => {
-                          setValues({
-                            ...values,
-                            bypass: Array.from(new Set([...defaultBypass, ...values.bypass]))
-                          })
-                        }}
-                      >
-                        {tr('Add defaults')}
-                      </Button>
-                      <Button size="sm" variant="secondary" onPress={() => setOpenEditor(true)}>
-                        {tr('Edit')}
-                      </Button>
-                    </div>
+          {values.mode === 'manual' && (
+            <SettingItem title={tr('Proxy bypass list')} align="start">
+              <div className="flex w-full min-w-0 flex-col gap-2">
+                <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
+                  <span className="text-xs leading-5 text-muted tabular-nums">
+                    {tr('{0} items', [values.bypass.length])}
+                  </span>
+                  <div className="flex shrink-0 flex-wrap items-center justify-end gap-1">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onPress={() => {
+                        setValues({
+                          ...values,
+                          bypass: Array.from(new Set([...defaultBypass, ...values.bypass]))
+                        })
+                      }}
+                    >
+                      {tr('Add defaults')}
+                    </Button>
+                    <Button size="sm" variant="secondary" onPress={() => setOpenEditor(true)}>
+                      {tr('Edit')}
+                    </Button>
                   </div>
-                  <BypassListPreview items={values.bypass} />
                 </div>
-              </SettingItem>
-            )}
-          </FeatureSettingsSection>
-        )}
+                <BypassListPreview items={values.bypass} />
+              </div>
+            </SettingItem>
+          )}
+        </FeatureSettingsSection>
       </FeatureSettingsLayout>
     </>
   )

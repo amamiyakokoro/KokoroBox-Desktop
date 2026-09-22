@@ -5,7 +5,7 @@ import { app, dialog, shell, BrowserWindow, Menu, type IpcMainEvent } from 'elec
 import { getAppConfig } from './config'
 import { quitWithoutCore, startCore, stopCore } from './core/manager'
 import { stopNetworkDetection } from './core/network'
-import { disableSysProxySync, triggerSysProxy } from './sys/sysproxy'
+import { triggerSysProxy } from './sys/sysproxy'
 import icon from '../../resources/icon.png?asset'
 import { createTray } from './resolve/tray'
 import { createApplicationMenu } from './resolve/menu'
@@ -594,7 +594,6 @@ export async function createWindow(appConfig?: AppConfig): Promise<void> {
 
     mainWindow.on('session-end', async () => {
       stopNetworkDetection()
-      disableSysProxySync(true)
       await triggerSysProxy(false, false, true)
       await stopCore()
     })

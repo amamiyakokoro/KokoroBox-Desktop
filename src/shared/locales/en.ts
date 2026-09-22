@@ -832,8 +832,8 @@ export const messages: Readonly<Record<string, string>> = {
     'Reduce most animations, which may improve performance',
   'Disable GPU acceleration. This may improve stability but reduce performance':
     'Disable GPU acceleration. This may improve stability but reduce performance',
-  'Apply the system proxy only to active network interfaces. Requires service mode':
-    'Apply the system proxy only to active network interfaces. Requires service mode',
+  'Apply the system proxy only to active network interfaces':
+    'Apply the system proxy only to active network interfaces',
   'Running script': 'Running script',
   'Launch at startup': 'Launch at startup',
   'Force domain sniffing': 'Force domain sniffing',
@@ -884,7 +884,6 @@ export const messages: Readonly<Record<string, string>> = {
   'Tray icon': 'Tray icon',
   'Show proxy details in tray menu': 'Show proxy details in tray menu',
   'Tray menu latency layout': 'Tray menu latency layout',
-  'Run command': 'Run command',
   'Execution log': 'Execution log',
   'Report an issue': 'Report an issue',
   'Custom user agent': 'Custom user agent',
@@ -1061,8 +1060,8 @@ export const messages: Readonly<Record<string, string>> = {
   'Check for updates': 'Check for updates',
   Detecting: 'Detecting',
   'Detecting...': 'Detecting...',
-  'Restore the system proxy automatically if it is changed. Requires service mode':
-    'Restore the system proxy automatically if it is changed. Requires service mode',
+  'Restore the system proxy automatically if it is changed':
+    'Restore the system proxy automatically if it is changed',
   'Welcome to KokoroBox': 'Welcome to KokoroBox',
   'Searching for a system core...': 'Searching for a system core...',
   'Reading configuration...': 'Reading configuration...',
@@ -1298,9 +1297,6 @@ export const messages: Readonly<Record<string, string>> = {
   'Remember expanded proxy groups': 'Remember expanded proxy groups',
   'Use this icon in the tray. PNG, JPG and WebP images are cropped before saving.':
     'Use this icon in the tray. PNG, JPG and WebP images are cropped before saving.',
-  'Configuration method': 'Configuration method',
-  'Run command applies proxy settings directly. Service mode uses KokoroBox Service for privileged and persistent changes.':
-    'Run command applies proxy settings directly. Service mode uses KokoroBox Service for privileged and persistent changes.',
   'Access key': 'Access key',
   'Certificate fingerprint': 'Certificate fingerprint',
   'Certificate fingerprint mismatch': 'Certificate fingerprint mismatch',

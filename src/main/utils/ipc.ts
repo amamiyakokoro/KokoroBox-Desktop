@@ -184,7 +184,7 @@ async function startTrafficPresenterAndRestoreTray(): Promise<void> {
 }
 
 async function patchAppConfigWithServiceSync(patch: Partial<AppConfig>): Promise<AppConfig> {
-  const nextConfig = await patchAppConfig(await normalizeServiceModePatch(patch))
+  const nextConfig = await patchAppConfig(await validateSystemProxyServicePatch(patch))
 
   if (
     process.platform === 'darwin' &&
@@ -234,8 +234,10 @@ async function patchAppConfigWithServiceSync(patch: Partial<AppConfig>): Promise
   return nextConfig
 }
 
-async function normalizeServiceModePatch(patch: Partial<AppConfig>): Promise<Partial<AppConfig>> {
-  if (patch.sysProxy?.settingMode !== 'service') {
+async function validateSystemProxyServicePatch(
+  patch: Partial<AppConfig>
+): Promise<Partial<AppConfig>> {
+  if (patch.sysProxy?.enable !== true) {
     return patch
   }
 

@@ -239,6 +239,16 @@ async function migration(): Promise<void> {
     }
   }
 
+  // System proxy mutations are owned exclusively by KokoroBox Service. Remove
+  // the legacy backend selector so old `exec` configurations cannot retain a
+  // second authority after upgrading.
+  if ('settingMode' in (appConfig.sysProxy as object)) {
+    appConfigPatch.sysProxy = {
+      ...(appConfigPatch.sysProxy || {}),
+      settingMode: undefined
+    } as AppConfig['sysProxy']
+  }
+
   if (Array.isArray(appConfig.siderOrder) && !appConfig.siderOrder.includes('kokoro')) {
     const siderOrder = [...appConfig.siderOrder]
     const legacySubStoreIndex = siderOrder.indexOf('substore')

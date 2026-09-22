@@ -177,9 +177,6 @@ export const getSettingsSchema = (): SettingsCategorySchema[] => {
         entry('system-proxy-pac', tr('PAC script'), tr('System proxy settings'), {
           panel: 'system-proxy'
         }),
-        entry('system-proxy-method', tr('Configuration method'), tr('System proxy settings'), {
-          panel: 'system-proxy'
-        }),
         entry('system-proxy-terminal', tr('Terminal proxy'), tr('System proxy settings'), {
           panel: 'system-proxy',
           platforms: ['linux']

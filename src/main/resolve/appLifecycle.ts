@@ -1,7 +1,7 @@
 import { app, ipcMain, powerMonitor, type BrowserWindow, type IpcMainEvent } from 'electron'
 import { stopCore } from '../core/manager'
 import { stopNetworkDetection } from '../core/network'
-import { disableSysProxySync, triggerSysProxy } from '../sys/sysproxy'
+import { triggerSysProxy } from '../sys/sysproxy'
 import { appendAppLog } from '../utils/log'
 import { stopAppRouting } from '../app-routing/manager'
 import { stopTrafficPresenter } from './trafficPresenter'
@@ -18,14 +18,12 @@ let notQuitDialog = false
 let lastQuitAttempt = 0
 let quitPromise: Promise<void> | undefined
 let quitConfirmationPromise: Promise<boolean> | undefined
-let asyncSysProxyCleanupSucceeded = false
 
 // Cleanup normally completes almost immediately. Keep a bounded fallback for
 // unavailable services and OS extensions so an explicit quit can never leave
 // the Electron process waiting indefinitely.
 const cleanupTaskTimeoutMs = 8_000
 const responsiveCleanupTaskTimeoutMs = 3_000
-const exitCommandTimeoutMs = 2_000
 const exitServiceRequestTimeoutMs = 2_500
 const quitConfirmationTimeoutMs = 30_000
 
@@ -79,13 +77,6 @@ export function initAppQuitLifecycle(context: AppQuitLifecycleContext): void {
     await cleanupBeforeExit(true)
     context.exitApp()
   })
-
-  app.on('will-quit', () => {
-    // Windows keeps a synchronous fallback because system proxy state must not
-    // survive the app. Avoid paying for the same command twice after the
-    // asynchronous cleanup already completed successfully.
-    if (!asyncSysProxyCleanupSucceeded) disableSysProxySync()
-  })
 }
 
 async function quit(context: AppQuitLifecycleContext): Promise<void> {
@@ -108,7 +99,6 @@ async function cleanupBeforeExit(useRegistry: boolean, responsiveQuit = false): 
   const responsiveTimeoutMs = responsiveQuit ? responsiveCleanupTaskTimeoutMs : cleanupTaskTimeoutMs
   const sysProxyOptions = responsiveQuit
     ? {
-        commandTimeoutMs: exitCommandTimeoutMs,
         serviceRequestTimeoutMs: exitServiceRequestTimeoutMs
       }
     : undefined
@@ -117,9 +107,7 @@ async function cleanupBeforeExit(useRegistry: boolean, responsiveQuit = false): 
     'disable system proxy',
     async () => triggerSysProxy(false, false, useRegistry, sysProxyOptions),
     responsiveTimeoutMs
-  ).then((succeeded) => {
-    asyncSysProxyCleanupSucceeded = succeeded
-  })
+  )
 
   await Promise.all([
     runCleanupTask('stop application routing', stopAppRouting, responsiveTimeoutMs),

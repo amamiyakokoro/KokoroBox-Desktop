@@ -1,10 +1,6 @@
 import { tr } from '../../shared/i18n'
 import { getAppConfig, getControledMihomoConfig } from '../config'
-import { getAppConfigSync } from '../config/app'
 import { pacPort, startPacServer, stopPacServer } from '../resolve/server'
-import { promisify } from 'util'
-import { execFile, execFileSync } from 'child_process'
-import { servicePath } from '../utils/dirs'
 import { net } from 'electron'
 import { isAxiosError } from 'axios'
 import {
@@ -31,12 +27,7 @@ let lastSysproxyGuardNotificationKey = ''
 let unsubscribeSysproxyGuardEvents: (() => void) | null = null
 
 export interface TriggerSysProxyOptions {
-  commandTimeoutMs?: number
   serviceRequestTimeoutMs?: number
-}
-
-function registryArgs(useRegistry: boolean): string[] {
-  return process.platform === 'win32' && useRegistry ? ['--use-registry'] : []
 }
 
 function stopSysproxyLeaseRenewal(): void {
@@ -72,7 +63,7 @@ function startSysproxyLeaseRenewal(onlyActiveDevice: boolean, useRegistry: boole
       ) {
         try {
           const { sysProxy } = await getAppConfig()
-          if (sysProxy.enable && sysProxy.settingMode === 'service') {
+          if (sysProxy.enable) {
             await setSysProxy(onlyActiveDevice, useRegistry)
             restored = true
           }
@@ -177,23 +168,30 @@ async function setSysProxy(onlyActiveDevice: boolean, useRegistry = false): Prom
     ]
   await startPacServer()
   const { sysProxy } = await getAppConfig()
-  const {
-    mode,
-    host,
-    bypass = defaultBypass,
-    settingMode = 'exec',
-    terminalProxy = false
-  } = sysProxy
-  const guard = settingMode === 'service' && !!sysProxy.guard
+  const { mode, host, bypass = defaultBypass, terminalProxy = false } = sysProxy
+  const guard = !!sysProxy.guard
   const guardNotify = guard && !!sysProxy.guardNotify
   const { 'mixed-port': port = 7890 } = await getControledMihomoConfig()
-  const execFilePromise = promisify(execFile)
 
   switch (mode || 'manual') {
     case 'auto': {
-      if (settingMode === 'service') {
-        await setPac(
-          `http://${host || '127.0.0.1'}:${pacPort}/pac`,
+      await setPac(
+        `http://${host || '127.0.0.1'}:${pacPort}/pac`,
+        '',
+        onlyActiveDevice,
+        useRegistry,
+        guard
+      )
+      updateSysproxyGuardEventStream(guardNotify)
+      startSysproxyLeaseRenewal(onlyActiveDevice, useRegistry)
+      break
+    }
+
+    case 'manual': {
+      if (port != 0) {
+        await setProxy(
+          `${host || '127.0.0.1'}:${port}`,
+          bypass.join(','),
           '',
           onlyActiveDevice,
           useRegistry,
@@ -201,54 +199,6 @@ async function setSysProxy(onlyActiveDevice: boolean, useRegistry = false): Prom
         )
         updateSysproxyGuardEventStream(guardNotify)
         startSysproxyLeaseRenewal(onlyActiveDevice, useRegistry)
-      } else {
-        stopSysproxyLeaseRenewal()
-        updateSysproxyGuardEventStream(false)
-        await execFilePromise(
-          servicePath(),
-          [
-            'sysproxy',
-            'pac',
-            '--url',
-            `http://${host || '127.0.0.1'}:${pacPort}/pac`,
-            ...registryArgs(useRegistry)
-          ],
-          { windowsHide: process.platform === 'win32' }
-        )
-      }
-      break
-    }
-
-    case 'manual': {
-      if (port != 0) {
-        if (settingMode === 'service') {
-          await setProxy(
-            `${host || '127.0.0.1'}:${port}`,
-            bypass.join(','),
-            '',
-            onlyActiveDevice,
-            useRegistry,
-            guard
-          )
-          updateSysproxyGuardEventStream(guardNotify)
-          startSysproxyLeaseRenewal(onlyActiveDevice, useRegistry)
-        } else {
-          stopSysproxyLeaseRenewal()
-          updateSysproxyGuardEventStream(false)
-          await execFilePromise(
-            servicePath(),
-            [
-              'sysproxy',
-              'proxy',
-              '--server',
-              `${host || '127.0.0.1'}:${port}`,
-              '--bypass',
-              process.platform === 'win32' ? bypass.join(';') : bypass.join(','),
-              ...registryArgs(useRegistry)
-            ],
-            { windowsHide: process.platform === 'win32' }
-          )
-        }
       } else {
         updateSysproxyGuardEventStream(false)
         stopSysproxyLeaseRenewal()
@@ -274,21 +224,9 @@ async function disableSysProxy(
   stopSysproxyLeaseRenewal()
   await stopPacServer()
   updateSysproxyGuardEventStream(false)
-  const { sysProxy } = await getAppConfig()
-  const { settingMode = 'exec' } = sysProxy
-  const execFilePromise = promisify(execFile)
-  const disableWithExec = (): Promise<unknown> =>
-    execFilePromise(servicePath(), ['sysproxy', 'disable', ...registryArgs(useRegistry)], {
-      windowsHide: process.platform === 'win32',
-      ...(options.commandTimeoutMs ? { timeout: options.commandTimeoutMs } : {})
-    })
 
   try {
-    if (settingMode === 'service') {
-      await disableProxy('', onlyActiveDevice, useRegistry, options.serviceRequestTimeoutMs)
-    } else {
-      await disableWithExec()
-    }
+    await disableProxy('', onlyActiveDevice, useRegistry, options.serviceRequestTimeoutMs)
   } finally {
     await disableTerminalProxy()
   }
@@ -341,18 +279,4 @@ async function shouldNotifySysproxyGuardEvent(event: ServiceSysproxyEvent): Prom
   if (key === lastSysproxyGuardNotificationKey) return false
   lastSysproxyGuardNotificationKey = key
   return true
-}
-
-export function disableSysProxySync(useRegistry = false): void {
-  if (process.platform !== 'win32') return
-  if (getAppConfigSync().sysProxy?.settingMode === 'service') return
-
-  try {
-    execFileSync(servicePath(), ['sysproxy', 'disable', ...registryArgs(useRegistry)], {
-      stdio: 'ignore',
-      timeout: 3000
-    })
-  } catch {
-    // ignore
-  }
 }

@@ -93,7 +93,6 @@ test('application quit cannot wait indefinitely for cleanup or renderer confirma
 
   assert.match(source, /cleanupTaskTimeoutMs = 8_000/)
   assert.match(source, /responsiveCleanupTaskTimeoutMs = 3_000/)
-  assert.match(source, /exitCommandTimeoutMs = 2_000/)
   assert.match(source, /exitServiceRequestTimeoutMs = 2_500/)
   assert.match(source, /Promise\.race\(\[/)
   assert.match(source, /runCleanupTask\('stop application routing'/)
@@ -102,27 +101,36 @@ test('application quit cannot wait indefinitely for cleanup or renderer confirma
   assert.match(source, /runCleanupTask\('stop traffic presenter'/)
   assert.match(source, /mainWindow\.hide\(\)/)
   assert.match(source, /app\.dock\?\.hide\(\)/)
-  assert.match(source, /if \(!asyncSysProxyCleanupSucceeded\) disableSysProxySync\(\)/)
+  assert.doesNotMatch(source, /disableSysProxySync|asyncSysProxyCleanupSucceeded/)
   assert.doesNotMatch(startup, /function exitApp\(\): void \{\s*disableSysProxySync\(\)/)
-  assert.match(sysproxy, /timeout: options\.commandTimeoutMs/)
+  assert.match(sysproxy, /options\.serviceRequestTimeoutMs/)
+  assert.doesNotMatch(sysproxy, /commandTimeoutMs/)
   assert.match(source, /quitConfirmationTimeoutMs = 30_000/)
   assert.match(source, /webContents\.once\('destroyed', handleRendererUnavailable\)/)
   assert.match(source, /if \(quitPromise\) return quitPromise/)
 })
 
-test('service-mode system proxy cleanup never falls back to direct CLI mutation', () => {
+test('system proxy uses KokoroBox Service as its only mutation authority', () => {
   const sysproxy = readFileSync(resolve('src/main/sys/sysproxy.ts'), 'utf8')
   const coreRuntime = readFileSync(resolve('src/main/core/service-core-runtime.ts'), 'utf8')
   const ipc = readFileSync(resolve('src/main/utils/ipc.ts'), 'utf8')
+  const init = readFileSync(resolve('src/main/utils/init.ts'), 'utf8')
+  const template = readFileSync(resolve('src/main/utils/template.ts'), 'utf8')
+  const types = readFileSync(resolve('src/shared/types/app.d.ts'), 'utf8')
   const settings = readFileSync(
     resolve('src/renderer/src/components/settings/network/system-proxy-settings.tsx'),
     'utf8'
   )
 
-  assert.match(sysproxy, /if \(settingMode === 'service'\) \{\s*await disableProxy\(/)
-  assert.match(sysproxy, /getAppConfigSync\(\)\.sysProxy\?\.settingMode === 'service'\) return/)
-  assert.doesNotMatch(sysproxy, /fallback to exec/)
-  assert.doesNotMatch(coreRuntime, /settingMode: 'exec'/)
-  assert.doesNotMatch(ipc, /settingMode: 'exec'/)
-  assert.doesNotMatch(settings, /settingMode: 'exec' as const/)
+  assert.match(sysproxy, /await setPac\(/)
+  assert.match(sysproxy, /await setProxy\(/)
+  assert.match(sysproxy, /await disableProxy\(/)
+  assert.doesNotMatch(sysproxy, /child_process|servicePath|settingMode|registryArgs/)
+  assert.match(coreRuntime, /const useServiceSysProxy = sysProxy\.enable/)
+  assert.match(ipc, /patch\.sysProxy\?\.enable !== true/)
+  assert.match(init, /'settingMode' in \(appConfig\.sysProxy as object\)/)
+  assert.match(init, /settingMode: undefined/)
+  assert.doesNotMatch(template, /settingMode/)
+  assert.doesNotMatch(types, /settingMode/)
+  assert.doesNotMatch(settings, /settingMode|Configuration method|Run command/)
 })

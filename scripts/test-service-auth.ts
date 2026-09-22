@@ -113,10 +113,7 @@ test('Windows service probes hide consoles and privileged actions use constraine
   assert.equal(existsSync(resolve('src/main/utils/elevation.ts')), false)
   assert.match(autoRunSource, /getLaunchAtLogin\(\{\s*identifier: name/)
   assert.doesNotMatch(autoRunSource, /schtasks\.exe|child_process/)
-  assert.equal(
-    (sysproxySource.match(/windowsHide: process\.platform === 'win32'/g) || []).length,
-    3
-  )
+  assert.doesNotMatch(sysproxySource, /child_process|servicePath|windowsHide/)
   assert.match(dirsSource, /findExecutables\(/)
   assert.doesNotMatch(dirsSource, /execFileSync\('where\.exe'/)
   assert.doesNotMatch(dirsSource, /execSync\(`which/)
