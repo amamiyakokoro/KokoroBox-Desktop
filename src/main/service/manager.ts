@@ -494,22 +494,24 @@ export async function serviceStatus(): Promise<
   const execPath = servicePath()
   let commandState: string | undefined
 
-  // Newer native builds query Windows SCM or the system-wide Linux systemd
-  // manager directly. The fixed-argument CLI remains for older native builds
-  // and Linux machines using another init system.
+  // Native owns the platform-specific OS status probe. Keep the Service CLI
+  // fallback for older native builds and Linux machines using another init.
   const nativeStatus = native as typeof native & {
     getWindowsServiceStatus?: () => 'running' | 'stopped' | 'paused' | 'not-installed' | 'unknown'
-    getLinuxServiceStatus?: () => 'running' | 'stopped' | 'not-installed' | 'unknown'
+    getLinuxServiceStatus?: () => Promise<'running' | 'stopped' | 'not-installed' | 'unknown'>
+    getMacosServiceProcessStatus?: () => Promise<'running' | 'stopped' | 'not-installed' | 'unknown'>
   }
   const queryNativeStatus =
     process.platform === 'win32'
       ? nativeStatus.getWindowsServiceStatus
       : process.platform === 'linux'
         ? nativeStatus.getLinuxServiceStatus
-        : undefined
+        : process.platform === 'darwin'
+          ? nativeStatus.getMacosServiceProcessStatus
+          : undefined
   if (typeof queryNativeStatus === 'function') {
     try {
-      commandState = queryNativeStatus()
+      commandState = await queryNativeStatus()
     } catch {
       // The native OS probe is unavailable; retain the Service CLI fallback.
     }
