@@ -22,6 +22,7 @@ import {
 import { appendAppLog } from '../utils/log'
 import { systemCoreOnlyBuild } from '../../shared/build-flags'
 import { showNativeMacOSUpdate } from './macosNativeUpdater'
+import * as native from 'kokorobox-native'
 
 let downloadCancelToken: CancelTokenSource | null = null
 const WINDOWS_INSTALLER_MIN_TEMP_SPACE_BYTES = 1024 * 1024 * 1024
@@ -127,6 +128,27 @@ async function stopServiceForPortableUpdate(): Promise<void> {
 
   await appendAppLog(`[Updater]: stop service before portable update, status: ${status}\n`)
   await stopService()
+}
+
+async function stagePortableUpdater(): Promise<{ path: string; argumentsPrefix: string[] }> {
+  const updaterPath = path.join(dataDir(), 'kokorobox-portable-update.exe')
+  const resolveNativeUpdater = (
+    native as typeof native & { getPortableUpdaterPath?: () => string }
+  ).getPortableUpdaterPath
+  if (typeof resolveNativeUpdater === 'function') {
+    try {
+      await copyFile(resolveNativeUpdater(), updaterPath)
+      return { path: updaterPath, argumentsPrefix: [] }
+    } catch (error) {
+      await appendAppLog(`[Updater]: native portable updater unavailable, ${error}\n`)
+    }
+  }
+
+  // Older native packages have no updater sidecar. Keep their bundled Service
+  // command until the new native package reaches all installed builds.
+  await promisify(execFile)(servicePath(), ['portable-update', '--help'], { windowsHide: true })
+  await copyFile(servicePath(), updaterPath)
+  return { path: updaterPath, argumentsPrefix: ['portable-update'] }
 }
 
 async function ensureWindowsInstallerTempSpace(): Promise<void> {
@@ -282,19 +304,15 @@ export async function downloadAndInstallUpdate(
       appUpdateInstalling = true
     }
     if (!systemCoreOnlyBuild && file.endsWith('.7z')) {
-      await promisify(execFile)(servicePath(), ['portable-update', '--help'], {
-        windowsHide: true
-      })
+      const updater = await stagePortableUpdater()
+      await copyFile(path.join(resourcesFilesDir(), '7za.exe'), path.join(dataDir(), '7za.exe'))
       await pauseSysProxy()
       await pauseServiceFallbackForAppUpdate()
       await stopServiceForPortableUpdate()
-      await copyFile(path.join(resourcesFilesDir(), '7za.exe'), path.join(dataDir(), '7za.exe'))
-      const updaterPath = path.join(dataDir(), 'kokorobox-portable-update.exe')
-      await copyFile(servicePath(), updaterPath)
-      const updater = spawn(
-        updaterPath,
+      const updaterProcess = spawn(
+        updater.path,
         [
-          'portable-update',
+          ...updater.argumentsPrefix,
           '--parent-pid',
           String(process.pid),
           '--archive',
@@ -307,10 +325,10 @@ export async function downloadAndInstallUpdate(
         { detached: true, stdio: 'ignore', windowsHide: true }
       )
       await new Promise<void>((resolve, reject) => {
-        updater.once('spawn', resolve)
-        updater.once('error', reject)
+        updaterProcess.once('spawn', resolve)
+        updaterProcess.once('error', reject)
       })
-      updater.unref()
+      updaterProcess.unref()
       appUpdateInstalling = true
     }
     if (appUpdateInstalling) {
