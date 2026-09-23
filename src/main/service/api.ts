@@ -10,6 +10,7 @@ import {
   dnsLeasePayload,
   legacyServiceMeta,
   serviceContract,
+  shouldAttemptSysproxyLeaseRenewal,
   validateCoreDesiredStatus,
   validateServiceMeta,
   type CoreDesiredStatus,
@@ -1019,12 +1020,19 @@ export const disableProxy = async (
 }
 
 export const renewSysProxyLease = async (): Promise<void> => {
-  if (!(await getServiceMeta()).capabilities.sysproxyLease) return
+  const meta = await getServiceMeta()
+  if (!shouldAttemptSysproxyLeaseRenewal(meta)) return
   const instance = getServiceAxios()
-  await instance.request({
-    method: serviceContract.sysproxyRenew.method,
-    url: serviceContract.sysproxyRenew.path
-  })
+  try {
+    await instance.request({
+      method: serviceContract.sysproxyRenew.method,
+      url: serviceContract.sysproxyRenew.path
+    })
+  } catch (error) {
+    // A truly old Service has neither /meta nor /sysproxy/renew, and no lease.
+    if (meta.apiVersion === 0 && error instanceof ServiceAPIError && error.status === 404) return
+    throw error
+  }
 }
 
 export const setSysDns = async (device?: string, servers?: string[]): Promise<void> => {

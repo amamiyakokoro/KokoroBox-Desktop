@@ -54,6 +54,12 @@ export const legacyServiceMeta: ServiceMeta = {
   }
 }
 
+// Some pre-/meta Service releases already own a timed system-proxy lease.
+// Probe /sysproxy/renew for those releases instead of letting the lease expire.
+export function shouldAttemptSysproxyLeaseRenewal(meta: ServiceMeta): boolean {
+  return meta.apiVersion === 0 || meta.capabilities.sysproxyLease
+}
+
 export function validateServiceMeta(value: unknown): ServiceMeta {
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
     throw new Error('Invalid Service metadata')

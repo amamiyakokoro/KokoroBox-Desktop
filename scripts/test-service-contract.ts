@@ -1,6 +1,35 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { supportedServiceApiVersion, validateServiceMeta } from '../src/main/service/contract'
+import {
+  legacyServiceMeta,
+  shouldAttemptSysproxyLeaseRenewal,
+  supportedServiceApiVersion,
+  validateServiceMeta
+} from '../src/main/service/contract'
+
+test('legacy Service probes system-proxy renewal even without /meta', () => {
+  assert.equal(shouldAttemptSysproxyLeaseRenewal(legacyServiceMeta), true)
+  assert.equal(
+    shouldAttemptSysproxyLeaseRenewal(
+      validateServiceMeta({
+        serviceVersion: '0.5.0',
+        apiVersion: supportedServiceApiVersion,
+        capabilities: { sysproxyLease: false }
+      })
+    ),
+    false
+  )
+  assert.equal(
+    shouldAttemptSysproxyLeaseRenewal(
+      validateServiceMeta({
+        serviceVersion: '0.6.0',
+        apiVersion: supportedServiceApiVersion,
+        capabilities: { sysproxyLease: true }
+      })
+    ),
+    true
+  )
+})
 
 test('older Service metadata treats missing capabilities as unsupported', () => {
   const meta = validateServiceMeta({
