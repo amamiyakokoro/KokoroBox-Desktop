@@ -152,18 +152,19 @@ const UwpLoopbackModal: React.FC<Props> = ({ onClose }) => {
             <Modal.Header className="app-drag">
               <Modal.Heading>{tr('UWP loopback')}</Modal.Heading>
             </Modal.Header>
-            <Modal.Body>
+            <Modal.Body className="gap-3">
               <p className="text-sm text-muted">
                 {tr('Allow selected Windows apps to connect to the local proxy.')}
               </p>
               {!isAdmin && (
-                <div className="flex items-center justify-between gap-3 rounded-lg bg-surface-secondary p-3 text-sm">
-                  <span>
+                <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 text-sm">
+                  <span className="min-w-0 flex-1 basis-56 text-muted">
                     {tr('Administrator access is required to change loopback exemptions.')}
                   </span>
                   <Button
                     size="sm"
                     variant="secondary"
+                    className="shrink-0"
                     onPress={() =>
                       void relaunchWindowsElevated().catch((cause) =>
                         notify(cause, { variant: 'danger' })
