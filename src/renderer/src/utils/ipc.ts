@@ -534,6 +534,10 @@ export async function setUwpLoopbackExemption(id: string, enabled: boolean): Pro
   )
 }
 
+export async function canManageUwpLoopback(): Promise<boolean> {
+  return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('canManageUwpLoopback'))
+}
+
 export async function setupFirewall(): Promise<void> {
   return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('setupFirewall'))
 }

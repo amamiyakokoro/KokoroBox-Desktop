@@ -93,7 +93,8 @@ import {
   setNativeTheme,
   setupFirewall
 } from '../sys/misc'
-import { listUwpLoopbackApps, setUwpLoopbackExemption } from 'kokorobox-native'
+import { listUwpLoopbackApps } from 'kokorobox-native'
+import { canManageUwpLoopback, setUwpLoopbackExemption } from '../sys/uwp-loopback'
 import {
   serviceStatus,
   installService,
@@ -454,6 +455,7 @@ export function registerIpcMainHandlers(): void {
   ipcMain.handle('getVersion', () => app.getVersion())
   ipcMain.handle('platform', () => process.platform)
   ipcMain.handle('listUwpLoopbackApps', ipcErrorWrapper(listUwpLoopbackApps))
+  ipcMain.handle('canManageUwpLoopback', ipcErrorWrapper(canManageUwpLoopback))
   ipcMain.handle('setUwpLoopbackExemption', ipcErrorWrapper(setUwpLoopbackExemption))
   ipcMain.handle('setupFirewall', ipcErrorWrapper(setupFirewall))
   ipcMain.handle('getInterfaces', getInterfaces)

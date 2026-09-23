@@ -69,6 +69,23 @@ export function getServiceMeta(): Promise<ServiceMeta> {
   return serviceMetaPromise
 }
 
+export async function supportsServiceUwpLoopback(): Promise<boolean> {
+  try {
+    return (await getServiceMeta()).capabilities.windowsUwpLoopback
+  } catch {
+    return false
+  }
+}
+
+export async function setServiceUwpLoopbackExemption(id: string, enabled: boolean): Promise<void> {
+  await requireServiceCapability('windowsUwpLoopback')
+  await getServiceAxios().request({
+    method: serviceContract.uwpLoopback.method,
+    url: serviceContract.uwpLoopback.path,
+    data: { id, enabled }
+  })
+}
+
 async function requireServiceCapability(capability: keyof ServiceCapabilities): Promise<void> {
   if (!(await getServiceMeta()).capabilities[capability]) {
     throw new ServiceAPIError(`Service does not support ${capability}; update KokoroBox Service`, {

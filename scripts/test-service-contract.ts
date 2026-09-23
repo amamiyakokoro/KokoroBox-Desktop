@@ -44,8 +44,26 @@ test('older Service metadata treats missing capabilities as unsupported', () => 
     sysproxyEvents: false,
     sysproxyNetworkReconcile: false,
     dnsLease: false,
-    processRouter: false
+    processRouter: false,
+    windowsUwpLoopback: false
   })
+})
+
+test('UWP loopback mutation is enabled only by an explicit Service capability', () => {
+  assert.equal(legacyServiceMeta.capabilities.windowsUwpLoopback, false)
+  const current = validateServiceMeta({
+    serviceVersion: '0.8.0',
+    apiVersion: supportedServiceApiVersion,
+    capabilities: { windowsUwpLoopback: true }
+  })
+  assert.equal(current.capabilities.windowsUwpLoopback, true)
+  assert.throws(() =>
+    validateServiceMeta({
+      serviceVersion: '0.8.0',
+      apiVersion: supportedServiceApiVersion,
+      capabilities: { windowsUwpLoopback: 'yes' }
+    })
+  )
 })
 
 test('Service network reconciliation is opt-in and legacy metadata keeps Desktop recovery', () => {

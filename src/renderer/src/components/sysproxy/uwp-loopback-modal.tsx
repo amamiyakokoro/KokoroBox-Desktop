@@ -3,7 +3,7 @@ import type { UwpLoopbackApp, UwpLoopbackAppCategory } from '../../../../shared/
 import { Button, Modal, Switch } from '@heroui/react'
 import { KokoSearchField } from '@renderer/components/base/koko-search-field'
 import {
-  checkElevateTask,
+  canManageUwpLoopback,
   listUwpLoopbackApps,
   relaunchWindowsElevated,
   setUwpLoopbackExemption
@@ -19,11 +19,11 @@ interface Props {
 interface AppRowProps {
   app: UwpLoopbackApp
   busyId: string | null
-  isAdmin: boolean
+  canManage: boolean
   onChange: (app: UwpLoopbackApp, enabled: boolean) => void
 }
 
-const AppRow: React.FC<AppRowProps> = ({ app, busyId, isAdmin, onChange }) => (
+const AppRow: React.FC<AppRowProps> = ({ app, busyId, canManage, onChange }) => (
   <div className="flex items-center justify-between gap-3 border-b border-separator/60 py-2 last:border-b-0">
     <div className="min-w-0">
       <div className="truncate text-sm font-medium" title={app.description || app.displayName}>
@@ -36,7 +36,7 @@ const AppRow: React.FC<AppRowProps> = ({ app, busyId, isAdmin, onChange }) => (
     <Switch
       size="sm"
       isSelected={app.enabled}
-      isDisabled={!isAdmin || busyId !== null}
+      isDisabled={!canManage || busyId !== null}
       onChange={(value) => onChange(app, value)}
       aria-label={app.displayName}
     >
@@ -52,12 +52,12 @@ const AppRow: React.FC<AppRowProps> = ({ app, busyId, isAdmin, onChange }) => (
 interface AppSectionProps {
   apps: UwpLoopbackApp[]
   busyId: string | null
-  isAdmin: boolean
+  canManage: boolean
   title: string
   onChange: (app: UwpLoopbackApp, enabled: boolean) => void
 }
 
-const AppSection: React.FC<AppSectionProps> = ({ apps, busyId, isAdmin, title, onChange }) => {
+const AppSection: React.FC<AppSectionProps> = ({ apps, busyId, canManage, title, onChange }) => {
   if (!apps.length) return null
   return (
     <section aria-label={title}>
@@ -65,7 +65,7 @@ const AppSection: React.FC<AppSectionProps> = ({ apps, busyId, isAdmin, title, o
         {title}
       </h3>
       {apps.map((app) => (
-        <AppRow key={app.id} app={app} busyId={busyId} isAdmin={isAdmin} onChange={onChange} />
+        <AppRow key={app.id} app={app} busyId={busyId} canManage={canManage} onChange={onChange} />
       ))}
     </section>
   )
@@ -78,7 +78,7 @@ const UwpLoopbackModal: React.FC<Props> = ({ onClose }) => {
   const [loading, setLoading] = useState(true)
   const [busyId, setBusyId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [isAdmin, setIsAdmin] = useState(true)
+  const [canManage, setCanManage] = useState(false)
 
   useEffect(() => {
     let active = true
@@ -92,9 +92,9 @@ const UwpLoopbackModal: React.FC<Props> = ({ onClose }) => {
       .finally(() => {
         if (active) setLoading(false)
       })
-    checkElevateTask()
+    canManageUwpLoopback()
       .then((value) => {
-        if (active) setIsAdmin(value)
+        if (active) setCanManage(value)
       })
       .catch(() => {})
     return () => {
@@ -156,7 +156,7 @@ const UwpLoopbackModal: React.FC<Props> = ({ onClose }) => {
               <p className="text-sm text-muted">
                 {tr('Allow selected Windows apps to connect to the local proxy.')}
               </p>
-              {!isAdmin && (
+              {!canManage && (
                 <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 text-sm">
                   <span className="min-w-0 flex-1 basis-56 text-muted">
                     {tr('Administrator access is required to change loopback exemptions.')}
@@ -197,14 +197,14 @@ const UwpLoopbackModal: React.FC<Props> = ({ onClose }) => {
                   <AppSection
                     apps={groupedApps.user}
                     busyId={busyId}
-                    isAdmin={isAdmin}
+                    canManage={canManage}
                     title={tr('Apps')}
                     onChange={(app, enabled) => void setExemption(app, enabled)}
                   />
                   <AppSection
                     apps={groupedApps.microsoft}
                     busyId={busyId}
-                    isAdmin={isAdmin}
+                    canManage={canManage}
                     title={tr('Microsoft apps')}
                     onChange={(app, enabled) => void setExemption(app, enabled)}
                   />
@@ -234,7 +234,7 @@ const UwpLoopbackModal: React.FC<Props> = ({ onClose }) => {
                             key={app.id}
                             app={app}
                             busyId={busyId}
-                            isAdmin={isAdmin}
+                            canManage={canManage}
                             onChange={(item, enabled) => void setExemption(item, enabled)}
                           />
                         ))}

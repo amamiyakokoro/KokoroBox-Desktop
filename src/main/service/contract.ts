@@ -15,7 +15,8 @@ export const serviceContract = {
   processRouterRules: { method: 'PUT', path: '/process-router/rules' },
   processRouterStatus: { method: 'GET', path: '/process-router/status' },
   processRouterFirewallRepair: { method: 'POST', path: '/process-router/firewall/repair' },
-  processRouterCleanup: { method: 'POST', path: '/process-router/cleanup' }
+  processRouterCleanup: { method: 'POST', path: '/process-router/cleanup' },
+  uwpLoopback: { method: 'PUT', path: '/sys/uwp-loopback' }
 } as const
 
 export interface ServiceCapabilities {
@@ -25,6 +26,7 @@ export interface ServiceCapabilities {
   sysproxyNetworkReconcile: boolean
   dnsLease: boolean
   processRouter: boolean
+  windowsUwpLoopback: boolean
 }
 
 export interface ServiceMeta {
@@ -41,7 +43,8 @@ const capabilityNames = [
   'sysproxyEvents',
   'sysproxyNetworkReconcile',
   'dnsLease',
-  'processRouter'
+  'processRouter',
+  'windowsUwpLoopback'
 ] as const satisfies readonly (keyof ServiceCapabilities)[]
 
 export const legacyServiceMeta: ServiceMeta = {
@@ -53,7 +56,8 @@ export const legacyServiceMeta: ServiceMeta = {
     sysproxyEvents: false,
     sysproxyNetworkReconcile: false,
     dnsLease: false,
-    processRouter: false
+    processRouter: false,
+    windowsUwpLoopback: false
   }
 }
 
