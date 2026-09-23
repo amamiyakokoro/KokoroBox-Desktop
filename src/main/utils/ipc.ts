@@ -9,6 +9,13 @@ import {
   setGistAgeIdentity
 } from '../config/gist-age-identity'
 import { app, ipcMain } from 'electron'
+import { getHomePublicIp } from '../resolve/public-ip'
+import {
+  chooseHomeBackground,
+  clearHomeBackground,
+  getHomeBackgroundDataUrl
+} from '../resolve/home-background'
+import { startHomeNetworkObservation, stopHomeNetworkObservation } from '../resolve/home-network'
 import {
   mihomoChangeProxy,
   mihomoCloseConnections,
@@ -270,6 +277,12 @@ async function validateSystemProxyServicePatch(
 
 export function registerIpcMainHandlers(): void {
   registerAppRoutingIpcHandlers()
+  ipcMain.handle('getHomePublicIp', ipcErrorWrapper(getHomePublicIp))
+  ipcMain.handle('chooseHomeBackground', ipcErrorWrapper(chooseHomeBackground))
+  ipcMain.handle('clearHomeBackground', ipcErrorWrapper(clearHomeBackground))
+  ipcMain.handle('getHomeBackgroundDataUrl', ipcErrorWrapper(getHomeBackgroundDataUrl))
+  ipcMain.handle('startHomeNetworkObservation', () => startHomeNetworkObservation())
+  ipcMain.handle('stopHomeNetworkObservation', () => stopHomeNetworkObservation())
   ipcMain.handle('mihomoVersion', ipcErrorWrapper(mihomoVersion))
   ipcMain.handle('mihomoConfig', ipcErrorWrapper(mihomoConfig))
   ipcMain.handle('mihomoCloseConnection', (_e, id) => ipcErrorWrapper(mihomoCloseConnection)(id))

@@ -13,6 +13,7 @@ const LogsPage = createPreloadablePage(() => import('@renderer/pages/logs'))
 const ConnectionsPage = createPreloadablePage(() => import('@renderer/pages/connections'))
 const ResourcesPage = createPreloadablePage(() => import('@renderer/pages/resources'))
 const AppRoutingPage = createPreloadablePage(() => import('@renderer/pages/app-routing'))
+const HomePage = createPreloadablePage(() => import('@renderer/pages/home'))
 
 export const Override = OverridePage.Page
 export const Proxies = ProxiesPage.Page
@@ -24,11 +25,13 @@ export const Logs = LogsPage.Page
 export const Connections = ConnectionsPage.Page
 export const Resources = ResourcesPage.Page
 export const AppRouting = AppRoutingPage.Page
+export const Home = HomePage.Page
 
-void ProxiesPage.preload().catch(() => {})
+void HomePage.preload().catch(() => {})
 
 const remainingPageLoaders: Array<() => Promise<unknown>> = [
   preloadSettingsSidebar,
+  ProxiesPage.preload,
   SettingsPage.preload,
   ProfilesPage.preload,
   KokoroPage.preload,

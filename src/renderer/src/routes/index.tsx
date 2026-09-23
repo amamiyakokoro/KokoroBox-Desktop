@@ -11,7 +11,8 @@ import {
   Resources,
   Rules,
   Settings,
-  AppRouting
+  AppRouting,
+  Home
 } from './route-pages'
 
 export { useDeferredRoutePreload } from './route-pages'
@@ -90,7 +91,7 @@ const routes = [
   },
   {
     index: true,
-    element: <Navigate to="/proxies" />
+    element: startupRoute(<Home />)
   }
 ]
 

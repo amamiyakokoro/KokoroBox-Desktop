@@ -89,6 +89,7 @@ jobs:
       - run: pnpm test:app-routing
       - run: pnpm test:dns
       - run: pnpm test:settings
+      - run: pnpm test:home
       - run: pnpm test:service-auth
       - run: pnpm test:service-contract
       - run: pnpm test:system-proxy

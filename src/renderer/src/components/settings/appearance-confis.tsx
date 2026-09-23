@@ -21,6 +21,7 @@ import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { platform } from '@renderer/utils/init'
 import { useTheme } from 'next-themes'
 import TrayIconCropModal from './tray-icon-crop-modal'
+import HomeBackgroundSettings from './home-background-settings'
 
 const rasterTrayIconPattern = /\.(png|jpe?g|webp)$/i
 
@@ -374,6 +375,7 @@ const AppearanceConfig: React.FC<AppearanceConfigProps> = ({
           </SettingItem>
         </SettingCard>
       )}
+      {showInterface && <HomeBackgroundSettings />}
     </>
   )
 }

@@ -57,10 +57,7 @@ test('Mihomo settings stage edits and restart the core once from the page', () =
     'src/renderer/src/components/settings/network/mihomo-settings.tsx',
     'utf8'
   )
-  const portSetting = readFileSync(
-    'src/renderer/src/components/mihomo/port-setting.tsx',
-    'utf8'
-  )
+  const portSetting = readFileSync('src/renderer/src/components/mihomo/port-setting.tsx', 'utf8')
   const stagedComponents = [
     'src/renderer/src/components/mihomo/port-setting.tsx',
     'src/renderer/src/components/mihomo/controller-setting.tsx',
@@ -163,7 +160,10 @@ test('application settings keep one clear navigation hierarchy in compact deskto
   assert.match(settings, /settings-context-inner[^"\n]*w-full[^"\n]*max-w-\[960px\][^"\n]*px-6/)
   assert.match(settings, /settings-content-inner w-full max-w-\[960px\] px-6/)
   assert.doesNotMatch(settings, /settings-(?:context|content)-inner mx-auto/)
-  assert.match(settings, /<main ref=\{contentRef\} className="settings-page min-h-full min-w-0 pb-4">/)
+  assert.match(
+    settings,
+    /<main ref=\{contentRef\} className="settings-page min-h-full min-w-0 pb-4">/
+  )
   assert.match(settings, /scrollTo\(\{ top: 0, left: 0 \}\)/)
   assert.doesNotMatch(settings, /<ScrollShadow|<KokoSearchField|className="settings-navigation/)
   assert.match(settings, /<KokoTabs/)
@@ -238,7 +238,7 @@ test('Application Settings swaps sidebar content without changing its width', ()
   assert.match(app, /<SettingsSidebar leaveSettings=\{leaveSettings\} \/>/)
   assert.match(app, /settingsFocusMode \? \([\s\S]*<SettingsSidebar[\s\S]*<SiderCards iconOnly \/>/)
   assert.match(app, /settingsFocusMode \? \([\s\S]*<SettingsSidebar[\s\S]*<SiderCards \/>/)
-  assert.match(app, /const lastNonSettingsRouteRef = useRef\('\/proxies'\)/)
+  assert.match(app, /const lastNonSettingsRouteRef = useRef\('\/'\)/)
   assert.match(
     app,
     /if \(!isSettingsFocusRoute\(location\.pathname\)\) \{[\s\S]*lastNonSettingsRouteRef\.current = `\$\{location\.pathname\}\$\{location\.search\}`/
@@ -271,10 +271,7 @@ test('Application Settings swaps sidebar content without changing its width', ()
 test('Settings sidebar preloads without importing the panel component tree', () => {
   const app = readFileSync('src/renderer/src/App.tsx', 'utf8')
   const routes = readFileSync('src/renderer/src/routes/route-pages.tsx', 'utf8')
-  const sidebar = readFileSync(
-    'src/renderer/src/components/settings/settings-sidebar.tsx',
-    'utf8'
-  )
+  const sidebar = readFileSync('src/renderer/src/components/settings/settings-sidebar.tsx', 'utf8')
   const loader = readFileSync(
     'src/renderer/src/components/settings/settings-sidebar-loader.ts',
     'utf8'
@@ -283,10 +280,7 @@ test('Settings sidebar preloads without importing the panel component tree', () 
     'src/renderer/src/components/settings/settings-sidebar-skeleton.tsx',
     'utf8'
   )
-  const schema = readFileSync(
-    'src/renderer/src/components/settings/settings-schema.ts',
-    'utf8'
-  )
+  const schema = readFileSync('src/renderer/src/components/settings/settings-schema.ts', 'utf8')
   const registry = readFileSync(
     'src/renderer/src/components/settings/settings-registry.tsx',
     'utf8'
@@ -317,10 +311,7 @@ test('Settings sidebar preloads without importing the panel component tree', () 
 })
 
 test('Mihomo settings belong to Core while legacy Network links normalize canonically', () => {
-  const schema = readFileSync(
-    'src/renderer/src/components/settings/settings-schema.ts',
-    'utf8'
-  )
+  const schema = readFileSync('src/renderer/src/components/settings/settings-schema.ts', 'utf8')
   const registry = readFileSync(
     'src/renderer/src/components/settings/settings-registry.tsx',
     'utf8'
@@ -589,10 +580,7 @@ test('conditional settings use the shared dependent subgroup hierarchy', () => {
     'src/renderer/src/components/settings/network/system-proxy-settings.tsx',
     'utf8'
   )
-  const dns = readFileSync(
-    'src/renderer/src/components/settings/network/dns-settings.tsx',
-    'utf8'
-  )
+  const dns = readFileSync('src/renderer/src/components/settings/network/dns-settings.tsx', 'utf8')
 
   assert.match(behavior, /autoLightweight && \([\s\S]*<SettingSubgroup/)
   assert.match(behavior, /networkDetection && \([\s\S]*<SettingSubgroup/)
@@ -1023,10 +1011,16 @@ test('Phase 9 card-heavy surfaces use native v3 anatomy and semantic interaction
   assert.doesNotMatch(appRule, /<Card/)
   assert.match(appRule, /<InputGroup variant="secondary"/)
   assert.equal(appRule.match(/density="compact"/g)?.length, 4)
-  assert.match(appRule, /className="app-routing-rule-row__trailing"[\s\S]*<Switch[\s\S]*<KokoActionMenu/)
+  assert.match(
+    appRule,
+    /className="app-routing-rule-row__trailing"[\s\S]*<Switch[\s\S]*<KokoActionMenu/
+  )
   assert.match(appRule, /data-has-identifier-kind=\{hasIdentifierKindSelector\}/)
   assert.match(styles, /\.app-routing-rule-list,[\s\S]*background: var\(--surface\)/)
-  assert.match(styles, /\.app-routing-rule-row__layout[\s\S]*'icon identity trailing'[\s\S]*'icon controls controls'/)
+  assert.match(
+    styles,
+    /\.app-routing-rule-row__layout[\s\S]*'icon identity trailing'[\s\S]*'icon controls controls'/
+  )
   assert.match(styles, /@container app-routing-rule-row \(min-width: 48rem\)/)
   assert.match(styles, /grid-template-areas: 'icon identity controls trailing'/)
 })
@@ -1213,10 +1207,7 @@ test('desktop sidebar separates controls, live status and navigation', () => {
   assert.match(surfaces, /siderItemTitleClassName[\s\S]*font-semibold leading-5/)
   assert.match(surfaces, /siderItemSubtitleClassName[\s\S]*h-4[\s\S]*leading-4/)
   assert.match(surfaces, /flex min-w-0 flex-1 flex-col justify-center gap-0\.5/)
-  assert.match(
-    surfaces,
-    /allowTextWrap \? 'min-h-\[2\.375rem\] py-0\.5' : 'h-\[2\.375rem\]'/
-  )
+  assert.match(surfaces, /allowTextWrap \? 'min-h-\[2\.375rem\] py-0\.5' : 'h-\[2\.375rem\]'/)
   assert.match(surfaces, /allowTextWrap \? 'line-clamp-2 break-words' : 'h-5 truncate'/)
   assert.match(surfaces, /allowTextWrap && 'h-auto min-h-4 flex-wrap overflow-visible'/)
   assert.match(surfaces, /data-sider-text-stack/)
@@ -1459,15 +1450,24 @@ test('desktop sidebar separates controls, live status and navigation', () => {
   assert.doesNotMatch(rules, /status=|statusTone=/)
   assert.match(rules, /if \(iconOnly\)[\s\S]*<SiderIconButton/)
   assert.doesNotMatch(surfaces, /endMetadata|data-sider-end-metadata/)
-  assert.match(navItem, /\{trailing && \([\s\S]*onPointerDown=\{\(event\) => event\.stopPropagation\(\)\}/)
+  assert.match(
+    navItem,
+    /\{trailing && \([\s\S]*onPointerDown=\{\(event\) => event\.stopPropagation\(\)\}/
+  )
   for (const navigationCard of [rules, overrideNav, logNav]) {
     assert.match(navigationCard, /<SiderNavItem/)
   }
   assert.match(overrideNav, /useOverrideConfig\(\)/)
-  assert.match(overrideNav, /description=\{tr\('\{0\} overrides', \[overrideConfig\?\.items\?\.length \?\? 0\]\)\}/)
+  assert.match(
+    overrideNav,
+    /description=\{tr\('\{0\} overrides', \[overrideConfig\?\.items\?\.length \?\? 0\]\)\}/
+  )
   assert.match(logNav, /useControledMihomoConfig\(\)/)
   assert.match(logNav, /realtimeLogLevel \?\? controledMihomoConfig\?\.\['log-level'\] \?\? 'info'/)
-  assert.match(logNav, /description=\{`\$\{getLogLevelLabel\(logLevel\)\} · \$\{tr\('Real time'\)\}`\}/)
+  assert.match(
+    logNav,
+    /description=\{`\$\{getLogLevelLabel\(logLevel\)\} · \$\{tr\('Real time'\)\}`\}/
+  )
   assert.doesNotMatch(logNav, /getMihomoLogs|subscribeMihomoLogs/)
   assert.match(profile, /<SiderStatusCard/)
   assert.match(profile, /title=\{tr\('Subscription'\)\}/)
@@ -1508,14 +1508,8 @@ test('desktop sidebar separates controls, live status and navigation', () => {
   assert.match(statusCard, /description \|\| status/)
   assert.match(connections, /metadata=\{/)
   assert.doesNotMatch(connections, /description=\{|status=\{/)
-  assert.match(
-    connections,
-    /grid-cols-\[minmax\(0,1fr\)_minmax\(0,1fr\)\][^"\n]*tabular-nums/
-  )
-  assert.equal(
-    connections.match(/grid-cols-\[0\.75rem_minmax\(0,1fr\)\]/g)?.length,
-    2
-  )
+  assert.match(connections, /grid-cols-\[minmax\(0,1fr\)_minmax\(0,1fr\)\][^"\n]*tabular-nums/)
+  assert.equal(connections.match(/grid-cols-\[0\.75rem_minmax\(0,1fr\)\]/g)?.length, 2)
   assert.equal(connections.match(/className="grid w-full min-w-0/g)?.length, 2)
   assert.equal(connections.match(/className="min-w-0 text-left"/g)?.length, 2)
   assert.match(connections, /calcCompactTraffic\(download\)/)
@@ -1544,15 +1538,10 @@ test('desktop sidebar separates controls, live status and navigation', () => {
   assert.equal(groupForSiderKey('log'), 'status')
   assert.deepEqual([...quickControlKeys], ['sysproxy', 'tun', 'dns', 'sniff', 'mihomo'])
   assert.deepEqual([...accountKeys], ['kokoro'])
-  assert.deepEqual([...currentStatusKeys], [
-    'profile',
-    'app-routing',
-    'proxy',
-    'connection',
-    'rule',
-    'override',
-    'log'
-  ])
+  assert.deepEqual(
+    [...currentStatusKeys],
+    ['profile', 'app-routing', 'proxy', 'connection', 'rule', 'override', 'log']
+  )
   assert.equal(navigationKeys.has('kokoro'), false)
   assert.equal(navigationKeys.size, 0)
   assert.equal(navigationKeys.has('resource'), false)
@@ -1858,10 +1847,7 @@ test('Kokoro account options and default rules use clear desktop sections and sa
   assert.match(page, /title=\{tr\('Update behavior'\)\}/)
   assert.match(page, /className="flex min-h-0 w-full flex-col gap-4"/)
   assert.match(page, /className="flex w-full min-w-0 flex-col gap-4"/)
-  assert.doesNotMatch(
-    page,
-    /lg:grid-cols-\[minmax\(0,1fr\)_minmax\(420px,1\.08fr\)\]/
-  )
+  assert.doesNotMatch(page, /lg:grid-cols-\[minmax\(0,1fr\)_minmax\(420px,1\.08fr\)\]/)
   assert.equal(page.match(/<KokoroOptionSection/g)?.length, 2)
   assert.match(page, /<KokoroDefaultRules \/>/)
   assert.match(page, /grid-cols-\[auto_minmax\(0,1fr\)_auto\]/)
@@ -1929,10 +1915,7 @@ test('operational lists use compact hierarchy without changing their behavior', 
     'src/renderer/src/components/resources/rule-provider.tsx',
     'utf8'
   )
-  const ruleProvidersHook = readFileSync(
-    'src/renderer/src/hooks/use-rule-providers.ts',
-    'utf8'
-  )
+  const ruleProvidersHook = readFileSync('src/renderer/src/hooks/use-rule-providers.ts', 'utf8')
   const resourceSurfaces = readFileSync(
     'src/renderer/src/components/resources/resource-surfaces.tsx',
     'utf8'
@@ -2057,7 +2040,10 @@ test('operational lists use compact hierarchy without changing their behavior', 
   assert.doesNotMatch(ruleProvider, /SettingCard|SettingItem|<Chip|::/)
   assert.match(ruleProvidersHook, /useSWR\(enabled \? 'mihomoRuleProviders' : null/)
   assert.match(ruleProvidersHook, /mihomoUpdateRuleProviders\(name\)/)
-  assert.match(ruleProvidersHook, /Promise\.all\(providers\.map\(\(provider\) => onUpdate\(provider\.name\)\)\)/)
+  assert.match(
+    ruleProvidersHook,
+    /Promise\.all\(providers\.map\(\(provider\) => onUpdate\(provider\.name\)\)\)/
+  )
   assert.match(ruleProvidersHook, /updatingAll/)
   assert.match(routes, /path: 'resources'[\s\S]*<Resources \/>/)
   assert.match(routes, /path: 'rules'[\s\S]*<Rules \/>/)
@@ -2179,10 +2165,7 @@ test('common settings choices use the shared segmented control', () => {
 })
 
 test('core settings combine service management with runtime while preserving its section', () => {
-  const schema = readFileSync(
-    'src/renderer/src/components/settings/settings-schema.ts',
-    'utf8'
-  )
+  const schema = readFileSync('src/renderer/src/components/settings/settings-schema.ts', 'utf8')
   const registry = readFileSync(
     'src/renderer/src/components/settings/settings-registry.tsx',
     'utf8'
@@ -2215,10 +2198,7 @@ test('core settings combine service management with runtime while preserving its
 })
 
 test('data settings separate subscriptions, backups, integrations and Geo databases', () => {
-  const schema = readFileSync(
-    'src/renderer/src/components/settings/settings-schema.ts',
-    'utf8'
-  )
+  const schema = readFileSync('src/renderer/src/components/settings/settings-schema.ts', 'utf8')
   const registry = readFileSync(
     'src/renderer/src/components/settings/settings-registry.tsx',
     'utf8'
@@ -2259,24 +2239,30 @@ test('data settings separate subscriptions, backups, integrations and Geo databa
 })
 
 test('keyboard shortcuts are grouped by application concern', () => {
-  const shortcuts = readFileSync(
-    'src/renderer/src/components/settings/shortcut-config.tsx',
-    'utf8'
-  )
-  const schema = readFileSync(
-    'src/renderer/src/components/settings/settings-schema.ts',
-    'utf8'
-  )
+  const shortcuts = readFileSync('src/renderer/src/components/settings/shortcut-config.tsx', 'utf8')
+  const schema = readFileSync('src/renderer/src/components/settings/settings-schema.ts', 'utf8')
   const shortcutSchema = schema.slice(
     schema.indexOf("key: 'shortcuts'"),
     schema.indexOf("key: 'diagnostics'")
   )
 
   assert.match(shortcuts, /const shortcutGroups: ShortcutGroup\[\] =/)
-  assert.match(shortcuts, /title: tr\('Window'\)[\s\S]*showWindowShortcut[\s\S]*showFloatingWindowShortcut/)
-  assert.match(shortcuts, /title: tr\('Network'\)[\s\S]*triggerSysProxyShortcut[\s\S]*triggerTunShortcut/)
-  assert.match(shortcuts, /title: tr\('Proxy mode'\)[\s\S]*ruleModeShortcut[\s\S]*globalModeShortcut[\s\S]*directModeShortcut/)
-  assert.match(shortcuts, /title: tr\('Application'\)[\s\S]*quitWithoutCoreShortcut[\s\S]*restartAppShortcut/)
+  assert.match(
+    shortcuts,
+    /title: tr\('Window'\)[\s\S]*showWindowShortcut[\s\S]*showFloatingWindowShortcut/
+  )
+  assert.match(
+    shortcuts,
+    /title: tr\('Network'\)[\s\S]*triggerSysProxyShortcut[\s\S]*triggerTunShortcut/
+  )
+  assert.match(
+    shortcuts,
+    /title: tr\('Proxy mode'\)[\s\S]*ruleModeShortcut[\s\S]*globalModeShortcut[\s\S]*directModeShortcut/
+  )
+  assert.match(
+    shortcuts,
+    /title: tr\('Application'\)[\s\S]*quitWithoutCoreShortcut[\s\S]*restartAppShortcut/
+  )
   assert.match(shortcuts, /shortcutGroups\.map\(\(group\) =>/)
   assert.match(shortcuts, /divider=\{index < group\.shortcuts\.length - 1\}/)
   assert.doesNotMatch(shortcuts, /header=\{tr\('Keyboard shortcuts'\)\}/)
@@ -2287,10 +2273,7 @@ test('keyboard shortcuts are grouped by application concern', () => {
 })
 
 test('diagnostics settings separate logs, maintenance and lifecycle actions', () => {
-  const schema = readFileSync(
-    'src/renderer/src/components/settings/settings-schema.ts',
-    'utf8'
-  )
+  const schema = readFileSync('src/renderer/src/components/settings/settings-schema.ts', 'utf8')
   const registry = readFileSync(
     'src/renderer/src/components/settings/settings-registry.tsx',
     'utf8'
@@ -2358,10 +2341,7 @@ test('Appearance supports only the native application color scheme', () => {
     'src/renderer/src/components/settings/appearance-confis.tsx',
     'utf8'
   )
-  const schema = readFileSync(
-    'src/renderer/src/components/settings/settings-schema.ts',
-    'utf8'
-  )
+  const schema = readFileSync('src/renderer/src/components/settings/settings-schema.ts', 'utf8')
   const registry = readFileSync(
     'src/renderer/src/components/settings/settings-registry.tsx',
     'utf8'

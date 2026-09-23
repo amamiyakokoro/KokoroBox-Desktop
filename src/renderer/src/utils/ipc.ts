@@ -1,5 +1,6 @@
 import { TitleBarOverlayOptions } from 'electron'
 import { normalizeUwpLoopbackApps, type UwpLoopbackApp } from '../../../shared/types/uwp-loopback'
+import type { HomeBackground, PublicIpSnapshot } from '../../../shared/home'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function ipcErrorWrapper(response: any): any {
@@ -8,6 +9,30 @@ function ipcErrorWrapper(response: any): any {
   } else {
     return response
   }
+}
+
+export async function getHomePublicIp(): Promise<PublicIpSnapshot> {
+  return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('getHomePublicIp'))
+}
+
+export async function chooseHomeBackground(): Promise<HomeBackground | undefined> {
+  return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('chooseHomeBackground'))
+}
+
+export async function clearHomeBackground(): Promise<void> {
+  return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('clearHomeBackground'))
+}
+
+export async function getHomeBackgroundDataUrl(): Promise<string | undefined> {
+  return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('getHomeBackgroundDataUrl'))
+}
+
+export async function startHomeNetworkObservation(): Promise<void> {
+  return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('startHomeNetworkObservation'))
+}
+
+export async function stopHomeNetworkObservation(): Promise<void> {
+  return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('stopHomeNetworkObservation'))
 }
 
 export async function mihomoVersion(): Promise<ControllerVersion> {

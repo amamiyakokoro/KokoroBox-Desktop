@@ -23,7 +23,7 @@ import { UnsavedChangesProvider } from './hooks/use-unsaved-changes'
 let F12Count = 0
 
 if (!window.location.hash) {
-  window.history.replaceState(null, '', '#/proxies')
+  window.history.replaceState(null, '', '#/')
 }
 
 const ApplicationProviders: React.FC = () => (

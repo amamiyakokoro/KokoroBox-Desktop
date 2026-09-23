@@ -9,6 +9,7 @@ own license; packaged builds include the referenced license files where noted.
 | [Sparkle](https://github.com/sparkle-project/Sparkle)                       | Native macOS application updates                      | MIT           | Packaged on macOS only.                                                                                               |
 | [ProxyBridge](https://github.com/amamiyakokoro/ProxyBridge)                 | Windows and macOS application-routing backend         | MIT           | `LICENSE.ProxyBridge`                                                                                                 |
 | [WinDivert 2.2.2](https://github.com/basil00/WinDivert/releases/tag/v2.2.2) | Windows packet-interception runtime                   | LGPL-3.0-only | `LICENSE.WinDivert`                                                                                                   |
+| [circle-flags](https://github.com/HatScripts/circle-flags)                  | Locally packaged country flag SVGs                    | MIT           | `src/renderer/src/assets/circle-flags/LICENSE.md`; revision `379588b5da95482d6bbf10bd45644a35b0609ea6`                |
 
 KokoroBox does not package the upstream ProxyBridge GUI, updater, or DNS proxy
 provider.

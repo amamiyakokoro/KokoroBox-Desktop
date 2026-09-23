@@ -60,6 +60,9 @@ export const getSettingsSchema = (): SettingsCategorySchema[] => {
         entry('background-color', tr('Background color'), tr('Interface and windows'), {
           panel: 'interface'
         }),
+        entry('home-background', tr('Home background'), tr('Interface and windows'), {
+          panel: 'interface'
+        }),
         entry('show-dock-icon', tr('Show Dock icon'), tr('Interface and windows'), {
           panel: 'interface',
           platforms: ['darwin']

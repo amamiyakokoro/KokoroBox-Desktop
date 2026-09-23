@@ -18,7 +18,7 @@ import {
 } from '@renderer/utils/ipc'
 import { platform } from '@renderer/utils/init'
 import { TitleBarOverlayOptions } from 'electron'
-import KokoroBoxIcon from './components/base/kokorobox-icon'
+import KokoroBrandLink from './components/base/kokoro-brand-link'
 import useSWR from 'swr'
 import { useUnsavedChanges } from '@renderer/hooks/use-unsaved-changes'
 import { SiderIconButton } from '@renderer/components/sider/sider-surfaces'
@@ -53,7 +53,7 @@ const App: React.FC = () => {
   const { resolvedTheme } = useTheme()
   const navigate = useNavigate()
   const location = useLocation()
-  const lastNonSettingsRouteRef = useRef('/proxies')
+  const lastNonSettingsRouteRef = useRef('/')
   const settingsFocusMode = isSettingsFocusRoute(location.pathname)
   const { hasUnsavedChanges, confirmUnsavedChanges } = useUnsavedChanges()
   useDeferredRoutePreload()
@@ -366,8 +366,10 @@ const App: React.FC = () => {
             </Suspense>
           ) : (
             <>
-              <div className="app-drag flex shrink-0 justify-center items-center z-40 bg-transparent h-12.25">
-                {platform !== 'darwin' && <KokoroBoxIcon className="size-7 text-foreground" />}
+              <div
+                className={`app-drag flex shrink-0 justify-center items-center z-40 bg-transparent ${platform === 'darwin' && !useWindowFrame ? 'h-24 pt-12' : 'h-12.25'}`}
+              >
+                <KokoroBrandLink compact />
               </div>
               <Suspense fallback={<div className="min-h-0 flex-1" />}>
                 <SiderCards iconOnly />
@@ -413,12 +415,7 @@ const App: React.FC = () => {
                 <div
                   className={`flex justify-between p-2 ${!useWindowFrame && platform === 'darwin' ? 'ml-16.5' : ''}`}
                 >
-                  <div className={`ml-2 flex items-center ${platform !== 'darwin' ? 'gap-2' : ''}`}>
-                    {platform !== 'darwin' && (
-                      <KokoroBoxIcon className="size-7 shrink-0 text-foreground" />
-                    )}
-                    <h3 className="text-lg font-bold leading-8">KokoroBox</h3>
-                  </div>
+                  <KokoroBrandLink />
                   {latest && latest.version && (
                     <Suspense fallback={null}>
                       <UpdaterButton
