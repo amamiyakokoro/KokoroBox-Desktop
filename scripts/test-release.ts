@@ -270,20 +270,20 @@ test('update drawer keeps package-manager guidance exclusive to Linux', () => {
 })
 
 test('stable builds pin verified service releases while rolling builds follow pre-release', () => {
-  assert.equal(KOKOROBOX_SERVICE_STABLE_TAG, 'v0.5.0')
+  assert.equal(KOKOROBOX_SERVICE_STABLE_TAG, 'v0.6.0')
   assert.deepEqual(kokoroboxServiceAsset('win32', 'x64', 'stable'), {
     downloadURL:
-      'https://github.com/amamiyakokoro/kokorobox-service/releases/download/v0.5.0/kokorobox-service-windows-amd64-v3.exe',
+      'https://github.com/amamiyakokoro/kokorobox-service/releases/download/v0.6.0/kokorobox-service-windows-amd64-v3.exe',
     filename: 'kokorobox-service-windows-amd64-v3.exe',
     sha256URL:
-      'https://github.com/amamiyakokoro/kokorobox-service/releases/download/v0.5.0/kokorobox-service-windows-amd64-v3.exe.sha256',
-    tag: 'v0.5.0',
+      'https://github.com/amamiyakokoro/kokorobox-service/releases/download/v0.6.0/kokorobox-service-windows-amd64-v3.exe.sha256',
+    tag: 'v0.6.0',
     processRouter: {
       downloadURL:
-        'https://github.com/amamiyakokoro/kokorobox-service/releases/download/v0.5.0/kokorobox-service-windows-amd64-v3-process-router.zip',
+        'https://github.com/amamiyakokoro/kokorobox-service/releases/download/v0.6.0/kokorobox-service-windows-amd64-v3-process-router.zip',
       filename: 'kokorobox-service-windows-amd64-v3-process-router.zip',
       sha256URL:
-        'https://github.com/amamiyakokoro/kokorobox-service/releases/download/v0.5.0/kokorobox-service-windows-amd64-v3-process-router.zip.sha256'
+        'https://github.com/amamiyakokoro/kokorobox-service/releases/download/v0.6.0/kokorobox-service-windows-amd64-v3-process-router.zip.sha256'
     }
   })
   assert.equal(kokoroboxServiceAsset('win32', 'arm64', 'stable').processRouter, undefined)
