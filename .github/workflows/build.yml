@@ -350,7 +350,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        fedora: ['43', '44']
+        fedora: ['44']
     steps:
       - uses: actions/checkout@v7
         with:
