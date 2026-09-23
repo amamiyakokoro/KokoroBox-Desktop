@@ -763,7 +763,7 @@ test('Fedora validation gates the reusable build for x64 RPMs', () => {
   assert.equal(job.needs, 'build')
   assert.equal(job['continue-on-error'], undefined)
   assert.equal(job['runs-on'], 'ubuntu-latest')
-  assert.deepEqual(job.strategy.matrix.fedora, ['43', '44'])
+  assert.deepEqual(job.strategy.matrix.fedora, ['44'])
   assert.equal(job.strategy.matrix.arch, undefined)
   assert.equal(job.strategy.matrix.include, undefined)
   const download = job.steps.find((step) => step.uses?.startsWith('actions/download-artifact@'))
