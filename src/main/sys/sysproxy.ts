@@ -7,6 +7,7 @@ import { net } from 'electron'
 import {
   ServiceAPIError,
   disableProxy,
+  getServiceMeta,
   renewSysProxyLease,
   setPac,
   setProxy,
@@ -66,6 +67,16 @@ export function startSysproxyNetworkRecovery(): void {
           proxyRequest !== triggerSysProxyRequest ||
           !sysProxy.enable
         ) {
+          return
+        }
+        if (process.platform === 'darwin') {
+          try {
+            if ((await getServiceMeta()).capabilities.sysproxyNetworkReconcile) return
+          } catch {
+            // An unavailable or older Service still needs the Desktop fallback.
+          }
+        }
+        if (generation !== sysproxyNetworkGeneration || proxyRequest !== triggerSysProxyRequest) {
           return
         }
         await triggerSysProxy(true, onlyActiveDevice)

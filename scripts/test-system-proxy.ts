@@ -31,6 +31,8 @@ test('network recovery runs independently of offline core detection and stops on
   assert.match(lifecycle, /stopSysproxyNetworkRecovery\(\)/)
   assert.match(sysproxy, /proxyRequest !== triggerSysProxyRequest/)
   assert.match(sysproxy, /!sysProxy\.enable/)
+  assert.match(sysproxy, /getServiceMeta\(\)\)\.capabilities\.sysproxyNetworkReconcile/)
+  assert.match(sysproxy, /An unavailable or older Service still needs the Desktop fallback/)
 })
 
 test('PAC listener is loopback-only, reuses an unchanged script, and closes before returning', async (t) => {

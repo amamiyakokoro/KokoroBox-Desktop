@@ -22,6 +22,7 @@ export interface ServiceCapabilities {
   coreDesiredState: boolean
   sysproxyLease: boolean
   sysproxyEvents: boolean
+  sysproxyNetworkReconcile: boolean
   dnsLease: boolean
   processRouter: boolean
 }
@@ -38,6 +39,7 @@ const capabilityNames = [
   'coreDesiredState',
   'sysproxyLease',
   'sysproxyEvents',
+  'sysproxyNetworkReconcile',
   'dnsLease',
   'processRouter'
 ] as const satisfies readonly (keyof ServiceCapabilities)[]
@@ -49,6 +51,7 @@ export const legacyServiceMeta: ServiceMeta = {
     coreDesiredState: false,
     sysproxyLease: false,
     sysproxyEvents: false,
+    sysproxyNetworkReconcile: false,
     dnsLease: false,
     processRouter: false
   }

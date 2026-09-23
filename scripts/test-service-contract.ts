@@ -42,9 +42,27 @@ test('older Service metadata treats missing capabilities as unsupported', () => 
     coreDesiredState: true,
     sysproxyLease: false,
     sysproxyEvents: false,
+    sysproxyNetworkReconcile: false,
     dnsLease: false,
     processRouter: false
   })
+})
+
+test('Service network reconciliation is opt-in and legacy metadata keeps Desktop recovery', () => {
+  const older = validateServiceMeta({
+    serviceVersion: '0.6.0',
+    apiVersion: supportedServiceApiVersion,
+    capabilities: { sysproxyLease: true }
+  })
+  assert.equal(older.capabilities.sysproxyNetworkReconcile, false)
+  assert.equal(legacyServiceMeta.capabilities.sysproxyNetworkReconcile, false)
+
+  const current = validateServiceMeta({
+    serviceVersion: '0.7.0',
+    apiVersion: supportedServiceApiVersion,
+    capabilities: { sysproxyLease: true, sysproxyNetworkReconcile: true }
+  })
+  assert.equal(current.capabilities.sysproxyNetworkReconcile, true)
 })
 
 test('new Service capabilities do not break an older Desktop', () => {
