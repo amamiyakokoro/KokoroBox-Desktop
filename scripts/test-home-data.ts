@@ -6,10 +6,18 @@ import path from 'node:path'
 import { test } from 'node:test'
 import {
   countryFlagAssetKey,
+  displayServiceVersion,
   homeRuntimeState,
   isManagedHomeBackgroundFile,
   maskPublicIp
 } from '../src/shared/home.ts'
+
+test('Home only presents release-style Service versions', () => {
+  assert.equal(displayServiceVersion('0.6.0'), 'v0.6.0')
+  assert.equal(displayServiceVersion('v0.6.0-rc.1'), 'v0.6.0-rc.1')
+  assert.equal(displayServiceVersion('dev+801cb18'), undefined)
+  assert.equal(displayServiceVersion('legacy'), undefined)
+})
 import {
   parsePublicIpResponse,
   nextPublicIpSnapshot,

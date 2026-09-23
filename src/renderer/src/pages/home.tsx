@@ -7,6 +7,7 @@ import { Link } from 'react-router-dom'
 import useSWR from 'swr'
 import { getLocale, tr } from '../../../shared/i18n'
 import {
+  displayServiceVersion,
   homeRuntimeState,
   maskPublicIp,
   type PublicIpInfo,
@@ -333,6 +334,7 @@ const Home = () => {
       : undefined
   ].filter((feature): feature is string => Boolean(feature))
   const mihomoVersionLabel = normalizeCoreVersion(coreVersion?.version)
+  const serviceVersionLabel = displayServiceVersion(serviceVersion)
 
   return (
     <BasePage title={tr('Overview')} contentClassName="overflow-x-hidden">
@@ -381,7 +383,7 @@ const Home = () => {
             </div>
             <div className="flex min-w-0 items-center gap-3">
               <CountryFlag code={publicIp?.countryCode} className="size-11 shrink-0" />
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 <div className="text-sm text-muted">{countryLabel(publicIp)}</div>
                 {publicIp ? (
                   <button
@@ -390,7 +392,7 @@ const Home = () => {
                     aria-label={revealed ? tr('Hide IP address') : tr('Reveal IP address')}
                     aria-pressed={revealed}
                     onClick={() => setRevealed((current) => !current)}
-                    className="app-nodrag -ml-1 max-w-full break-all rounded-md px-1 font-mono text-xl font-semibold text-foreground outline-offset-2 hover:bg-surface-secondary focus-visible:outline-2 focus-visible:outline-accent sm:text-2xl"
+                    className="app-nodrag -ml-1 max-w-full break-all rounded-md px-1 text-left font-mono text-xl font-semibold text-foreground outline-offset-2 hover:bg-surface-secondary focus-visible:outline-2 focus-visible:outline-accent sm:text-2xl"
                   >
                     {revealed ? publicIp.ip : maskPublicIp(publicIp.ip)}
                   </button>
@@ -420,8 +422,11 @@ const Home = () => {
             </div>
           </Surface>
 
-          <div className="grid min-w-0 grid-cols-1 gap-3 @min-[560px]:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
-            <Surface className={`min-w-0 rounded-2xl border p-4 shadow-none sm:p-5 ${cardStyle}`}>
+          <div className="flex min-w-0 flex-wrap gap-3">
+            <Surface
+              className={`min-w-0 rounded-2xl border p-4 shadow-none sm:p-5 ${cardStyle}`}
+              style={{ flex: '1 1 300px' }}
+            >
               <div className="mb-3 flex items-center justify-between gap-2">
                 <h2 className="text-sm font-semibold">{tr('Current subscription')}</h2>
                 <Link
@@ -504,7 +509,10 @@ const Home = () => {
               )}
             </Surface>
 
-            <Surface className={`min-w-0 rounded-2xl border p-4 shadow-none sm:p-5 ${cardStyle}`}>
+            <Surface
+              className={`min-w-0 rounded-2xl border p-4 shadow-none sm:p-5 ${cardStyle}`}
+              style={{ flex: '1 1 230px' }}
+            >
               <h2 className="mb-3 text-sm font-semibold">{tr('Runtime')}</h2>
               <div className="text-lg font-semibold">
                 {coreLoading && !coreStopped
@@ -531,14 +539,15 @@ const Home = () => {
                   {serviceStateLabel(runtime.service as ServiceState | undefined)}
                 </span>
               </div>
-              {serviceState === 'running' && (serviceVersion || serviceFeatures.length > 0) && (
-                <div className="mt-1 space-y-0.5 pl-4 text-xs text-muted">
-                  {serviceVersion && <div>v{serviceVersion.replace(/^v/i, '')}</div>}
-                  {serviceFeatures.length > 0 && (
-                    <div>{tr('Configured: {0}', [serviceFeatures.join(' · ')])}</div>
-                  )}
-                </div>
-              )}
+              {serviceState === 'running' &&
+                (serviceVersionLabel || serviceFeatures.length > 0) && (
+                  <div className="mt-1 space-y-0.5 pl-4 text-xs text-muted">
+                    {serviceVersionLabel && <div>{serviceVersionLabel}</div>}
+                    {serviceFeatures.length > 0 && (
+                      <div>{tr('Configured: {0}', [serviceFeatures.join(' · ')])}</div>
+                    )}
+                  </div>
+                )}
             </Surface>
           </div>
 

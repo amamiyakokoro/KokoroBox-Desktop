@@ -48,6 +48,14 @@ export function maskPublicIp(ip: string): string {
   return parts.length === 4 ? `${parts[0]}.${parts[1]}.**.${parts[3]}` : ip
 }
 
+export function displayServiceVersion(version: string | undefined): string | undefined {
+  const value = version?.trim()
+  if (!value || !/^v?\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$/.test(value)) {
+    return undefined
+  }
+  return `v${value.replace(/^v/, '')}`
+}
+
 export function isManagedHomeBackgroundFile(value: unknown): value is string {
   return typeof value === 'string' && /^home-background-[a-f0-9]{32}\.(?:png|jpg|webp)$/.test(value)
 }
