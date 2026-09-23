@@ -1,10 +1,9 @@
-export interface OverviewServiceFeature {
+export interface OverviewConfiguredFeature {
   kind: 'proxy' | 'dns' | 'app-routing'
   count?: number
 }
 
-export function configuredOverviewServiceFeatures(options: {
-  serviceRunning: boolean
+export function configuredOverviewFeatures(options: {
   proxyEnabled: boolean
   dnsConfigured: boolean
   platform: NodeJS.Platform
@@ -12,12 +11,11 @@ export function configuredOverviewServiceFeatures(options: {
   coreRunning: boolean
   appRoutingRunning: boolean
   protectedApplicationCount?: number
-}): OverviewServiceFeature[] {
-  if (!options.serviceRunning) return []
-  const features: OverviewServiceFeature[] = []
+}): OverviewConfiguredFeature[] {
+  const features: OverviewConfiguredFeature[] = []
   if (options.proxyEnabled) features.push({ kind: 'proxy' })
-  // Desktop only requests a Service DNS lease for macOS TUN. The chip describes
-  // the active configuration; a separate lease-status API is not available here.
+  // Desktop only requests a DNS lease for macOS TUN. These chips describe
+  // configuration, not verified ownership or an active lease.
   if (
     options.platform === 'darwin' &&
     options.dnsConfigured &&

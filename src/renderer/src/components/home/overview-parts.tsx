@@ -2,13 +2,38 @@ import { Chip, Meter } from '@heroui/react'
 import type { ReactNode } from 'react'
 import { LuArrowRight } from 'react-icons/lu'
 import { tr } from '../../../../shared/i18n'
+import { maskPublicIp } from '../../../../shared/home'
 import { calcTraffic } from '../../utils/calc'
 import { getOutboundModeLabel } from '../sider/outbound-mode'
-import type { OverviewServiceFeature } from '../../utils/home-overview'
+import type { OverviewConfiguredFeature } from '../../utils/home-overview'
 import { KokoStatusIndicator, type KokoStatusTone } from '../base/koko-status-indicator'
 
 export function OverviewChipGroup({ children }: { children: ReactNode }) {
   return <div className="flex min-w-0 flex-wrap items-center gap-1.5">{children}</div>
+}
+
+export function OverviewPublicIp({
+  ip,
+  revealed,
+  onToggle
+}: {
+  ip: string
+  revealed: boolean
+  onToggle: () => void
+}) {
+  const action = revealed ? tr('Hide IP address') : tr('Reveal IP address')
+  return (
+    <button
+      type="button"
+      title={action}
+      aria-label={action}
+      aria-pressed={revealed}
+      onClick={onToggle}
+      className="app-nodrag block max-w-full min-w-0 overflow-hidden text-ellipsis whitespace-nowrap rounded-md text-left font-mono text-[clamp(1.375rem,3.4cqw,1.875rem)] font-semibold leading-tight tabular-nums text-foreground outline-offset-2 hover:bg-accent-soft/35 focus-visible:outline-2 focus-visible:outline-accent"
+    >
+      {revealed ? ip : maskPublicIp(ip)}
+    </button>
+  )
 }
 
 export function OverviewStat({
@@ -16,20 +41,24 @@ export function OverviewStat({
   value,
   secondary,
   icon,
-  className = ''
+  className = '',
+  valueClassName = ''
 }: {
   label?: ReactNode
   value: ReactNode
   secondary?: ReactNode
   icon?: ReactNode
   className?: string
+  valueClassName?: string
 }) {
   return (
     <div className={`flex min-w-0 items-start gap-3 ${className}`}>
       {icon}
       <div className="min-w-0 flex-1">
         {label && <div className="text-xs text-muted">{label}</div>}
-        <div className="min-w-0 text-xl font-semibold leading-tight tabular-nums text-foreground">
+        <div
+          className={`min-w-0 font-semibold leading-tight tabular-nums text-foreground ${valueClassName || 'text-xl'}`}
+        >
           {value}
         </div>
         {secondary && <div className="mt-0.5 min-w-0 text-sm text-muted">{secondary}</div>}
@@ -38,10 +67,21 @@ export function OverviewStat({
   )
 }
 
-export function OverviewMetadataRow({ label, value }: { label: ReactNode; value: ReactNode }) {
+export function OverviewMetadataRow({
+  label,
+  value,
+  icon
+}: {
+  label: ReactNode
+  value: ReactNode
+  icon?: ReactNode
+}) {
   return (
-    <div className="grid min-w-0 grid-cols-[minmax(0,6rem)_minmax(0,1fr)] items-baseline gap-3 text-xs leading-5">
-      <dt className="min-w-0 text-muted">{label}</dt>
+    <div className="grid min-w-0 grid-cols-[minmax(0,6.5rem)_minmax(0,1fr)] items-baseline gap-2 text-xs leading-5">
+      <dt className="flex min-w-0 items-center gap-1.5 text-muted">
+        {icon}
+        <span>{label}</span>
+      </dt>
       <dd className="min-w-0 break-words text-right text-foreground">{value}</dd>
     </div>
   )
@@ -51,23 +91,21 @@ export function OverviewUsageSummary({ usage, quota }: { usage: number; quota: n
   if (quota <= 0) return null
   const percentage = Math.round((usage / quota) * 100)
   return (
-    <div className="space-y-1.5">
+    <div className="space-y-1.5 rounded-xl bg-accent-soft/25 px-3 py-2.5">
       <div className="flex min-w-0 flex-wrap items-center justify-between gap-x-2 gap-y-1 text-xs tabular-nums">
-        <span className="text-foreground">
-          {calcTraffic(usage)} / {calcTraffic(quota)}
+        <span>
+          <strong className="font-semibold text-foreground">{calcTraffic(usage)}</strong>
+          <span className="text-muted"> / {calcTraffic(quota)}</span>
         </span>
-        <Chip
-          size="sm"
-          variant="soft"
-          color={percentage >= 100 ? 'danger' : percentage >= 90 ? 'warning' : 'default'}
-          className="shrink-0"
+        <span
+          className={`shrink-0 font-medium ${percentage >= 100 ? 'text-danger' : percentage >= 90 ? 'text-warning' : 'text-foreground'}`}
         >
           {tr('{0}% used', [percentage])}
-        </Chip>
+        </span>
       </div>
       <Meter aria-label={tr('Traffic usage')} maxValue={quota} value={Math.min(usage, quota)}>
         <Meter.Track className="h-1.5 bg-surface-secondary">
-          <Meter.Fill className="bg-accent" />
+          <Meter.Fill className={percentage >= 100 ? 'bg-danger' : 'bg-accent'} />
         </Meter.Track>
       </Meter>
       <div className="text-xs tabular-nums text-muted">
@@ -101,11 +139,9 @@ export function OverviewStatusLine({
 
 export function OverviewRoutingChips({
   mode,
-  activeRoutes,
   proxy
 }: {
   mode: OutboundMode
-  activeRoutes: number
   proxy?: { name?: string; protocol?: string; latency?: number }
 }) {
   return (
@@ -115,20 +151,8 @@ export function OverviewRoutingChips({
       </Chip>
       {mode === 'rule' && (
         <Chip size="sm" variant="soft" color="default">
-          {activeRoutes > 0
-            ? activeRoutes === 1
-              ? tr('{0} active route', [activeRoutes])
-              : tr('{0} active routes', [activeRoutes])
-            : tr('Dynamic')}
+          {tr('Dynamic')}
         </Chip>
-      )}
-      {mode === 'global' && proxy?.name && (
-        <span className="max-w-full min-w-0 truncate text-xs font-medium" title={proxy.name}>
-          {proxy.name}
-        </span>
-      )}
-      {mode === 'global' && !proxy?.name && (
-        <span className="text-xs text-muted">{tr('Unavailable')}</span>
       )}
       {mode === 'global' && proxy?.protocol && (
         <Chip size="sm" variant="soft" color="default">
@@ -162,14 +186,14 @@ export function OverviewSubscriptionChips({ profile }: { profile: ProfileItem })
       <Chip size="sm" variant="soft" color="default">
         {profile.kokoro.settings.protocol.toUpperCase()}
       </Chip>
-      <Chip size="sm" variant="soft" color="default">
+      <Chip size="sm" variant="soft" color="default" title={tr('Subscription connection mode')}>
         {profile.kokoro.settings.mode === 'relay' ? tr('Relay') : tr('Direct')}
       </Chip>
     </OverviewChipGroup>
   )
 }
 
-export function OverviewServiceChips({ features }: { features: OverviewServiceFeature[] }) {
+export function OverviewConfiguredChips({ features }: { features: OverviewConfiguredFeature[] }) {
   if (features.length === 0) return null
   return (
     <OverviewChipGroup>
@@ -188,11 +212,16 @@ export function OverviewServiceChips({ features }: { features: OverviewServiceFe
   )
 }
 
+export function overviewConnectionLabel(count?: number): string {
+  if (count === undefined) return tr('Connections')
+  return count === 1 ? tr('1 connection') : tr('{0} connections', [count])
+}
+
 export function OverviewConnectionChip({ count }: { count?: number }) {
   return (
     <Chip size="sm" variant="soft" color="default">
       <Chip.Label className="flex items-center gap-1">
-        {count === undefined ? tr('Connections') : tr('{0} connections', [count])}
+        {overviewConnectionLabel(count)}
         <LuArrowRight className="size-3" aria-hidden="true" />
       </Chip.Label>
     </Chip>
