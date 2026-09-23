@@ -40,6 +40,7 @@ import {
   buildServiceProcessRouterRules,
   validateServiceProcessRouterStatus
 } from '../src/main/app-routing/service-protocol'
+import { serviceContract } from '../src/main/service/contract'
 import {
   appRoutingGroupKey,
   connectionIdentityKey,
@@ -813,7 +814,14 @@ test('Windows and Linux application routing use only the privileged service life
   assert.doesNotMatch(manager, /verifyProcessRouterIntegrity|ensureDirectFirewall/)
   assert.match(manager, /firewallReady: serviceStatus\.firewall_ready/)
   assert.match(manager, /repairProcessRouterFirewall\(\)/)
-  assert.match(serviceApi, /post\('\/process-router\/firewall\/repair'\)/)
+  assert.deepEqual(serviceContract.processRouterFirewallRepair, {
+    method: 'POST',
+    path: '/process-router/firewall/repair'
+  })
+  assert.match(
+    serviceApi,
+    /method: serviceContract\.processRouterFirewallRepair\.method,\s*url: serviceContract\.processRouterFirewallRepair\.path/
+  )
   assert.match(settingsDrawer, /34010\/TCP and 34011\/UDP/)
   assert.doesNotMatch(settingsDrawer, /7891/)
   assert.match(manager, /message\.toLowerCase\(\)\.includes\('service is not initialized'\)/)
