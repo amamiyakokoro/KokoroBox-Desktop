@@ -82,7 +82,7 @@ function selectedGlobalProxy(groups: ControllerMixedGroup[]): {
 }
 
 function countryLabel(info?: PublicIpInfo): string {
-  if (!info) return tr('Unavailable')
+  if (!info) return tr('Public IP')
   if (info.countryCode) {
     try {
       return (
@@ -252,15 +252,18 @@ const Home = () => {
 
   const usage = (profile?.extra?.download ?? 0) + (profile?.extra?.upload ?? 0)
   const quota = profile?.extra?.total ?? 0
-  const proxyName =
-    mode === 'direct' ? tr('Direct') : mode === 'rule' ? tr('By rule') : globalProxy.name
+  const proxyName = mode === 'global' ? globalProxy.name : undefined
   const proxyDetails =
     mode === 'global'
       ? [globalProxy.protocol, globalProxy.latency ? `${globalProxy.latency} ms` : undefined]
           .filter(Boolean)
           .join(' · ')
       : undefined
-  const cardStyle = hasBackground ? 'bg-surface/90 backdrop-blur-sm' : ''
+  const routingDetail =
+    mode === 'rule' ? `${getOutboundModeLabel(mode)} · ${tr('Selected dynamically')}` : tr('Direct')
+  const cardStyle = hasBackground
+    ? 'border-separator/50 bg-surface/80 backdrop-blur-sm'
+    : 'border-separator/60 bg-surface/85'
   const runtime = homeRuntimeState(
     !coreStopped && !coreError && Boolean(coreVersion),
     appConfig?.corePermissionMode,
@@ -290,7 +293,7 @@ const Home = () => {
             />
           </div>
         )}
-        <div className="relative mx-auto flex w-full max-w-[1000px] flex-col gap-4 px-4 py-5 sm:px-6 sm:py-7">
+        <div className="relative mx-auto flex w-full max-w-[1000px] flex-col gap-3 px-4 py-4 sm:px-6 sm:py-5">
           {attention && (
             <Surface
               variant="secondary"
@@ -307,49 +310,51 @@ const Home = () => {
             </Surface>
           )}
 
-          <Surface variant="secondary" className={`min-w-0 rounded-2xl p-5 sm:p-6 ${cardStyle}`}>
-            <div className="mb-5 flex items-center justify-between gap-3">
-              <h2 className="text-base font-semibold">{tr('Network')}</h2>
+          <Surface className={`min-w-0 rounded-2xl border p-4 shadow-none sm:p-5 ${cardStyle}`}>
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <h2 className="text-sm font-semibold">{tr('Network')}</h2>
               {refreshingIp && <span className="text-xs text-muted">{tr('Refreshing')}</span>}
             </div>
-            <div className="flex min-w-0 flex-col items-center gap-2 text-center">
-              <CountryFlag code={publicIp?.countryCode} className="size-12" />
-              <span className="mt-1 text-xs text-muted">
-                {publicIpSnapshot.stale && publicIp
-                  ? tr('Last known exit')
-                  : tr('Observed public exit')}
-              </span>
-              {publicIp ? (
-                <button
-                  type="button"
-                  title={revealed ? tr('Hide IP address') : tr('Reveal IP address')}
-                  aria-label={revealed ? tr('Hide IP address') : tr('Reveal IP address')}
-                  aria-pressed={revealed}
-                  onClick={() => setRevealed((current) => !current)}
-                  className="app-nodrag max-w-full break-all rounded-md px-2 py-0.5 font-mono text-2xl font-semibold text-foreground outline-offset-2 hover:bg-surface-secondary focus-visible:outline-2 focus-visible:outline-accent"
-                >
-                  {revealed ? publicIp.ip : maskPublicIp(publicIp.ip)}
-                </button>
-              ) : (
-                <span className="text-2xl font-semibold text-muted">{tr('Unavailable')}</span>
-              )}
-              <span className="text-sm text-muted">{countryLabel(publicIp)}</span>
+            <div className="flex min-w-0 items-center gap-3">
+              <CountryFlag code={publicIp?.countryCode} className="size-11 shrink-0" />
+              <div className="min-w-0">
+                <div className="text-sm text-muted">{countryLabel(publicIp)}</div>
+                {publicIp ? (
+                  <button
+                    type="button"
+                    title={revealed ? tr('Hide IP address') : tr('Reveal IP address')}
+                    aria-label={revealed ? tr('Hide IP address') : tr('Reveal IP address')}
+                    aria-pressed={revealed}
+                    onClick={() => setRevealed((current) => !current)}
+                    className="app-nodrag -ml-1 max-w-full break-all rounded-md px-1 font-mono text-xl font-semibold text-foreground outline-offset-2 hover:bg-surface-secondary focus-visible:outline-2 focus-visible:outline-accent sm:text-2xl"
+                  >
+                    {revealed ? publicIp.ip : maskPublicIp(publicIp.ip)}
+                  </button>
+                ) : (
+                  <span className="text-xl font-semibold text-muted">{tr('Unavailable')}</span>
+                )}
+                {publicIpSnapshot.stale && publicIp && (
+                  <div className="text-xs text-muted">{tr('Last known exit')}</div>
+                )}
+              </div>
             </div>
-            <div className="mt-6 flex min-w-0 flex-wrap items-center justify-between gap-x-5 gap-y-2 border-t border-separator/60 pt-4 text-sm">
-              <span className="text-muted">{tr('Current proxy')}</span>
+            <div className="mt-4 flex min-w-0 flex-wrap items-baseline justify-between gap-x-4 gap-y-1 text-sm">
+              <span className="text-muted">
+                {mode === 'global' ? tr('Current proxy') : tr('Routing')}
+              </span>
               <div className="min-w-0 text-left sm:text-right">
                 <div className="max-w-full break-words font-medium" title={proxyName}>
-                  {proxyName ?? tr('Unavailable')}
+                  {proxyName ?? (mode === 'global' ? tr('Unavailable') : routingDetail)}
                 </div>
                 {proxyDetails && <div className="text-xs text-muted">{proxyDetails}</div>}
               </div>
             </div>
           </Surface>
 
-          <div className="grid min-w-0 grid-cols-1 gap-4 @min-[700px]:grid-cols-2">
-            <Surface variant="secondary" className={`min-w-0 rounded-2xl p-5 ${cardStyle}`}>
-              <div className="mb-5 flex items-center justify-between gap-2">
-                <h2 className="text-base font-semibold">{tr('Current subscription')}</h2>
+          <div className="grid min-w-0 grid-cols-1 gap-3 @min-[560px]:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
+            <Surface className={`min-w-0 rounded-2xl border p-4 shadow-none sm:p-5 ${cardStyle}`}>
+              <div className="mb-3 flex items-center justify-between gap-2">
+                <h2 className="text-sm font-semibold">{tr('Current subscription')}</h2>
                 <Link
                   to="/profiles"
                   className="app-nodrag rounded-md p-1 text-muted hover:text-accent focus-visible:outline-2 focus-visible:outline-accent"
@@ -359,10 +364,15 @@ const Home = () => {
                 </Link>
               </div>
               {profile ? (
-                <div className="space-y-4">
+                <div className="space-y-3">
                   <div className="min-w-0">
-                    <div className="break-words text-lg font-semibold">{profile.name}</div>
-                    <div className="text-sm text-muted">
+                    <div
+                      className="line-clamp-2 break-words text-base font-semibold"
+                      title={profile.name}
+                    >
+                      {profile.name}
+                    </div>
+                    <div className="text-xs text-muted">
                       {profile.kokoro
                         ? tr('Kokoro subscription')
                         : profile.type === 'remote'
@@ -371,9 +381,12 @@ const Home = () => {
                     </div>
                   </div>
                   {quota > 0 && (
-                    <div className="space-y-2">
-                      <div className="text-sm tabular-nums text-muted">
-                        {calcTraffic(usage)} / {calcTraffic(quota)}
+                    <div className="space-y-1.5">
+                      <div className="flex flex-wrap items-baseline justify-between gap-x-2 text-xs tabular-nums text-muted">
+                        <span>
+                          {calcTraffic(usage)} / {calcTraffic(quota)}
+                        </span>
+                        <span>{Math.round((usage / quota) * 100)}%</span>
                       </div>
                       <Meter
                         aria-label={tr('Traffic usage')}
@@ -386,9 +399,11 @@ const Home = () => {
                       </Meter>
                     </div>
                   )}
-                  <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted">
+                  <div className="flex flex-wrap justify-between gap-x-3 gap-y-1 text-xs text-muted">
                     {profile.extra?.expire ? (
-                      <span>{tr('Expires {0}', [dayjs.unix(profile.extra.expire).fromNow()])}</span>
+                      <span>
+                        {tr('Expires {0}', [dayjs.unix(profile.extra.expire).format('YYYY-MM-DD')])}
+                      </span>
                     ) : null}
                     {profile.updated ? (
                       <span>{tr('Updated {0}', [dayjs(profile.updated).fromNow()])}</span>
@@ -402,84 +417,75 @@ const Home = () => {
               )}
             </Surface>
 
-            <Surface variant="secondary" className={`min-w-0 rounded-2xl p-5 ${cardStyle}`}>
-              <div className="mb-5 flex items-center justify-between gap-2">
-                <h2 className="text-base font-semibold">{tr('Traffic')}</h2>
-                <Link to="/connections" className="app-nodrag text-xs text-muted hover:text-accent">
-                  {tr('Connections')}
-                </Link>
+            <Surface className={`min-w-0 rounded-2xl border p-4 shadow-none sm:p-5 ${cardStyle}`}>
+              <h2 className="mb-3 text-sm font-semibold">{tr('Runtime')}</h2>
+              <div className="text-lg font-semibold">
+                {coreLoading && !coreStopped
+                  ? tr('Loading')
+                  : runtime.mihomo === 'system-service'
+                    ? tr('System service')
+                    : runtime.mihomo === 'direct-run'
+                      ? tr('Direct run')
+                      : tr('Stopped')}
               </div>
-              <div className="grid grid-cols-2 gap-3 tabular-nums">
-                <div className="min-w-0">
-                  <span className="flex items-center gap-1 text-xs text-muted">
-                    <LuArrowDown />
-                    {tr('Download')}
-                  </span>
-                  <div
-                    className="truncate text-lg font-semibold"
-                    title={`${calcTraffic(rates.down)}/s`}
-                  >
-                    {calcTraffic(rates.down)}/s
-                  </div>
-                </div>
-                <div className="min-w-0">
-                  <span className="flex items-center gap-1 text-xs text-muted">
-                    <LuArrowUp />
-                    {tr('Upload')}
-                  </span>
-                  <div
-                    className="truncate text-lg font-semibold"
-                    title={`${calcTraffic(rates.up)}/s`}
-                  >
-                    {calcTraffic(rates.up)}/s
-                  </div>
-                </div>
-              </div>
-              <div className="relative mt-4 h-10 overflow-hidden rounded-lg bg-surface-secondary/40">
-                <TrafficChart data={history} />
-              </div>
-              <div className="mt-4 border-t border-separator/60 pt-3 text-xs text-muted">
-                <div className="mb-1 font-medium">{tr('This session')}</div>
-                <div className="flex flex-wrap gap-x-5 gap-y-1 tabular-nums">
-                  <span>↓ {calcTraffic(connections?.downloadTotal ?? 0)}</span>
-                  <span>↑ {calcTraffic(connections?.uploadTotal ?? 0)}</span>
-                </div>
+              <div className="text-sm text-muted">Mihomo · {getOutboundModeLabel(mode)}</div>
+              <div className="mt-4 flex min-w-0 items-center gap-2 text-xs">
+                <span
+                  className={`size-2 shrink-0 rounded-full ${serviceState === 'running' ? 'bg-success' : 'bg-muted'}`}
+                  aria-hidden="true"
+                />
+                <span className="min-w-0 text-muted">{tr('KokoroBox Service')}</span>
+                <span className="font-medium">
+                  {serviceStateLabel(runtime.service as ServiceState | undefined)}
+                </span>
               </div>
             </Surface>
           </div>
 
-          <Surface variant="secondary" className={`min-w-0 rounded-2xl p-5 ${cardStyle}`}>
-            <h2 className="mb-4 text-base font-semibold">{tr('Runtime')}</h2>
-            <dl className="grid min-w-0 grid-cols-1 gap-x-8 gap-y-4 text-sm @min-[620px]:grid-cols-2">
-              <div className="flex min-w-0 justify-between gap-4">
-                <dt className="text-muted">{tr('Mihomo runtime')}</dt>
-                <dd className="text-right font-medium">
-                  {coreLoading && !coreStopped
-                    ? tr('Loading')
-                    : runtime.mihomo === 'system-service'
-                      ? tr('System service')
-                      : runtime.mihomo === 'direct-run'
-                        ? tr('Direct run')
-                        : tr('Stopped')}
-                </dd>
+          <Surface className={`min-w-0 rounded-2xl border p-4 shadow-none sm:p-5 ${cardStyle}`}>
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <h2 className="text-sm font-semibold">{tr('Traffic')}</h2>
+              <Link to="/connections" className="app-nodrag text-xs text-muted hover:text-accent">
+                {tr('Connections')} {connections?.connections?.length ?? '—'}
+              </Link>
+            </div>
+            <div className="grid grid-cols-2 gap-4 tabular-nums">
+              <div className="min-w-0">
+                <span className="flex items-center gap-1 text-xs text-muted">
+                  <LuArrowDown /> {tr('Download')}
+                </span>
+                <div
+                  className="truncate text-xl font-semibold"
+                  title={`${calcTraffic(rates.down)}/s`}
+                >
+                  {calcTraffic(rates.down)}/s
+                </div>
+                <div className="text-xs text-muted">
+                  {tr('{0} this session', [calcTraffic(connections?.downloadTotal ?? 0)])}
+                </div>
               </div>
-              <div className="flex min-w-0 justify-between gap-4">
-                <dt className="text-muted">{tr('Mode')}</dt>
-                <dd className="font-medium">{getOutboundModeLabel(mode)}</dd>
+              <div className="min-w-0">
+                <span className="flex items-center gap-1 text-xs text-muted">
+                  <LuArrowUp /> {tr('Upload')}
+                </span>
+                <div
+                  className="truncate text-xl font-semibold"
+                  title={`${calcTraffic(rates.up)}/s`}
+                >
+                  {calcTraffic(rates.up)}/s
+                </div>
+                <div className="text-xs text-muted">
+                  {tr('{0} this session', [calcTraffic(connections?.uploadTotal ?? 0)])}
+                </div>
               </div>
-              <div className="flex min-w-0 justify-between gap-4">
-                <dt className="text-muted">{tr('KokoroBox Service')}</dt>
-                <dd className={`font-medium ${serviceState === 'running' ? 'text-success' : ''}`}>
-                  {serviceStateLabel(runtime.service as ServiceState | undefined)}
-                </dd>
-              </div>
-              <div className="flex min-w-0 justify-between gap-4">
-                <dt className="text-muted">{tr('Active connections')}</dt>
-                <dd className="font-medium tabular-nums">
-                  {connections?.connections?.length ?? '—'}
-                </dd>
-              </div>
-            </dl>
+            </div>
+            <div className="relative mt-3 h-20 overflow-hidden" aria-hidden="true">
+              {history.some(({ traffic }) => traffic > 0) ? (
+                <TrafficChart data={history} />
+              ) : (
+                <div className="absolute inset-x-0 bottom-1 border-b border-separator/50" />
+              )}
+            </div>
           </Surface>
         </div>
       </main>
