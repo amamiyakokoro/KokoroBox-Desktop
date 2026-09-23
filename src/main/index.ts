@@ -8,7 +8,7 @@ import { getWebdavPassword } from './config/webdav-password'
 import { getGistAgeIdentity } from './config/gist-age-identity'
 import { quitWithoutCore, startCore, stopCore } from './core/manager'
 import { stopNetworkDetection } from './core/network'
-import { triggerSysProxy } from './sys/sysproxy'
+import { stopSysproxyNetworkRecovery, triggerSysProxy } from './sys/sysproxy'
 import icon from '../../resources/icon.png?asset'
 import { createTray } from './resolve/tray'
 import { createApplicationMenu } from './resolve/menu'
@@ -599,6 +599,7 @@ export async function createWindow(appConfig?: AppConfig): Promise<void> {
     })
 
     mainWindow.on('session-end', async () => {
+      stopSysproxyNetworkRecovery()
       stopNetworkDetection()
       await triggerSysProxy(false, false, true)
       await stopCore()

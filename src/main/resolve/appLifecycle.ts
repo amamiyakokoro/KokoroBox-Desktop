@@ -1,7 +1,7 @@
 import { app, ipcMain, powerMonitor, type BrowserWindow, type IpcMainEvent } from 'electron'
 import { stopCore } from '../core/manager'
 import { stopNetworkDetection } from '../core/network'
-import { triggerSysProxy } from '../sys/sysproxy'
+import { stopSysproxyNetworkRecovery, triggerSysProxy } from '../sys/sysproxy'
 import { appendAppLog } from '../utils/log'
 import { stopAppRouting } from '../app-routing/manager'
 import { stopTrafficPresenter } from './trafficPresenter'
@@ -94,6 +94,7 @@ async function quit(context: AppQuitLifecycleContext): Promise<void> {
 }
 
 async function cleanupBeforeExit(useRegistry: boolean, responsiveQuit = false): Promise<void> {
+  stopSysproxyNetworkRecovery()
   await runCleanupTask('stop network detection', async () => stopNetworkDetection())
 
   const responsiveTimeoutMs = responsiveQuit ? responsiveCleanupTaskTimeoutMs : cleanupTaskTimeoutMs

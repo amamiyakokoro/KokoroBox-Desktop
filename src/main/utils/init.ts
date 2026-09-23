@@ -29,7 +29,7 @@ import {
   shouldSeedDefaultAppConfig,
   writeAppConfigFile
 } from '../config/app-loader'
-import { triggerSysProxy } from '../sys/sysproxy'
+import { startSysproxyNetworkRecovery, triggerSysProxy } from '../sys/sysproxy'
 import {
   getAppConfig,
   getControledMihomoConfig,
@@ -296,6 +296,7 @@ function startBackgroundInit(appConfig: AppConfig): void {
   const { sysProxy, onlyActiveDevice = false, networkDetection = false } = appConfig
 
   runBackgroundInitTask('ssid check', startSSIDCheck())
+  startSysproxyNetworkRecovery()
 
   if (networkDetection) {
     runBackgroundInitTask('network detection', startNetworkDetection())

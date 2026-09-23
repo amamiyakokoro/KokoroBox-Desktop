@@ -18,6 +18,8 @@ import type { ServiceSysproxyEvent } from '../service/api'
 import { appendAppLog } from '../utils/log'
 import { showNotification } from '../utils/notification'
 import { disableTerminalProxy, enableTerminalProxy } from './terminal-proxy'
+import { observeNetworkContext, type ObservableNetworkContext } from './network-context'
+import { shouldReapplyProxyForNetworkChange } from './sysproxy-network'
 
 let triggerSysProxyTimer: NodeJS.Timeout | null = null
 let sysproxyLeaseTimer: NodeJS.Timeout | null = null
@@ -26,9 +28,61 @@ let triggerSysProxyRequest = 0
 let sysproxyGuardEventsStartedAt = 0
 let lastSysproxyGuardNotificationKey = ''
 let unsubscribeSysproxyGuardEvents: (() => void) | null = null
+let stopSysproxyNetworkObserver: (() => void) | null = null
+let sysproxyNetworkTimer: NodeJS.Timeout | null = null
+let sysproxyNetworkGeneration = 0
 
 export interface TriggerSysProxyOptions {
   serviceRequestTimeoutMs?: number
+}
+
+export function startSysproxyNetworkRecovery(): void {
+  if (stopSysproxyNetworkObserver) return
+  let previous: ObservableNetworkContext | undefined
+  stopSysproxyNetworkObserver = observeNetworkContext((current) => {
+    if (!previous) {
+      previous = current
+      return
+    }
+    const changed = shouldReapplyProxyForNetworkChange(previous, current)
+    previous = current
+    if (!current.online) {
+      if (sysproxyNetworkTimer) clearTimeout(sysproxyNetworkTimer)
+      sysproxyNetworkTimer = null
+      sysproxyNetworkGeneration++
+      return
+    }
+    if (!changed) return
+
+    if (sysproxyNetworkTimer) clearTimeout(sysproxyNetworkTimer)
+    const generation = ++sysproxyNetworkGeneration
+    const proxyRequest = triggerSysProxyRequest
+    sysproxyNetworkTimer = setTimeout(() => {
+      sysproxyNetworkTimer = null
+      void (async () => {
+        const { sysProxy, onlyActiveDevice = false } = await getAppConfig()
+        if (
+          generation !== sysproxyNetworkGeneration ||
+          proxyRequest !== triggerSysProxyRequest ||
+          !sysProxy.enable
+        ) {
+          return
+        }
+        await triggerSysProxy(true, onlyActiveDevice)
+      })().catch((error) => {
+        appendAppLog(`[Sysproxy]: network change recovery failed, ${error}\n`).catch(() => {})
+      })
+    }, 800)
+    sysproxyNetworkTimer.unref()
+  })
+}
+
+export function stopSysproxyNetworkRecovery(): void {
+  sysproxyNetworkGeneration++
+  if (sysproxyNetworkTimer) clearTimeout(sysproxyNetworkTimer)
+  sysproxyNetworkTimer = null
+  stopSysproxyNetworkObserver?.()
+  stopSysproxyNetworkObserver = null
 }
 
 function stopSysproxyLeaseRenewal(): void {

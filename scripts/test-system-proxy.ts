@@ -1,7 +1,37 @@
 import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
 import { PacHttpServer, localPacUrl } from '../src/main/resolve/pac-http-server'
+import { shouldReapplyProxyForNetworkChange } from '../src/main/sys/sysproxy-network'
 import { defaultSystemProxyBypass, normalizeProxyHost } from '../src/shared/system-proxy'
+
+test('system proxy is reapplied for connection changes but not unrelated context updates', () => {
+  const wifi = {
+    online: true,
+    defaultInterface: 'en0',
+    defaultService: 'Wi-Fi',
+    ssid: 'Home'
+  }
+  assert.equal(shouldReapplyProxyForNetworkChange(wifi, { ...wifi }), false)
+  assert.equal(shouldReapplyProxyForNetworkChange(wifi, { ...wifi, ssid: 'Office' }), true)
+  assert.equal(shouldReapplyProxyForNetworkChange(wifi, { ...wifi, defaultInterface: 'en1' }), true)
+  assert.equal(
+    shouldReapplyProxyForNetworkChange(wifi, { ...wifi, defaultService: 'Ethernet' }),
+    true
+  )
+  assert.equal(shouldReapplyProxyForNetworkChange(wifi, { ...wifi, online: false }), false)
+  assert.equal(shouldReapplyProxyForNetworkChange({ ...wifi, online: false }, wifi), true)
+})
+
+test('network recovery runs independently of offline core detection and stops on exit', () => {
+  const startup = readFileSync('src/main/utils/init.ts', 'utf8')
+  const lifecycle = readFileSync('src/main/resolve/appLifecycle.ts', 'utf8')
+  const sysproxy = readFileSync('src/main/sys/sysproxy.ts', 'utf8')
+  assert.match(startup, /startSysproxyNetworkRecovery\(\)\s*\n\s*if \(networkDetection\)/)
+  assert.match(lifecycle, /stopSysproxyNetworkRecovery\(\)/)
+  assert.match(sysproxy, /proxyRequest !== triggerSysProxyRequest/)
+  assert.match(sysproxy, /!sysProxy\.enable/)
+})
 
 test('PAC listener is loopback-only, reuses an unchanged script, and closes before returning', async (t) => {
   const server = new PacHttpServer()
