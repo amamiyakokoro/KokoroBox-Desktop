@@ -1,4 +1,4 @@
-import { Meter, Surface } from '@heroui/react'
+import { Chip, Surface } from '@heroui/react'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import { useEffect, useMemo, useRef, useState } from 'react'
@@ -19,12 +19,24 @@ import TrafficChart from '@renderer/components/sider/traffic-chart'
 import { withConnectionSpeeds } from '@renderer/components/connections/connection-speeds'
 import { getOutboundModeLabel } from '@renderer/components/sider/outbound-mode'
 import { normalizeCoreVersion } from '@renderer/components/sider/core-version'
+import {
+  OverviewMetadataRow,
+  OverviewConnectionChip,
+  OverviewRoutingChips,
+  OverviewServiceChips,
+  OverviewStat,
+  OverviewStatusLine,
+  OverviewSubscriptionChips,
+  OverviewUsageSummary
+} from '@renderer/components/home/overview-parts'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'
 import { useGroups } from '@renderer/hooks/use-groups'
 import { useProfileConfig } from '@renderer/hooks/use-profile-config'
 import { calcTraffic } from '@renderer/utils/calc'
 import { activeRouteCount, topActiveApplication } from '@renderer/utils/home-connections'
+import { configuredOverviewServiceFeatures } from '@renderer/utils/home-overview'
+import { platform } from '@renderer/utils/init'
 import { nextProfileUpdateAt } from '../../../shared/profile-update'
 import {
   getAppRoutingStatus,
@@ -289,7 +301,6 @@ const Home = () => {
 
   const usage = (profile?.extra?.download ?? 0) + (profile?.extra?.upload ?? 0)
   const quota = profile?.extra?.total ?? 0
-  const remainingQuota = Math.max(quota - usage, 0)
   const nextUpdateAt = profile ? nextProfileUpdateAt(profile, now) : undefined
   const topApplication = useMemo(
     () => topActiveApplication(connections?.connections),
@@ -299,23 +310,6 @@ const Home = () => {
     () => activeRouteCount(connections?.connections),
     [connections?.connections]
   )
-  const proxyName = mode === 'global' ? globalProxy.name : undefined
-  const proxyDetails =
-    mode === 'global'
-      ? [globalProxy.protocol, globalProxy.latency ? `${globalProxy.latency} ms` : undefined]
-          .filter(Boolean)
-          .join(' · ')
-      : undefined
-  const routingDetail =
-    mode === 'rule'
-      ? `${getOutboundModeLabel(mode)} · ${
-          activeRoutes > 0
-            ? activeRoutes === 1
-              ? tr('{0} active route', [activeRoutes])
-              : tr('{0} active routes', [activeRoutes])
-            : tr('Selected dynamically')
-        }`
-      : tr('Direct')
   const cardStyle = hasBackground
     ? 'border-separator/50 bg-surface/80 backdrop-blur-sm'
     : 'border-separator/60 bg-surface/85'
@@ -324,17 +318,27 @@ const Home = () => {
     appConfig?.corePermissionMode,
     serviceState
   )
-  const serviceFeatures = [
-    appConfig?.sysProxy.enable ? tr('Proxy') : undefined,
-    appConfig?.autoSetDNSMode === 'service' ? 'DNS' : undefined,
-    routingStatus?.state === 'running'
-      ? routingStatus.protectedApplicationCount === undefined
-        ? tr('App routing')
-        : tr('App routing ({0})', [routingStatus.protectedApplicationCount])
-      : undefined
-  ].filter((feature): feature is string => Boolean(feature))
+  const serviceFeatures = configuredOverviewServiceFeatures({
+    serviceRunning: serviceState === 'running',
+    proxyEnabled: appConfig?.sysProxy.enable === true,
+    dnsConfigured: appConfig?.autoSetDNSMode === 'service',
+    platform,
+    tunEnabled: Boolean(controledMihomoConfig?.tun?.enable),
+    coreRunning: runtime.mihomo !== 'stopped',
+    appRoutingRunning: routingStatus?.state === 'running',
+    protectedApplicationCount: routingStatus?.protectedApplicationCount
+  })
   const mihomoVersionLabel = normalizeCoreVersion(coreVersion?.version)
   const serviceVersionLabel = displayServiceVersion(serviceVersion)
+  const serviceTone =
+    serviceState === 'running'
+      ? 'success'
+      : serviceState === 'requires-approval' || serviceState === 'need-init'
+        ? 'warning'
+        : serviceExpected && serviceState
+          ? 'danger'
+          : 'neutral'
+  const hasRecentTraffic = history.some(({ traffic }) => traffic > 0)
 
   return (
     <BasePage title={tr('Overview')} contentClassName="overflow-x-hidden">
@@ -377,15 +381,20 @@ const Home = () => {
           )}
 
           <Surface className={`min-w-0 rounded-2xl border p-4 shadow-none sm:p-5 ${cardStyle}`}>
-            <div className="mb-3 flex items-center justify-between gap-3">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
               <h2 className="text-sm font-semibold">{tr('Network')}</h2>
-              {refreshingIp && <span className="text-xs text-muted">{tr('Refreshing')}</span>}
+              {publicIpSnapshot.stale && publicIp ? (
+                <Chip size="sm" variant="soft" color="warning">
+                  {tr('Last known exit')}
+                </Chip>
+              ) : refreshingIp ? (
+                <span className="text-xs text-muted">{tr('Refreshing')}</span>
+              ) : null}
             </div>
-            <div className="flex min-w-0 items-center gap-3">
-              <CountryFlag code={publicIp?.countryCode} className="size-11 shrink-0" />
-              <div className="min-w-0 flex-1">
-                <div className="text-sm text-muted">{countryLabel(publicIp)}</div>
-                {publicIp ? (
+            <OverviewStat
+              icon={<CountryFlag code={publicIp?.countryCode} className="size-11" />}
+              value={
+                publicIp ? (
                   <button
                     type="button"
                     title={revealed ? tr('Hide IP address') : tr('Reveal IP address')}
@@ -397,28 +406,22 @@ const Home = () => {
                     {revealed ? publicIp.ip : maskPublicIp(publicIp.ip)}
                   </button>
                 ) : (
-                  <span className="text-xl font-semibold text-muted">{tr('Unavailable')}</span>
-                )}
-                {publicIpSnapshot.stale && publicIp && (
-                  <div className="text-xs text-muted">{tr('Last known exit')}</div>
-                )}
-              </div>
-            </div>
+                  tr('Unavailable')
+                )
+              }
+              secondary={countryLabel(publicIp)}
+            />
             {(publicIp?.isp || publicIp?.asn) && (
-              <div className="mt-3 min-w-0 break-words text-xs text-muted">
-                {[publicIp.isp, publicIp.asn].filter(Boolean).join(' · ')}
-              </div>
+              <dl className="mt-3 space-y-0.5">
+                {publicIp.isp && (
+                  <OverviewMetadataRow label={tr('Network provider')} value={publicIp.isp} />
+                )}
+                {publicIp.asn && <OverviewMetadataRow label="ASN" value={publicIp.asn} />}
+              </dl>
             )}
-            <div className="mt-4 flex min-w-0 flex-wrap items-baseline justify-between gap-x-4 gap-y-1 text-sm">
-              <span className="text-muted">
-                {mode === 'global' ? tr('Current proxy') : tr('Routing')}
-              </span>
-              <div className="min-w-0 text-left sm:text-right">
-                <div className="max-w-full break-words font-medium" title={proxyName}>
-                  {proxyName ?? (mode === 'global' ? tr('Unavailable') : routingDetail)}
-                </div>
-                {proxyDetails && <div className="text-xs text-muted">{proxyDetails}</div>}
-              </div>
+            <div className="mt-3 flex min-w-0 flex-wrap items-center justify-between gap-2">
+              <span className="text-xs text-muted">{tr('Routing')}</span>
+              <OverviewRoutingChips mode={mode} activeRoutes={activeRoutes} proxy={globalProxy} />
             </div>
           </Surface>
 
@@ -446,61 +449,38 @@ const Home = () => {
                     >
                       {profile.name}
                     </div>
-                    <div className="text-xs text-muted">
-                      {profile.kokoro
-                        ? [
-                            'Kokoro',
-                            profile.kokoro.settings.protocol.toUpperCase(),
-                            profile.kokoro.settings.mode === 'relay' ? tr('Relay') : tr('Direct')
-                          ].join(' · ')
-                        : profile.type === 'remote'
-                          ? tr('Remote')
-                          : tr('Local')}
+                    <div className="mt-1.5">
+                      <OverviewSubscriptionChips profile={profile} />
                     </div>
                   </div>
-                  {quota > 0 && (
-                    <div className="space-y-1.5">
-                      <div className="flex flex-wrap items-baseline justify-between gap-x-2 text-xs tabular-nums text-muted">
-                        <span>
-                          {calcTraffic(usage)} / {calcTraffic(quota)}
-                        </span>
-                        <span>{tr('{0}% used', [Math.round((usage / quota) * 100)])}</span>
-                      </div>
-                      <Meter
-                        aria-label={tr('Traffic usage')}
-                        maxValue={quota}
-                        value={Math.min(usage, quota)}
-                      >
-                        <Meter.Track className="h-1.5 bg-surface-secondary">
-                          <Meter.Fill className="bg-accent" />
-                        </Meter.Track>
-                      </Meter>
-                      <div className="text-xs text-muted">
-                        {tr('{0} remaining', [calcTraffic(remainingQuota)])}
-                      </div>
-                    </div>
-                  )}
-                  <div className="flex flex-wrap justify-between gap-x-3 gap-y-1 text-xs text-muted">
+                  <OverviewUsageSummary usage={usage} quota={quota} />
+                  <dl className="space-y-0.5">
                     {profile.extra?.expire ? (
-                      <span>
-                        {tr('Expires {0}', [dayjs.unix(profile.extra.expire).format('YYYY-MM-DD')])}
-                      </span>
+                      <OverviewMetadataRow
+                        label={tr('Expires')}
+                        value={dayjs.unix(profile.extra.expire).format('YYYY-MM-DD')}
+                      />
                     ) : null}
                     {profile.updated ? (
-                      <span>{tr('Updated {0}', [dayjs(profile.updated).fromNow()])}</span>
+                      <OverviewMetadataRow
+                        label={tr('Updated')}
+                        value={dayjs(profile.updated).fromNow()}
+                      />
                     ) : null}
-                  </div>
-                  {profile.type === 'remote' && (
-                    <div className="text-xs text-muted">
-                      {profile.autoUpdate === false
-                        ? tr('Auto update off')
-                        : nextUpdateAt !== undefined
-                          ? nextUpdateAt <= now
-                            ? tr('Update due')
-                            : tr('Next update {0}', [dayjs(nextUpdateAt).fromNow()])
-                          : null}
-                    </div>
-                  )}
+                    {profile.type === 'remote' &&
+                      (profile.autoUpdate === false || nextUpdateAt !== undefined) && (
+                        <OverviewMetadataRow
+                          label={tr('Next update')}
+                          value={
+                            profile.autoUpdate === false
+                              ? tr('Auto update off')
+                              : nextUpdateAt !== undefined && nextUpdateAt <= now
+                                ? tr('Update due')
+                                : dayjs(nextUpdateAt).fromNow()
+                          }
+                        />
+                      )}
+                  </dl>
                 </div>
               ) : (
                 <Link to="/profiles" className="app-nodrag text-sm text-muted hover:text-accent">
@@ -514,104 +494,106 @@ const Home = () => {
               style={{ flex: '1 1 230px' }}
             >
               <h2 className="mb-3 text-sm font-semibold">{tr('Runtime')}</h2>
-              <div className="text-lg font-semibold">
-                {coreLoading && !coreStopped
-                  ? tr('Loading')
-                  : runtime.mihomo === 'system-service'
-                    ? tr('System service')
-                    : runtime.mihomo === 'direct-run'
-                      ? tr('Direct run')
-                      : tr('Stopped')}
+              <OverviewStat
+                label="Mihomo"
+                value={
+                  coreLoading && !coreStopped
+                    ? tr('Loading')
+                    : runtime.mihomo === 'system-service'
+                      ? tr('System service')
+                      : runtime.mihomo === 'direct-run'
+                        ? tr('Direct run')
+                        : tr('Stopped')
+                }
+                secondary={runtime.mihomo !== 'stopped' ? mihomoVersionLabel : undefined}
+              />
+              <div className="mt-2">
+                <Chip size="sm" variant="soft" color="default">
+                  {getOutboundModeLabel(mode)}
+                </Chip>
               </div>
-              <div className="text-sm text-muted">
-                Mihomo
-                {mihomoVersionLabel && runtime.mihomo !== 'stopped' ? ` ${mihomoVersionLabel}` : ''}
-                {' · '}
-                {getOutboundModeLabel(mode)}
-              </div>
-              <div className="mt-4 flex min-w-0 items-center gap-2 text-xs">
-                <span
-                  className={`size-2 shrink-0 rounded-full ${serviceState === 'running' ? 'bg-success' : 'bg-muted'}`}
-                  aria-hidden="true"
+              <div className="mt-4">
+                <OverviewStatusLine
+                  label={tr('KokoroBox Service')}
+                  status={serviceStateLabel(runtime.service as ServiceState | undefined)}
+                  tone={serviceTone}
+                  version={serviceState === 'running' ? serviceVersionLabel : undefined}
                 />
-                <span className="min-w-0 text-muted">{tr('KokoroBox Service')}</span>
-                <span className="font-medium">
-                  {serviceStateLabel(runtime.service as ServiceState | undefined)}
-                </span>
               </div>
-              {serviceState === 'running' &&
-                (serviceVersionLabel || serviceFeatures.length > 0) && (
-                  <div className="mt-1 space-y-0.5 pl-4 text-xs text-muted">
-                    {serviceVersionLabel && <div>{serviceVersionLabel}</div>}
-                    {serviceFeatures.length > 0 && (
-                      <div>{tr('Configured: {0}', [serviceFeatures.join(' · ')])}</div>
-                    )}
-                  </div>
-                )}
+              {serviceFeatures.length > 0 && (
+                <div className="mt-3">
+                  <div className="mb-1 text-xs text-muted">{tr('Configured')}</div>
+                  <OverviewServiceChips features={serviceFeatures} />
+                </div>
+              )}
             </Surface>
           </div>
 
           <Surface className={`min-w-0 rounded-2xl border p-4 shadow-none sm:p-5 ${cardStyle}`}>
-            <div className="mb-4 flex items-center justify-between gap-3">
+            <div className="mb-3 flex items-center justify-between gap-3">
               <h2 className="text-sm font-semibold">{tr('Traffic')}</h2>
               <Link
                 to="/connections"
-                className="app-nodrag inline-flex items-center gap-1 text-xs text-muted hover:text-accent"
+                className="app-nodrag rounded-full focus-visible:outline-2 focus-visible:outline-accent"
+                aria-label={
+                  connections?.connections
+                    ? tr('{0} connections', [connections.connections.length])
+                    : tr('Connections')
+                }
               >
-                {connections?.connections
-                  ? tr('{0} connections', [connections.connections.length])
-                  : tr('Connections')}
-                <LuArrowRight className="size-3" aria-hidden="true" />
+                <OverviewConnectionChip count={connections?.connections?.length} />
               </Link>
             </div>
-            <div className="grid grid-cols-2 gap-4 tabular-nums">
-              <div className="min-w-0">
-                <span className="flex items-center gap-1 text-xs text-muted">
-                  <LuArrowDown /> {tr('Download')}
-                </span>
-                <div
-                  className="truncate text-xl font-semibold"
-                  title={`${calcTraffic(rates.down)}/s`}
-                >
-                  {calcTraffic(rates.down)}/s
-                </div>
-                <div className="text-xs text-muted">
-                  {tr('{0} this session', [calcTraffic(connections?.downloadTotal ?? 0)])}
-                </div>
-              </div>
-              <div className="min-w-0">
-                <span className="flex items-center gap-1 text-xs text-muted">
-                  <LuArrowUp /> {tr('Upload')}
-                </span>
-                <div
-                  className="truncate text-xl font-semibold"
-                  title={`${calcTraffic(rates.up)}/s`}
-                >
-                  {calcTraffic(rates.up)}/s
-                </div>
-                <div className="text-xs text-muted">
-                  {tr('{0} this session', [calcTraffic(connections?.uploadTotal ?? 0)])}
-                </div>
-              </div>
+            <div className="grid grid-cols-2 gap-3">
+              <OverviewStat
+                label={
+                  <span className="inline-flex items-center gap-1">
+                    <LuArrowDown aria-hidden="true" />
+                    {tr('Download')}
+                  </span>
+                }
+                value={
+                  <span title={`${calcTraffic(rates.down)}/s`}>{calcTraffic(rates.down)}/s</span>
+                }
+                secondary={tr('{0} this session', [calcTraffic(connections?.downloadTotal ?? 0)])}
+              />
+              <OverviewStat
+                label={
+                  <span className="inline-flex items-center gap-1">
+                    <LuArrowUp aria-hidden="true" />
+                    {tr('Upload')}
+                  </span>
+                }
+                value={<span title={`${calcTraffic(rates.up)}/s`}>{calcTraffic(rates.up)}/s</span>}
+                secondary={tr('{0} this session', [calcTraffic(connections?.uploadTotal ?? 0)])}
+              />
             </div>
             {topApplication && (
-              <div className="mt-3 flex min-w-0 items-baseline gap-1.5 text-xs text-muted">
-                <span className="shrink-0">{tr('Top activity')}</span>
-                <span aria-hidden="true">·</span>
-                <span
-                  className="min-w-0 truncate font-medium text-foreground"
-                  title={topApplication.name}
-                >
-                  {topApplication.name}
-                </span>
-                <span className="shrink-0">· {calcTraffic(topApplication.speed)}/s</span>
-              </div>
+              <dl className="mt-3">
+                <OverviewMetadataRow
+                  label={tr('Top activity')}
+                  value={
+                    <Link
+                      to="/connections"
+                      className="app-nodrag hover:text-accent"
+                      title={topApplication.name}
+                    >
+                      {topApplication.name} · {calcTraffic(topApplication.speed)}/s
+                    </Link>
+                  }
+                />
+              </dl>
             )}
-            <div className="relative mt-3 h-20 overflow-hidden" aria-hidden="true">
-              {history.some(({ traffic }) => traffic > 0) ? (
+            <div
+              className={`relative mt-3 overflow-hidden ${hasRecentTraffic ? 'h-20' : 'h-11'}`}
+              aria-hidden="true"
+            >
+              {hasRecentTraffic ? (
                 <TrafficChart data={history} />
               ) : (
-                <div className="absolute inset-x-0 bottom-1 border-b border-separator/50" />
+                <div className="absolute inset-0 flex items-center justify-center text-xs text-muted">
+                  {tr('No recent traffic')}
+                </div>
               )}
             </div>
           </Surface>

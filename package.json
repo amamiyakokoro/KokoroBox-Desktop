@@ -25,7 +25,7 @@
     "test:app-routing": "tsx --test scripts/test-app-routing.ts",
     "test:dns": "tsx --test scripts/test-dns.ts",
     "test:settings": "tsx --test scripts/test-settings.ts",
-    "test:home": "tsx --tsconfig tsconfig.web.json --test scripts/test-home-data.ts scripts/test-home-ui.tsx",
+    "test:home": "tsx --tsconfig tsconfig.web.json --test scripts/test-home-data.ts scripts/test-home-ui.tsx scripts/test-home-overview.tsx",
     "test:ui-native": "tsx --test scripts/test-ui-native-contract.ts",
     "test:service-auth": "tsx --test scripts/test-service-auth.ts",
     "test:service-contract": "tsx --test scripts/test-service-contract.ts",
