@@ -43,6 +43,8 @@ win:
   extraResources:
     - from: './node_modules/kokorobox-native-win32-${arch}-msvc/kokorobox-traffic-presenter.exe'
       to: 'traffic-presenter/kokorobox-traffic-presenter.exe'
+    - from: './node_modules/kokorobox-native-win32-${arch}-msvc/kokorobox-portable-updater.exe'
+      to: 'portable-updater/kokorobox-portable-updater.exe'
   target:
     - nsis
 nsis:

@@ -202,6 +202,17 @@ test('launched application updates use the confirmed quit lifecycle', () => {
   assert.equal(updater.match(/setNotQuitDialog\(\)/g)?.length, 1)
 })
 
+test('Windows portable updates stage the native helper with a legacy Service fallback', () => {
+  const updater = readFileSync('src/main/resolve/autoUpdater.ts', 'utf8')
+  const builder = readFileSync('electron-builder.yml', 'utf8')
+
+  assert.match(builder, /kokorobox-native-win32-\$\{arch\}-msvc\/kokorobox-portable-updater\.exe/)
+  assert.match(builder, /portable-updater\/kokorobox-portable-updater\.exe/)
+  assert.match(updater, /resourcesDir\(\)[\s\S]*getPortableUpdaterPath/)
+  assert.match(updater, /\['portable-update', '--help'\]/)
+  assert.match(updater, /argumentsPrefix: \['portable-update'\]/)
+})
+
 test('desktop uses the independently maintained KokoroBox native packages', () => {
   const packageJson = JSON.parse(readFileSync('package.json', 'utf8'))
   const nativeSpecifier = packageJson.dependencies['kokorobox-native']

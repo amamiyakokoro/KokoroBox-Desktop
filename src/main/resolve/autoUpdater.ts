@@ -4,7 +4,7 @@ import { parseYaml } from '../utils/yaml'
 import { app, shell } from 'electron'
 import { getAppConfig, getControledMihomoConfig } from '../config'
 import { getGitHubToken } from '../config/github-token'
-import { dataDir, exePath, isPortable, resourcesFilesDir, servicePath } from '../utils/dirs'
+import { dataDir, exePath, isPortable, resourcesDir, resourcesFilesDir, servicePath } from '../utils/dirs'
 import { copyFile, rm, writeFile, readFile, statfs } from 'fs/promises'
 import path from 'path'
 import { existsSync } from 'fs'
@@ -132,6 +132,15 @@ async function stopServiceForPortableUpdate(): Promise<void> {
 
 async function stagePortableUpdater(): Promise<{ path: string; argumentsPrefix: string[] }> {
   const updaterPath = path.join(dataDir(), 'kokorobox-portable-update.exe')
+  const packagedUpdaterPath = path.join(
+    resourcesDir(),
+    'portable-updater',
+    'kokorobox-portable-updater.exe'
+  )
+  if (existsSync(packagedUpdaterPath)) {
+    await copyFile(packagedUpdaterPath, updaterPath)
+    return { path: updaterPath, argumentsPrefix: [] }
+  }
   const resolveNativeUpdater = (
     native as typeof native & { getPortableUpdaterPath?: () => string }
   ).getPortableUpdaterPath
