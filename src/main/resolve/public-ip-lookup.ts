@@ -11,6 +11,24 @@ export const publicIpEndpoints = [
 
 export const maximumPublicIpResponseBytes = 64 * 1024
 
+function networkName(value: unknown): string | undefined {
+  if (typeof value !== 'string') return undefined
+  const name = value.trim()
+  const hasControlCharacter = Array.from(name).some((character) => {
+    const code = character.charCodeAt(0)
+    return code < 32 || code === 127
+  })
+  return name && name.length <= 120 && !hasControlCharacter ? name : undefined
+}
+
+function asnLabel(value: unknown): string | undefined {
+  const raw = typeof value === 'number' && Number.isInteger(value) ? String(value) : value
+  if (typeof raw !== 'string') return undefined
+  const match = /^(?:AS)?([1-9]\d{0,9})$/i.exec(raw.trim())
+  if (!match || Number(match[1]) > 4294967295) return undefined
+  return `AS${Number(match[1])}`
+}
+
 export function publicIpRequestOptions(mixedPort: number, appVersion: string): AxiosRequestConfig {
   if (!Number.isInteger(mixedPort) || mixedPort < 1 || mixedPort > 65535) {
     throw new Error('A usable Mihomo mixed port is required')
@@ -48,7 +66,16 @@ export function parsePublicIpResponse(body: string): PublicIpInfo | undefined {
       : typeof result.country === 'string' && !normalizeCountryCode(result.country)
         ? result.country.trim() || undefined
         : undefined
-  return { ip, ...(countryCode ? { countryCode } : {}), ...(country ? { country } : {}) }
+  const isp =
+    networkName(result.isp) ?? networkName(result.org) ?? networkName(result.asn_organization)
+  const asn = asnLabel(result.asn)
+  return {
+    ip,
+    ...(countryCode ? { countryCode } : {}),
+    ...(country ? { country } : {}),
+    ...(isp ? { isp } : {}),
+    ...(asn ? { asn } : {})
+  }
 }
 
 export async function tryPublicIpEndpoints(

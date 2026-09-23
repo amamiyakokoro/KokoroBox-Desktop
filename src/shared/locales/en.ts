@@ -20,6 +20,11 @@ export const messages: Readonly<Record<string, string>> = {
   'Selected dynamically': 'Selected dynamically',
   'By rule': 'By rule',
   'Current subscription': 'Current subscription',
+  '{0}% used': '{0}% used',
+  '{0} remaining': '{0} remaining',
+  'App routing': 'App routing',
+  'Configured: {0}': 'Configured: {0}',
+  '{0} connections': '{0} connections',
   'Open subscriptions': 'Open subscriptions',
   'No subscription selected. Open subscriptions to choose one.':
     'No subscription selected. Open subscriptions to choose one.',

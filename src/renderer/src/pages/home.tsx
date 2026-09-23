@@ -16,6 +16,7 @@ import BasePage from '@renderer/components/base/base-page'
 import { CountryFlag } from '@renderer/components/base/country-flag'
 import TrafficChart from '@renderer/components/sider/traffic-chart'
 import { getOutboundModeLabel } from '@renderer/components/sider/outbound-mode'
+import { normalizeCoreVersion } from '@renderer/components/sider/core-version'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'
 import { useGroups } from '@renderer/hooks/use-groups'
@@ -25,6 +26,7 @@ import {
   getAppRoutingStatus,
   getHomeBackgroundDataUrl,
   getHomePublicIp,
+  getHomeServiceVersion,
   mihomoVersion,
   serviceStatus,
   startHomeNetworkObservation,
@@ -111,6 +113,10 @@ const Home = () => {
   const { data: serviceState, mutate: refreshService } = useSWR('serviceStatus', serviceStatus, {
     refreshInterval: 10_000
   })
+  const { data: serviceVersion } = useSWR(
+    serviceState === 'running' ? 'homeServiceVersion' : null,
+    getHomeServiceVersion
+  )
   const { data: routingStatus } = useSWR('sidebarAppRoutingStatus', getAppRoutingStatus)
   const [publicIpSnapshot, setPublicIpSnapshot] = useState<PublicIpSnapshot>({ stale: true })
   const publicIp = publicIpSnapshot.info
@@ -252,6 +258,7 @@ const Home = () => {
 
   const usage = (profile?.extra?.download ?? 0) + (profile?.extra?.upload ?? 0)
   const quota = profile?.extra?.total ?? 0
+  const remainingQuota = Math.max(quota - usage, 0)
   const proxyName = mode === 'global' ? globalProxy.name : undefined
   const proxyDetails =
     mode === 'global'
@@ -269,6 +276,12 @@ const Home = () => {
     appConfig?.corePermissionMode,
     serviceState
   )
+  const serviceFeatures = [
+    appConfig?.sysProxy.enable ? tr('Proxy') : undefined,
+    appConfig?.autoSetDNSMode === 'service' ? 'DNS' : undefined,
+    routingStatus?.state === 'running' ? tr('App routing') : undefined
+  ].filter((feature): feature is string => Boolean(feature))
+  const mihomoVersionLabel = normalizeCoreVersion(coreVersion?.version)
 
   return (
     <BasePage title={tr('Overview')} contentClassName="overflow-x-hidden">
@@ -338,6 +351,11 @@ const Home = () => {
                 )}
               </div>
             </div>
+            {(publicIp?.isp || publicIp?.asn) && (
+              <div className="mt-3 min-w-0 break-words text-xs text-muted">
+                {[publicIp.isp, publicIp.asn].filter(Boolean).join(' · ')}
+              </div>
+            )}
             <div className="mt-4 flex min-w-0 flex-wrap items-baseline justify-between gap-x-4 gap-y-1 text-sm">
               <span className="text-muted">
                 {mode === 'global' ? tr('Current proxy') : tr('Routing')}
@@ -386,7 +404,7 @@ const Home = () => {
                         <span>
                           {calcTraffic(usage)} / {calcTraffic(quota)}
                         </span>
-                        <span>{Math.round((usage / quota) * 100)}%</span>
+                        <span>{tr('{0}% used', [Math.round((usage / quota) * 100)])}</span>
                       </div>
                       <Meter
                         aria-label={tr('Traffic usage')}
@@ -397,6 +415,9 @@ const Home = () => {
                           <Meter.Fill className="bg-accent" />
                         </Meter.Track>
                       </Meter>
+                      <div className="text-xs text-muted">
+                        {tr('{0} remaining', [calcTraffic(remainingQuota)])}
+                      </div>
                     </div>
                   )}
                   <div className="flex flex-wrap justify-between gap-x-3 gap-y-1 text-xs text-muted">
@@ -428,7 +449,12 @@ const Home = () => {
                       ? tr('Direct run')
                       : tr('Stopped')}
               </div>
-              <div className="text-sm text-muted">Mihomo · {getOutboundModeLabel(mode)}</div>
+              <div className="text-sm text-muted">
+                Mihomo
+                {mihomoVersionLabel && runtime.mihomo !== 'stopped' ? ` ${mihomoVersionLabel}` : ''}
+                {' · '}
+                {getOutboundModeLabel(mode)}
+              </div>
               <div className="mt-4 flex min-w-0 items-center gap-2 text-xs">
                 <span
                   className={`size-2 shrink-0 rounded-full ${serviceState === 'running' ? 'bg-success' : 'bg-muted'}`}
@@ -439,14 +465,28 @@ const Home = () => {
                   {serviceStateLabel(runtime.service as ServiceState | undefined)}
                 </span>
               </div>
+              {serviceState === 'running' && (serviceVersion || serviceFeatures.length > 0) && (
+                <div className="mt-1 space-y-0.5 pl-4 text-xs text-muted">
+                  {serviceVersion && <div>v{serviceVersion.replace(/^v/i, '')}</div>}
+                  {serviceFeatures.length > 0 && (
+                    <div>{tr('Configured: {0}', [serviceFeatures.join(' · ')])}</div>
+                  )}
+                </div>
+              )}
             </Surface>
           </div>
 
           <Surface className={`min-w-0 rounded-2xl border p-4 shadow-none sm:p-5 ${cardStyle}`}>
             <div className="mb-4 flex items-center justify-between gap-3">
               <h2 className="text-sm font-semibold">{tr('Traffic')}</h2>
-              <Link to="/connections" className="app-nodrag text-xs text-muted hover:text-accent">
-                {tr('Connections')} {connections?.connections?.length ?? '—'}
+              <Link
+                to="/connections"
+                className="app-nodrag inline-flex items-center gap-1 text-xs text-muted hover:text-accent"
+              >
+                {connections?.connections
+                  ? tr('{0} connections', [connections.connections.length])
+                  : tr('Connections')}
+                <LuArrowRight className="size-3" aria-hidden="true" />
               </Link>
             </div>
             <div className="grid grid-cols-2 gap-4 tabular-nums">

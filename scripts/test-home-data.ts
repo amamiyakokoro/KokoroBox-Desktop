@@ -44,6 +44,20 @@ test('normalizes all three public IP provider shapes and validates addresses', (
     }
   )
   assert.deepEqual(parsePublicIpResponse('{"ip":"8.8.8.8"}'), { ip: '8.8.8.8' })
+  assert.deepEqual(
+    parsePublicIpResponse(
+      '{"ip":"172.225.7.7","isp":"iCloud Private Relay","asn":36183,"unknown":"ignored"}'
+    ),
+    { ip: '172.225.7.7', isp: 'iCloud Private Relay', asn: 'AS36183' }
+  )
+  assert.deepEqual(parsePublicIpResponse('{"ip":"8.8.8.8","org":"Google LLC","asn":"AS15169"}'), {
+    ip: '8.8.8.8',
+    isp: 'Google LLC',
+    asn: 'AS15169'
+  })
+  assert.deepEqual(parsePublicIpResponse('{"ip":"8.8.8.8","isp":"bad\\nname","asn":"AS0"}'), {
+    ip: '8.8.8.8'
+  })
   assert.deepEqual(parsePublicIpResponse('{"ip":"8.8.4.4","country":"hk"}'), {
     ip: '8.8.4.4',
     countryCode: 'HK'

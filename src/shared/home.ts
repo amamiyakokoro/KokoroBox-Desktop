@@ -2,6 +2,8 @@ export interface PublicIpInfo {
   ip: string
   countryCode?: string
   country?: string
+  isp?: string
+  asn?: string
 }
 
 export interface PublicIpSnapshot {

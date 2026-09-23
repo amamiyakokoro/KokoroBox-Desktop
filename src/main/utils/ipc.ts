@@ -113,7 +113,7 @@ import {
   restartService,
   openServiceSystemSettings
 } from '../service/manager'
-import { patchCoreProfile } from '../service/api'
+import { getServiceMeta, patchCoreProfile } from '../service/api'
 import { coreLogPath, findSystemMihomo, logDir } from './dirs'
 import { systemCoreOnlyBuild } from '../../shared/build-flags'
 import {
@@ -278,6 +278,13 @@ async function validateSystemProxyServicePatch(
 export function registerIpcMainHandlers(): void {
   registerAppRoutingIpcHandlers()
   ipcMain.handle('getHomePublicIp', ipcErrorWrapper(getHomePublicIp))
+  ipcMain.handle(
+    'getHomeServiceVersion',
+    ipcErrorWrapper(async () => {
+      const { serviceVersion } = await getServiceMeta()
+      return serviceVersion === 'legacy' ? undefined : serviceVersion
+    })
+  )
   ipcMain.handle('chooseHomeBackground', ipcErrorWrapper(chooseHomeBackground))
   ipcMain.handle('clearHomeBackground', ipcErrorWrapper(clearHomeBackground))
   ipcMain.handle('getHomeBackgroundDataUrl', ipcErrorWrapper(getHomeBackgroundDataUrl))
