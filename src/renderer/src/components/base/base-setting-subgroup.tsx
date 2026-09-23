@@ -1,4 +1,4 @@
-import { cn, Surface } from '@heroui/react'
+import { cn } from '@heroui/react'
 import React from 'react'
 
 interface SettingSubgroupProps {
@@ -9,17 +9,13 @@ interface SettingSubgroupProps {
 
 /** Groups settings whose availability or meaning depends on a preceding parent setting. */
 const SettingSubgroup: React.FC<SettingSubgroupProps> = ({ children, className, label }) => (
-  <Surface
+  <div
     aria-label={label}
-    className={cn(
-      'setting-subgroup my-1 ml-3 rounded-r-lg border-l-2 border-separator/80 px-2',
-      className
-    )}
+    className={cn('setting-subgroup my-1 ml-3 border-l-2 border-separator/80 pl-3', className)}
     role={label ? 'group' : undefined}
-    variant="secondary"
   >
     {children}
-  </Surface>
+  </div>
 )
 
 export default SettingSubgroup

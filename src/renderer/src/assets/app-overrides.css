@@ -426,6 +426,12 @@ input[type='number'] {
   overflow-wrap: anywhere;
 }
 
+.settings-page .setting-subgroup .setting-item__title,
+.feature-settings-layout .setting-subgroup .setting-item__title {
+  color: var(--muted);
+  font-weight: 400;
+}
+
 .settings-page .setting-item__content,
 .feature-settings-layout .setting-item__content {
   display: flex;
