@@ -1282,7 +1282,11 @@ test('desktop sidebar separates controls, live status and navigation', () => {
   assert.match(quickControl, /aria-label=\{title\}/)
   assert.match(quickControl, /data-sider-quick-control/)
   assert.match(quickControl, /sider-quick-control-container w-full min-w-0/)
-  assert.match(quickControl, /sider-quick-control__icon flex size-8 items-center justify-center/)
+  assert.match(
+    quickControl,
+    /<SiderItemIcon active=\{enabled\} className="sider-quick-control__icon" prominence="status">/
+  )
+  assert.match(surfaces, /: 'bg-surface-secondary\/70 text-xl text-muted/)
   assert.match(quickControl, /sider-quick-control__title whitespace-nowrap/)
   assert.match(surfaces, /interface SiderQuickControlProps \{[\s\S]*status: string/)
   assert.match(quickControl, /sider-quick-control__status/)

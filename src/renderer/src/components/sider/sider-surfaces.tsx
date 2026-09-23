@@ -533,9 +533,9 @@ export const SiderQuickControl: React.FC<SiderQuickControlProps> = ({
         if (!isDragging) void onToggle(selected)
       }}
     >
-      <span className="sider-quick-control__icon flex size-8 items-center justify-center rounded-lg text-xl text-muted transition-colors duration-150 group-hover:text-foreground group-data-[selected=true]:text-accent-soft-foreground">
+      <SiderItemIcon active={enabled} className="sider-quick-control__icon" prominence="status">
         {icon}
-      </span>
+      </SiderItemIcon>
       <span
         className={cn('sider-quick-control__title whitespace-nowrap', siderItemTitleClassName)}
         title={title}
