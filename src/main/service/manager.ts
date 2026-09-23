@@ -494,20 +494,24 @@ export async function serviceStatus(): Promise<
   const execPath = servicePath()
   let commandState: string | undefined
 
-  // Newer native builds query the Windows SCM with read-only access. Keep the
-  // bundled Service CLI fallback until that native release reaches Desktop.
-  if (process.platform === 'win32') {
-    const getWindowsServiceStatus = (
-      native as typeof native & {
-        getWindowsServiceStatus?: () => 'running' | 'stopped' | 'paused' | 'not-installed' | 'unknown'
-      }
-    ).getWindowsServiceStatus
-    if (typeof getWindowsServiceStatus === 'function') {
-      try {
-        commandState = getWindowsServiceStatus()
-      } catch {
-        // Fall back to the existing fixed-argument Service status command.
-      }
+  // Newer native builds query Windows SCM or the system-wide Linux systemd
+  // manager directly. The fixed-argument CLI remains for older native builds
+  // and Linux machines using another init system.
+  const nativeStatus = native as typeof native & {
+    getWindowsServiceStatus?: () => 'running' | 'stopped' | 'paused' | 'not-installed' | 'unknown'
+    getLinuxServiceStatus?: () => 'running' | 'stopped' | 'not-installed' | 'unknown'
+  }
+  const queryNativeStatus =
+    process.platform === 'win32'
+      ? nativeStatus.getWindowsServiceStatus
+      : process.platform === 'linux'
+        ? nativeStatus.getLinuxServiceStatus
+        : undefined
+  if (typeof queryNativeStatus === 'function') {
+    try {
+      commandState = queryNativeStatus()
+    } catch {
+      // The native OS probe is unavailable; retain the Service CLI fallback.
     }
   }
 
