@@ -23,19 +23,6 @@ Application routing supports Windows 10/11 x64, macOS 13+, and Linux x64/arm64. 
 [Windows](docs/windows-app-routing.md), [macOS](docs/macos-app-routing.md), and
 [Linux](docs/linux-app-routing.md) guides for setup requirements.
 
-## System proxy and core modes
-
-KokoroBox Service manages the system proxy independently of how Mihomo runs. It renews the
-proxy setting while KokoroBox is active and reapplies it after network changes, including
-Wi-Fi switches. Changing Mihomo between **Direct run** and **System service** does not change
-which component owns the system proxy.
-
-On macOS, **Direct run** does not grant Mihomo elevated permissions. Use **System service**
-for features that need them, including TUN and reliable application-name detection in the
-Connections view. If the system proxy stops working while still shown as enabled, check or
-repair KokoroBox Service under **Application settings → Core → Core runtime → Service management**
-before changing the core run mode.
-
 ## Install and update
 
 Get the Windows installer, macOS DMG, or Linux package from [GitHub Releases](https://github.com/amamiyakokoro/KokoroBox-Desktop/releases).
