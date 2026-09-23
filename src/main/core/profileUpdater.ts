@@ -1,30 +1,14 @@
 import { addProfileItem, getCurrentProfileItem, getProfileConfig } from '../config'
+import { profileUpdateDelay } from '../../shared/profile-update'
 
 const intervalPool: Record<string, NodeJS.Timeout> = {}
-
-function calculateUpdateDelay(item: ProfileItem): number {
-  if (!item.interval) {
-    return -1
-  }
-
-  const now = Date.now()
-  const lastUpdated = item.updated || 0
-  const intervalMs = item.interval * 60 * 1000
-  const timeSinceLastUpdate = now - lastUpdated
-
-  if (timeSinceLastUpdate >= intervalMs) {
-    return 0
-  }
-
-  return intervalMs - timeSinceLastUpdate
-}
 
 export async function initProfileUpdater(): Promise<void> {
   const { items, current } = await getProfileConfig()
   const currentItem = await getCurrentProfileItem()
   for (const item of items.filter((i) => i.id !== current)) {
     if (item.type === 'remote' && item.interval && item.autoUpdate !== false) {
-      const delay = calculateUpdateDelay(item)
+      const delay = profileUpdateDelay(item)
 
       if (delay === -1) {
         continue
@@ -56,7 +40,7 @@ export async function initProfileUpdater(): Promise<void> {
   }
 
   if (currentItem?.type === 'remote' && currentItem.interval && currentItem.autoUpdate !== false) {
-    const delay = calculateUpdateDelay(currentItem)
+    const delay = profileUpdateDelay(currentItem)
 
     if (delay === 0) {
       try {
@@ -89,7 +73,7 @@ export async function addProfileUpdater(item: ProfileItem): Promise<void> {
       clearTimeout(intervalPool[item.id])
     }
 
-    const delay = calculateUpdateDelay(item)
+    const delay = profileUpdateDelay(item)
 
     if (delay === -1) {
       return

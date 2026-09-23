@@ -16,6 +16,7 @@ import {
   buildConnectionGroups,
   type ConnectionGroup
 } from '@renderer/components/connections/connection-groups'
+import { withConnectionSpeeds } from '@renderer/components/connections/connection-speeds'
 import {
   connectionIdentityLabel,
   isAppRoutingConnection
@@ -323,9 +324,7 @@ const Connections: React.FC = () => {
 
       if (!info.connections) return
 
-      const prevActiveMap = new Map(activeConnectionsRef.current.map((conn) => [conn.id, conn]))
       const existingConnectionIds = new Set(allConnectionsRef.current.map((conn) => conn.id))
-      const speedRatio = 1000 / connectionInterval
 
       const now = Date.now()
       const activeConnIds = new Set(info.connections.map((conn) => conn.id))
@@ -340,14 +339,11 @@ const Connections: React.FC = () => {
         }
       })
 
-      const activeConns = info.connections.map((conn) => {
-        const preConn = prevActiveMap.get(conn.id)
-        const downloadSpeed = preConn
-          ? Math.max(0, Math.round((conn.download - preConn.download) * speedRatio))
-          : 0
-        const uploadSpeed = preConn
-          ? Math.max(0, Math.round((conn.upload - preConn.upload) * speedRatio))
-          : 0
+      const activeConns = withConnectionSpeeds(
+        info.connections,
+        activeConnectionsRef.current,
+        connectionInterval
+      ).map((conn) => {
         const metadata =
           conn.metadata.type === 'Inner'
             ? { ...conn.metadata, process: 'mihomo', processPath: 'mihomo' }
@@ -356,9 +352,7 @@ const Connections: React.FC = () => {
         return {
           ...conn,
           metadata,
-          isActive: true,
-          downloadSpeed,
-          uploadSpeed
+          isActive: true
         }
       })
 

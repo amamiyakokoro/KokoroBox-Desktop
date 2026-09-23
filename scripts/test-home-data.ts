@@ -23,6 +23,70 @@ import {
   readManagedHomeBackground,
   removeManagedHomeBackground
 } from '../src/main/resolve/home-background-storage.ts'
+import { profileUpdateDelay, nextProfileUpdateAt } from '../src/shared/profile-update.ts'
+import { withConnectionSpeeds } from '../src/renderer/src/components/connections/connection-speeds.ts'
+import {
+  activeRouteCount,
+  topActiveApplication
+} from '../src/renderer/src/utils/home-connections.ts'
+
+function homeConnection(
+  id: string,
+  process: string,
+  download: number,
+  upload: number,
+  route = 'DIRECT',
+  processPath = process
+): ControllerConnectionDetail {
+  return {
+    id,
+    download,
+    upload,
+    chains: [route],
+    metadata: { process, processPath, type: 'HTTP' }
+  } as ControllerConnectionDetail
+}
+
+test('Home derives application speed from the existing connection stream', () => {
+  const previous = [
+    homeConnection('chrome-1', 'Chrome', 100, 0, 'JP', '/apps/chrome'),
+    homeConnection('chrome-2', 'Chrome', 0, 0, 'JP', '/apps/chrome'),
+    homeConnection('mail', 'Mail', 100, 0, 'DIRECT', '/apps/mail')
+  ]
+  const current = [
+    homeConnection('chrome-1', 'Chrome', 600, 0, 'JP', '/apps/chrome'),
+    homeConnection('chrome-2', 'Chrome', 250, 0, 'JP', '/apps/chrome'),
+    homeConnection('mail', 'Mail', 200, 0, 'DIRECT', '/apps/mail'),
+    homeConnection('unknown', '', 2000, 0, 'DIRECT', '')
+  ]
+  const sampled = withConnectionSpeeds(current, previous, 500)
+  assert.deepEqual(
+    sampled.map((connection) => connection.downloadSpeed),
+    [1000, 500, 200, 0]
+  )
+  assert.deepEqual(topActiveApplication(sampled), { name: 'Chrome', speed: 1500 })
+  assert.equal(activeRouteCount(sampled), 2)
+  assert.equal(topActiveApplication(current), undefined)
+  assert.equal(topActiveApplication([homeConnection('missing', '', 0, 0, 'DIRECT', '')]), undefined)
+})
+
+test('Home uses the same subscription update clock as the profile updater', () => {
+  const now = 10_000_000
+  const profile = {
+    id: 'remote',
+    type: 'remote',
+    name: 'Example',
+    interval: 60,
+    updated: now - 20 * 60_000,
+    autoUpdate: true
+  } as ProfileItem
+  assert.equal(profileUpdateDelay(profile, now), 40 * 60_000)
+  assert.equal(nextProfileUpdateAt(profile, now), now + 40 * 60_000)
+  assert.equal(profileUpdateDelay({ ...profile, updated: 0 }, now), 0)
+  assert.equal(nextProfileUpdateAt({ ...profile, autoUpdate: false }, now), undefined)
+  assert.equal(nextProfileUpdateAt({ ...profile, interval: 0 }, now), undefined)
+  assert.equal(nextProfileUpdateAt({ ...profile, type: 'local' }, now), undefined)
+})
 
 test('normalizes all three public IP provider shapes and validates addresses', () => {
   assert.deepEqual(

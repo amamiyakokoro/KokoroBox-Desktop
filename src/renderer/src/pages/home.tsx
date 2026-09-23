@@ -1,7 +1,7 @@
 import { Meter, Surface } from '@heroui/react'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { LuArrowDown, LuArrowRight, LuArrowUp, LuTriangleAlert } from 'react-icons/lu'
 import { Link } from 'react-router-dom'
 import useSWR from 'swr'
@@ -15,6 +15,7 @@ import {
 import BasePage from '@renderer/components/base/base-page'
 import { CountryFlag } from '@renderer/components/base/country-flag'
 import TrafficChart from '@renderer/components/sider/traffic-chart'
+import { withConnectionSpeeds } from '@renderer/components/connections/connection-speeds'
 import { getOutboundModeLabel } from '@renderer/components/sider/outbound-mode'
 import { normalizeCoreVersion } from '@renderer/components/sider/core-version'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
@@ -22,6 +23,8 @@ import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-c
 import { useGroups } from '@renderer/hooks/use-groups'
 import { useProfileConfig } from '@renderer/hooks/use-profile-config'
 import { calcTraffic } from '@renderer/utils/calc'
+import { activeRouteCount, topActiveApplication } from '@renderer/utils/home-connections'
+import { nextProfileUpdateAt } from '../../../shared/profile-update'
 import {
   getAppRoutingStatus,
   getHomeBackgroundDataUrl,
@@ -128,6 +131,9 @@ const Home = () => {
   const [connections, setConnections] = useState<ControllerConnections>()
   const [history, setHistory] = useState<TrafficSample[]>([])
   const [coreStopped, setCoreStopped] = useState(false)
+  const [now, setNow] = useState(Date.now())
+  const previousConnections = useRef<ControllerConnectionDetail[] | undefined>(undefined)
+  const previousConnectionsAt = useRef<number | undefined>(undefined)
   const mode = controledMihomoConfig?.mode ?? 'rule'
   const globalProxy = useMemo(() => selectedGlobalProxy(groups), [groups])
   const profile = profileConfig?.items.find((item) => item.id === profileConfig.current)
@@ -156,6 +162,9 @@ const Home = () => {
     const refresh = (): void => setRefreshSignal((current) => current + 1)
     const coreStarted = (): void => {
       setCoreStopped(false)
+      setConnections(undefined)
+      previousConnections.current = undefined
+      previousConnectionsAt.current = undefined
       refresh()
       void refreshCore()
       void refreshService()
@@ -164,10 +173,15 @@ const Home = () => {
       setCoreStopped(true)
       setRates({ up: 0, down: 0 })
       setConnections(undefined)
+      previousConnections.current = undefined
+      previousConnectionsAt.current = undefined
       refresh()
     }
     const onVisible = (): void => {
-      if (!document.hidden) refresh()
+      if (!document.hidden) {
+        setNow(Date.now())
+        refresh()
+      }
     }
     const removeNetwork = window.electron.ipcRenderer.on('homeNetworkChanged', refresh)
     const removeGroups = window.electron.ipcRenderer.on('groupsUpdated', refresh)
@@ -184,6 +198,11 @@ const Home = () => {
       void stopHomeNetworkObservation()
     }
   }, [refreshCore, refreshService])
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 60_000)
+    return () => window.clearInterval(timer)
+  }, [])
 
   useEffect(() => {
     let active = true
@@ -220,7 +239,18 @@ const Home = () => {
     )
     const removeConnections = window.electron.ipcRenderer.on(
       'mihomoConnections',
-      (_event, info: ControllerConnections) => setConnections(info)
+      (_event, info: ControllerConnections) => {
+        const receivedAt = Date.now()
+        const sampleMs = receivedAt - (previousConnectionsAt.current ?? receivedAt)
+        setConnections({
+          ...info,
+          connections: info.connections
+            ? withConnectionSpeeds(info.connections, previousConnections.current, sampleMs)
+            : undefined
+        })
+        previousConnections.current = info.connections
+        previousConnectionsAt.current = receivedAt
+      }
     )
     return () => {
       removeTraffic()
@@ -259,6 +289,15 @@ const Home = () => {
   const usage = (profile?.extra?.download ?? 0) + (profile?.extra?.upload ?? 0)
   const quota = profile?.extra?.total ?? 0
   const remainingQuota = Math.max(quota - usage, 0)
+  const nextUpdateAt = profile ? nextProfileUpdateAt(profile, now) : undefined
+  const topApplication = useMemo(
+    () => topActiveApplication(connections?.connections),
+    [connections?.connections]
+  )
+  const activeRoutes = useMemo(
+    () => activeRouteCount(connections?.connections),
+    [connections?.connections]
+  )
   const proxyName = mode === 'global' ? globalProxy.name : undefined
   const proxyDetails =
     mode === 'global'
@@ -267,7 +306,15 @@ const Home = () => {
           .join(' · ')
       : undefined
   const routingDetail =
-    mode === 'rule' ? `${getOutboundModeLabel(mode)} · ${tr('Selected dynamically')}` : tr('Direct')
+    mode === 'rule'
+      ? `${getOutboundModeLabel(mode)} · ${
+          activeRoutes > 0
+            ? activeRoutes === 1
+              ? tr('{0} active route', [activeRoutes])
+              : tr('{0} active routes', [activeRoutes])
+            : tr('Selected dynamically')
+        }`
+      : tr('Direct')
   const cardStyle = hasBackground
     ? 'border-separator/50 bg-surface/80 backdrop-blur-sm'
     : 'border-separator/60 bg-surface/85'
@@ -279,7 +326,11 @@ const Home = () => {
   const serviceFeatures = [
     appConfig?.sysProxy.enable ? tr('Proxy') : undefined,
     appConfig?.autoSetDNSMode === 'service' ? 'DNS' : undefined,
-    routingStatus?.state === 'running' ? tr('App routing') : undefined
+    routingStatus?.state === 'running'
+      ? routingStatus.protectedApplicationCount === undefined
+        ? tr('App routing')
+        : tr('App routing ({0})', [routingStatus.protectedApplicationCount])
+      : undefined
   ].filter((feature): feature is string => Boolean(feature))
   const mihomoVersionLabel = normalizeCoreVersion(coreVersion?.version)
 
@@ -392,7 +443,11 @@ const Home = () => {
                     </div>
                     <div className="text-xs text-muted">
                       {profile.kokoro
-                        ? tr('Kokoro subscription')
+                        ? [
+                            'Kokoro',
+                            profile.kokoro.settings.protocol.toUpperCase(),
+                            profile.kokoro.settings.mode === 'relay' ? tr('Relay') : tr('Direct')
+                          ].join(' · ')
                         : profile.type === 'remote'
                           ? tr('Remote')
                           : tr('Local')}
@@ -430,6 +485,17 @@ const Home = () => {
                       <span>{tr('Updated {0}', [dayjs(profile.updated).fromNow()])}</span>
                     ) : null}
                   </div>
+                  {profile.type === 'remote' && (
+                    <div className="text-xs text-muted">
+                      {profile.autoUpdate === false
+                        ? tr('Auto update off')
+                        : nextUpdateAt !== undefined
+                          ? nextUpdateAt <= now
+                            ? tr('Update due')
+                            : tr('Next update {0}', [dayjs(nextUpdateAt).fromNow()])
+                          : null}
+                    </div>
+                  )}
                 </div>
               ) : (
                 <Link to="/profiles" className="app-nodrag text-sm text-muted hover:text-accent">
@@ -519,6 +585,19 @@ const Home = () => {
                 </div>
               </div>
             </div>
+            {topApplication && (
+              <div className="mt-3 flex min-w-0 items-baseline gap-1.5 text-xs text-muted">
+                <span className="shrink-0">{tr('Top activity')}</span>
+                <span aria-hidden="true">·</span>
+                <span
+                  className="min-w-0 truncate font-medium text-foreground"
+                  title={topApplication.name}
+                >
+                  {topApplication.name}
+                </span>
+                <span className="shrink-0">· {calcTraffic(topApplication.speed)}/s</span>
+              </div>
+            )}
             <div className="relative mt-3 h-20 overflow-hidden" aria-hidden="true">
               {history.some(({ traffic }) => traffic > 0) ? (
                 <TrafficChart data={history} />
