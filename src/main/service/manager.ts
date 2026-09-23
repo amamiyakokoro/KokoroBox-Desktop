@@ -37,6 +37,7 @@ import {
   unregisterMacosManagedService,
   type MacOSManagedServiceStatus
 } from 'kokorobox-native'
+import * as native from 'kokorobox-native'
 import { systemCoreOnlyBuild } from '../../shared/build-flags'
 import { parseServiceLog } from './log-parser'
 import { existsSync } from 'fs'
@@ -493,13 +494,32 @@ export async function serviceStatus(): Promise<
   const execPath = servicePath()
   let commandState: string | undefined
 
-  try {
-    const { stdout, stderr } = await execFilePromise(execPath, ['service', 'status'], {
-      windowsHide: true
-    })
-    commandState = parseServiceLog(`${stdout}\n${stderr}`)?.status?.state
-  } catch (error) {
-    commandState = parseServiceLog(serviceCommandOutput(error))?.status?.state
+  // Newer native builds query the Windows SCM with read-only access. Keep the
+  // bundled Service CLI fallback until that native release reaches Desktop.
+  if (process.platform === 'win32') {
+    const getWindowsServiceStatus = (
+      native as typeof native & {
+        getWindowsServiceStatus?: () => 'running' | 'stopped' | 'paused' | 'not-installed' | 'unknown'
+      }
+    ).getWindowsServiceStatus
+    if (typeof getWindowsServiceStatus === 'function') {
+      try {
+        commandState = getWindowsServiceStatus()
+      } catch {
+        // Fall back to the existing fixed-argument Service status command.
+      }
+    }
+  }
+
+  if (commandState === undefined) {
+    try {
+      const { stdout, stderr } = await execFilePromise(execPath, ['service', 'status'], {
+        windowsHide: true
+      })
+      commandState = parseServiceLog(`${stdout}\n${stderr}`)?.status?.state
+    } catch (error) {
+      commandState = parseServiceLog(serviceCommandOutput(error))?.status?.state
+    }
   }
 
   if (commandState === 'not-installed') {
