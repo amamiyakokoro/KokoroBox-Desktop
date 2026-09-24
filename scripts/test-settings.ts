@@ -1539,7 +1539,8 @@ test('desktop sidebar separates controls, live status and navigation', () => {
   assert.match(connections, /\{tr\('Closed'\)\}/)
   assert.doesNotMatch(connections, /<TrafficChart|mihomoTraffic|Download speed|Upload speed/)
   assert.doesNotMatch(profile, /details=\{|<Meter|profileDisplayDate/)
-  assert.match(appRouting, /<SiderStatusCard[\s\S]*allowTextWrap/)
+  assert.doesNotMatch(appRouting, /<SiderStatusCard[\s\S]*allowTextWrap/)
+  assert.doesNotMatch(appRouting, /<SiderStatusCard[\s\S]*stackStatus/)
   assert.doesNotMatch(profile, /<SiderStatusCard[\s\S]*allowTextWrap/)
   assert.doesNotMatch(connections, /<Card/)
 

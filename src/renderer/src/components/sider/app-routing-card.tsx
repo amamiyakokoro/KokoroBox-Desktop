@@ -113,7 +113,6 @@ const AppRoutingCard: React.FC<Props> = ({ iconOnly = false }) => {
       className={`${appRoutingCardStatus} app-routing-card ${isDragging && !disableAnimation ? 'scale-[0.98]' : ''}`}
     >
       <SiderStatusCard
-        allowTextWrap
         icon={<MdOutlineAppShortcut />}
         title={tr('Application routing')}
         description={
@@ -124,7 +123,6 @@ const AppRoutingCard: React.FC<Props> = ({ iconOnly = false }) => {
         status={runtimeLabel}
         statusTone={statusTone}
         statusIndicator
-        stackStatus
         active={match}
         onPress={() => navigate('/app-routing')}
         details={
