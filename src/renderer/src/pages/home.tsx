@@ -17,6 +17,7 @@ import useSWR from 'swr'
 import { getLocale, tr } from '../../../shared/i18n'
 import {
   displayServiceVersion,
+  homeBackgroundChoice,
   homeRuntimeState,
   type PublicIpInfo,
   type PublicIpSnapshot
@@ -65,6 +66,8 @@ import {
 import { configuredOverviewFeatures } from '@renderer/utils/home-overview'
 import { platform } from '@renderer/utils/init'
 import { nextProfileUpdateAt } from '../../../shared/profile-update'
+import ammyLight from '@renderer/assets/home/ammy1.png'
+import ammyDark from '@renderer/assets/home/ammy2.png'
 import {
   getAppRoutingStatus,
   getHomeBackgroundDataUrl,
@@ -201,10 +204,11 @@ const Home = () => {
   }, [groups])
   const profile = profileConfig?.items.find((item) => item.id === profileConfig.current)
   const background = appConfig?.homeBackground
-  const hasBackground = Boolean(background && backgroundUrl)
+  const backgroundChoice = homeBackgroundChoice(appConfig)
+  const hasBackground = backgroundChoice === 'custom' && Boolean(backgroundUrl)
 
   useEffect(() => {
-    if (!background?.file) {
+    if (backgroundChoice !== 'custom' || !background?.file) {
       setBackgroundUrl(undefined)
       return
     }
@@ -219,7 +223,7 @@ const Home = () => {
     return () => {
       active = false
     }
-  }, [background?.file])
+  }, [background?.file, backgroundChoice])
 
   useEffect(() => {
     const refresh = (): void => setRefreshSignal((current) => current + 1)
@@ -484,6 +488,24 @@ const Home = () => {
   return (
     <BasePage title={tr('Overview')} contentClassName="overflow-x-hidden">
       <main className="@container relative min-h-full min-w-0 overflow-hidden">
+        {backgroundChoice === 'default' && (
+          <div className="pointer-events-none absolute inset-0" aria-hidden="true">
+            <div
+              className="absolute inset-0 bg-right-bottom bg-no-repeat opacity-25 dark:hidden"
+              style={{
+                backgroundImage: `url(${ammyLight})`,
+                backgroundSize: 'auto min(100%, 900px)'
+              }}
+            />
+            <div
+              className="absolute inset-0 hidden bg-right-bottom bg-no-repeat opacity-25 dark:block"
+              style={{
+                backgroundImage: `url(${ammyDark})`,
+                backgroundSize: 'auto min(100%, 900px)'
+              }}
+            />
+          </div>
+        )}
         {hasBackground && (
           <div className="pointer-events-none absolute inset-0" aria-hidden="true">
             <div

@@ -23,8 +23,8 @@ export async function chooseHomeBackground(): Promise<HomeBackground | undefined
   return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('chooseHomeBackground'))
 }
 
-export async function clearHomeBackground(): Promise<void> {
-  return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('clearHomeBackground'))
+export async function clearHomeBackground(disabled = false): Promise<void> {
+  return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('clearHomeBackground', disabled))
 }
 
 export async function getHomeBackgroundDataUrl(): Promise<string | undefined> {

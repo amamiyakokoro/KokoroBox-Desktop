@@ -2,6 +2,8 @@
 export const messages: Readonly<Record<string, string>> = {
   None: 'None',
   'Custom image': 'Custom image',
+  'Default image': 'Default image',
+  'Use default': 'Use default',
   'Last known exit': 'Last known exit',
   Traffic: 'Traffic',
   Download: 'Download',

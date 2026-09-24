@@ -2,6 +2,8 @@
 export const messages: Readonly<Record<string, string>> = {
   None: '無',
   'Custom image': '自訂圖片',
+  'Default image': '預設圖片',
+  'Use default': '使用預設圖片',
   'Last known exit': '上次觀測的出口',
   Traffic: '流量',
   Download: '下載',

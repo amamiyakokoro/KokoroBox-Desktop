@@ -28,6 +28,13 @@ export const defaultHomeBackgroundSettings = {
   overlay: 35
 } as const satisfies Omit<HomeBackground, 'file'>
 
+export function homeBackgroundChoice(
+  config: Pick<AppConfig, 'homeBackground' | 'homeBackgroundDisabled'> | undefined
+): 'default' | 'custom' | 'none' {
+  if (config?.homeBackgroundDisabled) return 'none'
+  return config?.homeBackground?.file ? 'custom' : 'default'
+}
+
 export function normalizeCountryCode(value: unknown): string | undefined {
   if (typeof value !== 'string') return undefined
   const code = value.trim()

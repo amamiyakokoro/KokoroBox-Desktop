@@ -7,6 +7,7 @@ import { test } from 'node:test'
 import {
   countryFlagAssetKey,
   displayServiceVersion,
+  homeBackgroundChoice,
   homeRuntimeState,
   isManagedHomeBackgroundFile,
   maskPublicIp
@@ -17,6 +18,25 @@ test('Home only presents release-style Service versions', () => {
   assert.equal(displayServiceVersion('v0.6.0-rc.1'), 'v0.6.0-rc.1')
   assert.equal(displayServiceVersion('dev+801cb18'), undefined)
   assert.equal(displayServiceVersion('legacy'), undefined)
+})
+
+test('Home background keeps the bundled default, custom image, and explicit none distinct', () => {
+  assert.equal(homeBackgroundChoice(undefined), 'default')
+  assert.equal(homeBackgroundChoice({}), 'default')
+  assert.equal(homeBackgroundChoice({ homeBackgroundDisabled: true }), 'none')
+  const custom = {
+    file: 'home-background-0123456789abcdef0123456789abcdef.png',
+    fit: 'cover',
+    position: 'center',
+    opacity: 70,
+    blur: 0,
+    overlay: 35
+  } as const
+  assert.equal(homeBackgroundChoice({ homeBackground: custom }), 'custom')
+  assert.equal(
+    homeBackgroundChoice({ homeBackground: custom, homeBackgroundDisabled: true }),
+    'none'
+  )
 })
 import {
   createPublicIpCache,

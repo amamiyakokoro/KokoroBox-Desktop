@@ -40,7 +40,7 @@ export async function chooseHomeBackground(): Promise<HomeBackground | undefined
     file
   }
   try {
-    await patchAppConfig({ homeBackground: next })
+    await patchAppConfig({ homeBackground: next, homeBackgroundDisabled: false })
   } catch (error) {
     await removeManagedHomeBackground(directory, file)
     throw error
@@ -50,9 +50,9 @@ export async function chooseHomeBackground(): Promise<HomeBackground | undefined
   return next
 }
 
-export async function clearHomeBackground(): Promise<void> {
+export async function clearHomeBackground(disabled = false): Promise<void> {
   const previous = (await getAppConfig()).homeBackground
-  await patchAppConfig({ homeBackground: undefined })
+  await patchAppConfig({ homeBackground: undefined, homeBackgroundDisabled: disabled })
   await removeManagedHomeBackground(homeBackgroundDirectory(), previous?.file)
   notifyConfigUpdated()
 }

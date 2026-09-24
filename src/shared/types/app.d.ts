@@ -36,6 +36,7 @@ interface IHost {
 
 interface AppConfig {
   homeBackground?: import('../home').HomeBackground
+  homeBackgroundDisabled?: boolean
   language?: AppLanguage
   updateChannel: AppUpdateChannel
   notificationMode?: AppNotificationMode

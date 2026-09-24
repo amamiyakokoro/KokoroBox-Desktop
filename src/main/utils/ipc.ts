@@ -288,7 +288,9 @@ export function registerIpcMainHandlers(): void {
     })
   )
   ipcMain.handle('chooseHomeBackground', ipcErrorWrapper(chooseHomeBackground))
-  ipcMain.handle('clearHomeBackground', ipcErrorWrapper(clearHomeBackground))
+  ipcMain.handle('clearHomeBackground', (_event, disabled?: boolean) =>
+    ipcErrorWrapper(clearHomeBackground)(disabled)
+  )
   ipcMain.handle('getHomeBackgroundDataUrl', ipcErrorWrapper(getHomeBackgroundDataUrl))
   ipcMain.handle('startHomeNetworkObservation', () => startHomeNetworkObservation())
   ipcMain.handle('stopHomeNetworkObservation', () => stopHomeNetworkObservation())

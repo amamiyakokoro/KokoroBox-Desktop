@@ -1,7 +1,7 @@
 import { Button, Label, Slider } from '@heroui/react'
 import { useEffect, useState } from 'react'
 import { tr } from '../../../../shared/i18n'
-import type { HomeBackground } from '../../../../shared/home'
+import { homeBackgroundChoice, type HomeBackground } from '../../../../shared/home'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { chooseHomeBackground, clearHomeBackground } from '@renderer/utils/ipc'
 import { notify } from '@renderer/utils/notification'
@@ -50,6 +50,7 @@ function BackgroundSlider({
 export default function HomeBackgroundSettings() {
   const { appConfig, patchAppConfig, mutateAppConfig } = useAppConfig()
   const background = appConfig?.homeBackground
+  const choice = homeBackgroundChoice(appConfig)
 
   const patchBackground = (patch: Partial<HomeBackground>): void => {
     if (!background) return
@@ -61,9 +62,15 @@ export default function HomeBackgroundSettings() {
 
   return (
     <SettingCard header={tr('Home background')}>
-      <SettingItem title={tr('Image')} divider={Boolean(background)}>
+      <SettingItem title={tr('Image')} divider={choice === 'custom'}>
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-sm text-muted">{background ? tr('Custom image') : tr('None')}</span>
+          <span className="text-sm text-muted">
+            {choice === 'custom'
+              ? tr('Custom image')
+              : choice === 'none'
+                ? tr('None')
+                : tr('Default image')}
+          </span>
           <Button
             size="sm"
             variant="secondary"
@@ -75,27 +82,43 @@ export default function HomeBackgroundSettings() {
               }
             }}
           >
-            {background ? tr('Replace image') : tr('Choose image')}
+            {choice === 'custom' ? tr('Replace image') : tr('Choose image')}
           </Button>
-          {background && (
+          {choice !== 'default' && (
             <Button
               size="sm"
               variant="ghost"
               onPress={async () => {
                 try {
-                  await clearHomeBackground()
+                  await clearHomeBackground(false)
                   mutateAppConfig()
                 } catch (error) {
                   notify(error, { variant: 'danger' })
                 }
               }}
             >
-              {tr('Remove image')}
+              {tr('Use default')}
+            </Button>
+          )}
+          {choice !== 'none' && (
+            <Button
+              size="sm"
+              variant="ghost"
+              onPress={async () => {
+                try {
+                  await clearHomeBackground(true)
+                  mutateAppConfig()
+                } catch (error) {
+                  notify(error, { variant: 'danger' })
+                }
+              }}
+            >
+              {tr('None')}
             </Button>
           )}
         </div>
       </SettingItem>
-      {background && (
+      {choice === 'custom' && background && (
         <>
           <SettingItem title={tr('Fit')} divider>
             <KokoSegmentedControl
