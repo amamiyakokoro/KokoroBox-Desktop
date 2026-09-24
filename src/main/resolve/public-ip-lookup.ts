@@ -10,6 +10,8 @@ export const publicIpEndpoints = [
 ] as const
 
 export const maximumPublicIpResponseBytes = 64 * 1024
+export const publicIpCacheLifetimeMs = 15 * 60_000
+export const publicIpFailureRetryMs = 30_000
 
 function networkName(value: unknown): string | undefined {
   if (typeof value !== 'string') return undefined
@@ -106,4 +108,52 @@ export function nextPublicIpSnapshot(
   found: PublicIpInfo | undefined
 ): PublicIpSnapshot {
   return { info: retainPublicIpResult(previous.info, found), stale: !found }
+}
+
+export function createPublicIpCache(
+  lookup: () => Promise<PublicIpInfo | undefined>,
+  now: () => number = Date.now
+): { get: (forceRefresh?: boolean) => Promise<PublicIpSnapshot> } {
+  let snapshot: PublicIpSnapshot = { stale: true }
+  let freshUntil = 0
+  let retryAfter = 0
+  let generation = 0
+  let pending: Promise<PublicIpSnapshot> | undefined
+
+  return {
+    get(forceRefresh = false) {
+      if (!forceRefresh) {
+        if (pending) return pending
+        if (!snapshot.stale && snapshot.info && now() < freshUntil) {
+          return Promise.resolve(snapshot)
+        }
+        if (now() < retryAfter) return Promise.resolve(snapshot)
+      }
+
+      const currentGeneration = ++generation
+      const request = (async () => {
+        let found: PublicIpInfo | undefined
+        try {
+          found = await lookup()
+        } catch {
+          // Preserve the last successful observation after any lookup failure.
+        }
+        if (currentGeneration === generation) {
+          snapshot = nextPublicIpSnapshot(snapshot, found)
+          if (found) {
+            freshUntil = now() + publicIpCacheLifetimeMs
+            retryAfter = 0
+          } else {
+            retryAfter = now() + publicIpFailureRetryMs
+          }
+        }
+        return snapshot
+      })()
+      pending = request
+      void request.finally(() => {
+        if (pending === request) pending = undefined
+      })
+      return request
+    }
+  }
 }

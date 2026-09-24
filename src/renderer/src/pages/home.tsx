@@ -161,10 +161,20 @@ const Home = () => {
   const [coreStopped, setCoreStopped] = useState(false)
   const [now, setNow] = useState(Date.now())
   const observedIp = useRef<string | undefined>(undefined)
+  const ipRequestGeneration = useRef(0)
+  const previousMode = useRef<OutboundMode | undefined>(undefined)
+  const previousSelections = useRef<string | undefined>(undefined)
   const previousConnections = useRef<ControllerConnectionDetail[] | undefined>(undefined)
   const previousConnectionsAt = useRef<number | undefined>(undefined)
   const mode = controledMihomoConfig?.mode ?? 'rule'
   const globalProxy = useMemo(() => selectedGlobalProxy(groups), [groups])
+  const selectedProxyKey = useMemo(() => {
+    const selections = groups
+      .filter((group) => group.now)
+      .map((group) => [group.name, group.now])
+      .sort(([left], [right]) => left.localeCompare(right))
+    return selections.length > 0 ? JSON.stringify(selections) : undefined
+  }, [groups])
   const profile = profileConfig?.items.find((item) => item.id === profileConfig.current)
   const background = appConfig?.homeBackground
   const hasBackground = Boolean(background && backgroundUrl)
@@ -212,18 +222,15 @@ const Home = () => {
     const onVisible = (): void => {
       if (!document.hidden) {
         setNow(Date.now())
-        refresh()
       }
     }
     const removeNetwork = window.electron.ipcRenderer.on('homeNetworkChanged', refresh)
-    const removeGroups = window.electron.ipcRenderer.on('groupsUpdated', refresh)
     const removeCore = window.electron.ipcRenderer.on('core-started', coreStarted)
     const removeCoreStopped = window.electron.ipcRenderer.on('core-stopped', coreStoppedHandler)
     document.addEventListener('visibilitychange', onVisible)
     void startHomeNetworkObservation()
     return () => {
       removeNetwork()
-      removeGroups()
       removeCore()
       removeCoreStopped()
       document.removeEventListener('visibilitychange', onVisible)
@@ -237,18 +244,50 @@ const Home = () => {
   }, [])
 
   useEffect(() => {
+    if (!controledMihomoConfig) return
+    if (previousMode.current && previousMode.current !== mode) {
+      setRefreshSignal((current) => current + 1)
+    }
+    previousMode.current = mode
+  }, [controledMihomoConfig, mode])
+
+  useEffect(() => {
+    if (!selectedProxyKey) return
+    if (previousSelections.current && previousSelections.current !== selectedProxyKey) {
+      setRefreshSignal((current) => current + 1)
+    }
+    previousSelections.current = selectedProxyKey
+  }, [selectedProxyKey])
+
+  useEffect(() => {
+    let active = true
+    const generation = ++ipRequestGeneration.current
+    void getHomePublicIp()
+      .then((next) => {
+        if (!active || generation !== ipRequestGeneration.current) return
+        observedIp.current = next.info?.ip
+        setPublicIpSnapshot(next)
+      })
+      .catch(() => {})
+    return () => {
+      active = false
+    }
+  }, [])
+
+  useEffect(() => {
+    if (refreshSignal === 0) return
     let active = true
     const timer = window.setTimeout(() => {
+      const generation = ++ipRequestGeneration.current
       setRefreshingIp(true)
-      void getHomePublicIp()
+      void getHomePublicIp(true)
         .then((next) => {
-          if (active) {
-            if (observedIp.current !== next.info?.ip) {
-              observedIp.current = next.info?.ip
-              setRevealed(false)
-            }
-            setPublicIpSnapshot(next)
+          if (!active || generation !== ipRequestGeneration.current) return
+          if (observedIp.current !== next.info?.ip) {
+            observedIp.current = next.info?.ip
+            setRevealed(false)
           }
+          setPublicIpSnapshot(next)
         })
         .catch(() => {})
         .finally(() => {
@@ -259,7 +298,7 @@ const Home = () => {
       active = false
       window.clearTimeout(timer)
     }
-  }, [mode, globalProxy.name, refreshSignal])
+  }, [refreshSignal])
 
   useEffect(() => {
     let lastSampleAt = 0
@@ -350,6 +389,7 @@ const Home = () => {
   })
   const mihomoVersionLabel = normalizeCoreVersion(coreVersion?.version)
   const serviceVersionLabel = displayServiceVersion(serviceVersion)
+  const exitIsLastKnown = publicIpSnapshot.stale || (!coreLoading && runtime.mihomo === 'stopped')
   const serviceTone =
     serviceState === 'running'
       ? 'success'
@@ -414,7 +454,7 @@ const Home = () => {
           >
             <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
               <h2 className="text-sm font-semibold">{tr('Network')}</h2>
-              {publicIpSnapshot.stale && publicIp ? (
+              {exitIsLastKnown && publicIp ? (
                 <span className="text-xs text-warning">{tr('Last known exit')}</span>
               ) : refreshingIp ? (
                 <span className="text-xs text-muted">{tr('Refreshing')}</span>

@@ -19,9 +19,12 @@ test('Home only presents release-style Service versions', () => {
   assert.equal(displayServiceVersion('legacy'), undefined)
 })
 import {
+  createPublicIpCache,
   parsePublicIpResponse,
   nextPublicIpSnapshot,
+  publicIpCacheLifetimeMs,
   publicIpEndpoints,
+  publicIpFailureRetryMs,
   publicIpRequestOptions,
   retainPublicIpResult,
   tryPublicIpEndpoints
@@ -196,6 +199,62 @@ test('public IP requests are bounded and explicitly use the local Mihomo proxy',
   assert.equal(options.headers?.Accept, 'application/json')
   assert.match(String(options.headers?.['User-Agent']), /^KokoroBox-Desktop\//)
   assert.throws(() => publicIpRequestOptions(0, '4.26.9'))
+})
+
+test('public IP cache reuses a successful lookup until expiry or explicit refresh', async () => {
+  let currentTime = 1_000
+  let calls = 0
+  const cache = createPublicIpCache(
+    async () => ({ ip: `1.1.1.${++calls}` }),
+    () => currentTime
+  )
+  assert.equal((await cache.get()).info?.ip, '1.1.1.1')
+  assert.equal((await cache.get()).info?.ip, '1.1.1.1')
+  currentTime += publicIpCacheLifetimeMs - 1
+  assert.equal((await cache.get()).info?.ip, '1.1.1.1')
+  assert.equal(calls, 1)
+  assert.equal((await cache.get(true)).info?.ip, '1.1.1.2')
+  currentTime += publicIpCacheLifetimeMs
+  assert.equal((await cache.get()).info?.ip, '1.1.1.3')
+})
+
+test('public IP cache keeps the last result and backs off after a failed refresh', async () => {
+  let currentTime = 1_000
+  let calls = 0
+  const cache = createPublicIpCache(
+    async () => {
+      calls += 1
+      return calls === 2 ? undefined : { ip: `1.1.1.${calls}` }
+    },
+    () => currentTime
+  )
+  assert.equal((await cache.get()).stale, false)
+  assert.deepEqual(await cache.get(true), { info: { ip: '1.1.1.1' }, stale: true })
+  assert.equal((await cache.get()).info?.ip, '1.1.1.1')
+  assert.equal(calls, 2)
+  currentTime += publicIpFailureRetryMs
+  assert.deepEqual(await cache.get(), { info: { ip: '1.1.1.3' }, stale: false })
+})
+
+test('public IP cache shares pending reads and ignores an overtaken lookup', async () => {
+  const resolves: Array<(value: { ip: string }) => void> = []
+  const cache = createPublicIpCache(
+    () =>
+      new Promise<{ ip: string }>((resolve) => {
+        resolves.push(resolve)
+      }),
+    () => 1_000
+  )
+  const first = cache.get()
+  const shared = cache.get()
+  assert.equal(shared, first)
+  const refreshed = cache.get(true)
+  assert.equal(resolves.length, 2)
+  resolves[1]({ ip: '2.2.2.2' })
+  assert.equal((await refreshed).info?.ip, '2.2.2.2')
+  resolves[0]({ ip: '1.1.1.1' })
+  assert.equal((await first).info?.ip, '2.2.2.2')
+  assert.equal((await cache.get()).info?.ip, '2.2.2.2')
 })
 
 test('country flag lookup creates only local, valid asset keys', () => {

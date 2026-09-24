@@ -277,7 +277,9 @@ async function validateSystemProxyServicePatch(
 
 export function registerIpcMainHandlers(): void {
   registerAppRoutingIpcHandlers()
-  ipcMain.handle('getHomePublicIp', ipcErrorWrapper(getHomePublicIp))
+  ipcMain.handle('getHomePublicIp', (_event, forceRefresh) =>
+    ipcErrorWrapper(getHomePublicIp)(forceRefresh === true)
+  )
   ipcMain.handle(
     'getHomeServiceVersion',
     ipcErrorWrapper(async () => {

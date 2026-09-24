@@ -11,8 +11,8 @@ function ipcErrorWrapper(response: any): any {
   }
 }
 
-export async function getHomePublicIp(): Promise<PublicIpSnapshot> {
-  return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('getHomePublicIp'))
+export async function getHomePublicIp(forceRefresh = false): Promise<PublicIpSnapshot> {
+  return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('getHomePublicIp', forceRefresh))
 }
 
 export async function getHomeServiceVersion(): Promise<string | undefined> {
