@@ -9,6 +9,59 @@ export interface ActiveApplication {
   uploadSpeed: number
 }
 
+export type RememberedTopApplication = Pick<
+  ActiveApplication,
+  'key' | 'name' | 'lookupPath' | 'kind'
+>
+
+export const rememberedTopApplicationStorageKey = 'kokorobox:home:top-application:v1'
+
+export function rememberTopApplication(application: ActiveApplication): RememberedTopApplication {
+  const { key, name, lookupPath, kind } = application
+  return { key, name, lookupPath, kind }
+}
+
+export function displayedTopApplication(
+  current: ActiveApplication | undefined,
+  remembered: RememberedTopApplication | undefined
+): ActiveApplication | undefined {
+  return current ?? (remembered ? { ...remembered, downloadSpeed: 0, uploadSpeed: 0 } : undefined)
+}
+
+export function parseRememberedTopApplication(
+  value: string | null
+): RememberedTopApplication | undefined {
+  if (!value || value.length > 5000) return undefined
+  try {
+    const parsed: unknown = JSON.parse(value)
+    if (!parsed || typeof parsed !== 'object') return undefined
+    const item = parsed as Record<string, unknown>
+    if (item.kind !== 'application' && item.kind !== 'process') return undefined
+    if (
+      typeof item.key !== 'string' ||
+      typeof item.name !== 'string' ||
+      typeof item.lookupPath !== 'string' ||
+      !item.key.startsWith(`${item.kind}:`) ||
+      item.key.length > 2100 ||
+      !item.name.trim() ||
+      item.name.length > 256 ||
+      !item.lookupPath ||
+      item.lookupPath.length > 2048 ||
+      !/^(?:\/|[a-z]:[\\/]|\\\\)/i.test(item.lookupPath)
+    ) {
+      return undefined
+    }
+    return {
+      key: item.key,
+      name: item.name,
+      lookupPath: item.lookupPath,
+      kind: item.kind
+    }
+  } catch {
+    return undefined
+  }
+}
+
 export function connectionActivityFreshnessMs(connectionInterval: number): number {
   const interval =
     Number.isFinite(connectionInterval) && connectionInterval > 0 ? connectionInterval : 500

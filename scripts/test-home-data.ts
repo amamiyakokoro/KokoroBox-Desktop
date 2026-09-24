@@ -64,8 +64,11 @@ import {
   activeRouteCount,
   connectionActivityFreshnessMs,
   connectionApplicationIdentity,
+  displayedTopApplication,
   hasFreshConnectionActivity,
   macosHostApplicationPath,
+  parseRememberedTopApplication,
+  rememberTopApplication,
   topActiveApplication
 } from '../src/renderer/src/utils/home-connections.ts'
 
@@ -273,6 +276,37 @@ test('Top activity requires a measured sample and expires without another connec
   assert.equal(hasFreshConnectionActivity(1000, 500, 6000, 500), false)
   assert.equal(hasFreshConnectionActivity(1000, 500, 999, 500), false)
   assert.equal(topActiveApplication(undefined, 'darwin'), undefined)
+})
+
+test('Top activity remembers only application identity, never an old positive rate', () => {
+  const active = {
+    key: 'application:/Applications/Discord.app',
+    name: 'Discord',
+    lookupPath: '/Applications/Discord.app',
+    kind: 'application' as const,
+    downloadSpeed: 2048,
+    uploadSpeed: 256
+  }
+  const remembered = rememberTopApplication(active)
+  assert.deepEqual(remembered, {
+    key: active.key,
+    name: active.name,
+    lookupPath: active.lookupPath,
+    kind: active.kind
+  })
+  assert.deepEqual(parseRememberedTopApplication(JSON.stringify(remembered)), remembered)
+  assert.equal(displayedTopApplication(active, remembered), active)
+  assert.deepEqual(displayedTopApplication(undefined, remembered), {
+    ...remembered,
+    downloadSpeed: 0,
+    uploadSpeed: 0
+  })
+  assert.equal(displayedTopApplication(undefined, undefined), undefined)
+  assert.equal(parseRememberedTopApplication('invalid JSON'), undefined)
+  assert.equal(
+    parseRememberedTopApplication(JSON.stringify({ ...remembered, lookupPath: '../Discord.app' })),
+    undefined
+  )
 })
 
 test('Home uses the same subscription update clock as the profile updater', () => {

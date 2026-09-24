@@ -232,4 +232,15 @@ test('Top active app displays the host name, local icon, sampled directions and 
   )
   assert.doesNotMatch(fallback, /<img/)
   assert.match(fallback, /Discord/)
+
+  const retained = renderToStaticMarkup(
+    <TopActiveAppContent
+      application={application}
+      metadata={{ name: 'Discord' }}
+      explanation="Last observed application; no current rate."
+    />
+  )
+  assert.match(retained, /Top active app.*Last observed/)
+  assert.match(retained, /Discord/)
+  assert.doesNotMatch(retained, /KB\/s|B\/s/)
 })

@@ -60,7 +60,12 @@ import {
 } from '@renderer/utils/application-metadata'
 import {
   connectionActivityFreshnessMs,
+  displayedTopApplication,
   hasFreshConnectionActivity,
+  parseRememberedTopApplication,
+  rememberedTopApplicationStorageKey,
+  rememberTopApplication,
+  type RememberedTopApplication,
   topActiveApplication
 } from '@renderer/utils/home-connections'
 import { configuredOverviewFeatures } from '@renderer/utils/home-overview'
@@ -179,6 +184,15 @@ const Home = () => {
     key: string
     value: ApplicationMetadata
   }>()
+  const [rememberedTopApplication, setRememberedTopApplication] = useState<
+    RememberedTopApplication | undefined
+  >(() => {
+    try {
+      return parseRememberedTopApplication(localStorage.getItem(rememberedTopApplicationStorageKey))
+    } catch {
+      return undefined
+    }
+  })
   const [history, setHistory] = useState<OverviewTrafficSample[]>([])
   const [coreStopped, setCoreStopped] = useState(false)
   const [now, setNow] = useState(Date.now())
@@ -445,15 +459,28 @@ const Home = () => {
 
   useEffect(() => {
     if (!topApplication) return
+    const remembered = rememberTopApplication(topApplication)
+    setRememberedTopApplication(remembered)
+    try {
+      localStorage.setItem(rememberedTopApplicationStorageKey, JSON.stringify(remembered))
+    } catch {
+      // The current Home view can still retain the application in memory.
+    }
+  }, [topApplication?.key, topApplication?.name, topApplication?.lookupPath])
+
+  const displayedApplication = displayedTopApplication(topApplication, rememberedTopApplication)
+
+  useEffect(() => {
+    if (!displayedApplication) return
     let active = true
-    const { key, lookupPath } = topApplication
+    const { key, lookupPath } = displayedApplication
     void loadApplicationMetadata(lookupPath).then((value) => {
       if (active) setActivityMetadata({ key, value })
     })
     return () => {
       active = false
     }
-  }, [topApplication?.key, topApplication?.lookupPath])
+  }, [displayedApplication?.key, displayedApplication?.lookupPath])
   const cardStyle = hasBackground
     ? 'border-separator/50 bg-surface/88 backdrop-blur-sm'
     : 'border-separator/60 bg-surface/85'
@@ -774,13 +801,15 @@ const Home = () => {
                 }
                 valueClassName="text-[1.4rem]"
               />
-              {topApplication && (
-                <TopActiveAppRow
-                  application={topApplication}
-                  metadata={metadataForTopActiveApp(topApplication, activityMetadata)}
-                  sampleMs={connectionSampleMs}
-                />
-              )}
+              <TopActiveAppRow
+                application={displayedApplication}
+                metadata={
+                  displayedApplication
+                    ? metadataForTopActiveApp(displayedApplication, activityMetadata)
+                    : undefined
+                }
+                sampleMs={topApplication ? connectionSampleMs : undefined}
+              />
             </div>
             {trafficState === 'active' ? (
               <div className="relative mt-3 h-20 overflow-hidden">

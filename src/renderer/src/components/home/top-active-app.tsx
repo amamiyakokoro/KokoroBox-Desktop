@@ -5,6 +5,9 @@ import type { ActiveApplication } from '../../utils/home-connections'
 import type { ApplicationMetadata } from '../../utils/application-metadata'
 import { formatOverviewBytes } from './overview-parts'
 
+const rowClassName =
+  'home-top-activity app-nodrag group block min-w-0 rounded-lg bg-surface-secondary/35 px-3 py-2 hover:bg-surface-secondary/60 focus-visible:outline-2 focus-visible:outline-accent'
+
 export function metadataForTopActiveApp(
   application: ActiveApplication,
   resolved: { key: string; value: ApplicationMetadata } | undefined
@@ -50,18 +53,35 @@ export function TopActiveAppRow({
   metadata,
   sampleMs
 }: {
-  application: ActiveApplication
+  application?: ActiveApplication
   metadata?: ApplicationMetadata
-  sampleMs: number
+  sampleMs?: number
 }) {
+  if (!application) {
+    return (
+      <Link to="/connections" className={rowClassName}>
+        <span className="block text-[11px] text-muted">{tr('Top active app')}</span>
+        <span className="mt-1 flex items-center justify-between gap-2 text-sm text-muted">
+          {tr('No application activity yet')}
+          <LuArrowRight className="size-3 shrink-0" aria-hidden="true" />
+        </span>
+      </Link>
+    )
+  }
   const name = topActiveAppName(application, metadata)
-  const sampleSeconds = (sampleMs / 1000).toFixed(1)
-  const explanation = tr('Connection rates use a separate {0} s sample.', [sampleSeconds])
+  const sampleSeconds = sampleMs === undefined ? undefined : (sampleMs / 1000).toFixed(1)
+  const explanation = sampleSeconds
+    ? tr('Connection rates use a separate {0} s sample.', [sampleSeconds])
+    : tr('Last observed application; no current rate.')
   return (
     <Link
       to="/connections"
-      className="home-top-activity app-nodrag group block min-w-0 rounded-lg bg-surface-secondary/35 px-3 py-2 hover:bg-surface-secondary/60 focus-visible:outline-2 focus-visible:outline-accent"
-      aria-label={`${tr('Top active app')}: ${name}; ${tr('Download')} ${formatOverviewBytes(application.downloadSpeed)}/s; ${tr('Upload')} ${formatOverviewBytes(application.uploadSpeed)}/s; ${explanation}`}
+      className={rowClassName}
+      aria-label={
+        sampleSeconds
+          ? `${tr('Top active app')}: ${name}; ${tr('Download')} ${formatOverviewBytes(application.downloadSpeed)}/s; ${tr('Upload')} ${formatOverviewBytes(application.uploadSpeed)}/s; ${explanation}`
+          : `${tr('Top active app')}: ${name}; ${explanation}`
+      }
     >
       <TopActiveAppContent
         application={application}
@@ -81,14 +101,15 @@ export function TopActiveAppContent({
 }: {
   application: ActiveApplication
   metadata?: ApplicationMetadata
-  sampleSeconds: string
+  sampleSeconds?: string
   explanation: string
 }) {
   const name = topActiveAppName(application, metadata)
   return (
     <>
       <span className="block truncate text-[11px] text-muted" title={explanation}>
-        {tr('Top active app')} · {tr('{0} s sample', [sampleSeconds])}
+        {tr('Top active app')} ·
+        {sampleSeconds ? ` ${tr('{0} s sample', [sampleSeconds])}` : ` ${tr('Last observed')}`}
       </span>
       <span className="mt-1 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
         {metadata?.iconUrl ? (
@@ -104,10 +125,12 @@ export function TopActiveAppContent({
         >
           {name}
         </span>
-        <span className="ml-auto flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-foreground">
-          <ActivityRate direction="down" bytesPerSecond={application.downloadSpeed} />
-          <ActivityRate direction="up" bytesPerSecond={application.uploadSpeed} />
-        </span>
+        {sampleSeconds && (
+          <span className="ml-auto flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-foreground">
+            <ActivityRate direction="down" bytesPerSecond={application.downloadSpeed} />
+            <ActivityRate direction="up" bytesPerSecond={application.uploadSpeed} />
+          </span>
+        )}
         <LuArrowRight
           className="size-3 shrink-0 text-muted group-hover:text-accent"
           aria-hidden="true"
