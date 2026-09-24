@@ -5,10 +5,8 @@ import type { ActiveApplication } from '../../utils/home-connections'
 import type { ApplicationMetadata } from '../../utils/application-metadata'
 import { formatOverviewBytes } from './overview-parts'
 
-const activeRowClassName =
-  'home-top-activity app-nodrag group block min-w-0 rounded-lg bg-surface-secondary/35 px-3 py-2 hover:bg-surface-secondary/60 focus-visible:outline-2 focus-visible:outline-accent'
-const rememberedRowClassName =
-  'home-top-activity app-nodrag group block min-w-0 rounded-lg px-3 py-2 hover:bg-surface-secondary/35 focus-visible:outline-2 focus-visible:outline-accent'
+const rowClassName =
+  'home-top-activity app-nodrag group block min-w-0 rounded-lg bg-surface-secondary/25 px-3 py-2 hover:bg-surface-secondary/45 focus-visible:outline-2 focus-visible:outline-accent'
 
 export function metadataForTopActiveApp(
   application: ActiveApplication,
@@ -61,7 +59,7 @@ export function TopActiveAppRow({
 }) {
   if (!application) {
     return (
-      <Link to="/connections" className={rememberedRowClassName}>
+      <Link to="/connections" className={rowClassName}>
         <span className="block text-[11px] text-muted">{tr('Top active app')}</span>
         <span className="mt-1 flex items-center justify-between gap-2 text-sm text-muted">
           {tr('No application activity yet')}
@@ -78,7 +76,7 @@ export function TopActiveAppRow({
   return (
     <Link
       to="/connections"
-      className={sampleSeconds ? activeRowClassName : rememberedRowClassName}
+      className={rowClassName}
       aria-label={
         sampleSeconds
           ? `${tr('Top active app')}: ${name}; ${tr('Download')} ${formatOverviewBytes(application.downloadSpeed)}/s; ${tr('Upload')} ${formatOverviewBytes(application.uploadSpeed)}/s; ${explanation}`
