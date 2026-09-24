@@ -1,17 +1,17 @@
 .override-page,
 .logs-page {
-  background: var(--background);
+  background: var(--surface);
 }
 
 .override-page .collection-import-toolbar,
 .logs-page [role='toolbar'] {
-  background: var(--background);
+  background: var(--surface);
 }
 
 .override-page .collection-import-toolbar [data-slot='input-group'],
 .logs-page [data-slot='input-group'],
 .logs-page [data-slot='select-trigger'] {
-  background: var(--surface);
+  background: var(--surface-secondary);
   border: 1px solid var(--separator);
   box-shadow: 0 1px 2px rgb(0 0 0 / 0.03);
 }

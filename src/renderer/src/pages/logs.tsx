@@ -143,7 +143,7 @@ const Logs: React.FC = () => {
   return (
     <BasePage title={tr('Live logs')} contentClassName="logs-page overflow-y-hidden">
       <div className="flex h-full min-h-0 flex-col">
-        <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm">
+        <div className="sticky top-0 z-40 bg-surface">
           <KokoToolbar aria-label={tr('Live logs')}>
             <KokoSearchField
               className="min-w-40 flex-1"
