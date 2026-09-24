@@ -20,13 +20,94 @@ export interface HomeBackground {
   overlay: number
 }
 
+export type HomeDefaultBackgroundId = 'ammy1' | 'ammy2'
+
+export interface HomeBackgroundAppearance {
+  opacity: number
+  blur: number
+  overlay: number
+}
+
+export interface ResolvedHomeBackground extends HomeBackgroundAppearance {
+  source: 'default' | 'custom' | 'none'
+  imageUrl?: string
+  fit: 'cover' | 'contain'
+  position: string
+  cardOpacity: number
+  networkOpacity: number
+}
+
+export const defaultBuiltInBackgroundAppearance: HomeBackgroundAppearance = {
+  opacity: 90,
+  blur: 0,
+  overlay: 10
+}
+
+export const defaultHomeCardBackgroundOpacity = 68
+
 export const defaultHomeBackgroundSettings = {
   fit: 'cover',
   position: 'center',
-  opacity: 70,
+  opacity: 90,
   blur: 0,
-  overlay: 35
+  overlay: 10
 } as const satisfies Omit<HomeBackground, 'file'>
+
+export function normalizeHomeDefaultBackgroundId(value: unknown): HomeDefaultBackgroundId {
+  return value === 'ammy2' ? 'ammy2' : 'ammy1'
+}
+
+export function nextHomeDefaultBackgroundId(value: unknown): HomeDefaultBackgroundId {
+  return normalizeHomeDefaultBackgroundId(value) === 'ammy1' ? 'ammy2' : 'ammy1'
+}
+
+function boundedNumber(value: unknown, fallback: number, maximum: number): number {
+  return typeof value === 'number' && Number.isFinite(value)
+    ? Math.min(maximum, Math.max(0, value))
+    : fallback
+}
+
+export function resolveHomeBackground(
+  config:
+    | Pick<
+        AppConfig,
+        | 'homeBackground'
+        | 'homeBackgroundDisabled'
+        | 'homeDefaultBackgroundId'
+        | 'homeDefaultBackgroundAppearance'
+        | 'homeCardBackgroundOpacity'
+      >
+    | undefined,
+  customImageUrl: string | undefined,
+  builtInImages: Record<HomeDefaultBackgroundId, string>
+): ResolvedHomeBackground {
+  const source = homeBackgroundChoice(config)
+  const appearance =
+    source === 'custom' ? config?.homeBackground : config?.homeDefaultBackgroundAppearance
+  const defaults =
+    source === 'custom' ? defaultHomeBackgroundSettings : defaultBuiltInBackgroundAppearance
+  const cardOpacity = boundedNumber(
+    config?.homeCardBackgroundOpacity,
+    source === 'custom' ? 82 : defaultHomeCardBackgroundOpacity,
+    100
+  )
+  return {
+    source,
+    imageUrl:
+      source === 'default'
+        ? builtInImages[normalizeHomeDefaultBackgroundId(config?.homeDefaultBackgroundId)]
+        : source === 'custom'
+          ? customImageUrl
+          : undefined,
+    opacity: boundedNumber(appearance?.opacity, defaults.opacity, 100),
+    blur: boundedNumber(appearance?.blur, defaults.blur, 20),
+    overlay: boundedNumber(appearance?.overlay, defaults.overlay, 80),
+    fit: source === 'custom' ? (config?.homeBackground?.fit ?? 'cover') : 'contain',
+    position: source === 'custom' ? (config?.homeBackground?.position ?? 'center') : 'right bottom',
+    cardOpacity,
+    networkOpacity: Math.min(100, cardOpacity + 8)
+  }
+}
 
 export function homeBackgroundChoice(
   config: Pick<AppConfig, 'homeBackground' | 'homeBackgroundDisabled'> | undefined

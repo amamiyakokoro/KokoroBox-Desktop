@@ -37,6 +37,9 @@ interface IHost {
 interface AppConfig {
   homeBackground?: import('../home').HomeBackground
   homeBackgroundDisabled?: boolean
+  homeDefaultBackgroundId?: import('../home').HomeDefaultBackgroundId
+  homeDefaultBackgroundAppearance?: Partial<import('../home').HomeBackgroundAppearance>
+  homeCardBackgroundOpacity?: number
   language?: AppLanguage
   updateChannel: AppUpdateChannel
   notificationMode?: AppNotificationMode

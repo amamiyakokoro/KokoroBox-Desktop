@@ -1,15 +1,22 @@
-import { Button, Label, Slider } from '@heroui/react'
+import { Button, Label, Slider, Tooltip } from '@heroui/react'
 import { useEffect, useState } from 'react'
+import { LuImages } from 'react-icons/lu'
 import { tr } from '../../../../shared/i18n'
-import { homeBackgroundChoice, type HomeBackground } from '../../../../shared/home'
+import {
+  homeBackgroundChoice,
+  resolveHomeBackground,
+  type HomeBackground
+} from '../../../../shared/home'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
+import { useHomeDefaultBackgroundSwitch } from '@renderer/hooks/use-home-default-background'
+import { homeBuiltInImages } from '@renderer/utils/home-background-assets'
 import { chooseHomeBackground, clearHomeBackground } from '@renderer/utils/ipc'
 import { notify } from '@renderer/utils/notification'
 import SettingCard from '../base/base-setting-card'
 import SettingItem from '../base/base-setting-item'
 import { KokoSegmentedControl } from '../base/base-controls'
 
-type BackgroundNumberSetting = 'opacity' | 'blur' | 'overlay'
+type BackgroundNumberSetting = 'opacity' | 'blur' | 'overlay' | 'cardOpacity'
 
 function BackgroundSlider({
   label,
@@ -51,13 +58,30 @@ export default function HomeBackgroundSettings() {
   const { appConfig, patchAppConfig, mutateAppConfig } = useAppConfig()
   const background = appConfig?.homeBackground
   const choice = homeBackgroundChoice(appConfig)
+  const { selectedId, pending, switchSelectedBackground } = useHomeDefaultBackgroundSwitch()
+  const resolved = resolveHomeBackground(
+    appConfig ? { ...appConfig, homeDefaultBackgroundId: selectedId } : undefined,
+    undefined,
+    homeBuiltInImages
+  )
 
   const patchBackground = (patch: Partial<HomeBackground>): void => {
     if (!background) return
     void patchAppConfig({ homeBackground: { ...background, ...patch } })
   }
   const patchNumber = (setting: BackgroundNumberSetting, value: number): void => {
-    patchBackground({ [setting]: value })
+    if (setting === 'cardOpacity') {
+      void patchAppConfig({ homeCardBackgroundOpacity: value })
+    } else if (choice === 'custom') {
+      patchBackground({ [setting]: value })
+    } else if (choice === 'default') {
+      void patchAppConfig({
+        homeDefaultBackgroundAppearance: {
+          ...appConfig?.homeDefaultBackgroundAppearance,
+          [setting]: value
+        }
+      })
+    }
   }
 
   return (
@@ -118,6 +142,38 @@ export default function HomeBackgroundSettings() {
           )}
         </div>
       </SettingItem>
+      {choice === 'default' && (
+        <SettingItem title={tr('Built-in image')} divider>
+          <div className="flex items-center gap-3">
+            <div className="flex h-24 w-20 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-surface-secondary/40">
+              <img
+                src={homeBuiltInImages[selectedId]}
+                alt=""
+                className="h-full w-full object-contain"
+              />
+            </div>
+            <span className="text-xs tabular-nums text-muted">
+              {selectedId === 'ammy1' ? '1 / 2' : '2 / 2'}
+            </span>
+            <Tooltip delay={0}>
+              <Tooltip.Trigger>
+                <Button
+                  size="sm"
+                  isIconOnly
+                  variant="secondary"
+                  className="app-nodrag"
+                  aria-label={tr('Switch default background')}
+                  isDisabled={pending}
+                  onPress={() => void switchSelectedBackground()}
+                >
+                  <LuImages aria-hidden="true" />
+                </Button>
+              </Tooltip.Trigger>
+              <Tooltip.Content>{tr('Switch default background')}</Tooltip.Content>
+            </Tooltip>
+          </div>
+        </SettingItem>
+      )}
       {choice === 'custom' && background && (
         <>
           <SettingItem title={tr('Fit')} divider>
@@ -147,24 +203,26 @@ export default function HomeBackgroundSettings() {
               }
             />
           </SettingItem>
-          {(
-            [
-              ['opacity', tr('Image opacity'), 100],
-              ['blur', tr('Blur'), 20],
-              ['overlay', tr('Overlay intensity'), 80]
-            ] as const
-          ).map(([setting, label, maximum]) => (
-            <SettingItem key={setting} title={label} divider={setting !== 'overlay'}>
-              <BackgroundSlider
-                label={label}
-                value={background[setting]}
-                maximum={maximum}
-                onCommit={(value) => patchNumber(setting, value)}
-              />
-            </SettingItem>
-          ))}
         </>
       )}
+      {choice !== 'none' &&
+        (
+          [
+            ['opacity', tr('Image opacity'), 100],
+            ['blur', tr('Blur'), 20],
+            ['overlay', tr('Overlay intensity'), 80],
+            ['cardOpacity', tr('Card background opacity'), 100]
+          ] as const
+        ).map(([setting, label, maximum]) => (
+          <SettingItem key={setting} title={label} divider={setting !== 'cardOpacity'}>
+            <BackgroundSlider
+              label={label}
+              value={setting === 'cardOpacity' ? resolved.cardOpacity : resolved[setting]}
+              maximum={maximum}
+              onCommit={(value) => patchNumber(setting, value)}
+            />
+          </SettingItem>
+        ))}
     </SettingCard>
   )
 }

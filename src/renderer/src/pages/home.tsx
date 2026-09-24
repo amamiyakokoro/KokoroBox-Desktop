@@ -1,4 +1,4 @@
-import { Surface } from '@heroui/react'
+import { Button, Surface, Tooltip } from '@heroui/react'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import { useEffect, useMemo, useRef, useState } from 'react'
@@ -9,6 +9,7 @@ import {
   LuCalendarDays,
   LuClock3,
   LuCpu,
+  LuImages,
   LuRefreshCw,
   LuTriangleAlert
 } from 'react-icons/lu'
@@ -19,6 +20,7 @@ import {
   displayServiceVersion,
   homeBackgroundChoice,
   homeRuntimeState,
+  resolveHomeBackground,
   type PublicIpInfo,
   type PublicIpSnapshot
 } from '../../../shared/home'
@@ -53,6 +55,7 @@ import {
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'
 import { useGroups } from '@renderer/hooks/use-groups'
+import { useHomeDefaultBackgroundSwitch } from '@renderer/hooks/use-home-default-background'
 import { useProfileConfig } from '@renderer/hooks/use-profile-config'
 import {
   loadApplicationMetadata,
@@ -71,8 +74,7 @@ import {
 import { configuredOverviewFeatures } from '@renderer/utils/home-overview'
 import { platform } from '@renderer/utils/init'
 import { nextProfileUpdateAt } from '../../../shared/profile-update'
-import ammyLight from '@renderer/assets/home/ammy1.png'
-import ammyDark from '@renderer/assets/home/ammy2.png'
+import { homeBuiltInImages } from '@renderer/utils/home-background-assets'
 import {
   getAppRoutingStatus,
   getHomeBackgroundDataUrl,
@@ -219,7 +221,18 @@ const Home = () => {
   const profile = profileConfig?.items.find((item) => item.id === profileConfig.current)
   const background = appConfig?.homeBackground
   const backgroundChoice = homeBackgroundChoice(appConfig)
-  const hasBackground = backgroundChoice === 'custom' && Boolean(backgroundUrl)
+  const {
+    selectedId,
+    isDefault,
+    pending: backgroundSwitchPending,
+    switchSelectedBackground
+  } = useHomeDefaultBackgroundSwitch()
+  const resolvedBackground = resolveHomeBackground(
+    appConfig ? { ...appConfig, homeDefaultBackgroundId: selectedId } : undefined,
+    backgroundUrl,
+    homeBuiltInImages
+  )
+  const hasActiveBackground = Boolean(resolvedBackground.imageUrl)
 
   useEffect(() => {
     if (backgroundChoice !== 'custom' || !background?.file) {
@@ -481,9 +494,23 @@ const Home = () => {
       active = false
     }
   }, [displayedApplication?.key, displayedApplication?.lookupPath])
-  const cardStyle = hasBackground
-    ? 'border-separator/50 bg-surface/88 backdrop-blur-sm'
+  const cardStyle = hasActiveBackground
+    ? 'border-separator/50'
     : 'border-separator/60 bg-surface/85'
+  const cardBackgroundStyle = hasActiveBackground
+    ? {
+        backgroundColor: `color-mix(in srgb, var(--surface) ${resolvedBackground.cardOpacity}%, transparent)`,
+        backdropFilter: 'blur(1px)'
+      }
+    : undefined
+  const networkBackgroundStyle = hasActiveBackground
+    ? {
+        backgroundColor: `color-mix(in srgb, var(--surface) ${resolvedBackground.networkOpacity}%, transparent)`
+      }
+    : {
+        backgroundImage:
+          'linear-gradient(115deg, color-mix(in oklab, var(--accent) 10%, var(--surface)), var(--surface) 78%)'
+      }
   const runtime = homeRuntimeState(
     !coreStopped && !coreError && Boolean(coreVersion),
     appConfig?.corePermissionMode,
@@ -513,43 +540,54 @@ const Home = () => {
   const hasTrafficSnapshot = trafficState !== 'unavailable'
 
   return (
-    <BasePage title={tr('Overview')} contentClassName="overflow-x-hidden">
+    <BasePage
+      title={tr('Overview')}
+      contentClassName="overflow-x-hidden"
+      header={
+        isDefault ? (
+          <Tooltip delay={0}>
+            <Tooltip.Trigger>
+              <Button
+                size="sm"
+                isIconOnly
+                variant="ghost"
+                className="app-nodrag"
+                aria-label={tr('Switch default background')}
+                isDisabled={backgroundSwitchPending}
+                onPress={() => void switchSelectedBackground()}
+              >
+                <LuImages className="text-base" aria-hidden="true" />
+              </Button>
+            </Tooltip.Trigger>
+            <Tooltip.Content placement="bottom">{tr('Switch default background')}</Tooltip.Content>
+          </Tooltip>
+        ) : undefined
+      }
+    >
       <main className="@container relative min-h-full min-w-0 overflow-hidden">
-        {backgroundChoice === 'default' && (
-          <div className="pointer-events-none absolute inset-0" aria-hidden="true">
-            <div
-              className="absolute inset-0 bg-right-bottom bg-no-repeat opacity-25 dark:hidden"
-              style={{
-                backgroundImage: `url(${ammyLight})`,
-                backgroundSize: 'auto min(100%, 900px)'
-              }}
-            />
-            <div
-              className="absolute inset-0 hidden bg-right-bottom bg-no-repeat opacity-25 dark:block"
-              style={{
-                backgroundImage: `url(${ammyDark})`,
-                backgroundSize: 'auto min(100%, 900px)'
-              }}
-            />
-          </div>
-        )}
-        {hasBackground && (
-          <div className="pointer-events-none absolute inset-0" aria-hidden="true">
+        {hasActiveBackground && (
+          <div
+            className="home-background-plane pointer-events-none sticky top-0 overflow-hidden"
+            aria-hidden="true"
+          >
             <div
               className="absolute inset-0"
               style={{
-                backgroundImage: `url(${backgroundUrl})`,
-                backgroundSize: background?.fit,
-                backgroundPosition: background?.position,
+                backgroundImage: `url(${resolvedBackground.imageUrl})`,
+                backgroundSize:
+                  resolvedBackground.source === 'default'
+                    ? 'auto min(100%, 900px)'
+                    : resolvedBackground.fit,
+                backgroundPosition: resolvedBackground.position,
                 backgroundRepeat: 'no-repeat',
-                opacity: (background?.opacity ?? 70) / 100,
-                filter: `blur(${background?.blur ?? 0}px)`,
-                transform: background?.blur ? 'scale(1.04)' : undefined
+                opacity: resolvedBackground.opacity / 100,
+                filter: `blur(${resolvedBackground.blur}px)`,
+                transform: resolvedBackground.blur ? 'scale(1.04)' : undefined
               }}
             />
             <div
               className="absolute inset-0 bg-background"
-              style={{ opacity: (background?.overlay ?? 35) / 100 }}
+              style={{ opacity: resolvedBackground.overlay / 100 }}
             />
           </div>
         )}
@@ -571,15 +609,8 @@ const Home = () => {
           )}
 
           <Surface
-            className={`home-network-hero min-w-0 rounded-2xl border border-accent/20 p-4 shadow-none sm:p-5 ${hasBackground ? 'bg-surface/75 backdrop-blur-sm' : 'bg-accent-soft/20'}`}
-            style={
-              hasBackground
-                ? undefined
-                : {
-                    backgroundImage:
-                      'linear-gradient(115deg, color-mix(in oklab, var(--accent) 10%, var(--surface)), var(--surface) 78%)'
-                  }
-            }
+            className={`home-network-hero min-w-0 rounded-2xl border border-accent/20 p-4 shadow-none sm:p-5 ${hasActiveBackground ? '' : 'bg-accent-soft/20'}`}
+            style={networkBackgroundStyle}
           >
             <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
               <h2 className="text-sm font-semibold">{tr('Network')}</h2>
@@ -645,7 +676,10 @@ const Home = () => {
           </Surface>
 
           <div className="home-overview-pair min-w-0">
-            <Surface className={`min-w-0 rounded-2xl border p-4 shadow-none sm:p-5 ${cardStyle}`}>
+            <Surface
+              className={`min-w-0 rounded-2xl border p-4 shadow-none sm:p-5 ${cardStyle}`}
+              style={cardBackgroundStyle}
+            >
               <div className="mb-3 flex items-center justify-between gap-2">
                 <h2 className="text-sm font-semibold">{tr('Current subscription')}</h2>
                 <Link
@@ -712,7 +746,10 @@ const Home = () => {
               )}
             </Surface>
 
-            <Surface className={`min-w-0 rounded-2xl border p-4 shadow-none sm:p-5 ${cardStyle}`}>
+            <Surface
+              className={`min-w-0 rounded-2xl border p-4 shadow-none sm:p-5 ${cardStyle}`}
+              style={cardBackgroundStyle}
+            >
               <h2 className="mb-3 text-sm font-semibold">{tr('Runtime')}</h2>
               <OverviewStat
                 icon={
@@ -753,7 +790,10 @@ const Home = () => {
             </Surface>
           </div>
 
-          <Surface className={`min-w-0 rounded-2xl border p-4 shadow-none sm:p-5 ${cardStyle}`}>
+          <Surface
+            className={`min-w-0 rounded-2xl border p-4 shadow-none sm:p-5 ${cardStyle}`}
+            style={cardBackgroundStyle}
+          >
             <div className="mb-3 flex items-center justify-between gap-3">
               <h2 className="text-sm font-semibold">{tr('Traffic')}</h2>
               <Link

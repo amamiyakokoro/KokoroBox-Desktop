@@ -2,6 +2,11 @@
   container: overview-content / inline-size;
 }
 
+.home-background-plane {
+  height: calc(100vh - 49px);
+  margin-bottom: calc(49px - 100vh);
+}
+
 .home-network-main,
 .home-overview-pair {
   display: grid;
