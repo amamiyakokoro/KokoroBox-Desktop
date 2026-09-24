@@ -61,7 +61,9 @@ export function OverviewStat({
         >
           {value}
         </div>
-        {secondary && <div className="mt-0.5 min-w-0 text-sm text-muted">{secondary}</div>}
+        {secondary && (
+          <div className="home-secondary-value mt-0.5 min-w-0 text-sm text-muted">{secondary}</div>
+        )}
       </div>
     </div>
   )
@@ -134,7 +136,7 @@ export function OverviewUsageSummary({ usage, quota }: { usage: number; quota: n
           <Meter.Fill className={percentage >= 100 ? 'bg-danger' : 'bg-accent'} />
         </Meter.Track>
       </Meter>
-      <div className="text-xs tabular-nums text-muted">
+      <div className="home-secondary-value text-xs tabular-nums text-muted">
         {tr('{0} remaining', [formatOverviewBytes(Math.max(quota - usage, 0))])}
       </div>
     </div>
@@ -158,7 +160,9 @@ export function OverviewStatusLine({
         <span className="text-xs font-medium text-foreground">{label}</span>
         <KokoStatusIndicator tone={tone}>{status}</KokoStatusIndicator>
       </div>
-      {version && <div className="mt-0.5 truncate text-xs text-muted">{version}</div>}
+      {version && (
+        <div className="home-secondary-value mt-0.5 truncate text-xs text-muted">{version}</div>
+      )}
     </div>
   )
 }
@@ -202,7 +206,7 @@ export function OverviewConfiguredChips({ features }: { features: OverviewConfig
     <OverviewChipGroup>
       {features.map((feature) => (
         <Chip key={feature.kind} size="sm" variant="soft" color="default">
-          <Chip.Label className="flex items-center gap-1">
+          <Chip.Label className="home-secondary-value flex items-center gap-1">
             {feature.kind === 'proxy' ? (
               <LuGlobe className="size-3" aria-hidden="true" />
             ) : feature.kind === 'dns' ? (

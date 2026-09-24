@@ -34,13 +34,22 @@ export function overviewTrafficPaths(samples: OverviewTrafficSample[]): {
   return { down: pathFor('down'), up: pathFor('up') }
 }
 
+export function overviewTrafficRangeSeconds(samples: OverviewTrafficSample[]): number | undefined {
+  const recent = samples.slice(-60)
+  if (recent.length < 2) return undefined
+  const elapsed = recent.at(-1)!.index - recent[0].index
+  return Number.isFinite(elapsed) && elapsed > 0
+    ? Math.max(1, Math.round(elapsed / 1000))
+    : undefined
+}
+
 export function OverviewTrafficChart({ data }: { data: OverviewTrafficSample[] }) {
   const paths = overviewTrafficPaths(data)
   return (
     <svg
       viewBox="0 0 100 40"
       preserveAspectRatio="none"
-      className="absolute inset-0 size-full"
+      className="absolute inset-x-0 top-0 h-[calc(100%-1.25rem)] w-full"
       aria-hidden="true"
     >
       <path d="M 0 34 H 100" stroke="var(--separator)" strokeWidth="0.5" opacity="0.7" />

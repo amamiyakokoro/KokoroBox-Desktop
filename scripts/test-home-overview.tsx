@@ -15,6 +15,7 @@ import {
 } from '../src/renderer/src/components/home/overview-parts.tsx'
 import {
   overviewTrafficPaths,
+  overviewTrafficRangeSeconds,
   overviewTrafficState
 } from '../src/renderer/src/components/home/overview-traffic-chart.tsx'
 import { configuredOverviewFeatures } from '../src/renderer/src/utils/home-overview.ts'
@@ -187,6 +188,22 @@ test('traffic history uses actual download and upload samples without synthetic 
   assert.equal((paths.up.match(/[ML]/g) ?? []).length, 2)
   assert.notEqual(paths.down, paths.up)
   assert.equal(overviewTrafficState([{ index: 2, down: 20, up: 5 }]), 'active')
+  assert.equal(overviewTrafficRangeSeconds([]), undefined)
+  assert.equal(overviewTrafficRangeSeconds([{ index: 1000, down: 20, up: 5 }]), undefined)
+  assert.equal(
+    overviewTrafficRangeSeconds([
+      { index: 1000, down: 20, up: 5 },
+      { index: 31_000, down: 5, up: 10 }
+    ]),
+    30
+  )
+  assert.equal(
+    overviewTrafficRangeSeconds([
+      { index: 1000, down: 20, up: 5 },
+      { index: 64_000, down: 5, up: 10 }
+    ]),
+    63
+  )
 })
 
 test('Top active app displays the host name, local icon, sampled directions and navigation', () => {
@@ -240,7 +257,8 @@ test('Top active app displays the host name, local icon, sampled directions and 
       explanation="Last observed application; no current rate."
     />
   )
-  assert.match(retained, /Top active app.*Last observed/)
+  assert.match(retained, /Recently observed app/)
+  assert.doesNotMatch(retained, /Top active app/)
   assert.match(retained, /Discord/)
   assert.doesNotMatch(retained, /KB\/s|B\/s/)
 })

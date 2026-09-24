@@ -5,8 +5,10 @@ import type { ActiveApplication } from '../../utils/home-connections'
 import type { ApplicationMetadata } from '../../utils/application-metadata'
 import { formatOverviewBytes } from './overview-parts'
 
-const rowClassName =
+const activeRowClassName =
   'home-top-activity app-nodrag group block min-w-0 rounded-lg bg-surface-secondary/35 px-3 py-2 hover:bg-surface-secondary/60 focus-visible:outline-2 focus-visible:outline-accent'
+const rememberedRowClassName =
+  'home-top-activity app-nodrag group block min-w-0 rounded-lg px-3 py-2 hover:bg-surface-secondary/35 focus-visible:outline-2 focus-visible:outline-accent'
 
 export function metadataForTopActiveApp(
   application: ActiveApplication,
@@ -59,7 +61,7 @@ export function TopActiveAppRow({
 }) {
   if (!application) {
     return (
-      <Link to="/connections" className={rowClassName}>
+      <Link to="/connections" className={rememberedRowClassName}>
         <span className="block text-[11px] text-muted">{tr('Top active app')}</span>
         <span className="mt-1 flex items-center justify-between gap-2 text-sm text-muted">
           {tr('No application activity yet')}
@@ -76,11 +78,11 @@ export function TopActiveAppRow({
   return (
     <Link
       to="/connections"
-      className={rowClassName}
+      className={sampleSeconds ? activeRowClassName : rememberedRowClassName}
       aria-label={
         sampleSeconds
           ? `${tr('Top active app')}: ${name}; ${tr('Download')} ${formatOverviewBytes(application.downloadSpeed)}/s; ${tr('Upload')} ${formatOverviewBytes(application.uploadSpeed)}/s; ${explanation}`
-          : `${tr('Top active app')}: ${name}; ${explanation}`
+          : `${tr('Recently observed app')}: ${name}; ${explanation}`
       }
     >
       <TopActiveAppContent
@@ -108,8 +110,9 @@ export function TopActiveAppContent({
   return (
     <>
       <span className="block truncate text-[11px] text-muted" title={explanation}>
-        {tr('Top active app')} ·
-        {sampleSeconds ? ` ${tr('{0} s sample', [sampleSeconds])}` : ` ${tr('Last observed')}`}
+        {sampleSeconds
+          ? `${tr('Top active app')} · ${tr('{0} s sample', [sampleSeconds])}`
+          : tr('Recently observed app')}
       </span>
       <span className="mt-1 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
         {metadata?.iconUrl ? (
@@ -120,7 +123,7 @@ export function TopActiveAppContent({
           </span>
         )}
         <span
-          className="min-w-[6rem] flex-1 truncate text-sm font-medium text-foreground"
+          className={`min-w-[6rem] flex-1 truncate text-sm ${sampleSeconds ? 'font-medium text-foreground' : 'home-secondary-value text-muted'}`}
           title={name}
         >
           {name}

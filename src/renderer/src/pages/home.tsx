@@ -28,6 +28,7 @@ import BasePage from '@renderer/components/base/base-page'
 import { CountryFlag } from '@renderer/components/base/country-flag'
 import {
   OverviewTrafficChart,
+  overviewTrafficRangeSeconds,
   overviewTrafficState,
   type OverviewTrafficSample
 } from '@renderer/components/home/overview-traffic-chart'
@@ -537,6 +538,7 @@ const Home = () => {
           ? 'danger'
           : 'neutral'
   const trafficState = overviewTrafficState(history)
+  const trafficRangeSeconds = overviewTrafficRangeSeconds(history)
   const hasTrafficSnapshot = trafficState !== 'unavailable'
 
   return (
@@ -592,7 +594,9 @@ const Home = () => {
             />
           </div>
         )}
-        <div className="home-overview relative mx-auto flex w-full max-w-[1000px] flex-col gap-3 px-4 py-4 sm:px-6 sm:py-5">
+        <div
+          className={`home-overview relative mx-auto flex w-full max-w-[1000px] flex-col gap-3 px-4 py-4 sm:px-6 sm:py-5 ${hasActiveBackground ? 'home-overview-with-background' : ''}`}
+        >
           {attention && (
             <Surface
               variant="secondary"
@@ -634,9 +638,11 @@ const Home = () => {
                   ) : (
                     <div className="text-xl font-semibold text-muted">{tr('Unavailable')}</div>
                   )}
-                  <div className="mt-0.5 text-[0.95rem] text-muted">{countryLabel(publicIp)}</div>
+                  <div className="home-secondary-value mt-0.5 text-[0.95rem] text-muted">
+                    {countryLabel(publicIp)}
+                  </div>
                   {(publicIp?.isp || publicIp?.asn) && (
-                    <div className="mt-2 flex min-w-0 flex-wrap items-baseline gap-x-1.5 gap-y-0.5 text-xs text-muted">
+                    <div className="home-secondary-value mt-2 flex min-w-0 flex-wrap items-baseline gap-x-1.5 gap-y-0.5 text-xs text-muted">
                       {publicIp.isp && <span className="min-w-0 break-words">{publicIp.isp}</span>}
                       {publicIp.isp && publicIp.asn && <span aria-hidden="true">·</span>}
                       {publicIp.asn && <span className="shrink-0">{publicIp.asn}</span>}
@@ -648,7 +654,9 @@ const Home = () => {
                 <div className="mb-2 text-xs font-medium text-muted">{tr('Routing')}</div>
                 <OverviewRoutingChip mode={mode} />
                 {mode === 'rule' && (
-                  <div className="mt-2 text-xs text-muted">{tr('Selected by routing rules')}</div>
+                  <div className="home-secondary-value mt-2 text-xs text-muted">
+                    {tr('Selected by routing rules')}
+                  </div>
                 )}
                 {mode === 'global' && (
                   <div className="mt-2 min-w-0">
@@ -656,7 +664,7 @@ const Home = () => {
                       {globalProxy.name ?? tr('Unavailable')}
                     </div>
                     {(globalProxy.protocol || globalProxy.latency !== undefined) && (
-                      <div className="mt-0.5 text-xs text-muted">
+                      <div className="home-secondary-value mt-0.5 text-xs text-muted">
                         {[
                           globalProxy.protocol,
                           globalProxy.latency !== undefined
@@ -670,7 +678,9 @@ const Home = () => {
                   </div>
                 )}
                 {mode === 'direct' && (
-                  <div className="mt-2 text-xs text-muted">{tr('Direct connection')}</div>
+                  <div className="home-secondary-value mt-2 text-xs text-muted">
+                    {tr('Direct connection')}
+                  </div>
                 )}
               </div>
             </div>
@@ -853,8 +863,24 @@ const Home = () => {
               />
             </div>
             {trafficState === 'active' ? (
-              <div className="relative mt-3 h-20 overflow-hidden">
+              <div
+                className="relative mt-3 h-20 overflow-hidden rounded-lg"
+                style={
+                  hasActiveBackground
+                    ? {
+                        backgroundColor: `color-mix(in srgb, var(--surface) ${Math.min(100, resolvedBackground.cardOpacity + 16)}%, transparent)`
+                      }
+                    : undefined
+                }
+              >
                 <OverviewTrafficChart data={history} />
+                <span className="absolute bottom-1 left-2 text-[10px] text-muted">
+                  {trafficRangeSeconds === undefined
+                    ? tr('Latest sample')
+                    : trafficRangeSeconds === 1
+                      ? tr('Last 1 second')
+                      : tr('Last {0} seconds', [trafficRangeSeconds])}
+                </span>
               </div>
             ) : (
               <div className="mt-3 flex h-10 flex-col justify-end gap-2 text-xs text-muted">

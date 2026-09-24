@@ -7,6 +7,10 @@
   margin-bottom: calc(49px - 100vh);
 }
 
+.home-overview-with-background .home-secondary-value {
+  color: color-mix(in srgb, var(--foreground) 78%, var(--muted));
+}
+
 .home-network-main,
 .home-overview-pair {
   display: grid;
