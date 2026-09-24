@@ -3,15 +3,12 @@ import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
-  LuActivity,
   LuArrowDown,
   LuArrowRight,
   LuArrowUp,
-  LuBookmark,
   LuCalendarDays,
   LuClock3,
   LuCpu,
-  LuGlobe,
   LuImages,
   LuRefreshCw,
   LuTriangleAlert
@@ -52,7 +49,7 @@ import {
   OverviewConfiguredChips,
   OverviewStat,
   OverviewStatusLine,
-  OverviewSubscriptionChips,
+  OverviewSubscriptionIdentity,
   OverviewUsageSummary,
   OverviewTrafficRate,
   formatOverviewBytes
@@ -624,10 +621,7 @@ const Home = () => {
               />
             )}
             <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-              <h2 className="flex items-center gap-2 text-sm font-semibold text-foreground">
-                <LuGlobe className="size-4 text-accent" aria-hidden="true" />
-                {tr('Network')}
-              </h2>
+              <h2 className="text-sm font-semibold text-foreground">{tr('Network')}</h2>
               {exitIsLastKnown && publicIp ? (
                 <span className="text-xs text-warning">{tr('Last known exit')}</span>
               ) : refreshingIp ? (
@@ -700,8 +694,7 @@ const Home = () => {
               style={cardBackgroundStyle}
             >
               <div className="mb-4 flex items-center justify-between gap-2">
-                <h2 className="flex items-center gap-2 text-sm font-semibold text-foreground">
-                  <LuBookmark className="size-4 text-muted" aria-hidden="true" />
+                <h2 className="text-sm font-semibold text-foreground">
                   {tr('Current subscription')}
                 </h2>
                 <Link
@@ -714,17 +707,7 @@ const Home = () => {
               </div>
               {profile ? (
                 <div className="space-y-2">
-                  <div className="min-w-0">
-                    <div
-                      className="line-clamp-2 break-words text-base font-semibold"
-                      title={profile.name}
-                    >
-                      {profile.name}
-                    </div>
-                    <div className="mt-1.5">
-                      <OverviewSubscriptionChips profile={profile} />
-                    </div>
-                  </div>
+                  <OverviewSubscriptionIdentity profile={profile} />
                   <OverviewUsageSummary usage={usage} quota={quota} />
                   <dl className="space-y-0 pt-1">
                     {profile.extra?.expire ? (
@@ -772,13 +755,10 @@ const Home = () => {
               className={`min-w-0 rounded-2xl border p-4 sm:p-5 ${cardStyle}`}
               style={cardBackgroundStyle}
             >
-              <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold text-foreground">
-                <LuCpu className="size-4 text-accent" aria-hidden="true" />
-                {tr('Runtime')}
-              </h2>
+              <h2 className="mb-4 text-sm font-semibold text-foreground">{tr('Runtime')}</h2>
               <OverviewStat
                 icon={
-                  <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-accent-soft/55 text-accent">
+                  <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-accent-soft/55 text-accent">
                     <LuCpu className="size-5" aria-hidden="true" />
                   </span>
                 }
@@ -820,10 +800,7 @@ const Home = () => {
             style={cardBackgroundStyle}
           >
             <div className="mb-4 flex items-center justify-between gap-3">
-              <h2 className="flex items-center gap-2 text-sm font-semibold text-foreground">
-                <LuActivity className="size-4 text-muted" aria-hidden="true" />
-                {tr('Traffic')}
-              </h2>
+              <h2 className="text-sm font-semibold text-foreground">{tr('Traffic')}</h2>
               <Link
                 to="/connections"
                 className="group app-nodrag rounded-md hover:text-accent focus-visible:outline-2 focus-visible:outline-accent"

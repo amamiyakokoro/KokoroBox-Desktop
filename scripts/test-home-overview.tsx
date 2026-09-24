@@ -9,6 +9,7 @@ import {
   OverviewConfiguredChips,
   OverviewStatusLine,
   OverviewSubscriptionChips,
+  OverviewSubscriptionIdentity,
   OverviewUsageSummary,
   OverviewTrafficRate,
   formatOverviewBytes
@@ -70,6 +71,14 @@ test('subscription identity uses Kokoro, protocol and route chips', () => {
   assert.match(html, /chip--accent/)
   for (const text of ['Kokoro', 'ANYTLS', 'Direct']) assert.match(html, new RegExp(`>${text}<`))
   assert.equal((html.match(/data-slot="chip"/g) ?? []).length, 3)
+
+  const identity = renderToStaticMarkup(<OverviewSubscriptionIdentity profile={profile} />)
+  assert.match(identity, /aria-hidden="true"/)
+  assert.match(identity, /size-11 shrink-0/)
+  assert.match(identity, /line-clamp-2 break-words/)
+  assert.match(identity, /min-w-0 flex-1/)
+  assert.match(identity, /Kokoro Hong Kong/)
+  assert.equal((identity.match(/data-slot="chip"/g) ?? []).length, 3)
 })
 
 test('usage keeps the percentage, meter and remaining quota together', () => {

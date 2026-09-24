@@ -1,6 +1,6 @@
 import { Chip, Meter } from '@heroui/react'
 import type { ReactNode } from 'react'
-import { LuAppWindow, LuArrowRight, LuGlobe, LuNetwork } from 'react-icons/lu'
+import { LuAppWindow, LuArrowRight, LuGlobe, LuHeart, LuNetwork } from 'react-icons/lu'
 import { tr } from '../../../../shared/i18n'
 import { maskPublicIp } from '../../../../shared/home'
 import { calcTraffic } from '../../utils/calc'
@@ -203,6 +203,27 @@ export function OverviewSubscriptionChips({ profile }: { profile: ProfileItem })
         {profile.kokoro.settings.mode === 'relay' ? tr('Relay') : tr('Direct')}
       </Chip>
     </OverviewChipGroup>
+  )
+}
+
+export function OverviewSubscriptionIdentity({ profile }: { profile: ProfileItem }) {
+  return (
+    <div className="flex min-w-0 items-center gap-3">
+      <span
+        className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-accent-soft/50 text-accent"
+        aria-hidden="true"
+      >
+        <LuHeart className="size-5" />
+      </span>
+      <div className="min-w-0 flex-1">
+        <div className="line-clamp-2 break-words text-base font-semibold" title={profile.name}>
+          {profile.name}
+        </div>
+        <div className="mt-1">
+          <OverviewSubscriptionChips profile={profile} />
+        </div>
+      </div>
+    </div>
   )
 }
 
