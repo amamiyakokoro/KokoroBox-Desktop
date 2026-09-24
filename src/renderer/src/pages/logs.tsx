@@ -22,6 +22,7 @@ import {
 import { Separator } from '@heroui/react'
 import { restartMihomoLogs } from '@renderer/utils/ipc'
 import { notify } from '@renderer/utils/notification'
+import './management-surfaces.css'
 
 const logLevelOrder: Record<LogLevel, number> = {
   silent: 0,
@@ -140,7 +141,7 @@ const Logs: React.FC = () => {
   }, [maxLogEntries])
 
   return (
-    <BasePage title={tr('Live logs')} contentClassName="overflow-y-hidden">
+    <BasePage title={tr('Live logs')} contentClassName="logs-page overflow-y-hidden">
       <div className="flex h-full min-h-0 flex-col">
         <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm">
           <KokoToolbar aria-label={tr('Live logs')}>
@@ -196,7 +197,7 @@ const Logs: React.FC = () => {
           </KokoToolbar>
           <Separator />
         </div>
-        <div className="min-h-0 flex-1 py-1">
+        <div className="min-h-0 flex-1 bg-surface py-1">
           <Virtuoso
             className="h-full pr-1"
             data={filteredLogs}

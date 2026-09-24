@@ -3,21 +3,32 @@
 }
 
 .home-overview-page {
-  background: color-mix(in srgb, var(--surface-secondary) 18%, var(--background));
+  background: var(--background);
 }
 
 .home-overview-card {
-  background: color-mix(in srgb, var(--surface) 96%, transparent);
-  border-color: color-mix(in srgb, var(--separator) 80%, transparent);
+  background: var(--surface);
+  border-color: var(--separator);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.05);
 }
 
 .home-overview-subpanel {
-  background: color-mix(in srgb, var(--surface-secondary) 55%, transparent);
+  background: color-mix(in srgb, var(--surface-secondary) 45%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--separator) 55%, transparent);
 }
 
 .home-overview-subpanel-link:hover,
 .home-overview-subpanel-link:focus-visible {
-  background: color-mix(in srgb, var(--surface-secondary) 75%, transparent);
+  background: color-mix(in srgb, var(--surface-secondary) 65%, var(--surface));
+}
+
+.home-overview-with-background .home-overview-subpanel {
+  background: color-mix(in srgb, var(--surface-secondary) 45%, transparent);
+}
+
+.home-overview-with-background .home-overview-subpanel-link:hover,
+.home-overview-with-background .home-overview-subpanel-link:focus-visible {
+  background: color-mix(in srgb, var(--surface-secondary) 65%, transparent);
 }
 
 .home-background-plane {

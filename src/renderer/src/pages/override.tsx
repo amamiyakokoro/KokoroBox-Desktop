@@ -21,6 +21,7 @@ import { RiArchiveLine } from 'react-icons/ri'
 import { useCardDndSensors } from '@renderer/hooks/use-card-dnd-sensors'
 import { notify } from '@renderer/utils/notification'
 import { LuFiles } from 'react-icons/lu'
+import './management-surfaces.css'
 
 const emptyItems: OverrideItem[] = []
 
@@ -170,7 +171,7 @@ const Override: React.FC = () => {
     <BasePage
       ref={pageRef}
       title={tr('Overrides')}
-      contentClassName="no-scrollbar"
+      contentClassName="override-page no-scrollbar"
       header={
         <>
           <Button

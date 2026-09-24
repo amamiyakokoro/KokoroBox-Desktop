@@ -498,7 +498,7 @@ const Home = () => {
       active = false
     }
   }, [displayedApplication?.key, displayedApplication?.lookupPath])
-  const cardStyle = hasActiveBackground ? 'border-separator/50' : 'home-overview-card'
+  const cardStyle = hasActiveBackground ? 'border-separator/50 shadow-none' : 'home-overview-card'
   const cardBackgroundStyle = hasActiveBackground
     ? {
         backgroundColor: `color-mix(in srgb, var(--surface) ${resolvedBackground.cardOpacity}%, transparent)`,
@@ -537,7 +537,7 @@ const Home = () => {
   return (
     <BasePage
       title={tr('Overview')}
-      contentClassName={`overflow-x-hidden ${hasActiveBackground ? '' : 'home-overview-page'}`}
+      contentClassName="overflow-x-hidden home-overview-page"
       header={
         isDefault ? (
           <Tooltip delay={0}>
@@ -607,7 +607,7 @@ const Home = () => {
           )}
 
           <Surface
-            className={`home-network-hero min-w-0 rounded-2xl border p-4 shadow-none sm:p-5 ${cardStyle}`}
+            className={`home-network-hero min-w-0 rounded-2xl border p-4 sm:p-5 ${cardStyle}`}
             style={cardBackgroundStyle}
           >
             <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
@@ -683,7 +683,7 @@ const Home = () => {
 
           <div className="home-overview-pair min-w-0">
             <Surface
-              className={`min-w-0 rounded-2xl border p-4 shadow-none sm:p-5 ${cardStyle}`}
+              className={`min-w-0 rounded-2xl border p-4 sm:p-5 ${cardStyle}`}
               style={cardBackgroundStyle}
             >
               <div className="mb-4 flex items-center justify-between gap-2">
@@ -756,7 +756,7 @@ const Home = () => {
             </Surface>
 
             <Surface
-              className={`min-w-0 rounded-2xl border p-4 shadow-none sm:p-5 ${cardStyle}`}
+              className={`min-w-0 rounded-2xl border p-4 sm:p-5 ${cardStyle}`}
               style={cardBackgroundStyle}
             >
               <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold text-foreground">
@@ -803,7 +803,7 @@ const Home = () => {
           </div>
 
           <Surface
-            className={`min-w-0 rounded-2xl border p-4 shadow-none sm:p-5 ${cardStyle}`}
+            className={`min-w-0 rounded-2xl border p-4 sm:p-5 ${cardStyle}`}
             style={cardBackgroundStyle}
           >
             <div className="mb-4 flex items-center justify-between gap-3">

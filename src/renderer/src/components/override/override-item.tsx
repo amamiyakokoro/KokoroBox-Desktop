@@ -198,7 +198,7 @@ const OverrideItem: React.FC<Props> = (props) => {
         />
       )}
       {openLog && <ExecLogModal id={info.id} onClose={() => setOpenLog(false)} />}
-      <CollectionCard className={isDragging ? 'opacity-70' : undefined}>
+      <CollectionCard className={`override-item-card ${isDragging ? 'opacity-70' : ''}`}>
         <div className="h-full w-full min-w-0">
           <Card.Content className="min-w-0 px-3 py-3">
             <div className="flex min-w-0 items-start gap-2">
