@@ -52,20 +52,20 @@ export function OverviewTrafficChart({ data }: { data: OverviewTrafficSample[] }
       className="absolute inset-x-0 top-0 h-[calc(100%-1.25rem)] w-full"
       aria-hidden="true"
     >
-      <path d="M 0 34 H 100" stroke="var(--separator)" strokeWidth="0.5" opacity="0.7" />
-      <path d="M 0 19 H 100" stroke="var(--separator)" strokeWidth="0.3" opacity="0.35" />
+      <path d="M 0 34 H 100" stroke="var(--separator)" strokeWidth="0.5" opacity="0.8" />
+      <path d="M 0 19 H 100" stroke="var(--separator)" strokeWidth="0.3" opacity="0.4" />
       <path
         d={paths.down}
         fill="none"
         stroke="var(--accent)"
-        strokeWidth="1.1"
+        strokeWidth="1.4"
         vectorEffect="non-scaling-stroke"
       />
       <path
         d={paths.up}
         fill="none"
         stroke="var(--danger)"
-        strokeWidth="1.1"
+        strokeWidth="1.35"
         opacity="0.78"
         vectorEffect="non-scaling-stroke"
       />

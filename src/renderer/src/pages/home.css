@@ -2,6 +2,24 @@
   container: overview-content / inline-size;
 }
 
+.home-overview-page {
+  background: color-mix(in srgb, var(--surface-secondary) 18%, var(--background));
+}
+
+.home-overview-card {
+  background: color-mix(in srgb, var(--surface) 96%, transparent);
+  border-color: color-mix(in srgb, var(--separator) 80%, transparent);
+}
+
+.home-overview-subpanel {
+  background: color-mix(in srgb, var(--surface-secondary) 55%, transparent);
+}
+
+.home-overview-subpanel-link:hover,
+.home-overview-subpanel-link:focus-visible {
+  background: color-mix(in srgb, var(--surface-secondary) 75%, transparent);
+}
+
 .home-background-plane {
   height: calc(100vh - 49px);
   margin-bottom: calc(49px - 100vh);
@@ -11,7 +29,6 @@
   color: color-mix(in srgb, var(--foreground) 78%, var(--muted));
 }
 
-.home-network-main,
 .home-overview-pair {
   display: grid;
   gap: 0.75rem;
@@ -30,16 +47,6 @@
 @container overview-content (min-width: 620px) {
   .home-network-hero {
     padding-block: 2rem;
-  }
-
-  .home-network-main {
-    grid-template-columns: minmax(0, 1.3fr) minmax(0, 0.7fr);
-    align-items: center;
-  }
-
-  .home-network-routing {
-    border-left: 1px solid var(--separator);
-    padding-left: 1.25rem;
   }
 
   .home-overview-pair {

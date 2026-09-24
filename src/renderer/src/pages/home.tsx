@@ -3,12 +3,15 @@ import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
+  LuActivity,
   LuArrowDown,
   LuArrowRight,
   LuArrowUp,
+  LuBookmark,
   LuCalendarDays,
   LuClock3,
   LuCpu,
+  LuGlobe,
   LuImages,
   LuRefreshCw,
   LuTriangleAlert
@@ -495,9 +498,7 @@ const Home = () => {
       active = false
     }
   }, [displayedApplication?.key, displayedApplication?.lookupPath])
-  const cardStyle = hasActiveBackground
-    ? 'border-separator/50'
-    : 'border-separator/60 bg-surface/85'
+  const cardStyle = hasActiveBackground ? 'border-separator/50' : 'home-overview-card'
   const cardBackgroundStyle = hasActiveBackground
     ? {
         backgroundColor: `color-mix(in srgb, var(--surface) ${resolvedBackground.cardOpacity}%, transparent)`,
@@ -536,7 +537,7 @@ const Home = () => {
   return (
     <BasePage
       title={tr('Overview')}
-      contentClassName="overflow-x-hidden"
+      contentClassName={`overflow-x-hidden ${hasActiveBackground ? '' : 'home-overview-page'}`}
       header={
         isDefault ? (
           <Tooltip delay={0}>
@@ -610,71 +611,73 @@ const Home = () => {
             style={cardBackgroundStyle}
           >
             <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-              <h2 className="text-sm font-semibold text-muted">{tr('Network')}</h2>
+              <h2 className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                <LuGlobe className="size-4 text-accent" aria-hidden="true" />
+                {tr('Network')}
+              </h2>
               {exitIsLastKnown && publicIp ? (
                 <span className="text-xs text-warning">{tr('Last known exit')}</span>
               ) : refreshingIp ? (
                 <span className="text-xs text-muted">{tr('Refreshing')}</span>
               ) : null}
             </div>
-            <div className="home-network-main min-w-0">
-              <div className="flex min-w-0 items-center gap-2.5">
-                <CountryFlag code={publicIp?.countryCode} className="size-12 sm:size-13" />
-                <div className="min-w-0 flex-1">
-                  {publicIp ? (
-                    <OverviewPublicIp
-                      ip={publicIp.ip}
-                      revealed={revealed}
-                      onToggle={() => setRevealed((current) => !current)}
-                    />
-                  ) : (
-                    <div className="text-xl font-semibold text-muted">{tr('Unavailable')}</div>
-                  )}
-                  <div className="home-secondary-value mt-0.5 text-[0.95rem] text-muted">
-                    {countryLabel(publicIp)}
-                  </div>
-                  {(publicIp?.isp || publicIp?.asn) && (
-                    <div className="home-secondary-value mt-1 flex min-w-0 flex-wrap items-baseline gap-x-1.5 gap-y-0.5 text-xs text-muted">
-                      {publicIp.isp && <span className="min-w-0 break-words">{publicIp.isp}</span>}
-                      {publicIp.isp && publicIp.asn && <span aria-hidden="true">·</span>}
-                      {publicIp.asn && <span className="shrink-0">{publicIp.asn}</span>}
-                    </div>
-                  )}
+            <div className="flex min-w-0 items-center gap-2.5">
+              <CountryFlag code={publicIp?.countryCode} className="size-12 sm:size-13" />
+              <div className="min-w-0 flex-1">
+                {publicIp ? (
+                  <OverviewPublicIp
+                    ip={publicIp.ip}
+                    revealed={revealed}
+                    onToggle={() => setRevealed((current) => !current)}
+                  />
+                ) : (
+                  <div className="text-xl font-semibold text-muted">{tr('Unavailable')}</div>
+                )}
+                <div className="home-secondary-value mt-0.5 text-[0.95rem] text-muted">
+                  {countryLabel(publicIp)}
                 </div>
-              </div>
-              <div className="home-network-routing min-w-0">
-                <div className="mb-2 text-xs font-medium text-muted">{tr('Routing')}</div>
-                <OverviewRoutingChip mode={mode} />
-                {mode === 'rule' && (
-                  <div className="home-secondary-value mt-2 text-xs text-muted">
-                    {tr('Selected by routing rules')}
-                  </div>
-                )}
-                {mode === 'global' && (
-                  <div className="mt-2 min-w-0">
-                    <div className="truncate text-sm font-medium" title={globalProxy.name}>
-                      {globalProxy.name ?? tr('Unavailable')}
-                    </div>
-                    {(globalProxy.protocol || globalProxy.latency !== undefined) && (
-                      <div className="home-secondary-value mt-0.5 text-xs text-muted">
-                        {[
-                          globalProxy.protocol,
-                          globalProxy.latency !== undefined
-                            ? `${globalProxy.latency} ms`
-                            : undefined
-                        ]
-                          .filter(Boolean)
-                          .join(' · ')}
-                      </div>
-                    )}
-                  </div>
-                )}
-                {mode === 'direct' && (
-                  <div className="home-secondary-value mt-2 text-xs text-muted">
-                    {tr('Direct connection')}
+                {(publicIp?.isp || publicIp?.asn) && (
+                  <div className="home-secondary-value mt-1 flex min-w-0 flex-wrap items-baseline gap-x-1.5 gap-y-0.5 text-xs text-muted">
+                    {publicIp.isp && <span className="min-w-0 break-words">{publicIp.isp}</span>}
+                    {publicIp.isp && publicIp.asn && <span aria-hidden="true">·</span>}
+                    {publicIp.asn && <span className="shrink-0">{publicIp.asn}</span>}
                   </div>
                 )}
               </div>
+            </div>
+            <div className="mt-4 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 border-t border-separator/40 pt-3">
+              <span className="text-xs font-medium text-muted">{tr('Routing')}</span>
+              <OverviewRoutingChip mode={mode} />
+              {mode === 'rule' && (
+                <span className="home-secondary-value text-xs text-muted">
+                  {tr('Selected by routing rules')}
+                </span>
+              )}
+              {mode === 'global' && (
+                <span className="flex min-w-0 flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
+                  <span
+                    className="max-w-full truncate text-xs font-medium"
+                    title={globalProxy.name}
+                  >
+                    {globalProxy.name ?? tr('Unavailable')}
+                  </span>
+                  {(globalProxy.protocol || globalProxy.latency !== undefined) && (
+                    <span className="home-secondary-value text-xs text-muted">
+                      {[
+                        globalProxy.protocol,
+                        globalProxy.latency !== undefined ? `${globalProxy.latency} ms` : undefined
+                      ]
+                        .filter(Boolean)
+                        .join(' · ')}
+                    </span>
+                  )}
+                </span>
+              )}
+              {mode === 'direct' && (
+                <span className="home-secondary-value text-xs text-muted">
+                  {tr('Direct connection')}
+                </span>
+              )}
             </div>
           </Surface>
 
@@ -684,7 +687,10 @@ const Home = () => {
               style={cardBackgroundStyle}
             >
               <div className="mb-4 flex items-center justify-between gap-2">
-                <h2 className="text-sm font-semibold text-muted">{tr('Current subscription')}</h2>
+                <h2 className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                  <LuBookmark className="size-4 text-muted" aria-hidden="true" />
+                  {tr('Current subscription')}
+                </h2>
                 <Link
                   to="/profiles"
                   className="app-nodrag rounded-md p-1 text-muted hover:text-accent focus-visible:outline-2 focus-visible:outline-accent"
@@ -753,7 +759,10 @@ const Home = () => {
               className={`min-w-0 rounded-2xl border p-4 shadow-none sm:p-5 ${cardStyle}`}
               style={cardBackgroundStyle}
             >
-              <h2 className="mb-4 text-sm font-semibold text-muted">{tr('Runtime')}</h2>
+              <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold text-foreground">
+                <LuCpu className="size-4 text-accent" aria-hidden="true" />
+                {tr('Runtime')}
+              </h2>
               <OverviewStat
                 icon={
                   <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-accent-soft/55 text-accent">
@@ -776,20 +785,20 @@ const Home = () => {
                 }
                 valueClassName="text-[1.35rem]"
               />
-              <div className="mt-4 border-t border-separator/60 pt-3">
+              <div className="home-overview-subpanel mt-4 rounded-xl px-3 py-2.5">
                 <OverviewStatusLine
                   label={tr('KokoroBox Service')}
                   status={serviceStateLabel(runtime.service as ServiceState | undefined)}
                   tone={serviceTone}
                   version={serviceState === 'running' ? serviceVersionLabel : undefined}
                 />
+                {configuredFeatures.length > 0 && (
+                  <div className="mt-3">
+                    <div className="mb-1 text-xs text-muted">{tr('Configured')}</div>
+                    <OverviewConfiguredChips features={configuredFeatures} />
+                  </div>
+                )}
               </div>
-              {configuredFeatures.length > 0 && (
-                <div className="mt-3">
-                  <div className="mb-1 text-xs text-muted">{tr('Configured')}</div>
-                  <OverviewConfiguredChips features={configuredFeatures} />
-                </div>
-              )}
             </Surface>
           </div>
 
@@ -798,7 +807,10 @@ const Home = () => {
             style={cardBackgroundStyle}
           >
             <div className="mb-4 flex items-center justify-between gap-3">
-              <h2 className="text-sm font-semibold text-muted">{tr('Traffic')}</h2>
+              <h2 className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                <LuActivity className="size-4 text-muted" aria-hidden="true" />
+                {tr('Traffic')}
+              </h2>
               <Link
                 to="/connections"
                 className="group app-nodrag rounded-md hover:text-accent focus-visible:outline-2 focus-visible:outline-accent"
@@ -857,24 +869,26 @@ const Home = () => {
               />
             </div>
             {trafficState === 'active' ? (
-              <div
-                className="relative mt-4 h-24 overflow-hidden rounded-lg"
-                style={
-                  hasActiveBackground
-                    ? {
-                        backgroundColor: `color-mix(in srgb, var(--surface) ${Math.min(100, resolvedBackground.cardOpacity + 16)}%, transparent)`
-                      }
-                    : undefined
-                }
-              >
-                <OverviewTrafficChart data={history} />
-                <span className="absolute bottom-1.5 left-2 text-[10px] text-muted">
-                  {trafficRangeSeconds === undefined
-                    ? tr('Latest sample')
-                    : trafficRangeSeconds === 1
-                      ? tr('Last 1 second')
-                      : tr('Last {0} seconds', [trafficRangeSeconds])}
-                </span>
+              <div className="mt-4 border-t border-separator/40 pt-3">
+                <div
+                  className="relative h-24 overflow-hidden rounded-lg"
+                  style={
+                    hasActiveBackground
+                      ? {
+                          backgroundColor: `color-mix(in srgb, var(--surface) ${Math.min(100, resolvedBackground.cardOpacity + 16)}%, transparent)`
+                        }
+                      : undefined
+                  }
+                >
+                  <OverviewTrafficChart data={history} />
+                  <span className="absolute bottom-1.5 left-2 text-[10px] text-muted">
+                    {trafficRangeSeconds === undefined
+                      ? tr('Latest sample')
+                      : trafficRangeSeconds === 1
+                        ? tr('Last 1 second')
+                        : tr('Last {0} seconds', [trafficRangeSeconds])}
+                  </span>
+                </div>
               </div>
             ) : (
               <div className="mt-3 flex h-10 flex-col justify-end gap-2 text-xs text-muted">

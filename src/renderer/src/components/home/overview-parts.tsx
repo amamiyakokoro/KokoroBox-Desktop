@@ -117,7 +117,7 @@ export function OverviewUsageSummary({ usage, quota }: { usage: number; quota: n
   if (quota <= 0) return null
   const percentage = Math.round((usage / quota) * 100)
   return (
-    <div className="space-y-2 rounded-xl bg-surface-secondary/25 px-3 py-3">
+    <div className="home-overview-subpanel space-y-2 rounded-xl px-3 py-3">
       <div className="flex min-w-0 flex-wrap items-baseline justify-between gap-x-2 gap-y-1 tabular-nums">
         <span className="min-w-0 whitespace-nowrap">
           <span className="sr-only">{tr('Used traffic')} </span>

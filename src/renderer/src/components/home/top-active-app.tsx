@@ -6,7 +6,7 @@ import type { ApplicationMetadata } from '../../utils/application-metadata'
 import { formatOverviewBytes } from './overview-parts'
 
 const rowClassName =
-  'home-top-activity app-nodrag group block min-w-0 rounded-lg bg-surface-secondary/25 px-3 py-2 hover:bg-surface-secondary/45 focus-visible:outline-2 focus-visible:outline-accent'
+  'home-top-activity home-overview-subpanel home-overview-subpanel-link app-nodrag group block min-w-0 rounded-lg px-3 py-2 focus-visible:outline-2 focus-visible:outline-accent'
 
 export function metadataForTopActiveApp(
   application: ActiveApplication,
