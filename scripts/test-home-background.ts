@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import {
   defaultBuiltInBackgroundAppearance,
+  homeNetworkCardBackgroundChoice,
   nextHomeDefaultBackgroundId,
   normalizeHomeDefaultBackgroundId,
   resolveHomeBackground,
@@ -61,6 +62,12 @@ test('one built-in background is selected deterministically and independently of
   )
   // The resolver has no theme input: a theme change cannot select another image.
   assert.equal(resolveHomeBackground(selected, undefined, images).imageUrl, images.ammy2)
+})
+
+test('Network card illustration is opt-in and invalid values fall back to none', () => {
+  assert.equal(homeNetworkCardBackgroundChoice(undefined), 'none')
+  assert.equal(homeNetworkCardBackgroundChoice('unknown'), 'none')
+  assert.equal(homeNetworkCardBackgroundChoice('amamiya'), 'amamiya')
 })
 
 test('built-in backgrounds apply horizontal alignment and optional original size', () => {

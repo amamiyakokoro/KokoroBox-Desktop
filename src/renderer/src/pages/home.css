@@ -40,6 +40,40 @@
   color: color-mix(in srgb, var(--foreground) 78%, var(--muted));
 }
 
+.home-network-hero--illustrated {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.home-network-artwork {
+  position: absolute;
+  inset: 0;
+  background-position: 58% center;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+.home-network-artwork::after {
+  position: absolute;
+  inset: 0;
+  background: color-mix(in srgb, var(--surface) 48%, transparent);
+  content: '';
+}
+
+.dark .home-network-artwork::after {
+  background: color-mix(in srgb, var(--surface) 84%, transparent);
+}
+
+.home-network-hero--illustrated > :not(.home-network-artwork) {
+  position: relative;
+  z-index: 1;
+}
+
+.home-network-hero--illustrated .home-secondary-value {
+  color: color-mix(in srgb, var(--foreground) 75%, var(--muted));
+}
+
 .home-overview-pair {
   display: grid;
   gap: 0.75rem;
@@ -53,6 +87,12 @@
 
 .home-top-activity {
   grid-column: 1 / -1;
+}
+
+@container overview-content (max-width: 619px) {
+  .home-network-artwork {
+    background-position: 76% center;
+  }
 }
 
 @container overview-content (min-width: 620px) {

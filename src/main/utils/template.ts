@@ -15,6 +15,7 @@ export const defaultConfig: AppConfig = {
   silentStart: false,
   appTheme: 'system',
   homeBackgroundDisabled: true,
+  homeNetworkCardBackground: 'none',
   useWindowFrame: false,
   enableWindowDrag: false,
   proxyInTray: true,

@@ -22,6 +22,7 @@ import { getLocale, tr } from '../../../shared/i18n'
 import {
   displayServiceVersion,
   homeBackgroundChoice,
+  homeNetworkCardBackgroundChoice,
   homeRuntimeState,
   resolveHomeBackground,
   type PublicIpInfo,
@@ -79,6 +80,7 @@ import { configuredOverviewFeatures } from '@renderer/utils/home-overview'
 import { platform } from '@renderer/utils/init'
 import { nextProfileUpdateAt } from '../../../shared/profile-update'
 import { homeBuiltInImages } from '@renderer/utils/home-background-assets'
+import networkCardArtwork from '@renderer/assets/home/network-card-amamiya.png'
 import {
   getAppRoutingStatus,
   getHomeBackgroundDataUrl,
@@ -237,6 +239,8 @@ const Home = () => {
     homeBuiltInImages
   )
   const hasActiveBackground = Boolean(resolvedBackground.imageUrl)
+  const hasNetworkCardArtwork =
+    homeNetworkCardBackgroundChoice(appConfig?.homeNetworkCardBackground) === 'amamiya'
 
   useEffect(() => {
     if (backgroundChoice !== 'custom' || !background?.file) {
@@ -607,9 +611,18 @@ const Home = () => {
           )}
 
           <Surface
-            className={`home-network-hero min-w-0 rounded-2xl border p-4 sm:p-5 ${cardStyle}`}
-            style={cardBackgroundStyle}
+            className={`home-network-hero min-w-0 rounded-2xl border p-4 sm:p-5 ${cardStyle} ${hasNetworkCardArtwork ? 'home-network-hero--illustrated' : ''}`}
+            style={
+              hasNetworkCardArtwork ? { backgroundColor: 'var(--surface)' } : cardBackgroundStyle
+            }
           >
+            {hasNetworkCardArtwork && (
+              <div
+                className="home-network-artwork pointer-events-none"
+                style={{ backgroundImage: `url(${networkCardArtwork})` }}
+                aria-hidden="true"
+              />
+            )}
             <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
               <h2 className="flex items-center gap-2 text-sm font-semibold text-foreground">
                 <LuGlobe className="size-4 text-accent" aria-hidden="true" />

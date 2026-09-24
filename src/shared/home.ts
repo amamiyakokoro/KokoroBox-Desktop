@@ -13,6 +13,12 @@ export interface PublicIpSnapshot {
 
 export type HomeBackgroundAlignment = 'left' | 'center' | 'right'
 
+export type HomeNetworkCardBackground = 'none' | 'amamiya'
+
+export function homeNetworkCardBackgroundChoice(value: unknown): HomeNetworkCardBackground {
+  return value === 'amamiya' ? 'amamiya' : 'none'
+}
+
 export interface HomeBackground {
   file: string
   fit: 'cover' | 'contain'
