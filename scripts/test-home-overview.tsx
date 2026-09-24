@@ -18,6 +18,11 @@ import {
   overviewTrafficState
 } from '../src/renderer/src/components/home/overview-traffic-chart.tsx'
 import { configuredOverviewFeatures } from '../src/renderer/src/utils/home-overview.ts'
+import {
+  TopActiveAppContent,
+  metadataForTopActiveApp,
+  topActiveAppName
+} from '../src/renderer/src/components/home/top-active-app.tsx'
 
 test('routing emphasizes only its mode', () => {
   const rules = renderToStaticMarkup(<OverviewRoutingChip mode="rule" />)
@@ -182,4 +187,49 @@ test('traffic history uses actual download and upload samples without synthetic 
   assert.equal((paths.up.match(/[ML]/g) ?? []).length, 2)
   assert.notEqual(paths.down, paths.up)
   assert.equal(overviewTrafficState([{ index: 2, down: 20, up: 5 }]), 'active')
+})
+
+test('Top active app displays the host name, local icon, sampled directions and navigation', () => {
+  const application = {
+    key: 'application:/Applications/Discord.app',
+    name: 'Discord',
+    lookupPath: '/Applications/Discord.app',
+    kind: 'application' as const,
+    downloadSpeed: 2048,
+    uploadSpeed: 0
+  }
+  const html = renderToStaticMarkup(
+    <TopActiveAppContent
+      application={application}
+      metadata={{ name: 'Discord', iconUrl: 'data:image/png;base64,AA==' }}
+      sampleSeconds="0.5"
+      explanation="Connection sample"
+    />
+  )
+  assert.match(html, /Top active app/)
+  assert.match(html, /0\.5 s sample/)
+  assert.match(html, /src="data:image\/png;base64,AA==" alt=""/)
+  assert.match(html, /object-contain/)
+  assert.match(html, /Discord/)
+  assert.match(html, /KB\/s/)
+  assert.match(html, /B\/s/)
+  assert.match(html, /min-w-0/)
+  assert.equal(topActiveAppName(application, { name: 'Discord' }), 'Discord')
+  assert.equal(topActiveAppName(application, undefined), 'Discord')
+  assert.equal(
+    metadataForTopActiveApp(application, {
+      key: 'application:/Applications/Discord Canary.app',
+      value: { name: 'Discord Canary' }
+    }),
+    undefined
+  )
+  const fallback = renderToStaticMarkup(
+    <TopActiveAppContent
+      application={application}
+      sampleSeconds="0.5"
+      explanation="Connection sample"
+    />
+  )
+  assert.doesNotMatch(fallback, /<img/)
+  assert.match(fallback, /Discord/)
 })

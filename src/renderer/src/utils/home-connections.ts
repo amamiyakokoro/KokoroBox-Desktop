@@ -1,26 +1,135 @@
+import { isAppRoutingConnection } from '../components/connections/connection-identity'
+
 export interface ActiveApplication {
+  key: string
   name: string
-  speed: number
+  lookupPath: string
+  kind: 'application' | 'process'
+  downloadSpeed: number
+  uploadSpeed: number
+}
+
+export function connectionActivityFreshnessMs(connectionInterval: number): number {
+  const interval =
+    Number.isFinite(connectionInterval) && connectionInterval > 0 ? connectionInterval : 500
+  return Math.max(5000, Math.min(30_000, interval * 3))
+}
+
+export function hasFreshConnectionActivity(
+  sampledAt: number | undefined,
+  sampleMs: number,
+  now: number,
+  connectionInterval: number
+): boolean {
+  return (
+    sampledAt !== undefined &&
+    Number.isFinite(sampleMs) &&
+    sampleMs > 0 &&
+    Number.isFinite(now) &&
+    now >= sampledAt &&
+    now - sampledAt < connectionActivityFreshnessMs(connectionInterval)
+  )
+}
+
+const internalExecutables = new Set([
+  'mihomo',
+  'mihomo.exe',
+  'kokorobox-process-router',
+  'kokorobox-process-router.exe',
+  'kokorobox-service',
+  'kokorobox-service.exe'
+])
+
+function executableName(path: string): string {
+  return (
+    path
+      .split(/[\\/]/)
+      .at(-1)
+      ?.replace(/\.exe$/i, '') ?? ''
+  )
+}
+
+/** An enclosing host bundle is identified by its own Contents directory. */
+export function macosHostApplicationPath(executablePath: string): string | undefined {
+  if (!executablePath.startsWith('/') || executablePath.includes('\0')) return undefined
+  const segments = executablePath.split('/')
+  if (segments.some((segment) => segment === '.' || segment === '..')) return undefined
+  for (let index = 1; index < segments.length - 1; index += 1) {
+    if (/\.app$/i.test(segments[index]) && segments[index + 1] === 'Contents') {
+      return segments.slice(0, index + 1).join('/')
+    }
+  }
+  return undefined
+}
+
+export function connectionApplicationIdentity(
+  connection: ControllerConnectionDetail,
+  platform: NodeJS.Platform
+): Omit<ActiveApplication, 'downloadSpeed' | 'uploadSpeed'> | undefined {
+  if (connection.metadata.type === 'Inner') return undefined
+  const path = connection.metadata.processPath?.trim()
+  if (!path || path.includes('\0')) return undefined
+  const absolute = platform === 'win32' ? /^(?:[a-z]:[\\/]|\\\\)/i.test(path) : path.startsWith('/')
+  if (!absolute) return undefined
+  if (path.split(/[\\/]/).some((segment) => segment === '.' || segment === '..')) return undefined
+  const executable = executableName(path)
+  if (internalExecutables.has(executable.toLowerCase())) return undefined
+
+  const hostPath = platform === 'darwin' ? macosHostApplicationPath(path) : undefined
+  if (hostPath) {
+    return {
+      key: `application:${hostPath}`,
+      name: executableName(hostPath).replace(/\.app$/i, ''),
+      lookupPath: hostPath,
+      kind: 'application'
+    }
+  }
+
+  // A routing connection without an owning executable must not become a
+  // generic "Application routing" or proxy-helper application on Home.
+  if (isAppRoutingConnection(connection) && /^(?:helper|process.router)$/i.test(executable)) {
+    return undefined
+  }
+  const name = connection.metadata.process?.trim() || executable
+  if (!name || /^(?:helper|unknown|process.router)$/i.test(name)) return undefined
+  return {
+    key: `process:${platform === 'win32' ? path.toLowerCase() : path}`,
+    name: name.replace(/\.exe$/i, ''),
+    lookupPath: path,
+    kind: 'process'
+  }
+}
+
+function validRate(value: number | undefined): number {
+  return typeof value === 'number' && Number.isFinite(value) && value > 0 ? value : 0
 }
 
 export function topActiveApplication(
-  connections: ControllerConnectionDetail[] | undefined
+  connections: ControllerConnectionDetail[] | undefined,
+  platform: NodeJS.Platform
 ): ActiveApplication | undefined {
   if (!connections) return undefined
   const applications = new Map<string, ActiveApplication>()
+  const seenConnectionIds = new Set<string>()
   for (const connection of connections) {
-    if (connection.metadata.type === 'Inner') continue
-    const path = connection.metadata.processPath?.trim()
-    const name = connection.metadata.process?.trim() || path?.split(/[\\/]/).at(-1)
-    const speed =
-      Math.max(0, connection.downloadSpeed || 0) + Math.max(0, connection.uploadSpeed || 0)
-    if (!name || speed <= 0) continue
-    const key = path || name
-    const existing = applications.get(key)
-    applications.set(key, { name, speed: speed + (existing?.speed || 0) })
+    if (!connection.id || seenConnectionIds.has(connection.id)) continue
+    seenConnectionIds.add(connection.id)
+    const identity = connectionApplicationIdentity(connection, platform)
+    if (!identity) continue
+    const downloadSpeed = validRate(connection.downloadSpeed)
+    const uploadSpeed = validRate(connection.uploadSpeed)
+    if (downloadSpeed + uploadSpeed <= 0) continue
+    const existing = applications.get(identity.key)
+    applications.set(identity.key, {
+      ...identity,
+      downloadSpeed: downloadSpeed + (existing?.downloadSpeed ?? 0),
+      uploadSpeed: uploadSpeed + (existing?.uploadSpeed ?? 0)
+    })
   }
   return [...applications.values()].sort(
-    (a, b) => b.speed - a.speed || a.name.localeCompare(b.name)
+    (left, right) =>
+      right.downloadSpeed + right.uploadSpeed - left.downloadSpeed - left.uploadSpeed ||
+      left.key.localeCompare(right.key)
   )[0]
 }
 

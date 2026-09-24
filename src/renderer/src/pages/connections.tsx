@@ -16,7 +16,11 @@ import {
   buildConnectionGroups,
   type ConnectionGroup
 } from '@renderer/components/connections/connection-groups'
-import { withConnectionSpeeds } from '@renderer/components/connections/connection-speeds'
+import {
+  createConnectionCounterResetState,
+  nextConnectionCounterBaseline,
+  withConnectionSpeeds
+} from '@renderer/components/connections/connection-speeds'
 import {
   connectionIdentityLabel,
   isAppRoutingConnection
@@ -25,10 +29,8 @@ import appRoutingDefaultIcon from '../../../../resources/app-routing-default-ico
 import { CgClose, CgTrash } from 'react-icons/cg'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { includesIgnoreCase } from '@renderer/utils/includes'
-import { getIconDataURL, getAppName } from '@renderer/utils/ipc'
 import { HiSortAscending, HiSortDescending } from 'react-icons/hi'
-import { cropAndPadTransparent } from '@renderer/utils/image'
-import { platform } from '@renderer/utils/init'
+import { loadApplicationMetadata } from '@renderer/utils/application-metadata'
 import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'
 import { MdTune } from 'react-icons/md'
 import { IoPause, IoPlay } from 'react-icons/io5'
@@ -90,7 +92,9 @@ const Connections: React.FC = () => {
   const filterInputRef = useRef<HTMLInputElement>(null)
   const suppressSelectRef = useRef(false)
   const allConnectionsRef = useRef(allConnections)
-  const activeConnectionsRef = useRef(activeConnections)
+  const previousRateBaseline = useRef<ControllerConnectionDetail[] | undefined>(undefined)
+  const previousRateAt = useRef<number | undefined>(undefined)
+  const connectionCounterResets = useRef(createConnectionCounterResetState())
   const deletedIdsRef = useRef(deletedIds)
   const filteredConnectionsRef = useRef<ControllerConnectionDetail[]>([])
   const iconMapRef = useRef<Record<string, string>>({})
@@ -239,7 +243,6 @@ const Connections: React.FC = () => {
   }, [grouped, connectionGroups])
 
   allConnectionsRef.current = allConnections
-  activeConnectionsRef.current = activeConnections
   deletedIdsRef.current = deletedIds
   filteredConnectionsRef.current = filteredConnections
   iconMapRef.current = iconMap
@@ -318,15 +321,40 @@ const Connections: React.FC = () => {
   }, [])
 
   useEffect(() => {
+    previousRateBaseline.current = undefined
+    previousRateAt.current = undefined
+    connectionCounterResets.current = createConnectionCounterResetState()
     const handleConnections = (_e: unknown, info: ControllerConnections): void => {
       if (pausedRef.current) return
       setConnectionsInfo(info)
 
-      if (!info.connections) return
+      if (!info.connections) {
+        previousRateBaseline.current = undefined
+        previousRateAt.current = undefined
+        connectionCounterResets.current = createConnectionCounterResetState()
+        return
+      }
 
       const existingConnectionIds = new Set(allConnectionsRef.current.map((conn) => conn.id))
 
       const now = Date.now()
+      if (previousRateAt.current !== undefined && now <= previousRateAt.current) return
+      const sampleMs = now - (previousRateAt.current ?? now)
+      const maximumGapMs = Math.max(5000, connectionInterval * 3)
+      const baseline = sampleMs <= maximumGapMs ? previousRateBaseline.current : undefined
+      if (!baseline) connectionCounterResets.current = createConnectionCounterResetState()
+      const sampledConnections = withConnectionSpeeds(
+        info.connections,
+        baseline,
+        sampleMs,
+        maximumGapMs
+      )
+      previousRateBaseline.current = nextConnectionCounterBaseline(
+        info.connections,
+        baseline,
+        connectionCounterResets.current
+      )
+      previousRateAt.current = now
       const activeConnIds = new Set(info.connections.map((conn) => conn.id))
 
       activeConnIds.forEach((id) => {
@@ -339,11 +367,7 @@ const Connections: React.FC = () => {
         }
       })
 
-      const activeConns = withConnectionSpeeds(
-        info.connections,
-        activeConnectionsRef.current,
-        connectionInterval
-      ).map((conn) => {
+      const activeConns = sampledConnections.map((conn) => {
         const metadata =
           conn.metadata.type === 'Inner'
             ? { ...conn.metadata, process: 'mihomo', processPath: 'mihomo' }
@@ -420,7 +444,7 @@ const Connections: React.FC = () => {
       processingAppNames.current.add(path)
 
       try {
-        const appName = await getAppName(path)
+        const { name: appName } = await loadApplicationMetadata(path)
         if (appName) {
           setAppNameCache((prev) => ({ ...prev, [path]: appName }))
         }
@@ -449,17 +473,8 @@ const Connections: React.FC = () => {
       processingIcons.current.add(path)
 
       try {
-        const rawBase64 = await getIconDataURL(path)
-        if (!rawBase64) return
-
-        const fullDataURL = rawBase64.startsWith('data:')
-          ? rawBase64
-          : `data:image/png;base64,${rawBase64}`
-
-        let processedDataURL = fullDataURL
-        if (platform != 'darwin') {
-          processedDataURL = await cropAndPadTransparent(fullDataURL)
-        }
+        const { iconUrl: processedDataURL } = await loadApplicationMetadata(path)
+        if (!processedDataURL) return
 
         try {
           localStorage.setItem(path, processedDataURL)
