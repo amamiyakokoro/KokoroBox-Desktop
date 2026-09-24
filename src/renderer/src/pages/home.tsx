@@ -1,4 +1,4 @@
-import { Chip, Surface } from '@heroui/react'
+import { Surface } from '@heroui/react'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import { useEffect, useMemo, useRef, useState } from 'react'
@@ -29,26 +29,27 @@ import {
   type OverviewTrafficSample
 } from '@renderer/components/home/overview-traffic-chart'
 import { withConnectionSpeeds } from '@renderer/components/connections/connection-speeds'
-import { getOutboundModeLabel } from '@renderer/components/sider/outbound-mode'
 import { normalizeCoreVersion } from '@renderer/components/sider/core-version'
 import {
   OverviewMetadataRow,
-  OverviewConnectionChip,
+  OverviewConnectionAction,
   OverviewPublicIp,
   overviewConnectionLabel,
-  OverviewRoutingChips,
+  OverviewRoutingChip,
   OverviewConfiguredChips,
   OverviewStat,
   OverviewStatusLine,
   OverviewSubscriptionChips,
-  OverviewUsageSummary
+  OverviewUsageSummary,
+  OverviewTrafficRate,
+  formatOverviewBytes
 } from '@renderer/components/home/overview-parts'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'
 import { useGroups } from '@renderer/hooks/use-groups'
 import { useProfileConfig } from '@renderer/hooks/use-profile-config'
 import { calcTraffic } from '@renderer/utils/calc'
-import { activeRouteCount, topActiveApplication } from '@renderer/utils/home-connections'
+import { topActiveApplication } from '@renderer/utils/home-connections'
 import { configuredOverviewFeatures } from '@renderer/utils/home-overview'
 import { platform } from '@renderer/utils/init'
 import { nextProfileUpdateAt } from '../../../shared/profile-update'
@@ -330,12 +331,8 @@ const Home = () => {
     () => topActiveApplication(connections?.connections),
     [connections?.connections]
   )
-  const activeRoutes = useMemo(
-    () => activeRouteCount(connections?.connections),
-    [connections?.connections]
-  )
   const cardStyle = hasBackground
-    ? 'border-separator/50 bg-surface/80 backdrop-blur-sm'
+    ? 'border-separator/50 bg-surface/88 backdrop-blur-sm'
     : 'border-separator/60 bg-surface/85'
   const runtime = homeRuntimeState(
     !coreStopped && !coreError && Boolean(coreVersion),
@@ -405,7 +402,7 @@ const Home = () => {
           )}
 
           <Surface
-            className={`home-network-hero min-w-0 rounded-2xl border border-accent/20 p-4 shadow-none sm:p-5 ${hasBackground ? 'bg-surface/85 backdrop-blur-sm' : 'bg-accent-soft/20'}`}
+            className={`home-network-hero min-w-0 rounded-2xl border border-accent/20 p-4 shadow-none sm:p-5 ${hasBackground ? 'bg-surface/75 backdrop-blur-sm' : 'bg-accent-soft/20'}`}
             style={
               hasBackground
                 ? undefined
@@ -418,9 +415,7 @@ const Home = () => {
             <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
               <h2 className="text-sm font-semibold">{tr('Network')}</h2>
               {publicIpSnapshot.stale && publicIp ? (
-                <Chip size="sm" variant="soft" color="warning">
-                  {tr('Last known exit')}
-                </Chip>
+                <span className="text-xs text-warning">{tr('Last known exit')}</span>
               ) : refreshingIp ? (
                 <span className="text-xs text-muted">{tr('Refreshing')}</span>
               ) : null}
@@ -438,7 +433,7 @@ const Home = () => {
                   ) : (
                     <div className="text-xl font-semibold text-muted">{tr('Unavailable')}</div>
                   )}
-                  <div className="mt-0.5 text-sm text-muted">{countryLabel(publicIp)}</div>
+                  <div className="mt-0.5 text-[0.95rem] text-muted">{countryLabel(publicIp)}</div>
                   {(publicIp?.isp || publicIp?.asn) && (
                     <div className="mt-2 flex min-w-0 flex-wrap items-baseline gap-x-1.5 gap-y-0.5 text-xs text-muted">
                       {publicIp.isp && <span className="min-w-0 break-words">{publicIp.isp}</span>}
@@ -450,21 +445,31 @@ const Home = () => {
               </div>
               <div className="home-network-routing min-w-0">
                 <div className="mb-2 text-xs font-medium text-muted">{tr('Routing')}</div>
-                <OverviewRoutingChips mode={mode} proxy={globalProxy} />
-                {mode === 'rule' && activeRoutes > 0 && (
-                  <div className="mt-2 text-xs text-muted">
-                    {activeRoutes === 1
-                      ? tr('{0} active route', [activeRoutes])
-                      : tr('{0} active routes', [activeRoutes])}
-                  </div>
+                <OverviewRoutingChip mode={mode} />
+                {mode === 'rule' && (
+                  <div className="mt-2 text-xs text-muted">{tr('Selected by routing rules')}</div>
                 )}
                 {mode === 'global' && (
-                  <div
-                    className="mt-2 min-w-0 truncate text-xs text-muted"
-                    title={globalProxy.name}
-                  >
-                    {globalProxy.name ?? tr('Unavailable')}
+                  <div className="mt-2 min-w-0">
+                    <div className="truncate text-sm font-medium" title={globalProxy.name}>
+                      {globalProxy.name ?? tr('Unavailable')}
+                    </div>
+                    {(globalProxy.protocol || globalProxy.latency !== undefined) && (
+                      <div className="mt-0.5 text-xs text-muted">
+                        {[
+                          globalProxy.protocol,
+                          globalProxy.latency !== undefined
+                            ? `${globalProxy.latency} ms`
+                            : undefined
+                        ]
+                          .filter(Boolean)
+                          .join(' · ')}
+                      </div>
+                    )}
                   </div>
+                )}
+                {mode === 'direct' && (
+                  <div className="mt-2 text-xs text-muted">{tr('Direct connection')}</div>
                 )}
               </div>
             </div>
@@ -483,7 +488,7 @@ const Home = () => {
                 </Link>
               </div>
               {profile ? (
-                <div className="space-y-3">
+                <div className="space-y-2.5">
                   <div className="min-w-0">
                     <div
                       className="line-clamp-2 break-words text-base font-semibold"
@@ -496,7 +501,7 @@ const Home = () => {
                     </div>
                   </div>
                   <OverviewUsageSummary usage={usage} quota={quota} />
-                  <dl className="space-y-1">
+                  <dl className="space-y-0.5 pt-0.5">
                     {profile.extra?.expire ? (
                       <OverviewMetadataRow
                         icon={<LuCalendarDays className="size-3.5 shrink-0" aria-hidden="true" />}
@@ -523,7 +528,7 @@ const Home = () => {
                               tr('Update due')
                             ) : (
                               <span title={tr('Estimated from update interval')}>
-                                ≈ {dayjs(nextUpdateAt).fromNow()}
+                                {tr('In about {0}', [dayjs(nextUpdateAt).fromNow(true)])}
                               </span>
                             )
                           }
@@ -539,9 +544,8 @@ const Home = () => {
             </Surface>
 
             <Surface className={`min-w-0 rounded-2xl border p-4 shadow-none sm:p-5 ${cardStyle}`}>
-              <h2 className="mb-4 text-sm font-semibold">{tr('Runtime')}</h2>
+              <h2 className="mb-3 text-sm font-semibold">{tr('Runtime')}</h2>
               <OverviewStat
-                label="Mihomo"
                 icon={
                   <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-accent-soft/55 text-accent">
                     <LuCpu className="size-5" aria-hidden="true" />
@@ -556,15 +560,14 @@ const Home = () => {
                         ? tr('Direct run')
                         : tr('Stopped')
                 }
-                secondary={runtime.mihomo !== 'stopped' ? mihomoVersionLabel : undefined}
+                secondary={
+                  runtime.mihomo !== 'stopped' && mihomoVersionLabel
+                    ? `Mihomo ${mihomoVersionLabel}`
+                    : 'Mihomo'
+                }
                 valueClassName="text-[1.35rem]"
               />
-              <div className="mt-3">
-                <Chip size="sm" variant="soft" color="default">
-                  {getOutboundModeLabel(mode)}
-                </Chip>
-              </div>
-              <div className="mt-4 border-t border-separator/60 pt-3">
+              <div className="mt-5 border-t border-separator/60 pt-3">
                 <OverviewStatusLine
                   label={tr('KokoroBox Service')}
                   status={serviceStateLabel(runtime.service as ServiceState | undefined)}
@@ -586,10 +589,10 @@ const Home = () => {
               <h2 className="text-sm font-semibold">{tr('Traffic')}</h2>
               <Link
                 to="/connections"
-                className="app-nodrag rounded-full focus-visible:outline-2 focus-visible:outline-accent"
+                className="group app-nodrag rounded-md hover:text-accent focus-visible:outline-2 focus-visible:outline-accent"
                 aria-label={overviewConnectionLabel(connections?.connections?.length)}
               >
-                <OverviewConnectionChip count={connections?.connections?.length} />
+                <OverviewConnectionAction count={connections?.connections?.length} />
               </Link>
             </div>
             <div className="home-traffic-summary min-w-0">
@@ -601,15 +604,13 @@ const Home = () => {
                 }
                 label={tr('Download')}
                 value={
-                  hasTrafficSnapshot ? (
-                    <span title={`${calcTraffic(rates.down)}/s`}>{calcTraffic(rates.down)}/s</span>
-                  ) : (
-                    tr('Unavailable')
-                  )
+                  <OverviewTrafficRate
+                    bytesPerSecond={hasTrafficSnapshot ? rates.down : undefined}
+                  />
                 }
                 secondary={
                   connections?.downloadTotal !== undefined
-                    ? tr('{0} this session', [calcTraffic(connections.downloadTotal)])
+                    ? tr('{0} this session', [formatOverviewBytes(connections.downloadTotal)])
                     : undefined
                 }
                 valueClassName="text-[1.4rem]"
@@ -622,15 +623,11 @@ const Home = () => {
                 }
                 label={tr('Upload')}
                 value={
-                  hasTrafficSnapshot ? (
-                    <span title={`${calcTraffic(rates.up)}/s`}>{calcTraffic(rates.up)}/s</span>
-                  ) : (
-                    tr('Unavailable')
-                  )
+                  <OverviewTrafficRate bytesPerSecond={hasTrafficSnapshot ? rates.up : undefined} />
                 }
                 secondary={
                   connections?.uploadTotal !== undefined
-                    ? tr('{0} this session', [calcTraffic(connections.uploadTotal)])
+                    ? tr('{0} this session', [formatOverviewBytes(connections.uploadTotal)])
                     : undefined
                 }
                 valueClassName="text-[1.4rem]"
@@ -655,20 +652,20 @@ const Home = () => {
                 </Link>
               )}
             </div>
-            {hasTrafficSnapshot ? (
-              <div
-                className={`relative mt-3 overflow-hidden ${trafficState === 'active' ? 'h-20' : 'h-10'}`}
-              >
+            {trafficState === 'active' ? (
+              <div className="relative mt-3 h-20 overflow-hidden">
                 <OverviewTrafficChart data={history} />
-                {trafficState === 'idle' && (
-                  <span className="absolute right-1 bottom-2 text-xs text-muted">
-                    {tr('No recent traffic')}
-                  </span>
-                )}
               </div>
             ) : (
-              <div className="mt-3 border-t border-separator/50 pt-2 text-xs text-muted">
-                {runtime.mihomo === 'stopped' ? tr('Unavailable') : tr('Waiting for traffic')}
+              <div className="mt-3 flex h-10 flex-col justify-end gap-2 text-xs text-muted">
+                <span>
+                  {trafficState === 'idle'
+                    ? tr('No recent traffic')
+                    : runtime.mihomo === 'stopped'
+                      ? tr('Unavailable')
+                      : tr('Waiting for traffic')}
+                </span>
+                <div className="h-px w-full bg-separator/60" aria-hidden="true" />
               </div>
             )}
           </Surface>

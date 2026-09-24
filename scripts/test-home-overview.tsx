@@ -3,13 +3,15 @@ import { test } from 'node:test'
 import React from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import {
-  OverviewConnectionChip,
+  OverviewConnectionAction,
   OverviewPublicIp,
-  OverviewRoutingChips,
+  OverviewRoutingChip,
   OverviewConfiguredChips,
   OverviewStatusLine,
   OverviewSubscriptionChips,
-  OverviewUsageSummary
+  OverviewUsageSummary,
+  OverviewTrafficRate,
+  formatOverviewBytes
 } from '../src/renderer/src/components/home/overview-parts.tsx'
 import {
   overviewTrafficPaths,
@@ -17,16 +19,16 @@ import {
 } from '../src/renderer/src/components/home/overview-traffic-chart.tsx'
 import { configuredOverviewFeatures } from '../src/renderer/src/utils/home-overview.ts'
 
-test('routing renders mode and dynamic selection as separate compact chips', () => {
-  const rules = renderToStaticMarkup(<OverviewRoutingChips mode="rule" />)
+test('routing emphasizes only its mode', () => {
+  const rules = renderToStaticMarkup(<OverviewRoutingChip mode="rule" />)
   assert.match(rules, />Rules<\/span>/)
-  assert.match(rules, />Dynamic<\/span>/)
-  assert.equal((rules.match(/data-slot="chip"/g) ?? []).length, 2)
+  assert.doesNotMatch(rules, /Dynamic/)
+  assert.equal((rules.match(/data-slot="chip"/g) ?? []).length, 1)
 
-  const direct = renderToStaticMarkup(<OverviewRoutingChips mode="direct" />)
+  const direct = renderToStaticMarkup(<OverviewRoutingChip mode="direct" />)
   assert.equal((direct.match(/data-slot="chip"/g) ?? []).length, 1)
 
-  const global = renderToStaticMarkup(<OverviewRoutingChips mode="global" />)
+  const global = renderToStaticMarkup(<OverviewRoutingChip mode="global" />)
   assert.match(global, /Global/)
   assert.equal((global.match(/data-slot="chip"/g) ?? []).length, 1)
 })
@@ -68,12 +70,14 @@ test('usage keeps the percentage, meter and remaining quota together', () => {
   const html = renderToStaticMarkup(<OverviewUsageSummary usage={35} quota={100} />)
   assert.match(html, /35% used/)
   assert.match(html, /65\.00 B remaining/)
+  assert.match(html, /Used traffic/)
+  assert.match(html, /text-xl font-semibold/)
   assert.match(html, /data-slot="meter"/)
   assert.doesNotMatch(html, /data-slot="chip"/)
   assert.equal(renderToStaticMarkup(<OverviewUsageSummary usage={0} quota={0} />), '')
   const exceeded = renderToStaticMarkup(<OverviewUsageSummary usage={120} quota={100} />)
   assert.match(exceeded, /120% used/)
-  assert.match(exceeded, /0\.00 B remaining/)
+  assert.match(exceeded, /0 B remaining/)
   assert.match(exceeded, /bg-danger/)
 })
 
@@ -109,9 +113,10 @@ test('configured features include application routing independently of Service s
     { kind: 'app-routing', count: 2 }
   ])
   const html = renderToStaticMarkup(<OverviewConfiguredChips features={features} />)
-  for (const text of ['Proxy', 'DNS', 'App routing 2']) {
+  for (const text of ['Proxy', 'DNS', 'App routing']) {
     assert.match(html, new RegExp(`>${text}<`))
   }
+  assert.match(html, />2<\/span>/)
   assert.deepEqual(
     configuredOverviewFeatures({
       proxyEnabled: false,
@@ -139,16 +144,36 @@ test('configured features include application routing independently of Service s
 })
 
 test('connection count displays zero and handles missing data', () => {
-  assert.match(renderToStaticMarkup(<OverviewConnectionChip count={0} />), /0 connections/)
-  assert.match(renderToStaticMarkup(<OverviewConnectionChip count={1} />), /1 connection/)
-  assert.doesNotMatch(renderToStaticMarkup(<OverviewConnectionChip count={1} />), /1 connections/)
-  assert.match(renderToStaticMarkup(<OverviewConnectionChip />), />Connections<svg/)
+  assert.match(renderToStaticMarkup(<OverviewConnectionAction count={0} />), /0 connections/)
+  assert.match(renderToStaticMarkup(<OverviewConnectionAction count={1} />), /1 connection/)
+  assert.doesNotMatch(renderToStaticMarkup(<OverviewConnectionAction count={1} />), /1 connections/)
+  assert.match(renderToStaticMarkup(<OverviewConnectionAction />), /Connections<svg/)
+  assert.doesNotMatch(
+    renderToStaticMarkup(<OverviewConnectionAction count={0} />),
+    /data-slot="chip"/
+  )
+})
+
+test('traffic rate distinguishes zero from unavailable without false precision', () => {
+  const zero = renderToStaticMarkup(<OverviewTrafficRate bytesPerSecond={0} />)
+  assert.match(zero, />0<\/span>/)
+  assert.match(zero, /B\/s/)
+  assert.doesNotMatch(zero, /0\.00/)
+  assert.equal(formatOverviewBytes(0), '0 B')
+  assert.match(renderToStaticMarkup(<OverviewTrafficRate />), /—/)
 })
 
 test('traffic history uses actual download and upload samples without synthetic points', () => {
   assert.deepEqual(overviewTrafficPaths([]), { down: '', up: '' })
   assert.equal(overviewTrafficState([]), 'unavailable')
   assert.equal(overviewTrafficState([{ index: 1, down: 0, up: 0 }]), 'idle')
+  assert.equal(
+    overviewTrafficState([
+      { index: 1, down: 10, up: 0 },
+      { index: 2, down: 0, up: 0 }
+    ]),
+    'active'
+  )
   const paths = overviewTrafficPaths([
     { index: 1, down: 10, up: 0 },
     { index: 2, down: 20, up: 5 }

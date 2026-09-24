@@ -1,6 +1,6 @@
 import { Chip, Meter } from '@heroui/react'
 import type { ReactNode } from 'react'
-import { LuArrowRight } from 'react-icons/lu'
+import { LuAppWindow, LuArrowRight, LuGlobe, LuNetwork } from 'react-icons/lu'
 import { tr } from '../../../../shared/i18n'
 import { maskPublicIp } from '../../../../shared/home'
 import { calcTraffic } from '../../utils/calc'
@@ -29,7 +29,7 @@ export function OverviewPublicIp({
       aria-label={action}
       aria-pressed={revealed}
       onClick={onToggle}
-      className="app-nodrag block max-w-full min-w-0 overflow-hidden text-ellipsis whitespace-nowrap rounded-md text-left font-mono text-[clamp(1.375rem,3.4cqw,1.875rem)] font-semibold leading-tight tabular-nums text-foreground outline-offset-2 hover:bg-accent-soft/35 focus-visible:outline-2 focus-visible:outline-accent"
+      className="app-nodrag block max-w-full min-w-0 overflow-hidden text-ellipsis whitespace-nowrap rounded-md text-left font-mono text-[clamp(1.5rem,4.2cqw,1.875rem)] font-semibold leading-tight tabular-nums text-foreground outline-offset-2 hover:bg-accent-soft/35 focus-visible:outline-2 focus-visible:outline-accent"
     >
       {revealed ? ip : maskPublicIp(ip)}
     </button>
@@ -87,29 +87,55 @@ export function OverviewMetadataRow({
   )
 }
 
+export function formatOverviewBytes(bytes: number): string {
+  return Number.isFinite(bytes) && bytes > 0 ? calcTraffic(bytes) : '0 B'
+}
+
+export function OverviewTrafficRate({ bytesPerSecond }: { bytesPerSecond?: number }) {
+  if (bytesPerSecond === undefined) return <span className="text-muted">—</span>
+  const formatted = formatOverviewBytes(bytesPerSecond)
+  const unitIndex = formatted.lastIndexOf(' ')
+  return (
+    <>
+      <span>{formatted.slice(0, unitIndex)}</span>
+      <span className="ml-1 text-sm font-normal text-muted">
+        {formatted.slice(unitIndex + 1)}/s
+      </span>
+    </>
+  )
+}
+
 export function OverviewUsageSummary({ usage, quota }: { usage: number; quota: number }) {
   if (quota <= 0) return null
   const percentage = Math.round((usage / quota) * 100)
   return (
     <div className="space-y-1.5 rounded-xl bg-accent-soft/25 px-3 py-2.5">
-      <div className="flex min-w-0 flex-wrap items-center justify-between gap-x-2 gap-y-1 text-xs tabular-nums">
-        <span>
-          <strong className="font-semibold text-foreground">{calcTraffic(usage)}</strong>
-          <span className="text-muted"> / {calcTraffic(quota)}</span>
+      <div className="flex min-w-0 flex-wrap items-baseline justify-between gap-x-2 gap-y-1 tabular-nums">
+        <span className="min-w-0 whitespace-nowrap">
+          <span className="sr-only">{tr('Used traffic')} </span>
+          <strong className="text-xl font-semibold text-foreground">
+            {formatOverviewBytes(usage)}
+          </strong>
+          <span className="ml-1 text-xs text-muted">/ {formatOverviewBytes(quota)}</span>
         </span>
         <span
-          className={`shrink-0 font-medium ${percentage >= 100 ? 'text-danger' : percentage >= 90 ? 'text-warning' : 'text-foreground'}`}
+          aria-label={tr('{0}% used', [percentage])}
+          className={`shrink-0 text-xs font-medium ${percentage >= 100 ? 'text-danger' : percentage >= 90 ? 'text-warning' : 'text-foreground'}`}
         >
-          {tr('{0}% used', [percentage])}
+          {percentage}%
         </span>
       </div>
-      <Meter aria-label={tr('Traffic usage')} maxValue={quota} value={Math.min(usage, quota)}>
+      <Meter
+        aria-label={tr('Traffic usage')}
+        maxValue={quota}
+        value={Math.min(Math.max(usage, 0), quota)}
+      >
         <Meter.Track className="h-1.5 bg-surface-secondary">
           <Meter.Fill className={percentage >= 100 ? 'bg-danger' : 'bg-accent'} />
         </Meter.Track>
       </Meter>
       <div className="text-xs tabular-nums text-muted">
-        {tr('{0} remaining', [calcTraffic(Math.max(quota - usage, 0))])}
+        {tr('{0} remaining', [formatOverviewBytes(Math.max(quota - usage, 0))])}
       </div>
     </div>
   )
@@ -137,34 +163,11 @@ export function OverviewStatusLine({
   )
 }
 
-export function OverviewRoutingChips({
-  mode,
-  proxy
-}: {
-  mode: OutboundMode
-  proxy?: { name?: string; protocol?: string; latency?: number }
-}) {
+export function OverviewRoutingChip({ mode }: { mode: OutboundMode }) {
   return (
-    <OverviewChipGroup>
-      <Chip size="sm" variant="soft" color="default">
-        {getOutboundModeLabel(mode)}
-      </Chip>
-      {mode === 'rule' && (
-        <Chip size="sm" variant="soft" color="default">
-          {tr('Dynamic')}
-        </Chip>
-      )}
-      {mode === 'global' && proxy?.protocol && (
-        <Chip size="sm" variant="soft" color="default">
-          {proxy.protocol}
-        </Chip>
-      )}
-      {mode === 'global' && proxy?.latency && (
-        <Chip size="sm" variant="soft" color="default">
-          {proxy.latency} ms
-        </Chip>
-      )}
-    </OverviewChipGroup>
+    <Chip size="sm" variant="soft" color="accent">
+      {getOutboundModeLabel(mode)}
+    </Chip>
   )
 }
 
@@ -199,13 +202,27 @@ export function OverviewConfiguredChips({ features }: { features: OverviewConfig
     <OverviewChipGroup>
       {features.map((feature) => (
         <Chip key={feature.kind} size="sm" variant="soft" color="default">
-          {feature.kind === 'proxy'
-            ? tr('Proxy')
-            : feature.kind === 'dns'
-              ? 'DNS'
-              : feature.count === undefined
-                ? tr('App routing')
-                : tr('App routing {0}', [feature.count])}
+          <Chip.Label className="flex items-center gap-1">
+            {feature.kind === 'proxy' ? (
+              <LuGlobe className="size-3" aria-hidden="true" />
+            ) : feature.kind === 'dns' ? (
+              <LuNetwork className="size-3" aria-hidden="true" />
+            ) : (
+              <LuAppWindow className="size-3" aria-hidden="true" />
+            )}
+            <span>
+              {feature.kind === 'proxy'
+                ? tr('Proxy')
+                : feature.kind === 'dns'
+                  ? 'DNS'
+                  : tr('App routing')}
+            </span>
+            {feature.kind === 'app-routing' && feature.count !== undefined && (
+              <span className="ml-0.5 inline-flex min-w-4 justify-center rounded-full bg-surface-secondary px-1 text-[10px] leading-4 tabular-nums text-muted">
+                {feature.count}
+              </span>
+            )}
+          </Chip.Label>
         </Chip>
       ))}
     </OverviewChipGroup>
@@ -217,13 +234,11 @@ export function overviewConnectionLabel(count?: number): string {
   return count === 1 ? tr('1 connection') : tr('{0} connections', [count])
 }
 
-export function OverviewConnectionChip({ count }: { count?: number }) {
+export function OverviewConnectionAction({ count }: { count?: number }) {
   return (
-    <Chip size="sm" variant="soft" color="default">
-      <Chip.Label className="flex items-center gap-1">
-        {overviewConnectionLabel(count)}
-        <LuArrowRight className="size-3" aria-hidden="true" />
-      </Chip.Label>
-    </Chip>
+    <span className="inline-flex items-center gap-1 text-xs font-medium text-muted transition-colors group-hover:text-accent">
+      {overviewConnectionLabel(count)}
+      <LuArrowRight className="size-3" aria-hidden="true" />
+    </span>
   )
 }
