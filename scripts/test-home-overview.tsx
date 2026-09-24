@@ -15,6 +15,8 @@ import {
   formatOverviewBytes
 } from '../src/renderer/src/components/home/overview-parts.tsx'
 import {
+  OverviewTrafficChart,
+  overviewTrafficAreaPaths,
   overviewTrafficPaths,
   overviewTrafficRangeSeconds,
   overviewTrafficMaximumSamples,
@@ -184,6 +186,7 @@ test('traffic rate distinguishes zero from unavailable without false precision',
 
 test('traffic history uses actual download and upload samples without synthetic points', () => {
   assert.deepEqual(overviewTrafficPaths([]), { down: '', up: '' })
+  assert.deepEqual(overviewTrafficAreaPaths([]), { down: '', up: '' })
   assert.equal(overviewTrafficState([]), 'unavailable')
   assert.equal(overviewTrafficState([{ index: 1, down: 0, up: 0 }]), 'idle')
   assert.equal(
@@ -200,6 +203,18 @@ test('traffic history uses actual download and upload samples without synthetic 
   assert.equal((paths.down.match(/[ML]/g) ?? []).length, 2)
   assert.equal((paths.up.match(/[ML]/g) ?? []).length, 2)
   assert.notEqual(paths.down, paths.up)
+  const areaPaths = overviewTrafficAreaPaths([
+    { index: 1_000, down: 10, up: 5 },
+    { index: 2_000, down: 20, up: 10 },
+    { index: 10_000, down: 15, up: 7 },
+    { index: 11_000, down: 5, up: 2 }
+  ])
+  assert.equal((areaPaths.down.match(/Z/g) ?? []).length, 2)
+  assert.equal((areaPaths.up.match(/Z/g) ?? []).length, 2)
+  const chart = renderToStaticMarkup(<OverviewTrafficChart data={[]} />)
+  assert.match(chart, /fill="var\(--accent\)" fill-opacity="0\.07"/)
+  assert.match(chart, /fill="var\(--danger\)" fill-opacity="0\.06"/)
+  assert.equal((chart.match(/stroke="var\(--separator\)"/g) ?? []).length, 2)
   assert.equal(overviewTrafficState([{ index: 2, down: 20, up: 5 }]), 'active')
   assert.equal(overviewTrafficRangeSeconds([]), undefined)
   assert.equal(overviewTrafficRangeSeconds([{ index: 1000, down: 20, up: 5 }]), undefined)

@@ -53,13 +53,10 @@ export function overviewTrafficState(
   return samples.some(({ down, up }) => down > 0 || up > 0) ? 'active' : 'idle'
 }
 
-export function overviewTrafficPaths(
+function overviewTrafficGeometry(
   samples: OverviewTrafficSample[],
   now = samples.at(-1)?.index ?? 0
-): {
-  down: string
-  up: string
-} {
+) {
   const recent = pruneOverviewTrafficHistory(samples, now)
   const visibleMs = Math.min(
     overviewTrafficRetentionMs,
@@ -72,17 +69,56 @@ export function overviewTrafficPaths(
       [down, up].filter((value) => Number.isFinite(value) && value > 0)
     )
   )
-  const pathFor = (key: 'down' | 'up'): string =>
-    recent
-      .map((sample, position) => {
-        const x = ((sample.index - visibleStart) / visibleMs) * 100
-        const value = Number.isFinite(sample[key]) ? Math.max(0, sample[key]) : 0
-        const y = 34 - (value / maximum) * 30
-        const startsNewSegment = position === 0 || sample.index - recent[position - 1].index > 5_000
-        return `${startsNewSegment ? 'M' : 'L'} ${x.toFixed(2)} ${y.toFixed(2)}`
-      })
+  const segments: OverviewTrafficSample[][] = []
+  for (const sample of recent) {
+    const segment = segments.at(-1)
+    if (!segment || sample.index - segment.at(-1)!.index > 5_000) {
+      segments.push([sample])
+    } else {
+      segment.push(sample)
+    }
+  }
+  const point = (sample: OverviewTrafficSample, key: 'down' | 'up') => {
+    const x = ((sample.index - visibleStart) / visibleMs) * 100
+    const y = 34 - (sample[key] / maximum) * 30
+    return `${x.toFixed(2)} ${y.toFixed(2)}`
+  }
+  const baselineX = (sample: OverviewTrafficSample) =>
+    (((sample.index - visibleStart) / visibleMs) * 100).toFixed(2)
+  const lineFor = (key: 'down' | 'up') =>
+    segments
+      .map((segment) =>
+        segment
+          .map((sample, position) => `${position === 0 ? 'M' : 'L'} ${point(sample, key)}`)
+          .join(' ')
+      )
       .join(' ')
-  return { down: pathFor('down'), up: pathFor('up') }
+  const areaFor = (key: 'down' | 'up') =>
+    segments
+      .filter((segment) => segment.length > 1)
+      .map(
+        (segment) =>
+          `M ${baselineX(segment[0])} 34 L ${segment.map((sample) => point(sample, key)).join(' L ')} L ${baselineX(segment.at(-1)!)} 34 Z`
+      )
+      .join(' ')
+  return {
+    lines: { down: lineFor('down'), up: lineFor('up') },
+    areas: { down: areaFor('down'), up: areaFor('up') }
+  }
+}
+
+export function overviewTrafficPaths(
+  samples: OverviewTrafficSample[],
+  now = samples.at(-1)?.index ?? 0
+): { down: string; up: string } {
+  return overviewTrafficGeometry(samples, now).lines
+}
+
+export function overviewTrafficAreaPaths(
+  samples: OverviewTrafficSample[],
+  now = samples.at(-1)?.index ?? 0
+): { down: string; up: string } {
+  return overviewTrafficGeometry(samples, now).areas
 }
 
 export function overviewTrafficRangeSeconds(
@@ -104,7 +140,7 @@ export function OverviewTrafficChart({
   data: OverviewTrafficSample[]
   now?: number
 }) {
-  const paths = overviewTrafficPaths(data, now)
+  const { lines, areas } = overviewTrafficGeometry(data, now)
   return (
     <svg
       viewBox="0 0 100 40"
@@ -112,20 +148,22 @@ export function OverviewTrafficChart({
       className="absolute inset-x-0 top-0 h-[calc(100%-1.25rem)] w-full"
       aria-hidden="true"
     >
-      <path d="M 0 34 H 100" stroke="var(--separator)" strokeWidth="0.5" opacity="0.8" />
-      <path d="M 0 19 H 100" stroke="var(--separator)" strokeWidth="0.3" opacity="0.4" />
+      <path d={areas.down} fill="var(--accent)" fillOpacity="0.07" />
+      <path d={areas.up} fill="var(--danger)" fillOpacity="0.06" />
+      <path d="M 0 19 H 100" stroke="var(--separator)" strokeWidth="0.35" opacity="0.28" />
+      <path d="M 0 34 H 100" stroke="var(--separator)" strokeWidth="0.35" opacity="0.28" />
       <path
-        d={paths.down}
+        d={lines.down}
         fill="none"
         stroke="var(--accent)"
-        strokeWidth="1.4"
+        strokeWidth="1.2"
         vectorEffect="non-scaling-stroke"
       />
       <path
-        d={paths.up}
+        d={lines.up}
         fill="none"
         stroke="var(--danger)"
-        strokeWidth="1.35"
+        strokeWidth="1.2"
         opacity="0.78"
         vectorEffect="non-scaling-stroke"
       />
