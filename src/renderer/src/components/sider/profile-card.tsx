@@ -1,8 +1,7 @@
 import { tr } from '../../../../shared/i18n'
-import { Button, Chip, Meter, Tooltip } from '@heroui/react'
+import { Chip } from '@heroui/react'
 import { useProfileConfig } from '@renderer/hooks/use-profile-config'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { calcTraffic } from '@renderer/utils/calc'
 import { CgLoadbarDoc } from 'react-icons/cg'
 import { IoMdRefresh } from 'react-icons/io'
 import relativeTime from 'dayjs/plugin/relativeTime'
@@ -22,12 +21,8 @@ interface Props {
 }
 
 const ProfileCard: React.FC<Props> = ({ iconOnly }) => {
-  const { appConfig, patchAppConfig } = useAppConfig()
-  const {
-    profileCardStatus = 'col-span-2',
-    profileDisplayDate = 'expire',
-    disableAnimation = false
-  } = appConfig || {}
+  const { appConfig } = useAppConfig()
+  const { profileCardStatus = 'col-span-2', disableAnimation = false } = appConfig || {}
   const location = useLocation()
   const navigate = useNavigate()
   const match = location.pathname.includes('/profiles')
@@ -51,17 +46,6 @@ const ProfileCard: React.FC<Props> = ({ iconOnly }) => {
     name: tr('Blank profile')
   }
   const isKokoroProfile = info.type === 'remote' && Boolean(info.kokoro)
-
-  const extra = info.extra
-  const usage = (extra?.upload ?? 0) + (extra?.download ?? 0)
-  const total = extra?.total ?? 0
-  const dateLabel = profileDisplayDate === 'expire' ? tr('Expiration') : tr('Last updated')
-  const dateValue =
-    profileDisplayDate === 'expire'
-      ? extra?.expire
-        ? dayjs.unix(extra.expire).format('YYYY-MM-DD')
-        : tr('No expiration')
-      : dayjs(info.updated).fromNow()
 
   if (iconOnly) {
     return (
@@ -136,48 +120,6 @@ const ProfileCard: React.FC<Props> = ({ iconOnly }) => {
               </SiderIconButton>
             )}
           </>
-        }
-        details={
-          info.type === 'remote' ? (
-            extra ? (
-              <div className="space-y-1.5">
-                <div className="flex min-w-0 items-center justify-between gap-2 text-xs">
-                  <span className="truncate text-muted">
-                    {calcTraffic(usage)} / {calcTraffic(total)}
-                  </span>
-                  <Tooltip delay={0}>
-                    <Tooltip.Trigger className="inline-flex min-w-0">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="h-6 min-w-0 px-1.5 text-xs text-muted"
-                        aria-label={dateLabel}
-                        onPress={() =>
-                          patchAppConfig({
-                            profileDisplayDate:
-                              profileDisplayDate === 'expire' ? 'update' : 'expire'
-                          })
-                        }
-                      >
-                        {dateValue}
-                      </Button>
-                    </Tooltip.Trigger>
-                    <Tooltip.Content placement="top">{dateLabel}</Tooltip.Content>
-                  </Tooltip>
-                </div>
-                <Meter aria-label={tr('Traffic usage')} maxValue={total} value={usage}>
-                  <Meter.Track className="h-1.5 bg-surface-secondary">
-                    <Meter.Fill className="bg-accent" />
-                  </Meter.Track>
-                </Meter>
-              </div>
-            ) : (
-              <div className="flex items-center justify-between gap-2 text-xs text-muted">
-                <span>{tr('Last updated')}</span>
-                <span>{dayjs(info.updated).fromNow()}</span>
-              </div>
-            )
-          ) : undefined
         }
       />
     </div>

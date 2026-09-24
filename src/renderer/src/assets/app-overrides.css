@@ -69,33 +69,6 @@
   }
 }
 
-/*
- * Live connection rates are a paired metric rather than generic card metadata.
- * Compact values keep both directions readable in the default sidebar, while a
- * wider status card can show the full unit formatting without truncation.
- */
-.sider-status-card__primary {
-  container: sider-status-card / inline-size;
-}
-
-.sider-connection-rate__full {
-  display: none;
-}
-
-.sider-connection-rate__compact {
-  display: inline;
-}
-
-@container sider-status-card (min-width: 15rem) {
-  .sider-connection-rate__full {
-    display: inline;
-  }
-
-  .sider-connection-rate__compact {
-    display: none;
-  }
-}
-
 /* DNS list editors own their row geometry so long endpoints never force the
  * surrounding settings page to scroll. Narrow containers stack intentionally;
  * wider containers expose stable columns for faster scanning. */

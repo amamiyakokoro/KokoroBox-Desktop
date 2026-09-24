@@ -15,6 +15,10 @@ import {
 import { normalizeCoreVersion } from '../src/renderer/src/components/sider/core-version.ts'
 import { isSettingsFocusRoute } from '../src/renderer/src/components/sider/sider-presentation.ts'
 import {
+  emptySiderConnectionCounts,
+  updateSiderConnectionCounts
+} from '../src/renderer/src/components/sider/connection-counts.ts'
+import {
   formatLogTimestamp,
   parseLogMessage
 } from '../src/renderer/src/components/logs/log-display.ts'
@@ -27,6 +31,25 @@ function collectTsxFiles(directory: string): string[] {
     return entry.isFile() && entry.name.endsWith('.tsx') ? [path] : []
   })
 }
+
+test('sidebar connection counts follow live snapshots and retain up to 200 recently closed IDs', () => {
+  let counts = emptySiderConnectionCounts()
+  counts = updateSiderConnectionCounts(counts, [{ id: 'a' }, { id: 'b' }])
+  assert.deepEqual([counts.active, counts.closed], [2, 0])
+
+  counts = updateSiderConnectionCounts(counts, [{ id: 'b' }, { id: 'c' }])
+  assert.deepEqual([counts.active, counts.closed], [2, 1])
+  counts = updateSiderConnectionCounts(counts, [{ id: 'a' }, { id: 'a' }])
+  assert.deepEqual([counts.active, counts.closed], [1, 2])
+
+  for (let index = 0; index < 205; index += 1) {
+    counts = updateSiderConnectionCounts(counts, [{ id: `item-${index}` }])
+  }
+  counts = updateSiderConnectionCounts(counts, [])
+  assert.deepEqual([counts.active, counts.closed], [0, 200])
+  assert.equal(counts.closedIds.has('item-204'), true)
+  assert.equal(counts.closedIds.has('b'), false)
+})
 
 test('settings drafts merge nested objects and replace arrays without mutating the source', () => {
   const original = {
@@ -1122,7 +1145,6 @@ test('desktop sidebar separates controls, live status and navigation', () => {
   const logNav = readFileSync('src/renderer/src/components/sider/log-card.tsx', 'utf8')
   const profile = readFileSync('src/renderer/src/components/sider/profile-card.tsx', 'utf8')
   const connections = readFileSync('src/renderer/src/components/sider/conn-card.tsx', 'utf8')
-  const trafficChart = readFileSync('src/renderer/src/components/sider/traffic-chart.tsx', 'utf8')
   const outboundMode = readFileSync(
     'src/renderer/src/components/sider/outbound-mode-switcher.tsx',
     'utf8'
@@ -1512,23 +1534,13 @@ test('desktop sidebar separates controls, live status and navigation', () => {
   assert.match(statusCard, /description \|\| status/)
   assert.match(connections, /metadata=\{/)
   assert.doesNotMatch(connections, /description=\{|status=\{/)
-  assert.match(connections, /grid-cols-\[minmax\(0,1fr\)_minmax\(0,1fr\)\][^"\n]*tabular-nums/)
-  assert.equal(connections.match(/grid-cols-\[0\.75rem_minmax\(0,1fr\)\]/g)?.length, 2)
-  assert.equal(connections.match(/className="grid w-full min-w-0/g)?.length, 2)
-  assert.equal(connections.match(/className="min-w-0 text-left"/g)?.length, 2)
-  assert.match(connections, /calcCompactTraffic\(download\)/)
-  assert.match(connections, /calcCompactTraffic\(upload\)/)
-  assert.doesNotMatch(connections, /truncate/)
+  assert.match(connections, /grid-cols-2[^"\n]*tabular-nums/)
+  assert.match(connections, /\{tr\('Active'\)\}/)
+  assert.match(connections, /\{tr\('Closed'\)\}/)
+  assert.doesNotMatch(connections, /<TrafficChart|mihomoTraffic|Download speed|Upload speed/)
+  assert.doesNotMatch(profile, /details=\{|<Meter|profileDisplayDate/)
   assert.match(appRouting, /<SiderStatusCard[\s\S]*allowTextWrap/)
   assert.doesNotMatch(profile, /<SiderStatusCard[\s\S]*allowTextWrap/)
-  assert.match(appOverrides, /container: sider-status-card \/ inline-size/)
-  assert.match(appOverrides, /@container sider-status-card \(min-width: 15rem\)/)
-  assert.match(connections, /<TrafficChart/)
-  assert.match(trafficChart, /const chartTop = 8/)
-  assert.match(trafficChart, /const chartBottom = 96/)
-  assert.match(trafficChart, /const usableHeight = chartBottom - chartTop/)
-  assert.match(trafficChart, /Number\.isFinite\(traffic\)/)
-  assert.doesNotMatch(trafficChart, /\* 50/)
   assert.doesNotMatch(connections, /<Card/)
 
   assert.equal(groupForSiderKey('sysproxy'), 'quick')

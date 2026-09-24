@@ -422,10 +422,10 @@ const Connections: React.FC = () => {
       }
     }
 
-    window.electron.ipcRenderer.on('mihomoConnections', handleConnections)
+    const removeConnections = window.electron.ipcRenderer.on('mihomoConnections', handleConnections)
 
     return (): void => {
-      window.electron.ipcRenderer.removeAllListeners('mihomoConnections')
+      removeConnections()
     }
   }, [connectionInterval])
 
