@@ -1,6 +1,7 @@
 import { TitleBarOverlayOptions } from 'electron'
 import { normalizeUwpLoopbackApps, type UwpLoopbackApp } from '../../../shared/types/uwp-loopback'
 import type { HomeBackground, PublicIpSnapshot } from '../../../shared/home'
+import type { SysProxyOperationState } from '../../../shared/sysproxy-operation'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function ipcErrorWrapper(response: any): any {
@@ -412,6 +413,19 @@ export async function triggerSysProxy(
       useRegistry
     )
   )
+}
+
+export async function changeSysProxy(
+  enable: boolean,
+  onlyActiveDevice: boolean
+): Promise<SysProxyOperationState> {
+  return ipcErrorWrapper(
+    await window.electron.ipcRenderer.invoke('changeSysProxy', enable, onlyActiveDevice)
+  )
+}
+
+export async function getSysProxyOperationState(): Promise<SysProxyOperationState> {
+  return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('getSysProxyOperationState'))
 }
 
 export async function manualGrantCorePermition(

@@ -13,11 +13,16 @@ import FeatureSettingsLayout, {
 import PacEditorModal from '@renderer/components/sysproxy/pac-editor-modal'
 import UwpLoopbackModal from '@renderer/components/sysproxy/uwp-loopback-modal'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
+import { useSysProxyOperation } from '@renderer/hooks/use-sysproxy-operation'
 import { platform } from '@renderer/utils/init'
-import { getAppConfig, serviceStatus, triggerSysProxy } from '@renderer/utils/ipc'
+import {
+  changeSysProxy,
+  getAppConfig,
+  patchAppConfig as persistAppConfig,
+  serviceStatus
+} from '@renderer/utils/ipc'
 import React, { useEffect, useState } from 'react'
 import ByPassEditorModal from '@renderer/components/sysproxy/bypass-editor-modal'
-import { notify } from '@renderer/utils/notification'
 import { useSettingsSave } from '@renderer/hooks/use-settings-save'
 import { useUnsavedChangesGuard } from '@renderer/hooks/use-unsaved-changes'
 import { defaultSystemProxyBypass, normalizeProxyHost } from '../../../../../shared/system-proxy'
@@ -72,6 +77,7 @@ const Sysproxy: React.FC<Props> = ({ embedded = false }) => {
   const defaultBypass = defaultSystemProxyBypass(platform)
 
   const { appConfig, patchAppConfig, mutateAppConfig } = useAppConfig()
+  const proxyOperation = useSysProxyOperation()
   const { sysProxy, onlyActiveDevice = false } =
     appConfig || ({ sysProxy: { enable: false } } as AppConfig)
   const [changed, setChanged] = useState(false)
@@ -125,6 +131,7 @@ const Sysproxy: React.FC<Props> = ({ embedded = false }) => {
   }
 
   const onSave = async (): Promise<boolean> => {
+    let awaitingConfirmation = false
     const saved = await runSave(async () => {
       const nextValues = await validateServiceAvailability()
       const nextHost =
@@ -132,23 +139,24 @@ const Sysproxy: React.FC<Props> = ({ embedded = false }) => {
         (nextValues.mode === 'manual' || (platform === 'linux' && nextValues.terminalProxy))
           ? normalizeProxyHost(nextValues.host)
           : nextValues.host
-      let nextConfig =
-        (await patchAppConfig({ sysProxy: { ...nextValues, host: nextHost } })) ??
-        (await getAppConfig(true))
-      if (nextConfig.sysProxy.enable) {
-        try {
-          await triggerSysProxy(nextConfig.sysProxy.enable, onlyActiveDevice)
-        } catch (e) {
-          notify(e, { variant: 'danger' })
-          nextConfig =
-            (await patchAppConfig({ sysProxy: { enable: false } })) ?? (await getAppConfig(true))
-        }
+      await persistAppConfig({
+        sysProxy: { ...nextValues, host: nextHost, enable: sysProxy.enable }
+      })
+      if (
+        nextValues.enable ||
+        nextValues.enable !== (proxyOperation.confirmed ?? sysProxy.enable) ||
+        proxyOperation.phase === 'waiting-network' ||
+        proxyOperation.phase === 'unconfirmed'
+      ) {
+        const result = await changeSysProxy(nextValues.enable, onlyActiveDevice)
+        awaitingConfirmation = result.phase === 'unconfirmed'
       }
+      const nextConfig = await getAppConfig(true)
       syncValuesFromSysProxy(nextConfig.sysProxy)
       await mutateAppConfig()
     })
-    if (saved) setChanged(false)
-    return saved
+    if (saved && !awaitingConfirmation) setChanged(false)
+    return saved && !awaitingConfirmation
   }
 
   useUnsavedChangesGuard({

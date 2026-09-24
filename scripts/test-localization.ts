@@ -400,7 +400,7 @@ test('migrated feature settings use modern rows and stable save actions', () => 
   for (const page of featureFiles.slice(0, 4)) {
     const source = readFileSync(page, 'utf8')
     assert.match(source, /isDirty=\{changed\}/)
-    assert.match(source, /if \(saved\) setChanged\(false\)/)
+    assert.match(source, /if \(saved(?: && !awaitingConfirmation)?\) setChanged\(false\)/)
   }
 
   for (const page of featureFiles.slice(1, 4)) {

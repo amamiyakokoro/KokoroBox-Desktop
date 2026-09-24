@@ -84,6 +84,7 @@ import {
   revokeCorePermission
 } from '../core/permission'
 import { triggerSysProxy } from '../sys/sysproxy'
+import { changeSysProxy, getSysProxyOperationState } from '../sys/sysproxy-operation'
 import { disableTerminalProxy } from '../sys/terminal-proxy'
 import { checkUpdate, downloadAndInstallUpdate, cancelUpdate } from '../resolve/autoUpdater'
 import { configureNativeMacOSUpdate } from '../resolve/macosNativeUpdater'
@@ -428,6 +429,10 @@ export function registerIpcMainHandlers(): void {
   ipcMain.handle('triggerSysProxy', (_e, enable, onlyActiveDevice, useRegistry) =>
     ipcErrorWrapper(triggerSysProxy)(enable, onlyActiveDevice, useRegistry)
   )
+  ipcMain.handle('changeSysProxy', (_e, enable, onlyActiveDevice) =>
+    ipcErrorWrapper(changeSysProxy)(enable, onlyActiveDevice)
+  )
+  ipcMain.handle('getSysProxyOperationState', () => getSysProxyOperationState())
   if (!systemCoreOnlyBuild) {
     ipcMain.handle('manualGrantCorePermition', (_e, cores?: ('mihomo' | 'mihomo-alpha')[]) =>
       ipcErrorWrapper(manualGrantCorePermition)(cores)

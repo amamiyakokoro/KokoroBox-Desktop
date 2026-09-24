@@ -474,7 +474,7 @@ test('sidebar quick controls use one native toggle target', () => {
 
   assert.match(surfaces, /import \{[\s\S]*ToggleButton[\s\S]*\} from '@heroui\/react'/)
   assert.match(quickControl, /<ToggleButton[\s\S]*isSelected=\{enabled\}/)
-  assert.match(quickControl, /isDisabled=\{disabled\}/)
+  assert.match(quickControl, /isDisabled=\{disabled \|\| pending\}/)
   assert.match(quickControl, /onChange=\{\(selected\) => \{[\s\S]*onToggle\(selected\)/)
   assert.doesNotMatch(quickControl, /<button|control: React\.ReactNode|data-sider-control-slot/)
   assert.match(surfaces, /export const SiderIconToggleButton/)

@@ -1,7 +1,8 @@
 import { tr } from '../../../../shared/i18n'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
+import { useSysProxyOperation } from '@renderer/hooks/use-sysproxy-operation'
 import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'
-import { triggerSysProxy } from '@renderer/utils/ipc'
+import { changeSysProxy } from '@renderer/utils/ipc'
 import { AiOutlineGlobal } from 'react-icons/ai'
 import React from 'react'
 import { useSortable } from '@dnd-kit/sortable'
@@ -15,7 +16,12 @@ interface Props {
 
 const SysproxySwitcher: React.FC<Props> = (props) => {
   const { iconOnly } = props
-  const { appConfig, patchAppConfig } = useAppConfig()
+  const { appConfig } = useAppConfig()
+  const operation = useSysProxyOperation()
+  const [optimisticPhase, setOptimisticPhase] = React.useState<'enabling' | 'disabling' | null>(
+    null
+  )
+  React.useEffect(() => setOptimisticPhase(null), [operation.revision])
   const {
     sysProxy,
     sysproxyCardStatus = 'col-span-1',
@@ -36,17 +42,35 @@ const SysproxySwitcher: React.FC<Props> = (props) => {
   })
 
   const transform = tf ? { x: tf.x, y: tf.y, scaleX: 1, scaleY: 1 } : null
-  const disabled = mixedPort == 0
-  const selected = Boolean(!(mode !== 'auto' && disabled) && enable)
-  const onChange = async (enable: boolean): Promise<void> => {
-    if (mode == 'manual' && disabled) return
+  const portUnavailable = mode === 'manual' && mixedPort == 0
+  const phase = optimisticPhase ?? operation.phase
+  const pending = phase === 'enabling' || phase === 'disabling'
+  const selected = Boolean(operation.confirmed ?? (phase === 'idle' && enable))
+  const disabled = portUnavailable && !selected && phase !== 'waiting-network'
+  const status =
+    phase === 'enabling'
+      ? tr('Turning on…')
+      : phase === 'disabling'
+        ? tr('Turning off…')
+        : phase === 'waiting-network'
+          ? tr('Waiting for network…')
+          : phase === 'unconfirmed'
+            ? tr('Status unconfirmed')
+            : selected
+              ? tr('On')
+              : tr('Off')
+  const onChange = async (nextSelected: boolean): Promise<void> => {
+    if (pending) return
+    const nextEnable = phase === 'waiting-network' ? false : nextSelected
+    if (nextEnable && portUnavailable) return
+    setOptimisticPhase(nextEnable ? 'enabling' : 'disabling')
     try {
-      await triggerSysProxy(enable, onlyActiveDevice)
-      await patchAppConfig({ sysProxy: { enable } })
+      await changeSysProxy(nextEnable, onlyActiveDevice)
       window.electron.ipcRenderer.send('updateFloatingWindow')
-      window.electron.ipcRenderer.send('updateTrayMenu')
     } catch (e) {
       notify(e, { variant: 'danger' })
+    } finally {
+      setOptimisticPhase(null)
     }
   }
 
@@ -54,14 +78,17 @@ const SysproxySwitcher: React.FC<Props> = (props) => {
     return (
       <div className={`${sysproxyCardStatus} flex justify-center`}>
         <SiderIconToggleButton
-          isDisabled={mode === 'manual' && disabled}
+          isDisabled={disabled || pending}
           isSelected={selected}
-          label={`${tr('System proxy')} — ${selected ? tr('Enabled') : tr('Disabled')}`}
+          label={`${tr('System proxy')} — ${status}`}
           placement="right"
           onChange={onChange}
         >
           <AiOutlineGlobal className="text-[20px]" />
         </SiderIconToggleButton>
+        <span className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+          {tr('System proxy')}: {status}
+        </span>
       </div>
     )
   }
@@ -84,9 +111,12 @@ const SysproxySwitcher: React.FC<Props> = (props) => {
         <SiderQuickControl
           icon={<AiOutlineGlobal />}
           title={tr('System proxy')}
-          status={selected ? tr('Enabled') : tr('Disabled')}
+          status={status}
+          statusTitle={operation.error}
           enabled={selected}
-          disabled={mode === 'manual' && disabled}
+          disabled={disabled}
+          pending={pending}
+          statusTone={phase === 'unconfirmed' ? 'warning' : selected ? 'success' : 'default'}
           isDragging={isDragging}
           onToggle={onChange}
         />

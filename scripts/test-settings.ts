@@ -1244,7 +1244,7 @@ test('desktop sidebar separates controls, live status and navigation', () => {
   assert.match(statusCard, /active\s*\? siderActiveSurfaceClassName/)
   assert.match(quickControl, /<ToggleButton/)
   assert.match(quickControl, /isSelected=\{enabled\}/)
-  assert.match(quickControl, /isDisabled=\{disabled\}/)
+  assert.match(quickControl, /isDisabled=\{disabled \|\| pending\}/)
   assert.match(
     quickControl,
     /onChange=\{\(selected\) => \{[\s\S]*if \(!isDragging\) void onToggle\(selected\)/
@@ -1281,7 +1281,10 @@ test('desktop sidebar separates controls, live status and navigation', () => {
   assert.match(quickControl, /sider-quick-control__title whitespace-nowrap/)
   assert.match(surfaces, /interface SiderQuickControlProps \{[\s\S]*status: string/)
   assert.match(quickControl, /sider-quick-control__status/)
-  assert.match(quickControl, /<SiderStatusRow[\s\S]*tone=\{enabled \? 'success' : 'danger'\}/)
+  assert.match(
+    quickControl,
+    /<SiderStatusRow[\s\S]*tone=\{statusTone \?\? \(enabled \? 'success' : 'danger'\)\}/
+  )
   assert.doesNotMatch(quickControl, /control: React\.ReactNode|data-sider-control-slot/)
   assert.doesNotMatch(sider, /\[data-sider-control-slot\]/)
   assert.match(
@@ -1349,9 +1352,10 @@ test('desktop sidebar separates controls, live status and navigation', () => {
   assert.doesNotMatch(sidebarSettings, /<Radio/)
   assert.match(systemProxy, /<SiderQuickControl/)
   assert.match(systemProxy, /<SiderIconToggleButton/)
-  assert.match(systemProxy, /status=\{selected \? tr\('Enabled'\) : tr\('Disabled'\)\}/)
+  assert.match(systemProxy, /status=\{status\}/)
+  assert.match(systemProxy, /pending=\{pending\}/)
   assert.match(systemProxy, /onToggle=\{onChange\}/)
-  assert.match(systemProxy, /isDisabled=\{mode === 'manual' && disabled\}/)
+  assert.match(systemProxy, /isDisabled=\{disabled \|\| pending\}/)
   assert.match(systemProxy, /isSelected=\{selected\}/)
   assert.match(systemProxy, /isDragging=\{isDragging\}/)
   assert.doesNotMatch(systemProxy, /<Switch|control=\{|<SiderIconButton/)

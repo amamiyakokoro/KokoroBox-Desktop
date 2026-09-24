@@ -4,7 +4,6 @@ import {
   getAppConfig,
   getControledMihomoConfig,
   getProfileConfig,
-  patchAppConfig,
   patchControledMihomoConfig
 } from '../config'
 import macTrayIcon from '../../../resources/tray-icon-macos.svg?asset'
@@ -30,7 +29,8 @@ import {
   Tray
 } from 'electron'
 import { dataDir, logDir, mihomoCoreDir, mihomoWorkDir } from '../utils/dirs'
-import { triggerSysProxy } from '../sys/sysproxy'
+import { changeSysProxy, getSysProxyOperationState } from '../sys/sysproxy-operation'
+import { showNotification } from '../utils/notification'
 import { quitWithoutCore, restartCore } from '../core/manager'
 import { floatingWindow, triggerFloatingWindow } from './floatingWindow'
 import { is } from '@electron-toolkit/utils'
@@ -229,6 +229,7 @@ export const buildContextMenu = async (): Promise<Menu> => {
     quitWithoutCoreShortcut = '',
     restartAppShortcut = ''
   } = await getAppConfig()
+  const sysProxyOperation = getSysProxyOperationState()
   let groupsMenu: Electron.MenuItemConstructorOptions[] = []
   if (proxyInTray && process.platform !== 'linux') {
     try {
@@ -325,18 +326,32 @@ export const buildContextMenu = async (): Promise<Menu> => {
     { type: 'separator' },
     {
       type: 'checkbox',
-      label: tr('System proxy'),
+      label:
+        tr('System proxy') +
+        (sysProxyOperation.phase === 'waiting-network'
+          ? ` — ${tr('Waiting for network…')}`
+          : sysProxyOperation.phase === 'enabling'
+            ? ` — ${tr('Turning on…')}`
+            : sysProxyOperation.phase === 'disabling'
+              ? ` — ${tr('Turning off…')}`
+              : sysProxyOperation.phase === 'unconfirmed'
+                ? ` — ${tr('Status unconfirmed')}`
+                : ''),
       accelerator: triggerSysProxyShortcut,
-      checked: sysProxy.enable,
+      checked:
+        sysProxyOperation.confirmed ?? (sysProxyOperation.phase === 'idle' && sysProxy.enable),
+      enabled: !['enabling', 'disabling'].includes(sysProxyOperation.phase),
       click: async (item): Promise<void> => {
-        const enable = item.checked
+        const enable =
+          getSysProxyOperationState().phase === 'waiting-network' ? false : item.checked
         try {
-          await triggerSysProxy(enable, onlyActiveDevice)
-          await patchAppConfig({ sysProxy: { enable } })
-          mainWindow?.webContents.send('appConfigUpdated')
-          floatingWindow?.webContents.send('appConfigUpdated')
-        } catch (e) {
-          // ignore
+          await changeSysProxy(enable, onlyActiveDevice)
+        } catch (error) {
+          void showNotification({
+            title: tr('System proxy operation failed'),
+            body: String(error),
+            variant: 'danger'
+          })
         } finally {
           ipcMain.emit('updateTrayMenu')
         }

@@ -1,13 +1,8 @@
 import { tr } from '../../shared/i18n'
 import { app, globalShortcut, ipcMain } from 'electron'
 import { mainWindow, setNotQuitDialog, triggerMainWindow } from '..'
-import {
-  getAppConfig,
-  getControledMihomoConfig,
-  patchAppConfig,
-  patchControledMihomoConfig
-} from '../config'
-import { triggerSysProxy } from '../sys/sysproxy'
+import { getAppConfig, getControledMihomoConfig, patchControledMihomoConfig } from '../config'
+import { changeSysProxy, getSysProxyOperationState } from '../sys/sysproxy-operation'
 import { patchMihomoConfig } from '../core/mihomoApi'
 import { quitWithoutCore, restartCore } from '../core/manager'
 import { floatingWindow, triggerFloatingWindow } from './floatingWindow'
@@ -42,15 +37,22 @@ export async function registerShortcut(
           onlyActiveDevice = false
         } = await getAppConfig()
         try {
-          await triggerSysProxy(!enable, onlyActiveDevice)
-          await patchAppConfig({ sysProxy: { enable: !enable } })
+          const operation = getSysProxyOperationState()
+          if (operation.phase === 'enabling' || operation.phase === 'disabling') return
+          const nextEnable =
+            operation.phase === 'waiting-network' ? false : !(operation.confirmed ?? enable)
+          const result = await changeSysProxy(nextEnable, onlyActiveDevice)
+          if (result.phase === 'idle' && result.confirmed === nextEnable) {
+            void showNotification({
+              title: nextEnable ? tr('System proxy enabled') : tr('System proxy disabled')
+            })
+          }
+        } catch (error) {
           void showNotification({
-            title: !enable ? tr('System proxy enabled') : tr('System proxy disabled')
+            title: tr('System proxy operation failed'),
+            body: String(error),
+            variant: 'danger'
           })
-          mainWindow?.webContents.send('appConfigUpdated')
-          floatingWindow?.webContents.send('appConfigUpdated')
-        } catch {
-          // ignore
         } finally {
           ipcMain.emit('updateTrayMenu')
         }

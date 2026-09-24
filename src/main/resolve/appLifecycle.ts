@@ -106,7 +106,9 @@ async function cleanupBeforeExit(useRegistry: boolean, responsiveQuit = false): 
 
   const sysProxyCleanup = runCleanupTask(
     'disable system proxy',
-    async () => triggerSysProxy(false, false, useRegistry, sysProxyOptions),
+    async () => {
+      await triggerSysProxy(false, false, useRegistry, sysProxyOptions)
+    },
     responsiveTimeoutMs
   )
 

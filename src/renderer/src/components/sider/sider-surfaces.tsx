@@ -4,7 +4,7 @@ import {
   type KokoStatusTone
 } from '@renderer/components/base/koko-status-indicator'
 import type React from 'react'
-import { LuChevronRight } from 'react-icons/lu'
+import { LuChevronRight, LuLoaderCircle } from 'react-icons/lu'
 
 type SiderStatusTone = 'default' | 'success' | 'warning' | 'danger'
 type SiderItemProminence = 'navigation' | 'account'
@@ -499,8 +499,11 @@ interface SiderQuickControlProps {
   icon: React.ReactNode
   title: string
   status: string
+  statusTitle?: string
   enabled: boolean
   disabled?: boolean
+  pending?: boolean
+  statusTone?: SiderStatusTone
   isDragging?: boolean
   onToggle: (enabled: boolean) => void | Promise<void>
 }
@@ -509,8 +512,11 @@ export const SiderQuickControl: React.FC<SiderQuickControlProps> = ({
   icon,
   title,
   status,
+  statusTitle,
   enabled,
   disabled = false,
+  pending = false,
+  statusTone,
   isDragging = false,
   onToggle
 }) => (
@@ -520,13 +526,14 @@ export const SiderQuickControl: React.FC<SiderQuickControlProps> = ({
       aria-label={title}
       className={cn(
         'sider-quick-control app-nodrag group h-auto w-full min-w-0 justify-start rounded-2xl border px-2.5 py-2 text-left text-foreground shadow-sm transition-[background-color,border-color,box-shadow] duration-150 data-[selected=true]:text-foreground',
+        pending && 'data-[disabled]:opacity-100',
         disabled
           ? 'border-separator bg-surface-secondary opacity-60 shadow-none'
           : enabled
             ? 'border-accent/35 bg-accent-soft/20 hover:border-accent/45 hover:bg-accent-soft/30 hover:shadow-md'
             : 'border-separator bg-surface hover:border-accent/25 hover:bg-surface-secondary/70 hover:shadow-md'
       )}
-      isDisabled={disabled}
+      isDisabled={disabled || pending}
       isSelected={enabled}
       variant="ghost"
       onChange={(selected) => {
@@ -542,12 +549,26 @@ export const SiderQuickControl: React.FC<SiderQuickControlProps> = ({
       >
         {title}
       </span>
-      <SiderStatusRow
-        className="sider-quick-control__status min-w-0 text-xs"
-        tone={enabled ? 'success' : 'danger'}
-      >
-        <span className="truncate">{status}</span>
-      </SiderStatusRow>
+      {pending ? (
+        <span className="sider-quick-control__status inline-flex h-4 min-w-0 items-center gap-2 text-xs leading-4 text-accent">
+          <LuLoaderCircle className="size-2 shrink-0 animate-spin" aria-hidden="true" />
+          <span className="truncate" title={statusTitle}>
+            {status}
+          </span>
+        </span>
+      ) : (
+        <SiderStatusRow
+          className="sider-quick-control__status min-w-0 text-xs"
+          tone={statusTone ?? (enabled ? 'success' : 'danger')}
+        >
+          <span className="truncate" title={statusTitle}>
+            {status}
+          </span>
+        </SiderStatusRow>
+      )}
     </ToggleButton>
+    <span className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+      {title}: {status}
+    </span>
   </div>
 )

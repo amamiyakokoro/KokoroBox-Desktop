@@ -33,8 +33,33 @@ let stopSysproxyNetworkObserver: (() => void) | null = null
 let sysproxyNetworkTimer: NodeJS.Timeout | null = null
 let sysproxyNetworkGeneration = 0
 
+export function cancelPendingSysProxyRetry(): void {
+  if (!triggerSysProxyTimer) return
+  clearTimeout(triggerSysProxyTimer)
+  triggerSysProxyTimer = null
+}
+
 export interface TriggerSysProxyOptions {
   serviceRequestTimeoutMs?: number
+  onTiming?: (stage: 'queue' | 'pac' | 'service' | 'terminal', durationMs: number) => void
+  onRetryResult?: (result: 'applied' | 'waiting-network') => void
+  onRetryError?: (error: unknown) => void
+  onSystemApplied?: () => void
+}
+
+export type TriggerSysProxyResult = 'applied' | 'waiting-network' | 'superseded'
+
+async function timed<T>(
+  stage: 'pac' | 'service' | 'terminal',
+  options: TriggerSysProxyOptions,
+  task: () => Promise<T>
+): Promise<T> {
+  const startedAt = performance.now()
+  try {
+    return await task()
+  } finally {
+    options.onTiming?.(stage, performance.now() - startedAt)
+  }
 }
 
 export function startSysproxyNetworkRecovery(): void {
@@ -79,7 +104,12 @@ export function startSysproxyNetworkRecovery(): void {
         if (generation !== sysproxyNetworkGeneration || proxyRequest !== triggerSysProxyRequest) {
           return
         }
-        await triggerSysProxy(true, onlyActiveDevice)
+        const operation = await import('./sysproxy-operation')
+        if (operation.getSysProxyOperationState().phase === 'waiting-network') {
+          await operation.changeSysProxy(true, onlyActiveDevice)
+        } else {
+          await triggerSysProxy(true, onlyActiveDevice)
+        }
       })().catch((error) => {
         appendAppLog(`[Sysproxy]: network change recovery failed, ${error}\n`).catch(() => {})
       })
@@ -150,16 +180,15 @@ export function triggerSysProxy(
   onlyActiveDevice: boolean,
   useRegistry = false,
   options: TriggerSysProxyOptions = {}
-): Promise<void> {
+): Promise<TriggerSysProxyResult> {
   const request = ++triggerSysProxyRequest
-  if (triggerSysProxyTimer) {
-    clearTimeout(triggerSysProxyTimer)
-    triggerSysProxyTimer = null
-  }
-  const task = triggerSysProxyTask.then(() =>
-    triggerSysProxyImpl(enable, onlyActiveDevice, useRegistry, request, options)
-  )
-  triggerSysProxyTask = task.catch(() => {})
+  const queuedAt = performance.now()
+  cancelPendingSysProxyRetry()
+  const task = triggerSysProxyTask.then(() => {
+    options.onTiming?.('queue', performance.now() - queuedAt)
+    return triggerSysProxyImpl(enable, onlyActiveDevice, useRegistry, request, options)
+  })
+  triggerSysProxyTask = task.then(() => undefined).catch(() => {})
   return task
 }
 
@@ -169,26 +198,38 @@ async function triggerSysProxyImpl(
   useRegistry: boolean,
   request: number,
   options: TriggerSysProxyOptions
-): Promise<void> {
+): Promise<TriggerSysProxyResult> {
+  if (request !== triggerSysProxyRequest) return 'superseded'
   if (enable) {
     if (net.isOnline()) {
-      await setSysProxy(onlyActiveDevice, useRegistry)
+      await setSysProxy(onlyActiveDevice, useRegistry, options)
     } else {
-      if (request !== triggerSysProxyRequest) return
+      if (request !== triggerSysProxyRequest) return 'superseded'
       triggerSysProxyTimer = setTimeout(() => {
-        triggerSysProxy(enable, onlyActiveDevice, useRegistry, options).catch((error) => {
-          appendAppLog(`[Sysproxy]: retry enable failed, ${error}\n`).catch(() => {})
-        })
+        triggerSysProxy(enable, onlyActiveDevice, useRegistry, options)
+          .then((result) => {
+            if (result !== 'superseded') options.onRetryResult?.(result)
+          })
+          .catch((error) => {
+            options.onRetryError?.(error)
+            appendAppLog(`[Sysproxy]: retry enable failed, ${error}\n`).catch(() => {})
+          })
       }, 5000)
+      return 'waiting-network'
     }
   } else {
     await disableSysProxy(onlyActiveDevice, useRegistry, options)
   }
+  return 'applied'
 }
 
-async function setSysProxy(onlyActiveDevice: boolean, useRegistry = false): Promise<void> {
+async function setSysProxy(
+  onlyActiveDevice: boolean,
+  useRegistry = false,
+  options: TriggerSysProxyOptions = {}
+): Promise<void> {
   const defaultBypass = defaultSystemProxyBypass(process.platform)
-  const pacPort = await startPacServer()
+  const pacPort = await timed('pac', options, startPacServer)
   const { sysProxy } = await getAppConfig()
   const { mode, host, bypass = defaultBypass, terminalProxy = false } = sysProxy
   const guard = !!sysProxy.guard
@@ -198,7 +239,10 @@ async function setSysProxy(onlyActiveDevice: boolean, useRegistry = false): Prom
   switch (mode || 'manual') {
     case 'auto': {
       if (pacPort === undefined) throw new Error('PAC server did not start')
-      await setPac(localPacUrl(pacPort), '', onlyActiveDevice, useRegistry, guard)
+      await timed('service', options, () =>
+        setPac(localPacUrl(pacPort), '', onlyActiveDevice, useRegistry, guard)
+      )
+      options.onSystemApplied?.()
       updateSysproxyGuardEventStream(guardNotify)
       startSysproxyLeaseRenewal(onlyActiveDevice, useRegistry)
       break
@@ -206,19 +250,21 @@ async function setSysProxy(onlyActiveDevice: boolean, useRegistry = false): Prom
 
     case 'manual': {
       if (port != 0) {
-        await setProxy(
-          `${normalizeProxyHost(host || '')}:${port}`,
-          bypass.join(','),
-          '',
-          onlyActiveDevice,
-          useRegistry,
-          guard
+        await timed('service', options, () =>
+          setProxy(
+            `${normalizeProxyHost(host || '')}:${port}`,
+            bypass.join(','),
+            '',
+            onlyActiveDevice,
+            useRegistry,
+            guard
+          )
         )
+        options.onSystemApplied?.()
         updateSysproxyGuardEventStream(guardNotify)
         startSysproxyLeaseRenewal(onlyActiveDevice, useRegistry)
       } else {
-        updateSysproxyGuardEventStream(false)
-        stopSysproxyLeaseRenewal()
+        throw new Error('System proxy port is unavailable')
       }
       break
     }
@@ -226,9 +272,11 @@ async function setSysProxy(onlyActiveDevice: boolean, useRegistry = false): Prom
 
   if (process.platform === 'linux') {
     if (terminalProxy && port !== 0) {
-      await enableTerminalProxy(normalizeProxyHost(host || ''), port, bypass)
+      await timed('terminal', options, () =>
+        enableTerminalProxy(normalizeProxyHost(host || ''), port, bypass)
+      )
     } else {
-      await disableTerminalProxy()
+      await timed('terminal', options, disableTerminalProxy)
     }
   }
 }
@@ -239,13 +287,16 @@ async function disableSysProxy(
   options: TriggerSysProxyOptions = {}
 ): Promise<void> {
   stopSysproxyLeaseRenewal()
-  await stopPacServer()
+  await timed('pac', options, stopPacServer)
   updateSysproxyGuardEventStream(false)
 
   try {
-    await disableProxy('', onlyActiveDevice, useRegistry, options.serviceRequestTimeoutMs)
+    await timed('service', options, () =>
+      disableProxy('', onlyActiveDevice, useRegistry, options.serviceRequestTimeoutMs)
+    )
+    options.onSystemApplied?.()
   } finally {
-    await disableTerminalProxy()
+    await timed('terminal', options, disableTerminalProxy)
   }
 }
 
