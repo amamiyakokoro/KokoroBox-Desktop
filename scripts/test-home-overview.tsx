@@ -17,7 +17,11 @@ import {
 import {
   overviewTrafficPaths,
   overviewTrafficRangeSeconds,
-  overviewTrafficState
+  overviewTrafficMaximumSamples,
+  overviewTrafficRetentionMs,
+  overviewTrafficState,
+  parseOverviewTrafficHistory,
+  pruneOverviewTrafficHistory
 } from '../src/renderer/src/components/home/overview-traffic-chart.tsx'
 import { configuredOverviewFeatures } from '../src/renderer/src/utils/home-overview.ts'
 import {
@@ -213,6 +217,39 @@ test('traffic history uses actual download and upload samples without synthetic 
     ]),
     63
   )
+})
+
+test('traffic history survives remounts for five minutes and expires by timestamp', () => {
+  const now = 500_000
+  const samples = [
+    { index: now - overviewTrafficRetentionMs - 1, down: 10, up: 0 },
+    { index: now - 60_000, down: 20, up: 5 },
+    { index: now - 1_000, down: 0, up: 0 }
+  ]
+  assert.deepEqual(pruneOverviewTrafficHistory(samples, now), samples.slice(1))
+  assert.deepEqual(parseOverviewTrafficHistory(JSON.stringify(samples), now), samples.slice(1))
+  assert.deepEqual(parseOverviewTrafficHistory('{invalid', now), [])
+  assert.deepEqual(
+    parseOverviewTrafficHistory(JSON.stringify([{ index: now, down: -1, up: 0 }]), now),
+    []
+  )
+  assert.deepEqual(pruneOverviewTrafficHistory(samples, now + overviewTrafficRetentionMs), [])
+  assert.equal(
+    pruneOverviewTrafficHistory(
+      Array.from({ length: 400 }, (_, index) => ({
+        index: now - 199_500 + index * 500,
+        down: 1,
+        up: 0
+      })),
+      now
+    ).length,
+    overviewTrafficMaximumSamples
+  )
+
+  const paths = overviewTrafficPaths(samples.slice(1), now)
+  assert.equal((paths.down.match(/M/g) ?? []).length, 2)
+  assert.equal((paths.up.match(/M/g) ?? []).length, 2)
+  assert.equal(overviewTrafficRangeSeconds(samples.slice(1), now), 60)
 })
 
 test('Top active app displays the host name, local icon, sampled directions and navigation', () => {

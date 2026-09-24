@@ -32,6 +32,9 @@ import {
   OverviewTrafficChart,
   overviewTrafficRangeSeconds,
   overviewTrafficState,
+  overviewTrafficStorageKey,
+  parseOverviewTrafficHistory,
+  pruneOverviewTrafficHistory,
   type OverviewTrafficSample
 } from '@renderer/components/home/overview-traffic-chart'
 import {
@@ -203,7 +206,17 @@ const Home = () => {
       return undefined
     }
   })
-  const [history, setHistory] = useState<OverviewTrafficSample[]>([])
+  const [history, setHistory] = useState<OverviewTrafficSample[]>(() => {
+    try {
+      return parseOverviewTrafficHistory(
+        localStorage.getItem(overviewTrafficStorageKey),
+        Date.now()
+      )
+    } catch {
+      return []
+    }
+  })
+  const [trafficNow, setTrafficNow] = useState(Date.now())
   const [coreStopped, setCoreStopped] = useState(false)
   const [now, setNow] = useState(Date.now())
   const observedIp = useRef<string | undefined>(undefined)
@@ -292,7 +305,6 @@ const Home = () => {
     const coreStarted = (): void => {
       setCoreStopped(false)
       setRates({ up: 0, down: 0 })
-      setHistory([])
       setConnections(undefined)
       setConnectionSampleAt(undefined)
       setConnectionSampleMs(0)
@@ -306,7 +318,6 @@ const Home = () => {
     const coreStoppedHandler = (): void => {
       setCoreStopped(true)
       setRates({ up: 0, down: 0 })
-      setHistory([])
       setConnections(undefined)
       setConnectionSampleAt(undefined)
       setConnectionSampleMs(0)
@@ -317,8 +328,11 @@ const Home = () => {
     }
     const onVisible = (): void => {
       if (!document.hidden) {
-        setNow(Date.now())
-        setActivityNow(Date.now())
+        const currentTime = Date.now()
+        setNow(currentTime)
+        setActivityNow(currentTime)
+        setTrafficNow(currentTime)
+        setHistory((samples) => pruneOverviewTrafficHistory(samples, currentTime))
       }
     }
     const removeNetwork = window.electron.ipcRenderer.on('homeNetworkChanged', refresh)
@@ -339,6 +353,24 @@ const Home = () => {
     const timer = window.setInterval(() => setNow(Date.now()), 60_000)
     return () => window.clearInterval(timer)
   }, [])
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      const currentTime = Date.now()
+      setTrafficNow(currentTime)
+      setHistory((samples) => pruneOverviewTrafficHistory(samples, currentTime))
+    }, 15_000)
+    return () => window.clearInterval(timer)
+  }, [])
+
+  useEffect(() => {
+    try {
+      if (history.length === 0) localStorage.removeItem(overviewTrafficStorageKey)
+      else localStorage.setItem(overviewTrafficStorageKey, JSON.stringify(history))
+    } catch {
+      // The chart still retains the current session's samples in memory.
+    }
+  }, [history])
 
   useEffect(() => {
     if (!controledMihomoConfig) return
@@ -403,12 +435,16 @@ const Home = () => {
       'mihomoTraffic',
       (_event, info: ControllerTraffic) => {
         setRates({ up: info.up, down: info.down })
-        if (Date.now() - lastSampleAt < 1000) return
-        lastSampleAt = Date.now()
-        setHistory((samples) => [
-          ...samples.slice(-59),
-          { up: info.up, down: info.down, index: lastSampleAt }
-        ])
+        const receivedAt = Date.now()
+        if (receivedAt - lastSampleAt < 1000) return
+        lastSampleAt = receivedAt
+        setTrafficNow(receivedAt)
+        setHistory((samples) =>
+          pruneOverviewTrafficHistory(
+            [...samples, { up: info.up, down: info.down, index: receivedAt }],
+            receivedAt
+          )
+        )
       }
     )
     const removeConnections = window.electron.ipcRenderer.on(
@@ -562,7 +598,7 @@ const Home = () => {
           ? 'danger'
           : 'neutral'
   const trafficState = overviewTrafficState(history)
-  const trafficRangeSeconds = overviewTrafficRangeSeconds(history)
+  const trafficRangeSeconds = overviewTrafficRangeSeconds(history, trafficNow)
   const hasTrafficSnapshot = trafficState !== 'unavailable'
 
   return (
@@ -900,7 +936,7 @@ const Home = () => {
                       : undefined
                   }
                 >
-                  <OverviewTrafficChart data={history} />
+                  <OverviewTrafficChart data={history} now={trafficNow} />
                   <span className="absolute bottom-1.5 left-2 text-[10px] text-muted">
                     {trafficRangeSeconds === undefined
                       ? tr('Latest sample')
