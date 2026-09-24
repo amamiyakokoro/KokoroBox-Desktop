@@ -43,7 +43,6 @@ export interface ResolvedHomeBackground extends HomeBackgroundAppearance {
   position: string
   scale: boolean
   cardOpacity: number
-  networkOpacity: number
 }
 
 export const defaultBuiltInBackgroundAppearance: HomeBackgroundAppearance = {
@@ -133,8 +132,7 @@ export function resolveHomeBackground(
     fit: source === 'custom' ? (config?.homeBackground?.fit ?? 'cover') : 'contain',
     position: `${alignment} ${verticalPosition}`,
     scale: appearance?.scale !== false,
-    cardOpacity,
-    networkOpacity: Math.min(100, cardOpacity + 8)
+    cardOpacity
   }
 }
 

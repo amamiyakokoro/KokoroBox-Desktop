@@ -38,7 +38,6 @@ test('one built-in background is selected deterministically and independently of
   assert.equal(fresh.imageUrl, undefined)
   assert.equal(fresh.opacity, defaultBuiltInBackgroundAppearance.opacity)
   assert.equal(fresh.cardOpacity, 68)
-  assert.equal(fresh.networkOpacity, 76)
 
   const selected = { homeDefaultBackgroundId: 'ammy2' as const, homeBackgroundDisabled: false }
   assert.equal(resolveHomeBackground(selected, undefined, images).imageUrl, images.ammy2)
@@ -112,7 +111,6 @@ test('custom and none retain the selected built-in ID without showing a fallback
   assert.equal(loaded.blur, 4)
   assert.equal(loaded.overlay, 54)
   assert.equal(loaded.cardOpacity, 61)
-  assert.equal(loaded.networkOpacity, 69)
   assert.equal(resolveHomeBackground(config, undefined, images).imageUrl, undefined)
 
   const aligned = resolveHomeBackground(

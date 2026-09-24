@@ -504,14 +504,6 @@ const Home = () => {
         backdropFilter: 'blur(1px)'
       }
     : undefined
-  const networkBackgroundStyle = hasActiveBackground
-    ? {
-        backgroundColor: `color-mix(in srgb, var(--surface) ${resolvedBackground.networkOpacity}%, transparent)`
-      }
-    : {
-        backgroundImage:
-          'linear-gradient(115deg, color-mix(in oklab, var(--accent) 10%, var(--surface)), var(--surface) 78%)'
-      }
   const runtime = homeRuntimeState(
     !coreStopped && !coreError && Boolean(coreVersion),
     appConfig?.corePermissionMode,
@@ -614,8 +606,8 @@ const Home = () => {
           )}
 
           <Surface
-            className={`home-network-hero min-w-0 rounded-2xl border border-accent/20 p-4 shadow-none sm:p-5 ${hasActiveBackground ? '' : 'bg-accent-soft/20'}`}
-            style={networkBackgroundStyle}
+            className={`home-network-hero min-w-0 rounded-2xl border p-4 shadow-none sm:p-5 ${cardStyle}`}
+            style={cardBackgroundStyle}
           >
             <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
               <h2 className="text-sm font-semibold">{tr('Network')}</h2>
