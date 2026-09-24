@@ -80,7 +80,6 @@ export const messages: Readonly<Record<string, string>> = {
   'The current subscription expires soon.': '当前订阅即将到期。',
   'Home background': '主页背景',
   'Network card background': '网络卡片背景',
-  'Network illustration': '网络插画',
   Image: '图片',
   'Replace image': '更换图片',
   'Choose image': '选择图片',

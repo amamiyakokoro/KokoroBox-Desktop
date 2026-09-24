@@ -41,6 +41,7 @@ interface AppConfig {
   homeDefaultBackgroundAppearance?: Partial<import('../home').HomeBackgroundAppearance>
   homeCardBackgroundOpacity?: number
   homeNetworkCardBackground?: import('../home').HomeNetworkCardBackground
+  homeNetworkCardBackgroundFile?: string
   language?: AppLanguage
   updateChannel: AppUpdateChannel
   notificationMode?: AppNotificationMode

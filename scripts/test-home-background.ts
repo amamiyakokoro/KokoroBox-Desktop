@@ -64,10 +64,11 @@ test('one built-in background is selected deterministically and independently of
   assert.equal(resolveHomeBackground(selected, undefined, images).imageUrl, images.ammy2)
 })
 
-test('Network card illustration is opt-in and invalid values fall back to none', () => {
+test('Network card custom background is opt-in and the former built-in choice falls back to none', () => {
   assert.equal(homeNetworkCardBackgroundChoice(undefined), 'none')
   assert.equal(homeNetworkCardBackgroundChoice('unknown'), 'none')
-  assert.equal(homeNetworkCardBackgroundChoice('amamiya'), 'amamiya')
+  assert.equal(homeNetworkCardBackgroundChoice('amamiya'), 'none')
+  assert.equal(homeNetworkCardBackgroundChoice('custom'), 'custom')
 })
 
 test('built-in backgrounds apply horizontal alignment and optional original size', () => {

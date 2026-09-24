@@ -523,6 +523,7 @@ test('background import, replacement and clearing affect only managed files', as
   const root = await mkdtemp(path.join(os.tmpdir(), 'kokoro-home-background-'))
   const original = path.join(root, 'original.png')
   const managed = path.join(root, 'managed')
+  const networkCardManaged = path.join(root, 'network-card-managed')
   const png = Buffer.from(
     'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jR5sAAAAASUVORK5CYII=',
     'base64'
@@ -536,14 +537,24 @@ test('background import, replacement and clearing affect only managed files', as
       true
     )
     const second = await importManagedHomeBackground(original, managed)
+    const networkCard = await importManagedHomeBackground(original, networkCardManaged)
     assert.notEqual(second, first)
+    assert.equal(await readManagedHomeBackground(managed, networkCard), undefined)
     await removeManagedHomeBackground(managed, first)
     assert.equal(await readManagedHomeBackground(managed, first), undefined)
+    assert.equal(
+      (await readManagedHomeBackground(networkCardManaged, networkCard))?.startsWith(
+        'data:image/png;base64,'
+      ),
+      true
+    )
     assert.deepEqual(await readFile(original), png)
     await removeManagedHomeBackground(managed, '../original.png')
     assert.deepEqual(await readFile(original), png)
     await removeManagedHomeBackground(managed, second)
     assert.equal(await readManagedHomeBackground(managed, second), undefined)
+    await removeManagedHomeBackground(networkCardManaged, networkCard)
+    assert.equal(await readManagedHomeBackground(networkCardManaged, networkCard), undefined)
   } finally {
     await rm(root, { recursive: true, force: true })
   }

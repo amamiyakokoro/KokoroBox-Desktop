@@ -81,7 +81,6 @@ export const messages: Readonly<Record<string, string>> = {
   'The current subscription expires soon.': 'The current subscription expires soon.',
   'Home background': 'Home background',
   'Network card background': 'Network card background',
-  'Network illustration': 'Network illustration',
   Image: 'Image',
   'Replace image': 'Replace image',
   'Choose image': 'Choose image',

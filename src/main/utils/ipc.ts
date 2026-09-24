@@ -13,7 +13,10 @@ import { getHomePublicIp } from '../resolve/public-ip'
 import {
   chooseHomeBackground,
   clearHomeBackground,
-  getHomeBackgroundDataUrl
+  getHomeBackgroundDataUrl,
+  chooseNetworkCardBackground,
+  clearNetworkCardBackground,
+  getNetworkCardBackgroundDataUrl
 } from '../resolve/home-background'
 import { startHomeNetworkObservation, stopHomeNetworkObservation } from '../resolve/home-network'
 import {
@@ -293,6 +296,12 @@ export function registerIpcMainHandlers(): void {
     ipcErrorWrapper(clearHomeBackground)(disabled)
   )
   ipcMain.handle('getHomeBackgroundDataUrl', ipcErrorWrapper(getHomeBackgroundDataUrl))
+  ipcMain.handle('chooseNetworkCardBackground', ipcErrorWrapper(chooseNetworkCardBackground))
+  ipcMain.handle('clearNetworkCardBackground', ipcErrorWrapper(clearNetworkCardBackground))
+  ipcMain.handle(
+    'getNetworkCardBackgroundDataUrl',
+    ipcErrorWrapper(getNetworkCardBackgroundDataUrl)
+  )
   ipcMain.handle('startHomeNetworkObservation', () => startHomeNetworkObservation())
   ipcMain.handle('stopHomeNetworkObservation', () => stopHomeNetworkObservation())
   ipcMain.handle('mihomoVersion', ipcErrorWrapper(mihomoVersion))

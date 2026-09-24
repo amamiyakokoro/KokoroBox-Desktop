@@ -32,6 +32,20 @@ export async function getHomeBackgroundDataUrl(): Promise<string | undefined> {
   return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('getHomeBackgroundDataUrl'))
 }
 
+export async function chooseNetworkCardBackground(): Promise<string | undefined> {
+  return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('chooseNetworkCardBackground'))
+}
+
+export async function clearNetworkCardBackground(): Promise<void> {
+  return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('clearNetworkCardBackground'))
+}
+
+export async function getNetworkCardBackgroundDataUrl(): Promise<string | undefined> {
+  return ipcErrorWrapper(
+    await window.electron.ipcRenderer.invoke('getNetworkCardBackgroundDataUrl')
+  )
+}
+
 export async function startHomeNetworkObservation(): Promise<void> {
   return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('startHomeNetworkObservation'))
 }

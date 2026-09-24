@@ -21,6 +21,7 @@ import {
   homeBackgroundChoice,
   homeNetworkCardBackgroundChoice,
   homeRuntimeState,
+  isManagedHomeBackgroundFile,
   resolveHomeBackground,
   type PublicIpInfo,
   type PublicIpSnapshot
@@ -77,10 +78,10 @@ import { configuredOverviewFeatures } from '@renderer/utils/home-overview'
 import { platform } from '@renderer/utils/init'
 import { nextProfileUpdateAt } from '../../../shared/profile-update'
 import { homeBuiltInImages } from '@renderer/utils/home-background-assets'
-import networkCardArtwork from '@renderer/assets/home/network-card-amamiya.png'
 import {
   getAppRoutingStatus,
   getHomeBackgroundDataUrl,
+  getNetworkCardBackgroundDataUrl,
   getHomePublicIp,
   getHomeServiceVersion,
   mihomoVersion,
@@ -180,6 +181,10 @@ const Home = () => {
   const [refreshSignal, setRefreshSignal] = useState(0)
   const [revealed, setRevealed] = useState(false)
   const [backgroundUrl, setBackgroundUrl] = useState<string>()
+  const [networkCardBackground, setNetworkCardBackground] = useState<{
+    file: string
+    url: string
+  }>()
   const [rates, setRates] = useState({ up: 0, down: 0 })
   const [connections, setConnections] = useState<ControllerConnections>()
   const [connectionSampleAt, setConnectionSampleAt] = useState<number>()
@@ -236,8 +241,13 @@ const Home = () => {
     homeBuiltInImages
   )
   const hasActiveBackground = Boolean(resolvedBackground.imageUrl)
-  const hasNetworkCardArtwork =
-    homeNetworkCardBackgroundChoice(appConfig?.homeNetworkCardBackground) === 'amamiya'
+  const networkCardBackgroundFile = appConfig?.homeNetworkCardBackgroundFile
+  const networkCardImageUrl =
+    homeNetworkCardBackgroundChoice(appConfig?.homeNetworkCardBackground) === 'custom' &&
+    networkCardBackground?.file === networkCardBackgroundFile
+      ? networkCardBackground?.url
+      : undefined
+  const hasNetworkCardBackground = Boolean(networkCardImageUrl)
 
   useEffect(() => {
     if (backgroundChoice !== 'custom' || !background?.file) {
@@ -256,6 +266,26 @@ const Home = () => {
       active = false
     }
   }, [background?.file, backgroundChoice])
+
+  useEffect(() => {
+    if (!isManagedHomeBackgroundFile(networkCardBackgroundFile)) {
+      setNetworkCardBackground(undefined)
+      return
+    }
+    let active = true
+    void getNetworkCardBackgroundDataUrl()
+      .then((url) => {
+        if (active) {
+          setNetworkCardBackground(url ? { file: networkCardBackgroundFile, url } : undefined)
+        }
+      })
+      .catch(() => {
+        if (active) setNetworkCardBackground(undefined)
+      })
+    return () => {
+      active = false
+    }
+  }, [networkCardBackgroundFile])
 
   useEffect(() => {
     const refresh = (): void => setRefreshSignal((current) => current + 1)
@@ -608,15 +638,15 @@ const Home = () => {
           )}
 
           <Surface
-            className={`home-network-hero min-w-0 rounded-2xl border p-4 sm:p-5 ${cardStyle} ${hasNetworkCardArtwork ? 'home-network-hero--illustrated' : ''}`}
+            className={`home-network-hero min-w-0 rounded-2xl border p-4 sm:p-5 ${cardStyle} ${hasNetworkCardBackground ? 'home-network-hero--custom-background' : ''}`}
             style={
-              hasNetworkCardArtwork ? { backgroundColor: 'var(--surface)' } : cardBackgroundStyle
+              hasNetworkCardBackground ? { backgroundColor: 'var(--surface)' } : cardBackgroundStyle
             }
           >
-            {hasNetworkCardArtwork && (
+            {hasNetworkCardBackground && (
               <div
-                className="home-network-artwork pointer-events-none"
-                style={{ backgroundImage: `url(${networkCardArtwork})` }}
+                className="home-network-background pointer-events-none"
+                style={{ backgroundImage: `url(${networkCardImageUrl})` }}
                 aria-hidden="true"
               />
             )}
