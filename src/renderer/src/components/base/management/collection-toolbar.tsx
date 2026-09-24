@@ -35,7 +35,7 @@ const CollectionImportToolbar: React.FC<CollectionImportToolbarProps> = ({
 }) => (
   <div
     className={cn(
-      'collection-import-toolbar sticky top-0 z-40 border-b border-separator bg-background/95 px-3 py-2 backdrop-blur-sm',
+      'collection-import-toolbar sticky top-0 z-40 border-b border-separator bg-surface px-3 py-2',
       className
     )}
   >
