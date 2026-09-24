@@ -566,7 +566,7 @@ const Home = () => {
         ) : undefined
       }
     >
-      <main className="@container relative min-h-full min-w-0 overflow-hidden">
+      <main className="@container relative min-h-full min-w-0 overflow-clip">
         {hasActiveBackground && (
           <div
             className="home-background-plane pointer-events-none sticky top-0 overflow-hidden"
