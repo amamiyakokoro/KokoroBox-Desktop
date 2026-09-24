@@ -574,10 +574,11 @@ const Home = () => {
               className="absolute inset-0"
               style={{
                 backgroundImage: `url(${resolvedBackground.imageUrl})`,
-                backgroundSize:
-                  resolvedBackground.source === 'default'
+                backgroundSize: resolvedBackground.scale
+                  ? resolvedBackground.source === 'default'
                     ? 'auto min(100%, 900px)'
-                    : resolvedBackground.fit,
+                    : resolvedBackground.fit
+                  : 'auto',
                 backgroundPosition: resolvedBackground.position,
                 backgroundRepeat: 'no-repeat',
                 opacity: resolvedBackground.opacity / 100,

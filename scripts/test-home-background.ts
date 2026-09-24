@@ -9,7 +9,11 @@ import {
 } from '../src/shared/home.ts'
 import { createHomeBackgroundSwitch } from '../src/shared/home-background-switch.ts'
 
-const images = { ammy1: '/assets/ammy1.png', ammy2: '/assets/ammy2.png' }
+const images = {
+  ammy1: '/assets/ammy1.png',
+  ammy2: '/assets/ammy2.png',
+  ammy3: '/assets/ammy3.png'
+}
 
 function deferred<T>() {
   let resolve!: (value: T) => void
@@ -25,17 +29,29 @@ test('one built-in background is selected deterministically and independently of
   assert.equal(normalizeHomeDefaultBackgroundId(undefined), 'ammy1')
   assert.equal(normalizeHomeDefaultBackgroundId('../../bad.png'), 'ammy1')
   assert.equal(nextHomeDefaultBackgroundId('ammy1'), 'ammy2')
-  assert.equal(nextHomeDefaultBackgroundId('ammy2'), 'ammy1')
+  assert.equal(nextHomeDefaultBackgroundId('ammy2'), 'ammy3')
+  assert.equal(nextHomeDefaultBackgroundId('ammy3'), 'ammy1')
+  assert.equal(normalizeHomeDefaultBackgroundId('ammy3'), 'ammy3')
 
   const fresh = resolveHomeBackground(undefined, undefined, images)
-  assert.equal(fresh.source, 'default')
-  assert.equal(fresh.imageUrl, images.ammy1)
+  assert.equal(fresh.source, 'none')
+  assert.equal(fresh.imageUrl, undefined)
   assert.equal(fresh.opacity, defaultBuiltInBackgroundAppearance.opacity)
   assert.equal(fresh.cardOpacity, 68)
   assert.equal(fresh.networkOpacity, 76)
 
-  const selected = { homeDefaultBackgroundId: 'ammy2' as const }
+  const selected = { homeDefaultBackgroundId: 'ammy2' as const, homeBackgroundDisabled: false }
   assert.equal(resolveHomeBackground(selected, undefined, images).imageUrl, images.ammy2)
+  assert.equal(resolveHomeBackground(selected, undefined, images).position, 'right bottom')
+  assert.equal(resolveHomeBackground(selected, undefined, images).scale, true)
+  assert.equal(
+    resolveHomeBackground(
+      { homeDefaultBackgroundId: 'ammy3', homeBackgroundDisabled: false },
+      undefined,
+      images
+    ).imageUrl,
+    images.ammy3
+  )
   assert.equal(
     resolveHomeBackground(
       { ...selected, homeDefaultBackgroundId: 'invalid' as 'ammy2' },
@@ -46,6 +62,30 @@ test('one built-in background is selected deterministically and independently of
   )
   // The resolver has no theme input: a theme change cannot select another image.
   assert.equal(resolveHomeBackground(selected, undefined, images).imageUrl, images.ammy2)
+})
+
+test('built-in backgrounds apply horizontal alignment and optional original size', () => {
+  const centered = resolveHomeBackground(
+    {
+      homeBackgroundDisabled: false,
+      homeDefaultBackgroundAppearance: { alignment: 'center', scale: false }
+    },
+    undefined,
+    images
+  )
+  assert.equal(centered.position, 'center bottom')
+  assert.equal(centered.scale, false)
+  assert.equal(
+    resolveHomeBackground(
+      {
+        homeBackgroundDisabled: false,
+        homeDefaultBackgroundAppearance: { alignment: 'left', scale: true }
+      },
+      undefined,
+      images
+    ).position,
+    'left bottom'
+  )
 })
 
 test('custom and none retain the selected built-in ID without showing a fallback image', () => {
@@ -67,18 +107,36 @@ test('custom and none retain the selected built-in ID without showing a fallback
   assert.equal(loaded.source, 'custom')
   assert.equal(loaded.imageUrl, 'data:image/png;base64,AA==')
   assert.equal(loaded.opacity, 37)
+  assert.equal(loaded.position, 'center top')
+  assert.equal(loaded.scale, true)
   assert.equal(loaded.blur, 4)
   assert.equal(loaded.overlay, 54)
   assert.equal(loaded.cardOpacity, 61)
   assert.equal(loaded.networkOpacity, 69)
   assert.equal(resolveHomeBackground(config, undefined, images).imageUrl, undefined)
 
+  const aligned = resolveHomeBackground(
+    { ...config, homeBackground: { ...custom, alignment: 'right' as const, scale: false } },
+    undefined,
+    images
+  )
+  assert.equal(aligned.position, 'right top')
+  assert.equal(aligned.scale, false)
+  assert.equal(
+    resolveHomeBackground(
+      { ...config, homeBackground: { ...custom, position: 'left' } },
+      undefined,
+      images
+    ).position,
+    'left center'
+  )
+
   const none = resolveHomeBackground({ ...config, homeBackgroundDisabled: true }, undefined, images)
   assert.equal(none.source, 'none')
   assert.equal(none.imageUrl, undefined)
 
   const backToDefault = resolveHomeBackground(
-    { ...config, homeBackground: undefined },
+    { ...config, homeBackground: undefined, homeBackgroundDisabled: false },
     undefined,
     images
   )
@@ -113,8 +171,19 @@ test('manual switching preloads before persisting and serializes rapid clicks', 
   assert.equal(saved.join(','), 'ammy2')
   assert.equal(selectedId, 'ammy2')
 
-  // A new Home/settings instance reads the persisted ID and cycles back.
+  // A new Home/settings instance reads the persisted ID and cycles onward.
   const afterRemount = createHomeBackgroundSwitch(
+    () => ({ mode: 'default', selectedId }),
+    async (id) => assert.equal(id, 'ammy3'),
+    async (id) => {
+      saved.push(id)
+      selectedId = id
+    }
+  )
+  assert.equal(await afterRemount(), true)
+  assert.equal(saved.join(','), 'ammy2,ammy3')
+
+  const wrapAround = createHomeBackgroundSwitch(
     () => ({ mode: 'default', selectedId }),
     async (id) => assert.equal(id, 'ammy1'),
     async (id) => {
@@ -122,8 +191,8 @@ test('manual switching preloads before persisting and serializes rapid clicks', 
       selectedId = id
     }
   )
-  assert.equal(await afterRemount(), true)
-  assert.equal(saved.join(','), 'ammy2,ammy1')
+  assert.equal(await wrapAround(), true)
+  assert.equal(saved.join(','), 'ammy2,ammy3,ammy1')
 })
 
 test('failed preload, failed persistence, and mode changes keep the current image', async () => {

@@ -4,8 +4,11 @@ import { LuImages } from 'react-icons/lu'
 import { tr } from '../../../../shared/i18n'
 import {
   homeBackgroundChoice,
+  homeDefaultBackgroundIds,
   resolveHomeBackground,
-  type HomeBackground
+  type HomeBackground,
+  type HomeBackgroundAlignment,
+  type HomeBackgroundAppearance
 } from '../../../../shared/home'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { useHomeDefaultBackgroundSwitch } from '@renderer/hooks/use-home-default-background'
@@ -69,18 +72,18 @@ export default function HomeBackgroundSettings() {
     if (!background) return
     void patchAppConfig({ homeBackground: { ...background, ...patch } })
   }
+  const patchBuiltInAppearance = (patch: Partial<HomeBackgroundAppearance>): void => {
+    void patchAppConfig({
+      homeDefaultBackgroundAppearance: { ...appConfig?.homeDefaultBackgroundAppearance, ...patch }
+    })
+  }
   const patchNumber = (setting: BackgroundNumberSetting, value: number): void => {
     if (setting === 'cardOpacity') {
       void patchAppConfig({ homeCardBackgroundOpacity: value })
     } else if (choice === 'custom') {
       patchBackground({ [setting]: value })
     } else if (choice === 'default') {
-      void patchAppConfig({
-        homeDefaultBackgroundAppearance: {
-          ...appConfig?.homeDefaultBackgroundAppearance,
-          [setting]: value
-        }
-      })
+      patchBuiltInAppearance({ [setting]: value })
     }
   }
 
@@ -153,7 +156,7 @@ export default function HomeBackgroundSettings() {
               />
             </div>
             <span className="text-xs tabular-nums text-muted">
-              {selectedId === 'ammy1' ? '1 / 2' : '2 / 2'}
+              {`${homeDefaultBackgroundIds.indexOf(selectedId) + 1} / ${homeDefaultBackgroundIds.length}`}
             </span>
             <Tooltip delay={0}>
               <Tooltip.Trigger>
@@ -174,6 +177,41 @@ export default function HomeBackgroundSettings() {
           </div>
         </SettingItem>
       )}
+      {choice !== 'none' && (
+        <>
+          <SettingItem title={tr('Horizontal alignment')} divider>
+            <KokoSegmentedControl
+              ariaLabel={tr('Horizontal alignment')}
+              selectedKey={resolved.position.split(' ')[0]}
+              options={[
+                { id: 'left', label: tr('Left') },
+                { id: 'center', label: tr('Center') },
+                { id: 'right', label: tr('Right') }
+              ]}
+              onChange={(alignment) => {
+                const value = alignment as HomeBackgroundAlignment
+                if (choice === 'custom') patchBackground({ alignment: value })
+                else patchBuiltInAppearance({ alignment: value })
+              }}
+            />
+          </SettingItem>
+          <SettingItem title={tr('Scale image')} divider>
+            <KokoSegmentedControl
+              ariaLabel={tr('Scale image')}
+              selectedKey={resolved.scale ? 'scaled' : 'original'}
+              options={[
+                { id: 'scaled', label: tr('Scaled') },
+                { id: 'original', label: tr('Original size') }
+              ]}
+              onChange={(size) => {
+                const scale = size === 'scaled'
+                if (choice === 'custom') patchBackground({ scale })
+                else patchBuiltInAppearance({ scale })
+              }}
+            />
+          </SettingItem>
+        </>
+      )}
       {choice === 'custom' && background && (
         <>
           <SettingItem title={tr('Fit')} divider>
@@ -187,16 +225,14 @@ export default function HomeBackgroundSettings() {
               onChange={(fit) => patchBackground({ fit: fit as HomeBackground['fit'] })}
             />
           </SettingItem>
-          <SettingItem title={tr('Position')} divider>
+          <SettingItem title={tr('Vertical position')} divider>
             <KokoSegmentedControl
-              ariaLabel={tr('Position')}
-              selectedKey={background.position}
+              ariaLabel={tr('Vertical position')}
+              selectedKey={resolved.position.split(' ')[1]}
               options={[
-                { id: 'center', label: tr('Center') },
                 { id: 'top', label: tr('Top') },
-                { id: 'bottom', label: tr('Bottom') },
-                { id: 'left', label: tr('Left') },
-                { id: 'right', label: tr('Right') }
+                { id: 'center', label: tr('Center') },
+                { id: 'bottom', label: tr('Bottom') }
               ]}
               onChange={(position) =>
                 patchBackground({ position: position as HomeBackground['position'] })

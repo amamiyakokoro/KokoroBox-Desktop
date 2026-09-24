@@ -20,10 +20,11 @@ test('Home only presents release-style Service versions', () => {
   assert.equal(displayServiceVersion('legacy'), undefined)
 })
 
-test('Home background keeps the bundled default, custom image, and explicit none distinct', () => {
-  assert.equal(homeBackgroundChoice(undefined), 'default')
-  assert.equal(homeBackgroundChoice({}), 'default')
+test('Home background starts at none and keeps explicit built-in and custom choices distinct', () => {
+  assert.equal(homeBackgroundChoice(undefined), 'none')
+  assert.equal(homeBackgroundChoice({}), 'none')
   assert.equal(homeBackgroundChoice({ homeBackgroundDisabled: true }), 'none')
+  assert.equal(homeBackgroundChoice({ homeBackgroundDisabled: false }), 'default')
   const custom = {
     file: 'home-background-0123456789abcdef0123456789abcdef.png',
     fit: 'cover',

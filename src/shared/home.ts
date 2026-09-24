@@ -11,21 +11,29 @@ export interface PublicIpSnapshot {
   stale: boolean
 }
 
+export type HomeBackgroundAlignment = 'left' | 'center' | 'right'
+
 export interface HomeBackground {
   file: string
   fit: 'cover' | 'contain'
   position: 'center' | 'top' | 'bottom' | 'left' | 'right'
+  alignment?: HomeBackgroundAlignment
+  scale?: boolean
   opacity: number
   blur: number
   overlay: number
 }
 
-export type HomeDefaultBackgroundId = 'ammy1' | 'ammy2'
+export const homeDefaultBackgroundIds = ['ammy1', 'ammy2', 'ammy3'] as const
+
+export type HomeDefaultBackgroundId = (typeof homeDefaultBackgroundIds)[number]
 
 export interface HomeBackgroundAppearance {
   opacity: number
   blur: number
   overlay: number
+  alignment?: HomeBackgroundAlignment
+  scale?: boolean
 }
 
 export interface ResolvedHomeBackground extends HomeBackgroundAppearance {
@@ -33,6 +41,7 @@ export interface ResolvedHomeBackground extends HomeBackgroundAppearance {
   imageUrl?: string
   fit: 'cover' | 'contain'
   position: string
+  scale: boolean
   cardOpacity: number
   networkOpacity: number
 }
@@ -40,7 +49,9 @@ export interface ResolvedHomeBackground extends HomeBackgroundAppearance {
 export const defaultBuiltInBackgroundAppearance: HomeBackgroundAppearance = {
   opacity: 90,
   blur: 0,
-  overlay: 10
+  overlay: 10,
+  alignment: 'right',
+  scale: true
 }
 
 export const defaultHomeCardBackgroundOpacity = 68
@@ -48,17 +59,20 @@ export const defaultHomeCardBackgroundOpacity = 68
 export const defaultHomeBackgroundSettings = {
   fit: 'cover',
   position: 'center',
+  alignment: 'center',
+  scale: true,
   opacity: 90,
   blur: 0,
   overlay: 10
 } as const satisfies Omit<HomeBackground, 'file'>
 
 export function normalizeHomeDefaultBackgroundId(value: unknown): HomeDefaultBackgroundId {
-  return value === 'ammy2' ? 'ammy2' : 'ammy1'
+  return homeDefaultBackgroundIds.find((id) => id === value) ?? homeDefaultBackgroundIds[0]
 }
 
 export function nextHomeDefaultBackgroundId(value: unknown): HomeDefaultBackgroundId {
-  return normalizeHomeDefaultBackgroundId(value) === 'ammy1' ? 'ammy2' : 'ammy1'
+  const currentIndex = homeDefaultBackgroundIds.indexOf(normalizeHomeDefaultBackgroundId(value))
+  return homeDefaultBackgroundIds[(currentIndex + 1) % homeDefaultBackgroundIds.length]
 }
 
 function boundedNumber(value: unknown, fallback: number, maximum: number): number {
@@ -91,6 +105,20 @@ export function resolveHomeBackground(
     source === 'custom' ? 82 : defaultHomeCardBackgroundOpacity,
     100
   )
+  const legacyPosition = config?.homeBackground?.position
+  const alignment =
+    appearance?.alignment ??
+    (source === 'custom' && (legacyPosition === 'left' || legacyPosition === 'right')
+      ? legacyPosition
+      : source === 'custom'
+        ? 'center'
+        : 'right')
+  const verticalPosition =
+    source === 'custom' && (legacyPosition === 'top' || legacyPosition === 'bottom')
+      ? legacyPosition
+      : source === 'custom'
+        ? 'center'
+        : 'bottom'
   return {
     source,
     imageUrl:
@@ -103,7 +131,8 @@ export function resolveHomeBackground(
     blur: boundedNumber(appearance?.blur, defaults.blur, 20),
     overlay: boundedNumber(appearance?.overlay, defaults.overlay, 80),
     fit: source === 'custom' ? (config?.homeBackground?.fit ?? 'cover') : 'contain',
-    position: source === 'custom' ? (config?.homeBackground?.position ?? 'center') : 'right bottom',
+    position: `${alignment} ${verticalPosition}`,
+    scale: appearance?.scale !== false,
     cardOpacity,
     networkOpacity: Math.min(100, cardOpacity + 8)
   }
@@ -113,7 +142,8 @@ export function homeBackgroundChoice(
   config: Pick<AppConfig, 'homeBackground' | 'homeBackgroundDisabled'> | undefined
 ): 'default' | 'custom' | 'none' {
   if (config?.homeBackgroundDisabled) return 'none'
-  return config?.homeBackground?.file ? 'custom' : 'default'
+  if (config?.homeBackground?.file) return 'custom'
+  return config?.homeBackgroundDisabled === false ? 'default' : 'none'
 }
 
 export function normalizeCountryCode(value: unknown): string | undefined {

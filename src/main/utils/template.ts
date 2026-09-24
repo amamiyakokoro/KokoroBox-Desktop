@@ -14,6 +14,7 @@ export const defaultConfig: AppConfig = {
   showUpdateButtonAfterNotification: true,
   silentStart: false,
   appTheme: 'system',
+  homeBackgroundDisabled: true,
   useWindowFrame: false,
   enableWindowDrag: false,
   proxyInTray: true,
