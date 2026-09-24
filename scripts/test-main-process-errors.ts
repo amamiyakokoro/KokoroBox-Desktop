@@ -122,9 +122,9 @@ test('system proxy uses KokoroBox Service as its only mutation authority', () =>
     'utf8'
   )
 
-  assert.match(sysproxy, /await setPac\(/)
-  assert.match(sysproxy, /await setProxy\(/)
-  assert.match(sysproxy, /await disableProxy\(/)
+  assert.match(sysproxy, /await timed\('service', options, \(\) =>\s*setPac\(/)
+  assert.match(sysproxy, /await timed\('service', options, \(\) =>\s*setProxy\(/)
+  assert.match(sysproxy, /await timed\('service', options, \(\) =>\s*disableProxy\(/)
   assert.doesNotMatch(sysproxy, /child_process|servicePath|settingMode|registryArgs/)
   assert.match(coreRuntime, /const useServiceSysProxy = sysProxy\.enable/)
   assert.match(ipc, /patch\.sysProxy\?\.enable !== true/)
