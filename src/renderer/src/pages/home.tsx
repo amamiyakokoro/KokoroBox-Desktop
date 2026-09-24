@@ -610,7 +610,7 @@ const Home = () => {
             style={cardBackgroundStyle}
           >
             <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-              <h2 className="text-sm font-semibold">{tr('Network')}</h2>
+              <h2 className="text-sm font-semibold text-muted">{tr('Network')}</h2>
               {exitIsLastKnown && publicIp ? (
                 <span className="text-xs text-warning">{tr('Last known exit')}</span>
               ) : refreshingIp ? (
@@ -618,7 +618,7 @@ const Home = () => {
               ) : null}
             </div>
             <div className="home-network-main min-w-0">
-              <div className="flex min-w-0 items-center gap-3">
+              <div className="flex min-w-0 items-center gap-2.5">
                 <CountryFlag code={publicIp?.countryCode} className="size-12 sm:size-13" />
                 <div className="min-w-0 flex-1">
                   {publicIp ? (
@@ -634,7 +634,7 @@ const Home = () => {
                     {countryLabel(publicIp)}
                   </div>
                   {(publicIp?.isp || publicIp?.asn) && (
-                    <div className="home-secondary-value mt-2 flex min-w-0 flex-wrap items-baseline gap-x-1.5 gap-y-0.5 text-xs text-muted">
+                    <div className="home-secondary-value mt-1 flex min-w-0 flex-wrap items-baseline gap-x-1.5 gap-y-0.5 text-xs text-muted">
                       {publicIp.isp && <span className="min-w-0 break-words">{publicIp.isp}</span>}
                       {publicIp.isp && publicIp.asn && <span aria-hidden="true">·</span>}
                       {publicIp.asn && <span className="shrink-0">{publicIp.asn}</span>}
@@ -683,8 +683,8 @@ const Home = () => {
               className={`min-w-0 rounded-2xl border p-4 shadow-none sm:p-5 ${cardStyle}`}
               style={cardBackgroundStyle}
             >
-              <div className="mb-3 flex items-center justify-between gap-2">
-                <h2 className="text-sm font-semibold">{tr('Current subscription')}</h2>
+              <div className="mb-4 flex items-center justify-between gap-2">
+                <h2 className="text-sm font-semibold text-muted">{tr('Current subscription')}</h2>
                 <Link
                   to="/profiles"
                   className="app-nodrag rounded-md p-1 text-muted hover:text-accent focus-visible:outline-2 focus-visible:outline-accent"
@@ -694,7 +694,7 @@ const Home = () => {
                 </Link>
               </div>
               {profile ? (
-                <div className="space-y-2.5">
+                <div className="space-y-2">
                   <div className="min-w-0">
                     <div
                       className="line-clamp-2 break-words text-base font-semibold"
@@ -702,12 +702,12 @@ const Home = () => {
                     >
                       {profile.name}
                     </div>
-                    <div className="mt-2">
+                    <div className="mt-1.5">
                       <OverviewSubscriptionChips profile={profile} />
                     </div>
                   </div>
                   <OverviewUsageSummary usage={usage} quota={quota} />
-                  <dl className="space-y-0.5 pt-0.5">
+                  <dl className="space-y-0 pt-1">
                     {profile.extra?.expire ? (
                       <OverviewMetadataRow
                         icon={<LuCalendarDays className="size-3.5 shrink-0" aria-hidden="true" />}
@@ -753,7 +753,7 @@ const Home = () => {
               className={`min-w-0 rounded-2xl border p-4 shadow-none sm:p-5 ${cardStyle}`}
               style={cardBackgroundStyle}
             >
-              <h2 className="mb-3 text-sm font-semibold">{tr('Runtime')}</h2>
+              <h2 className="mb-4 text-sm font-semibold text-muted">{tr('Runtime')}</h2>
               <OverviewStat
                 icon={
                   <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-accent-soft/55 text-accent">
@@ -776,7 +776,7 @@ const Home = () => {
                 }
                 valueClassName="text-[1.35rem]"
               />
-              <div className="mt-5 border-t border-separator/60 pt-3">
+              <div className="mt-4 border-t border-separator/60 pt-3">
                 <OverviewStatusLine
                   label={tr('KokoroBox Service')}
                   status={serviceStateLabel(runtime.service as ServiceState | undefined)}
@@ -797,8 +797,8 @@ const Home = () => {
             className={`min-w-0 rounded-2xl border p-4 shadow-none sm:p-5 ${cardStyle}`}
             style={cardBackgroundStyle}
           >
-            <div className="mb-3 flex items-center justify-between gap-3">
-              <h2 className="text-sm font-semibold">{tr('Traffic')}</h2>
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <h2 className="text-sm font-semibold text-muted">{tr('Traffic')}</h2>
               <Link
                 to="/connections"
                 className="group app-nodrag rounded-md hover:text-accent focus-visible:outline-2 focus-visible:outline-accent"
@@ -826,6 +826,7 @@ const Home = () => {
                     : undefined
                 }
                 valueClassName="text-[1.4rem]"
+                secondaryClassName="text-[13px]"
               />
               <OverviewStat
                 icon={
@@ -843,6 +844,7 @@ const Home = () => {
                     : undefined
                 }
                 valueClassName="text-[1.4rem]"
+                secondaryClassName="text-[13px]"
               />
               <TopActiveAppRow
                 application={displayedApplication}
@@ -856,7 +858,7 @@ const Home = () => {
             </div>
             {trafficState === 'active' ? (
               <div
-                className="relative mt-3 h-20 overflow-hidden rounded-lg"
+                className="relative mt-4 h-24 overflow-hidden rounded-lg"
                 style={
                   hasActiveBackground
                     ? {
@@ -866,7 +868,7 @@ const Home = () => {
                 }
               >
                 <OverviewTrafficChart data={history} />
-                <span className="absolute bottom-1 left-2 text-[10px] text-muted">
+                <span className="absolute bottom-1.5 left-2 text-[10px] text-muted">
                   {trafficRangeSeconds === undefined
                     ? tr('Latest sample')
                     : trafficRangeSeconds === 1

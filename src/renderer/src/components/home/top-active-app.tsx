@@ -108,34 +108,36 @@ export function TopActiveAppContent({
   return (
     <>
       <span className="block truncate text-[11px] text-muted" title={explanation}>
-        {sampleSeconds
-          ? `${tr('Top active app')} · ${tr('{0} s sample', [sampleSeconds])}`
-          : tr('Recently observed app')}
+        {sampleSeconds ? tr('Top active app') : tr('Recently observed app')}
       </span>
-      <span className="mt-1 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
-        {metadata?.iconUrl ? (
-          <img className="size-8 shrink-0 object-contain" src={metadata.iconUrl} alt="" />
-        ) : (
-          <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-surface-secondary text-muted">
-            <LuAppWindow className="size-4" aria-hidden="true" />
+      <span className="mt-1 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
+        <span className="flex min-w-0 flex-1 items-center gap-2">
+          {metadata?.iconUrl ? (
+            <img className="size-8 shrink-0 object-contain" src={metadata.iconUrl} alt="" />
+          ) : (
+            <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-surface-secondary text-muted">
+              <LuAppWindow className="size-4" aria-hidden="true" />
+            </span>
+          )}
+          <span
+            className={`min-w-[6rem] flex-1 truncate text-sm ${sampleSeconds ? 'font-medium text-foreground' : 'home-secondary-value text-muted'}`}
+            title={name}
+          >
+            {name}
           </span>
-        )}
-        <span
-          className={`min-w-[6rem] flex-1 truncate text-sm ${sampleSeconds ? 'font-medium text-foreground' : 'home-secondary-value text-muted'}`}
-          title={name}
-        >
-          {name}
         </span>
-        {sampleSeconds && (
-          <span className="ml-auto flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-foreground">
-            <ActivityRate direction="down" bytesPerSecond={application.downloadSpeed} />
-            <ActivityRate direction="up" bytesPerSecond={application.uploadSpeed} />
-          </span>
-        )}
-        <LuArrowRight
-          className="size-3 shrink-0 text-muted group-hover:text-accent"
-          aria-hidden="true"
-        />
+        <span className="ml-auto inline-flex shrink-0 items-center gap-2">
+          {sampleSeconds && (
+            <span className="flex items-center gap-2 text-xs text-foreground">
+              <ActivityRate direction="down" bytesPerSecond={application.downloadSpeed} />
+              <ActivityRate direction="up" bytesPerSecond={application.uploadSpeed} />
+            </span>
+          )}
+          <LuArrowRight
+            className="size-3 shrink-0 text-muted group-hover:text-accent"
+            aria-hidden="true"
+          />
+        </span>
       </span>
     </>
   )

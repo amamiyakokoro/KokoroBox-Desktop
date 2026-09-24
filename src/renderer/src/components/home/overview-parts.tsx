@@ -42,7 +42,8 @@ export function OverviewStat({
   secondary,
   icon,
   className = '',
-  valueClassName = ''
+  valueClassName = '',
+  secondaryClassName = ''
 }: {
   label?: ReactNode
   value: ReactNode
@@ -50,6 +51,7 @@ export function OverviewStat({
   icon?: ReactNode
   className?: string
   valueClassName?: string
+  secondaryClassName?: string
 }) {
   return (
     <div className={`flex min-w-0 items-start gap-3 ${className}`}>
@@ -57,12 +59,16 @@ export function OverviewStat({
       <div className="min-w-0 flex-1">
         {label && <div className="text-xs text-muted">{label}</div>}
         <div
-          className={`min-w-0 font-semibold leading-tight tabular-nums text-foreground ${valueClassName || 'text-xl'}`}
+          className={`min-w-0 font-semibold leading-tight tabular-nums text-foreground ${label ? 'mt-0.5' : ''} ${valueClassName || 'text-xl'}`}
         >
           {value}
         </div>
         {secondary && (
-          <div className="home-secondary-value mt-0.5 min-w-0 text-sm text-muted">{secondary}</div>
+          <div
+            className={`home-secondary-value mt-1 min-w-0 text-muted ${secondaryClassName || 'text-sm'}`}
+          >
+            {secondary}
+          </div>
         )}
       </div>
     </div>
@@ -79,8 +85,8 @@ export function OverviewMetadataRow({
   icon?: ReactNode
 }) {
   return (
-    <div className="grid min-w-0 grid-cols-[minmax(0,6.5rem)_minmax(0,1fr)] items-baseline gap-2 text-xs leading-5">
-      <dt className="flex min-w-0 items-center gap-1.5 text-muted">
+    <div className="grid min-w-0 grid-cols-[minmax(0,6.5rem)_minmax(0,1fr)] items-baseline gap-1.5 text-xs leading-5">
+      <dt className="flex min-w-0 items-center gap-1 text-muted">
         {icon}
         <span>{label}</span>
       </dt>
@@ -111,18 +117,18 @@ export function OverviewUsageSummary({ usage, quota }: { usage: number; quota: n
   if (quota <= 0) return null
   const percentage = Math.round((usage / quota) * 100)
   return (
-    <div className="space-y-1.5 rounded-xl bg-accent-soft/25 px-3 py-2.5">
+    <div className="space-y-2 rounded-xl bg-surface-secondary/25 px-3 py-3">
       <div className="flex min-w-0 flex-wrap items-baseline justify-between gap-x-2 gap-y-1 tabular-nums">
         <span className="min-w-0 whitespace-nowrap">
           <span className="sr-only">{tr('Used traffic')} </span>
-          <strong className="text-xl font-semibold text-foreground">
+          <strong className="text-2xl font-semibold leading-none text-foreground">
             {formatOverviewBytes(usage)}
           </strong>
-          <span className="ml-1 text-xs text-muted">/ {formatOverviewBytes(quota)}</span>
+          <span className="ml-1 text-sm text-muted">/ {formatOverviewBytes(quota)}</span>
         </span>
         <span
           aria-label={tr('{0}% used', [percentage])}
-          className={`shrink-0 text-xs font-medium ${percentage >= 100 ? 'text-danger' : percentage >= 90 ? 'text-warning' : 'text-foreground'}`}
+          className={`shrink-0 rounded-full bg-surface-secondary/60 px-2 py-0.5 text-xs font-medium ${percentage >= 100 ? 'text-danger' : percentage >= 90 ? 'text-warning' : 'text-foreground'}`}
         >
           {percentage}%
         </span>
@@ -156,8 +162,8 @@ export function OverviewStatusLine({
 }) {
   return (
     <div className="min-w-0">
-      <div className="flex min-w-0 flex-wrap items-center justify-between gap-x-3 gap-y-1">
-        <span className="text-xs font-medium text-foreground">{label}</span>
+      <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
+        <span className="text-xs font-medium text-muted">{label}</span>
         <KokoStatusIndicator tone={tone}>{status}</KokoStatusIndicator>
       </div>
       {version && (

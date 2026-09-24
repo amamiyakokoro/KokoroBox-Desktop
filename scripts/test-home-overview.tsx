@@ -77,7 +77,7 @@ test('usage keeps the percentage, meter and remaining quota together', () => {
   assert.match(html, /35% used/)
   assert.match(html, /65\.00 B remaining/)
   assert.match(html, /Used traffic/)
-  assert.match(html, /text-xl font-semibold/)
+  assert.match(html, /text-2xl font-semibold/)
   assert.match(html, /data-slot="meter"/)
   assert.doesNotMatch(html, /data-slot="chip"/)
   assert.equal(renderToStaticMarkup(<OverviewUsageSummary usage={0} quota={0} />), '')
@@ -224,7 +224,7 @@ test('Top active app displays the host name, local icon, sampled directions and 
     />
   )
   assert.match(html, /Top active app/)
-  assert.match(html, /0\.5 s sample/)
+  assert.doesNotMatch(html, /0\.5 s sample/)
   assert.match(html, /src="data:image\/png;base64,AA==" alt=""/)
   assert.match(html, /object-contain/)
   assert.match(html, /Discord/)
