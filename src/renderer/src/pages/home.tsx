@@ -613,7 +613,7 @@ const Home = () => {
               }}
             />
             <div
-              className="absolute inset-0 bg-background"
+              className="absolute inset-0 bg-surface"
               style={{ opacity: resolvedBackground.overlay / 100 }}
             />
           </div>
