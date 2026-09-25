@@ -1,8 +1,6 @@
 # macOS application updates
 
-KokoroBox uses Sparkle 2 for application updates on macOS. The goal is the familiar native flow:
-check for an update, review release notes, download in the background, then install and relaunch.
-Windows and Linux keep their existing update implementations.
+KokoroBox uses Sparkle 2 on macOS for update checks, release notes, background downloads, installation, and relaunch. Windows and Linux use their existing updaters.
 
 ## Distribution model
 
@@ -15,9 +13,7 @@ KokoroBox separates first installation from subsequent updates:
 - An appcast is the authenticated update index. Stable and rolling channels use separate feeds.
 - The existing `latest.yml` remains available for non-macOS clients.
 
-The DMG and application archive contain the same Developer ID-signed app bundle used to build the
-PKG. Both the archive and appcast are signed with Sparkle EdDSA keys. Apple code signing,
-notarization and Sparkle signatures are independent checks; none replaces another.
+The DMG, PKG, and archive use the same Developer ID-signed app. The archive and appcast also carry Sparkle EdDSA signatures. Apple signing, notarization, and Sparkle signatures are separate checks.
 
 ## Version ordering
 
@@ -157,15 +153,7 @@ the pinned Sparkle 2.10.0 tools, and removed with the other temporary signing ma
 5. **Bundle updates:** switch macOS update actions to Sparkle after privileged runtime migration.
 6. **Cleanup:** remove the macOS PKG auto-install code; retain PKG only for first install and repair.
 
-The foundation, native-integration, privileged-runtime, parallel-publication, bundle-update and
-cleanup stages are implemented. Release builds compile and sign the updater bridge and embedded Sparkle framework,
-inject the architecture-specific `SUFeedURL` and `SUPublicEDKey` before code signing, notarize the
-application independently of the PKG, and publish the signed application archive and appcast only
-after their receipt and checksums are verified. On macOS, manual update checks open Sparkle's
-standard UI directly, and the automatic-check preference controls Sparkle's own schedule. The
-in-app manifest checker and PKG installer are not used. If the native bridge or its
-signed configuration cannot initialize, KokoroBox records the failure and opens the matching
-GitHub Release so recovery remains an explicit user action.
+All migration stages are implemented. Release builds sign the updater bridge and Sparkle framework, inject `SUFeedURL` and `SUPublicEDKey` before code signing, and publish the archive and appcast after receipt and checksum verification. Manual checks open Sparkle's UI; the automatic-check preference controls its schedule. If the bridge cannot initialize, KokoroBox opens the matching GitHub Release for recovery.
 
 Users on the last PKG-only versions install a transition release through the notarized PKG path.
 Subsequent updates replace the app bundle through Sparkle. Validate this path from Intel and Apple

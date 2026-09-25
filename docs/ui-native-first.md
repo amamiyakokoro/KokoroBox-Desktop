@@ -4,8 +4,7 @@ KokoroBox uses HeroUI v3 as its component design language. The application keeps
 information architecture and desktop layout, while HeroUI owns the appearance and interaction of
 its components.
 
-This document defines the native-first contract established in Phase 6 and tightened in Phase 10.
-Compatibility styling is not an approved extension point.
+Compatibility styling is not an extension point.
 
 ## Ownership boundary
 
@@ -29,8 +28,6 @@ HeroUI v3 owns:
 - switch geometry
 - focus rings
 - component animation and internal spacing
-
-The working rule is: **KokoroBox controls layout; HeroUI controls component appearance.**
 
 ## Rules for new work
 
@@ -97,7 +94,7 @@ Behavior worth preserving includes value normalization, concise selected-value r
 application option models, clear actions, and accessible menu identities. Native HeroUI Button,
 Switch, and Tooltip APIs are used directly instead of preserving v2 vocabulary through adapters.
 
-Phase 8 has established these thinner contracts:
+These wrappers have bounded roles:
 
 - `KokoSearchField` is the single-line 36px desktop search control. It owns icon/value/clear-action
   alignment while HeroUI owns its secondary input surface and focus behavior. Search values use
@@ -127,8 +124,7 @@ Use `KokoTabs` for page, panel, and section navigation; use `KokoSegmentedContro
 mutually exclusive setting values that must remain visible together; use `KokoSelect` for numerous,
 long, or low-frequency choices.
 
-The former `KokoButton`, `KokoSwitch`, and `KokoTooltip` migration shims were removed in Phase 12.
-The native contract test prevents these adapters from being reintroduced.
+The native contract test prevents reintroducing `KokoButton`, `KokoSwitch`, and `KokoTooltip` adapters.
 
 Phase 9 moves card-heavy management surfaces to native v3 Card anatomy. Dense rule and proxy rows
 may choose compact application-level padding, while Card surface, radius, elevation, and focus

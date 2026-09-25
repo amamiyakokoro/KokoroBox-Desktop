@@ -1,6 +1,6 @@
 # Linux application routing without TUN
 
-KokoroBox routes selected Linux applications through Mihomo without creating a TUN interface. The Desktop owns the rule model and Mihomo configuration; the root `kokorobox-service` owns process classification, policy routing and netfilter state.
+KokoroBox routes selected Linux applications through Mihomo without TUN. Desktop owns rules and Mihomo configuration; the root `kokorobox-service` owns process classification, policy routing, and netfilter state.
 
 ## Traffic path
 
@@ -35,9 +35,7 @@ The active backend is returned by the process-router status API and shown next t
 - Kernel support for TPROXY, policy routing and the cgroup netfilter matcher.
 - For the fallback only: cgroup v1 `net_cls` and `mount`/`umount`.
 
-The official deb, rpm and pacman package definitions declare the user-space dependencies. Kernel configuration remains distribution-specific.
-
-The Desktop sends authenticated policy and lifecycle requests to the service. It never starts or supervises the privileged Linux Process Router directly.
+Official packages declare user-space dependencies; kernel support varies by distribution. Desktop sends authenticated policy and lifecycle requests to the service.
 
 ## Rule and lifecycle semantics
 
@@ -51,7 +49,7 @@ The Desktop sends authenticated policy and lifecycle requests to the service. It
 
 ## Current boundary
 
-Classification of independently launched processes uses a short `/proc` polling interval; it is not an atomic kernel exec hook. A newly launched process can open a socket before its first scan. Once assigned, cgroup inheritance keeps child processes classified. Applications that require a strict zero-race launch boundary should be started by a future KokoroBox cgroup launcher or exec-permission backend; the current implementation must not be advertised as providing that guarantee.
+Independently launched processes are classified by short-interval `/proc` polling, so a new process can open a socket before its first scan. Child processes normally inherit the assigned cgroup. This is not a zero-race launch boundary.
 
 The DNS redirect covers ordinary UDP/TCP port 53 queries issued by a Proxy-rule process after classification. Applications using built-in DoH/DoT are ordinary application traffic and follow the selected Proxy action rather than the DNS redirect.
 

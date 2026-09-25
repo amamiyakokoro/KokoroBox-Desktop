@@ -1,8 +1,6 @@
 # macOS application routing
 
-KokoroBox reuses its existing **Application routing** UI and canonical rule order on macOS. The
-macOS backend targets macOS 13 or later on Apple Silicon and Intel Macs; it does not change the
-minimum OS version of unrelated KokoroBox features.
+KokoroBox uses its existing **Application routing** UI and rule order on macOS 13+ for Apple Silicon and Intel Macs.
 
 ## Architecture
 
@@ -13,10 +11,7 @@ main app process. It is the only component that calls `OSSystemExtensionRequest`
 `com.amamiyakokoro.app.proxy-extension`, a KokoroBox-specific build of ProxyBridge's
 `NETransparentProxyProvider`.
 
-The native package is not a standalone executable and carries no restricted entitlement or
-embedded provisioning profile of its own. Apple authorizes the hosting
-`com.amamiyakokoro.app` process using the main app's provisioning profile while the System
-Extension remains in its separately provisioned bundle.
+The native package runs inside `com.amamiyakokoro.app` under the main app's provisioning profile; the System Extension has its own profile.
 
 The extension receives the complete policy atomically. Every rule has an explicit identity kind:
 
@@ -38,8 +33,7 @@ provider permanently leaves KokoroBox, its extension and helpers, Mihomo, loopba
 multicast, and broadcast traffic Direct. If Mihomo is unavailable, every enabled Proxy rule is
 sent to the provider as Block. No fallback to Direct is implemented.
 
-The DNS proxy provider and the upstream ProxyBridge SwiftUI application are not packaged.
-Ordinary UDP/53, QUIC, DoH, and DoT traffic follows the selected application's TCP/UDP rule.
+UDP/53, QUIC, DoH, and DoT follow the selected application's TCP/UDP rule. The DNS proxy provider and upstream ProxyBridge UI are not packaged.
 
 ## Source and build
 
@@ -53,8 +47,7 @@ PROXYBRIDGE_SOURCE_DIR=/path/to/ProxyBridge npm_config_target_arch=arm64 \
   pnpm prepare:macos-routing
 ```
 
-The generated System Extension payload is intentionally unsigned. Release packaging embeds its
-provisioning profile and signs it before signing the containing app.
+The staged extension is unsigned; release packaging provisions and signs it before signing the app.
 
 The System Extension version is pinned alongside the ProxyBridge revision in
 `build/proxybridge/source-manifest.json`. It intentionally does not follow the Desktop app or

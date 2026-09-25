@@ -1,8 +1,6 @@
 # Native integration
 
-KokoroBox Desktop uses [`kokorobox-native`](https://github.com/amamiyakokoro/kokorobox-native)
-for operating-system behavior that should not be implemented by parsing shell
-output or constructing privileged shell commands in Electron.
+KokoroBox Desktop uses [`kokorobox-native`](https://github.com/amamiyakokoro/kokorobox-native) for OS behavior instead of parsing shell output or constructing privileged commands in Electron.
 
 ## Current boundary
 
@@ -17,20 +15,14 @@ output or constructing privileged shell commands in Electron.
 | Unix core permissions     | `getCorePrivilegeStatus`, `setCorePrivileges`   | Mihomo permission checks, grant, and revoke  |
 | Windows system operations | SID, explicit privilege relaunch, Firewall APIs | Routing and privileged setup                 |
 
-The P0 migration consolidates active interface, macOS network-service, DNS, and
-SSID discovery in Rust. Windows SSID lookup uses the Native Wi-Fi API rather
-than localized command output. The Desktop process consumes one typed network
-snapshot instead of maintaining independent platform parsers.
+Rust provides one typed snapshot for interface, macOS network-service, DNS, and SSID discovery. Windows SSID lookup uses the Native Wi-Fi API.
 
 Launch-at-login now uses native platform registration. On macOS, the returned
 status distinguishes an enabled item from one that still requires approval in
 System Settings. Desktop keeps the switch off in that state and presents a
 direct route to Login Items & Extensions instead of reporting a false success.
 
-The P1 migration removes Desktop's separately compiled Objective-C service
-bridge. Registration, status, approval detection, reload, removal, and opening
-Login Items now come from the versioned native package. The LaunchDaemon plist
-and the service binary remain application-owned packaging assets.
+The native package handles macOS service registration, status, approval, reload, removal, and opening Login Items. Desktop still packages the LaunchDaemon plist and service binary.
 
 System core discovery also runs behind the native boundary. Desktop no longer
 spawns `which`, `where.exe`, Homebrew, dpkg, rpm, pacman, or Scoop merely to

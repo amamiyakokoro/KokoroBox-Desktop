@@ -16,20 +16,9 @@ To verify a downloaded package against the release checksums, run:
 shasum -a 256 -c SHA256SUMS --ignore-missing
 ```
 
-The build matrix contains 10 platform jobs. Each macOS job publishes a normal-install DMG, a
-recovery PKG, a signed Sparkle application archive, and an appcast. Publication also adds
-`latest.yml`, `SHA256SUMS`, and `SHA256SUMS.asc`. Linux RPMs contain an OpenPGP signature; Debian
-and Arch packages include detached signatures. Windows
-publishes one standard `setup.exe` for each supported architecture; the former
-`manual-elevation-setup` compatibility aliases are no longer generated. The updater metadata
-preserves the exact release tag, including a leading `v` when present. Build artifacts remain
-available in the workflow run for 14 days.
+The 10-job build matrix also publishes macOS appcasts, `latest.yml`, `SHA256SUMS`, and `SHA256SUMS.asc`. RPMs carry OpenPGP signatures; Debian and Arch packages have detached signatures. Updater metadata preserves the exact tag, including a leading `v`. Workflow artifacts remain available for 14 days.
 
-The assisted NSIS package asks whether KokoroBox should be installed only for the current user or
-for every user of the computer. A current-user installation is stored below `%LOCALAPPDATA%` and
-does not request UAC during installation. An all-users installation is stored below `Program
-Files` and requests UAC when installing or updating. In both modes the installed KokoroBox
-executable declares `asInvoker`, so normal launches and login startup do not request UAC.
+The Windows installer offers current-user (`%LOCALAPPDATA%`, no installation UAC) and all-users (`Program Files`, UAC required) scopes. Normal launches use `asInvoker` in either mode.
 
 Privileged features remain opt-in. When a current-user installation first enables the Windows
 service, its helper requests UAC and deploys the service executable plus the verified Process
@@ -81,16 +70,16 @@ before APT can perform this verification automatically.
 
 Fedora 43 and 44 are the first runtime validation targets. The reusable build workflow tests the actual x86_64 release RPM on both versions, and a failure blocks publication. Each disposable Fedora container installs the RPM with DNF, checks ELF linkage before installing test tools, checks launcher/desktop/sandbox permissions, starts both bundled Mihomo cores, verifies the packaged renderer and preload/main-process IPC under Xvfb as a regular user, then removes the package and checks cleanup.
 
-On 2026-09-06, the locally built `2.26.9-6` x86_64 RPM passed these checks on both Fedora 43 and 44. ARM64 RPMs are still built and published, but Fedora ARM64 runtime validation is currently disabled because the native-runner smoke tests exceed the 20-minute job limit. To reproduce the x86_64 checks with Docker (or substitute Podman):
+ARM64 RPMs are built and published without a Fedora ARM64 runtime gate. To reproduce the x86_64 checks with Docker (or Podman), use an RPM from `dist`:
 
 ```sh
 docker run --rm --shm-size=256m \
   -v "$PWD/dist:/packages:ro" -v "$PWD/scripts:/checks:ro" \
   registry.fedoraproject.org/fedora:44 \
-  bash /checks/check-fedora-rpm.sh /packages/kokorobox-desktop-linux-2.26.9-6-x86_64.rpm
+  bash /checks/check-fedora-rpm.sh /packages/kokorobox-desktop-linux-*-x86_64.rpm
 ```
 
-The container smoke test uses X11 and disables Chromium's sandbox and GPU acceleration only for that test process. It does not certify Wayland, hardware rendering, desktop sandbox/SELinux policy, credential storage with a real keyring, or the privileged service/TUN flow; verify those in a Fedora desktop VM or on hardware. The bundled x64 Mihomo and service binaries require an x86-64-v3 CPU.
+The container test uses X11 with Chromium sandbox and GPU acceleration disabled. Verify Wayland, hardware rendering, SELinux, keyring, service, and TUN behavior on a desktop VM or hardware. Bundled x64 Mihomo and service binaries require an x86-64-v3 CPU.
 
 The reusable build also installs and runs the x86_64 RPM in the official openSUSE Tumbleweed container. This gate uses Zypper and performs the same package metadata, linkage, bundled-core, renderer/IPC, and removal checks as Fedora. openSUSE ARM64 is not included in the runtime gate.
 
@@ -105,7 +94,7 @@ Rocky Linux retains compatible dependency declarations but is not yet covered by
    signing/notarization secrets and two Sparkle signing secrets. GitHub supplies `GITHUB_TOKEN`
    automatically.
 
-The local Apple Keychain is not available on hosted runners. Do not upload certificates or private keys to Git. No AUR key, translation API key, or SignPath token is required by this pipeline.
+Hosted runners cannot use the local Apple Keychain. Keep certificates and private keys out of Git.
 
 ### Linux repository secrets
 
@@ -130,7 +119,7 @@ The pipeline builds a version such as `2.26.9-rolling-abcdef0` and publishes a p
 
 The rolling tag moves only after all new assets have uploaded successfully. Older KokoroBox package assets are then removed; existing assets are not deleted before replacement builds succeed. Automatic cancellation is disabled to avoid interrupting publication. GitHub may replace an older pending run with a newer pending run while one release is running.
 
-There is no AUR publication from the Rolling workflow. The upstream AUR workflow is not part of this release pipeline.
+Rolling does not publish to AUR.
 
 ## Stable releases
 

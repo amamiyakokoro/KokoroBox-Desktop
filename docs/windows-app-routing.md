@@ -25,14 +25,7 @@ group can be created manually and populated through the application picker, or c
 a folder for `.exe` files. Each group menu supports adding applications, scanning again, renaming,
 and deleting the group. Manually created groups do not require a source directory.
 
-The system picker accepts `.exe` files only. It uses the stable executable filename as the
-default `processPattern`, while retaining the selected canonical path only as the optional icon
-source. KokoroBox persists the version 1 schema: `id`, `enabled`, `priority`, `processPattern`,
-optional `sourcePath`, `protocol`, and `action`. The enclosing configuration requires
-`failClosed: true`. Invalid development-time configuration files are discarded.
-
-KokoroBox converts this canonical schema to the private sidecar command in `profile.ts`; an
-upstream `.pbprofile` is never stored as application configuration.
+The picker accepts `.exe` files and uses their filename as the default `processPattern`; the canonical path is optional icon metadata. The version 1 schema stores `id`, `enabled`, `priority`, `processPattern`, optional `sourcePath`, `protocol`, and `action`, with `failClosed: true`. Invalid configurations are discarded. `profile.ts` converts this schema for the sidecar; upstream `.pbprofile` files are not stored.
 
 ## Runtime architecture
 
@@ -104,11 +97,7 @@ the rules. The service creates, verifies, repairs, and removes these rules as pa
 Router lifecycle. The NSIS installer only installs or uninstalls the service and never mutates the
 application-routing firewall itself.
 
-The same installer supports current-user and all-users scopes. Current-user application files
-remain below `%LOCALAPPDATA%`, but an explicitly installed privileged service is copied together
-with its verified Process Router bundle into a content-addressed directory below
-`%ProgramFiles%\KokoroBox Service`. SCM therefore never executes the service from a user-writable
-application directory.
+The installer supports current-user and all-users scopes. Current-user app files live below `%LOCALAPPDATA%`, while the privileged service and verified router run from a protected directory below `%ProgramFiles%\KokoroBox Service`.
 
 The all-users installation registers and starts the service as part of package installation. A
 current-user installation defers that UAC-protected operation until the user explicitly enables a

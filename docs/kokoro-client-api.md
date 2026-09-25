@@ -1,6 +1,6 @@
 # Kokoro client authentication
 
-KokoroBox uses the public API at `https://amamiyakoko.ro/api` and the exact redirect URI `kokoro://oauth/callback`. This URI is the shared backend contract for Android, iOS, Windows, macOS and Linux. This repository implements the Electron desktop client (Windows, macOS and Linux); it contains no Android or iOS application.
+KokoroBox Desktop uses `https://amamiyakoko.ro/api` and the shared callback `kokoro://oauth/callback` on Windows, macOS, and Linux.
 
 PKCE **S256 is mandatory**. There is no `plain`, omitted-verifier, legacy-token or platform-specific callback fallback. No `API_SECRET`, `APP_AUTH_SECRET` or `OSU_CLIENT_SECRET` belongs in the client.
 
@@ -34,7 +34,7 @@ PKCE **S256 is mandatory**. There is no `plain`, omitted-verifier, legacy-token 
 
 8. Validate the Bearer token response and save `access_token`, `refresh_token`, `expires_in` and `refresh_expires_in` as one encrypted credential record before publishing the new session. Do not parse opaque tokens.
 
-The backend authorization code expires after five minutes and is single-use. A missing verifier is HTTP 400; invalid verifier syntax is 422; mismatched, expired or already-used codes are 400. Code exchange is never automatically retried, even for a timeout with an uncertain outcome. All these failures require a fresh login, with fresh random values and S256.
+The backend code expires after five minutes and is single-use. Missing, mismatched, expired, or used verifiers/codes return 400; invalid verifier syntax returns 422. Never retry code exchange, including after an uncertain timeout; start a fresh S256 login.
 
 Pending data is released on success, provider denial, explicit cancellation, timeout, browser-launch failure or a terminal exchange failure. Closing the subscription dialog cancels its pending login; the waiting screen also has a Cancel button. Merely closing a browser tab cannot be detected by `openExternal`: use Cancel or wait for the five-minute expiry. Cancelling or logging out during an in-flight exchange prevents its eventual response from restoring a session.
 
@@ -51,13 +51,7 @@ Pending data is released on success, provider denial, explicit cancellation, tim
 
 The existing Electron `safeStorage` encryption is retained (the OS-backed secure-storage abstraction). Linux without a secure keyring, including the `basic_text` backend, fails closed. The encrypted envelope contains both tokens and their absolute expiries. Writes are serialized, use a mode-0600 temporary file beside the destination, and rename over the destination without first deleting the old record. JSON/decryption errors never return decrypted input to the renderer.
 
-Refresh remains:
-
-```json
-{ "grant_type": "refresh_token", "refresh_token": "<current-refresh-token>" }
-```
-
-No verifier is sent for refresh. Concurrent requests share one refresh and await the complete credential replacement before proceeding. An access-protected request may refresh after its first 401 and replay once; refresh 401 clears the session. Explicit logout invalidates pending exchanges and clears credentials even when server revocation fails. Existing profile-cache cleanup remains in the logout IPC handler.
+Refresh sends `grant_type=refresh_token` and the current refresh token, never a verifier. Concurrent requests share one refresh and await credential replacement. A protected request may refresh after its first 401 and replay once; refresh 401 clears the session. Logout invalidates pending exchanges and clears credentials even if server revocation fails.
 
 ## Sensitive-data boundaries
 
@@ -74,7 +68,7 @@ pnpm typecheck
 pnpm exec electron-vite build
 ```
 
-OAuth tests exercise the actual client with mocked HTTP, Electron, clock and secure-storage boundaries. Coverage includes the RFC vector, random independence, URL/body contracts, state validation/expiry, callback spoofing/duplicates/replay, provider denial/cancel, browser failure, lost verifier/cold process, concurrent logins, 400/422 fail-closed behavior, cancellation during exchange/storage, single-flight refresh, token persistence ordering, 401 replay limits, and desktop delivery queue/packaging declarations.
+OAuth tests use mocked HTTP, Electron, clock, and secure storage to cover PKCE, callback validation and delivery, replay, cancellation, token persistence, 400/422 handling, and single-flight refresh.
 
 Automated callback simulations and package declaration checks **do not establish OS registration or delivery correctness on a real installation**. Before release, manually verify on installed macOS, Windows and Linux builds:
 
