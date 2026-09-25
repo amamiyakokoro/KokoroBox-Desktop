@@ -6,7 +6,7 @@
 
 A cross-platform [Mihomo](https://github.com/MetaCubeX/mihomo) desktop client with Kokoro subscriptions.
 
-[Download](https://github.com/amamiyakokoro/KokoroBox-Desktop/releases) · [Privacy](PRIVACY_POLICY.md) · [License](LICENSE)
+[Privacy](PRIVACY_POLICY.md) · [License](LICENSE)
 
 </div>
 
@@ -18,17 +18,13 @@ A cross-platform [Mihomo](https://github.com/MetaCubeX/mihomo) desktop client wi
 - Per-application **Proxy**, **Direct**, and **Block** rules
 - Searchable settings and WebDAV backup
 
-## Application routing
+## Supported platforms
 
-Application routing supports Windows 10/11 x64, macOS 13+, and Linux x64/arm64. See the
-[Windows](docs/windows-app-routing.md), [macOS](docs/macos-app-routing.md), and
-[Linux](docs/linux-app-routing.md) guides for setup requirements.
+KokoroBox is available for Windows, macOS, and Linux. Application routing supports Windows 10/11 x64, macOS 13+, and Linux x64/arm64; see the platform guides below for setup requirements.
 
-## Install and update
+## Get started
 
-Download KokoroBox for Windows, macOS, or Linux from
-[GitHub Releases](https://github.com/amamiyakokoro/KokoroBox-Desktop/releases). See the
-[release guide](docs/releases.md) for update and verification details.
+Download KokoroBox for Windows, macOS, or Linux from [GitHub Releases](https://github.com/amamiyakokoro/KokoroBox-Desktop/releases).
 
 ## Development
 
@@ -39,7 +35,11 @@ pnpm install
 pnpm dev
 ```
 
-Build and packaging instructions are in the [release guide](docs/releases.md).
+## Documentation
+
+- [Release, update, and verification guide](docs/releases.md)
+- Application routing: [Windows](docs/windows-app-routing.md), [macOS](docs/macos-app-routing.md), [Linux](docs/linux-app-routing.md)
+- [Privacy policy](PRIVACY_POLICY.md)
 
 ## License
 
