@@ -26,13 +26,9 @@ Application routing supports Windows 10/11 x64, macOS 13+, and Linux x64/arm64. 
 
 ## Install and update
 
-Get the Windows installer (x64/ARM64), macOS DMG (Intel/Apple Silicon), or Linux package
-(x64/ARM64) from [GitHub Releases](https://github.com/amamiyakokoro/KokoroBox-Desktop/releases).
-On macOS, drag KokoroBox into Applications. Windows installers are currently unsigned.
-
-Choose **Stable** or **Rolling** in Application settings. macOS and Windows update in the app;
-Linux updates through the system package manager. See the [macOS update guide](docs/macos-updates.md)
-and [release guide](docs/releases.md) for details.
+Download KokoroBox for Windows, macOS, or Linux from
+[GitHub Releases](https://github.com/amamiyakokoro/KokoroBox-Desktop/releases). See the
+[release guide](docs/releases.md) for update and verification details.
 
 ## Development
 
