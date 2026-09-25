@@ -12,7 +12,7 @@ import {
   getAppRoutingStatusMessage
 } from '@renderer/utils/app-routing-status'
 import { isAppRoutingRuleEffectivelyEnabled } from '../../../../shared/app-routing'
-import { SiderIconButton, SiderStatusCard } from './sider-surfaces'
+import { SiderIconButton, SiderStatusCard, SiderStatusRow } from './sider-surfaces'
 
 interface Props {
   iconOnly?: boolean
@@ -60,6 +60,10 @@ const AppRoutingCard: React.FC<Props> = ({ iconOnly = false }) => {
   const enabledRuleCount = config
     ? config.rules.filter((rule) => isAppRoutingRuleEffectivelyEnabled(config, rule)).length
     : 0
+  const applicationCountLabel =
+    enabledRuleCount === 1
+      ? tr('{0} application', [enabledRuleCount])
+      : tr('{0} applications', [enabledRuleCount])
   const runtimeLabel = status
     ? getAppRoutingStatusLabel(status)
     : config?.enabled
@@ -115,14 +119,15 @@ const AppRoutingCard: React.FC<Props> = ({ iconOnly = false }) => {
       <SiderStatusCard
         icon={<MdOutlineAppShortcut />}
         title={tr('Application routing')}
-        description={
-          enabledRuleCount === 1
-            ? tr('{0} application', [enabledRuleCount])
-            : tr('{0} applications', [enabledRuleCount])
+        metadata={
+          <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5 text-xs leading-4">
+            <span className="shrink-0 whitespace-nowrap text-muted">{applicationCountLabel}</span>
+            <SiderStatusRow allowTextWrap className="max-w-full shrink-0" tone={statusTone}>
+              {runtimeLabel}
+            </SiderStatusRow>
+          </div>
         }
-        status={runtimeLabel}
-        statusTone={statusTone}
-        statusIndicator
+        metadataCanWrap
         active={match}
         onPress={() => navigate('/app-routing')}
         details={

@@ -28,6 +28,7 @@ interface SiderStatusCardProps extends Omit<SiderNavItemProps, 'onPress'> {
   statusTitle?: string
   details?: React.ReactNode
   metadata?: React.ReactNode
+  metadataCanWrap?: boolean
   metadataSeparator?: React.ReactNode
   prioritizeDescription?: boolean
   showChevron?: boolean
@@ -57,17 +58,23 @@ const siderActiveIconButtonClassName =
   'border border-accent/45 bg-accent-soft/55 text-accent-soft-foreground ring-1 ring-inset ring-accent/15 hover:border-accent/55 hover:bg-accent-soft/75'
 
 interface SiderStatusRowProps {
+  allowTextWrap?: boolean
   children: React.ReactNode
   className?: string
   tone?: SiderStatusTone
 }
 
 export const SiderStatusRow: React.FC<SiderStatusRowProps> = ({
+  allowTextWrap = false,
   children,
   className,
   tone = 'default'
 }) => (
-  <KokoStatusIndicator className={className} tone={kokoStatusTone(tone)}>
+  <KokoStatusIndicator
+    allowTextWrap={allowTextWrap}
+    className={className}
+    tone={kokoStatusTone(tone)}
+  >
     {children}
   </KokoStatusIndicator>
 )
@@ -367,6 +374,7 @@ export const SiderStatusCard: React.FC<SiderStatusCardProps> = ({
   statusTitle,
   details,
   metadata,
+  metadataCanWrap = false,
   metadataSeparator = '·',
   prioritizeDescription = false,
   showChevron,
@@ -379,7 +387,10 @@ export const SiderStatusCard: React.FC<SiderStatusCardProps> = ({
     onPress &&
       'focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-accent',
     metadata
-      ? 'grid grid-cols-[2rem_minmax(0,1fr)_2rem] grid-rows-[1.25rem_1rem] items-center gap-x-2.5 gap-y-0.5'
+      ? cn(
+          'grid grid-cols-[2rem_minmax(0,1fr)_2rem] items-center gap-x-2.5 gap-y-0.5',
+          metadataCanWrap ? 'grid-rows-[1.25rem_auto]' : 'grid-rows-[1.25rem_1rem]'
+        )
       : 'flex items-center gap-2.5'
   )
   const primaryContent = (
