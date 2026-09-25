@@ -32,23 +32,21 @@ function collectTsxFiles(directory: string): string[] {
   })
 }
 
-test('sidebar connection counts follow live snapshots and retain up to 200 recently closed IDs', () => {
+test('sidebar connection counts show only closures in the latest live snapshot', () => {
   let counts = emptySiderConnectionCounts()
   counts = updateSiderConnectionCounts(counts, [{ id: 'a' }, { id: 'b' }])
   assert.deepEqual([counts.active, counts.closed], [2, 0])
 
   counts = updateSiderConnectionCounts(counts, [{ id: 'b' }, { id: 'c' }])
   assert.deepEqual([counts.active, counts.closed], [2, 1])
+  counts = updateSiderConnectionCounts(counts, [{ id: 'b' }, { id: 'c' }])
+  assert.deepEqual([counts.active, counts.closed], [2, 0])
   counts = updateSiderConnectionCounts(counts, [{ id: 'a' }, { id: 'a' }])
   assert.deepEqual([counts.active, counts.closed], [1, 2])
-
-  for (let index = 0; index < 205; index += 1) {
-    counts = updateSiderConnectionCounts(counts, [{ id: `item-${index}` }])
-  }
   counts = updateSiderConnectionCounts(counts, [])
-  assert.deepEqual([counts.active, counts.closed], [0, 200])
-  assert.equal(counts.closedIds.has('item-204'), true)
-  assert.equal(counts.closedIds.has('b'), false)
+  assert.deepEqual([counts.active, counts.closed], [0, 1])
+  counts = updateSiderConnectionCounts(counts, [])
+  assert.deepEqual([counts.active, counts.closed], [0, 0])
 })
 
 test('settings drafts merge nested objects and replace arrays without mutating the source', () => {
