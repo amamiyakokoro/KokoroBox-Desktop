@@ -120,14 +120,16 @@ const AppRoutingCard: React.FC<Props> = ({ iconOnly = false }) => {
         icon={<MdOutlineAppShortcut />}
         title={tr('Application routing')}
         metadata={
-          <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5 text-xs leading-4">
+          <div className="flex min-w-0 flex-nowrap items-center gap-1.5 whitespace-nowrap text-xs leading-4">
             <span className="shrink-0 whitespace-nowrap text-muted">{applicationCountLabel}</span>
-            <SiderStatusRow allowTextWrap className="max-w-full shrink-0" tone={statusTone}>
+            <SiderStatusRow
+              className="shrink-0 [&>span:last-child]:overflow-visible [&>span:last-child]:text-clip"
+              tone={statusTone}
+            >
               {runtimeLabel}
             </SiderStatusRow>
           </div>
         }
-        metadataCanWrap
         active={match}
         onPress={() => navigate('/app-routing')}
         details={

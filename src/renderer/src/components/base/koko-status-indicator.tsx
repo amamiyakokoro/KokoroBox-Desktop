@@ -18,7 +18,6 @@ const statusTextClasses: Record<KokoStatusTone, string> = {
 }
 
 interface KokoStatusIndicatorProps {
-  allowTextWrap?: boolean
   children: React.ReactNode
   className?: string
   title?: string
@@ -26,7 +25,6 @@ interface KokoStatusIndicatorProps {
 }
 
 export const KokoStatusIndicator: React.FC<KokoStatusIndicatorProps> = ({
-  allowTextWrap = false,
   children,
   className,
   title,
@@ -34,8 +32,7 @@ export const KokoStatusIndicator: React.FC<KokoStatusIndicatorProps> = ({
 }) => (
   <span
     className={cn(
-      'inline-flex min-w-0 gap-2 text-xs leading-4',
-      allowTextWrap ? 'min-h-4 items-start' : 'h-4 items-center',
+      'inline-flex h-4 min-w-0 items-center gap-2 text-xs leading-4',
       statusTextClasses[tone],
       className
     )}
@@ -44,12 +41,8 @@ export const KokoStatusIndicator: React.FC<KokoStatusIndicatorProps> = ({
   >
     <span
       aria-hidden="true"
-      className={cn(
-        'size-2 shrink-0 rounded-full',
-        allowTextWrap && 'mt-1',
-        statusDotClasses[tone]
-      )}
+      className={cn('size-2 shrink-0 rounded-full', statusDotClasses[tone])}
     />
-    <span className={cn('min-w-0', allowTextWrap ? 'break-words' : 'truncate')}>{children}</span>
+    <span className="min-w-0 truncate">{children}</span>
   </span>
 )
