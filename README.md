@@ -16,7 +16,7 @@ A cross-platform [Mihomo](https://github.com/MetaCubeX/mihomo) desktop client wi
 - Mihomo profiles, system proxy, TUN, DNS, and sniffing
 - Kokoro account and subscriptions with osu! sign-in, custom rules, and automatic refresh
 - Per-application **Proxy**, **Direct**, and **Block** rules
-- Searchable settings, WebDAV backup, and English, Simplified Chinese, and Traditional Chinese interfaces
+- Searchable settings and WebDAV backup
 
 ## Application routing
 
