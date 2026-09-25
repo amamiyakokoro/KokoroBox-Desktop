@@ -6,6 +6,7 @@ import {
   OverviewConnectionAction,
   OverviewPublicIp,
   OverviewRoutingChip,
+  OverviewActiveChips,
   OverviewConfiguredChips,
   OverviewStatusLine,
   OverviewSubscriptionChips,
@@ -25,7 +26,10 @@ import {
   parseOverviewTrafficHistory,
   pruneOverviewTrafficHistory
 } from '../src/renderer/src/components/home/overview-traffic-chart.tsx'
-import { configuredOverviewFeatures } from '../src/renderer/src/utils/home-overview.ts'
+import {
+  activeOverviewFeatures,
+  configuredOverviewFeatures
+} from '../src/renderer/src/utils/home-overview.ts'
 import {
   TopActiveAppContent,
   metadataForTopActiveApp,
@@ -118,15 +122,64 @@ test('service status has a semantic indicator independent of Mihomo runtime', ()
   assert.doesNotMatch(html, /Direct run|System service/)
 })
 
-test('configured features include application routing independently of Service state', () => {
+test('runtime chips report only confirmed active behavior and the DNS mode actually generated', () => {
+  const features = activeOverviewFeatures({
+    coreRunning: true,
+    tunEnabled: true,
+    dnsEnabled: true,
+    dnsMode: 'fake-ip',
+    systemProxyConfirmed: true,
+    appRoutingRunning: true
+  })
+  assert.deepEqual(features, ['tun', 'fake-ip', 'sysproxy', 'app-routing'])
+  const html = renderToStaticMarkup(<OverviewActiveChips features={features} />)
+  for (const label of ['TUN', 'Fake IP', 'System proxy', 'App routing']) {
+    assert.match(html, new RegExp(`>${label}<`))
+  }
+
+  assert.deepEqual(
+    activeOverviewFeatures({
+      coreRunning: true,
+      tunEnabled: false,
+      dnsEnabled: true,
+      dnsMode: 'redir-host',
+      systemProxyConfirmed: null,
+      appRoutingRunning: false
+    }),
+    ['redir-host']
+  )
+  assert.deepEqual(
+    activeOverviewFeatures({
+      coreRunning: false,
+      tunEnabled: true,
+      dnsEnabled: true,
+      dnsMode: 'fake-ip',
+      systemProxyConfirmed: null,
+      appRoutingRunning: true
+    }),
+    []
+  )
+  assert.deepEqual(
+    activeOverviewFeatures({
+      coreRunning: true,
+      dnsEnabled: true,
+      dnsMode: 'normal',
+      systemProxyConfirmed: false,
+      appRoutingRunning: false
+    }),
+    ['dns']
+  )
+})
+
+test('configured features are distinct from runtime activity', () => {
   const features = configuredOverviewFeatures({
     proxyEnabled: true,
     dnsConfigured: true,
     platform: 'darwin',
     tunEnabled: true,
     coreRunning: true,
-    appRoutingRunning: true,
-    protectedApplicationCount: 2
+    appRoutingConfigured: true,
+    configuredRuleCount: 2
   })
   assert.deepEqual(features, [
     { kind: 'proxy' },
@@ -145,7 +198,7 @@ test('configured features include application routing independently of Service s
       platform: 'darwin',
       tunEnabled: false,
       coreRunning: false,
-      appRoutingRunning: false
+      appRoutingConfigured: false
     }),
     []
   )
@@ -156,8 +209,8 @@ test('configured features include application routing independently of Service s
       platform: 'darwin',
       tunEnabled: false,
       coreRunning: false,
-      appRoutingRunning: true,
-      protectedApplicationCount: 1
+      appRoutingConfigured: true,
+      configuredRuleCount: 1
     }),
     [{ kind: 'app-routing', count: 1 }]
   )

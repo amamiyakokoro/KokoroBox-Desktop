@@ -5,7 +5,7 @@ import { tr } from '../../../../shared/i18n'
 import { maskPublicIp } from '../../../../shared/home'
 import { calcTraffic } from '../../utils/calc'
 import { getOutboundModeLabel } from '../sider/outbound-mode'
-import type { OverviewConfiguredFeature } from '../../utils/home-overview'
+import type { OverviewActiveFeature, OverviewConfiguredFeature } from '../../utils/home-overview'
 import { KokoStatusIndicator, type KokoStatusTone } from '../base/koko-status-indicator'
 
 export function OverviewChipGroup({ children }: { children: ReactNode }) {
@@ -254,6 +254,27 @@ export function OverviewConfiguredChips({ features }: { features: OverviewConfig
               </span>
             )}
           </Chip.Label>
+        </Chip>
+      ))}
+    </OverviewChipGroup>
+  )
+}
+
+export function OverviewActiveChips({ features }: { features: OverviewActiveFeature[] }) {
+  if (features.length === 0) return null
+  const labels: Record<OverviewActiveFeature, string> = {
+    tun: 'TUN',
+    'fake-ip': tr('Fake IP'),
+    'redir-host': 'Redir-Host',
+    dns: 'DNS',
+    sysproxy: tr('System proxy'),
+    'app-routing': tr('App routing')
+  }
+  return (
+    <OverviewChipGroup>
+      {features.map((feature) => (
+        <Chip key={feature} size="sm" variant="soft" color="accent">
+          {labels[feature]}
         </Chip>
       ))}
     </OverviewChipGroup>

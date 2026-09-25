@@ -291,6 +291,7 @@ export const messages: Readonly<Record<string, string>> = {
   '{0} groups': '{0} 个组',
   'Quick controls': '快速控制',
   'Current status': '当前状态',
+  'No active features confirmed': '没有已确认启用的功能',
   Navigation: '导航',
   'Application routing supports at most 64 groups': '应用程序规则组最多支持 64 个',
   'The selected folder contains no .exe files to add': '所选文件夹中没有可添加的 .exe',

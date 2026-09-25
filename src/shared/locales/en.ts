@@ -294,6 +294,7 @@ export const messages: Readonly<Record<string, string>> = {
   '{0} groups': '{0} groups',
   'Quick controls': 'Quick controls',
   'Current status': 'Current status',
+  'No active features confirmed': 'No active features confirmed',
   Navigation: 'Navigation',
   'Application routing supports at most 64 groups':
     'Application routing supports at most 64 groups',

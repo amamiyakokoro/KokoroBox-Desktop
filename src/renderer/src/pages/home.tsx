@@ -16,6 +16,7 @@ import {
 import { Link } from 'react-router-dom'
 import useSWR from 'swr'
 import { getLocale, tr } from '../../../shared/i18n'
+import { isAppRoutingRuleEffectivelyEnabled } from '../../../shared/app-routing'
 import {
   displayServiceVersion,
   homeBackgroundChoice,
@@ -50,6 +51,7 @@ import {
   OverviewPublicIp,
   overviewConnectionLabel,
   OverviewRoutingChip,
+  OverviewActiveChips,
   OverviewConfiguredChips,
   OverviewStat,
   OverviewStatusLine,
@@ -59,6 +61,7 @@ import {
   formatOverviewBytes
 } from '@renderer/components/home/overview-parts'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
+import { useSysProxyOperation } from '@renderer/hooks/use-sysproxy-operation'
 import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'
 import { useGroups } from '@renderer/hooks/use-groups'
 import { useHomeDefaultBackgroundSwitch } from '@renderer/hooks/use-home-default-background'
@@ -77,16 +80,20 @@ import {
   type RememberedTopApplication,
   topActiveApplication
 } from '@renderer/utils/home-connections'
-import { configuredOverviewFeatures } from '@renderer/utils/home-overview'
+import { activeOverviewFeatures, configuredOverviewFeatures } from '@renderer/utils/home-overview'
 import { platform } from '@renderer/utils/init'
 import { nextProfileUpdateAt } from '../../../shared/profile-update'
 import { homeBuiltInImages } from '@renderer/utils/home-background-assets'
 import {
   getAppRoutingStatus,
+  getAppRoutingConfig,
   getHomeBackgroundDataUrl,
   getNetworkCardBackgroundDataUrl,
   getHomePublicIp,
   getHomeServiceVersion,
+  getRuntimeConfig,
+  getSystemProxyEnabled,
+  mihomoConfig,
   mihomoVersion,
   serviceStatus,
   startHomeNetworkObservation,
@@ -161,6 +168,7 @@ function countryLabel(info?: PublicIpInfo): string {
 
 const Home = () => {
   const { appConfig } = useAppConfig()
+  const systemProxyOperation = useSysProxyOperation()
   const { controledMihomoConfig } = useControledMihomoConfig()
   const { profileConfig } = useProfileConfig()
   const { groups = [] } = useGroups()
@@ -177,7 +185,17 @@ const Home = () => {
     serviceState === 'running' ? 'homeServiceVersion' : null,
     getHomeServiceVersion
   )
-  const { data: routingStatus } = useSWR('sidebarAppRoutingStatus', getAppRoutingStatus)
+  const { data: observedSystemProxyEnabled } = useSWR(
+    serviceState === 'running' ? ['homeSystemProxyEnabled', systemProxyOperation.revision] : null,
+    getSystemProxyEnabled,
+    { refreshInterval: 5000 }
+  )
+  const { data: routingStatus } = useSWR('sidebarAppRoutingStatus', getAppRoutingStatus, {
+    refreshInterval: 5000
+  })
+  const { data: routingConfig } = useSWR('sidebarAppRoutingConfig', getAppRoutingConfig, {
+    refreshInterval: 5000
+  })
   const [publicIpSnapshot, setPublicIpSnapshot] = useState<PublicIpSnapshot>({ stale: true })
   const publicIp = publicIpSnapshot.info
   const [refreshingIp, setRefreshingIp] = useState(false)
@@ -218,6 +236,18 @@ const Home = () => {
   })
   const [trafficNow, setTrafficNow] = useState(Date.now())
   const [coreStopped, setCoreStopped] = useState(false)
+  const [coreEpoch, setCoreEpoch] = useState(0)
+  const runtimeQueryKey = !coreStopped && !coreError && coreVersion ? coreEpoch : null
+  const { data: controllerRuntime, error: controllerRuntimeError } = useSWR(
+    runtimeQueryKey === null ? null : ['homeControllerRuntime', runtimeQueryKey],
+    mihomoConfig,
+    { refreshInterval: 10_000 }
+  )
+  const { data: generatedRuntime, error: generatedRuntimeError } = useSWR(
+    runtimeQueryKey === null ? null : ['homeGeneratedRuntime', runtimeQueryKey],
+    getRuntimeConfig,
+    { refreshInterval: 10_000 }
+  )
   const [now, setNow] = useState(Date.now())
   const observedIp = useRef<string | undefined>(undefined)
   const ipRequestGeneration = useRef(0)
@@ -304,6 +334,7 @@ const Home = () => {
     const refresh = (): void => setRefreshSignal((current) => current + 1)
     const coreStarted = (): void => {
       setCoreStopped(false)
+      setCoreEpoch((epoch) => epoch + 1)
       setRates({ up: 0, down: 0 })
       setConnections(undefined)
       setConnectionSampleAt(undefined)
@@ -317,6 +348,7 @@ const Home = () => {
     }
     const coreStoppedHandler = (): void => {
       setCoreStopped(true)
+      setCoreEpoch((epoch) => epoch + 1)
       setRates({ up: 0, down: 0 })
       setConnections(undefined)
       setConnectionSampleAt(undefined)
@@ -583,9 +615,25 @@ const Home = () => {
     platform,
     tunEnabled: Boolean(controledMihomoConfig?.tun?.enable),
     coreRunning: runtime.mihomo !== 'stopped',
-    appRoutingRunning: routingStatus?.state === 'running',
-    protectedApplicationCount: routingStatus?.protectedApplicationCount
+    appRoutingConfigured: routingConfig?.enabled === true,
+    configuredRuleCount: routingConfig?.rules.filter((rule) =>
+      isAppRoutingRuleEffectivelyEnabled(routingConfig, rule)
+    ).length
   })
+  const activeFeatures = activeOverviewFeatures({
+    coreRunning: runtime.mihomo !== 'stopped',
+    tunEnabled: controllerRuntime?.tun?.enable,
+    dnsEnabled: generatedRuntime?.dns?.enable,
+    dnsMode: generatedRuntime?.dns?.['enhanced-mode'],
+    systemProxyConfirmed: observedSystemProxyEnabled ?? systemProxyOperation.confirmed,
+    appRoutingRunning: routingStatus?.state === 'running' && routingStatus.mihomoAvailable
+  })
+  const runtimeFeaturesLoading =
+    runtime.mihomo !== 'stopped' &&
+    (!controllerRuntime || !generatedRuntime) &&
+    !controllerRuntimeError &&
+    !generatedRuntimeError
+  const runtimeFeaturesUnavailable = Boolean(controllerRuntimeError || generatedRuntimeError)
   const mihomoVersionLabel = normalizeCoreVersion(coreVersion?.version)
   const serviceVersionLabel = displayServiceVersion(serviceVersion)
   const exitIsLastKnown = publicIpSnapshot.stale || (!coreLoading && runtime.mihomo === 'stopped')
@@ -844,6 +892,20 @@ const Home = () => {
                 }
                 valueClassName="text-[1.35rem]"
               />
+              <div className="mt-4">
+                <div className="mb-1 text-xs text-muted">{tr('Current status')}</div>
+                {activeFeatures.length > 0 ? (
+                  <OverviewActiveChips features={activeFeatures} />
+                ) : (
+                  <div className="home-secondary-value text-xs text-muted">
+                    {runtimeFeaturesLoading
+                      ? tr('Loading')
+                      : runtimeFeaturesUnavailable
+                        ? tr('Unavailable')
+                        : tr('No active features confirmed')}
+                  </div>
+                )}
+              </div>
               <div className="home-overview-subpanel mt-4 rounded-xl px-3 py-2.5">
                 <OverviewStatusLine
                   label={tr('KokoroBox Service')}

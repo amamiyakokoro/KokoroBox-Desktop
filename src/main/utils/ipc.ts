@@ -117,7 +117,8 @@ import {
   restartService,
   openServiceSystemSettings
 } from '../service/manager'
-import { getServiceMeta, patchCoreProfile } from '../service/api'
+import { getProxyStatus, getServiceMeta, patchCoreProfile } from '../service/api'
+import { readSystemProxyEnabled } from '../../shared/sysproxy-operation'
 import { coreLogPath, findSystemMihomo, logDir } from './dirs'
 import { systemCoreOnlyBuild } from '../../shared/build-flags'
 import {
@@ -306,6 +307,10 @@ export function registerIpcMainHandlers(): void {
   ipcMain.handle('stopHomeNetworkObservation', () => stopHomeNetworkObservation())
   ipcMain.handle('mihomoVersion', ipcErrorWrapper(mihomoVersion))
   ipcMain.handle('mihomoConfig', ipcErrorWrapper(mihomoConfig))
+  ipcMain.handle(
+    'getSystemProxyEnabled',
+    ipcErrorWrapper(async () => readSystemProxyEnabled(await getProxyStatus()))
+  )
   ipcMain.handle('mihomoCloseConnection', (_e, id) => ipcErrorWrapper(mihomoCloseConnection)(id))
   ipcMain.handle('mihomoCloseConnections', (_e, name) =>
     ipcErrorWrapper(mihomoCloseConnections)(name)

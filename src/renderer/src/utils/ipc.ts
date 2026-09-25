@@ -62,6 +62,10 @@ export async function mihomoConfig(): Promise<ControllerConfigs> {
   return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('mihomoConfig'))
 }
 
+export async function getSystemProxyEnabled(): Promise<boolean | null> {
+  return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('getSystemProxyEnabled'))
+}
+
 export async function mihomoCloseConnection(id: string): Promise<void> {
   return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('mihomoCloseConnection', id))
 }

@@ -292,6 +292,7 @@ export const messages: Readonly<Record<string, string>> = {
   '{0} groups': '{0} 個群組',
   'Quick controls': '快速控制',
   'Current status': '目前狀態',
+  'No active features confirmed': '沒有已確認啟用的功能',
   Navigation: '導覽',
   'Application routing supports at most 64 groups': '應用程式規則群組最多支援 64 個',
   'The selected folder contains no .exe files to add': '所選資料夾中沒有可新增的 .exe',
