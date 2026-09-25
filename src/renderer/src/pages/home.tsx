@@ -82,7 +82,10 @@ import {
 } from '@renderer/utils/home-connections'
 import { activeOverviewFeatures, configuredOverviewFeatures } from '@renderer/utils/home-overview'
 import { platform } from '@renderer/utils/init'
+import { notify } from '@renderer/utils/notification'
+import { repairServiceAndPromptRestart } from '@renderer/utils/service-repair'
 import { nextProfileUpdateAt } from '../../../shared/profile-update'
+import { systemCoreOnlyBuild } from '../../../shared/build-flags'
 import { homeBuiltInImages } from '@renderer/utils/home-background-assets'
 import {
   getAppRoutingStatus,
@@ -95,6 +98,7 @@ import {
   getSystemProxyEnabled,
   mihomoConfig,
   mihomoVersion,
+  relaunchApp,
   serviceStatus,
   startHomeNetworkObservation,
   stopHomeNetworkObservation
@@ -199,6 +203,8 @@ const Home = () => {
   const [publicIpSnapshot, setPublicIpSnapshot] = useState<PublicIpSnapshot>({ stale: true })
   const publicIp = publicIpSnapshot.info
   const [refreshingIp, setRefreshingIp] = useState(false)
+  const [repairingService, setRepairingService] = useState(false)
+  const [serviceRestartRequired, setServiceRestartRequired] = useState(false)
   const [refreshSignal, setRefreshSignal] = useState(0)
   const [revealed, setRevealed] = useState(false)
   const [backgroundUrl, setBackgroundUrl] = useState<string>()
@@ -645,6 +651,21 @@ const Home = () => {
         : serviceExpected && serviceState
           ? 'danger'
           : 'neutral'
+  const serviceRepairAvailable =
+    !systemCoreOnlyBuild &&
+    (serviceState === 'not-installed' || (serviceExpected && serviceState === 'unknown'))
+  const handleRepairService = async (): Promise<void> => {
+    setRepairingService(true)
+    try {
+      await repairServiceAndPromptRestart()
+      setServiceRestartRequired(true)
+      void refreshService()
+    } catch (error) {
+      notify(error, { variant: 'danger' })
+    } finally {
+      setRepairingService(false)
+    }
+  }
   const trafficState = overviewTrafficState(history)
   const trafficRangeSeconds = overviewTrafficRangeSeconds(history, trafficNow)
   const hasTrafficSnapshot = trafficState !== 'unavailable'
@@ -909,10 +930,38 @@ const Home = () => {
               <div className="home-overview-subpanel mt-4 rounded-xl px-3 py-2.5">
                 <OverviewStatusLine
                   label={tr('KokoroBox Service')}
-                  status={serviceStateLabel(runtime.service as ServiceState | undefined)}
+                  status={
+                    serviceExpected && serviceState === 'unknown'
+                      ? tr('The service may not be installed')
+                      : serviceStateLabel(runtime.service as ServiceState | undefined)
+                  }
                   tone={serviceTone}
                   version={serviceState === 'running' ? serviceVersionLabel : undefined}
                 />
+                {(serviceRepairAvailable || serviceRestartRequired) && (
+                  <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-2">
+                    {serviceRestartRequired && (
+                      <span className="text-xs text-muted">
+                        {tr('Restart KokoroBox to apply the service repair.')}
+                      </span>
+                    )}
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      isPending={repairingService}
+                      isDisabled={repairingService}
+                      onPress={() => {
+                        if (serviceRestartRequired) {
+                          void relaunchApp().catch((error) => notify(error, { variant: 'danger' }))
+                        } else {
+                          void handleRepairService()
+                        }
+                      }}
+                    >
+                      {serviceRestartRequired ? tr('Restart app') : tr('Repair service')}
+                    </Button>
+                  </div>
+                )}
                 {configuredFeatures.length > 0 && (
                   <div className="mt-3">
                     <div className="mb-1 text-xs text-muted">{tr('Configured')}</div>

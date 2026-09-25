@@ -856,6 +856,8 @@ export const messages: Readonly<Record<string, string>> = {
   'Install service': 'Install service',
   'Repair service': 'Repair service',
   'Service installed or repaired': 'Service installed or repaired',
+  'Restart KokoroBox to apply the service repair.':
+    'Restart KokoroBox to apply the service repair.',
   'macOS privileged features require KokoroBox Service. Install or repair the service.':
     'macOS privileged features require KokoroBox Service. Install or repair the service.',
   'macOS TUN requires the core to run through KokoroBox Service.':

@@ -14,7 +14,6 @@ import PubSub from 'pubsub-js'
 import {
   findSystemMihomo,
   initService,
-  installService,
   mihomoUpgrade,
   restartCore,
   restartService,
@@ -23,6 +22,7 @@ import {
 } from '@renderer/utils/ipc'
 import React, { useEffect, useState } from 'react'
 import { notify } from '@renderer/utils/notification'
+import { repairServiceAndPromptRestart } from '@renderer/utils/service-repair'
 import { systemCoreOnlyBuild } from '../../../../shared/build-flags'
 
 let systemCorePathsCache: string[] | null = null
@@ -160,8 +160,7 @@ const CoreRuntimeConfig: React.FC<Props> = ({
           {...(!systemCoreOnlyBuild
             ? {
                 onInstall: async () => {
-                  await installService()
-                  notify(tr('Service installed or repaired'))
+                  await repairServiceAndPromptRestart()
                 },
                 onUninstall: async () => {
                   await uninstallService()
