@@ -13,7 +13,11 @@ import {
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { useHomeDefaultBackgroundSwitch } from '@renderer/hooks/use-home-default-background'
 import { homeBuiltInImages } from '@renderer/utils/home-background-assets'
-import { chooseHomeBackground, clearHomeBackground } from '@renderer/utils/ipc'
+import {
+  chooseHomeBackground,
+  clearHomeBackground,
+  getHomeBackgroundDataUrl
+} from '@renderer/utils/ipc'
 import { notify } from '@renderer/utils/notification'
 import SettingCard from '../base/base-setting-card'
 import SettingItem from '../base/base-setting-item'
@@ -61,12 +65,55 @@ export default function HomeBackgroundSettings() {
   const { appConfig, patchAppConfig, mutateAppConfig } = useAppConfig()
   const background = appConfig?.homeBackground
   const choice = homeBackgroundChoice(appConfig)
+  const [preview, setPreview] = useState<{ file: string; url: string }>()
+  const previewUrl =
+    choice === 'custom' && preview?.file === background?.file ? preview?.url : undefined
   const { selectedId, pending, switchSelectedBackground } = useHomeDefaultBackgroundSwitch()
   const resolved = resolveHomeBackground(
     appConfig ? { ...appConfig, homeDefaultBackgroundId: selectedId } : undefined,
     undefined,
     homeBuiltInImages
   )
+
+  useEffect(() => {
+    const file = background?.file
+    if (choice !== 'custom' || !file) {
+      setPreview(undefined)
+      return
+    }
+    let active = true
+    void getHomeBackgroundDataUrl()
+      .then((url) => {
+        if (active) setPreview(url ? { file, url } : undefined)
+      })
+      .catch(() => {
+        if (active) setPreview(undefined)
+      })
+    return () => {
+      active = false
+    }
+  }, [background?.file, choice])
+
+  const chooseImage = async (): Promise<void> => {
+    try {
+      if (await chooseHomeBackground()) mutateAppConfig()
+    } catch (error) {
+      notify(error, { variant: 'danger' })
+    }
+  }
+  const selectBackground = async (next: string): Promise<void> => {
+    if (next === choice) return
+    if (next === 'custom') {
+      await chooseImage()
+      return
+    }
+    try {
+      await clearHomeBackground(next === 'none')
+      mutateAppConfig()
+    } catch (error) {
+      notify(error, { variant: 'danger' })
+    }
+  }
 
   const patchBackground = (patch: Partial<HomeBackground>): void => {
     if (!background) return
@@ -90,58 +137,28 @@ export default function HomeBackgroundSettings() {
   return (
     <SettingCard header={tr('Home background')}>
       <SettingItem title={tr('Image')} divider={choice === 'custom'}>
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-sm text-muted">
-            {choice === 'custom'
-              ? tr('Custom image')
-              : choice === 'none'
-                ? tr('None')
-                : tr('Default image')}
-          </span>
-          <Button
-            size="sm"
-            variant="secondary"
-            onPress={async () => {
-              try {
-                if (await chooseHomeBackground()) mutateAppConfig()
-              } catch (error) {
-                notify(error, { variant: 'danger' })
-              }
-            }}
-          >
-            {choice === 'custom' ? tr('Replace image') : tr('Choose image')}
-          </Button>
-          {choice !== 'default' && (
-            <Button
-              size="sm"
-              variant="ghost"
-              onPress={async () => {
-                try {
-                  await clearHomeBackground(false)
-                  mutateAppConfig()
-                } catch (error) {
-                  notify(error, { variant: 'danger' })
-                }
-              }}
-            >
-              {tr('Use default')}
-            </Button>
-          )}
-          {choice !== 'none' && (
-            <Button
-              size="sm"
-              variant="ghost"
-              onPress={async () => {
-                try {
-                  await clearHomeBackground(true)
-                  mutateAppConfig()
-                } catch (error) {
-                  notify(error, { variant: 'danger' })
-                }
-              }}
-            >
-              {tr('None')}
-            </Button>
+        <div className="flex w-full min-w-0 flex-col items-end gap-2">
+          <KokoSegmentedControl
+            ariaLabel={tr('Home background')}
+            selectedKey={choice}
+            options={[
+              { id: 'none', label: tr('None') },
+              { id: 'default', label: tr('Default image') },
+              { id: 'custom', label: tr('Custom image') }
+            ]}
+            onChange={(next) => void selectBackground(next)}
+          />
+          {choice === 'custom' && (
+            <div className="flex max-w-full flex-wrap items-center justify-end gap-2">
+              {previewUrl && (
+                <div className="h-14 w-28 shrink-0 overflow-hidden rounded-lg border border-separator bg-surface-secondary/40">
+                  <img src={previewUrl} alt="" className="h-full w-full object-contain" />
+                </div>
+              )}
+              <Button size="sm" variant="secondary" onPress={() => void chooseImage()}>
+                {tr('Replace image')}
+              </Button>
+            </div>
           )}
         </div>
       </SettingItem>

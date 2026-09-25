@@ -56,12 +56,7 @@ export default function NetworkCardBackgroundSettings() {
   return (
     <SettingCard header={tr('Network card background')}>
       <SettingItem title={tr('Image')}>
-        <div className="flex flex-wrap items-center gap-3">
-          {previewUrl && (
-            <div className="h-16 w-40 shrink-0 overflow-hidden rounded-lg border border-separator bg-surface">
-              <img src={previewUrl} alt="" className="h-full w-full object-cover" />
-            </div>
-          )}
+        <div className="flex w-full min-w-0 flex-col items-end gap-2">
           <KokoSegmentedControl
             ariaLabel={tr('Network card background')}
             selectedKey={selected}
@@ -79,24 +74,31 @@ export default function NetworkCardBackgroundSettings() {
               }
             }}
           />
-          <Button size="sm" variant="secondary" onPress={() => void chooseImage()}>
-            {hasImage ? tr('Replace image') : tr('Choose image')}
-          </Button>
-          {hasImage && (
-            <Button
-              size="sm"
-              variant="ghost"
-              onPress={async () => {
-                try {
-                  await clearNetworkCardBackground()
-                  mutateAppConfig()
-                } catch (error) {
-                  notify(error, { variant: 'danger' })
-                }
-              }}
-            >
-              {tr('Remove image')}
-            </Button>
+          {selected === 'custom' && (
+            <div className="flex max-w-full flex-wrap items-center justify-end gap-2">
+              {previewUrl && (
+                <div className="h-14 w-28 shrink-0 overflow-hidden rounded-lg border border-separator bg-surface-secondary/40">
+                  <img src={previewUrl} alt="" className="h-full w-full object-cover" />
+                </div>
+              )}
+              <Button size="sm" variant="secondary" onPress={() => void chooseImage()}>
+                {tr('Replace image')}
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onPress={async () => {
+                  try {
+                    await clearNetworkCardBackground()
+                    mutateAppConfig()
+                  } catch (error) {
+                    notify(error, { variant: 'danger' })
+                  }
+                }}
+              >
+                {tr('Remove image')}
+              </Button>
+            </div>
           )}
         </div>
       </SettingItem>
