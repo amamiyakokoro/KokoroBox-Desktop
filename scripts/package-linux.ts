@@ -24,7 +24,11 @@ interface BuilderConfig {
 function createSystemPackageConfig(): BuilderConfig {
   const config = parse(readFileSync('electron-builder.yml', 'utf8')) as BuilderConfig
   config.files = [...(config.files || []), '!build/linux/preinst', '!build/linux/postinst']
-  config.extraResources = []
+  // Keep notices even when native resources are supplied by system packages.
+  config.extraResources = (config.extraResources || []).filter((entry) => {
+    const from = (entry as { from?: string }).from
+    return from !== './extra/'
+  })
 
   for (const target of [config.deb, config.rpm, config.pacman]) {
     if (!target) continue

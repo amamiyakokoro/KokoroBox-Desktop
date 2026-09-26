@@ -2,6 +2,7 @@ import { resolve } from 'path'
 import { defineConfig } from 'electron-vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
+import { thirdPartyLicenses } from './scripts/third-party-licenses'
 import { systemCoreDefaultPath, systemCoreOnlyBuild, systemServicePath } from './scripts/build-env'
 
 const buildDefines = {
@@ -19,6 +20,7 @@ const omitExternalRendererResources = {
 
 export default defineConfig({
   main: {
+    plugins: [thirdPartyLicenses('main', true)],
     define: buildDefines,
     build: {
       externalizeDeps: {
@@ -27,6 +29,7 @@ export default defineConfig({
     }
   },
   preload: {
+    plugins: [thirdPartyLicenses('preload')],
     build: {
       externalizeDeps: true
     }
@@ -47,6 +50,6 @@ export default defineConfig({
         '@renderer': resolve('src/renderer/src')
       }
     },
-    plugins: [omitExternalRendererResources, react(), tailwindcss()]
+    plugins: [omitExternalRendererResources, react(), tailwindcss(), thirdPartyLicenses('renderer')]
   }
 })

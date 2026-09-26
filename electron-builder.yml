@@ -29,6 +29,14 @@ extraResources:
       - '!macos-updater{,/**/*}'
   - from: './THIRD_PARTY_NOTICES.md'
     to: 'THIRD_PARTY_NOTICES.md'
+  - from: './LICENSE.CloudflareSpeedtest'
+    to: 'LICENSE.CloudflareSpeedtest'
+  - from: './out/licenses/'
+    to: 'licenses'
+  - from: './licenses/'
+    to: 'licenses/supplemental'
+  - from: './src/renderer/src/assets/circle-flags/LICENSE.md'
+    to: 'licenses/LICENSE.circle-flags'
 protocols:
   name: 'KokoroBox URI Scheme'
   schemes:

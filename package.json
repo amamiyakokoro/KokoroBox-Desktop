@@ -50,7 +50,8 @@
     "postinstall": "pnpm run ensure:electron && electron-builder install-app-deps",
     "build:win": "electron-vite build && electron-builder --publish never --win nsis",
     "build:mac": "pnpm run prepare:macos-routing && pnpm run prepare:macos-updater && electron-vite build && electron-builder --publish never --mac",
-    "build:linux": "electron-vite build && node scripts/package-linux.ts"
+    "build:linux": "electron-vite build && node scripts/package-linux.ts",
+    "test:licenses": "tsx --test scripts/test-third-party-licenses.ts"
   },
   "dependencies": {
     "@electron-toolkit/preload": "^3.0.2",
