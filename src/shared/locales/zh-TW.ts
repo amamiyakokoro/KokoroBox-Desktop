@@ -18,12 +18,15 @@ export const messages: Readonly<Record<string, string>> = {
   'Application lifecycle': '應用程式生命週期',
   Stop: '停止',
   'Speed test failed. Check your connection and try again.': '測速失敗，請檢查連線後重試。',
-  'Test your current connection with Cloudflare. Uses about 67 MB of data.':
-    '使用 Cloudflare 測試目前連線，約使用 67 MB 流量。',
+  'Test your current connection with Cloudflare. Uses up to about 64 MB of data.':
+    '使用 Cloudflare 測試目前連線，最多約使用 64 MB 流量。',
   'Start test': '開始測速',
   Jitter: '抖動',
   'Testing speed': '測速中',
   'Speed test': '測速',
+  'Measuring latency': '正在測量延遲',
+  'Measuring download speed': '正在測量下載速度',
+  'Measuring upload speed': '正在測量上傳速度',
   'Accent color': '主題色',
   'Custom accent color': '自訂主題色',
   'Blue accent': '藍色',

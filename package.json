@@ -52,6 +52,7 @@
     "build:mac": "pnpm run prepare:macos-routing && pnpm run prepare:macos-updater && electron-vite build && electron-builder --publish never --mac",
     "build:linux": "electron-vite build && node scripts/package-linux.ts",
     "test:licenses": "tsx --test scripts/test-third-party-licenses.ts",
+    "test:speed-test": "tsx --test scripts/test-speed-test.ts",
     "test:about": "tsx --test scripts/test-about.ts"
   },
   "dependencies": {
@@ -69,7 +70,6 @@
     "yaml": "^2.9.1"
   },
   "devDependencies": {
-    "@cloudflare/speedtest": "^1.14.1",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",

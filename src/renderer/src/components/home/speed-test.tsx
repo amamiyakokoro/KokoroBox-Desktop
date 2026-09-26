@@ -1,26 +1,30 @@
 import { Button, Modal, Spinner } from '@heroui/react'
 import { useEffect, useRef, useState } from 'react'
-import type SpeedTest from '@cloudflare/speedtest'
-import type { MeasurementSummary } from '@cloudflare/speedtest'
+import {
+  runCloudflareSpeedTest,
+  type SpeedTestResult,
+  type SpeedTestPhase
+} from '../../utils/cloudflare-speed-test'
 import { LuGauge } from 'react-icons/lu'
 import { tr } from '../../../../shared/i18n'
 
 function SpeedTestDialog({ onClose }: { onClose: () => void }) {
-  const engine = useRef<SpeedTest | null>(null)
+  const engine = useRef<AbortController | null>(null)
   const generation = useRef(0)
   const [running, setRunning] = useState(false)
-  const [results, setResults] = useState<MeasurementSummary>({})
+  const [results, setResults] = useState<SpeedTestResult>({})
   const [error, setError] = useState(false)
+  const [phase, setPhase] = useState<SpeedTestPhase>('latency')
   const stop = () => {
     generation.current++
-    engine.current?.pause()
+    engine.current?.abort()
     engine.current = null
     setRunning(false)
   }
   useEffect(
     () => () => {
       generation.current++
-      engine.current?.pause()
+      engine.current?.abort()
     },
     []
   )
@@ -32,37 +36,19 @@ function SpeedTestDialog({ onClose }: { onClose: () => void }) {
     setError(false)
     setResults({})
     try {
-      const { default: CloudflareSpeedTest } = await import('@cloudflare/speedtest')
-      if (current !== generation.current) return
-      const test = new CloudflareSpeedTest({
-        autoStart: false,
-        logAimApiUrl: null,
-        logMeasurementApiUrl: null,
-        measurements: [
-          { type: 'latency', numPackets: 10 },
-          { type: 'download', bytes: 100_000, count: 3 },
-          { type: 'download', bytes: 1_000_000, count: 3 },
-          { type: 'download', bytes: 10_000_000, count: 3 },
-          { type: 'upload', bytes: 100_000, count: 3 },
-          { type: 'upload', bytes: 1_000_000, count: 3 },
-          { type: 'upload', bytes: 10_000_000, count: 3 }
-        ]
+      const controller = new AbortController()
+      engine.current = controller
+      const result = await runCloudflareSpeedTest({
+        signal: controller.signal,
+        onProgress: (next, phase) => {
+          if (current !== generation.current) return
+          setResults(next)
+          setPhase(phase)
+        }
       })
-      engine.current = test
-      test.onResultsChange = () => {
-        if (current === generation.current) setResults(test.results.getSummary())
-      }
-      test.onFinish = (result) => {
-        if (current !== generation.current) return
-        setResults(result.getSummary())
-        stop()
-      }
-      test.onError = () => {
-        if (current !== generation.current) return
-        setError(true)
-        stop()
-      }
-      test.play()
+      if (current !== generation.current) return
+      setResults(result)
+      stop()
     } catch {
       if (current !== generation.current) return
       setError(true)
@@ -94,8 +80,19 @@ function SpeedTestDialog({ onClose }: { onClose: () => void }) {
             </Modal.Header>
             <Modal.Body className="space-y-4">
               <p className="text-sm text-muted">
-                {tr('Test your current connection with Cloudflare. Uses about 67 MB of data.')}
+                {tr(
+                  'Test your current connection with Cloudflare. Uses up to about 64 MB of data.'
+                )}
               </p>
+              {running && (
+                <p className="text-sm text-muted" role="status">
+                  {phase === 'latency'
+                    ? tr('Measuring latency')
+                    : phase === 'download'
+                      ? tr('Measuring download speed')
+                      : tr('Measuring upload speed')}
+                </p>
+              )}
               <div className="grid grid-cols-2 gap-4" aria-live="polite">
                 {metrics.map(([label, value, divisor, unit]) => (
                   <div key={label} className="rounded-xl bg-surface-secondary p-3">

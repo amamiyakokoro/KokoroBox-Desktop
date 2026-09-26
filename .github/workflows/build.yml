@@ -77,6 +77,7 @@ jobs:
           cache-dependency-path: service-contract-source/go.sum
       - name: Test Desktop and pinned Service API contract
         run: bash scripts/check-service-contract.sh service-contract-source
+      - run: pnpm test:speed-test
       - run: pnpm test:about
       - run: pnpm test:licenses
       - run: pnpm test:release

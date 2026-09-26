@@ -19,12 +19,15 @@ export const messages: Readonly<Record<string, string>> = {
   Stop: 'Stop',
   'Speed test failed. Check your connection and try again.':
     'Speed test failed. Check your connection and try again.',
-  'Test your current connection with Cloudflare. Uses about 67 MB of data.':
-    'Test your current connection with Cloudflare. Uses about 67 MB of data.',
+  'Test your current connection with Cloudflare. Uses up to about 64 MB of data.':
+    'Test your current connection with Cloudflare. Uses up to about 64 MB of data.',
   'Start test': 'Start test',
   Jitter: 'Jitter',
   'Testing speed': 'Testing speed',
   'Speed test': 'Speed test',
+  'Measuring latency': 'Measuring latency',
+  'Measuring download speed': 'Measuring download speed',
+  'Measuring upload speed': 'Measuring upload speed',
   'Accent color': 'Accent color',
   'Custom accent color': 'Custom accent color',
   'Blue accent': 'Blue accent',
