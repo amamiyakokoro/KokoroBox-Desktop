@@ -927,7 +927,8 @@ export const startCore = async (
   profile?: ServiceCoreLaunchProfile
 ): Promise<Record<string, unknown>> => {
   const instance = getServiceAxios()
-  return await instance.post('/core/start', profile)
+  // Service startup includes bounded firewall reconciliation and core readiness checks.
+  return await instance.post('/core/start', profile, { timeout: 60_000 })
 }
 
 export const stopCore = async (timeoutMs?: number): Promise<Record<string, unknown>> => {
@@ -943,7 +944,7 @@ export const restartCore = async (
   profile?: ServiceCoreLaunchProfile
 ): Promise<Record<string, unknown>> => {
   const instance = getServiceAxios()
-  return await instance.post('/core/restart', profile)
+  return await instance.post('/core/restart', profile, { timeout: 60_000 })
 }
 
 export const patchCoreProfile = async (
@@ -951,6 +952,19 @@ export const patchCoreProfile = async (
 ): Promise<Record<string, unknown>> => {
   const instance = getServiceAxios()
   return await instance.patch('/core/profile', profile)
+}
+
+export async function repairServiceCoreFirewall(): Promise<void> {
+  try {
+    await getServiceAxios().post('/core/firewall/repair', undefined, { timeout: 20_000 })
+  } catch (error) {
+    if (error instanceof ServiceAPIError && error.status === 404) {
+      throw new Error(
+        tr('Update KokoroBox Service to repair firewall rules for the service-managed core.')
+      )
+    }
+    throw error
+  }
 }
 
 export const getProxyStatus = async (): Promise<Record<string, unknown>> => {

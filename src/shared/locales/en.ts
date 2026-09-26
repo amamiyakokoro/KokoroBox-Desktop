@@ -1503,6 +1503,8 @@ export const messages: Readonly<Record<string, string>> = {
   'Error details': 'Error details',
   Mirror: 'Mirror',
   'No expiration': 'No expiration',
+  'Update KokoroBox Service to repair firewall rules for the service-managed core.':
+    'Update KokoroBox Service to repair firewall rules for the service-managed core.',
   'Firewall reset': 'Firewall reset',
   Descending: 'Descending',
   Hide: 'Hide',

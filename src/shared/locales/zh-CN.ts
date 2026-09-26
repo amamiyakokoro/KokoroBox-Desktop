@@ -1462,6 +1462,8 @@ export const messages: Readonly<Record<string, string>> = {
   'Error details': '错误详情',
   Mirror: '镜像',
   'No expiration': '长期有效',
+  'Update KokoroBox Service to repair firewall rules for the service-managed core.':
+    '请更新 KokoroBox Service，以修复系统服务模式核心的防火墙规则。',
   'Firewall reset': '防火墙重设成功',
   Descending: '降序',
   Hide: '隐藏',

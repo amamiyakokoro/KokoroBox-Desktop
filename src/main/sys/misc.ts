@@ -1,3 +1,6 @@
+import { getAppConfig } from '../config'
+import { repairServiceCoreFirewall } from '../service/api'
+import { resetCoreFirewall } from '../service/core-firewall'
 import { tr } from '../../shared/i18n'
 import {
   isProtectedAppRoutingProcess,
@@ -186,13 +189,19 @@ export function openFile(type: 'profile' | 'override', id: string, ext?: 'yaml' 
 }
 
 export async function setupFirewall(): Promise<void> {
-  if (process.platform === 'win32') {
-    ensureKokoroBoxCoreFirewall(
-      mihomoCorePath('mihomo'),
-      mihomoCorePath('mihomo-alpha'),
-      exePath()
-    )
-  }
+  if (process.platform !== 'win32') return
+  const { corePermissionMode = 'elevated' } = await getAppConfig()
+  await resetCoreFirewall({
+    platform: process.platform,
+    serviceMode: corePermissionMode === 'service',
+    repairService: repairServiceCoreFirewall,
+    repairDirect: () =>
+      ensureKokoroBoxCoreFirewall(
+        mihomoCorePath('mihomo'),
+        mihomoCorePath('mihomo-alpha'),
+        exePath()
+      )
+  })
 }
 
 export function setNativeTheme(theme: 'system' | 'light' | 'dark'): void {
