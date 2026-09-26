@@ -61,6 +61,7 @@ const Connections: React.FC = () => {
     displayIcon = true,
     displayAppName = true,
     connectionGroupByProcess = false,
+    connectionRightClickRule = true,
     connectionGroupSort = 'name',
     connectionGroupDirection = 'asc'
   } = appConfig || {}
@@ -784,6 +785,7 @@ const Connections: React.FC = () => {
           displayName={displayName}
           close={closeConnection}
           onAddRule={openRule}
+          rightClickRule={connectionRightClickRule}
           index={i}
           key={itemKey}
           info={connection}
@@ -797,6 +799,7 @@ const Connections: React.FC = () => {
       selected,
       closeConnection,
       openRule,
+      connectionRightClickRule,
       appNameCache,
       findProcessMode,
       displayAppName
@@ -839,33 +842,37 @@ const Connections: React.FC = () => {
     closeGroupRef.current(key)
   }, [])
 
-  const renderGroupMember = useCallback((i: number) => {
-    const connection = flatMembersRef.current[i]
-    if (!connection) return <div style={{ minHeight: 68 }} />
-    const path = connection.metadata.processPath || ''
-    const displayName =
-      displayAppNameRef.current && path ? appNameCacheRefStable.current[path] : undefined
-    const localIndex = flatMemberLocalIndexRef.current[i] ?? 0
+  const renderGroupMember = useCallback(
+    (i: number) => {
+      const connection = flatMembersRef.current[i]
+      if (!connection) return <div style={{ minHeight: 68 }} />
+      const path = connection.metadata.processPath || ''
+      const displayName =
+        displayAppNameRef.current && path ? appNameCacheRefStable.current[path] : undefined
+      const localIndex = flatMemberLocalIndexRef.current[i] ?? 0
 
-    return (
-      <div className="pl-6" style={{ animation: 'proxy-row-in 0.15s ease both' }}>
-        <ConnectionItem
-          onAddRule={openRule}
-          setSelected={setSelected}
-          setIsDetailModalOpen={setIsDetailModalOpen}
-          selected={selectedRef.current}
-          iconUrl=""
-          displayIcon={false}
-          displayName={displayName}
-          hideProcess
-          close={closeConnectionRef.current}
-          index={localIndex}
-          key={connection.id}
-          info={connection}
-        />
-      </div>
-    )
-  }, [])
+      return (
+        <div className="pl-6" style={{ animation: 'proxy-row-in 0.15s ease both' }}>
+          <ConnectionItem
+            onAddRule={openRule}
+            rightClickRule={connectionRightClickRule}
+            setSelected={setSelected}
+            setIsDetailModalOpen={setIsDetailModalOpen}
+            selected={selectedRef.current}
+            iconUrl=""
+            displayIcon={false}
+            displayName={displayName}
+            hideProcess
+            close={closeConnectionRef.current}
+            index={localIndex}
+            key={connection.id}
+            info={connection}
+          />
+        </div>
+      )
+    },
+    [connectionRightClickRule, openRule]
+  )
 
   const renderGroupHeader = useCallback(
     (index: number) => {

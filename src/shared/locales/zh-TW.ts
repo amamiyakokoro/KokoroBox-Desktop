@@ -1,5 +1,6 @@
 // Traditional Chinese (Taiwan) localization. Keys are the canonical English source messages.
 export const messages: Readonly<Record<string, string>> = {
+  'Add rules on right-click': '右鍵新增規則',
   'Copy process name': '複製進程名稱',
   'Copy destination': '複製目標位址',
   'Copy full log': '複製整條日誌',

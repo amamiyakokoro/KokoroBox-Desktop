@@ -19,6 +19,7 @@ interface Props {
   setIsDetailModalOpen: React.Dispatch<React.SetStateAction<boolean>>
   close: (id: string) => void
   onAddRule: (connection: ControllerConnectionDetail) => void
+  rightClickRule: boolean
 }
 
 const ConnectionItemComponent: React.FC<Props> = ({
@@ -30,6 +31,7 @@ const ConnectionItemComponent: React.FC<Props> = ({
   hideProcess,
   close,
   onAddRule,
+  rightClickRule,
   setSelected,
   setIsDetailModalOpen
 }) => {
@@ -102,11 +104,15 @@ const ConnectionItemComponent: React.FC<Props> = ({
       className={`px-2 pb-1.5 ${index === 0 ? 'pt-1.5' : ''}`}
       style={{ minHeight: 68 }}
       onContextMenu={(event) => {
+        if (!rightClickRule) return
         event.preventDefault()
         onAddRule(info)
       }}
       onKeyDown={(event) => {
-        if (event.key === 'ContextMenu' || (event.shiftKey && event.key === 'F10')) {
+        if (
+          rightClickRule &&
+          (event.key === 'ContextMenu' || (event.shiftKey && event.key === 'F10'))
+        ) {
           event.preventDefault()
           onAddRule(info)
         }
@@ -204,6 +210,7 @@ const ConnectionItem = memo(ConnectionItemComponent, (prevProps, nextProps) => {
     prevProps.info.metadata.process === nextProps.info.metadata.process &&
     prevProps.info.metadata.processPath === nextProps.info.metadata.processPath &&
     prevProps.onAddRule === nextProps.onAddRule &&
+    prevProps.rightClickRule === nextProps.rightClickRule &&
     prevProps.iconUrl === nextProps.iconUrl &&
     prevProps.displayIcon === nextProps.displayIcon &&
     prevProps.displayName === nextProps.displayName &&

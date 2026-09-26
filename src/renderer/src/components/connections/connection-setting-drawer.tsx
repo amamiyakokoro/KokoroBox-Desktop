@@ -23,6 +23,7 @@ const ConnectionSettingDrawer: React.FC<Props> = (props) => {
     displayAppName = true,
     connectionInterval = 500,
     connectionGroupByProcess = false,
+    connectionRightClickRule = true,
     connectionGroupSort = 'name',
     connectionGroupDirection = 'asc'
   } = appConfig || {}
@@ -62,12 +63,27 @@ const ConnectionSettingDrawer: React.FC<Props> = (props) => {
             </Switch.Content>
           </Switch>
         </SettingItem>
-        <SettingItem title={tr('Show app name')} {...settingItemProps}>
+        <SettingItem title={tr('Show app name')} {...settingItemProps} divider>
           <Switch
             aria-label={tr('Show app name')}
             isSelected={displayAppName}
             onChange={(v) => {
               patchAppConfig({ displayAppName: v })
+            }}
+          >
+            <Switch.Content>
+              <Switch.Control>
+                <Switch.Thumb />
+              </Switch.Control>
+            </Switch.Content>
+          </Switch>
+        </SettingItem>
+        <SettingItem title={tr('Add rules on right-click')} {...settingItemProps}>
+          <Switch
+            aria-label={tr('Add rules on right-click')}
+            isSelected={connectionRightClickRule}
+            onChange={(value) => {
+              patchAppConfig({ connectionRightClickRule: value })
             }}
           >
             <Switch.Content>

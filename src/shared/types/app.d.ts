@@ -67,6 +67,7 @@ interface AppConfig {
   connectionDirection: 'asc' | 'desc'
   connectionOrderBy: 'time' | 'upload' | 'download' | 'uploadSpeed' | 'downloadSpeed' | 'process'
   connectionGroupByProcess?: boolean
+  connectionRightClickRule?: boolean
   connectionGroupSort?: 'name' | 'count' | 'upload' | 'download' | 'uploadSpeed' | 'downloadSpeed'
   connectionGroupDirection?: 'asc' | 'desc'
   connectionInterval?: number

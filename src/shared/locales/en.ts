@@ -1,5 +1,6 @@
 // English source catalog. Keys are the canonical application-owned messages.
 export const messages: Readonly<Record<string, string>> = {
+  'Add rules on right-click': 'Add rules on right-click',
   'Copy process name': 'Copy process name',
   'Copy destination': 'Copy destination',
   'Copy full log': 'Copy full log',

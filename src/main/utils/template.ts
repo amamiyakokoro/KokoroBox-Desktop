@@ -30,6 +30,7 @@ export const defaultConfig: AppConfig = {
   connectionDirection: 'asc',
   connectionOrderBy: 'time',
   connectionGroupByProcess: false,
+  connectionRightClickRule: true,
   connectionGroupSort: 'name',
   connectionGroupDirection: 'asc',
   connectionInterval: 500,

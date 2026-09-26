@@ -1,4 +1,4 @@
-import { Button, Input, Label, Modal, TextField } from '@heroui/react'
+import { Button, Input, Label, Modal, Spinner, TextField } from '@heroui/react'
 import { useEffect, useRef, useState } from 'react'
 import { tr } from '../../../../shared/i18n'
 import { KokoSelect } from '../base/koko-form'
@@ -97,8 +97,9 @@ export default function LogRuleModal({
       >
         <Modal.Container>
           <Modal.Dialog className="w-full max-w-lg">
-            <Modal.Header>
+            <Modal.Header className="flex-row items-center gap-2">
               <Modal.Heading>{tr('Add Kokoro rule')}</Modal.Heading>
+              {loading && <Spinner size="sm" aria-label={tr('Loading')} />}
             </Modal.Header>
             <Modal.Body className="flex flex-col gap-4">
               <p className="text-sm text-muted">
@@ -133,7 +134,6 @@ export default function LogRuleModal({
                 options={(data?.options.targets || []).map((id) => ({ id, label: id }))}
                 onChange={setTarget}
               />
-              {loading && <p role="status">{tr('Loading')}</p>}
               {(error || validation) && (
                 <p role="alert" className="break-words text-sm text-danger">
                   {error || validation}
