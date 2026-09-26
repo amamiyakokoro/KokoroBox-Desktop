@@ -104,7 +104,6 @@ const AppRouting: React.FC = () => {
     }
   }
   const [isSettingDrawerOpen, setIsSettingDrawerOpen] = useState(false)
-  const [settingDrawerReopenSignal, setSettingDrawerReopenSignal] = useState(0)
   const currentStatusMessage = getAppRoutingStatusMessage(
     status?.message,
     status?.protectedApplicationCount
@@ -233,7 +232,6 @@ const AppRouting: React.FC = () => {
           aria-label={tr('Application routing settings')}
           onPress={() => {
             setIsSettingDrawerOpen(true)
-            setSettingDrawerReopenSignal((signal) => signal + 1)
           }}
         >
           <MdTune className="text-lg" />
@@ -242,7 +240,6 @@ const AppRouting: React.FC = () => {
     >
       {isSettingDrawerOpen && config && (
         <AppRoutingSettingDrawer
-          reopenSignal={settingDrawerReopenSignal}
           isDisabled={!supported || saving}
           isMac={isMac}
           isWindows={isWindows}

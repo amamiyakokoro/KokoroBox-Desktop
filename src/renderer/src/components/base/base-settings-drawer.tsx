@@ -1,13 +1,12 @@
 /* eslint-disable react/prop-types */
 import { tr } from '../../../../shared/i18n'
 import { Drawer } from '@heroui/react'
-import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
+import { useId, type ReactNode } from 'react'
 
 interface PageSettingsDrawerProps {
   title: string
   children: ReactNode
   onClose: () => void
-  reopenSignal?: number
   width?: 'default' | 'wide'
 }
 
@@ -16,8 +15,6 @@ interface PageSettingsSectionProps {
   description?: ReactNode
   children: ReactNode
 }
-
-const DRAWER_CLOSE_ANIMATION_MS = 220
 
 export const PageSettingsSection: React.FC<PageSettingsSectionProps> = ({
   title,
@@ -46,43 +43,16 @@ const PageSettingsDrawer: React.FC<PageSettingsDrawerProps> = ({
   title,
   children,
   onClose,
-  reopenSignal,
   width = 'default'
 }) => {
-  const [isOpen, setIsOpen] = useState(true)
-  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  useEffect(() => {
-    return () => {
-      if (closeTimer.current) clearTimeout(closeTimer.current)
-    }
-  }, [])
-
-  useEffect(() => {
-    if (closeTimer.current) {
-      clearTimeout(closeTimer.current)
-      closeTimer.current = null
-    }
-    setIsOpen(true)
-  }, [reopenSignal])
-
-  const closeWithAnimation = (): void => {
-    if (closeTimer.current) return
-    setIsOpen(false)
-    closeTimer.current = setTimeout(() => {
-      closeTimer.current = null
-      onClose()
-    }, DRAWER_CLOSE_ANIMATION_MS)
-  }
-
   const widthClass =
     width === 'wide' ? 'w-[min(520px,calc(100vw-16px))]' : 'w-[min(432px,calc(100vw-16px))]'
 
   return (
     <Drawer.Backdrop
-      isOpen={isOpen}
+      isOpen
       onOpenChange={(open) => {
-        if (!open) closeWithAnimation()
+        if (!open) onClose()
       }}
       variant="transparent"
       className="page-settings-drawer-backdrop top-12 h-[calc(100%-48px)]"

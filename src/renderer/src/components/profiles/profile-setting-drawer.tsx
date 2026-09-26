@@ -10,19 +10,14 @@ import PageSettingsDrawer, { PageSettingsSection } from '../base/base-settings-d
 
 interface Props {
   onClose: () => void
-  reopenSignal?: number
 }
 
-const ProfileSettingDrawer: React.FC<Props> = ({ onClose, reopenSignal }) => {
+const ProfileSettingDrawer: React.FC<Props> = ({ onClose }) => {
   const navigate = useNavigate()
   const { appConfig, patchAppConfig } = useAppConfig()
   const { profileDisplayDate = 'update' } = appConfig || {}
   return (
-    <PageSettingsDrawer
-      title={tr('Subscription settings')}
-      onClose={onClose}
-      reopenSignal={reopenSignal}
-    >
+    <PageSettingsDrawer title={tr('Subscription settings')} onClose={onClose}>
       <PageSettingsSection title={tr('Display')}>
         <SettingItem title={tr('Show date')} {...settingItemProps}>
           <KokoSegmentedControl

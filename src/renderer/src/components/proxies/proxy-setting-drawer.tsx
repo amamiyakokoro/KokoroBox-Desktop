@@ -16,11 +16,10 @@ import { KokoSelect, KokoTextField } from '../base/koko-form'
 
 interface Props {
   onClose: () => void
-  reopenSignal?: number
 }
 
 const ProxySettingDrawer: React.FC<Props> = (props) => {
-  const { onClose, reopenSignal } = props
+  const { onClose } = props
   const { appConfig, patchAppConfig } = useAppConfig()
 
   const {
@@ -53,12 +52,7 @@ const ProxySettingDrawer: React.FC<Props> = (props) => {
   }, [delayTestUrl])
 
   return (
-    <PageSettingsDrawer
-      title={tr('Proxy group settings')}
-      onClose={onClose}
-      reopenSignal={reopenSignal}
-      width="wide"
-    >
+    <PageSettingsDrawer title={tr('Proxy group settings')} onClose={onClose} width="wide">
       <PageSettingsSection title={tr('Display')}>
         <SettingItem title={tr('Proxy columns')} {...settingItemProps} divider>
           <KokoSelect

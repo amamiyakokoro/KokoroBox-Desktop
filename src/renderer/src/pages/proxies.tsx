@@ -104,7 +104,6 @@ const Proxies: React.FC = () => {
   isOpenContentRef.current = isOpenContent
   const [delaying, setDelaying] = useState(Array(groups.length).fill(false))
   const [isSettingDrawerOpen, setIsSettingDrawerOpen] = useState(false)
-  const [settingDrawerReopenSignal, setSettingDrawerReopenSignal] = useState(0)
   const [filter, setFilter] = useState('')
   const [initialScrollTop] = useState(() =>
     rememberProxyGroupOpenState ? proxyGroupPageCache.scrollTop : 0
@@ -543,19 +542,13 @@ const Proxies: React.FC = () => {
           aria-label={tr('Proxy group settings')}
           onPress={() => {
             setIsSettingDrawerOpen(true)
-            setSettingDrawerReopenSignal((signal) => signal + 1)
           }}
         >
           <MdTune className="text-lg" />
         </Button>
       }
     >
-      {isSettingDrawerOpen && (
-        <ProxySettingDrawer
-          reopenSignal={settingDrawerReopenSignal}
-          onClose={() => setIsSettingDrawerOpen(false)}
-        />
-      )}
+      {isSettingDrawerOpen && <ProxySettingDrawer onClose={() => setIsSettingDrawerOpen(false)} />}
       {mode === 'direct' ? (
         <div className="h-full w-full flex justify-center items-center">
           <div className="flex flex-col items-center">

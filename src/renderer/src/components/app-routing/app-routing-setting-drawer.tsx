@@ -23,7 +23,6 @@ interface Props {
   onOpenSystemSettings: () => void
   onRepairFirewall: () => void
   onClose: () => void
-  reopenSignal?: number
 }
 
 const AppRoutingSettingDrawer: React.FC<Props> = (props) => {
@@ -43,15 +42,10 @@ const AppRoutingSettingDrawer: React.FC<Props> = (props) => {
     onDiagnosticLoggingChange,
     onOpenSystemSettings,
     onRepairFirewall,
-    onClose,
-    reopenSignal
+    onClose
   } = props
   return (
-    <PageSettingsDrawer
-      title={tr('Application routing settings')}
-      onClose={onClose}
-      reopenSignal={reopenSignal}
-    >
+    <PageSettingsDrawer title={tr('Application routing settings')} onClose={onClose}>
       <PageSettingsSection title={tr('Rule defaults')}>
         <SettingItem title={tr('Default action for new rules')} {...settingItemProps} divider>
           <KokoSelect

@@ -72,7 +72,6 @@ const Connections: React.FC = () => {
   const [closedConnections, setClosedConnections] = useState<ControllerConnectionDetail[]>([])
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
   const [isSettingDrawerOpen, setIsSettingDrawerOpen] = useState(false)
-  const [settingDrawerReopenSignal, setSettingDrawerReopenSignal] = useState(0)
   const [selected, setSelected] = useState<ControllerConnectionDetail>()
   const [ruleDetails, setRuleDetails] = useState<LogActionDetails>()
   const openRule = useCallback((connection: ControllerConnectionDetail) => {
@@ -980,7 +979,6 @@ const Connections: React.FC = () => {
             aria-label={tr('Connection settings')}
             onPress={() => {
               setIsSettingDrawerOpen(true)
-              setSettingDrawerReopenSignal((signal) => signal + 1)
             }}
           >
             <MdTune className="text-lg" />
@@ -999,10 +997,7 @@ const Connections: React.FC = () => {
         <LogRuleModal details={ruleDetails} onClose={() => setRuleDetails(undefined)} />
       )}
       {isSettingDrawerOpen && (
-        <ConnectionSettingDrawer
-          reopenSignal={settingDrawerReopenSignal}
-          onClose={() => setIsSettingDrawerOpen(false)}
-        />
+        <ConnectionSettingDrawer onClose={() => setIsSettingDrawerOpen(false)} />
       )}
       <div className="sticky top-0 z-40 overflow-x-auto">
         <KokoToolbar aria-label={tr('Connections')}>

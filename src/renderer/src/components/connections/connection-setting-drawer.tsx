@@ -11,11 +11,10 @@ import { HiSortAscending, HiSortDescending } from 'react-icons/hi'
 
 interface Props {
   onClose: () => void
-  reopenSignal?: number
 }
 
 const ConnectionSettingDrawer: React.FC<Props> = (props) => {
-  const { onClose, reopenSignal } = props
+  const { onClose } = props
   const { appConfig, patchAppConfig } = useAppConfig()
 
   const {
@@ -42,11 +41,7 @@ const ConnectionSettingDrawer: React.FC<Props> = (props) => {
   }
 
   return (
-    <PageSettingsDrawer
-      title={tr('Connection settings')}
-      onClose={onClose}
-      reopenSignal={reopenSignal}
-    >
+    <PageSettingsDrawer title={tr('Connection settings')} onClose={onClose}>
       <PageSettingsSection title={tr('Display')}>
         <SettingItem title={tr('Show app icon')} {...settingItemProps} divider>
           <Switch

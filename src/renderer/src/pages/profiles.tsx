@@ -48,7 +48,6 @@ const Profiles: React.FC = () => {
   const [fileOver, setFileOver] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
   const [isSettingDrawerOpen, setIsSettingDrawerOpen] = useState(false)
-  const [settingDrawerReopenSignal, setSettingDrawerReopenSignal] = useState(0)
   const [editingItem, setEditingItem] = useState<ProfileItem | null>(null)
   const [url, setUrl] = useState('')
   const isUrlEmpty = url.trim() === ''
@@ -202,7 +201,6 @@ const Profiles: React.FC = () => {
             isIconOnly
             onPress={() => {
               setIsSettingDrawerOpen(true)
-              setSettingDrawerReopenSignal((signal) => signal + 1)
             }}
           >
             <MdTune className="text-lg" />
@@ -211,10 +209,7 @@ const Profiles: React.FC = () => {
       }
     >
       {isSettingDrawerOpen && (
-        <ProfileSettingDrawer
-          reopenSignal={settingDrawerReopenSignal}
-          onClose={() => setIsSettingDrawerOpen(false)}
-        />
+        <ProfileSettingDrawer onClose={() => setIsSettingDrawerOpen(false)} />
       )}
       {showEditModal && editingItem && (
         <EditInfoModal

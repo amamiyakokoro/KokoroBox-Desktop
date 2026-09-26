@@ -1097,7 +1097,8 @@ test('page settings drawers use the shared compact inspector behavior', () => {
     proxySettings
   ]
 
-  assert.match(drawer, /const DRAWER_CLOSE_ANIMATION_MS = 220/)
+  assert.doesNotMatch(drawer, /DRAWER_CLOSE_ANIMATION_MS|reopenSignal/)
+  assert.match(drawer, /if \(!open\) onClose\(\)/)
   assert.match(drawer, /variant="transparent"/)
   assert.match(drawer, /w-\[min\(432px,calc\(100vw-16px\)\)\]/)
   assert.match(drawer, /w-\[min\(520px,calc\(100vw-16px\)\)\]/)
