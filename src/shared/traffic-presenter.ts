@@ -32,3 +32,18 @@ export function encodeTrafficPresenterCommand(command: TrafficPresenterCommand):
 export function trafficPresenterLayout(platform: NodeJS.Platform): TrafficPresenterLayout {
   return platform === 'win32' ? 'stacked' : 'horizontal'
 }
+
+export function trafficPresenterTheme(
+  platform: NodeJS.Platform,
+  theme: {
+    shouldUseDarkColors: boolean
+    shouldUseDarkColorsForSystemIntegratedUI: boolean
+  }
+): 'dark' | 'light' {
+  // Windows permits different themes for applications and the taskbar.
+  const dark =
+    platform === 'win32'
+      ? theme.shouldUseDarkColorsForSystemIntegratedUI
+      : theme.shouldUseDarkColors
+  return dark ? 'dark' : 'light'
+}

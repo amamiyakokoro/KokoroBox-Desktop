@@ -10,6 +10,7 @@ import { appendAppLog } from '../utils/log'
 import {
   encodeTrafficPresenterCommand,
   trafficPresenterLayout,
+  trafficPresenterTheme,
   trafficPresenterProtocolVersion,
   type TrafficPresenterCommand
 } from '../../shared/traffic-presenter'
@@ -25,6 +26,19 @@ let restartTimer: NodeJS.Timeout | undefined
 let operation = Promise.resolve()
 let latestTraffic: { up: number; down: number } | undefined
 let legacyMonitorMigrated = false
+const configuredThemes = new WeakMap<ChildProcess, 'dark' | 'light'>()
+
+function currentPresenterTheme(): 'dark' | 'light' {
+  return trafficPresenterTheme(process.platform, nativeTheme)
+}
+
+function refreshPresenterTheme(): void {
+  if (child && child.exitCode === null && configuredThemes.get(child) !== currentPresenterTheme()) {
+    configure(child)
+  }
+}
+
+nativeTheme.on('updated', refreshPresenterTheme)
 
 async function migrateLegacyTrafficMonitor(): Promise<void> {
   if (legacyMonitorMigrated || process.platform !== 'win32') return
@@ -67,16 +81,18 @@ function send(command: TrafficPresenterCommand, target = child): void {
 }
 
 function configure(target: ChildProcess): void {
+  const theme = currentPresenterTheme()
   send(
     {
       version: trafficPresenterProtocolVersion,
       type: 'configure',
       visible: true,
       layout: trafficPresenterLayout(process.platform),
-      theme: nativeTheme.shouldUseDarkColors ? 'dark' : 'light'
+      theme
     },
     target
   )
+  configuredThemes.set(target, theme)
   if (latestTraffic) {
     send(
       {
@@ -191,6 +207,8 @@ export async function stopTrafficPresenter(): Promise<void> {
 }
 
 export function updateTrafficPresenter(traffic: { up: number; down: number }): void {
+  // Also check on samples: a system-only change may leave the app theme unchanged.
+  refreshPresenterTheme()
   latestTraffic = {
     up: Math.max(0, Math.floor(traffic.up)),
     down: Math.max(0, Math.floor(traffic.down))
