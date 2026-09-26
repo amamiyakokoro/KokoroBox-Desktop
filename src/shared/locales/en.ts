@@ -1,5 +1,13 @@
 // English source catalog. Keys are the canonical application-owned messages.
 export const messages: Readonly<Record<string, string>> = {
+  'Accent color': 'Accent color',
+  'Custom accent color': 'Custom accent color',
+  'Blue accent': 'Blue accent',
+  'Purple accent': 'Purple accent',
+  'Pink accent': 'Pink accent',
+  'Red accent': 'Red accent',
+  'Orange accent': 'Orange accent',
+  'Green accent': 'Green accent',
   'Add rules on right-click': 'Add rules on right-click',
   'Copy process name': 'Copy process name',
   'Copy destination': 'Copy destination',

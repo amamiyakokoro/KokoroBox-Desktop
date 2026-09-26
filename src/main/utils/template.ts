@@ -14,6 +14,7 @@ export const defaultConfig: AppConfig = {
   showUpdateButtonAfterNotification: true,
   silentStart: false,
   appTheme: 'system',
+  accentColor: '',
   homeBackgroundDisabled: true,
   homeNetworkCardBackground: 'none',
   useWindowFrame: false,

@@ -3,6 +3,7 @@ import useSWR from 'swr'
 import { getAppConfig, patchAppConfig as patch } from '@renderer/utils/ipc'
 import { notify } from '@renderer/utils/notification'
 import { useTheme } from 'next-themes'
+import { useAccentColor } from './use-accent-color'
 
 interface AppConfigContextType {
   appConfig: AppConfig | undefined
@@ -26,6 +27,7 @@ export const AppConfigProvider: React.FC<{ children: ReactNode }> = ({ children 
   const { data: appConfig, mutate: mutateAppConfig } = useSWR('getConfig', () => getAppConfig())
   const { setTheme } = useTheme()
   const appTheme = appConfig?.appTheme
+  useAccentColor(appConfig?.accentColor)
 
   const patchAppConfigOrThrow = async (value: Partial<AppConfig>): Promise<AppConfig> => {
     try {

@@ -23,6 +23,7 @@ import { useTheme } from 'next-themes'
 import TrayIconCropModal from './tray-icon-crop-modal'
 import HomeBackgroundSettings from './home-background-settings'
 import NetworkCardBackgroundSettings from './network-card-background-settings'
+import AccentColorSetting from './accent-color-setting'
 
 const rasterTrayIconPattern = /\.(png|jpe?g|webp)$/i
 
@@ -312,6 +313,7 @@ const AppearanceConfig: React.FC<AppearanceConfigProps> = ({
               }}
             />
           </SettingItem>
+          <AccentColorSetting />
           {platform === 'darwin' && (
             <>
               <SettingItem contentAlign="end" title={tr('Show Dock icon')} divider>

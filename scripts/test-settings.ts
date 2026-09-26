@@ -1,6 +1,34 @@
 import assert from 'node:assert/strict'
 import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import { test } from 'node:test'
+import {
+  normalizeAccentColor,
+  accentTextColor,
+  accentVariables
+} from '../src/renderer/src/utils/accent-color.ts'
+
+test('accent colors accept only full hex colors and restore defaults for invalid settings', () => {
+  assert.equal(normalizeAccentColor('#AABBCC'), '#aabbcc')
+  for (const input of ['', undefined, null, '#abc', '#12345678', 'red', '#000000; color: red']) {
+    assert.equal(normalizeAccentColor(input), undefined)
+    assert.deepEqual(accentVariables(input, false), {})
+  }
+})
+
+test('accent foreground and derived colors adapt to color and appearance', () => {
+  assert.equal(accentTextColor('#ffffff'), '#000000')
+  assert.equal(accentTextColor('#ffff00'), '#000000')
+  assert.equal(accentTextColor('#000000'), '#ffffff')
+  assert.equal(accentTextColor('#047857'), '#ffffff')
+  const light = accentVariables('#7c3aed', false)
+  const dark = accentVariables('#7c3aed', true)
+  assert.equal(light['--accent'], '#7c3aed')
+  assert.equal(dark['--accent'], '#7c3aed')
+  assert.equal(light['--focus'], '#7c3aed')
+  assert.notEqual(light['--accent-soft'], dark['--accent-soft'])
+  assert.notEqual(light['--accent-soft-foreground'], dark['--accent-soft-foreground'])
+  assert.equal(light['--selection-foreground'], light['--accent-foreground'])
+})
 import { mergeSettingsPatch } from '../src/renderer/src/utils/merge-settings-patch.ts'
 import {
   accountKeys,

@@ -1,5 +1,13 @@
 // Simplified Chinese localization. Keys are the canonical English source messages.
 export const messages: Readonly<Record<string, string>> = {
+  'Accent color': '主题色',
+  'Custom accent color': '自定义主题色',
+  'Blue accent': '蓝色',
+  'Purple accent': '紫色',
+  'Pink accent': '粉色',
+  'Red accent': '红色',
+  'Orange accent': '橙色',
+  'Green accent': '绿色',
   'Add rules on right-click': '右键新增规则',
   'Copy process name': '复制进程名',
   'Copy destination': '复制目标地址',

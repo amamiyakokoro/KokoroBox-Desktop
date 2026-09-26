@@ -109,6 +109,7 @@ interface AppConfig {
   siderOrder: string[]
   siderWidth: number
   appTheme: AppTheme
+  accentColor?: string
   autoCheckUpdate: boolean
   silentStart: boolean
   autoCloseConnection: boolean
