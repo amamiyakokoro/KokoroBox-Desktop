@@ -76,17 +76,12 @@ type AboutSection = 'versions' | 'dependencies' | 'licenses'
 
 function AboutDetailsDialog({ section, onClose }: { section: AboutSection; onClose: () => void }) {
   const { data, error, isLoading, mutate } = useSWR('about-info', getAboutInfo)
-  const [search, setSearch] = useState('')
   const [document, setDocument] = useState<{ id: string; title: string }>()
   const [limit, setLimit] = useState(30)
   const [licenseSearch, setLicenseSearch] = useState('')
   const [licenseLimit, setLicenseLimit] = useState(30)
-  useEffect(() => setLimit(30), [search])
   useEffect(() => setLicenseLimit(30), [licenseSearch])
-  const dependencies =
-    data?.dependencies.filter((item) =>
-      `${item.name} ${item.version} ${item.license}`.toLowerCase().includes(search.toLowerCase())
-    ) || []
+  const dependencies = data?.dependencies || []
   const versions = [
     ['KokoroBox Service', data?.service],
     ['KokoroBox Native', data?.native],
@@ -176,10 +171,6 @@ function AboutDetailsDialog({ section, onClose }: { section: AboutSection; onClo
                 )}
                 {section === 'dependencies' && (
                   <>
-                    <TextField value={search} onChange={setSearch} className="mb-3">
-                      <Label>{tr('Search dependencies')}</Label>
-                      <Input />
-                    </TextField>
                     {!isLoading && !error && dependencies.length === 0 && (
                       <p className="text-sm text-muted">
                         {tr('No dependency information available')}
