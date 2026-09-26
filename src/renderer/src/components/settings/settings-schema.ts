@@ -736,6 +736,13 @@ export const getSettingsSchema = (): SettingsCategorySchema[] => {
         ]
       },
       {
+        key: 'diagnostics',
+        label: tr('Diagnostics'),
+        icon: LuWrench,
+        entries: diagnosticsPanels.flatMap((panel) => panel.entries),
+        panels: diagnosticsPanels
+      },
+      {
         key: 'about',
         label: tr('About'),
         icon: LuInfo,
@@ -750,13 +757,6 @@ export const getSettingsSchema = (): SettingsCategorySchema[] => {
           ),
           entry('licenses', tr('Licenses'), tr('Licenses'))
         ]
-      },
-      {
-        key: 'diagnostics',
-        label: tr('Diagnostics'),
-        icon: LuWrench,
-        entries: diagnosticsPanels.flatMap((panel) => panel.entries),
-        panels: diagnosticsPanels
       }
     ] satisfies SettingsCategorySchema[]
   ).map((category) => ({
