@@ -1,9 +1,2 @@
 ---
 blank_issues_enabled: false
-contact_links:
-  - about: 提出问题前请先查看常见问题
-    name: 常见问题
-    url: https://mihomo.party/docs/issues/common
-  - about: 提问/讨论性质的问题请勿提交 issue
-    name: 交流群组
-    url: https://t.me/+y7rcYjEKIiI1NzZl

@@ -570,8 +570,8 @@ export const messages: Readonly<Record<string, string>> = {
   'Rule target': 'Rule target',
   'Rule type': 'Rule type',
   'The current rule limit has been exceeded': 'The current rule limit has been exceeded',
-  'KokoroBox lets you customize imported profiles with overrides, including rules and proxy groups. Import an existing override or write your own. <b>Remember to enable the override on the profiles that should use it.</b> See the <a href="https://mihomo.party/docs/guide/override" target="_blank">official documentation</a> for the syntax.':
-    'KokoroBox lets you customize imported profiles with overrides, including rules and proxy groups. Import an existing override or write your own. <b>Remember to enable the override on the profiles that should use it.</b> See the <a href="https://mihomo.party/docs/guide/override" target="_blank">official documentation</a> for the syntax.',
+  'Customize imported profiles with YAML or JavaScript overrides. <b>Enable each override on the profiles that should use it.</b> Open Help on the Overrides page for examples.':
+    'Customize imported profiles with YAML or JavaScript overrides. <b>Enable each override on the profiles that should use it.</b> Open Help on the Overrides page for examples.',
   'KokoroBox supports several ways to import subscriptions. Enter a subscription URL here and click Import. If updates require a proxy, enable "Proxy" before importing. This requires an existing working profile.':
     'KokoroBox supports several ways to import subscriptions. Enter a subscription URL here and click Import. If updates require a proxy, enable "Proxy" before importing. This requires an existing working profile.',
   'KokoroBox service management': 'KokoroBox service management',

@@ -196,7 +196,7 @@ export async function createDriver(navigate: NavigateFunction): Promise<Driver> 
         popover: {
           title: tr('Overrides'),
           description: tr(
-            'KokoroBox lets you customize imported profiles with overrides, including rules and proxy groups. Import an existing override or write your own. <b>Remember to enable the override on the profiles that should use it.</b> See the <a href="https://mihomo.party/docs/guide/override" target="_blank">official documentation</a> for the syntax.'
+            'Customize imported profiles with YAML or JavaScript overrides. <b>Enable each override on the profiles that should use it.</b> Open Help on the Overrides page for examples.'
           ),
           side: 'right',
           align: 'center'

@@ -551,8 +551,8 @@ export const messages: Readonly<Record<string, string>> = {
   'Rule target': '規則目標',
   'Rule type': '規則類型',
   'The current rule limit has been exceeded': '規則數量超過目前限制',
-  'KokoroBox lets you customize imported profiles with overrides, including rules and proxy groups. Import an existing override or write your own. <b>Remember to enable the override on the profiles that should use it.</b> See the <a href="https://mihomo.party/docs/guide/override" target="_blank">official documentation</a> for the syntax.':
-    'KokoroBox 提供強大的覆寫功能，可以對您匯入的訂閱設定進行個性化修改，如新增規則、自訂代理組等，您可以直接匯入別人寫好的覆寫檔案，也可以自己動手編寫，<b>編輯好覆寫檔案一定要記得在需要覆寫的訂閱上啟用</b>，覆寫檔案的語法請參考 <a href="https://mihomo.party/docs/guide/override" target="_blank">官方文件</a>',
+  'Customize imported profiles with YAML or JavaScript overrides. <b>Enable each override on the profiles that should use it.</b> Open Help on the Overrides page for examples.':
+    '可用 YAML 或 JavaScript 覆寫匯入的訂閱設定。<b>請在需要套用的訂閱中啟用覆寫。</b>範例請查看覆寫頁面的說明。',
   'KokoroBox supports several ways to import subscriptions. Enter a subscription URL here and click Import. If updates require a proxy, enable "Proxy" before importing. This requires an existing working profile.':
     'KokoroBox 支援多種訂閱匯入方式，在此輸入訂閱連結，點選匯入即可匯入您的訂閱設定，如果您的訂閱需要代理才能更新，請勾選"代理"再點選匯入，當然這需要已經有一個可以正常使用的訂閱才可以',
   'KokoroBox service management': 'KokoroBox 服務管理',

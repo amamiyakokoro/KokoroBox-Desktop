@@ -29,20 +29,13 @@ const ErrorFallback = ({ error }: FallbackProps): JSX.Element => {
         )}
       </h2>
 
-      {/* <Button
-        size="sm"
-        variant="secondary"
-        onPress={() => open('https://github.com/amamiyakokoro/KokoroBox-Desktop/issues/new/choose')}
-      >
-        GitHub
-      </Button> */}
       <Button
         size="sm"
         variant="primary"
         className="ml-2"
-        onPress={() => open('https://t.me/+y7rcYjEKIiI1NzZl')}
+        onPress={() => open('https://github.com/amamiyakokoro/KokoroBox-Desktop/issues/new/choose')}
       >
-        Telegram
+        GitHub Issues
       </Button>
 
       <Button
