@@ -82,6 +82,7 @@ function getLevelLabel(type: LogLevel): string {
 interface Props extends ControllerLog {
   index: number
   animateOnMount?: boolean
+  onOpenMenu?: (event: React.MouseEvent | React.KeyboardEvent, log: ControllerLog) => void
 }
 
 const LogItemComponent: React.FC<Props> = (props) => {
@@ -108,6 +109,18 @@ const LogItemComponent: React.FC<Props> = (props) => {
 
   return (
     <div
+      tabIndex={0}
+      aria-haspopup="menu"
+      onContextMenu={(event) => {
+        event.preventDefault()
+        props.onOpenMenu?.(event, { type, payload, time })
+      }}
+      onKeyDown={(event) => {
+        if (event.key === 'ContextMenu' || (event.shiftKey && event.key === 'F10')) {
+          event.preventDefault()
+          props.onOpenMenu?.(event, { type, payload, time })
+        }
+      }}
       data-log-level={type}
       className={`mx-2 grid grid-cols-[5.25rem_4.5rem_minmax(0,1fr)] items-start gap-2 border-b border-l-2 border-b-separator/70 px-2 py-1.5 transition-[background-color,opacity,transform] duration-300 ease-out hover:bg-surface-secondary/70 ${levelTone[type].row} ${
         entered ? 'translate-y-0 opacity-100' : 'translate-y-1 opacity-0'

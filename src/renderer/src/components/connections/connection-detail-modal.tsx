@@ -1,5 +1,5 @@
 import { tr } from '../../../../shared/i18n'
-import { Drawer, Surface, Tabs } from '@heroui/react'
+import { Button, Drawer, Surface, Tabs } from '@heroui/react'
 import { KokoActionMenu } from '../base/koko-collections'
 import type { ReactNode } from 'react'
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
@@ -12,6 +12,7 @@ import { HiChevronDown } from 'react-icons/hi2'
 interface Props {
   connection: ControllerConnectionDetail
   onClose: () => void
+  onAddRule: (connection: ControllerConnectionDetail) => void
 }
 
 interface CopyProps {
@@ -125,7 +126,7 @@ const DetailSection = ({ title, children }: DetailSectionProps) => {
   )
 }
 
-const ConnectionDetailModal = ({ connection, onClose }: Props) => {
+const ConnectionDetailModal = ({ connection, onClose, onAddRule }: Props) => {
   const [viewMode, setViewMode] = useState<'detail' | 'raw'>('detail')
   const [isOpen, setIsOpen] = useState(true)
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -518,6 +519,14 @@ const ConnectionDetailModal = ({ connection, onClose }: Props) => {
             onSelectionChange={(key) => setViewMode(key as 'detail' | 'raw')}
           >
             <div className="app-nodrag shrink-0 border-b border-separator/70 px-5 py-2">
+              <Button
+                variant="secondary"
+                size="sm"
+                className="mb-2"
+                onPress={() => onAddRule(connection)}
+              >
+                {tr('Add Kokoro rule')}
+              </Button>
               <Tabs.ListContainer>
                 <Tabs.List aria-label={tr('Switch connection details view')}>
                   <Tabs.Tab id="detail">

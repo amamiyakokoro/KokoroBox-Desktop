@@ -5,7 +5,10 @@ import { KokoSearchField } from '@renderer/components/base/koko-search-field'
 import { KokoToolbar, KokoToolbarIconButton } from '@renderer/components/base/koko-toolbar'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'
-import { startTransition, useEffect, useMemo, useRef, useState } from 'react'
+import { startTransition, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import LogContextMenu from '@renderer/components/logs/log-context-menu'
+import LogRuleModal from '@renderer/components/logs/log-rule-modal'
+import type { LogActionDetails } from '@renderer/components/logs/log-actions'
 import { KokoSelect } from '@renderer/components/base/koko-form'
 import { Virtuoso } from 'react-virtuoso'
 import { IoLocationSharp } from 'react-icons/io5'
@@ -65,6 +68,20 @@ const Logs: React.FC = () => {
   const [filter, setFilter] = useState('')
   const [trace, setTrace] = useState(true)
   const [freshLogIds, setFreshLogIds] = useState<string[]>([])
+  const [context, setContext] = useState<{ log: ControllerLog; x: number; y: number }>()
+  const [ruleDetails, setRuleDetails] = useState<LogActionDetails>()
+  const closeContext = useCallback(() => setContext(undefined), [])
+  const openContext = useCallback(
+    (event: React.MouseEvent | React.KeyboardEvent, log: ControllerLog) => {
+      const rect = event.currentTarget.getBoundingClientRect()
+      setContext({
+        log: { ...log },
+        x: 'clientX' in event ? event.clientX : rect.left + 16,
+        y: 'clientY' in event ? event.clientY : rect.top + 16
+      })
+    },
+    []
+  )
 
   const freshLogTimerRef = useRef<number | null>(null)
   const hasHydratedLogsRef = useRef(false)
@@ -202,7 +219,7 @@ const Logs: React.FC = () => {
             className="h-full pr-1"
             data={filteredLogs}
             initialTopMostItemIndex={filteredLogs.length > 0 ? filteredLogs.length - 1 : undefined}
-            followOutput={trace}
+            followOutput={trace && !context && !ruleDetails}
             computeItemKey={(_index, log) => log.id}
             itemContent={(i, log) => {
               return (
@@ -212,12 +229,17 @@ const Logs: React.FC = () => {
                   time={log.time}
                   type={log.type}
                   payload={log.payload}
+                  onOpenMenu={openContext}
                 />
               )
             }}
           />
         </div>
       </div>
+      {context && <LogContextMenu {...context} onClose={closeContext} onRule={setRuleDetails} />}
+      {ruleDetails && (
+        <LogRuleModal details={ruleDetails} onClose={() => setRuleDetails(undefined)} />
+      )}
     </BasePage>
   )
 }

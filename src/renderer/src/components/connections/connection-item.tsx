@@ -5,6 +5,7 @@ import dayjs from 'dayjs'
 import React, { memo, useCallback, useEffect, useMemo, useState } from 'react'
 import { CgClose, CgTrash } from 'react-icons/cg'
 import { connectionIdentityLabel } from './connection-identity'
+import { LuListPlus } from 'react-icons/lu'
 
 interface Props {
   index: number
@@ -17,6 +18,7 @@ interface Props {
   setSelected: React.Dispatch<React.SetStateAction<ControllerConnectionDetail | undefined>>
   setIsDetailModalOpen: React.Dispatch<React.SetStateAction<boolean>>
   close: (id: string) => void
+  onAddRule: (connection: ControllerConnectionDetail) => void
 }
 
 const ConnectionItemComponent: React.FC<Props> = ({
@@ -27,6 +29,7 @@ const ConnectionItemComponent: React.FC<Props> = ({
   displayName,
   hideProcess,
   close,
+  onAddRule,
   setSelected,
   setIsDetailModalOpen
 }) => {
@@ -95,7 +98,20 @@ const ConnectionItemComponent: React.FC<Props> = ({
   }, [close, info.id])
 
   return (
-    <div className={`px-2 pb-1.5 ${index === 0 ? 'pt-1.5' : ''}`} style={{ minHeight: 68 }}>
+    <div
+      className={`px-2 pb-1.5 ${index === 0 ? 'pt-1.5' : ''}`}
+      style={{ minHeight: 68 }}
+      onContextMenu={(event) => {
+        event.preventDefault()
+        onAddRule(info)
+      }}
+      onKeyDown={(event) => {
+        if (event.key === 'ContextMenu' || (event.shiftKey && event.key === 'F10')) {
+          event.preventDefault()
+          onAddRule(info)
+        }
+      }}
+    >
       <Card className="group relative w-full min-w-0 gap-0 overflow-hidden p-0">
         <button
           type="button"
@@ -112,7 +128,7 @@ const ConnectionItemComponent: React.FC<Props> = ({
             </div>
           )}
           <div className="relative flex min-w-0 flex-1 flex-col justify-start">
-            <Card.Header className="relative flex min-h-8 w-full min-w-0 flex-row items-center gap-1 px-3 pb-0 pt-2 pr-12">
+            <Card.Header className="relative flex min-h-8 w-full min-w-0 flex-row items-center gap-1 px-3 pb-0 pt-2 pr-22">
               <div className="min-w-0 flex-1 truncate text-left text-sm font-medium">
                 <span title={hideProcess ? destination : `${processName} → ${destination}`}>
                   {hideProcess ? destination : `${processName} → ${destination}`}
@@ -147,6 +163,16 @@ const ConnectionItemComponent: React.FC<Props> = ({
           </div>
         </div>
         <Button
+          variant="ghost"
+          isIconOnly
+          size="sm"
+          aria-label={tr('Add Kokoro rule')}
+          className="pointer-events-auto absolute right-12 top-2 z-2 text-muted opacity-50 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100"
+          onPress={() => onAddRule(info)}
+        >
+          <LuListPlus className="text-lg" />
+        </Button>
+        <Button
           variant={info.isActive ? 'ghost' : 'danger-soft'}
           isIconOnly
           size="sm"
@@ -173,6 +199,11 @@ const ConnectionItem = memo(ConnectionItemComponent, (prevProps, nextProps) => {
     prevProps.info.uploadSpeed === nextProps.info.uploadSpeed &&
     prevProps.info.downloadSpeed === nextProps.info.downloadSpeed &&
     prevProps.info.isActive === nextProps.info.isActive &&
+    prevProps.info.metadata.host === nextProps.info.metadata.host &&
+    prevProps.info.metadata.sniffHost === nextProps.info.metadata.sniffHost &&
+    prevProps.info.metadata.process === nextProps.info.metadata.process &&
+    prevProps.info.metadata.processPath === nextProps.info.metadata.processPath &&
+    prevProps.onAddRule === nextProps.onAddRule &&
     prevProps.iconUrl === nextProps.iconUrl &&
     prevProps.displayIcon === nextProps.displayIcon &&
     prevProps.displayName === nextProps.displayName &&

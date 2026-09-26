@@ -10,6 +10,9 @@ import { calcTraffic } from '@renderer/utils/calc'
 import ConnectionItem from '@renderer/components/connections/connection-item'
 import { Virtuoso, GroupedVirtuoso } from 'react-virtuoso'
 import ConnectionDetailModal from '@renderer/components/connections/connection-detail-modal'
+import LogRuleModal from '@renderer/components/logs/log-rule-modal'
+import type { LogActionDetails } from '@renderer/components/logs/log-actions'
+import { connectionRuleDetails } from '@renderer/components/connections/connection-rule-details'
 import ConnectionSettingDrawer from '@renderer/components/connections/connection-setting-drawer'
 import ConnectionGroupHeader from '@renderer/components/connections/connection-group-header'
 import {
@@ -70,6 +73,11 @@ const Connections: React.FC = () => {
   const [isSettingDrawerOpen, setIsSettingDrawerOpen] = useState(false)
   const [settingDrawerReopenSignal, setSettingDrawerReopenSignal] = useState(0)
   const [selected, setSelected] = useState<ControllerConnectionDetail>()
+  const [ruleDetails, setRuleDetails] = useState<LogActionDetails>()
+  const openRule = useCallback((connection: ControllerConnectionDetail) => {
+    setRuleDetails(connectionRuleDetails(connection.metadata))
+    setIsDetailModalOpen(false)
+  }, [])
 
   const [iconMap, setIconMap] = useState<Record<string, string>>({})
   const [appNameCache, setAppNameCache] = useState<Record<string, string>>({})
@@ -775,6 +783,7 @@ const Connections: React.FC = () => {
           displayIcon={displayIcon && findProcessMode !== 'off'}
           displayName={displayName}
           close={closeConnection}
+          onAddRule={openRule}
           index={i}
           key={itemKey}
           info={connection}
@@ -787,6 +796,7 @@ const Connections: React.FC = () => {
       firstItemRefreshTrigger,
       selected,
       closeConnection,
+      openRule,
       appNameCache,
       findProcessMode,
       displayAppName
@@ -840,6 +850,7 @@ const Connections: React.FC = () => {
     return (
       <div className="pl-6" style={{ animation: 'proxy-row-in 0.15s ease both' }}>
         <ConnectionItem
+          onAddRule={openRule}
           setSelected={setSelected}
           setIsDetailModalOpen={setIsDetailModalOpen}
           selected={selectedRef.current}
@@ -971,7 +982,14 @@ const Connections: React.FC = () => {
       }
     >
       {isDetailModalOpen && selected && (
-        <ConnectionDetailModal onClose={() => setIsDetailModalOpen(false)} connection={selected} />
+        <ConnectionDetailModal
+          onClose={() => setIsDetailModalOpen(false)}
+          connection={selected}
+          onAddRule={openRule}
+        />
+      )}
+      {ruleDetails && (
+        <LogRuleModal details={ruleDetails} onClose={() => setRuleDetails(undefined)} />
       )}
       {isSettingDrawerOpen && (
         <ConnectionSettingDrawer

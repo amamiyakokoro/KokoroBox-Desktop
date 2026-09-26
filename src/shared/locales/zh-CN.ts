@@ -1,5 +1,13 @@
 // Simplified Chinese localization. Keys are the canonical English source messages.
 export const messages: Readonly<Record<string, string>> = {
+  'Copy process name': '复制进程名',
+  'Copy destination': '复制目标地址',
+  'Copy full log': '复制整条日志',
+  'Log actions': '日志操作',
+  'Add Kokoro rule': '添加 Kokoro 规则',
+  'Enter a domain name without a port or URL path': '请输入域名，不要包含端口或网址路径',
+  'Add to the top of the Kokoro default rule set. Refresh the Kokoro subscription to apply it.':
+    '添加到 Kokoro 默认规则集顶部。更新 Kokoro 订阅后生效。',
   None: '无',
   'Custom image': '自定义图片',
   'Default image': '默认图片',

@@ -1,5 +1,14 @@
 // English source catalog. Keys are the canonical application-owned messages.
 export const messages: Readonly<Record<string, string>> = {
+  'Copy process name': 'Copy process name',
+  'Copy destination': 'Copy destination',
+  'Copy full log': 'Copy full log',
+  'Log actions': 'Log actions',
+  'Add Kokoro rule': 'Add Kokoro rule',
+  'Enter a domain name without a port or URL path':
+    'Enter a domain name without a port or URL path',
+  'Add to the top of the Kokoro default rule set. Refresh the Kokoro subscription to apply it.':
+    'Add to the top of the Kokoro default rule set. Refresh the Kokoro subscription to apply it.',
   None: 'None',
   'Custom image': 'Custom image',
   'Default image': 'Default image',

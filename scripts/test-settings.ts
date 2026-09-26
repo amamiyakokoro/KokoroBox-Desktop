@@ -352,7 +352,7 @@ test('Mihomo settings belong to Core while legacy Network links normalize canoni
     schema.indexOf('const dataPanels:')
   )
   const panelKeys = (source: string): string[] =>
-    [...source.matchAll(/^ {4}\{\n {6}key: '([^']+)'/gm)].map((match) => match[1])
+    [...source.matchAll(/^ {4}\{\r?\n {6}key: '([^']+)'/gm)].map((match) => match[1])
 
   assert.match(schema, /key: 'network'/)
   assert.deepEqual(panelKeys(networkPanels), [
@@ -2088,7 +2088,7 @@ test('operational lists use compact hierarchy without changing their behavior', 
   assert.match(logsPage, /<KokoToolbarIconButton[\s\S]*isActive=\{trace\}/)
   assert.match(logsPage, /<KokoToolbarIconButton[\s\S]*tone="danger"/)
   assert.doesNotMatch(logsPage, /<Select\.Trigger|<Select\.Popover|<ListBox/)
-  assert.match(logsPage, /followOutput=\{trace\}/)
+  assert.match(logsPage, /followOutput=\{trace && !context && !ruleDetails\}/)
   assert.match(logsPage, /clearMihomoLogs\(\)/)
   assert.match(logsPage, /restartMihomoLogs\(\)/)
   assert.doesNotMatch(logItem, /<Card/)
@@ -2369,7 +2369,7 @@ test('Appearance supports only the native application color scheme', () => {
     schema.indexOf('const appearancePanels:'),
     schema.indexOf('const networkPanels:')
   )
-  const panelKeys = [...appearancePanels.matchAll(/^ {4}\{\n {6}key: '([^']+)'/gm)].map(
+  const panelKeys = [...appearancePanels.matchAll(/^ {4}\{\r?\n {6}key: '([^']+)'/gm)].map(
     (match) => match[1]
   )
 

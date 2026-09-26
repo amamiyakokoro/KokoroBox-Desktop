@@ -26,6 +26,7 @@
     "test:dns": "tsx --test scripts/test-dns.ts",
     "test:runtime-recovery": "tsx --test scripts/test-settings-failures.ts scripts/test-runtime-recovery.ts scripts/test-override-execution.ts scripts/test-traffic-history.ts scripts/test-core-firewall.ts",
     "test:settings": "tsx --test scripts/test-settings.ts",
+    "test:logs": "tsx --test scripts/test-log-actions.ts",
     "test:home": "tsx --tsconfig tsconfig.web.json --test scripts/test-home-data.ts scripts/test-home-background.ts scripts/test-home-ui.tsx scripts/test-home-overview.tsx scripts/test-home-app-metadata.ts",
     "test:ui-native": "tsx --test scripts/test-ui-native-contract.ts",
     "test:service-auth": "tsx --test scripts/test-service-auth.ts",
@@ -59,6 +60,7 @@
     "dayjs": "^1.11.23",
     "iconv-lite": "^0.7.3",
     "kokorobox-native": "^0.16.0",
+    "tldts": "^7.4.15",
     "webdav": "^5.10.0",
     "ws": "^8.21.3",
     "yaml": "^2.9.1"
