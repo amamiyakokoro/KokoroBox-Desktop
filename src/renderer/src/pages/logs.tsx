@@ -199,25 +199,25 @@ const Logs: React.FC = () => {
   return (
     <BasePage title={tr('Live logs')} contentClassName="logs-page overflow-y-hidden">
       <div className="flex h-full min-h-0 flex-col">
-        <div className="sticky top-0 z-40 bg-surface">
-          <div className="px-4 pt-2">
+        <div className="no-scrollbar sticky top-0 z-40 overflow-x-auto bg-surface">
+          <KokoToolbar aria-label={tr('Live logs')}>
             <KokoTabs
               ariaLabel={tr('Log source')}
+              density="toolbar"
               options={[
                 { id: 'core', label: tr('Core logs') },
                 { id: 'routing', label: tr('Application routing logs') }
               ]}
               selectedKey={tab}
+              variant="secondary"
               onChange={(key) => {
                 setTab(key === 'routing' ? 'routing' : 'core')
                 setFilter('')
                 setContext(undefined)
               }}
             />
-          </div>
-          <KokoToolbar aria-label={tr('Live logs')}>
             <KokoSearchField
-              className="min-w-40 flex-1"
+              className="min-w-36 flex-1"
               value={filter}
               aria-label={tr('Filter')}
               placeholder={tr('Filter')}
