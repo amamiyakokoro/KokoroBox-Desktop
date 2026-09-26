@@ -285,6 +285,17 @@ test('traffic history uses actual download and upload samples without synthetic 
     ]),
     63
   )
+  assert.equal(
+    overviewTrafficRangeSeconds(
+      Array.from({ length: 300 }, (_, index) => ({
+        index: (index + 1) * 1000,
+        down: 20,
+        up: 5
+      })),
+      300_000
+    ),
+    300
+  )
 })
 
 test('traffic history survives remounts for five minutes and expires by timestamp', () => {

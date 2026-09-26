@@ -95,9 +95,9 @@ export function overviewTrafficRangeSeconds(
   const recent = pruneOverviewTrafficHistory(samples, now)
   if (recent.length < 2) return undefined
   const elapsed = now - recent[0].index
-  return Number.isFinite(elapsed) && elapsed > 0
-    ? Math.max(1, Math.round(elapsed / 1000))
-    : undefined
+  if (!Number.isFinite(elapsed) || elapsed <= 0) return undefined
+  if (elapsed >= overviewTrafficRetentionMs - 1000) return overviewTrafficRetentionMs / 1000
+  return Math.max(1, Math.round(elapsed / 1000))
 }
 
 export const OverviewTrafficChart = memo(function OverviewTrafficChart({
