@@ -1,5 +1,20 @@
 # Supplemental licenses
 
+This is the repository's central directory for tracked third-party license files.
+Its relative layout is preserved in the installed `licenses/` directory. Generated
+npm notices and build-supplied native notices are added to the same directory.
+
+Native licenses come from the exact artifacts prepared for each build:
+
+- ProxyBridge / WinDivert: `extra/files/process-router/LICENSE.*` (Windows).
+- ProxyBridge: `extra/files/macos-app-routing/LICENSE.ProxyBridge` (macOS).
+- Sparkle: `extra/macos-updater/LICENSE.Sparkle` (macOS).
+
+These staging directories and `out/licenses/` are generated and ignored by Git;
+their files are available after preparation/build, not as repository links.
+The circle-flags license mirrors the original asset directory's license at
+revision `379588b5da95482d6bbf10bd45644a35b0609ea6`.
+
 Production builds generate `out/licenses/{main,preload,renderer}.txt` from
 bundled module paths and installed runtime dependency trees. License, COPYING,
 NOTICE, and copyright files are preserved, including full licenses embedded in

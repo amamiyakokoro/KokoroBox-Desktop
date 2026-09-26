@@ -29,14 +29,10 @@ extraResources:
       - '!macos-updater{,/**/*}'
   - from: './THIRD_PARTY_NOTICES.md'
     to: 'THIRD_PARTY_NOTICES.md'
-  - from: './LICENSE.CloudflareSpeedtest'
-    to: 'LICENSE.CloudflareSpeedtest'
   - from: './out/licenses/'
     to: 'licenses'
   - from: './licenses/'
-    to: 'licenses/supplemental'
-  - from: './src/renderer/src/assets/circle-flags/LICENSE.md'
-    to: 'licenses/LICENSE.circle-flags'
+    to: 'licenses'
 protocols:
   name: 'KokoroBox URI Scheme'
   schemes:
@@ -49,6 +45,9 @@ win:
   executableName: KokoroBox
   requestedExecutionLevel: asInvoker
   extraResources:
+    - from: './extra/files/process-router/'
+      to: 'licenses'
+      filter: ['LICENSE.*']
     - from: './node_modules/kokorobox-native-win32-${arch}-msvc/kokorobox-traffic-presenter.exe'
       to: 'traffic-presenter/kokorobox-traffic-presenter.exe'
     - from: './node_modules/kokorobox-native-win32-${arch}-msvc/kokorobox-portable-updater.exe'
@@ -87,6 +86,9 @@ mac:
     - from: './extra/macos-updater/manifest.json'
       to: 'Resources/macos-updater/manifest.json'
   extraResources:
+    - from: './extra/files/macos-app-routing/'
+      to: 'licenses'
+      filter: ['LICENSE.*']
     - from: './node_modules/kokorobox-native-darwin-${arch}/kokorobox-traffic-presenter'
       to: 'traffic-presenter/kokorobox-traffic-presenter'
   extendInfo:
