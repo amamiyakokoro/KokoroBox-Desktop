@@ -40,6 +40,7 @@ import {
 import * as native from 'kokorobox-native'
 import { systemCoreOnlyBuild } from '../../shared/build-flags'
 import { parseServiceLog } from './log-parser'
+import { probeServiceHealth } from './health'
 import { existsSync } from 'fs'
 import { appendAppLog } from '../utils/log'
 let keyManager: KeyManager | null = null
@@ -499,7 +500,9 @@ export async function serviceStatus(): Promise<
   const nativeStatus = native as typeof native & {
     getWindowsServiceStatus?: () => 'running' | 'stopped' | 'paused' | 'not-installed' | 'unknown'
     getLinuxServiceStatus?: () => Promise<'running' | 'stopped' | 'not-installed' | 'unknown'>
-    getMacosServiceProcessStatus?: () => Promise<'running' | 'stopped' | 'not-installed' | 'unknown'>
+    getMacosServiceProcessStatus?: () => Promise<
+      'running' | 'stopped' | 'not-installed' | 'unknown'
+    >
   }
   const queryNativeStatus =
     process.platform === 'win32'
@@ -534,32 +537,12 @@ export async function serviceStatus(): Promise<
   if (commandState === 'stopped') return 'stopped'
   if (commandState === 'paused') return 'paused'
 
-  // A running service is still observable through its authenticated IPC even
-  // when an older helper cannot read the Windows SCM status as a standard user.
-  try {
-    await ping()
-    try {
-      await test()
-      await finalizeServiceAuthMigration()
-      return 'running'
-    } catch (error) {
-      if (isServiceAuthenticationStateError(error)) return 'need-init'
-      // A process-level status of running only proves that launchd/SCM has a
-      // live service process. Never report it as usable after the authenticated
-      // API probe failed.
-      return 'unknown'
-    }
-  } catch (error) {
-    const errorMsg = error instanceof Error ? error.message : String(error)
-    if (
-      errorMsg.includes('EACCES') ||
-      errorMsg.includes('permission denied') ||
-      errorMsg.includes('access is denied')
-    ) {
-      return 'need-init'
-    }
-    return commandState === 'running' ? 'running' : 'unknown'
-  }
+  return probeServiceHealth({
+    ping,
+    authenticate: test,
+    finalizeAuthentication: finalizeServiceAuthMigration,
+    isAuthenticationError: isServiceAuthenticationStateError
+  })
 }
 
 export function openServiceSystemSettings(): void {

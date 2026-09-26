@@ -5,6 +5,7 @@ import { resolve } from 'node:path'
 import { test } from 'node:test'
 import { computeKeyId, generateKeyPair, signData, validateKeyPair } from '../src/main/service/key'
 import { parseServiceLog } from '../src/main/service/log-parser'
+import { probeServiceHealth } from '../src/main/service/health'
 
 function publicKeyObject(publicKey: string): crypto.KeyObject {
   return crypto.createPublicKey({
@@ -178,10 +179,7 @@ test('macOS registers the bundled daemon through SMAppService', () => {
   assert.match(managerSource, /export async function ensureMacOSServiceReady/)
   assert.match(managerSource, /function isServiceAuthenticationStateError/)
   assert.match(managerSource, /message\.includes\('key id is not registered'\)/)
-  assert.match(
-    managerSource,
-    /Never report it as usable after the authenticated[\s\S]*?return 'unknown'/
-  )
+  assert.match(managerSource, /return probeServiceHealth\(/)
   const initSource = managerSource.slice(
     managerSource.indexOf('export async function initService'),
     managerSource.indexOf('export async function installService')
@@ -316,7 +314,10 @@ test('service core startup tolerates pre-desired-state service releases', () => 
   assert.match(desiredStatusSource, /return undefined/)
   assert.match(apiSource, /await requireServiceCapability\('dnsLease'\)/)
   assert.match(apiSource, /shouldAttemptSysproxyLeaseRenewal\(meta\)\) return/)
-  assert.match(apiSource, /meta\.apiVersion === 0 && error instanceof ServiceAPIError && error\.status === 404/)
+  assert.match(
+    apiSource,
+    /meta\.apiVersion === 0 && error instanceof ServiceAPIError && error\.status === 404/
+  )
   assert.match(coreManagerSource, /desiredStatus\?\.desired_state === 'running'/)
   assert.match(coreManagerSource, /await startServiceCore\(serviceProfile\)/)
 })
@@ -342,4 +343,29 @@ test('service core handoff removes legacy direct processes and repairs occupied 
     coreManagerSource,
     /export async function stopCore[\s\S]*await stopLegacyDirectCore\(\)/
   )
+})
+
+test('service health requires a responding and authenticated API', async () => {
+  let authenticated = false
+  const probe = {
+    ping: async () => {},
+    authenticate: async () => {
+      authenticated = true
+    },
+    finalizeAuthentication: async () => {},
+    isAuthenticationError: () => false
+  }
+  assert.equal(await probeServiceHealth(probe), 'running')
+  assert.equal(authenticated, true)
+  authenticated = false
+  assert.equal(
+    await probeServiceHealth({
+      ...probe,
+      ping: async () => {
+        throw new Error('connect ECONNREFUSED')
+      }
+    }),
+    'unknown'
+  )
+  assert.equal(authenticated, false)
 })
