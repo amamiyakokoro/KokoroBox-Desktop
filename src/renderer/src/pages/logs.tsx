@@ -169,7 +169,7 @@ const Logs: React.FC = () => {
                 if (value === activeLogLevelFilter) return
 
                 try {
-                  await patchAppConfig({ realtimeLogLevel: value as LogLevel })
+                  if (!(await patchAppConfig({ realtimeLogLevel: value as LogLevel }))) return
                   await restartMihomoLogs()
                 } catch (error) {
                   notify(error, { variant: 'danger' })

@@ -202,10 +202,13 @@ export const PerformanceConfig: React.FC = () => {
             setShowRestartConfirm(open)
           }}
           onConfirm={async () => {
-            await patchAppConfig({ disableGPU: pendingDisableGPU })
-            if (!pendingDisableGPU) {
-              await patchAppConfig({ disableAnimation: false })
-            }
+            if (
+              !(await patchAppConfig({
+                disableGPU: pendingDisableGPU,
+                ...(!pendingDisableGPU ? { disableAnimation: false } : {})
+              }))
+            )
+              return
             await relaunchApp()
           }}
         />

@@ -72,7 +72,7 @@ const AppearanceConfig: React.FC<AppearanceConfigProps> = ({
           imageDataURL={trayIconCropDataURL}
           onCancel={() => setTrayIconCropDataURL('')}
           onConfirm={async (dataURL) => {
-            await patchAppConfig({ customTrayIcon: dataURL })
+            if (!(await patchAppConfig({ customTrayIcon: dataURL }))) return
             setTrayIconCropDataURL('')
             await updateTrayIcon()
           }}
@@ -99,11 +99,17 @@ const AppearanceConfig: React.FC<AppearanceConfigProps> = ({
                 if (v) {
                   await showFloatingWindow()
                   timeoutRef.current = setTimeout(async () => {
-                    await patchAppConfig({ showFloatingWindow: v })
                     timeoutRef.current = null
+                    if (!(await patchAppConfig({ showFloatingWindow: v }))) {
+                      setLocalShowFloating(false)
+                      await closeFloatingWindow()
+                    }
                   }, 1000)
                 } else {
-                  patchAppConfig({ showFloatingWindow: v })
+                  if (!(await patchAppConfig({ showFloatingWindow: v }))) {
+                    setLocalShowFloating(!v)
+                    return
+                  }
                   await closeFloatingWindow()
                 }
               }}
@@ -126,7 +132,7 @@ const AppearanceConfig: React.FC<AppearanceConfigProps> = ({
                   size="sm"
                   isSelected={spinFloatingIcon}
                   onChange={async (v) => {
-                    await patchAppConfig({ spinFloatingIcon: v })
+                    if (!(await patchAppConfig({ spinFloatingIcon: v }))) return
                     window.electron.ipcRenderer.send('updateFloatingWindow')
                   }}
                 >
@@ -142,7 +148,7 @@ const AppearanceConfig: React.FC<AppearanceConfigProps> = ({
                   size="sm"
                   isSelected={disableTray}
                   onChange={async (v) => {
-                    await patchAppConfig({ disableTray: v })
+                    if (!(await patchAppConfig({ disableTray: v }))) return
                     if (v) {
                       closeTrayIcon()
                     } else {
@@ -190,7 +196,12 @@ const AppearanceConfig: React.FC<AppearanceConfigProps> = ({
                       setTrayIconCropDataURL(await readImageFileDataURL(files[0]))
                       return
                     }
-                    await patchAppConfig({ customTrayIcon: await readImageFileDataURL(files[0]) })
+                    if (
+                      !(await patchAppConfig({
+                        customTrayIcon: await readImageFileDataURL(files[0])
+                      }))
+                    )
+                      return
                     await updateTrayIcon()
                   }}
                 >
@@ -201,7 +212,7 @@ const AppearanceConfig: React.FC<AppearanceConfigProps> = ({
                     size="sm"
                     variant="ghost"
                     onPress={async () => {
-                      await patchAppConfig({ customTrayIcon: '' })
+                      if (!(await patchAppConfig({ customTrayIcon: '' }))) return
                       await updateTrayIcon()
                     }}
                   >
@@ -243,9 +254,12 @@ const AppearanceConfig: React.FC<AppearanceConfigProps> = ({
                         { id: 'new-line', label: tr('New line') }
                       ]}
                       onChange={async (v) => {
-                        await patchAppConfig({
-                          trayProxyDelayLayout: v as 'same-line' | 'new-line'
-                        })
+                        if (
+                          !(await patchAppConfig({
+                            trayProxyDelayLayout: v as 'same-line' | 'new-line'
+                          }))
+                        )
+                          return
                         window.electron.ipcRenderer.send('updateTrayMenu')
                       }}
                     />
@@ -268,7 +282,7 @@ const AppearanceConfig: React.FC<AppearanceConfigProps> = ({
               size="sm"
               isSelected={showTraffic}
               onChange={async (v) => {
-                await patchAppConfig({ showTraffic: v })
+                if (!(await patchAppConfig({ showTraffic: v }))) return
                 await startMonitor()
               }}
             >
@@ -305,7 +319,7 @@ const AppearanceConfig: React.FC<AppearanceConfigProps> = ({
                   size="sm"
                   isSelected={useDockIcon}
                   onChange={async (v) => {
-                    await patchAppConfig({ useDockIcon: v })
+                    if (!(await patchAppConfig({ useDockIcon: v }))) return
                     setDockVisible(v)
                   }}
                 >
@@ -323,7 +337,7 @@ const AppearanceConfig: React.FC<AppearanceConfigProps> = ({
               size="sm"
               isSelected={useWindowFrame}
               onChange={async (v) => {
-                await patchAppConfig({ useWindowFrame: v })
+                if (!(await patchAppConfig({ useWindowFrame: v }))) return
                 await relaunchApp()
               }}
             >
@@ -347,7 +361,7 @@ const AppearanceConfig: React.FC<AppearanceConfigProps> = ({
                 size="sm"
                 isSelected={enableWindowDrag}
                 onChange={async (v) => {
-                  await patchAppConfig({ enableWindowDrag: v })
+                  if (!(await patchAppConfig({ enableWindowDrag: v }))) return
                   await relaunchApp()
                 }}
               >

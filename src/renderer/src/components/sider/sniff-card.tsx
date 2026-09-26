@@ -13,14 +13,14 @@ interface Props {
   iconOnly?: boolean
 }
 const SniffCard: React.FC<Props> = (props) => {
-  const { appConfig, patchAppConfig } = useAppConfig()
+  const { appConfig, patchAppConfigOrThrow } = useAppConfig()
   const { iconOnly } = props
   const {
     sniffCardStatus = 'col-span-1',
     controlSniff = true,
     disableAnimation = false
   } = appConfig || {}
-  const { patchControledMihomoConfig } = useControledMihomoConfig()
+  const { patchControledMihomoConfigOrThrow } = useControledMihomoConfig()
   const {
     listeners,
     setNodeRef,
@@ -33,8 +33,8 @@ const SniffCard: React.FC<Props> = (props) => {
   const transform = tf ? { x: tf.x, y: tf.y, scaleX: 1, scaleY: 1 } : null
   const onChange = async (value: boolean): Promise<void> => {
     try {
-      await patchAppConfig({ controlSniff: value })
-      await patchControledMihomoConfig({})
+      await patchAppConfigOrThrow({ controlSniff: value })
+      await patchControledMihomoConfigOrThrow({})
       await restartCore()
     } catch (error) {
       notify(error, { variant: 'danger' })

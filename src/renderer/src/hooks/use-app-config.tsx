@@ -7,6 +7,7 @@ import { useTheme } from 'next-themes'
 interface AppConfigContextType {
   appConfig: AppConfig | undefined
   mutateAppConfig: () => void
+  patchAppConfigOrThrow: (value: Partial<AppConfig>) => Promise<AppConfig>
   patchAppConfig: (value: Partial<AppConfig>) => Promise<AppConfig | undefined>
 }
 
@@ -26,16 +27,22 @@ export const AppConfigProvider: React.FC<{ children: ReactNode }> = ({ children 
   const { setTheme } = useTheme()
   const appTheme = appConfig?.appTheme
 
-  const patchAppConfig = async (value: Partial<AppConfig>): Promise<AppConfig | undefined> => {
+  const patchAppConfigOrThrow = async (value: Partial<AppConfig>): Promise<AppConfig> => {
     try {
       const nextConfig = await patch(value)
-      mutateAppConfig(nextConfig, false)
+      void mutateAppConfig(nextConfig, false)
       return nextConfig
+    } finally {
+      void mutateAppConfig()
+    }
+  }
+
+  const patchAppConfig = async (value: Partial<AppConfig>): Promise<AppConfig | undefined> => {
+    try {
+      return await patchAppConfigOrThrow(value)
     } catch (e) {
       notify(e, { variant: 'danger' })
       return undefined
-    } finally {
-      mutateAppConfig()
     }
   }
 
@@ -59,7 +66,9 @@ export const AppConfigProvider: React.FC<{ children: ReactNode }> = ({ children 
   }, [appTheme, setTheme])
 
   return (
-    <AppConfigContext.Provider value={{ appConfig, mutateAppConfig, patchAppConfig }}>
+    <AppConfigContext.Provider
+      value={{ appConfig, mutateAppConfig, patchAppConfig, patchAppConfigOrThrow }}
+    >
       {children}
     </AppConfigContext.Provider>
   )

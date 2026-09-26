@@ -13,14 +13,14 @@ interface Props {
   iconOnly?: boolean
 }
 const DNSCard: React.FC<Props> = (props) => {
-  const { appConfig, patchAppConfig } = useAppConfig()
+  const { appConfig, patchAppConfigOrThrow } = useAppConfig()
   const { iconOnly } = props
   const {
     dnsCardStatus = 'col-span-1',
     controlDns = true,
     disableAnimation = false
   } = appConfig || {}
-  const { patchControledMihomoConfig } = useControledMihomoConfig()
+  const { patchControledMihomoConfigOrThrow } = useControledMihomoConfig()
   const {
     listeners,
     setNodeRef,
@@ -33,8 +33,8 @@ const DNSCard: React.FC<Props> = (props) => {
   const transform = tf ? { x: tf.x, y: tf.y, scaleX: 1, scaleY: 1 } : null
   const onChange = async (value: boolean): Promise<void> => {
     try {
-      await patchAppConfig({ controlDns: value })
-      await patchControledMihomoConfig({})
+      await patchAppConfigOrThrow({ controlDns: value })
+      await patchControledMihomoConfigOrThrow({})
       await restartCore()
     } catch (error) {
       notify(error, { variant: 'danger' })

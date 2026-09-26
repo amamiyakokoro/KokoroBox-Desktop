@@ -182,9 +182,12 @@ const BehaviorSettings: React.FC<Props> = ({
                 disallowEmptySelection={true}
                 onChange={async (value) => {
                   try {
-                    await patchAppConfig({
-                      envType: value as ('bash' | 'fish' | 'cmd' | 'powershell' | 'nushell')[]
-                    })
+                    if (
+                      !(await patchAppConfig({
+                        envType: value as ('bash' | 'fish' | 'cmd' | 'powershell' | 'nushell')[]
+                      }))
+                    )
+                      return
                   } catch (e) {
                     notify(e, { variant: 'danger' })
                   }
@@ -247,7 +250,7 @@ const BehaviorSettings: React.FC<Props> = ({
                     if (isNaN(num)) num = 0
                     const minDelay = autoLightweightMode === 'core' ? 5 : 0
                     if (num < minDelay) num = minDelay
-                    await patchAppConfig({ autoLightweightDelay: num })
+                    if (!(await patchAppConfig({ autoLightweightDelay: num }))) return
                   }}
                 />
               </SettingItem>
@@ -301,7 +304,7 @@ const BehaviorSettings: React.FC<Props> = ({
                   <PendingFieldAction
                     isVisible={interval !== networkDetectionInterval}
                     onPress={async () => {
-                      await patchAppConfig({ networkDetectionInterval: interval })
+                      if (!(await patchAppConfig({ networkDetectionInterval: interval }))) return
                       await startNetworkDetection()
                     }}
                   />
@@ -311,7 +314,7 @@ const BehaviorSettings: React.FC<Props> = ({
                 <PendingFieldAction
                   isVisible={bypass.length != networkDetectionBypass.length}
                   onPress={async () => {
-                    await patchAppConfig({ networkDetectionBypass: bypass })
+                    if (!(await patchAppConfig({ networkDetectionBypass: bypass }))) return
                     await startNetworkDetection()
                   }}
                 />

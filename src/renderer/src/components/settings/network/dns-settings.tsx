@@ -61,9 +61,8 @@ const DNS: React.FC<Props> = ({ embedded = false }) => {
   )
     ? requestedSetting
     : null
-  const { controledMihomoConfig, patchControledMihomoConfig, patchControledMihomoConfigOrThrow } =
-    useControledMihomoConfig()
-  const { appConfig, patchAppConfig } = useAppConfig()
+  const { controledMihomoConfig, patchControledMihomoConfigOrThrow } = useControledMihomoConfig()
+  const { appConfig, patchAppConfigOrThrow } = useAppConfig()
   const { hosts, controlDns = true } = appConfig || {}
   const { dns } = controledMihomoConfig || {}
   const {
@@ -178,7 +177,7 @@ const DNS: React.FC<Props> = ({ embedded = false }) => {
 
   const onSave = async (patch: Partial<MihomoConfig>): Promise<boolean> => {
     const saved = await runSave(async () => {
-      await patchAppConfig({
+      await patchAppConfigOrThrow({
         hosts: values.hosts
       })
       await patchControledMihomoConfigOrThrow(patch)
@@ -282,8 +281,8 @@ const DNS: React.FC<Props> = ({ embedded = false }) => {
               isSelected={controlDns}
               onChange={async (value) => {
                 try {
-                  await patchAppConfig({ controlDns: value })
-                  await patchControledMihomoConfig({})
+                  await patchAppConfigOrThrow({ controlDns: value })
+                  await patchControledMihomoConfigOrThrow({})
                   await restartCore()
                 } catch (e) {
                   notify(e, { variant: 'danger' })

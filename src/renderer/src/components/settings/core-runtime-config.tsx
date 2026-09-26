@@ -87,7 +87,7 @@ const CoreRuntimeConfig: React.FC<Props> = ({
 
   const handleConfigChangeWithRestart = async (key: string, value: unknown): Promise<void> => {
     try {
-      await patchAppConfig({ [key]: value })
+      if (!(await patchAppConfig({ [key]: value }))) return
       await restartCore()
       PubSub.publish('mihomo-core-changed')
     } catch (e) {
@@ -123,7 +123,7 @@ const CoreRuntimeConfig: React.FC<Props> = ({
         return
       }
       if (!appConfig?.systemCorePath || !paths.includes(appConfig.systemCorePath)) {
-        await patchAppConfig({ systemCorePath: paths[0] })
+        if (!(await patchAppConfig({ systemCorePath: paths[0] }))) return
       }
     }
     await handleConfigChangeWithRestart('core', newCore)
@@ -138,7 +138,7 @@ const CoreRuntimeConfig: React.FC<Props> = ({
       return
     }
     try {
-      await patchAppConfig({ corePermissionMode: key as 'elevated' | 'service' })
+      if (!(await patchAppConfig({ corePermissionMode: key as 'elevated' | 'service' }))) return
       await restartCore()
     } catch (e) {
       notify(e, { variant: 'danger' })

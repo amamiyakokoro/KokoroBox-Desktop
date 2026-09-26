@@ -206,7 +206,7 @@ const ShortcutInput: React.FC<{
         onPress={async () => {
           try {
             if (await registerShortcut(value, inputValue, action)) {
-              await patchAppConfig({ [action]: inputValue })
+              if (!(await patchAppConfig({ [action]: inputValue }))) return
               window.electron.ipcRenderer.send('updateTrayMenu')
             } else {
               notify(tr('Failed to register shortcut'), { variant: 'danger' })

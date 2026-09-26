@@ -22,12 +22,11 @@ const EnvSetting: React.FC = () => {
   } = appConfig || {}
   const handleConfigChangeWithRestart = async (key: string, value: unknown): Promise<void> => {
     try {
-      await patchAppConfig({ [key]: value })
+      if (!(await patchAppConfig({ [key]: value }))) return
       await restartCore()
+      PubSub.publish('mihomo-core-changed')
     } catch (e) {
       notify(e, { variant: 'danger' })
-    } finally {
-      PubSub.publish('mihomo-core-changed')
     }
   }
   const [safePathsInput, setSafePathsInput] = useState(safePaths)

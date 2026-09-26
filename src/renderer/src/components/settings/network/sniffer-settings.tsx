@@ -22,10 +22,9 @@ interface Props {
 }
 
 const Sniffer: React.FC<Props> = ({ embedded = false }) => {
-  const { appConfig, patchAppConfig } = useAppConfig()
+  const { appConfig, patchAppConfigOrThrow } = useAppConfig()
   const { controlSniff = true } = appConfig || {}
-  const { controledMihomoConfig, patchControledMihomoConfig, patchControledMihomoConfigOrThrow } =
-    useControledMihomoConfig()
+  const { controledMihomoConfig, patchControledMihomoConfigOrThrow } = useControledMihomoConfig()
   const { sniffer } = controledMihomoConfig || {}
   const {
     'parse-pure-ip': parsePureIP = true,
@@ -143,8 +142,8 @@ const Sniffer: React.FC<Props> = ({ embedded = false }) => {
               isSelected={controlSniff}
               onChange={async (value) => {
                 try {
-                  await patchAppConfig({ controlSniff: value })
-                  await patchControledMihomoConfig({})
+                  await patchAppConfigOrThrow({ controlSniff: value })
+                  await patchControledMihomoConfigOrThrow({})
                   await restartCore()
                 } catch (e) {
                   notify(e, { variant: 'danger' })
