@@ -542,9 +542,11 @@ const Home = () => {
                 aria-hidden="true"
               />
             )}
-            <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+            <div className="relative mb-4 flex flex-wrap items-center justify-between gap-2 pr-24">
               <h2 className="mr-auto text-sm font-semibold text-foreground">{tr('Network')}</h2>
-              <OverviewSpeedTest />
+              <div className="absolute right-0 top-1/2 -translate-y-1/2">
+                <OverviewSpeedTest />
+              </div>
               {exitIsLastKnown && publicIp ? (
                 <span className="text-xs text-warning">{tr('Last known exit')}</span>
               ) : refreshingIp ? (
