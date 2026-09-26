@@ -1,7 +1,11 @@
 import assert from 'node:assert/strict'
-import { readFileSync, existsSync } from 'node:fs'
+import { readFileSync, existsSync, readdirSync } from 'node:fs'
 import { test } from 'node:test'
-import { parseDependencyNotices, sysproxyBuildVersion } from '../src/shared/about.ts'
+import {
+  licenseProjectForDocument,
+  parseDependencyNotices,
+  sysproxyBuildVersion
+} from '../src/shared/about.ts'
 
 test('dependency notices retain scoped names, installed versions and license document IDs', () => {
   assert.deepEqual(
@@ -43,4 +47,21 @@ test('central license backups exist and the application/flag licenses retain the
     readFileSync('licenses/LICENSE.circle-flags', 'utf8'),
     readFileSync('src/renderer/src/assets/circle-flags/LICENSE.md', 'utf8')
   )
+})
+
+test('standalone licenses identify the covered project while package supplements stay with their package', () => {
+  assert.equal(licenseProjectForDocument('LICENSE.ProxyBridge'), 'ProxyBridge')
+  assert.equal(licenseProjectForDocument('icons/font-awesome6.txt'), 'react-icons · Font Awesome 6')
+  assert.equal(licenseProjectForDocument('CC-BY-SA-3.0.txt'), 'Typicons · CC-BY-SA-3.0')
+  for (const name of ['main.txt', 'renderer.txt', 'README.md', '@vscode+l10n@0.0.18.txt']) {
+    assert.equal(licenseProjectForDocument(name), undefined)
+  }
+  const documents = readdirSync('licenses', { recursive: true }).map((name) =>
+    name.replaceAll('\\', '/')
+  )
+  for (const name of documents.filter(
+    (name) => name.startsWith('icons/') && name.endsWith('.txt')
+  )) {
+    assert.match(licenseProjectForDocument(name) || '', /^react-icons · /)
+  }
 })
