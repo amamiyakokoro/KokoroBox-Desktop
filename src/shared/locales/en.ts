@@ -979,8 +979,8 @@ export const messages: Readonly<Record<string, string>> = {
   'A port number is required': 'A port number is required',
   'In-app': 'In-app',
   'App initialization failed': 'App initialization failed',
-  'The app crashed :( Please send the following details to the developer to help diagnose the issue':
-    'The app crashed :( Please send the following details to the developer to help diagnose the issue',
+  'The app encountered an error. Copy the details below for troubleshooting.':
+    'The app encountered an error. Copy the details below for troubleshooting.',
   'App version': 'App version',
   'App directory': 'App directory',
   'Application settings': 'Application settings',
@@ -1054,7 +1054,6 @@ export const messages: Readonly<Record<string, string>> = {
   'Show proxy details in tray menu': 'Show proxy details in tray menu',
   'Tray menu latency layout': 'Tray menu latency layout',
   'Execution log': 'Execution log',
-  'Report an issue': 'Report an issue',
   'Custom user agent': 'Custom user agent',
   'Set outbound interface': 'Set outbound interface',
   'New line': 'New line',

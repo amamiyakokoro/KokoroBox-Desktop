@@ -24,24 +24,12 @@ const ErrorFallback = ({ error }: FallbackProps): JSX.Element => {
   return (
     <div className="p-4">
       <h2 className="my-2 text-lg font-bold">
-        {tr(
-          'The app crashed :( Please send the following details to the developer to help diagnose the issue'
-        )}
+        {tr('The app encountered an error. Copy the details below for troubleshooting.')}
       </h2>
 
       <Button
         size="sm"
         variant="primary"
-        className="ml-2"
-        onPress={() => open('https://github.com/amamiyakokoro/KokoroBox-Desktop/issues/new/choose')}
-      >
-        GitHub Issues
-      </Button>
-
-      <Button
-        size="sm"
-        variant="secondary"
-        className="ml-2"
         onPress={() => navigator.clipboard.writeText('```\n' + message + '\n' + stack + '\n```')}
       >
         {tr('Copy error details')}

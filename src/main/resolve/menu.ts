@@ -175,12 +175,6 @@ export async function createApplicationMenu(): Promise<void> {
             shell.openExternal('https://github.com/amamiyakokoro/KokoroBox-Desktop')
           }
         },
-        {
-          label: tr('Report an issue'),
-          click: () => {
-            shell.openExternal('https://github.com/amamiyakokoro/KokoroBox-Desktop/issues')
-          }
-        },
         { type: 'separator' },
         {
           label: tr('About'),

@@ -120,7 +120,6 @@ security and privacy properties outside KokoroBox's control.
 ## Changes and contact
 
 We may update this policy when KokoroBox data practices change. The current
-version is published in this repository. For questions or to report a privacy
-issue, open a private security report where available or use the
-[KokoroBox-Desktop issue tracker](https://github.com/amamiyakokoro/KokoroBox-Desktop/issues)
-without posting sensitive information.
+version is published in this repository. For a sensitive privacy or security
+issue, use the repository's private security reporting feature where available.
+Do not post sensitive information publicly.

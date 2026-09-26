@@ -945,8 +945,8 @@ export const messages: Readonly<Record<string, string>> = {
   'A port number is required': '应包含端口号',
   'In-app': '应用内',
   'App initialization failed': '应用初始化失败',
-  'The app crashed :( Please send the following details to the developer to help diagnose the issue':
-    '应用崩溃了 :( 请将以下信息提交给开发者以排查错误',
+  'The app encountered an error. Copy the details below for troubleshooting.':
+    '应用程序发生错误。可复制下方信息以便排查。',
   'App version': '应用版本',
   'App directory': '应用目录',
   'Application settings': '应用设置',
@@ -1020,7 +1020,6 @@ export const messages: Readonly<Record<string, string>> = {
   'Show proxy details in tray menu': '托盘菜单显示节点信息',
   'Tray menu latency layout': '托盘菜单节点延迟显示方式',
   'Execution log': '执行日志',
-  'Report an issue': '报告问题',
   'Custom user agent': '指定 UA',
   'Set outbound interface': '指定出站接口',
   'New line': '换行',
