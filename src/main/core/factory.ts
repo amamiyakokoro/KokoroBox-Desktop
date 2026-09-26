@@ -18,8 +18,9 @@ import {
 import { parseYaml, stringifyYaml } from '../utils/yaml'
 import { copyFile, mkdir, readdir, writeFile } from 'fs/promises'
 import { deepMerge } from '../utils/merge'
-import vm from 'vm'
-import { existsSync, writeFileSync } from 'fs'
+import createOverrideWorker from './override-worker?nodeWorker'
+import { executeOverride } from './override-execution'
+import { existsSync } from 'fs'
 import path from 'path'
 import { getAppRoutingConfig } from '../app-routing/config'
 import { applyAppRoutingListener } from '../app-routing/profile'
@@ -377,60 +378,26 @@ async function runOverrideScript(
   script: string,
   item: OverrideItem
 ): Promise<MihomoConfig> {
-  const log = (type: string, data: string, flag = 'a'): void => {
-    writeFileSync(overridePath(item.id, 'log'), `[${type}] ${data}\n`, {
-      encoding: 'utf-8',
-      flag
-    })
-  }
+  const logPath = overridePath(item.id, 'log')
+  await writeFile(logPath, `[info] ${tr('Running script')}\n`, 'utf-8')
   try {
-    const b64d = (str: string): string => Buffer.from(str, 'base64').toString('utf-8')
-    const b64e = (data: Buffer | string): string =>
-      (Buffer.isBuffer(data) ? data : Buffer.from(String(data))).toString('base64')
-    const ctx = {
-      console: Object.freeze({
-        log: (...args: unknown[]) => log('log', args.map(format).join(' ')),
-        info: (...args: unknown[]) => log('info', args.map(format).join(' ')),
-        error: (...args: unknown[]) => log('error', args.map(format).join(' ')),
-        debug: (...args: unknown[]) => log('debug', args.map(format).join(' '))
-      }),
-      fetch,
-      yaml: { parse: parseYaml, stringify: stringifyYaml },
-      b64d,
-      b64e,
-      Buffer
-    }
-    vm.createContext(ctx)
-    log('info', tr('Running script'), 'w')
-    vm.runInContext(script, ctx)
-    const promise = vm.runInContext(
-      `(async () => {
-        const result = main(${JSON.stringify(profile)})
-        if (result instanceof Promise) return await result
-        return result
-      })()`,
-      ctx
+    const result = await executeOverride(() =>
+      createOverrideWorker({
+        workerData: { profile, script },
+        resourceLimits: { maxOldGenerationSizeMb: 128 }
+      })
     )
-    const newProfile = await promise
-    if (typeof newProfile !== 'object') {
-      throw new Error(tr('Script must return an object'))
-    }
-    log('info', tr('Script executed successfully'))
-    return newProfile
-  } catch (e) {
-    log('exception', tr('Script execution failed: {0}', [e]))
+    const outcome = result.error
+      ? `[exception] ${tr('Script execution failed: {0}', [result.error])}`
+      : `[info] ${tr('Script executed successfully')}`
+    await writeFile(logPath, result.logs + outcome + '\n', { encoding: 'utf-8', flag: 'a' })
+    return result.profile ?? profile
+  } catch (error) {
+    await writeFile(logPath, `[exception] ${tr('Script execution failed: {0}', [error])}\n`, {
+      encoding: 'utf-8',
+      flag: 'a'
+    })
     return profile
-  }
-}
-
-function format(data: unknown): string {
-  if (data instanceof Error) {
-    return `${data.name}: ${data.message}\n${data.stack}`
-  }
-  try {
-    return JSON.stringify(data)
-  } catch {
-    return String(data)
   }
 }
 
