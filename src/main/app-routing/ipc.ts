@@ -1,4 +1,5 @@
 import { ipcMain } from 'electron'
+import { tr } from '../../shared/i18n'
 import { restartCore } from '../core/manager'
 import { getApplicationPaths, getAppRoutingIcon, scanAppRoutingDirectory } from '../sys/misc'
 import { getAppRoutingConfig } from './config'
@@ -9,6 +10,7 @@ import {
   replaceAppRoutingConfig
 } from './manager'
 import { openMacAppRoutingSystemSettings } from './macos'
+import { clearProcessRouterLogs, getProcessRouterLogs } from '../service/api'
 
 async function invokeSafely<T>(
   operation: () => T | Promise<T>
@@ -32,6 +34,14 @@ export function registerAppRoutingIpcHandlers(): void {
     invokeSafely(() => getAppRoutingConfig(force))
   )
   ipcMain.handle('getAppRoutingStatus', () => getAppRoutingStatus())
+  ipcMain.handle('getAppRoutingLogs', () =>
+    invokeSafely(() => {
+      if (process.platform === 'darwin')
+        throw new Error(tr('Application routing logs are unavailable on macOS.'))
+      return getProcessRouterLogs()
+    })
+  )
+  ipcMain.handle('clearAppRoutingLogs', () => invokeSafely(clearProcessRouterLogs))
   ipcMain.handle('refreshAppRoutingStatus', () => invokeSafely(refreshAppRoutingStatus))
   ipcMain.handle('repairAppRoutingFirewall', () => invokeSafely(repairAppRoutingFirewall))
   ipcMain.handle('replaceAppRoutingConfig', (_event, config: AppRoutingConfig) =>

@@ -14,6 +14,8 @@ export const serviceContract = {
   processRouterStop: { method: 'POST', path: '/process-router/stop' },
   processRouterRules: { method: 'PUT', path: '/process-router/rules' },
   processRouterStatus: { method: 'GET', path: '/process-router/status' },
+  processRouterLogs: { method: 'GET', path: '/process-router/logs' },
+  processRouterLogsClear: { method: 'DELETE', path: '/process-router/logs' },
   processRouterFirewallRepair: { method: 'POST', path: '/process-router/firewall/repair' },
   processRouterCleanup: { method: 'POST', path: '/process-router/cleanup' },
   uwpLoopback: { method: 'PUT', path: '/sys/uwp-loopback' }

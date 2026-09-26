@@ -889,6 +889,14 @@ export const messages: Readonly<Record<string, string>> = {
   'Scheduled configuration restore': '定时恢复配置',
   'Real time': '实时',
   'Live logs': '实时日志',
+  'Log source': '日志来源',
+  'Core logs': '内核日志',
+  'Application routing logs': '应用分流日志',
+  'No application routing logs yet. Enable diagnostic logging in Application routing settings.':
+    '暂无应用分流日志，请在应用分流设置中开启诊断日志。',
+  'Application routing logs require an updated KokoroBox Service.':
+    '应用分流日志需要更新 KokoroBox Service。',
+  'Application routing logs are unavailable on macOS.': 'macOS 目前无法读取应用分流日志。',
   'Follow new logs': '跟随新日志',
   'Stop following new logs': '停止跟随新日志',
   'Clear logs': '清空日志',

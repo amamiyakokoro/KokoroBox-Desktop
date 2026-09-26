@@ -2,6 +2,7 @@ import { tr } from '../../../shared/i18n'
 import BasePage from '@renderer/components/base/base-page'
 import LogItem from '@renderer/components/logs/log-item'
 import { KokoSearchField } from '@renderer/components/base/koko-search-field'
+import { KokoTabs } from '@renderer/components/base/base-controls'
 import { KokoToolbar, KokoToolbarIconButton } from '@renderer/components/base/koko-toolbar'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'
@@ -23,7 +24,8 @@ import {
   subscribeMihomoLogs
 } from '@renderer/utils/mihomo-log-store'
 import { Separator } from '@heroui/react'
-import { restartMihomoLogs } from '@renderer/utils/ipc'
+import { clearAppRoutingLogs, getAppRoutingLogs, restartMihomoLogs } from '@renderer/utils/ipc'
+import type { AppRoutingLogEntry } from '../../../shared/app-routing-log'
 import { notify } from '@renderer/utils/notification'
 import './management-surfaces.css'
 
@@ -65,6 +67,10 @@ const Logs: React.FC = () => {
   const { 'log-level': logLevel = 'info' } = controledMihomoConfig || {}
 
   const [logs, setLogs] = useState<MihomoLogEntry[]>(() => getMihomoLogs())
+  const [tab, setTab] = useState<'core' | 'routing'>('core')
+  const [routingLogs, setRoutingLogs] = useState<AppRoutingLogEntry[]>([])
+  const [routingError, setRoutingError] = useState('')
+  const routingRequest = useRef(0)
   const [filter, setFilter] = useState('')
   const [trace, setTrace] = useState(true)
   const [freshLogIds, setFreshLogIds] = useState<string[]>([])
@@ -98,6 +104,39 @@ const Logs: React.FC = () => {
       return includesIgnoreCase(log.payload, filter) || includesIgnoreCase(log.type, filter)
     })
   }, [logsByLevel, filter])
+  const filteredRoutingLogs = useMemo(
+    () => routingLogs.filter((log) => includesIgnoreCase(log.message, filter)),
+    [routingLogs, filter]
+  )
+
+  const refreshRoutingLogs = useCallback(async () => {
+    const request = ++routingRequest.current
+    try {
+      const entries = await getAppRoutingLogs()
+      if (request !== routingRequest.current) return
+      setRoutingLogs(entries)
+      setRoutingError('')
+    } catch (error) {
+      if (request !== routingRequest.current) return
+      setRoutingError(error instanceof Error ? error.message : String(error))
+    }
+  }, [])
+
+  useEffect(() => {
+    if (tab !== 'routing') return
+    let active = true
+    let timer: number | undefined
+    const update = async () => {
+      await refreshRoutingLogs()
+      if (active) timer = window.setTimeout(() => void update(), 2000)
+    }
+    void update()
+    return () => {
+      active = false
+      if (timer !== undefined) window.clearTimeout(timer)
+      routingRequest.current++
+    }
+  }, [tab, refreshRoutingLogs])
 
   const clearFreshLogTimer = (): void => {
     if (!freshLogTimerRef.current) return
@@ -161,6 +200,21 @@ const Logs: React.FC = () => {
     <BasePage title={tr('Live logs')} contentClassName="logs-page overflow-y-hidden">
       <div className="flex h-full min-h-0 flex-col">
         <div className="sticky top-0 z-40 bg-surface">
+          <div className="px-4 pt-2">
+            <KokoTabs
+              ariaLabel={tr('Log source')}
+              options={[
+                { id: 'core', label: tr('Core logs') },
+                { id: 'routing', label: tr('Application routing logs') }
+              ]}
+              selectedKey={tab}
+              onChange={(key) => {
+                setTab(key === 'routing' ? 'routing' : 'core')
+                setFilter('')
+                setContext(undefined)
+              }}
+            />
+          </div>
           <KokoToolbar aria-label={tr('Live logs')}>
             <KokoSearchField
               className="min-w-40 flex-1"
@@ -169,30 +223,32 @@ const Logs: React.FC = () => {
               placeholder={tr('Filter')}
               onChangeValue={setFilter}
             />
-            <KokoSelect
-              aria-label={tr('Filter by log level')}
-              className="w-24 shrink-0"
-              density="toolbar"
-              options={[
-                { id: 'silent', label: tr('Silent') },
-                { id: 'error', label: tr('Error') },
-                { id: 'warning', label: tr('Warning') },
-                { id: 'info', label: tr('Info') },
-                { id: 'debug', label: tr('Debug') }
-              ]}
-              value={activeLogLevelFilter}
-              variant="secondary"
-              onChange={async (value) => {
-                if (value === activeLogLevelFilter) return
+            {tab === 'core' && (
+              <KokoSelect
+                aria-label={tr('Filter by log level')}
+                className="w-24 shrink-0"
+                density="toolbar"
+                options={[
+                  { id: 'silent', label: tr('Silent') },
+                  { id: 'error', label: tr('Error') },
+                  { id: 'warning', label: tr('Warning') },
+                  { id: 'info', label: tr('Info') },
+                  { id: 'debug', label: tr('Debug') }
+                ]}
+                value={activeLogLevelFilter}
+                variant="secondary"
+                onChange={async (value) => {
+                  if (value === activeLogLevelFilter) return
 
-                try {
-                  if (!(await patchAppConfig({ realtimeLogLevel: value as LogLevel }))) return
-                  await restartMihomoLogs()
-                } catch (error) {
-                  notify(error, { variant: 'danger' })
-                }
-              }}
-            />
+                  try {
+                    if (!(await patchAppConfig({ realtimeLogLevel: value as LogLevel }))) return
+                    await restartMihomoLogs()
+                  } catch (error) {
+                    notify(error, { variant: 'danger' })
+                  }
+                }}
+              />
+            )}
             <KokoToolbarIconButton
               isActive={trace}
               label={trace ? tr('Stop following new logs') : tr('Follow new logs')}
@@ -205,8 +261,20 @@ const Logs: React.FC = () => {
             <KokoToolbarIconButton
               label={tr('Clear logs')}
               tone="danger"
+              isDisabled={tab === 'routing' && (Boolean(routingError) || routingLogs.length === 0)}
               onPress={() => {
-                clearMihomoLogs()
+                if (tab === 'core') {
+                  clearMihomoLogs()
+                } else {
+                  routingRequest.current++
+                  void clearAppRoutingLogs()
+                    .then(() => {
+                      setRoutingLogs([])
+                      setRoutingError('')
+                      void refreshRoutingLogs()
+                    })
+                    .catch((error) => notify(error, { variant: 'danger' }))
+                }
               }}
             >
               <CgTrash className="text-lg" />
@@ -215,25 +283,58 @@ const Logs: React.FC = () => {
           <Separator />
         </div>
         <div className="min-h-0 flex-1 bg-surface py-1">
-          <Virtuoso
-            className="h-full pr-1"
-            data={filteredLogs}
-            initialTopMostItemIndex={filteredLogs.length > 0 ? filteredLogs.length - 1 : undefined}
-            followOutput={trace && !context && !ruleDetails}
-            computeItemKey={(_index, log) => log.id}
-            itemContent={(i, log) => {
-              return (
+          {tab === 'core' ? (
+            <Virtuoso
+              className="h-full pr-1"
+              data={filteredLogs}
+              initialTopMostItemIndex={
+                filteredLogs.length > 0 ? filteredLogs.length - 1 : undefined
+              }
+              followOutput={trace && !context && !ruleDetails}
+              computeItemKey={(_index, log) => log.id}
+              itemContent={(i, log) => {
+                return (
+                  <LogItem
+                    index={i}
+                    animateOnMount={freshLogIdSet.has(log.id)}
+                    time={log.time}
+                    type={log.type}
+                    payload={log.payload}
+                    onOpenMenu={openContext}
+                  />
+                )
+              }}
+            />
+          ) : routingError ? (
+            <div role="alert" className="p-5 text-sm text-danger">
+              {routingError}
+            </div>
+          ) : routingLogs.length === 0 ? (
+            <div className="p-5 text-sm text-muted">
+              {tr(
+                'No application routing logs yet. Enable diagnostic logging in Application routing settings.'
+              )}
+            </div>
+          ) : (
+            <Virtuoso
+              className="h-full pr-1"
+              data={filteredRoutingLogs}
+              initialTopMostItemIndex={
+                filteredRoutingLogs.length > 0 ? filteredRoutingLogs.length - 1 : undefined
+              }
+              followOutput={trace && !context && !ruleDetails}
+              computeItemKey={(_index, log) => log.id}
+              itemContent={(index, log) => (
                 <LogItem
-                  index={i}
-                  animateOnMount={freshLogIdSet.has(log.id)}
+                  index={index}
                   time={log.time}
-                  type={log.type}
-                  payload={log.payload}
+                  type="info"
+                  payload={log.message}
                   onOpenMenu={openContext}
                 />
-              )
-            }}
-          />
+              )}
+            />
+          )}
         </div>
       </div>
       {context && <LogContextMenu {...context} onClose={closeContext} onRule={setRuleDetails} />}

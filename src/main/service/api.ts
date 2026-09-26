@@ -1,4 +1,5 @@
 import { tr } from '../../shared/i18n'
+import type { AppRoutingLogEntry } from '../../shared/app-routing-log'
 import axios, { AxiosInstance, AxiosRequestConfig, InternalAxiosRequestConfig } from 'axios'
 import crypto from 'crypto'
 import WebSocket from 'ws'
@@ -569,6 +570,30 @@ export const getProcessRouterStatus = async (): Promise<ServiceProcessRouterStat
   return await getServiceAxios().request({
     method: serviceContract.processRouterStatus.method,
     url: serviceContract.processRouterStatus.path
+  })
+}
+
+export const getProcessRouterLogs = async (): Promise<AppRoutingLogEntry[]> => {
+  await requireServiceCapability('processRouter')
+  try {
+    const response = (await getServiceAxios().request({
+      method: serviceContract.processRouterLogs.method,
+      url: serviceContract.processRouterLogs.path
+    })) as { entries: AppRoutingLogEntry[] }
+    return response.entries
+  } catch (error) {
+    if (error instanceof ServiceAPIError && error.status === 404) {
+      throw new Error(tr('Application routing logs require an updated KokoroBox Service.'))
+    }
+    throw error
+  }
+}
+
+export const clearProcessRouterLogs = async (): Promise<void> => {
+  await requireServiceCapability('processRouter')
+  await getServiceAxios().request({
+    method: serviceContract.processRouterLogsClear.method,
+    url: serviceContract.processRouterLogsClear.path
   })
 }
 

@@ -2,6 +2,7 @@ import { TitleBarOverlayOptions } from 'electron'
 import { normalizeUwpLoopbackApps, type UwpLoopbackApp } from '../../../shared/types/uwp-loopback'
 import type { HomeBackground, PublicIpSnapshot } from '../../../shared/home'
 import type { SysProxyOperationState } from '../../../shared/sysproxy-operation'
+import type { AppRoutingLogEntry } from '../../../shared/app-routing-log'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function ipcErrorWrapper(response: any): any {
@@ -227,6 +228,14 @@ export async function getAppRoutingConfig(force = false): Promise<AppRoutingConf
 
 export async function getAppRoutingStatus(): Promise<AppRoutingStatus> {
   return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('getAppRoutingStatus'))
+}
+
+export async function getAppRoutingLogs(): Promise<AppRoutingLogEntry[]> {
+  return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('getAppRoutingLogs'))
+}
+
+export async function clearAppRoutingLogs(): Promise<void> {
+  return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('clearAppRoutingLogs'))
 }
 
 export async function refreshAppRoutingStatus(): Promise<AppRoutingStatus> {

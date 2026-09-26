@@ -923,6 +923,15 @@ export const messages: Readonly<Record<string, string>> = {
   'Scheduled configuration restore': 'Scheduled configuration restore',
   'Real time': 'Real time',
   'Live logs': 'Live logs',
+  'Log source': 'Log source',
+  'Core logs': 'Core logs',
+  'Application routing logs': 'Application routing logs',
+  'No application routing logs yet. Enable diagnostic logging in Application routing settings.':
+    'No application routing logs yet. Enable diagnostic logging in Application routing settings.',
+  'Application routing logs require an updated KokoroBox Service.':
+    'Application routing logs require an updated KokoroBox Service.',
+  'Application routing logs are unavailable on macOS.':
+    'Application routing logs are unavailable on macOS.',
   'Follow new logs': 'Follow new logs',
   'Stop following new logs': 'Stop following new logs',
   'Clear logs': 'Clear logs',
