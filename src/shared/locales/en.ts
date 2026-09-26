@@ -35,6 +35,7 @@ export const messages: Readonly<Record<string, string>> = {
   Jitter: 'Jitter',
   'Testing speed': 'Testing speed',
   'Speed test': 'Speed test',
+  'Latest speed test': 'Latest speed test',
   'Accent color': 'Accent color',
   'Custom accent color': 'Custom accent color',
   'Blue accent': 'Blue accent',

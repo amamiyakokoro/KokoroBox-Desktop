@@ -1,4 +1,4 @@
-import OverviewSpeedTest from '../components/home/speed-test'
+import OverviewSpeedTest, { type CompletedSpeedTestResult } from '../components/home/speed-test'
 import { OverviewTrafficCard } from '@renderer/components/home/traffic-card'
 import { Button, Surface, Tooltip } from '@heroui/react'
 import dayjs from 'dayjs'
@@ -6,13 +6,16 @@ import relativeTime from 'dayjs/plugin/relativeTime'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   LuArrowRight,
+  LuActivity,
   LuCalendarDays,
   LuClock3,
   LuCpu,
+  LuDownload,
   LuImages,
   LuNetwork,
   LuRefreshCw,
-  LuTriangleAlert
+  LuTriangleAlert,
+  LuUpload
 } from 'react-icons/lu'
 import { Link } from 'react-router-dom'
 import useSWR from 'swr'
@@ -79,12 +82,79 @@ import './home.css'
 dayjs.extend(relativeTime)
 
 type ServiceState = Awaited<ReturnType<typeof serviceStatus>>
-type SpeedTestSummary = { download: number; upload: number }
+type SpeedTestSummary = CompletedSpeedTestResult & { completedAt: number }
 
 let lastCompletedSpeedTest: SpeedTestSummary | undefined
 
 function formatSpeedTestMbps(bitsPerSecond: number): string {
   return (bitsPerSecond / 1_000_000).toFixed(1)
+}
+
+function OverviewSpeedTestSummary({ result }: { result: SpeedTestSummary }) {
+  const completedAt = new Date(result.completedAt)
+  const metrics = [
+    {
+      label: tr('Download'),
+      value: formatSpeedTestMbps(result.download),
+      unit: 'Mbps',
+      Icon: LuDownload
+    },
+    {
+      label: tr('Upload'),
+      value: formatSpeedTestMbps(result.upload),
+      unit: 'Mbps',
+      Icon: LuUpload
+    },
+    {
+      label: tr('Latency'),
+      value:
+        result.latency !== undefined && Number.isFinite(result.latency)
+          ? result.latency.toFixed(1)
+          : '—',
+      unit: 'ms',
+      Icon: LuClock3
+    },
+    {
+      label: tr('Jitter'),
+      value:
+        result.jitter !== undefined && Number.isFinite(result.jitter)
+          ? result.jitter.toFixed(1)
+          : '—',
+      unit: 'ms',
+      Icon: LuActivity
+    }
+  ]
+
+  return (
+    <section
+      aria-label={tr('Latest speed test')}
+      aria-live="polite"
+      className="home-overview-subpanel w-full max-w-80 justify-self-end rounded-xl px-3 py-2.5"
+    >
+      <div className="mb-2 flex items-center justify-between gap-2 text-xs text-muted">
+        <h3 className="font-medium">{tr('Latest speed test')}</h3>
+        <time dateTime={completedAt.toISOString()}>
+          {completedAt.toLocaleTimeString(getLocale(), {
+            hour: '2-digit',
+            minute: '2-digit'
+          })}
+        </time>
+      </div>
+      <dl className="grid grid-cols-2 gap-x-4 gap-y-2">
+        {metrics.map(({ label, value, unit, Icon }) => (
+          <div key={label} className="min-w-0">
+            <dt className="flex items-center gap-1 text-[11px] leading-4 text-muted">
+              <Icon className="size-3 shrink-0" aria-hidden="true" />
+              {label}
+            </dt>
+            <dd className="mt-0.5 whitespace-nowrap text-sm font-semibold leading-5 tabular-nums text-foreground">
+              {value} <span className="text-[11px] font-normal text-muted">{unit}</span>
+            </dd>
+          </div>
+        ))}
+      </dl>
+    </section>
+  )
 }
 
 function serviceStateLabel(state: ServiceState | undefined): string {
@@ -560,25 +630,14 @@ const Home = () => {
                 aria-hidden="true"
               />
             )}
-            <div
-              className={`relative mb-4 flex flex-wrap items-center justify-between gap-2 ${speedTestSummary ? 'pr-64' : 'pr-24'}`}
-            >
+            <div className="relative mb-4 flex flex-wrap items-center justify-between gap-2 pr-24">
               <h2 className="mr-auto text-sm font-semibold text-foreground">{tr('Network')}</h2>
               <div className="absolute right-0 top-1/2 flex -translate-y-1/2 items-center gap-2">
-                {speedTestSummary && (
-                  <span
-                    className="whitespace-nowrap text-xs tabular-nums text-muted"
-                    role="status"
-                    aria-label={`${tr('Download')} ${formatSpeedTestMbps(speedTestSummary.download)} Mbps; ${tr('Upload')} ${formatSpeedTestMbps(speedTestSummary.upload)} Mbps`}
-                  >
-                    ↓{formatSpeedTestMbps(speedTestSummary.download)} · ↑
-                    {formatSpeedTestMbps(speedTestSummary.upload)} Mbps
-                  </span>
-                )}
                 <OverviewSpeedTest
                   onComplete={(result) => {
-                    lastCompletedSpeedTest = result
-                    setSpeedTestSummary(result)
+                    const summary = { ...result, completedAt: Date.now() }
+                    lastCompletedSpeedTest = summary
+                    setSpeedTestSummary(summary)
                   }}
                 />
               </div>
@@ -612,39 +671,46 @@ const Home = () => {
                 )}
               </div>
             </div>
-            <div className="mt-4 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 border-t border-separator/40 pt-3">
-              <span className="text-xs font-medium text-muted">{tr('Routing')}</span>
-              <OverviewRoutingChip mode={mode} />
-              {mode === 'rule' && (
-                <span className="home-secondary-value text-xs text-muted">
-                  {tr('Selected by routing rules')}
-                </span>
-              )}
-              {mode === 'global' && (
-                <span className="flex min-w-0 flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
-                  <span
-                    className="max-w-full truncate text-xs font-medium"
-                    title={globalProxy.name}
-                  >
-                    {globalProxy.name ?? tr('Unavailable')}
+            <div
+              className={`home-network-footer mt-4 min-w-0 border-t border-separator/40 pt-3 ${speedTestSummary ? 'home-network-footer--with-speed-test' : ''}`}
+            >
+              <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 self-start">
+                <span className="text-xs font-medium text-muted">{tr('Routing')}</span>
+                <OverviewRoutingChip mode={mode} />
+                {mode === 'rule' && (
+                  <span className="home-secondary-value text-xs text-muted">
+                    {tr('Selected by routing rules')}
                   </span>
-                  {(globalProxy.protocol || globalProxy.latency !== undefined) && (
-                    <span className="home-secondary-value text-xs text-muted">
-                      {[
-                        globalProxy.protocol,
-                        globalProxy.latency !== undefined ? `${globalProxy.latency} ms` : undefined
-                      ]
-                        .filter(Boolean)
-                        .join(' · ')}
+                )}
+                {mode === 'global' && (
+                  <span className="flex min-w-0 flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
+                    <span
+                      className="max-w-full truncate text-xs font-medium"
+                      title={globalProxy.name}
+                    >
+                      {globalProxy.name ?? tr('Unavailable')}
                     </span>
-                  )}
-                </span>
-              )}
-              {mode === 'direct' && (
-                <span className="home-secondary-value text-xs text-muted">
-                  {tr('Direct connection')}
-                </span>
-              )}
+                    {(globalProxy.protocol || globalProxy.latency !== undefined) && (
+                      <span className="home-secondary-value text-xs text-muted">
+                        {[
+                          globalProxy.protocol,
+                          globalProxy.latency !== undefined
+                            ? `${globalProxy.latency} ms`
+                            : undefined
+                        ]
+                          .filter(Boolean)
+                          .join(' · ')}
+                      </span>
+                    )}
+                  </span>
+                )}
+                {mode === 'direct' && (
+                  <span className="home-secondary-value text-xs text-muted">
+                    {tr('Direct connection')}
+                  </span>
+                )}
+              </div>
+              {speedTestSummary && <OverviewSpeedTestSummary result={speedTestSummary} />}
             </div>
           </Surface>
 

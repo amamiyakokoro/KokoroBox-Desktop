@@ -4,12 +4,14 @@ import { runCloudflareSpeedTest, type SpeedTestResult } from '../../utils/cloudf
 import { LuActivity, LuClock3, LuDownload, LuGauge, LuUpload } from 'react-icons/lu'
 import { tr } from '../../../../shared/i18n'
 
+export type CompletedSpeedTestResult = SpeedTestResult & { download: number; upload: number }
+
 function SpeedTestDialog({
   onClose,
   onComplete
 }: {
   onClose: () => void
-  onComplete: (result: { download: number; upload: number }) => void
+  onComplete: (result: CompletedSpeedTestResult) => void
 }) {
   const engine = useRef<AbortController | null>(null)
   const generation = useRef(0)
@@ -54,7 +56,7 @@ function SpeedTestDialog({
         Number.isFinite(result.download) &&
         Number.isFinite(result.upload)
       ) {
-        onComplete({ download: result.download, upload: result.upload })
+        onComplete({ ...result, download: result.download, upload: result.upload })
       }
       stop()
     } catch {
@@ -138,7 +140,7 @@ function SpeedTestDialog({
 export default function OverviewSpeedTest({
   onComplete
 }: {
-  onComplete: (result: { download: number; upload: number }) => void
+  onComplete: (result: CompletedSpeedTestResult) => void
 }) {
   const [open, setOpen] = useState(false)
   return (

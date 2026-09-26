@@ -34,6 +34,7 @@ export const messages: Readonly<Record<string, string>> = {
   Jitter: '抖动',
   'Testing speed': '测速中',
   'Speed test': '测速',
+  'Latest speed test': '最近测速',
   'Accent color': '主题色',
   'Custom accent color': '自定义主题色',
   'Blue accent': '蓝色',
