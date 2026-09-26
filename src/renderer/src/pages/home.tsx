@@ -83,7 +83,10 @@ import {
 import { activeOverviewFeatures, configuredOverviewFeatures } from '@renderer/utils/home-overview'
 import { platform } from '@renderer/utils/init'
 import { notify } from '@renderer/utils/notification'
-import { repairServiceAndPromptRestart } from '@renderer/utils/service-repair'
+import {
+  repairServiceAndPromptRestart,
+  useServiceRepairState
+} from '@renderer/utils/service-repair'
 import { nextProfileUpdateAt } from '../../../shared/profile-update'
 import { systemCoreOnlyBuild } from '../../../shared/build-flags'
 import { homeBuiltInImages } from '@renderer/utils/home-background-assets'
@@ -203,8 +206,8 @@ const Home = () => {
   const [publicIpSnapshot, setPublicIpSnapshot] = useState<PublicIpSnapshot>({ stale: true })
   const publicIp = publicIpSnapshot.info
   const [refreshingIp, setRefreshingIp] = useState(false)
-  const [repairingService, setRepairingService] = useState(false)
-  const [serviceRestartRequired, setServiceRestartRequired] = useState(false)
+  const { repairing: repairingService, restartRequired: serviceRestartRequired } =
+    useServiceRepairState()
   const [refreshSignal, setRefreshSignal] = useState(0)
   const [revealed, setRevealed] = useState(false)
   const [backgroundUrl, setBackgroundUrl] = useState<string>()
@@ -655,15 +658,11 @@ const Home = () => {
     !systemCoreOnlyBuild &&
     (serviceState === 'not-installed' || (serviceExpected && serviceState === 'unknown'))
   const handleRepairService = async (): Promise<void> => {
-    setRepairingService(true)
     try {
       await repairServiceAndPromptRestart()
-      setServiceRestartRequired(true)
       void refreshService()
     } catch (error) {
       notify(error, { variant: 'danger' })
-    } finally {
-      setRepairingService(false)
     }
   }
   const trafficState = overviewTrafficState(history)

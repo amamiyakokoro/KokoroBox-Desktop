@@ -857,7 +857,7 @@ test('service management separates maintenance, danger and state-specific action
     serviceModal.indexOf('service-maintenance-heading') < serviceModal.indexOf('<Modal.Footer')
   )
   assert.ok(serviceModal.indexOf('service-danger-heading') < serviceModal.indexOf('<Modal.Footer'))
-  assert.doesNotMatch(footer, /Initialize again|Restart|Repair service|Uninstall/)
+  assert.doesNotMatch(footer, /Initialize again|tr\('Restart'\)|Repair service|Uninstall/)
   assert.equal((footer.match(/tr\('Close'\)/g) || []).length, 1)
   assert.match(footer, /status === 'not-installed'/)
   assert.match(footer, /status === 'need-init'/)

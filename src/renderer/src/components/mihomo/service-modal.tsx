@@ -2,10 +2,12 @@ import { tr } from '../../../../shared/i18n'
 import React, { useEffect, useState, useCallback } from 'react'
 import { Button, Card, Chip, Modal, Separator, Spinner } from '@heroui/react'
 import {
+  relaunchApp,
   openServiceSystemSettings,
   serviceStatus,
   testServiceConnection
 } from '@renderer/utils/ipc'
+import { useServiceRepairState } from '@renderer/utils/service-repair'
 import { notify } from '@renderer/utils/notification'
 import { systemCoreOnlyBuild, systemServicePath } from '../../../../shared/build-flags'
 import { platform } from '@renderer/utils/init'
@@ -73,6 +75,7 @@ async function readServiceStatus(): Promise<ServiceStatusType> {
 
 const ServiceModal: React.FC<Props> = (props) => {
   const { onChange, onInit, onInstall, onUninstall, onStart, onRestart } = props
+  const { repairing, restartRequired } = useServiceRepairState()
   const [activeAction, setActiveAction] = useState<ServiceAction | null>(null)
   const [status, setStatus] = useState<ServiceStatusType | null>(null)
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatusType>('checking')
@@ -171,7 +174,7 @@ const ServiceModal: React.FC<Props> = (props) => {
 
   const serviceTone = serviceStatusColor(status)
   const connectionTone = connectionStatusColor(connectionStatus)
-  const isBusy = activeAction !== null
+  const isBusy = activeAction !== null || repairing
   const hasKnownInstalledService =
     status !== null && status !== 'unknown' && status !== 'not-installed'
   const requiresMacApproval = status === 'requires-approval' && platform === 'darwin'
@@ -243,6 +246,11 @@ const ServiceModal: React.FC<Props> = (props) => {
                   </Card.Content>
                 </Card>
 
+                {restartRequired && (
+                  <p role="status" className="text-sm text-muted">
+                    {tr('Restart KokoroBox to apply the service repair.')}
+                  </p>
+                )}
                 <div className="space-y-1">
                   <h3 className="text-sm font-semibold text-foreground">KokoroBox Service</h3>
                   <p className="text-xs leading-5 text-muted">
@@ -261,7 +269,7 @@ const ServiceModal: React.FC<Props> = (props) => {
                   </p>
                 </div>
 
-                {showMaintenance && (
+                {showMaintenance && !restartRequired && (
                   <section className="space-y-2" aria-labelledby="service-maintenance-heading">
                     <Separator />
                     <h3
@@ -318,7 +326,7 @@ const ServiceModal: React.FC<Props> = (props) => {
                   </section>
                 )}
 
-                {showDangerZone && (
+                {showDangerZone && !restartRequired && (
                   <section className="space-y-2" aria-labelledby="service-danger-heading">
                     <Separator />
                     <h3
@@ -351,7 +359,18 @@ const ServiceModal: React.FC<Props> = (props) => {
                 {tr('Close')}
               </Button>
 
-              {systemCoreOnlyBuild ? (
+              {restartRequired ? (
+                <Button
+                  size="sm"
+                  variant="primary"
+                  isDisabled={isBusy}
+                  onPress={() =>
+                    void relaunchApp().catch((error) => notify(error, { variant: 'danger' }))
+                  }
+                >
+                  {tr('Restart app')}
+                </Button>
+              ) : systemCoreOnlyBuild ? (
                 status === 'need-init' ? (
                   <Button
                     size="sm"
