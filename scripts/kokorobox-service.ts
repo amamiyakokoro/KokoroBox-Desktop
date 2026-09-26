@@ -3,7 +3,7 @@ import { mkdirSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import AdmZip from 'adm-zip'
 
-export const KOKOROBOX_SERVICE_STABLE_TAG = 'v0.6.1'
+export const KOKOROBOX_SERVICE_STABLE_TAG = 'v0.6.2'
 export const KOKOROBOX_PROCESS_ROUTER_FILES = Object.freeze([
   'kokorobox-process-router.exe',
   'ProxyBridgeCore.dll',
