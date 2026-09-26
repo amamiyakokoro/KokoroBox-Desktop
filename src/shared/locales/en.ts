@@ -1,5 +1,12 @@
 // English source catalog. Keys are the canonical application-owned messages.
 export const messages: Readonly<Record<string, string>> = {
+  'Override help': 'Override help',
+  'YAML overrides merge objects; values and arrays replace the originals.':
+    'YAML overrides merge objects; values and arrays replace the originals.',
+  'Use ! to replace a whole object. Prefix + to prepend array items; suffix + to append them.':
+    'Use ! to replace a whole object. Prefix + to prepend array items; suffix + to append them.',
+  'JavaScript uses main(config): change the configuration and return it.':
+    'JavaScript uses main(config): change the configuration and return it.',
   'Show more': 'Show more',
   'Service shows the running version. Other components show the bundled version or source revision.':
     'Service shows the running version. Other components show the bundled version or source revision.',

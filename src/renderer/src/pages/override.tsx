@@ -16,11 +16,10 @@ import { useOverrideConfig } from '@renderer/hooks/use-override-config'
 import OverrideItem from '@renderer/components/override/override-item'
 import EditInfoModal from '@renderer/components/override/edit-info-modal'
 import { FaPlus } from 'react-icons/fa6'
-import { HiOutlineDocumentText } from 'react-icons/hi'
-import { RiArchiveLine } from 'react-icons/ri'
+import { LuCircleHelp, LuFiles } from 'react-icons/lu'
 import { useCardDndSensors } from '@renderer/hooks/use-card-dnd-sensors'
 import { notify } from '@renderer/utils/notification'
-import { LuFiles } from 'react-icons/lu'
+import OverrideHelpModal from '@renderer/components/override/override-help-modal'
 import './management-surfaces.css'
 
 const emptyItems: OverrideItem[] = []
@@ -41,6 +40,7 @@ const Override: React.FC = () => {
   const [fileOver, setFileOver] = useState(false)
   const [url, setUrl] = useState('')
   const [showEditModal, setShowEditModal] = useState(false)
+  const [showHelpModal, setShowHelpModal] = useState(false)
   const [editingItem, setEditingItem] = useState<OverrideItem | null>(null)
   const sensors = useCardDndSensors()
   const isProcessingDrop = useRef(false)
@@ -179,22 +179,10 @@ const Override: React.FC = () => {
             variant="ghost"
             isIconOnly
             className="app-nodrag"
-            onPress={() => {
-              open('https://mihomo.party/docs/guide/override')
-            }}
+            aria-label={tr('Override help')}
+            onPress={() => setShowHelpModal(true)}
           >
-            <HiOutlineDocumentText className="text-lg" />
-          </Button>
-          <Button
-            className="app-nodrag"
-            isIconOnly
-            variant="ghost"
-            size="sm"
-            onPress={() => {
-              open('https://github.com/mihomo-party-org/override-hub')
-            }}
-          >
-            <RiArchiveLine className="text-lg" />
+            <LuCircleHelp className="text-lg" aria-hidden="true" />
           </Button>
         </>
       }
@@ -244,14 +232,14 @@ const Override: React.FC = () => {
                 await addOverrideItem({
                   name: tr('New YAML'),
                   type: 'local',
-                  file: '# https://mihomo.party/docs/guide/override/yaml',
+                  file: '# +rules:\n#   - DOMAIN,example.com,DIRECT',
                   ext: 'yaml'
                 })
               } else if (id === 'new-js') {
                 await addOverrideItem({
                   name: tr('New JS'),
                   type: 'local',
-                  file: '// https://mihomo.party/docs/guide/override/javascript\nfunction main(config) {\n  return config\n}',
+                  file: 'function main(config) {\n  return config\n}',
                   ext: 'js'
                 })
               } else if (id === 'import') {
@@ -323,6 +311,7 @@ const Override: React.FC = () => {
           }}
         />
       )}
+      {showHelpModal && <OverrideHelpModal onClose={() => setShowHelpModal(false)} />}
     </BasePage>
   )
 }

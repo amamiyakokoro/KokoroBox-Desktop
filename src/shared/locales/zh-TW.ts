@@ -1,5 +1,12 @@
 // Traditional Chinese (Taiwan) localization. Keys are the canonical English source messages.
 export const messages: Readonly<Record<string, string>> = {
+  'Override help': '覆寫說明',
+  'YAML overrides merge objects; values and arrays replace the originals.':
+    'YAML 覆寫會合併物件；一般值與陣列會取代原有內容。',
+  'Use ! to replace a whole object. Prefix + to prepend array items; suffix + to append them.':
+    '在鍵名後加 ! 可取代整個物件；在陣列鍵名前加 + 會插入開頭，鍵名後加 + 會追加到結尾。',
+  'JavaScript uses main(config): change the configuration and return it.':
+    'JavaScript 使用 main(config)：修改設定後回傳設定物件。',
   'Show more': '顯示更多',
   'Service shows the running version. Other components show the bundled version or source revision.':
     'Service 顯示執行中版本；其他元件顯示內附版本或原始碼修訂。',
