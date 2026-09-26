@@ -106,11 +106,15 @@ function AboutDetailsDialog({ section, onClose }: { section: AboutSection; onClo
                       )}
                     </p>
                     {versions.map(([name, value]) => (
-                      <SettingItem key={name} title={name} contentAlign="end" divider>
-                        <span className="max-w-[65%] break-all text-right text-sm text-muted select-text">
+                      <div
+                        key={name}
+                        className="grid grid-cols-2 items-start gap-4 border-b border-separator py-3 text-sm select-text"
+                      >
+                        <span className="min-w-0 [overflow-wrap:anywhere]">{name}</span>
+                        <span className="min-w-0 text-right text-muted [overflow-wrap:anywhere]">
                           {value || tr('Unavailable')}
                         </span>
-                      </SettingItem>
+                      </div>
                     ))}
                     <Button size="sm" variant="secondary" onPress={() => void mutate()}>
                       {tr('Refresh')}
@@ -129,16 +133,20 @@ function AboutDetailsDialog({ section, onClose }: { section: AboutSection; onClo
                       </p>
                     )}
                     {dependencies.slice(0, limit).map((item) => (
-                      <SettingItem
+                      <div
                         key={`${item.name}@${item.version}`}
-                        title={item.name}
-                        description={`${item.version} · ${item.license}`}
-                        contentAlign="end"
-                        divider
+                        className="flex items-center gap-4 border-b border-separator py-3"
                       >
+                        <div className="min-w-0 flex-1 select-text [overflow-wrap:anywhere]">
+                          <p className="text-sm font-medium text-foreground">{item.name}</p>
+                          <p className="mt-1 text-xs text-muted">
+                            {item.version} · {item.license}
+                          </p>
+                        </div>
                         <Button
                           size="sm"
                           variant="tertiary"
+                          className="shrink-0"
                           onPress={() =>
                             setDocument({
                               id: item.document,
@@ -148,7 +156,7 @@ function AboutDetailsDialog({ section, onClose }: { section: AboutSection; onClo
                         >
                           {tr('License')}
                         </Button>
-                      </SettingItem>
+                      </div>
                     ))}
                     {dependencies.length > limit && (
                       <Button variant="secondary" onPress={() => setLimit(limit + 30)}>
