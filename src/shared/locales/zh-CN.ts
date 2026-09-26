@@ -1216,6 +1216,7 @@ export const messages: Readonly<Record<string, string>> = {
   'Test URL source': '测试地址来源',
   Dark: '深色',
   'Mixed port': '混合端口',
+  'Mixed proxy port': '混合代理端口',
   'Add defaults': '添加默认值',
   '{0} items': '{0} 个项目',
   '+ {0} more': '+ 还有 {0} 项',

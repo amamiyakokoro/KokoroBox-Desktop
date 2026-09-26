@@ -10,6 +10,7 @@ import {
   LuClock3,
   LuCpu,
   LuImages,
+  LuNetwork,
   LuRefreshCw,
   LuTriangleAlert
 } from 'react-icons/lu'
@@ -442,6 +443,15 @@ const Home = () => {
     !controllerRuntimeError &&
     !generatedRuntimeError
   const runtimeFeaturesUnavailable = Boolean(controllerRuntimeError || generatedRuntimeError)
+  const mixedPort = controllerRuntime?.['mixed-port']
+  const activeMixedPort =
+    runtime.mihomo !== 'stopped' &&
+    Number.isInteger(mixedPort) &&
+    mixedPort !== undefined &&
+    mixedPort > 0 &&
+    mixedPort <= 65535
+      ? mixedPort
+      : undefined
   const mihomoVersionLabel = normalizeCoreVersion(coreVersion?.version)
   const serviceVersionLabel = displayServiceVersion(serviceVersion)
   const exitIsLastKnown = publicIpSnapshot.stale || (!coreLoading && runtime.mihomo === 'stopped')
@@ -784,6 +794,22 @@ const Home = () => {
                   </div>
                 )}
               </div>
+              {activeMixedPort !== undefined && (
+                <Link
+                  to="/settings?section=core&panel=mihomo&setting=mihomo-mixed-port"
+                  className="app-nodrag group mt-3 flex min-w-0 items-center justify-between gap-2 rounded-md border-t border-separator/40 px-1 pt-3 pb-0.5 text-xs text-muted hover:text-accent focus-visible:outline-2 focus-visible:outline-accent"
+                  aria-label={`${tr('Mixed proxy port')} ${activeMixedPort} · ${tr('Open settings')}`}
+                >
+                  <span className="flex min-w-0 items-center gap-1.5">
+                    <LuNetwork className="size-3.5 shrink-0" aria-hidden="true" />
+                    <span>{tr('Mixed proxy port')}</span>
+                  </span>
+                  <span className="flex shrink-0 items-center gap-1 font-medium tabular-nums text-foreground group-hover:text-accent">
+                    {activeMixedPort}
+                    <LuArrowRight className="size-3.5" aria-hidden="true" />
+                  </span>
+                </Link>
+              )}
             </Surface>
           </div>
 

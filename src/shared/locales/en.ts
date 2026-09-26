@@ -1258,6 +1258,7 @@ export const messages: Readonly<Record<string, string>> = {
   'Test URL source': 'Test URL source',
   Dark: 'Dark',
   'Mixed port': 'Mixed port',
+  'Mixed proxy port': 'Mixed proxy port',
   'Add defaults': 'Add defaults',
   '{0} items': '{0} items',
   '+ {0} more': '+ {0} more',
