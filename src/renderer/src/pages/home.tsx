@@ -1,11 +1,10 @@
+import { OverviewTrafficCard } from '@renderer/components/home/traffic-card'
 import { Button, Surface, Tooltip } from '@heroui/react'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
-  LuArrowDown,
   LuArrowRight,
-  LuArrowUp,
   LuCalendarDays,
   LuClock3,
   LuCpu,
@@ -29,36 +28,17 @@ import {
 } from '../../../shared/home'
 import BasePage from '@renderer/components/base/base-page'
 import { CountryFlag } from '@renderer/components/base/country-flag'
-import {
-  OverviewTrafficChart,
-  overviewTrafficRangeSeconds,
-  overviewTrafficState,
-  overviewTrafficStorageKey,
-  parseOverviewTrafficHistory,
-  pruneOverviewTrafficHistory,
-  type OverviewTrafficSample
-} from '@renderer/components/home/overview-traffic-chart'
-import {
-  createConnectionCounterResetState,
-  nextConnectionCounterBaseline,
-  withConnectionSpeeds
-} from '@renderer/components/connections/connection-speeds'
-import { TopActiveAppRow, metadataForTopActiveApp } from '@renderer/components/home/top-active-app'
 import { normalizeCoreVersion } from '@renderer/components/sider/core-version'
 import {
   OverviewMetadataRow,
-  OverviewConnectionAction,
   OverviewPublicIp,
-  overviewConnectionLabel,
   OverviewRoutingChip,
   OverviewActiveChips,
   OverviewConfiguredChips,
   OverviewStat,
   OverviewStatusLine,
   OverviewSubscriptionIdentity,
-  OverviewUsageSummary,
-  OverviewTrafficRate,
-  formatOverviewBytes
+  OverviewUsageSummary
 } from '@renderer/components/home/overview-parts'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { useSysProxyOperation } from '@renderer/hooks/use-sysproxy-operation'
@@ -66,20 +46,6 @@ import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-c
 import { useGroups } from '@renderer/hooks/use-groups'
 import { useHomeDefaultBackgroundSwitch } from '@renderer/hooks/use-home-default-background'
 import { useProfileConfig } from '@renderer/hooks/use-profile-config'
-import {
-  loadApplicationMetadata,
-  type ApplicationMetadata
-} from '@renderer/utils/application-metadata'
-import {
-  connectionActivityFreshnessMs,
-  displayedTopApplication,
-  hasFreshConnectionActivity,
-  parseRememberedTopApplication,
-  rememberedTopApplicationStorageKey,
-  rememberTopApplication,
-  type RememberedTopApplication,
-  topActiveApplication
-} from '@renderer/utils/home-connections'
 import { activeOverviewFeatures, configuredOverviewFeatures } from '@renderer/utils/home-overview'
 import { platform } from '@renderer/utils/init'
 import { notify } from '@renderer/utils/notification'
@@ -215,35 +181,6 @@ const Home = () => {
     file: string
     url: string
   }>()
-  const [rates, setRates] = useState({ up: 0, down: 0 })
-  const [connections, setConnections] = useState<ControllerConnections>()
-  const [connectionSampleAt, setConnectionSampleAt] = useState<number>()
-  const [connectionSampleMs, setConnectionSampleMs] = useState(0)
-  const [activityNow, setActivityNow] = useState(Date.now())
-  const [activityMetadata, setActivityMetadata] = useState<{
-    key: string
-    value: ApplicationMetadata
-  }>()
-  const [rememberedTopApplication, setRememberedTopApplication] = useState<
-    RememberedTopApplication | undefined
-  >(() => {
-    try {
-      return parseRememberedTopApplication(localStorage.getItem(rememberedTopApplicationStorageKey))
-    } catch {
-      return undefined
-    }
-  })
-  const [history, setHistory] = useState<OverviewTrafficSample[]>(() => {
-    try {
-      return parseOverviewTrafficHistory(
-        localStorage.getItem(overviewTrafficStorageKey),
-        Date.now()
-      )
-    } catch {
-      return []
-    }
-  })
-  const [trafficNow, setTrafficNow] = useState(Date.now())
   const [coreStopped, setCoreStopped] = useState(false)
   const [coreEpoch, setCoreEpoch] = useState(0)
   const runtimeQueryKey = !coreStopped && !coreError && coreVersion ? coreEpoch : null
@@ -262,13 +199,6 @@ const Home = () => {
   const ipRequestGeneration = useRef(0)
   const previousMode = useRef<OutboundMode | undefined>(undefined)
   const previousSelections = useRef<string | undefined>(undefined)
-  const previousConnections = useRef<ControllerConnectionDetail[] | undefined>(undefined)
-  const previousConnectionsAt = useRef<number | undefined>(undefined)
-  const connectionCounterResets = useRef(createConnectionCounterResetState())
-  const connectionInterval = appConfig?.connectionInterval ?? 500
-  const connectionIntervalRef = useRef(connectionInterval)
-  connectionIntervalRef.current = connectionInterval
-  const activityFreshnessMs = connectionActivityFreshnessMs(connectionInterval)
   const mode = controledMihomoConfig?.mode ?? 'rule'
   const globalProxy = useMemo(() => selectedGlobalProxy(groups), [groups])
   const selectedProxyKey = useMemo(() => {
@@ -344,13 +274,6 @@ const Home = () => {
     const coreStarted = (): void => {
       setCoreStopped(false)
       setCoreEpoch((epoch) => epoch + 1)
-      setRates({ up: 0, down: 0 })
-      setConnections(undefined)
-      setConnectionSampleAt(undefined)
-      setConnectionSampleMs(0)
-      previousConnections.current = undefined
-      previousConnectionsAt.current = undefined
-      connectionCounterResets.current = createConnectionCounterResetState()
       refresh()
       void refreshCore()
       void refreshService()
@@ -358,22 +281,12 @@ const Home = () => {
     const coreStoppedHandler = (): void => {
       setCoreStopped(true)
       setCoreEpoch((epoch) => epoch + 1)
-      setRates({ up: 0, down: 0 })
-      setConnections(undefined)
-      setConnectionSampleAt(undefined)
-      setConnectionSampleMs(0)
-      previousConnections.current = undefined
-      previousConnectionsAt.current = undefined
-      connectionCounterResets.current = createConnectionCounterResetState()
       refresh()
     }
     const onVisible = (): void => {
       if (!document.hidden) {
         const currentTime = Date.now()
         setNow(currentTime)
-        setActivityNow(currentTime)
-        setTrafficNow(currentTime)
-        setHistory((samples) => pruneOverviewTrafficHistory(samples, currentTime))
       }
     }
     const removeNetwork = window.electron.ipcRenderer.on('homeNetworkChanged', refresh)
@@ -394,24 +307,6 @@ const Home = () => {
     const timer = window.setInterval(() => setNow(Date.now()), 60_000)
     return () => window.clearInterval(timer)
   }, [])
-
-  useEffect(() => {
-    const timer = window.setInterval(() => {
-      const currentTime = Date.now()
-      setTrafficNow(currentTime)
-      setHistory((samples) => pruneOverviewTrafficHistory(samples, currentTime))
-    }, 15_000)
-    return () => window.clearInterval(timer)
-  }, [])
-
-  useEffect(() => {
-    try {
-      if (history.length === 0) localStorage.removeItem(overviewTrafficStorageKey)
-      else localStorage.setItem(overviewTrafficStorageKey, JSON.stringify(history))
-    } catch {
-      // The chart still retains the current session's samples in memory.
-    }
-  }, [history])
 
   useEffect(() => {
     if (!controledMihomoConfig) return
@@ -470,75 +365,6 @@ const Home = () => {
     }
   }, [refreshSignal])
 
-  useEffect(() => {
-    let lastSampleAt = 0
-    const removeTraffic = window.electron.ipcRenderer.on(
-      'mihomoTraffic',
-      (_event, info: ControllerTraffic) => {
-        setRates({ up: info.up, down: info.down })
-        const receivedAt = Date.now()
-        if (receivedAt - lastSampleAt < 1000) return
-        lastSampleAt = receivedAt
-        setTrafficNow(receivedAt)
-        setHistory((samples) =>
-          pruneOverviewTrafficHistory(
-            [...samples, { up: info.up, down: info.down, index: receivedAt }],
-            receivedAt
-          )
-        )
-      }
-    )
-    const removeConnections = window.electron.ipcRenderer.on(
-      'mihomoConnections',
-      (_event, info: ControllerConnections) => {
-        const receivedAt = Date.now()
-        if (
-          previousConnectionsAt.current !== undefined &&
-          receivedAt <= previousConnectionsAt.current
-        ) {
-          return
-        }
-        if (!info.connections) {
-          previousConnections.current = undefined
-          previousConnectionsAt.current = undefined
-          connectionCounterResets.current = createConnectionCounterResetState()
-          setConnectionSampleAt(undefined)
-          setConnectionSampleMs(0)
-          setConnections(info)
-          return
-        }
-        const sampleMs = receivedAt - (previousConnectionsAt.current ?? receivedAt)
-        const maximumGapMs = connectionActivityFreshnessMs(connectionIntervalRef.current)
-        const baseline = sampleMs <= maximumGapMs ? previousConnections.current : undefined
-        if (!baseline) connectionCounterResets.current = createConnectionCounterResetState()
-        setConnections({
-          ...info,
-          connections: withConnectionSpeeds(info.connections, baseline, sampleMs, maximumGapMs)
-        })
-        previousConnections.current = nextConnectionCounterBaseline(
-          info.connections,
-          baseline,
-          connectionCounterResets.current
-        )
-        previousConnectionsAt.current = receivedAt
-        setConnectionSampleAt(receivedAt)
-        setConnectionSampleMs(baseline ? sampleMs : 0)
-        setActivityNow(receivedAt)
-      }
-    )
-    return () => {
-      removeTraffic()
-      removeConnections()
-    }
-  }, [])
-
-  useEffect(() => {
-    if (connectionSampleAt === undefined) return
-    const remaining = connectionSampleAt + activityFreshnessMs - Date.now()
-    const timer = window.setTimeout(() => setActivityNow(Date.now()), Math.max(0, remaining) + 1)
-    return () => window.clearTimeout(timer)
-  }, [connectionSampleAt, activityFreshnessMs])
-
   const expiresSoon =
     profile?.extra?.expire &&
     profile.extra.expire > 0 &&
@@ -570,42 +396,6 @@ const Home = () => {
   const usage = (profile?.extra?.download ?? 0) + (profile?.extra?.upload ?? 0)
   const quota = profile?.extra?.total ?? 0
   const nextUpdateAt = profile ? nextProfileUpdateAt(profile, now) : undefined
-  const connectionSampleFresh = hasFreshConnectionActivity(
-    connectionSampleAt,
-    connectionSampleMs,
-    activityNow,
-    connectionInterval
-  )
-  const topApplication = useMemo(
-    () =>
-      connectionSampleFresh ? topActiveApplication(connections?.connections, platform) : undefined,
-    [connectionSampleFresh, connections?.connections]
-  )
-
-  useEffect(() => {
-    if (!topApplication) return
-    const remembered = rememberTopApplication(topApplication)
-    setRememberedTopApplication(remembered)
-    try {
-      localStorage.setItem(rememberedTopApplicationStorageKey, JSON.stringify(remembered))
-    } catch {
-      // The current Home view can still retain the application in memory.
-    }
-  }, [topApplication?.key, topApplication?.name, topApplication?.lookupPath])
-
-  const displayedApplication = displayedTopApplication(topApplication, rememberedTopApplication)
-
-  useEffect(() => {
-    if (!displayedApplication) return
-    let active = true
-    const { key, lookupPath } = displayedApplication
-    void loadApplicationMetadata(lookupPath).then((value) => {
-      if (active) setActivityMetadata({ key, value })
-    })
-    return () => {
-      active = false
-    }
-  }, [displayedApplication?.key, displayedApplication?.lookupPath])
   const cardStyle = hasActiveBackground ? 'border-separator/50 shadow-none' : 'home-overview-card'
   const cardBackgroundStyle = hasActiveBackground
     ? {
@@ -665,9 +455,6 @@ const Home = () => {
       notify(error, { variant: 'danger' })
     }
   }
-  const trafficState = overviewTrafficState(history)
-  const trafficRangeSeconds = overviewTrafficRangeSeconds(history, trafficNow)
-  const hasTrafficSnapshot = trafficState !== 'unavailable'
 
   return (
     <BasePage
@@ -971,104 +758,11 @@ const Home = () => {
             </Surface>
           </div>
 
-          <Surface
-            className={`min-w-0 rounded-2xl border p-4 sm:p-5 ${cardStyle}`}
-            style={cardBackgroundStyle}
-          >
-            <div className="mb-4 flex items-center justify-between gap-3">
-              <h2 className="text-sm font-semibold text-foreground">{tr('Traffic')}</h2>
-              <Link
-                to="/connections"
-                className="group app-nodrag rounded-md hover:text-accent focus-visible:outline-2 focus-visible:outline-accent"
-                aria-label={overviewConnectionLabel(connections?.connections?.length)}
-              >
-                <OverviewConnectionAction count={connections?.connections?.length} />
-              </Link>
-            </div>
-            <div className="home-traffic-summary min-w-0">
-              <OverviewStat
-                icon={
-                  <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-accent-soft/50 text-accent">
-                    <LuArrowDown className="size-4" aria-hidden="true" />
-                  </span>
-                }
-                label={tr('Download')}
-                value={
-                  <OverviewTrafficRate
-                    bytesPerSecond={hasTrafficSnapshot ? rates.down : undefined}
-                  />
-                }
-                secondary={
-                  connections?.downloadTotal !== undefined
-                    ? tr('{0} this session', [formatOverviewBytes(connections.downloadTotal)])
-                    : undefined
-                }
-                valueClassName="text-[1.4rem]"
-                secondaryClassName="text-[13px]"
-              />
-              <OverviewStat
-                icon={
-                  <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-danger-soft/50 text-danger">
-                    <LuArrowUp className="size-4" aria-hidden="true" />
-                  </span>
-                }
-                label={tr('Upload')}
-                value={
-                  <OverviewTrafficRate bytesPerSecond={hasTrafficSnapshot ? rates.up : undefined} />
-                }
-                secondary={
-                  connections?.uploadTotal !== undefined
-                    ? tr('{0} this session', [formatOverviewBytes(connections.uploadTotal)])
-                    : undefined
-                }
-                valueClassName="text-[1.4rem]"
-                secondaryClassName="text-[13px]"
-              />
-              <TopActiveAppRow
-                application={displayedApplication}
-                metadata={
-                  displayedApplication
-                    ? metadataForTopActiveApp(displayedApplication, activityMetadata)
-                    : undefined
-                }
-                sampleMs={topApplication ? connectionSampleMs : undefined}
-              />
-            </div>
-            {trafficState === 'active' ? (
-              <div className="mt-4 border-t border-separator/40 pt-3">
-                <div
-                  className="relative h-24 overflow-hidden rounded-lg"
-                  style={
-                    hasActiveBackground
-                      ? {
-                          backgroundColor: `color-mix(in srgb, var(--surface) ${Math.min(100, resolvedBackground.cardOpacity + 16)}%, transparent)`
-                        }
-                      : undefined
-                  }
-                >
-                  <OverviewTrafficChart data={history} now={trafficNow} />
-                  <span className="absolute bottom-1.5 left-2 text-[10px] text-muted">
-                    {trafficRangeSeconds === undefined
-                      ? tr('Latest sample')
-                      : trafficRangeSeconds === 1
-                        ? tr('Last 1 second')
-                        : tr('Last {0} seconds', [trafficRangeSeconds])}
-                  </span>
-                </div>
-              </div>
-            ) : (
-              <div className="mt-3 flex h-10 flex-col justify-end gap-2 text-xs text-muted">
-                <span>
-                  {trafficState === 'idle'
-                    ? tr('No recent traffic')
-                    : runtime.mihomo === 'stopped'
-                      ? tr('Unavailable')
-                      : tr('Waiting for traffic')}
-                </span>
-                <div className="h-px w-full bg-separator/60" aria-hidden="true" />
-              </div>
-            )}
-          </Surface>
+          <OverviewTrafficCard
+            hasActiveBackground={hasActiveBackground}
+            cardOpacity={resolvedBackground.cardOpacity}
+            runtimeStopped={runtime.mihomo === 'stopped'}
+          />
         </div>
       </main>
     </BasePage>

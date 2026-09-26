@@ -1,3 +1,4 @@
+import { startOverviewTrafficCollection } from '@renderer/hooks/use-overview-traffic'
 import { tr } from '../../shared/i18n'
 import { useTheme } from 'next-themes'
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
@@ -34,6 +35,7 @@ const UpdaterButton = lazy(() => import('@renderer/components/updater/updater-bu
 const MacOSServiceSetup = lazy(() => import('@renderer/components/mihomo/macos-service-setup'))
 
 const App: React.FC = () => {
+  useEffect(startOverviewTrafficCollection, [])
   const { appConfig, patchAppConfig } = useAppConfig()
   const {
     appTheme = 'system',
