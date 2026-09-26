@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import Actions from './actions'
+import AboutSettings from './about-settings'
 import AppearanceConfig from './appearance-confis'
 import {
   BackgroundBehaviorSettings,
@@ -54,7 +55,8 @@ const categoryContent: Partial<Record<SettingsCategory, () => ReactNode>> = {
       <BackgroundBehaviorSettings />
     </>
   ),
-  shortcuts: () => <ShortcutConfig />
+  shortcuts: () => <ShortcutConfig />,
+  about: () => <AboutSettings />
 }
 
 const panelContent: Partial<Record<SettingsCategory, Record<string, () => ReactNode>>> = {
@@ -90,7 +92,7 @@ const panelContent: Partial<Record<SettingsCategory, Record<string, () => ReactN
   diagnostics: {
     logs: () => <LogSetting />,
     maintenance: () => <Actions sections={['application', 'diagnostics']} />,
-    lifecycle: () => <Actions sections={['version', 'danger']} showVersionHeading={false} />
+    lifecycle: () => <Actions sections={['danger']} showVersionHeading={false} />
   }
 }
 

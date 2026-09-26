@@ -1,5 +1,21 @@
 // Simplified Chinese localization. Keys are the canonical English source messages.
 export const messages: Readonly<Record<string, string>> = {
+  'Show more': '显示更多',
+  'Service shows the running version. Other components show the bundled version or source revision.':
+    'Service 显示运行中版本；其他组件显示内附版本或源码修订。',
+  'Application license and third-party notices are available offline.':
+    '可离线查看应用授权与第三方授权声明。',
+  'No dependency information available': '没有可用的依赖信息',
+  'Unable to load version information': '无法读取版本信息',
+  'Unable to load license information': '无法读取授权信息',
+  'Search dependencies': '搜索依赖',
+  'Third-party notices': '第三方授权声明',
+  'Application license': '应用授权',
+  License: '授权',
+  Licenses: '授权',
+  'Third-party dependencies': '第三方依赖',
+  'Component versions': '组件版本',
+  'Application lifecycle': '应用生命周期',
   Stop: '停止',
   'Speed test failed. Check your connection and try again.': '测速失败，请检查连接后重试。',
   'Test your current connection with Cloudflare. Uses about 67 MB of data.':

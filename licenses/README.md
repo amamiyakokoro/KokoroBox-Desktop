@@ -1,6 +1,6 @@
-# Supplemental licenses
+# Licenses
 
-This is the repository's central directory for tracked third-party license files.
+This is the repository's central directory for application and third-party license files.
 Its relative layout is preserved in the installed `licenses/` directory. Generated
 npm notices and build-supplied native notices are added to the same directory.
 
@@ -10,8 +10,16 @@ Native licenses come from the exact artifacts prepared for each build:
 - ProxyBridge: `extra/files/macos-app-routing/LICENSE.ProxyBridge` (macOS).
 - Sparkle: `extra/macos-updater/LICENSE.Sparkle` (macOS).
 
-These staging directories and `out/licenses/` are generated and ignored by Git;
-their files are available after preparation/build, not as repository links.
+Tracked backups are available here as `LICENSE.ProxyBridge`, `LICENSE.WinDivert`,
+and `LICENSE.Sparkle`. ProxyBridge is from revision
+`84193638336c1c5bf77bfd3b15b25e3546f75795`, WinDivert from 2.2.2, and Sparkle from
+https://github.com/sparkle-project/Sparkle/blob/2.10.0/LICENSE.
+`LICENSE.sysproxy-go` is backed up from
+https://github.com/amamiyakokoro/sysproxy-go/blob/v1.0.4/LICENSE.
+`LICENSE.KokoroBox` mirrors the application's root `LICENSE`.
+Build-supplied native notices still take precedence for the exact bundled artifact.
+Update these backups when the corresponding component changes version.
+Only `out/licenses/` npm aggregates remain generated and ignored by Git.
 The circle-flags license mirrors the original asset directory's license at
 revision `379588b5da95482d6bbf10bd45644a35b0609ea6`.
 

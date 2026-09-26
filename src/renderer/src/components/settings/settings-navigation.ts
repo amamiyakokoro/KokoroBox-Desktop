@@ -31,6 +31,11 @@ export const normalizeLegacySettingsSearchParams = (
 ): URLSearchParams | undefined => {
   const nextParams = new URLSearchParams(searchParams)
   let changed = false
+  if (['app-version', 'check-updates'].includes(searchParams.get('setting') || '')) {
+    nextParams.set('section', 'about')
+    nextParams.delete('panel')
+    changed = searchParams.get('section') !== 'about' || searchParams.has('panel')
+  }
   const isLegacyMihomoPanel =
     searchParams.get('section') === 'network' &&
     (searchParams.get('panel') === 'mihomo' || searchParams.get('setting')?.startsWith('mihomo-'))

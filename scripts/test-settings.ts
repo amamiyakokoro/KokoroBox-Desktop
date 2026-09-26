@@ -2331,12 +2331,9 @@ test('diagnostics settings separate logs, maintenance and lifecycle actions', ()
   assert.match(schema, /key: 'maintenance'/)
   assert.match(registry, /<Actions sections=\{\['application', 'diagnostics'\]\} \/>/)
   assert.match(schema, /key: 'lifecycle'/)
-  assert.match(schema, /key: 'lifecycle',[\s\S]{0,80}label: tr\('Version and lifecycle'\)/)
+  assert.match(schema, /key: 'lifecycle',[\s\S]{0,80}label: tr\('Application lifecycle'\)/)
   assert.match(schema, /entry\('app-version', tr\('App version'\), tr\('Version information'\)/)
-  assert.match(
-    registry,
-    /<Actions sections=\{\['version', 'danger'\]\} showVersionHeading=\{false\} \/>/
-  )
+  assert.match(registry, /<Actions sections=\{\['danger'\]\} showVersionHeading=\{false\} \/>/)
   assert.match(schema, /entries: diagnosticsPanels\.flatMap/)
   assert.match(schema, /panels: diagnosticsPanels/)
   assert.match(actions, /export type ActionSection/)

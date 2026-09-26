@@ -87,6 +87,7 @@ import {
   revokeCorePermission
 } from '../core/permission'
 import { triggerSysProxy } from '../sys/sysproxy'
+import { getAboutInfo, readAboutLicense } from '../resolve/about'
 import { changeSysProxy, getSysProxyOperationState } from '../sys/sysproxy-operation'
 import { disableTerminalProxy } from '../sys/terminal-proxy'
 import { checkUpdate, downloadAndInstallUpdate, cancelUpdate } from '../resolve/autoUpdater'
@@ -281,6 +282,8 @@ async function validateSystemProxyServicePatch(
 }
 
 export function registerIpcMainHandlers(): void {
+  ipcMain.handle('getAboutInfo', ipcErrorWrapper(getAboutInfo))
+  ipcMain.handle('readAboutLicense', (_event, id: unknown) => ipcErrorWrapper(readAboutLicense)(id))
   registerAppRoutingIpcHandlers()
   ipcMain.handle('getHomePublicIp', (_event, forceRefresh) =>
     ipcErrorWrapper(getHomePublicIp)(forceRefresh === true)

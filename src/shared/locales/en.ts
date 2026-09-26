@@ -1,5 +1,21 @@
 // English source catalog. Keys are the canonical application-owned messages.
 export const messages: Readonly<Record<string, string>> = {
+  'Show more': 'Show more',
+  'Service shows the running version. Other components show the bundled version or source revision.':
+    'Service shows the running version. Other components show the bundled version or source revision.',
+  'Application license and third-party notices are available offline.':
+    'Application license and third-party notices are available offline.',
+  'No dependency information available': 'No dependency information available',
+  'Unable to load version information': 'Unable to load version information',
+  'Unable to load license information': 'Unable to load license information',
+  'Search dependencies': 'Search dependencies',
+  'Third-party notices': 'Third-party notices',
+  'Application license': 'Application license',
+  License: 'License',
+  Licenses: 'Licenses',
+  'Third-party dependencies': 'Third-party dependencies',
+  'Component versions': 'Component versions',
+  'Application lifecycle': 'Application lifecycle',
   Stop: 'Stop',
   'Speed test failed. Check your connection and try again.':
     'Speed test failed. Check your connection and try again.',

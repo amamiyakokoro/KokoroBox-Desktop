@@ -16,6 +16,14 @@ export async function getHomePublicIp(forceRefresh = false): Promise<PublicIpSna
   return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('getHomePublicIp', forceRefresh))
 }
 
+export async function getAboutInfo(): Promise<import('../../../shared/about').AboutInfo> {
+  return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('getAboutInfo'))
+}
+
+export async function readAboutLicense(id: string): Promise<string> {
+  return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('readAboutLicense', id))
+}
+
 export async function getHomeServiceVersion(): Promise<string | undefined> {
   return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('getHomeServiceVersion'))
 }

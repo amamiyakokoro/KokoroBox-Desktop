@@ -8,12 +8,13 @@ import {
   LuCommand,
   LuCpu,
   LuNetwork,
+  LuInfo,
   LuWrench
 } from 'react-icons/lu'
 import { advancedDnsSettingIds } from '../dns/advanced-dns-setting-ids'
 
 export type SettingsCategory =
-  'general' | 'appearance' | 'network' | 'core' | 'data' | 'shortcuts' | 'diagnostics'
+  'general' | 'appearance' | 'network' | 'core' | 'data' | 'shortcuts' | 'diagnostics' | 'about'
 
 type SettingsPlatform = 'win32' | 'darwin' | 'linux'
 
@@ -641,9 +642,6 @@ export const getSettingsSchema = (): SettingsCategorySchema[] => {
         entry('guided-tour', tr('Open guided tour'), tr('Application actions'), {
           panel: 'maintenance'
         }),
-        entry('check-updates', tr('Check for updates'), tr('Application actions'), {
-          panel: 'maintenance'
-        }),
         entry('clear-cache', tr('Clear cache'), tr('Diagnostics'), { panel: 'maintenance' }),
         entry('heap-snapshot', tr('Create heap snapshot'), tr('Diagnostics'), {
           panel: 'maintenance'
@@ -652,11 +650,8 @@ export const getSettingsSchema = (): SettingsCategorySchema[] => {
     },
     {
       key: 'lifecycle',
-      label: tr('Version and lifecycle'),
+      label: tr('Application lifecycle'),
       entries: [
-        entry('app-version', tr('App version'), tr('Version information'), {
-          panel: 'lifecycle'
-        }),
         entry('reset-app', tr('Reset app'), tr('Danger zone'), { panel: 'lifecycle' }),
         entry('quit-keep-core', tr('Quit and keep core running'), tr('Danger zone'), {
           panel: 'lifecycle'
@@ -738,6 +733,22 @@ export const getSettingsSchema = (): SettingsCategorySchema[] => {
           entry('shortcut-direct-mode', tr('Switch to direct mode'), tr('Proxy mode')),
           entry('shortcut-keep-core', tr('Quit and keep core running'), tr('Application')),
           entry('shortcut-restart-app', tr('Restart app'), tr('Application'))
+        ]
+      },
+      {
+        key: 'about',
+        label: tr('About'),
+        icon: LuInfo,
+        entries: [
+          entry('app-version', tr('App version'), tr('Version information')),
+          entry('check-updates', tr('Check for updates'), tr('Check for updates')),
+          entry('component-versions', tr('Component versions'), tr('Component versions')),
+          entry(
+            'dependency-versions',
+            tr('Third-party dependencies'),
+            tr('Third-party dependencies')
+          ),
+          entry('licenses', tr('Licenses'), tr('Licenses'))
         ]
       },
       {

@@ -28,7 +28,7 @@ async function handleCreateHeapSnapshot(): Promise<void> {
   }
 }
 
-export type ActionSection = 'application' | 'diagnostics' | 'danger' | 'version'
+export type ActionSection = 'application' | 'diagnostics' | 'danger' | 'version' | 'updates'
 
 interface Props {
   sections?: ActionSection[]
@@ -36,7 +36,7 @@ interface Props {
 }
 
 const Actions: React.FC<Props> = ({
-  sections = ['application', 'diagnostics', 'version', 'danger'],
+  sections = ['application', 'diagnostics', 'version', 'updates', 'danger'],
   showVersionHeading = true
 }) => {
   const navigate = useNavigate()
@@ -103,7 +103,7 @@ const Actions: React.FC<Props> = ({
 
   return (
     <>
-      {sections.includes('application') && openUpdate && (
+      {sections.includes('updates') && openUpdate && (
         <UpdaterDrawer
           onClose={() => setOpenUpdate(false)}
           version={newVersion}
@@ -136,6 +136,11 @@ const Actions: React.FC<Props> = ({
               {tr('Open guided tour')}
             </Button>
           </SettingItem>
+        </SettingCard>
+      )}
+
+      {sections.includes('updates') && (
+        <SettingCard header={tr('Check for updates')}>
           <SettingItem contentAlign="end" title={tr('Check for updates')}>
             <Button
               size="sm"
