@@ -49,7 +49,9 @@ function LicenseDialog({ id, title, onClose }: { id: string; title: string; onCl
   )
 }
 
-export default function AboutSettings() {
+type AboutSection = 'versions' | 'dependencies' | 'licenses'
+
+function AboutDetailsDialog({ section, onClose }: { section: AboutSection; onClose: () => void }) {
   const { data, error, isLoading, mutate } = useSWR('about-info', getAboutInfo)
   const [search, setSearch] = useState('')
   const [document, setDocument] = useState<{ id: string; title: string }>()
@@ -70,80 +72,122 @@ export default function AboutSettings() {
   ] as const
   return (
     <>
-      <Actions sections={['version', 'updates']} />
-      <SettingCard
-        header={tr('Component versions')}
-        description={tr(
-          'Service shows the running version. Other components show the bundled version or source revision.'
-        )}
-      >
-        {isLoading && <Spinner size="sm" aria-label={tr('Loading')} />}
-        {error && <p role="alert">{tr('Unable to load version information')}</p>}
-        {versions.map(([name, value]) => (
-          <SettingItem key={name} title={name} contentAlign="end" divider>
-            <span className="max-w-[65%] break-all text-right text-sm text-muted select-text">
-              {value || tr('Unavailable')}
-            </span>
-          </SettingItem>
-        ))}
-        <Button size="sm" variant="secondary" onPress={() => void mutate()}>
-          {tr('Refresh')}
-        </Button>
-      </SettingCard>
-      <SettingCard header={tr('Third-party dependencies')}>
-        <TextField value={search} onChange={setSearch} className="mb-3">
-          <Label>{tr('Search dependencies')}</Label>
-          <Input />
-        </TextField>
-        {!isLoading && dependencies.length === 0 && (
-          <p className="text-sm text-muted">{tr('No dependency information available')}</p>
-        )}
-        {dependencies.slice(0, limit).map((item) => (
-          <SettingItem
-            key={`${item.name}@${item.version}`}
-            title={item.name}
-            description={`${item.version} · ${item.license}`}
-            contentAlign="end"
-            divider
-          >
-            <Button
-              size="sm"
-              variant="tertiary"
-              onPress={() =>
-                setDocument({ id: item.document, title: `${item.name}@${item.version}` })
-              }
-            >
-              {tr('License')}
-            </Button>
-          </SettingItem>
-        ))}
-        {dependencies.length > limit && (
-          <Button variant="secondary" onPress={() => setLimit(limit + 30)}>
-            {tr('Show more')}
-          </Button>
-        )}
-      </SettingCard>
-      <SettingCard header={tr('Licenses')}>
-        <p className="mb-3 text-sm text-muted">
-          {tr('Application license and third-party notices are available offline.')}
-        </p>
-        <div className="flex flex-wrap gap-2">
-          {data?.documents.map((item) => (
-            <Button
-              key={item.id}
-              size="sm"
-              variant="secondary"
-              onPress={() => setDocument({ id: item.id, title: item.name })}
-            >
-              {item.name === 'LICENSE.KokoroBox'
-                ? tr('Application license')
-                : item.name === 'THIRD_PARTY_NOTICES.md'
-                  ? tr('Third-party notices')
-                  : item.name}
-            </Button>
-          ))}
-        </div>
-      </SettingCard>
+      <Modal>
+        <Modal.Backdrop
+          isOpen
+          onOpenChange={(open) => {
+            if (!open) onClose()
+          }}
+        >
+          <Modal.Container>
+            <Modal.Dialog className="w-full max-w-3xl">
+              <Modal.Header className="flex-row items-center gap-2">
+                <Modal.Heading>
+                  {section === 'versions'
+                    ? tr('Component versions')
+                    : section === 'dependencies'
+                      ? tr('Third-party dependencies')
+                      : tr('Licenses')}
+                </Modal.Heading>
+                {isLoading && <Spinner size="sm" aria-label={tr('Loading')} />}
+              </Modal.Header>
+              <Modal.Body className="max-h-[60vh] overflow-y-auto">
+                {error && (
+                  <div role="alert" className="mb-3 space-y-2">
+                    <p>{tr('Unable to load version information')}</p>
+                    <Button onPress={() => void mutate()}>{tr('Retry')}</Button>
+                  </div>
+                )}
+                {section === 'versions' && (
+                  <>
+                    <p className="mb-3 text-sm text-muted">
+                      {tr(
+                        'Service shows the running version. Other components show the bundled version or source revision.'
+                      )}
+                    </p>
+                    {versions.map(([name, value]) => (
+                      <SettingItem key={name} title={name} contentAlign="end" divider>
+                        <span className="max-w-[65%] break-all text-right text-sm text-muted select-text">
+                          {value || tr('Unavailable')}
+                        </span>
+                      </SettingItem>
+                    ))}
+                    <Button size="sm" variant="secondary" onPress={() => void mutate()}>
+                      {tr('Refresh')}
+                    </Button>
+                  </>
+                )}
+                {section === 'dependencies' && (
+                  <>
+                    <TextField value={search} onChange={setSearch} className="mb-3">
+                      <Label>{tr('Search dependencies')}</Label>
+                      <Input />
+                    </TextField>
+                    {!isLoading && !error && dependencies.length === 0 && (
+                      <p className="text-sm text-muted">
+                        {tr('No dependency information available')}
+                      </p>
+                    )}
+                    {dependencies.slice(0, limit).map((item) => (
+                      <SettingItem
+                        key={`${item.name}@${item.version}`}
+                        title={item.name}
+                        description={`${item.version} · ${item.license}`}
+                        contentAlign="end"
+                        divider
+                      >
+                        <Button
+                          size="sm"
+                          variant="tertiary"
+                          onPress={() =>
+                            setDocument({
+                              id: item.document,
+                              title: `${item.name}@${item.version}`
+                            })
+                          }
+                        >
+                          {tr('License')}
+                        </Button>
+                      </SettingItem>
+                    ))}
+                    {dependencies.length > limit && (
+                      <Button variant="secondary" onPress={() => setLimit(limit + 30)}>
+                        {tr('Show more')}
+                      </Button>
+                    )}
+                  </>
+                )}
+                {section === 'licenses' && (
+                  <>
+                    <p className="mb-3 text-sm text-muted">
+                      {tr('Application license and third-party notices are available offline.')}
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {data?.documents.map((item) => (
+                        <Button
+                          key={item.id}
+                          size="sm"
+                          variant="secondary"
+                          onPress={() => setDocument({ id: item.id, title: item.name })}
+                        >
+                          {item.name === 'LICENSE.KokoroBox'
+                            ? tr('Application license')
+                            : item.name === 'THIRD_PARTY_NOTICES.md'
+                              ? tr('Third-party notices')
+                              : item.name}
+                        </Button>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </Modal.Body>
+              <Modal.Footer>
+                <Button onPress={onClose}>{tr('Close')}</Button>
+              </Modal.Footer>
+            </Modal.Dialog>
+          </Modal.Container>
+        </Modal.Backdrop>
+      </Modal>
       {document && (
         <LicenseDialog
           id={document.id}
@@ -151,6 +195,35 @@ export default function AboutSettings() {
           onClose={() => setDocument(undefined)}
         />
       )}
+    </>
+  )
+}
+
+export default function AboutSettings() {
+  const [section, setSection] = useState<AboutSection>()
+  const entries = [
+    ['versions', tr('Component versions')],
+    ['dependencies', tr('Third-party dependencies')],
+    ['licenses', tr('Licenses')]
+  ] as const
+  return (
+    <>
+      <Actions sections={['version', 'updates']} />
+      <SettingCard>
+        {entries.map(([id, title], index) => (
+          <SettingItem
+            key={id}
+            title={title}
+            contentAlign="end"
+            divider={index < entries.length - 1}
+          >
+            <Button size="sm" variant="tertiary" aria-label={title} onPress={() => setSection(id)}>
+              {tr('Open')}
+            </Button>
+          </SettingItem>
+        ))}
+      </SettingCard>
+      {section && <AboutDetailsDialog section={section} onClose={() => setSection(undefined)} />}
     </>
   )
 }
