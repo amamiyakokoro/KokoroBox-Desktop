@@ -1,83 +1,29 @@
-import yaml from 'yaml'
+import yaml, { isPair, isScalar } from 'yaml'
 
 export function parseYaml<T = unknown>(content: string): T {
-  const processedContent = addYamlTagsToProxiesShortId(content)
+  const document = yaml.parseDocument(content, { merge: true })
+  if (document.errors.length > 0) throw document.errors[0]
 
-  const result =
-    yaml.parse(processedContent, {
-      merge: true
-    }) || {}
-  return result as T
+  yaml.visit(document, {
+    Pair(_key, pair, path) {
+      if (!isScalar(pair.key) || pair.key.value !== 'short-id') return
+      const inRealityOptions = path.some(
+        (node) => isPair(node) && isScalar(node.key) && node.key.value === 'reality-opts'
+      )
+      if (!inRealityOptions || !isScalar(pair.value)) return
+      const value = pair.value
+      // Use the original scalar spelling, before numeric conversion loses zeros
+      // or precision. Keep explicit YAML types, nulls and strings unchanged.
+      if (value.value === null || typeof value.value === 'string' || value.tag) return
+      if (value.source === undefined) return
+      value.value = value.source
+      value.tag = 'tag:yaml.org,2002:str'
+    }
+  })
+
+  return (document.toJS() || {}) as T
 }
 
 export function stringifyYaml(data: unknown): string {
   return yaml.stringify(data)
-}
-
-function addYamlTagsToProxiesShortId(yamlContent: string, includeNestedProxies = false): string {
-  if (!yamlContent.includes('proxies:') || !yamlContent.includes('short-id:')) {
-    return yamlContent
-  }
-
-  const lines = yamlContent.split('\n')
-  const result: string[] = []
-  let ctx = { proxies: false, proxy: false, reality: false }
-  const lvl = { proxies: -1, proxy: -1, reality: -1 }
-  const shortIdRegex = /^(\s*short-id:\s*)([^\s#]+)(.*)$/
-
-  for (const line of lines) {
-    const trimmed = line.trim()
-    if (!trimmed || trimmed.startsWith('#')) {
-      result.push(line)
-      continue
-    }
-
-    const indent = line.length - line.trimStart().length
-
-    if (trimmed.startsWith('proxies:') && (includeNestedProxies || indent === 0)) {
-      ctx = { proxies: true, proxy: false, reality: false }
-      lvl.proxies = indent
-    } else if (ctx.proxies && indent <= lvl.proxies && !trimmed.startsWith('-')) {
-      ctx = { proxies: false, proxy: false, reality: false }
-    }
-
-    if (ctx.proxies) {
-      if (trimmed.startsWith('-')) {
-        ctx = { ...ctx, proxy: true, reality: false }
-        lvl.proxy = indent
-      } else if (ctx.proxy && indent <= lvl.proxy) {
-        ctx = { ...ctx, proxy: false, reality: false }
-      }
-
-      if (ctx.proxy) {
-        if (trimmed.startsWith('reality-opts:')) {
-          ctx.reality = true
-          lvl.reality = indent
-        } else if (ctx.reality && indent <= lvl.reality) {
-          ctx.reality = false
-        }
-
-        if (ctx.reality && trimmed.includes('short-id:')) {
-          const match = line.match(shortIdRegex)
-          if (match) {
-            const [, prefix, value, suffix] = match
-            if (
-              value.toLowerCase() !== 'null' &&
-              value !== '~' &&
-              !value.startsWith('!!') &&
-              !value.startsWith('{') &&
-              !value.startsWith('[')
-            ) {
-              result.push(`${prefix}!!str ${value}${suffix}`)
-              continue
-            }
-          }
-        }
-      }
-    }
-
-    result.push(line)
-  }
-
-  return result.join('\n')
 }

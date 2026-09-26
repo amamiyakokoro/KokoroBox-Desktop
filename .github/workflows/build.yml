@@ -90,6 +90,7 @@ jobs:
       - run: pnpm test:dns
       - run: pnpm test:settings
       - run: pnpm test:logs
+      - run: pnpm test:yaml
       - run: pnpm test:runtime-recovery
       - run: pnpm test:home
       - run: pnpm test:service-auth
