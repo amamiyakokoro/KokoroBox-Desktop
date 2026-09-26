@@ -162,17 +162,16 @@ function AboutDetailsDialog({ section, onClose }: { section: AboutSection; onClo
                     {versions.map(([name, value]) => (
                       <div
                         key={name}
-                        className="grid grid-cols-2 items-start gap-4 border-b border-separator py-3 text-sm select-text"
+                        className="min-w-0 border-b border-separator py-3 text-sm select-text"
                       >
-                        <span className="min-w-0 [overflow-wrap:anywhere]">{name}</span>
-                        <span className="min-w-0 text-right text-muted [overflow-wrap:anywhere]">
+                        <p className="font-medium text-foreground [overflow-wrap:anywhere]">
+                          {name}
+                        </p>
+                        <p className="mt-1 text-muted [overflow-wrap:anywhere]">
                           {value || tr('Unavailable')}
-                        </span>
+                        </p>
                       </div>
                     ))}
-                    <Button size="sm" variant="secondary" onPress={() => void mutate()}>
-                      {tr('Refresh')}
-                    </Button>
                   </>
                 )}
                 {section === 'dependencies' && (
