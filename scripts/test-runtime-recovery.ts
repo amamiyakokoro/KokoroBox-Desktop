@@ -27,3 +27,15 @@ test('repair is shared across page subscriptions and runs only once', async () =
   assert.equal(calls, 1)
   assert.equal(events.length, 1)
 })
+
+test('failed repair clears pending state and can be retried', async () => {
+  let attempts = 0
+  const failure = new Error('installation cancelled')
+  const store = createServiceRepairState(async () => {
+    if (++attempts === 1) throw failure
+  })
+  await assert.rejects(store.repair(), (error) => error === failure)
+  assert.deepEqual(store.getSnapshot(), { repairing: false, restartRequired: false })
+  await store.repair()
+  assert.deepEqual(store.getSnapshot(), { repairing: false, restartRequired: true })
+})

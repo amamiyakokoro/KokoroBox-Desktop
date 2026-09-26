@@ -369,3 +369,37 @@ test('service health requires a responding and authenticated API', async () => {
   )
   assert.equal(authenticated, false)
 })
+
+test('service health distinguishes authentication problems from unreachable API failures', async () => {
+  for (const [message, expected] of [
+    ['ECONNREFUSED', 'unknown'],
+    ['request timed out', 'unknown'],
+    ['EACCES', 'need-init'],
+    ['permission denied', 'need-init'],
+    ['authentication required', 'need-init']
+  ] as const) {
+    const result = await probeServiceHealth({
+      ping: async () => {},
+      authenticate: async () => {
+        throw new Error(message)
+      },
+      finalizeAuthentication: async () => {
+        assert.fail('cannot finalize after failed authentication')
+      },
+      isAuthenticationError: (error) => String(error).includes('authentication required')
+    })
+    assert.equal(result, expected, message)
+  }
+})
+
+test('failed authentication migration cannot produce a healthy service state', async () => {
+  const result = await probeServiceHealth({
+    ping: async () => {},
+    authenticate: async () => {},
+    finalizeAuthentication: async () => {
+      throw new Error('migration failed')
+    },
+    isAuthenticationError: () => false
+  })
+  assert.equal(result, 'unknown')
+})

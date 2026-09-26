@@ -45,3 +45,46 @@ test('a synchronous infinite loop is terminated without blocking the parent', as
     clearInterval(timer)
   }
 })
+
+test('an infinite async microtask chain is terminated by the same deadline', async () => {
+  const result = await executeOverride(
+    () => worker('async function main() { while (true) { await Promise.resolve() } }'),
+    500
+  )
+  assert.match(result.error!, /timed out/)
+  assert.equal(result.profile, undefined)
+})
+
+test('a never-resolving promise cannot hold profile generation indefinitely', async () => {
+  const result = await executeOverride(
+    () => worker('function main() { return new Promise(() => {}) }'),
+    500
+  )
+  assert.match(result.error!, /timed out|exited before returning/)
+  assert.equal(result.profile, undefined)
+})
+
+test('script exceptions and invalid return values do not replace the profile', async () => {
+  for (const script of [
+    'function main() { throw new Error("bad override") }',
+    'function main() { return null }',
+    'function main() { return [] }'
+  ]) {
+    const result = await executeOverride(() => worker(script))
+    assert.ok(result.error)
+    assert.equal(result.profile, undefined)
+  }
+})
+
+test('log floods are bounded and the worker still returns a valid result', async () => {
+  const result = await executeOverride(() =>
+    worker(`function main(profile) {
+    for (let i = 0; i < 100000; i++) console.log('x'.repeat(1000));
+    return profile;
+  }`)
+  )
+  assert.equal(result.error, undefined)
+  assert.ok(Buffer.byteLength(result.logs) <= 64 * 1024 + 100)
+  assert.match(result.logs, /log limit reached/)
+  assert.equal(result.profile?.mode, 'rule')
+})

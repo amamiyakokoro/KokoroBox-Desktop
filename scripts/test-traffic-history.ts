@@ -63,3 +63,45 @@ test('restored history and core resets never masquerade as live rates', () => {
   assert.equal(store.getSnapshot().rates, undefined)
   assert.equal(store.getSnapshot().history.length, 3)
 })
+
+test('storage failure is retried without losing in-memory history', () => {
+  let fail = true
+  let saved = ''
+  const store = createTrafficHistoryStore(
+    {
+      getItem: () => {
+        throw new Error('blocked')
+      },
+      setItem: (_key, value) => {
+        if (fail) throw new Error('quota')
+        saved = value
+      },
+      removeItem: () => {}
+    },
+    () => 1000
+  )
+  store.receive({ up: 1, down: 2 })
+  store.flush()
+  assert.equal(store.getSnapshot().history.length, 1)
+  fail = false
+  store.flush()
+  assert.equal(JSON.parse(saved).length, 1)
+})
+
+test('sampling is limited to one per second, bounded in size, and rejects invalid rates', () => {
+  let now = 1000
+  const store = createTrafficHistoryStore(
+    { getItem: () => null, setItem: () => {}, removeItem: () => {} },
+    () => now
+  )
+  for (let i = 0; i < 800; i++) {
+    store.receive({ up: i, down: i })
+    now += 500
+  }
+  assert.equal(store.getSnapshot().history.length, 300)
+  const last = store.getSnapshot()
+  store.receive({ up: NaN, down: 0 })
+  store.receive({ up: 0, down: -1 })
+  store.receive({ up: Infinity, down: 0 })
+  assert.equal(store.getSnapshot(), last)
+})

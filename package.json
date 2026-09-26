@@ -24,6 +24,7 @@
     "test:app-config": "tsx --test scripts/test-app-config-recovery.ts",
     "test:app-routing": "tsx --test scripts/test-app-routing.ts",
     "test:dns": "tsx --test scripts/test-dns.ts",
+    "test:runtime-recovery": "tsx --test scripts/test-settings-failures.ts scripts/test-runtime-recovery.ts scripts/test-override-execution.ts scripts/test-traffic-history.ts",
     "test:settings": "tsx --test scripts/test-settings.ts",
     "test:home": "tsx --tsconfig tsconfig.web.json --test scripts/test-home-data.ts scripts/test-home-background.ts scripts/test-home-ui.tsx scripts/test-home-overview.tsx scripts/test-home-app-metadata.ts",
     "test:ui-native": "tsx --test scripts/test-ui-native-contract.ts",
