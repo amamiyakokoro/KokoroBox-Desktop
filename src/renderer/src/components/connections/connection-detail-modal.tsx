@@ -8,6 +8,7 @@ import { calcTraffic } from '@renderer/utils/calc'
 import dayjs from 'dayjs'
 import { BiCopy } from 'react-icons/bi'
 import { HiChevronDown } from 'react-icons/hi2'
+import { LuPlus } from 'react-icons/lu'
 
 interface Props {
   connection: ControllerConnectionDetail
@@ -518,27 +519,30 @@ const ConnectionDetailModal = ({ connection, onClose, onAddRule }: Props) => {
             variant="secondary"
             onSelectionChange={(key) => setViewMode(key as 'detail' | 'raw')}
           >
-            <div className="app-nodrag shrink-0 border-b border-separator/70 px-5 py-2">
+            <div className="app-nodrag flex shrink-0 flex-wrap items-center gap-x-3 gap-y-2 border-b border-separator/70 px-5 py-2">
+              <div className="w-fit max-w-full shrink-0">
+                <Tabs.ListContainer>
+                  <Tabs.List aria-label={tr('Switch connection details view')} className="w-max">
+                    <Tabs.Tab id="detail">
+                      {tr('Details')}
+                      <Tabs.Indicator />
+                    </Tabs.Tab>
+                    <Tabs.Tab id="raw">
+                      {tr('Raw data')}
+                      <Tabs.Indicator />
+                    </Tabs.Tab>
+                  </Tabs.List>
+                </Tabs.ListContainer>
+              </div>
               <Button
                 variant="secondary"
                 size="sm"
-                className="mb-2"
+                className="ml-auto shrink-0 whitespace-nowrap"
                 onPress={() => onAddRule(connection)}
               >
+                <LuPlus className="size-4" aria-hidden="true" />
                 {tr('Add Kokoro rule')}
               </Button>
-              <Tabs.ListContainer>
-                <Tabs.List aria-label={tr('Switch connection details view')}>
-                  <Tabs.Tab id="detail">
-                    {tr('Details')}
-                    <Tabs.Indicator />
-                  </Tabs.Tab>
-                  <Tabs.Tab id="raw">
-                    {tr('Raw data')}
-                    <Tabs.Indicator />
-                  </Tabs.Tab>
-                </Tabs.List>
-              </Tabs.ListContainer>
             </div>
             <Drawer.Body className="min-h-0 flex-1 overflow-hidden p-0">
               <Tabs.Panel
