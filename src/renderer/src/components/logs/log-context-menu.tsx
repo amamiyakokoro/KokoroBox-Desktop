@@ -25,7 +25,7 @@ export default function LogContextMenu({
     const bounds = element.getBoundingClientRect()
     element.style.left = `${Math.max(8, Math.min(x, window.innerWidth - bounds.width - 8))}px`
     element.style.top = `${Math.max(8, Math.min(y, window.innerHeight - bounds.height - 8))}px`
-    element.querySelector<HTMLButtonElement>('button:not(:disabled)')?.focus()
+    element.focus({ preventScroll: true })
     const dismiss = (event: Event) => {
       if (!element.contains(event.target as Node)) onClose()
     }
@@ -54,6 +54,7 @@ export default function LogContextMenu({
     <div
       ref={menu}
       role="menu"
+      tabIndex={-1}
       aria-label={tr('Log actions')}
       className="app-nodrag fixed z-[100] min-w-52 max-w-[calc(100vw-16px)] rounded-xl border border-separator bg-surface p-1 shadow-xl"
       style={{ left: x, top: y }}
@@ -70,7 +71,8 @@ export default function LogContextMenu({
         const index = buttons.indexOf(document.activeElement as HTMLButtonElement)
         let next: number | undefined
         if (event.key === 'ArrowDown') next = (index + 1) % buttons.length
-        if (event.key === 'ArrowUp') next = (index - 1 + buttons.length) % buttons.length
+        if (event.key === 'ArrowUp')
+          next = index < 0 ? buttons.length - 1 : (index - 1 + buttons.length) % buttons.length
         if (event.key === 'Home') next = 0
         if (event.key === 'End') next = buttons.length - 1
         if (next !== undefined) {
