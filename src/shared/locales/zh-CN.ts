@@ -1464,6 +1464,23 @@ export const messages: Readonly<Record<string, string>> = {
   'No expiration': '长期有效',
   'Update KokoroBox Service to repair firewall rules for the service-managed core.':
     '请更新 KokoroBox Service，以修复系统服务模式核心的防火墙规则。',
+  'Firewall repair failed': '防火墙修复失败',
+  'Service authentication failed. Reset KokoroBox Service in settings, then restart KokoroBox.':
+    '服务认证失败。请在设置中重置 KokoroBox Service，然后重启 KokoroBox。',
+  'Firewall repair timed out. The result is unconfirmed; check the service and try again.':
+    '防火墙修复请求超时，结果尚未确认。请检查服务状态后重试。',
+  'Cannot connect to KokoroBox Service. Check its status in Overview before trying again.':
+    '无法连接 KokoroBox Service。请在总览中检查服务状态后重试。',
+  'The service-managed core is not running. Start it before repairing its firewall rules.':
+    '系统服务模式的核心尚未运行。请先启动核心，再修复防火墙规则。',
+  'Windows policy blocks local firewall changes. Contact your system administrator.':
+    'Windows 策略禁止修改本地防火墙规则。请联系系统管理员。',
+  'Windows denied the service permission to change firewall rules. Check system security policies.':
+    'Windows 拒绝服务修改防火墙规则。请检查系统安全策略。',
+  'Administrator permission is required. Run KokoroBox as administrator or use system service mode, then try again.':
+    '需要管理员权限。请以管理员身份运行 KokoroBox，或使用系统服务模式后重试。',
+  'Could not repair the core firewall rules. See the technical details below for the cause.':
+    '无法修复核心防火墙规则。请查看下方详细错误原因。',
   'Firewall reset': '防火墙重设成功',
   Descending: '降序',
   Hide: '隐藏',

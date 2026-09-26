@@ -955,16 +955,7 @@ export const patchCoreProfile = async (
 }
 
 export async function repairServiceCoreFirewall(): Promise<void> {
-  try {
-    await getServiceAxios().post('/core/firewall/repair', undefined, { timeout: 20_000 })
-  } catch (error) {
-    if (error instanceof ServiceAPIError && error.status === 404) {
-      throw new Error(
-        tr('Update KokoroBox Service to repair firewall rules for the service-managed core.')
-      )
-    }
-    throw error
-  }
+  await getServiceAxios().post('/core/firewall/repair', undefined, { timeout: 20_000 })
 }
 
 export const getProxyStatus = async (): Promise<Record<string, unknown>> => {

@@ -1505,6 +1505,23 @@ export const messages: Readonly<Record<string, string>> = {
   'No expiration': 'No expiration',
   'Update KokoroBox Service to repair firewall rules for the service-managed core.':
     'Update KokoroBox Service to repair firewall rules for the service-managed core.',
+  'Firewall repair failed': 'Firewall repair failed',
+  'Service authentication failed. Reset KokoroBox Service in settings, then restart KokoroBox.':
+    'Service authentication failed. Reset KokoroBox Service in settings, then restart KokoroBox.',
+  'Firewall repair timed out. The result is unconfirmed; check the service and try again.':
+    'Firewall repair timed out. The result is unconfirmed; check the service and try again.',
+  'Cannot connect to KokoroBox Service. Check its status in Overview before trying again.':
+    'Cannot connect to KokoroBox Service. Check its status in Overview before trying again.',
+  'The service-managed core is not running. Start it before repairing its firewall rules.':
+    'The service-managed core is not running. Start it before repairing its firewall rules.',
+  'Windows policy blocks local firewall changes. Contact your system administrator.':
+    'Windows policy blocks local firewall changes. Contact your system administrator.',
+  'Windows denied the service permission to change firewall rules. Check system security policies.':
+    'Windows denied the service permission to change firewall rules. Check system security policies.',
+  'Administrator permission is required. Run KokoroBox as administrator or use system service mode, then try again.':
+    'Administrator permission is required. Run KokoroBox as administrator or use system service mode, then try again.',
+  'Could not repair the core firewall rules. See the technical details below for the cause.':
+    'Could not repair the core firewall rules. See the technical details below for the cause.',
   'Firewall reset': 'Firewall reset',
   Descending: 'Descending',
   Hide: 'Hide',

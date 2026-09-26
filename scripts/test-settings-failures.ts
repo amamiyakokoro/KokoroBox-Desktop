@@ -40,6 +40,38 @@ function action(
 const hook = 'src/renderer/src/hooks/use-app-config.tsx'
 const core = 'src/renderer/src/components/settings/core-runtime-config.tsx'
 
+test('TUN firewall repair reports failures with details and never restarts the core', async () => {
+  for (const failure of [undefined, 'Add(mihomo) failed: 0x80070005']) {
+    const calls: string[] = []
+    const repair = action(
+      'src/renderer/src/components/settings/network/tun-settings.tsx',
+      'resetFirewall',
+      {
+        loading: false,
+        setLoading: (pending: boolean) => calls.push(`pending:${pending}`),
+        setupFirewall: async () => {
+          calls.push('repair')
+          if (failure) throw failure
+        },
+        restartCore: () => assert.fail('Firewall rules take effect without restarting the core'),
+        tr: (value: string) => value,
+        notify: (title: string, options: { variant: string; body?: string }) => {
+          calls.push(options.variant)
+          assert.equal(title, failure ? 'Firewall repair failed' : 'Firewall reset')
+          assert.equal(options.body, failure)
+        }
+      }
+    )
+    await repair()
+    assert.deepEqual(calls, [
+      'pending:true',
+      'repair',
+      failure ? 'danger' : 'success',
+      'pending:false'
+    ])
+  }
+})
+
 test('strict config saves propagate persistence errors and refresh the cache', async () => {
   const failure = new Error('disk full')
   let refreshed = 0

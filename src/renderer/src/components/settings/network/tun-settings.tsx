@@ -29,6 +29,21 @@ const Tun: React.FC<Props> = ({ embedded = false }) => {
   const { autoSetDNSMode = 'none' } = appConfig || {}
   const { tun } = controledMihomoConfig || {}
   const [loading, setLoading] = useState(false)
+  const resetFirewall = async (): Promise<void> => {
+    if (loading) return
+    setLoading(true)
+    try {
+      await setupFirewall()
+      notify(tr('Firewall reset'), { variant: 'success' })
+    } catch (error) {
+      notify(tr('Firewall repair failed'), {
+        variant: 'danger',
+        body: error instanceof Error ? error.message : String(error)
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
   const {
     device = platform === 'darwin' ? undefined : 'mihomo',
     stack = 'mixed',
@@ -124,18 +139,8 @@ const Tun: React.FC<Props> = ({ embedded = false }) => {
                   size="sm"
                   variant="primary"
                   isPending={loading}
-                  onPress={async () => {
-                    setLoading(true)
-                    try {
-                      await setupFirewall()
-                      notify(tr('Firewall reset'))
-                      await restartCore()
-                    } catch (e) {
-                      notify(e, { variant: 'danger' })
-                    } finally {
-                      setLoading(false)
-                    }
-                  }}
+                  isDisabled={loading}
+                  onPress={resetFirewall}
                 >
                   {tr('Reset firewall')}
                 </Button>
