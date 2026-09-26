@@ -78,6 +78,13 @@ import './home.css'
 dayjs.extend(relativeTime)
 
 type ServiceState = Awaited<ReturnType<typeof serviceStatus>>
+type SpeedTestSummary = { download: number; upload: number }
+
+let lastCompletedSpeedTest: SpeedTestSummary | undefined
+
+function formatSpeedTestMbps(bitsPerSecond: number): string {
+  return (bitsPerSecond / 1_000_000).toFixed(1)
+}
 
 function serviceStateLabel(state: ServiceState | undefined): string {
   switch (state) {
@@ -173,6 +180,7 @@ const Home = () => {
   const [publicIpSnapshot, setPublicIpSnapshot] = useState<PublicIpSnapshot>({ stale: true })
   const publicIp = publicIpSnapshot.info
   const [refreshingIp, setRefreshingIp] = useState(false)
+  const [speedTestSummary, setSpeedTestSummary] = useState(lastCompletedSpeedTest)
   const { repairing: repairingService, restartRequired: serviceRestartRequired } =
     useServiceRepairState()
   const [refreshSignal, setRefreshSignal] = useState(0)
@@ -542,10 +550,27 @@ const Home = () => {
                 aria-hidden="true"
               />
             )}
-            <div className="relative mb-4 flex flex-wrap items-center justify-between gap-2 pr-24">
+            <div
+              className={`relative mb-4 flex flex-wrap items-center justify-between gap-2 ${speedTestSummary ? 'pr-64' : 'pr-24'}`}
+            >
               <h2 className="mr-auto text-sm font-semibold text-foreground">{tr('Network')}</h2>
-              <div className="absolute right-0 top-1/2 -translate-y-1/2">
-                <OverviewSpeedTest />
+              <div className="absolute right-0 top-1/2 flex -translate-y-1/2 items-center gap-2">
+                {speedTestSummary && (
+                  <span
+                    className="whitespace-nowrap text-xs tabular-nums text-muted"
+                    role="status"
+                    aria-label={`${tr('Download')} ${formatSpeedTestMbps(speedTestSummary.download)} Mbps; ${tr('Upload')} ${formatSpeedTestMbps(speedTestSummary.upload)} Mbps`}
+                  >
+                    ↓{formatSpeedTestMbps(speedTestSummary.download)} · ↑
+                    {formatSpeedTestMbps(speedTestSummary.upload)} Mbps
+                  </span>
+                )}
+                <OverviewSpeedTest
+                  onComplete={(result) => {
+                    lastCompletedSpeedTest = result
+                    setSpeedTestSummary(result)
+                  }}
+                />
               </div>
               {exitIsLastKnown && publicIp ? (
                 <span className="text-xs text-warning">{tr('Last known exit')}</span>

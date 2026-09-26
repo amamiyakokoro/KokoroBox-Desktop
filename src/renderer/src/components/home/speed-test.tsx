@@ -4,7 +4,13 @@ import { runCloudflareSpeedTest, type SpeedTestResult } from '../../utils/cloudf
 import { LuActivity, LuClock3, LuDownload, LuGauge, LuUpload } from 'react-icons/lu'
 import { tr } from '../../../../shared/i18n'
 
-function SpeedTestDialog({ onClose }: { onClose: () => void }) {
+function SpeedTestDialog({
+  onClose,
+  onComplete
+}: {
+  onClose: () => void
+  onComplete: (result: { download: number; upload: number }) => void
+}) {
   const engine = useRef<AbortController | null>(null)
   const generation = useRef(0)
   const [running, setRunning] = useState(false)
@@ -42,6 +48,14 @@ function SpeedTestDialog({ onClose }: { onClose: () => void }) {
       })
       if (current !== generation.current) return
       setResults(result)
+      if (
+        result.download !== undefined &&
+        result.upload !== undefined &&
+        Number.isFinite(result.download) &&
+        Number.isFinite(result.upload)
+      ) {
+        onComplete({ download: result.download, upload: result.upload })
+      }
       stop()
     } catch {
       if (current !== generation.current) return
@@ -121,7 +135,11 @@ function SpeedTestDialog({ onClose }: { onClose: () => void }) {
   )
 }
 
-export default function OverviewSpeedTest() {
+export default function OverviewSpeedTest({
+  onComplete
+}: {
+  onComplete: (result: { download: number; upload: number }) => void
+}) {
   const [open, setOpen] = useState(false)
   return (
     <>
@@ -129,7 +147,7 @@ export default function OverviewSpeedTest() {
         <LuGauge className="size-4" aria-hidden="true" />
         {tr('Speed test')}
       </Button>
-      {open && <SpeedTestDialog onClose={() => setOpen(false)} />}
+      {open && <SpeedTestDialog onClose={() => setOpen(false)} onComplete={onComplete} />}
     </>
   )
 }
