@@ -1,11 +1,7 @@
 import { Button, Modal, Spinner } from '@heroui/react'
 import { useEffect, useRef, useState } from 'react'
-import {
-  runCloudflareSpeedTest,
-  type SpeedTestResult,
-  type SpeedTestPhase
-} from '../../utils/cloudflare-speed-test'
-import { LuGauge } from 'react-icons/lu'
+import { runCloudflareSpeedTest, type SpeedTestResult } from '../../utils/cloudflare-speed-test'
+import { LuActivity, LuClock3, LuDownload, LuGauge, LuUpload } from 'react-icons/lu'
 import { tr } from '../../../../shared/i18n'
 
 function SpeedTestDialog({ onClose }: { onClose: () => void }) {
@@ -14,7 +10,6 @@ function SpeedTestDialog({ onClose }: { onClose: () => void }) {
   const [running, setRunning] = useState(false)
   const [results, setResults] = useState<SpeedTestResult>({})
   const [error, setError] = useState(false)
-  const [phase, setPhase] = useState<SpeedTestPhase>('latency')
   const stop = () => {
     generation.current++
     engine.current?.abort()
@@ -40,10 +35,9 @@ function SpeedTestDialog({ onClose }: { onClose: () => void }) {
       engine.current = controller
       const result = await runCloudflareSpeedTest({
         signal: controller.signal,
-        onProgress: (next, phase) => {
+        onProgress: (next) => {
           if (current !== generation.current) return
           setResults(next)
-          setPhase(phase)
         }
       })
       if (current !== generation.current) return
@@ -56,10 +50,10 @@ function SpeedTestDialog({ onClose }: { onClose: () => void }) {
     }
   }
   const metrics = [
-    [tr('Download'), results.download, 1_000_000, 'Mbps'],
-    [tr('Upload'), results.upload, 1_000_000, 'Mbps'],
-    [tr('Latency'), results.latency, 1, 'ms'],
-    [tr('Jitter'), results.jitter, 1, 'ms']
+    [tr('Download'), results.download, 1_000_000, 'Mbps', LuDownload],
+    [tr('Upload'), results.upload, 1_000_000, 'Mbps', LuUpload],
+    [tr('Latency'), results.latency, 1, 'ms', LuClock3],
+    [tr('Jitter'), results.jitter, 1, 'ms', LuActivity]
   ] as const
   return (
     <Modal>
@@ -84,19 +78,13 @@ function SpeedTestDialog({ onClose }: { onClose: () => void }) {
                   'Test your current connection with Cloudflare. Uses up to about 64 MB of data.'
                 )}
               </p>
-              {running && (
-                <p className="text-sm text-muted" role="status">
-                  {phase === 'latency'
-                    ? tr('Measuring latency')
-                    : phase === 'download'
-                      ? tr('Measuring download speed')
-                      : tr('Measuring upload speed')}
-                </p>
-              )}
               <div className="grid grid-cols-2 gap-4" aria-live="polite">
-                {metrics.map(([label, value, divisor, unit]) => (
+                {metrics.map(([label, value, divisor, unit, Icon]) => (
                   <div key={label} className="rounded-xl bg-surface-secondary p-3">
-                    <div className="text-xs text-muted">{label}</div>
+                    <div className="flex items-center gap-1.5 text-xs text-muted">
+                      <Icon className="size-3.5 shrink-0" aria-hidden="true" />
+                      {label}
+                    </div>
                     <div className="mt-1 text-xl font-semibold tabular-nums">
                       {value !== undefined && Number.isFinite(value)
                         ? (value / divisor).toFixed(1)
