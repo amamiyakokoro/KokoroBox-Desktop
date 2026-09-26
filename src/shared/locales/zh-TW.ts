@@ -1,5 +1,13 @@
 // Traditional Chinese (Taiwan) localization. Keys are the canonical English source messages.
 export const messages: Readonly<Record<string, string>> = {
+  Stop: '停止',
+  'Speed test failed. Check your connection and try again.': '測速失敗，請檢查連線後重試。',
+  'Test your current connection with Cloudflare. Uses about 67 MB of data.':
+    '使用 Cloudflare 測試目前連線，約使用 67 MB 流量。',
+  'Start test': '開始測速',
+  Jitter: '抖動',
+  'Testing speed': '測速中',
+  'Speed test': '測速',
   'Accent color': '主題色',
   'Custom accent color': '自訂主題色',
   'Blue accent': '藍色',

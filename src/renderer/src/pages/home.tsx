@@ -1,3 +1,4 @@
+import OverviewSpeedTest from '../components/home/speed-test'
 import { OverviewTrafficCard } from '@renderer/components/home/traffic-card'
 import { Button, Surface, Tooltip } from '@heroui/react'
 import dayjs from 'dayjs'
@@ -542,7 +543,8 @@ const Home = () => {
               />
             )}
             <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-              <h2 className="text-sm font-semibold text-foreground">{tr('Network')}</h2>
+              <h2 className="mr-auto text-sm font-semibold text-foreground">{tr('Network')}</h2>
+              <OverviewSpeedTest />
               {exitIsLastKnown && publicIp ? (
                 <span className="text-xs text-warning">{tr('Last known exit')}</span>
               ) : refreshingIp ? (
