@@ -41,6 +41,7 @@ import * as native from 'kokorobox-native'
 import { systemCoreOnlyBuild } from '../../shared/build-flags'
 import { parseServiceLog } from './log-parser'
 import { probeServiceHealth } from './health'
+import { createServiceStartupRepair } from './startup-repair'
 import { existsSync } from 'fs'
 import { appendAppLog } from '../utils/log'
 let keyManager: KeyManager | null = null
@@ -48,6 +49,23 @@ let macOSServiceRecoveryPromise: Promise<void> | undefined
 let pendingLegacyServiceAuthCleanup = false
 const execFilePromise = promisify(execFile)
 const MACOS_SERVICE_PLIST_NAME = 'KokoroBoxService.plist'
+
+export const repairUninitializedService = createServiceStartupRepair({
+  probe: test,
+  repair: async () => {
+    await appendAppLog(
+      '[Service]: service is uninitialized; repairing authentication before core startup\n'
+    )
+    try {
+      // initService reuses the persisted client key and waits for authenticated readiness.
+      await initService()
+      await appendAppLog('[Service]: startup initialization repair completed\n')
+    } catch (error) {
+      await appendAppLog(`[Service]: startup initialization repair failed: ${error}\n`)
+      throw error
+    }
+  }
+})
 
 function macOSServiceRegistrationStatus(): MacOSManagedServiceStatus {
   return getMacosManagedServiceStatus(MACOS_SERVICE_PLIST_NAME)

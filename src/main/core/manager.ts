@@ -37,7 +37,11 @@ import {
   isServiceUnavailableError,
   type ServiceCoreLaunchProfile
 } from '../service/api'
-import { ensureMacOSServiceReady, serviceStatus } from '../service/manager'
+import {
+  ensureMacOSServiceReady,
+  repairUninitializedService,
+  serviceStatus
+} from '../service/manager'
 import { clearAppUpdateServiceFallbackPause, getServiceFallbackPolicy } from '../service/fallback'
 import { appendAppLog, createLogWritable, setMihomoLogSource } from '../utils/log'
 import {
@@ -437,6 +441,8 @@ export async function startCore(detached = false): Promise<Promise<void>[]> {
   if (useServiceCore) {
     if (process.platform === 'darwin') {
       await ensureMacOSServiceReady()
+    } else {
+      await repairUninitializedService()
     }
     stoppedLegacyDirectCore = await stopLegacyDirectCore()
     if (stoppedLegacyDirectCore) {

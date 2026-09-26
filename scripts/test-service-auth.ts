@@ -6,6 +6,86 @@ import { test } from 'node:test'
 import { computeKeyId, generateKeyPair, signData, validateKeyPair } from '../src/main/service/key'
 import { parseServiceLog } from '../src/main/service/log-parser'
 import { probeServiceHealth } from '../src/main/service/health'
+import {
+  createServiceStartupRepair,
+  isUninitializedServiceError
+} from '../src/main/service/startup-repair'
+
+test('startup repairs uninitialized authentication once before continuing', async () => {
+  let ready = false
+  let repairs = 0
+  const ensure = createServiceStartupRepair({
+    probe: async () => {
+      if (!ready) throw new Error('Service is not initialized')
+    },
+    repair: async () => {
+      repairs++
+      ready = true
+    }
+  })
+  await Promise.all([ensure(), ensure(), ensure()])
+  await ensure()
+  assert.equal(repairs, 1)
+  assert.equal(ready, true)
+})
+
+test('startup never re-prompts after repair cancellation but permits manual recovery', async () => {
+  let ready = false
+  let repairs = 0
+  const cancelled = new Error('User canceled')
+  const ensure = createServiceStartupRepair({
+    probe: async () => {
+      if (!ready) throw new Error('Service is not initialized')
+    },
+    repair: async () => {
+      repairs++
+      throw cancelled
+    }
+  })
+  await assert.rejects(ensure(), (error) => error === cancelled)
+  await assert.rejects(ensure(), (error) => error === cancelled)
+  assert.equal(repairs, 1)
+  ready = true
+  await ensure()
+})
+
+test('startup verifies the repaired service and does not loop on a failed repair', async () => {
+  let repairs = 0
+  const ensure = createServiceStartupRepair({
+    probe: async () => {
+      throw new Error('Service is not initialized')
+    },
+    repair: async () => {
+      repairs++
+    }
+  })
+  await assert.rejects(ensure(), /not initialized/)
+  await assert.rejects(ensure(), /not initialized/)
+  assert.equal(repairs, 1)
+})
+
+test('healthy services and unrelated failures do not trigger initialization', async () => {
+  for (const message of [
+    '',
+    'ECONNREFUSED',
+    'Service API is not initialized',
+    'Key ID is not registered',
+    'HTTP 503',
+    'Access denied'
+  ]) {
+    const ensure = createServiceStartupRepair({
+      probe: async () => {
+        if (message) throw new Error(message)
+      },
+      repair: async () => {
+        assert.fail('unexpected initialization')
+      }
+    })
+    await ensure()
+  }
+  assert.equal(isUninitializedServiceError(new Error('服務未初始化')), true)
+  assert.equal(isUninitializedServiceError(new Error('服务未初始化')), true)
+})
 
 function publicKeyObject(publicKey: string): crypto.KeyObject {
   return crypto.createPublicKey({
