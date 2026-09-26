@@ -19,7 +19,6 @@ interface Props {
 const UpdaterButton: React.FC<Props> = (props) => {
   const { iconOnly, latest, showButtonAfterNotification = true } = props
   const [openDrawer, setOpenDrawer] = useState(false)
-  const [drawerReopenSignal, setDrawerReopenSignal] = useState(0)
   const [showButton, setShowButton] = useState(false)
   const [updateStatus, setUpdateStatus] = useState<{
     downloading: boolean
@@ -66,7 +65,6 @@ const UpdaterButton: React.FC<Props> = (props) => {
         children: tr('View content'),
         onPress: () => {
           setOpenDrawer(true)
-          setDrawerReopenSignal((signal) => signal + 1)
         },
         variant: 'secondary'
       },
@@ -102,7 +100,6 @@ const UpdaterButton: React.FC<Props> = (props) => {
           tag={latest.tag}
           changelog={latest.changelog}
           updateStatus={updateStatus}
-          reopenSignal={drawerReopenSignal}
           onCancel={handleCancelUpdate}
           onClose={() => {
             setOpenDrawer(false)
@@ -116,7 +113,6 @@ const UpdaterButton: React.FC<Props> = (props) => {
           variant="danger"
           onPress={() => {
             setOpenDrawer(true)
-            setDrawerReopenSignal((signal) => signal + 1)
           }}
         >
           <GrUpgrade />
@@ -131,7 +127,6 @@ const UpdaterButton: React.FC<Props> = (props) => {
           variant="danger"
           onPress={() => {
             setOpenDrawer(true)
-            setDrawerReopenSignal((signal) => signal + 1)
           }}
         >
           <GrUpgrade />

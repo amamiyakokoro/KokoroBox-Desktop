@@ -2,7 +2,7 @@ import { tr } from '../../../../shared/i18n'
 import { Button, Drawer, Surface, Tabs } from '@heroui/react'
 import { KokoActionMenu } from '../base/koko-collections'
 import type { ReactNode } from 'react'
-import { useEffect, useId, useMemo, useRef, useState } from 'react'
+import { useId, useMemo, useState } from 'react'
 import { BaseEditor } from '@renderer/components/base/base-editor-lazy'
 import { calcTraffic } from '@renderer/utils/calc'
 import dayjs from 'dayjs'
@@ -36,8 +36,6 @@ interface CopyRow extends CopyProps {
 }
 
 type DetailRow = StaticRow | CopyRow
-
-const DRAWER_CLOSE_ANIMATION_MS = 220
 
 function buildCopyMenuItems(value: string | string[], displayName?: string, prefix: string[] = []) {
   const getSubDomains = (domain: string): string[] =>
@@ -129,24 +127,7 @@ const DetailSection = ({ title, children }: DetailSectionProps) => {
 
 const ConnectionDetailModal = ({ connection, onClose, onAddRule }: Props) => {
   const [viewMode, setViewMode] = useState<'detail' | 'raw'>('detail')
-  const [isOpen, setIsOpen] = useState(true)
-  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const rawJson = useMemo(() => JSON.stringify(connection, null, 2), [connection])
-
-  useEffect(() => {
-    return () => {
-      if (closeTimer.current) clearTimeout(closeTimer.current)
-    }
-  }, [])
-
-  const closeWithAnimation = (): void => {
-    if (closeTimer.current) return
-    setIsOpen(false)
-    closeTimer.current = setTimeout(() => {
-      closeTimer.current = null
-      onClose()
-    }, DRAWER_CLOSE_ANIMATION_MS)
-  }
 
   const renderRow = (row: DetailRow) => {
     const content =
@@ -495,9 +476,9 @@ const ConnectionDetailModal = ({ connection, onClose, onAddRule }: Props) => {
 
   return (
     <Drawer.Backdrop
-      isOpen={isOpen}
+      isOpen
       onOpenChange={(open) => {
-        if (!open) closeWithAnimation()
+        if (!open) onClose()
       }}
       variant="transparent"
       className="page-settings-drawer-backdrop top-12 h-[calc(100%-48px)]"

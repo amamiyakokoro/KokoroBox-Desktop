@@ -43,7 +43,6 @@ const Actions: React.FC<Props> = ({
   const [newVersion, setNewVersion] = useState('')
   const [changelog, setChangelog] = useState('')
   const [openUpdate, setOpenUpdate] = useState(false)
-  const [updateDrawerReopenSignal, setUpdateDrawerReopenSignal] = useState(0)
   const [checkingUpdate, setCheckingUpdate] = useState(false)
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [updateStatus, setUpdateStatus] = useState<{
@@ -69,7 +68,6 @@ const Actions: React.FC<Props> = ({
 
   const openUpdateDrawer = (): void => {
     setOpenUpdate(true)
-    setUpdateDrawerReopenSignal((signal) => signal + 1)
   }
 
   const handleCheckUpdate = async (): Promise<void> => {
@@ -109,7 +107,6 @@ const Actions: React.FC<Props> = ({
           version={newVersion}
           changelog={changelog}
           updateStatus={updateStatus}
-          reopenSignal={updateDrawerReopenSignal}
           onCancel={handleCancelUpdate}
         />
       )}

@@ -1,7 +1,7 @@
 import { tr } from '../../../../shared/i18n'
 import { Button, Drawer, Label, Link, ProgressBar } from '@heroui/react'
 import ReactMarkdown from 'react-markdown'
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useState } from 'react'
 import { downloadAndInstallUpdate } from '@renderer/utils/ipc'
 import { platform } from '@renderer/utils/init'
 import { FiX, FiDownload } from 'react-icons/fi'
@@ -18,41 +18,22 @@ interface Props {
   }
   onCancel?: () => void
   onClose: () => void
-  reopenSignal?: number
 }
 
-const DRAWER_CLOSE_ANIMATION_MS = 700
 const isLinux = platform === 'linux'
 
 const UpdaterDrawer: React.FC<Props> = (props) => {
-  const { version, tag, changelog, updateStatus, onCancel, onClose, reopenSignal } = props
+  const { version, tag, changelog, updateStatus, onCancel, onClose } = props
   const [downloading, setDownloading] = useState(false)
-  const [isOpen, setIsOpen] = useState(true)
-  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  useEffect(() => {
-    return () => {
-      if (closeTimer.current) {
-        clearTimeout(closeTimer.current)
-      }
-    }
-  }, [])
-
-  useEffect(() => {
-    if (closeTimer.current) {
-      clearTimeout(closeTimer.current)
-      closeTimer.current = null
-    }
-    setIsOpen(true)
-  }, [reopenSignal])
+  const isDownloading = updateStatus?.downloading || downloading
 
   const onUpdate = async (): Promise<void> => {
     try {
       setDownloading(true)
       const launchResult = await downloadAndInstallUpdate(version, tag)
+      setDownloading(false)
       if (launchResult === 'native' || launchResult === 'external') {
-        setDownloading(false)
-        closeWithAnimation()
+        onClose()
       }
     } catch (e) {
       notify(e, { variant: 'danger' })
@@ -61,31 +42,22 @@ const UpdaterDrawer: React.FC<Props> = (props) => {
   }
 
   const handleCancel = (): void => {
-    if (updateStatus?.downloading && onCancel) {
-      setDownloading(false)
-      onCancel()
-    } else {
-      closeWithAnimation()
+    if (isDownloading) {
+      if (onCancel) {
+        setDownloading(false)
+        onCancel()
+      }
+      return
     }
+    onClose()
   }
 
   const handleOpenChange = (open: boolean): void => {
     if (!open && !isDownloading) {
-      closeWithAnimation()
+      onClose()
     }
   }
 
-  const closeWithAnimation = (): void => {
-    if (closeTimer.current) return
-
-    setIsOpen(false)
-    closeTimer.current = setTimeout(() => {
-      closeTimer.current = null
-      onClose()
-    }, DRAWER_CLOSE_ANIMATION_MS)
-  }
-
-  const isDownloading = updateStatus?.downloading || downloading
   const releaseTag = tag ?? (version.includes('-rolling-') ? 'rolling' : version)
   const releaseUrl = `https://github.com/amamiyakokoro/KokoroBox-Desktop/releases/tag/${releaseTag}`
 
@@ -93,7 +65,7 @@ const UpdaterDrawer: React.FC<Props> = (props) => {
 
   return (
     <Drawer.Backdrop
-      isOpen={isOpen}
+      isOpen
       onOpenChange={handleOpenChange}
       variant="blur"
       isDismissable={!isDownloading}
