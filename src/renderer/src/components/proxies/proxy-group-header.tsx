@@ -72,7 +72,7 @@ const ProxyGroupHeader = memo(function ProxyGroupHeader({
   return (
     <div className={`w-full bg-surface px-2 pt-1.5 ${isLast && !isOpen ? 'pb-1.5' : ''}`}>
       <div
-        className={`group/proxy relative min-w-0 rounded-lg border transition-[background-color,border-color] duration-150 focus-within:ring-2 focus-within:ring-accent/35 ${
+        className={`group/proxy relative min-w-0 rounded-lg border transition-[background-color,border-color] duration-150 ${
           isRelevant
             ? 'border-accent/40 bg-accent-soft/35'
             : isOpen
@@ -86,7 +86,7 @@ const ProxyGroupHeader = memo(function ProxyGroupHeader({
           type="button"
           aria-expanded={isOpen}
           aria-label={group.name}
-          className="absolute inset-0 z-0 cursor-pointer rounded-lg outline-none"
+          className="absolute inset-0 z-0 cursor-pointer rounded-[inherit] outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus"
           onClick={() => onToggle(index, isOpen)}
         />
         <div className="pointer-events-none relative z-1 flex min-h-14 w-full items-center gap-2 px-3 py-2">
