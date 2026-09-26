@@ -9,7 +9,6 @@ on:
       - '**/*.md'
       - 'docs/**'
       - '.github/ISSUE_TEMPLATE/**'
-      - '.github/workflows/issues.yml'
 
 permissions:
   contents: read
