@@ -129,7 +129,7 @@ function OverviewSpeedTestSummary({ result }: { result: SpeedTestSummary }) {
     <section
       aria-label={tr('Latest speed test')}
       aria-live="polite"
-      className="home-overview-subpanel w-full max-w-80 justify-self-end rounded-xl px-3 py-2.5"
+      className="home-overview-subpanel w-full rounded-xl px-3 py-2.5"
     >
       <div className="mb-2 flex items-center justify-between gap-2 text-xs text-muted">
         <h3 className="font-medium">{tr('Latest speed test')}</h3>
@@ -647,34 +647,37 @@ const Home = () => {
                 <span className="text-xs text-muted">{tr('Refreshing')}</span>
               ) : null}
             </div>
-            <div className="flex min-w-0 items-center gap-2.5">
-              <CountryFlag code={publicIp?.countryCode} className="size-12 sm:size-13" />
-              <div className="min-w-0 flex-1">
-                {publicIp ? (
-                  <OverviewPublicIp
-                    ip={publicIp.ip}
-                    revealed={revealed}
-                    onToggle={() => setRevealed((current) => !current)}
-                  />
-                ) : (
-                  <div className="text-xl font-semibold text-muted">{tr('Unavailable')}</div>
-                )}
-                <div className="home-secondary-value mt-0.5 text-[0.95rem] text-muted">
-                  {countryLabel(publicIp)}
-                </div>
-                {(publicIp?.isp || publicIp?.asn) && (
-                  <div className="home-secondary-value mt-1 flex min-w-0 flex-wrap items-baseline gap-x-1.5 gap-y-0.5 text-xs text-muted">
-                    {publicIp.isp && <span className="min-w-0 break-words">{publicIp.isp}</span>}
-                    {publicIp.isp && publicIp.asn && <span aria-hidden="true">·</span>}
-                    {publicIp.asn && <span className="shrink-0">{publicIp.asn}</span>}
-                  </div>
-                )}
-              </div>
-            </div>
             <div
-              className={`home-network-footer mt-4 min-w-0 border-t border-separator/40 pt-3 ${speedTestSummary ? 'home-network-footer--with-speed-test' : ''}`}
+              className={`home-network-main min-w-0 ${speedTestSummary ? 'home-network-main--with-speed-test' : ''}`}
             >
-              <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 self-start">
+              <div className="flex min-w-0 items-center gap-2.5">
+                <CountryFlag code={publicIp?.countryCode} className="size-12 sm:size-13" />
+                <div className="min-w-0 flex-1">
+                  {publicIp ? (
+                    <OverviewPublicIp
+                      ip={publicIp.ip}
+                      revealed={revealed}
+                      onToggle={() => setRevealed((current) => !current)}
+                    />
+                  ) : (
+                    <div className="text-xl font-semibold text-muted">{tr('Unavailable')}</div>
+                  )}
+                  <div className="home-secondary-value mt-0.5 text-[0.95rem] text-muted">
+                    {countryLabel(publicIp)}
+                  </div>
+                  {(publicIp?.isp || publicIp?.asn) && (
+                    <div className="home-secondary-value mt-1 flex min-w-0 flex-wrap items-baseline gap-x-1.5 gap-y-0.5 text-xs text-muted">
+                      {publicIp.isp && <span className="min-w-0 break-words">{publicIp.isp}</span>}
+                      {publicIp.isp && publicIp.asn && <span aria-hidden="true">·</span>}
+                      {publicIp.asn && <span className="shrink-0">{publicIp.asn}</span>}
+                    </div>
+                  )}
+                </div>
+              </div>
+              {speedTestSummary && <OverviewSpeedTestSummary result={speedTestSummary} />}
+            </div>
+            <div className="mt-4 min-w-0 border-t border-separator/40 pt-3">
+              <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
                 <span className="text-xs font-medium text-muted">{tr('Routing')}</span>
                 <OverviewRoutingChip mode={mode} />
                 {mode === 'rule' && (
@@ -710,7 +713,6 @@ const Home = () => {
                   </span>
                 )}
               </div>
-              {speedTestSummary && <OverviewSpeedTestSummary result={speedTestSummary} />}
             </div>
           </Surface>
 
