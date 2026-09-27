@@ -282,29 +282,36 @@ const AppRouting: React.FC = () => {
         />
       )}
       <div className="flex w-full max-w-6xl flex-col gap-4 p-4">
-        <section className="app-routing-status-strip" aria-live="polite">
+        <section className="app-routing-status-card" aria-live="polite">
           <div className="min-w-0 flex-1">
-            <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+            <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
+              <span className="text-sm font-semibold text-foreground">
+                {tr('Application routing')}
+              </span>
               <span
-                aria-hidden="true"
-                className={`size-2 shrink-0 rounded-full ${currentStatusTone.dot}`}
-              />
-              <span className={`text-sm font-semibold ${currentStatusTone.label}`}>
+                className={`inline-flex items-center gap-1.5 text-xs font-medium ${currentStatusTone.label}`}
+              >
+                <span
+                  aria-hidden="true"
+                  className={`size-2 shrink-0 rounded-full ${currentStatusTone.dot}`}
+                />
                 {getAppRoutingStatusLabel(status)}
               </span>
-              {config?.enabled && (
-                <span className="font-mono text-xs text-muted">
-                  {displayedProxyProtocol} · 127.0.0.1:{displayedProxyPort}
-                  {backendLabel ? ` · ${backendLabel}` : ''}
-                </span>
-              )}
             </div>
-            <p className="mt-1 pl-4 text-xs text-muted">
+            {supported && config && (
+              <p
+                className={`mt-1 font-mono text-xs ${config.enabled ? 'text-muted' : 'text-muted/70'}`}
+              >
+                {displayedProxyProtocol} · 127.0.0.1:{displayedProxyPort}
+                {backendLabel ? ` · ${backendLabel}` : ''}
+              </p>
+            )}
+            <p className="mt-1 text-xs leading-5 text-muted">
               {tr('Route selected applications through local Mihomo without system proxy or TUN.')}
             </p>
             {currentStatusMessage && !needsMacApproval && (
               <p
-                className={`mt-1 pl-4 text-xs ${status?.state === 'error' ? 'text-danger' : 'text-warning'}`}
+                className={`mt-1 text-xs ${status?.state === 'error' ? 'text-danger' : 'text-warning'}`}
               >
                 {currentStatusMessage}
               </p>
@@ -314,7 +321,7 @@ const AppRouting: React.FC = () => {
               config?.enabled &&
               ['starting', 'error'].includes(status?.state ?? '') && (
                 <Button
-                  className="mt-2 ms-4"
+                  className="mt-2"
                   size="sm"
                   variant="secondary"
                   onPress={() => void refresh()}
@@ -324,7 +331,7 @@ const AppRouting: React.FC = () => {
               )}
             {needsWindowsServiceRepair && (
               <Button
-                className="mt-2 ms-4"
+                className="mt-2"
                 size="sm"
                 variant="secondary"
                 isPending={preparingService}
@@ -337,6 +344,7 @@ const AppRouting: React.FC = () => {
             )}
           </div>
           <Switch
+            className="mt-0.5 shrink-0"
             aria-label={tr('Application routing')}
             isSelected={config?.enabled ?? false}
             isDisabled={!supported || !config || saving || preparingService}

@@ -1033,11 +1033,11 @@ test('application routing status and Windows groups retain compact semantic stru
   const page = readFileSync('src/renderer/src/pages/app-routing.tsx', 'utf8')
   const styles = readFileSync('src/renderer/src/assets/app-overrides.css', 'utf8')
 
-  assert.match(page, /<section className="app-routing-status-strip" aria-live="polite">/)
+  assert.match(page, /<section className="app-routing-status-card" aria-live="polite">/)
   assert.match(page, /getAppRoutingStatusLabel\(status\)/)
   assert.match(page, /displayedProxyProtocol\} · 127\.0\.0\.1:\{displayedProxyPort\}/)
   assert.match(page, /aria-label=\{tr\('Application routing'\)\}/)
-  assert.match(styles, /\.app-routing-status-strip/)
+  assert.match(styles, /\.app-routing-status-card/)
   assert.match(page, /className="app-routing-group-header"/)
   assert.match(page, /aria-expanded=\{!isCollapsed\}/)
   assert.match(page, /onClick=\{\(\) => toggleGroup\(group\.id\)\}/)

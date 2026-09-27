@@ -451,17 +451,18 @@ input[type='number'] {
   }
 }
 
-/* Application routing is a compact management workspace: status reads as a strip,
+/* Application routing is a compact management workspace: status reads as a card,
  * the add flow is one composer, groups are section headers and rules are neutral
  * interactive surfaces. HeroUI continues to own the control anatomy. */
-.app-routing-status-strip {
+.app-routing-status-card {
   display: flex;
   min-width: 0;
-  align-items: center;
+  align-items: flex-start;
   gap: calc(var(--spacing) * 4);
-  border-block: 1px solid var(--separator);
-  background: transparent;
-  padding: calc(var(--spacing) * 2.5) calc(var(--spacing) * 3);
+  border: 1px solid var(--separator);
+  border-radius: var(--radius-xl);
+  background: color-mix(in srgb, var(--surface-secondary) 45%, var(--surface));
+  padding: calc(var(--spacing) * 3) calc(var(--spacing) * 3.5);
 }
 
 .app-routing-rule-composer {
