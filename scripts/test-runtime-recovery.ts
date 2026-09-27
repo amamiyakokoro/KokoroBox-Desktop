@@ -1,14 +1,15 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { createServiceRepairState } from '../src/renderer/src/utils/service-repair-state'
+import { recoverServiceBeforeReinstall } from '../src/renderer/src/utils/service-recovery'
 
 test('repair is shared across page subscriptions and runs only once', async () => {
   let complete!: () => void
   let calls = 0
   const store = createServiceRepairState(() => {
     calls++
-    return new Promise<void>((resolve) => {
-      complete = resolve
+    return new Promise<boolean>((resolve) => {
+      complete = () => resolve(true)
     })
   })
   const events: unknown[] = []
@@ -33,9 +34,65 @@ test('failed repair clears pending state and can be retried', async () => {
   const failure = new Error('installation cancelled')
   const store = createServiceRepairState(async () => {
     if (++attempts === 1) throw failure
+    return true
   })
   await assert.rejects(store.repair(), (error) => error === failure)
   assert.deepEqual(store.getSnapshot(), { repairing: false, restartRequired: false })
   await store.repair()
   assert.deepEqual(store.getSnapshot(), { repairing: false, restartRequired: true })
+})
+
+test('successful initialization does not request an app restart', async () => {
+  const store = createServiceRepairState(async () => false)
+  await store.repair()
+  assert.deepEqual(store.getSnapshot(), { repairing: false, restartRequired: false })
+})
+
+test('service recovery initializes before reinstalling and stops when authentication succeeds', async () => {
+  const calls: string[] = []
+  const restartRequired = await recoverServiceBeforeReinstall({
+    status: async () => 'need-init',
+    initialize: async () => {
+      calls.push('initialize')
+    },
+    authenticate: async () => {
+      calls.push('authenticate')
+      return true
+    },
+    reinstall: async () => {
+      calls.push('reinstall')
+    }
+  })
+  assert.equal(restartRequired, false)
+  assert.deepEqual(calls, ['initialize', 'authenticate'])
+})
+
+test('service recovery reinstalls after failed initialization but respects cancellation', async () => {
+  const calls: string[] = []
+  const actions = {
+    status: async () => 'need-init',
+    initialize: async () => {
+      calls.push('initialize')
+      throw new Error('initialization failed')
+    },
+    authenticate: async () => true,
+    reinstall: async () => {
+      calls.push('reinstall')
+    }
+  }
+  assert.equal(await recoverServiceBeforeReinstall(actions), true)
+  assert.deepEqual(calls, ['initialize', 'reinstall'])
+
+  calls.length = 0
+  await assert.rejects(
+    recoverServiceBeforeReinstall({
+      ...actions,
+      initialize: async () => {
+        calls.push('initialize')
+        throw new Error('User canceled')
+      }
+    }),
+    /User canceled/
+  )
+  assert.deepEqual(calls, ['initialize'])
 })

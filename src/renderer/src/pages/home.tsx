@@ -534,7 +534,9 @@ const Home = () => {
           : 'neutral'
   const serviceRepairAvailable =
     !systemCoreOnlyBuild &&
-    (serviceState === 'not-installed' || (serviceExpected && serviceState === 'unknown'))
+    (serviceState === 'not-installed' ||
+      serviceState === 'need-init' ||
+      (serviceExpected && serviceState === 'unknown'))
   const handleRepairService = async (): Promise<void> => {
     try {
       await repairServiceAndPromptRestart()
@@ -850,7 +852,11 @@ const Home = () => {
                         }
                       }}
                     >
-                      {serviceRestartRequired ? tr('Restart app') : tr('Repair service')}
+                      {serviceRestartRequired
+                        ? tr('Restart app')
+                        : serviceState === 'need-init'
+                          ? tr('Initialize')
+                          : tr('Repair service')}
                     </Button>
                   </div>
                 )}

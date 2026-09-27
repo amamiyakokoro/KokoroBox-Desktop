@@ -15,6 +15,7 @@ import { platform } from '@renderer/utils/init'
 interface Props {
   onChange: (open: boolean) => void
   onInit: () => Promise<void>
+  onRecover?: () => Promise<void>
   onInstall?: () => Promise<void>
   onUninstall?: () => Promise<void>
   onStart?: () => Promise<void>
@@ -74,7 +75,7 @@ async function readServiceStatus(): Promise<ServiceStatusType> {
 }
 
 const ServiceModal: React.FC<Props> = (props) => {
-  const { onChange, onInit, onInstall, onUninstall, onStart, onRestart } = props
+  const { onChange, onInit, onRecover, onInstall, onUninstall, onStart, onRestart } = props
   const { repairing, restartRequired } = useServiceRepairState()
   const [activeAction, setActiveAction] = useState<ServiceAction | null>(null)
   const [status, setStatus] = useState<ServiceStatusType | null>(null)
@@ -418,7 +419,7 @@ const ServiceModal: React.FC<Props> = (props) => {
                   variant="primary"
                   isDisabled={isBusy}
                   isPending={activeAction === 'init'}
-                  onPress={() => handleAction('init', onInit)}
+                  onPress={() => handleAction('init', onRecover ?? onInit)}
                 >
                   {tr('Initialize')}
                 </Button>

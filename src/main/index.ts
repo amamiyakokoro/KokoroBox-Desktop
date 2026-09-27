@@ -13,6 +13,7 @@ import icon from '../../resources/icon.png?asset'
 import { createTray } from './resolve/tray'
 import { createApplicationMenu } from './resolve/menu'
 import { init } from './utils/init'
+import { repairUninitializedService } from './service/manager'
 import { join } from 'path'
 import { rmSync } from 'fs'
 import { initShortcut } from './resolve/shortcut'
@@ -420,6 +421,9 @@ function startPrimaryInstance(initialDeepLinks: string[]): void {
       })
       const { showFloatingWindow: showFloating = false, disableTray = false } = appConfig
       registerIpcMainHandlers()
+      if (process.platform !== 'darwin') {
+        runStartupTask('service authentication recovery', repairUninitializedService())
+      }
       runStartupTask('GitHub token migration', getGitHubToken())
       runStartupTask('WebDAV password migration', getWebdavPassword())
       runStartupTask('Gist age identity migration', getGistAgeIdentity())

@@ -157,6 +157,7 @@ const CoreRuntimeConfig: React.FC<Props> = ({
             await initService()
             notify(tr('Service initialized'))
           }}
+          {...(!systemCoreOnlyBuild ? { onRecover: repairServiceAndPromptRestart } : {})}
           {...(!systemCoreOnlyBuild
             ? {
                 onInstall: async () => {
