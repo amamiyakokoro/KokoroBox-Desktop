@@ -3,6 +3,14 @@ allowBuilds:
   electron-winstaller: true
   esbuild: true
   meta-json-schema: true
+minimumReleaseAgeExclude:
+  - kokorobox-native-darwin-arm64@0.16.1
+  - kokorobox-native-darwin-x64@0.16.1
+  - kokorobox-native-linux-arm64-gnu@0.16.1
+  - kokorobox-native-linux-x64-gnu@0.16.1
+  - kokorobox-native-win32-arm64-msvc@0.16.1
+  - kokorobox-native-win32-x64-msvc@0.16.1
+  - kokorobox-native@0.16.1
 overrides:
   typescript-eslint: ^8.59.2
 patchedDependencies:
