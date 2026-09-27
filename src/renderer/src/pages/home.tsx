@@ -716,7 +716,7 @@ const Home = () => {
 
           <div className="home-overview-pair min-w-0">
             <Surface
-              className={`min-w-0 rounded-2xl border p-4 sm:p-5 ${cardStyle}`}
+              className={`flex min-w-0 flex-col rounded-2xl border p-4 sm:p-5 ${cardStyle}`}
               style={cardBackgroundStyle}
             >
               <div className="mb-4 flex items-center justify-between gap-2">
@@ -732,10 +732,10 @@ const Home = () => {
                 </Link>
               </div>
               {profile ? (
-                <div className="space-y-2">
+                <div className="flex flex-1 flex-col gap-2">
                   <OverviewSubscriptionIdentity profile={profile} />
                   <OverviewUsageSummary usage={usage} quota={quota} />
-                  <dl className="space-y-0 pt-1">
+                  <dl className="mt-auto space-y-0 pt-1">
                     {profile.extra?.expire ? (
                       <OverviewMetadataRow
                         icon={<LuCalendarDays className="size-3.5 shrink-0" aria-hidden="true" />}
