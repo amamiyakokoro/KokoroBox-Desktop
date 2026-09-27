@@ -736,7 +736,7 @@ const Home = () => {
                 <div className="flex flex-1 flex-col gap-2">
                   <OverviewSubscriptionIdentity profile={profile} />
                   <OverviewUsageSummary usage={usage} quota={quota} />
-                  <dl className="mt-auto space-y-0 pt-1">
+                  <dl className="mt-auto space-y-0 border-t border-separator/40 pt-3">
                     {profile.extra?.expire ? (
                       <OverviewMetadataRow
                         icon={<LuCalendarDays className="size-3.5 shrink-0" aria-hidden="true" />}
