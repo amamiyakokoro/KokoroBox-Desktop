@@ -127,7 +127,7 @@ const DetailSection = ({ title, children }: DetailSectionProps) => {
 }
 
 const ConnectionDetailModal = ({ connection, onClose, onAddRule }: Props) => {
-  const { isOpen, requestClose } = useAnimatedDrawerClose(onClose)
+  const { isOpen, isSlideOpen, requestClose } = useAnimatedDrawerClose(onClose)
   const [viewMode, setViewMode] = useState<'detail' | 'raw'>('detail')
   const rawJson = useMemo(() => JSON.stringify(connection, null, 2), [connection])
 
@@ -479,6 +479,7 @@ const ConnectionDetailModal = ({ connection, onClose, onAddRule }: Props) => {
   return (
     <Drawer.Backdrop
       isOpen={isOpen}
+      isExiting={!isOpen}
       onOpenChange={(open) => {
         if (!open) requestClose()
       }}
@@ -491,7 +492,8 @@ const ConnectionDetailModal = ({ connection, onClose, onAddRule }: Props) => {
       >
         <Drawer.Dialog
           inert={!isOpen}
-          className="connection-detail-modal page-settings-drawer flag-emoji flex h-full w-[min(580px,calc(100vw-16px))] max-w-none flex-col overflow-hidden p-0"
+          data-slide-open={isSlideOpen}
+          className="app-slide-drawer connection-detail-modal page-settings-drawer flag-emoji flex h-full w-[min(580px,calc(100vw-16px))] max-w-none flex-col overflow-hidden p-0"
         >
           <Drawer.Header className="app-drag shrink-0 border-b border-separator/70 px-5 py-3">
             <Drawer.Heading className="text-base font-semibold">

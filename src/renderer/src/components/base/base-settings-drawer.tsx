@@ -46,13 +46,14 @@ const PageSettingsDrawer: React.FC<PageSettingsDrawerProps> = ({
   onClose,
   width = 'default'
 }) => {
-  const { isOpen, requestClose } = useAnimatedDrawerClose(onClose)
+  const { isOpen, isSlideOpen, requestClose } = useAnimatedDrawerClose(onClose)
   const widthClass =
     width === 'wide' ? 'w-[min(520px,calc(100vw-16px))]' : 'w-[min(432px,calc(100vw-16px))]'
 
   return (
     <Drawer.Backdrop
       isOpen={isOpen}
+      isExiting={!isOpen}
       onOpenChange={(open) => {
         if (!open) requestClose()
       }}
@@ -65,7 +66,8 @@ const PageSettingsDrawer: React.FC<PageSettingsDrawerProps> = ({
       >
         <Drawer.Dialog
           inert={!isOpen}
-          className={`page-settings-drawer flag-emoji flex h-full ${widthClass} max-w-none flex-col overflow-hidden p-0`}
+          data-slide-open={isSlideOpen}
+          className={`app-slide-drawer page-settings-drawer flag-emoji flex h-full ${widthClass} max-w-none flex-col overflow-hidden p-0`}
         >
           <Drawer.Header className="border-b border-separator/70 px-4 py-3">
             <Drawer.Heading className="text-base font-semibold">{title}</Drawer.Heading>

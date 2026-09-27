@@ -6,6 +6,21 @@
  * `pnpm run test:ui-native` when changing this file.
  */
 
+/* React Aria tracks the drawer wrapper, while HeroUI animates its child panel.
+ * Keep the panel's native transition but give it a painted off-screen starting
+ * position and a reliable closing state. */
+.app-slide-drawer[data-slide-open='false'] {
+  translate: 100% 0;
+}
+
+.app-slide-drawer[data-slide-open='true'] {
+  translate: 0 0;
+}
+
+:root[data-reduce-motion='true'] .app-slide-drawer {
+  transition: none;
+}
+
 /*
  * Quick controls stay two-up in the sidebar, so each card owns its responsive
  * composition. The safe, narrow layout gives its title and status a full row;

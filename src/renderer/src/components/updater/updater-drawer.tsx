@@ -25,7 +25,7 @@ const isLinux = platform === 'linux'
 
 const UpdaterDrawer: React.FC<Props> = (props) => {
   const { version, tag, changelog, updateStatus, onCancel, onClose } = props
-  const { isOpen, requestClose } = useAnimatedDrawerClose(onClose)
+  const { isOpen, isSlideOpen, requestClose } = useAnimatedDrawerClose(onClose)
   const [downloading, setDownloading] = useState(false)
   const isDownloading = updateStatus?.downloading || downloading
 
@@ -68,6 +68,7 @@ const UpdaterDrawer: React.FC<Props> = (props) => {
   return (
     <Drawer.Backdrop
       isOpen={isOpen}
+      isExiting={!isOpen}
       onOpenChange={handleOpenChange}
       variant="blur"
       isDismissable={!isDownloading}
@@ -76,7 +77,8 @@ const UpdaterDrawer: React.FC<Props> = (props) => {
       <Drawer.Content placement="right" className="top-12 h-[calc(100%-48px)]">
         <Drawer.Dialog
           inert={!isOpen}
-          className="updater-drawer h-full w-[min(460px,calc(100vw-32px))] max-w-none overflow-hidden p-0"
+          data-slide-open={isSlideOpen}
+          className="app-slide-drawer updater-drawer h-full w-[min(460px,calc(100vw-32px))] max-w-none overflow-hidden p-0"
         >
           <Drawer.Header className="relative border-b border-separator/70 px-5 py-4 pr-14">
             <div className="flex min-w-0 flex-1 items-start gap-3">
