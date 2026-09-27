@@ -892,6 +892,11 @@ export const messages: Readonly<Record<string, string>> = {
   'Live logs': '实时日志',
   'Log source': '日志来源',
   'Core logs': '内核日志',
+  'Service logs': '服务日志',
+  'No service logs yet.': '暂无服务日志。',
+  'Clear displayed logs': '清空显示的日志',
+  'Service logs are not readable. Update KokoroBox Service and initialize it.':
+    '无法读取服务日志，请更新 KokoroBox Service 并初始化服务。',
   'Application routing logs': '应用分流日志',
   'No application routing logs yet. Enable diagnostic logging in Application routing settings.':
     '暂无应用分流日志，请在应用分流设置中开启诊断日志。',

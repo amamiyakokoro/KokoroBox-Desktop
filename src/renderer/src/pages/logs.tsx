@@ -24,8 +24,19 @@ import {
   subscribeMihomoLogs
 } from '@renderer/utils/mihomo-log-store'
 import { Separator } from '@heroui/react'
-import { clearAppRoutingLogs, getAppRoutingLogs, restartMihomoLogs } from '@renderer/utils/ipc'
+import {
+  clearAppRoutingLogs,
+  getAppRoutingLogs,
+  getServiceLogs,
+  restartMihomoLogs
+} from '@renderer/utils/ipc'
 import type { AppRoutingLogEntry } from '../../../shared/app-routing-log'
+import {
+  parseServiceLogs,
+  type ServiceLogCursor,
+  type ServiceLogEntry,
+  type ServiceLogSnapshot
+} from '../../../shared/service-log'
 import { notify } from '@renderer/utils/notification'
 import './management-surfaces.css'
 
@@ -67,10 +78,15 @@ const Logs: React.FC = () => {
   const { 'log-level': logLevel = 'info' } = controledMihomoConfig || {}
 
   const [logs, setLogs] = useState<MihomoLogEntry[]>(() => getMihomoLogs())
-  const [tab, setTab] = useState<'core' | 'routing'>('core')
+  const [tab, setTab] = useState<'core' | 'routing' | 'service'>('core')
   const [routingLogs, setRoutingLogs] = useState<AppRoutingLogEntry[]>([])
   const [routingError, setRoutingError] = useState('')
   const routingRequest = useRef(0)
+  const [serviceLogs, setServiceLogs] = useState<ServiceLogEntry[]>([])
+  const [serviceError, setServiceError] = useState('')
+  const serviceRequest = useRef(0)
+  const serviceSnapshot = useRef<ServiceLogSnapshot | undefined>(undefined)
+  const clearedServiceLogs = useRef<ServiceLogCursor | undefined>(undefined)
   const [filter, setFilter] = useState('')
   const [trace, setTrace] = useState(true)
   const [freshLogIds, setFreshLogIds] = useState<string[]>([])
@@ -108,6 +124,27 @@ const Logs: React.FC = () => {
     () => routingLogs.filter((log) => includesIgnoreCase(log.message, filter)),
     [routingLogs, filter]
   )
+  const filteredServiceLogs = useMemo(
+    () =>
+      serviceLogs.filter(
+        (log) => includesIgnoreCase(log.payload, filter) || includesIgnoreCase(log.type, filter)
+      ),
+    [serviceLogs, filter]
+  )
+
+  const refreshServiceLogs = useCallback(async () => {
+    const request = ++serviceRequest.current
+    try {
+      const snapshot = await getServiceLogs()
+      if (request !== serviceRequest.current) return
+      serviceSnapshot.current = snapshot
+      setServiceLogs(parseServiceLogs(snapshot, clearedServiceLogs.current).slice(-maxLogEntries))
+      setServiceError('')
+    } catch (error) {
+      if (request !== serviceRequest.current) return
+      setServiceError(error instanceof Error ? error.message : String(error))
+    }
+  }, [maxLogEntries])
 
   const refreshRoutingLogs = useCallback(async () => {
     const request = ++routingRequest.current
@@ -137,6 +174,22 @@ const Logs: React.FC = () => {
       routingRequest.current++
     }
   }, [tab, refreshRoutingLogs])
+
+  useEffect(() => {
+    if (tab !== 'service') return
+    let active = true
+    let timer: number | undefined
+    const update = async () => {
+      await refreshServiceLogs()
+      if (active) timer = window.setTimeout(() => void update(), 2000)
+    }
+    void update()
+    return () => {
+      active = false
+      if (timer !== undefined) window.clearTimeout(timer)
+      serviceRequest.current++
+    }
+  }, [tab, refreshServiceLogs])
 
   const clearFreshLogTimer = (): void => {
     if (!freshLogTimerRef.current) return
@@ -206,12 +259,13 @@ const Logs: React.FC = () => {
               density="toolbar"
               options={[
                 { id: 'core', label: tr('Core logs') },
-                { id: 'routing', label: tr('Application routing logs') }
+                { id: 'routing', label: tr('Application routing logs') },
+                { id: 'service', label: tr('Service logs') }
               ]}
               selectedKey={tab}
               variant="secondary"
               onChange={(key) => {
-                setTab(key === 'routing' ? 'routing' : 'core')
+                setTab(key === 'routing' || key === 'service' ? key : 'core')
                 setFilter('')
                 setContext(undefined)
               }}
@@ -259,12 +313,21 @@ const Logs: React.FC = () => {
               <IoLocationSharp className="text-lg" />
             </KokoToolbarIconButton>
             <KokoToolbarIconButton
-              label={tr('Clear logs')}
+              label={tab === 'service' ? tr('Clear displayed logs') : tr('Clear logs')}
               tone="danger"
-              isDisabled={tab === 'routing' && (Boolean(routingError) || routingLogs.length === 0)}
+              isDisabled={
+                (tab === 'routing' && (Boolean(routingError) || routingLogs.length === 0)) ||
+                (tab === 'service' && (Boolean(serviceError) || serviceLogs.length === 0))
+              }
               onPress={() => {
                 if (tab === 'core') {
                   clearMihomoLogs()
+                } else if (tab === 'service') {
+                  const snapshot = serviceSnapshot.current
+                  if (snapshot) {
+                    clearedServiceLogs.current = { session: snapshot.session, end: snapshot.end }
+                    setServiceLogs([])
+                  }
                 } else {
                   routingRequest.current++
                   void clearAppRoutingLogs()
@@ -305,6 +368,33 @@ const Logs: React.FC = () => {
                 )
               }}
             />
+          ) : tab === 'service' ? (
+            serviceError ? (
+              <div role="alert" className="p-5 text-sm text-danger">
+                {serviceError}
+              </div>
+            ) : serviceLogs.length === 0 ? (
+              <div className="p-5 text-sm text-muted">{tr('No service logs yet.')}</div>
+            ) : (
+              <Virtuoso
+                className="h-full pr-1"
+                data={filteredServiceLogs}
+                initialTopMostItemIndex={
+                  filteredServiceLogs.length > 0 ? filteredServiceLogs.length - 1 : undefined
+                }
+                followOutput={trace && !context && !ruleDetails}
+                computeItemKey={(_index, log) => log.id}
+                itemContent={(index, log) => (
+                  <LogItem
+                    index={index}
+                    time={log.time}
+                    type={log.type}
+                    payload={log.payload}
+                    onOpenMenu={openContext}
+                  />
+                )}
+              />
+            )
           ) : routingError ? (
             <div role="alert" className="p-5 text-sm text-danger">
               {routingError}

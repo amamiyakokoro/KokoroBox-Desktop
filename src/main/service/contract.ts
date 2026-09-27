@@ -1,5 +1,6 @@
 export const serviceContract = {
   meta: { method: 'GET', path: '/meta' },
+  serviceLogs: { method: 'GET', path: '/service/logs' },
   coreDesired: { method: 'GET', path: '/core/desired' },
   dnsLease: { method: 'POST', path: '/network/dns/lease' },
   dnsRenew: { method: 'POST', path: '/network/dns/renew' },
@@ -29,6 +30,7 @@ export interface ServiceCapabilities {
   dnsLease: boolean
   processRouter: boolean
   windowsUwpLoopback: boolean
+  serviceLogs: boolean
 }
 
 export interface ServiceMeta {
@@ -46,7 +48,8 @@ const capabilityNames = [
   'sysproxyNetworkReconcile',
   'dnsLease',
   'processRouter',
-  'windowsUwpLoopback'
+  'windowsUwpLoopback',
+  'serviceLogs'
 ] as const satisfies readonly (keyof ServiceCapabilities)[]
 
 export const legacyServiceMeta: ServiceMeta = {
@@ -59,7 +62,8 @@ export const legacyServiceMeta: ServiceMeta = {
     sysproxyNetworkReconcile: false,
     dnsLease: false,
     processRouter: false,
-    windowsUwpLoopback: false
+    windowsUwpLoopback: false,
+    serviceLogs: false
   }
 }
 

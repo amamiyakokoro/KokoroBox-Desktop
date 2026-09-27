@@ -45,7 +45,8 @@ test('older Service metadata treats missing capabilities as unsupported', () => 
     sysproxyNetworkReconcile: false,
     dnsLease: false,
     processRouter: false,
-    windowsUwpLoopback: false
+    windowsUwpLoopback: false,
+    serviceLogs: false
   })
 })
 
@@ -63,6 +64,18 @@ test('UWP loopback mutation is enabled only by an explicit Service capability', 
       apiVersion: supportedServiceApiVersion,
       capabilities: { windowsUwpLoopback: 'yes' }
     })
+  )
+})
+
+test('service log capability is additive and available on updated Service releases', () => {
+  assert.equal(legacyServiceMeta.capabilities.serviceLogs, false)
+  assert.equal(
+    validateServiceMeta({
+      serviceVersion: 'dev',
+      apiVersion: 1,
+      capabilities: { serviceLogs: true }
+    }).capabilities.serviceLogs,
+    true
   )
 })
 

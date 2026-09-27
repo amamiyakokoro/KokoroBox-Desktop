@@ -3,6 +3,7 @@ import { normalizeUwpLoopbackApps, type UwpLoopbackApp } from '../../../shared/t
 import type { HomeBackground, PublicIpSnapshot } from '../../../shared/home'
 import type { SysProxyOperationState } from '../../../shared/sysproxy-operation'
 import type { AppRoutingLogEntry } from '../../../shared/app-routing-log'
+import type { ServiceLogSnapshot } from '../../../shared/service-log'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function ipcErrorWrapper(response: any): any {
@@ -232,6 +233,10 @@ export async function getAppRoutingStatus(): Promise<AppRoutingStatus> {
 
 export async function getAppRoutingLogs(): Promise<AppRoutingLogEntry[]> {
   return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('getAppRoutingLogs'))
+}
+
+export async function getServiceLogs(): Promise<ServiceLogSnapshot> {
+  return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('getServiceLogs'))
 }
 
 export async function clearAppRoutingLogs(): Promise<void> {

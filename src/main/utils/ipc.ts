@@ -88,6 +88,7 @@ import {
 } from '../core/permission'
 import { triggerSysProxy } from '../sys/sysproxy'
 import { getAboutInfo, readAboutLicense } from '../resolve/about'
+import { getServiceLogs } from '../service/logs'
 import { changeSysProxy, getSysProxyOperationState } from '../sys/sysproxy-operation'
 import { disableTerminalProxy } from '../sys/terminal-proxy'
 import { checkUpdate, downloadAndInstallUpdate, cancelUpdate } from '../resolve/autoUpdater'
@@ -464,6 +465,7 @@ export function registerIpcMainHandlers(): void {
     ipcMain.handle('relaunchWindowsUnelevated', () => ipcErrorWrapper(relaunchWindowsUnelevated)())
   }
   ipcMain.handle('serviceStatus', () => ipcErrorWrapper(serviceStatus)())
+  ipcMain.handle('getServiceLogs', () => ipcErrorWrapper(getServiceLogs)())
   ipcMain.handle('testServiceConnection', () => ipcErrorWrapper(testServiceConnection)())
   ipcMain.handle('openServiceSystemSettings', () => ipcErrorWrapper(openServiceSystemSettings)())
   // Only an explicit renderer action may authorize replacement of stale

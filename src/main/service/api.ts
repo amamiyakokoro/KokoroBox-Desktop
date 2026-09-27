@@ -1,5 +1,6 @@
 import { tr } from '../../shared/i18n'
 import type { AppRoutingLogEntry } from '../../shared/app-routing-log'
+import { validateServiceLogSnapshot, type ServiceLogSnapshot } from '../../shared/service-log'
 import axios, { AxiosInstance, AxiosRequestConfig, InternalAxiosRequestConfig } from 'axios'
 import crypto from 'crypto'
 import WebSocket from 'ws'
@@ -23,6 +24,7 @@ export type { ServiceCapabilities, ServiceMeta } from './contract'
 
 let serviceAxios: AxiosInstance | null = null
 let serviceMetaPromise: Promise<ServiceMeta> | null = null
+let serviceLogsUnsupportedUntil = 0
 let keyManager: KeyManager | null = null
 let serviceUnavailableFallbackHandler: ((reason: unknown) => Promise<void>) | null = null
 let serviceUnavailableFallbackTimer: NodeJS.Timeout | null = null
@@ -55,6 +57,7 @@ export class ServiceAPIError extends Error {
 
 export function invalidateServiceMeta(): void {
   serviceMetaPromise = null
+  serviceLogsUnsupportedUntil = 0
 }
 
 export function getServiceMeta(): Promise<ServiceMeta> {
@@ -408,6 +411,30 @@ export const createSignedServiceAxios = (baseURL = 'http://localhost'): AxiosIns
   instance.interceptors.response.use((response) => response.data, handleServiceAxiosError)
 
   return instance
+}
+
+// Viewing diagnostics must not trigger runtime recovery or stop a healthy core.
+export async function getServiceLogSnapshot(): Promise<ServiceLogSnapshot | undefined> {
+  if (Date.now() < serviceLogsUnsupportedUntil) return undefined
+  const instance = axios.create({
+    baseURL: 'http://localhost',
+    socketPath: serviceIpcPath(),
+    timeout: 5000
+  })
+  attachServiceAuth(instance)
+  try {
+    const response = await instance.request({
+      method: serviceContract.serviceLogs.method,
+      url: serviceContract.serviceLogs.path
+    })
+    return validateServiceLogSnapshot(response.data)
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response?.status === 404) {
+      serviceLogsUnsupportedUntil = Date.now() + 60_000
+      return undefined
+    }
+    throw createServiceAPIError(error)
+  }
 }
 
 export const getServiceAuthHeaders = (

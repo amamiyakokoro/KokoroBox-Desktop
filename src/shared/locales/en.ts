@@ -926,6 +926,11 @@ export const messages: Readonly<Record<string, string>> = {
   'Live logs': 'Live logs',
   'Log source': 'Log source',
   'Core logs': 'Core logs',
+  'Service logs': 'Service logs',
+  'No service logs yet.': 'No service logs yet.',
+  'Clear displayed logs': 'Clear displayed logs',
+  'Service logs are not readable. Update KokoroBox Service and initialize it.':
+    'Service logs are not readable. Update KokoroBox Service and initialize it.',
   'Application routing logs': 'Application routing logs',
   'No application routing logs yet. Enable diagnostic logging in Application routing settings.':
     'No application routing logs yet. Enable diagnostic logging in Application routing settings.',
