@@ -1,7 +1,10 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { createServiceRepairState } from '../src/renderer/src/utils/service-repair-state'
-import { recoverServiceBeforeReinstall } from '../src/renderer/src/utils/service-recovery'
+import {
+  recoverServiceBeforeReinstall,
+  type ServiceRecoveryOptions
+} from '../src/renderer/src/utils/service-recovery'
 
 test('repair is shared across page subscriptions and runs only once', async () => {
   let complete!: () => void
@@ -65,6 +68,68 @@ test('service recovery initializes before reinstalling and stops when authentica
   })
   assert.equal(restartRequired, false)
   assert.deepEqual(calls, ['initialize', 'authenticate'])
+})
+
+test('routing recovery reinitializes even when the service already reports running', async () => {
+  const calls: string[] = []
+  const store = createServiceRepairState<ServiceRecoveryOptions>((options) =>
+    recoverServiceBeforeReinstall(
+      {
+        status: async () => 'running',
+        initialize: async () => {
+          calls.push('initialize')
+        },
+        authenticate: async () => {
+          calls.push('authenticate')
+          return true
+        },
+        reinstall: async () => {
+          assert.fail('A recovered service must not be reinstalled')
+        }
+      },
+      options
+    )
+  )
+
+  await store.repair({ initializeRunningService: true })
+  assert.deepEqual(calls, ['initialize', 'authenticate'])
+  assert.deepEqual(store.getSnapshot(), { repairing: false, restartRequired: false })
+})
+
+test('routing recovery reinstalls a running service when reinitialization cannot authenticate', async () => {
+  const calls: string[] = []
+  const restartRequired = await recoverServiceBeforeReinstall(
+    {
+      status: async () => 'running',
+      initialize: async () => {
+        calls.push('initialize')
+      },
+      authenticate: async () => {
+        calls.push('authenticate')
+        return false
+      },
+      reinstall: async () => {
+        calls.push('reinstall')
+      }
+    },
+    { initializeRunningService: true }
+  )
+  assert.equal(restartRequired, true)
+  assert.deepEqual(calls, ['initialize', 'authenticate', 'reinstall'])
+})
+
+test('regular maintenance of a running service still reinstalls its executable', async () => {
+  const calls: string[] = []
+  const restartRequired = await recoverServiceBeforeReinstall({
+    status: async () => 'running',
+    initialize: async () => assert.fail('Initialization is only requested for routing recovery'),
+    authenticate: async () => assert.fail('Initialization was not requested'),
+    reinstall: async () => {
+      calls.push('reinstall')
+    }
+  })
+  assert.equal(restartRequired, true)
+  assert.deepEqual(calls, ['reinstall'])
 })
 
 test('service recovery reinstalls after failed initialization but respects cancellation', async () => {

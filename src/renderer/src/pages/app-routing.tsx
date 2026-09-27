@@ -9,11 +9,16 @@ import {
   initService,
   installService,
   openAppRoutingSystemSettings,
+  relaunchApp,
   repairAppRoutingFirewall,
   serviceStatus,
   startService
 } from '@renderer/utils/ipc'
 import { notify } from '@renderer/utils/notification'
+import {
+  repairServiceAndPromptRestart,
+  useServiceRepairState
+} from '@renderer/utils/service-repair'
 import {
   getAppRoutingStatusLabel,
   getAppRoutingStatusMessage
@@ -79,6 +84,8 @@ const AppRouting: React.FC = () => {
   const [openingSettings, setOpeningSettings] = useState(false)
   const [preparingService, setPreparingService] = useState(false)
   const [repairingFirewall, setRepairingFirewall] = useState(false)
+  const { repairing: repairingService, restartRequired: serviceRestartRequired } =
+    useServiceRepairState()
   useEffect(() => {
     const currentIds = new Set(config?.groups?.map((group) => group.id) ?? [])
     const previousIds = knownGroupIds.current
@@ -170,7 +177,7 @@ const AppRouting: React.FC = () => {
     }
   }
   const prepareWindowsService = async (): Promise<boolean> => {
-    if (!isWindows || preparingService) return false
+    if (!isWindows || preparingService || repairingService || serviceRestartRequired) return false
     setPreparingService(true)
     try {
       let nextStatus = await serviceStatus()
@@ -196,6 +203,17 @@ const AppRouting: React.FC = () => {
     if (!config) return
     if (enabled && isWindows && !(await prepareWindowsService())) return
     await save({ ...config, enabled })
+  }
+  const repairWindowsService = async (): Promise<void> => {
+    if (!isWindows || preparingService || repairingService) return
+    try {
+      // A healthy service can still leave routing paused after an earlier auth error.
+      // Explicit initialization also clears that pause through the main-process IPC.
+      await repairServiceAndPromptRestart({ initializeRunningService: true })
+      await refresh()
+    } catch (error) {
+      notify(error, { variant: 'danger' })
+    }
   }
   const repairWindowsFirewall = async (): Promise<void> => {
     if (!isWindows || repairingFirewall) return
@@ -329,25 +347,44 @@ const AppRouting: React.FC = () => {
                   {tr('Retry')}
                 </Button>
               )}
-            {needsWindowsServiceRepair && (
-              <Button
-                className="mt-2"
-                size="sm"
-                variant="secondary"
-                isPending={preparingService}
-                isDisabled={saving}
-                onPress={() => void prepareWindowsService()}
-              >
-                <MdRefresh className="text-base" />
-                {tr('Repair service')}
-              </Button>
+            {isWindows && (needsWindowsServiceRepair || serviceRestartRequired) && (
+              <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-2">
+                {serviceRestartRequired && (
+                  <span className="text-xs text-muted">
+                    {tr('Restart KokoroBox to apply the service repair.')}
+                  </span>
+                )}
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  isPending={repairingService}
+                  isDisabled={saving || preparingService || repairingService}
+                  onPress={() => {
+                    if (serviceRestartRequired) {
+                      void relaunchApp().catch((error) => notify(error, { variant: 'danger' }))
+                    } else {
+                      void repairWindowsService()
+                    }
+                  }}
+                >
+                  <MdRefresh className="text-base" />
+                  {serviceRestartRequired ? tr('Restart app') : tr('Repair service')}
+                </Button>
+              </div>
             )}
           </div>
           <Switch
             className="mt-0.5 shrink-0"
             aria-label={tr('Application routing')}
             isSelected={config?.enabled ?? false}
-            isDisabled={!supported || !config || saving || preparingService}
+            isDisabled={
+              !supported ||
+              !config ||
+              saving ||
+              preparingService ||
+              repairingService ||
+              serviceRestartRequired
+            }
             onChange={(enabled) => void setRoutingEnabled(enabled)}
           >
             <Switch.Content>

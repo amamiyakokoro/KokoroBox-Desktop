@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from 'react'
 import { createServiceRepairState } from './service-repair-state'
-import { recoverServiceBeforeReinstall } from './service-recovery'
+import { recoverServiceBeforeReinstall, type ServiceRecoveryOptions } from './service-recovery'
 import { tr } from '../../../shared/i18n'
 import {
   initService,
@@ -11,13 +11,16 @@ import {
 } from './ipc'
 import { notify } from './notification'
 
-const serviceRepair = createServiceRepairState(async () => {
-  const restartRequired = await recoverServiceBeforeReinstall({
-    status: serviceStatus,
-    initialize: initService,
-    authenticate: testServiceConnection,
-    reinstall: installService
-  })
+const serviceRepair = createServiceRepairState<ServiceRecoveryOptions>(async (options) => {
+  const restartRequired = await recoverServiceBeforeReinstall(
+    {
+      status: serviceStatus,
+      initialize: initService,
+      authenticate: testServiceConnection,
+      reinstall: installService
+    },
+    options
+  )
   if (!restartRequired) {
     notify(tr('Service initialized'), { variant: 'success' })
     return false

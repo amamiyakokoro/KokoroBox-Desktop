@@ -4,7 +4,9 @@ export interface ServiceRepairState {
 }
 
 /** Session state outlives pages; only a service reinstall remains pending until app restart. */
-export function createServiceRepairState(recover: () => Promise<boolean>) {
+export function createServiceRepairState<Options = void>(
+  recover: (options?: Options) => Promise<boolean>
+) {
   let snapshot: ServiceRepairState = { repairing: false, restartRequired: false }
   let operation: Promise<void> | undefined
   const listeners = new Set<() => void>()
@@ -18,11 +20,11 @@ export function createServiceRepairState(recover: () => Promise<boolean>) {
       listeners.add(listener)
       return () => listeners.delete(listener)
     },
-    repair: (): Promise<void> => {
+    repair: (options?: Options): Promise<void> => {
       if (operation) return operation
       if (snapshot.restartRequired) return Promise.resolve()
       operation = Promise.resolve()
-        .then(recover)
+        .then(() => recover(options))
         .then((restartRequired) => update({ repairing: true, restartRequired }))
         .finally(() => {
           operation = undefined
