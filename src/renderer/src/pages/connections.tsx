@@ -71,12 +71,18 @@ const Connections: React.FC = () => {
   const [activeConnections, setActiveConnections] = useState<ControllerConnectionDetail[]>([])
   const [closedConnections, setClosedConnections] = useState<ControllerConnectionDetail[]>([])
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
+  const [detailDrawerKey, setDetailDrawerKey] = useState(0)
   const [isSettingDrawerOpen, setIsSettingDrawerOpen] = useState(false)
+  const [settingDrawerKey, setSettingDrawerKey] = useState(0)
   const [selected, setSelected] = useState<ControllerConnectionDetail>()
   const [ruleDetails, setRuleDetails] = useState<LogActionDetails>()
   const openRule = useCallback((connection: ControllerConnectionDetail) => {
     setRuleDetails(connectionRuleDetails(connection.metadata))
     setIsDetailModalOpen(false)
+  }, [])
+  const openDetailDrawer = useCallback(() => {
+    setDetailDrawerKey((key) => key + 1)
+    setIsDetailModalOpen(true)
   }, [])
 
   const [iconMap, setIconMap] = useState<Record<string, string>>({})
@@ -777,7 +783,7 @@ const Connections: React.FC = () => {
       return (
         <ConnectionItem
           setSelected={setSelected}
-          setIsDetailModalOpen={setIsDetailModalOpen}
+          openDetailDrawer={openDetailDrawer}
           selected={selected}
           iconUrl={iconUrl}
           displayIcon={displayIcon && findProcessMode !== 'off'}
@@ -797,6 +803,7 @@ const Connections: React.FC = () => {
       firstItemRefreshTrigger,
       selected,
       closeConnection,
+      openDetailDrawer,
       openRule,
       connectionRightClickRule,
       appNameCache,
@@ -856,7 +863,7 @@ const Connections: React.FC = () => {
             onAddRule={openRule}
             rightClickRule={connectionRightClickRule}
             setSelected={setSelected}
-            setIsDetailModalOpen={setIsDetailModalOpen}
+            openDetailDrawer={openDetailDrawer}
             selected={selectedRef.current}
             iconUrl=""
             displayIcon={false}
@@ -978,6 +985,7 @@ const Connections: React.FC = () => {
             variant="ghost"
             aria-label={tr('Connection settings')}
             onPress={() => {
+              setSettingDrawerKey((key) => key + 1)
               setIsSettingDrawerOpen(true)
             }}
           >
@@ -988,6 +996,7 @@ const Connections: React.FC = () => {
     >
       {isDetailModalOpen && selected && (
         <ConnectionDetailModal
+          key={detailDrawerKey}
           onClose={() => setIsDetailModalOpen(false)}
           connection={selected}
           onAddRule={openRule}
@@ -997,7 +1006,10 @@ const Connections: React.FC = () => {
         <LogRuleModal details={ruleDetails} onClose={() => setRuleDetails(undefined)} />
       )}
       {isSettingDrawerOpen && (
-        <ConnectionSettingDrawer onClose={() => setIsSettingDrawerOpen(false)} />
+        <ConnectionSettingDrawer
+          key={settingDrawerKey}
+          onClose={() => setIsSettingDrawerOpen(false)}
+        />
       )}
       <div className="sticky top-0 z-40 overflow-x-auto">
         <KokoToolbar aria-label={tr('Connections')}>

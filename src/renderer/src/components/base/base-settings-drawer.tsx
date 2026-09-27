@@ -2,6 +2,7 @@
 import { tr } from '../../../../shared/i18n'
 import { Drawer } from '@heroui/react'
 import { useId, type ReactNode } from 'react'
+import { useAnimatedDrawerClose } from './use-animated-drawer-close'
 
 interface PageSettingsDrawerProps {
   title: string
@@ -45,23 +46,25 @@ const PageSettingsDrawer: React.FC<PageSettingsDrawerProps> = ({
   onClose,
   width = 'default'
 }) => {
+  const { isOpen, requestClose } = useAnimatedDrawerClose(onClose)
   const widthClass =
     width === 'wide' ? 'w-[min(520px,calc(100vw-16px))]' : 'w-[min(432px,calc(100vw-16px))]'
 
   return (
     <Drawer.Backdrop
-      isOpen
+      isOpen={isOpen}
       onOpenChange={(open) => {
-        if (!open) onClose()
+        if (!open) requestClose()
       }}
       variant="transparent"
-      className="page-settings-drawer-backdrop top-12 h-[calc(100%-48px)]"
+      className={`page-settings-drawer-backdrop top-12 h-[calc(100%-48px)] ${isOpen ? '' : 'pointer-events-none'}`}
     >
       <Drawer.Content
         placement="right"
         className="page-settings-drawer-content top-12 h-[calc(100%-48px)]"
       >
         <Drawer.Dialog
+          inert={!isOpen}
           className={`page-settings-drawer flag-emoji flex h-full ${widthClass} max-w-none flex-col overflow-hidden p-0`}
         >
           <Drawer.Header className="border-b border-separator/70 px-4 py-3">

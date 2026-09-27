@@ -48,6 +48,7 @@ const Profiles: React.FC = () => {
   const [fileOver, setFileOver] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
   const [isSettingDrawerOpen, setIsSettingDrawerOpen] = useState(false)
+  const [settingDrawerKey, setSettingDrawerKey] = useState(0)
   const [editingItem, setEditingItem] = useState<ProfileItem | null>(null)
   const [url, setUrl] = useState('')
   const isUrlEmpty = url.trim() === ''
@@ -200,6 +201,7 @@ const Profiles: React.FC = () => {
             variant="ghost"
             isIconOnly
             onPress={() => {
+              setSettingDrawerKey((key) => key + 1)
               setIsSettingDrawerOpen(true)
             }}
           >
@@ -209,7 +211,10 @@ const Profiles: React.FC = () => {
       }
     >
       {isSettingDrawerOpen && (
-        <ProfileSettingDrawer onClose={() => setIsSettingDrawerOpen(false)} />
+        <ProfileSettingDrawer
+          key={settingDrawerKey}
+          onClose={() => setIsSettingDrawerOpen(false)}
+        />
       )}
       {showEditModal && editingItem && (
         <EditInfoModal

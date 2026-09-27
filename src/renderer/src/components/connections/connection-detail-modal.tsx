@@ -1,6 +1,7 @@
 import { tr } from '../../../../shared/i18n'
 import { Button, Drawer, Surface, Tabs } from '@heroui/react'
 import { KokoActionMenu } from '../base/koko-collections'
+import { useAnimatedDrawerClose } from '../base/use-animated-drawer-close'
 import type { ReactNode } from 'react'
 import { useId, useMemo, useState } from 'react'
 import { BaseEditor } from '@renderer/components/base/base-editor-lazy'
@@ -126,6 +127,7 @@ const DetailSection = ({ title, children }: DetailSectionProps) => {
 }
 
 const ConnectionDetailModal = ({ connection, onClose, onAddRule }: Props) => {
+  const { isOpen, requestClose } = useAnimatedDrawerClose(onClose)
   const [viewMode, setViewMode] = useState<'detail' | 'raw'>('detail')
   const rawJson = useMemo(() => JSON.stringify(connection, null, 2), [connection])
 
@@ -476,18 +478,21 @@ const ConnectionDetailModal = ({ connection, onClose, onAddRule }: Props) => {
 
   return (
     <Drawer.Backdrop
-      isOpen
+      isOpen={isOpen}
       onOpenChange={(open) => {
-        if (!open) onClose()
+        if (!open) requestClose()
       }}
       variant="transparent"
-      className="page-settings-drawer-backdrop top-12 h-[calc(100%-48px)]"
+      className={`page-settings-drawer-backdrop top-12 h-[calc(100%-48px)] ${isOpen ? '' : 'pointer-events-none'}`}
     >
       <Drawer.Content
         placement="right"
         className="page-settings-drawer-content top-12 h-[calc(100%-48px)]"
       >
-        <Drawer.Dialog className="connection-detail-modal page-settings-drawer flag-emoji flex h-full w-[min(580px,calc(100vw-16px))] max-w-none flex-col overflow-hidden p-0">
+        <Drawer.Dialog
+          inert={!isOpen}
+          className="connection-detail-modal page-settings-drawer flag-emoji flex h-full w-[min(580px,calc(100vw-16px))] max-w-none flex-col overflow-hidden p-0"
+        >
           <Drawer.Header className="app-drag shrink-0 border-b border-separator/70 px-5 py-3">
             <Drawer.Heading className="text-base font-semibold">
               {tr('Connection details')}

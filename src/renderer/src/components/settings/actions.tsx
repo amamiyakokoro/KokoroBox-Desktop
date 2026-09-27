@@ -43,6 +43,7 @@ const Actions: React.FC<Props> = ({
   const [newVersion, setNewVersion] = useState('')
   const [changelog, setChangelog] = useState('')
   const [openUpdate, setOpenUpdate] = useState(false)
+  const [updateDrawerKey, setUpdateDrawerKey] = useState(0)
   const [checkingUpdate, setCheckingUpdate] = useState(false)
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [updateStatus, setUpdateStatus] = useState<{
@@ -67,6 +68,7 @@ const Actions: React.FC<Props> = ({
   }
 
   const openUpdateDrawer = (): void => {
+    setUpdateDrawerKey((key) => key + 1)
     setOpenUpdate(true)
   }
 
@@ -103,6 +105,7 @@ const Actions: React.FC<Props> = ({
     <>
       {sections.includes('updates') && openUpdate && (
         <UpdaterDrawer
+          key={updateDrawerKey}
           onClose={() => setOpenUpdate(false)}
           version={newVersion}
           changelog={changelog}

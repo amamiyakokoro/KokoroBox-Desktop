@@ -104,6 +104,7 @@ const Proxies: React.FC = () => {
   isOpenContentRef.current = isOpenContent
   const [delaying, setDelaying] = useState(Array(groups.length).fill(false))
   const [isSettingDrawerOpen, setIsSettingDrawerOpen] = useState(false)
+  const [settingDrawerKey, setSettingDrawerKey] = useState(0)
   const [filter, setFilter] = useState('')
   const [initialScrollTop] = useState(() =>
     rememberProxyGroupOpenState ? proxyGroupPageCache.scrollTop : 0
@@ -541,6 +542,7 @@ const Proxies: React.FC = () => {
           className="app-nodrag"
           aria-label={tr('Proxy group settings')}
           onPress={() => {
+            setSettingDrawerKey((key) => key + 1)
             setIsSettingDrawerOpen(true)
           }}
         >
@@ -548,7 +550,9 @@ const Proxies: React.FC = () => {
         </Button>
       }
     >
-      {isSettingDrawerOpen && <ProxySettingDrawer onClose={() => setIsSettingDrawerOpen(false)} />}
+      {isSettingDrawerOpen && (
+        <ProxySettingDrawer key={settingDrawerKey} onClose={() => setIsSettingDrawerOpen(false)} />
+      )}
       {mode === 'direct' ? (
         <div className="h-full w-full flex justify-center items-center">
           <div className="flex flex-col items-center">

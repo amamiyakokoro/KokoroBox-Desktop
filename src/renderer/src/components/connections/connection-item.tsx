@@ -16,7 +16,7 @@ interface Props {
   hideProcess?: boolean
   selected: ControllerConnectionDetail | undefined
   setSelected: React.Dispatch<React.SetStateAction<ControllerConnectionDetail | undefined>>
-  setIsDetailModalOpen: React.Dispatch<React.SetStateAction<boolean>>
+  openDetailDrawer: () => void
   close: (id: string) => void
   onAddRule: (connection: ControllerConnectionDetail) => void
   rightClickRule: boolean
@@ -33,7 +33,7 @@ const ConnectionItemComponent: React.FC<Props> = ({
   onAddRule,
   rightClickRule,
   setSelected,
-  setIsDetailModalOpen
+  openDetailDrawer
 }) => {
   const fallbackProcessName = useMemo(
     () => connectionIdentityLabel(info, tr('Application routing')).replace(/\.exe$/, ''),
@@ -92,8 +92,8 @@ const ConnectionItemComponent: React.FC<Props> = ({
 
   const handleCardPress = useCallback(() => {
     setSelected(info)
-    setIsDetailModalOpen(true)
-  }, [info, setSelected, setIsDetailModalOpen])
+    openDetailDrawer()
+  }, [info, setSelected, openDetailDrawer])
 
   const handleClose = useCallback(() => {
     close(info.id)

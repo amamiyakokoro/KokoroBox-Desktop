@@ -104,6 +104,7 @@ const AppRouting: React.FC = () => {
     }
   }
   const [isSettingDrawerOpen, setIsSettingDrawerOpen] = useState(false)
+  const [settingDrawerKey, setSettingDrawerKey] = useState(0)
   const currentStatusMessage = getAppRoutingStatusMessage(
     status?.message,
     status?.protectedApplicationCount
@@ -231,6 +232,7 @@ const AppRouting: React.FC = () => {
           variant="ghost"
           aria-label={tr('Application routing settings')}
           onPress={() => {
+            setSettingDrawerKey((key) => key + 1)
             setIsSettingDrawerOpen(true)
           }}
         >
@@ -240,6 +242,7 @@ const AppRouting: React.FC = () => {
     >
       {isSettingDrawerOpen && config && (
         <AppRoutingSettingDrawer
+          key={settingDrawerKey}
           isDisabled={!supported || saving}
           isMac={isMac}
           isWindows={isWindows}

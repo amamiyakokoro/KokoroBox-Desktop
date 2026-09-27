@@ -1076,6 +1076,10 @@ test('Phase 9 card-heavy surfaces use native v3 anatomy and semantic interaction
 
 test('page settings drawers use the shared compact inspector behavior', () => {
   const drawer = readFileSync('src/renderer/src/components/base/base-settings-drawer.tsx', 'utf8')
+  const closeAnimation = readFileSync(
+    'src/renderer/src/components/base/use-animated-drawer-close.ts',
+    'utf8'
+  )
   const settingItem = readFileSync('src/renderer/src/components/base/base-setting-item.tsx', 'utf8')
   const styles = readFileSync('src/renderer/src/assets/app-overrides.css', 'utf8')
   const connections = readFileSync(
@@ -1097,8 +1101,12 @@ test('page settings drawers use the shared compact inspector behavior', () => {
     proxySettings
   ]
 
-  assert.doesNotMatch(drawer, /DRAWER_CLOSE_ANIMATION_MS|reopenSignal/)
-  assert.match(drawer, /if \(!open\) onClose\(\)/)
+  assert.match(drawer, /useAnimatedDrawerClose\(onClose\)/)
+  assert.match(drawer, /if \(!open\) requestClose\(\)/)
+  assert.match(drawer, /inert=\{!isOpen\}/)
+  assert.match(drawer, /pointer-events-none/)
+  assert.match(closeAnimation, /DRAWER_CLOSE_ANIMATION_MS = 220/)
+  assert.match(closeAnimation, /clearTimeout\(closeTimer\.current\)/)
   assert.match(drawer, /variant="transparent"/)
   assert.match(drawer, /w-\[min\(432px,calc\(100vw-16px\)\)\]/)
   assert.match(drawer, /w-\[min\(520px,calc\(100vw-16px\)\)\]/)

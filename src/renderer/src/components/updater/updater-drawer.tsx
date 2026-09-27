@@ -6,6 +6,7 @@ import { downloadAndInstallUpdate } from '@renderer/utils/ipc'
 import { platform } from '@renderer/utils/init'
 import { FiX, FiDownload } from 'react-icons/fi'
 import { notify } from '@renderer/utils/notification'
+import { useAnimatedDrawerClose } from '../base/use-animated-drawer-close'
 
 interface Props {
   version: string
@@ -24,6 +25,7 @@ const isLinux = platform === 'linux'
 
 const UpdaterDrawer: React.FC<Props> = (props) => {
   const { version, tag, changelog, updateStatus, onCancel, onClose } = props
+  const { isOpen, requestClose } = useAnimatedDrawerClose(onClose)
   const [downloading, setDownloading] = useState(false)
   const isDownloading = updateStatus?.downloading || downloading
 
@@ -33,7 +35,7 @@ const UpdaterDrawer: React.FC<Props> = (props) => {
       const launchResult = await downloadAndInstallUpdate(version, tag)
       setDownloading(false)
       if (launchResult === 'native' || launchResult === 'external') {
-        onClose()
+        requestClose()
       }
     } catch (e) {
       notify(e, { variant: 'danger' })
@@ -49,12 +51,12 @@ const UpdaterDrawer: React.FC<Props> = (props) => {
       }
       return
     }
-    onClose()
+    requestClose()
   }
 
   const handleOpenChange = (open: boolean): void => {
     if (!open && !isDownloading) {
-      onClose()
+      requestClose()
     }
   }
 
@@ -65,14 +67,17 @@ const UpdaterDrawer: React.FC<Props> = (props) => {
 
   return (
     <Drawer.Backdrop
-      isOpen
+      isOpen={isOpen}
       onOpenChange={handleOpenChange}
       variant="blur"
       isDismissable={!isDownloading}
-      className="top-12 h-[calc(100%-48px)]"
+      className={`top-12 h-[calc(100%-48px)] ${isOpen ? '' : 'pointer-events-none'}`}
     >
       <Drawer.Content placement="right" className="top-12 h-[calc(100%-48px)]">
-        <Drawer.Dialog className="updater-drawer h-full w-[min(460px,calc(100vw-32px))] max-w-none overflow-hidden p-0">
+        <Drawer.Dialog
+          inert={!isOpen}
+          className="updater-drawer h-full w-[min(460px,calc(100vw-32px))] max-w-none overflow-hidden p-0"
+        >
           <Drawer.Header className="relative border-b border-separator/70 px-5 py-4 pr-14">
             <div className="flex min-w-0 flex-1 items-start gap-3">
               <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent-soft-foreground">

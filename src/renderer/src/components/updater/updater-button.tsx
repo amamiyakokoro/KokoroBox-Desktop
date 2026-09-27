@@ -19,6 +19,7 @@ interface Props {
 const UpdaterButton: React.FC<Props> = (props) => {
   const { iconOnly, latest, showButtonAfterNotification = true } = props
   const [openDrawer, setOpenDrawer] = useState(false)
+  const [drawerKey, setDrawerKey] = useState(0)
   const [showButton, setShowButton] = useState(false)
   const [updateStatus, setUpdateStatus] = useState<{
     downloading: boolean
@@ -64,6 +65,7 @@ const UpdaterButton: React.FC<Props> = (props) => {
       actionProps: {
         children: tr('View content'),
         onPress: () => {
+          setDrawerKey((key) => key + 1)
           setOpenDrawer(true)
         },
         variant: 'secondary'
@@ -96,6 +98,7 @@ const UpdaterButton: React.FC<Props> = (props) => {
     <>
       {openDrawer && (
         <UpdaterDrawer
+          key={drawerKey}
           version={latest.version}
           tag={latest.tag}
           changelog={latest.changelog}
@@ -112,6 +115,7 @@ const UpdaterButton: React.FC<Props> = (props) => {
           placement="right"
           variant="danger"
           onPress={() => {
+            setDrawerKey((key) => key + 1)
             setOpenDrawer(true)
           }}
         >
@@ -126,6 +130,7 @@ const UpdaterButton: React.FC<Props> = (props) => {
           size="sm"
           variant="danger"
           onPress={() => {
+            setDrawerKey((key) => key + 1)
             setOpenDrawer(true)
           }}
         >
