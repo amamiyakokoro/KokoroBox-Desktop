@@ -26,21 +26,46 @@ export default function OverrideHelpModal({ onClose }: { onClose: () => void }) 
                     'Use ! to replace a whole object. Prefix + to prepend array items; suffix + to append them.'
                   )}
                 </p>
-                <pre className="overflow-x-auto rounded-lg bg-surface-secondary p-3 font-mono text-xs select-text">
-                  {`dns!:
-  enable: false
-+rules:
-  - DOMAIN,example.com,DIRECT`}
+                <pre className="overflow-x-auto rounded-lg bg-surface-secondary p-3 font-mono text-xs leading-5 text-foreground select-text">
+                  <code>
+                    <span className="block">
+                      <span className="text-accent">dns!</span>:
+                    </span>
+                    <span className="block">
+                      {'  '}
+                      <span className="text-accent">enable</span>:{' '}
+                      <span className="text-warning-soft-foreground">false</span>
+                    </span>
+                    <span className="block">
+                      <span className="text-accent">+rules</span>:
+                    </span>
+                    <span className="block">
+                      {'  - '}
+                      <span className="text-success">DOMAIN,example.com,DIRECT</span>
+                    </span>
+                  </code>
                 </pre>
               </section>
               <section className="space-y-2">
                 <h3 className="font-semibold">JavaScript</h3>
                 <p>{tr('JavaScript uses main(config): change the configuration and return it.')}</p>
-                <pre className="overflow-x-auto rounded-lg bg-surface-secondary p-3 font-mono text-xs select-text">
-                  {`function main(config) {
-  config.rules.unshift('DOMAIN,example.com,DIRECT')
-  return config
-}`}
+                <pre className="overflow-x-auto rounded-lg bg-surface-secondary p-3 font-mono text-xs leading-5 text-foreground select-text">
+                  <code>
+                    <span className="block">
+                      <span className="text-accent">function</span> main(config) {'{'}
+                    </span>
+                    <span className="block">
+                      {'  config.rules.'}
+                      <span className="text-accent">unshift</span>
+                      {'('}
+                      <span className="text-success">{"'DOMAIN,example.com,DIRECT'"}</span>)
+                    </span>
+                    <span className="block">
+                      {'  '}
+                      <span className="text-accent">return</span> config
+                    </span>
+                    <span className="block">{'}'}</span>
+                  </code>
                 </pre>
               </section>
             </Modal.Body>
