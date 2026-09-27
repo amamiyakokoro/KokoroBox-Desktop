@@ -82,7 +82,13 @@
 .home-network-main {
   display: grid;
   gap: 0.75rem;
-  align-items: center;
+  align-items: end;
+}
+
+.home-network-speed-summary {
+  max-width: 100%;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--separator);
 }
 
 .home-traffic-summary {
@@ -111,8 +117,15 @@
   }
 }
 
-@container overview-content (min-width: 720px) {
+@container overview-content (min-width: 780px) {
   .home-network-main--with-speed-test {
     grid-template-columns: minmax(0, 1fr) minmax(0, 20rem);
+  }
+
+  .home-network-speed-summary {
+    padding-top: 0;
+    padding-left: 1rem;
+    border-top: 0;
+    border-left: 1px solid var(--separator);
   }
 }

@@ -92,6 +92,10 @@ function formatSpeedTestMbps(bitsPerSecond: number): string {
 
 function OverviewSpeedTestSummary({ result }: { result: SpeedTestSummary }) {
   const completedAt = new Date(result.completedAt)
+  const completedTime = completedAt.toLocaleTimeString(getLocale(), {
+    hour: '2-digit',
+    minute: '2-digit'
+  })
   const metrics = [
     {
       label: tr('Download'),
@@ -127,28 +131,23 @@ function OverviewSpeedTestSummary({ result }: { result: SpeedTestSummary }) {
 
   return (
     <section
-      aria-label={tr('Latest speed test')}
+      aria-label={`${tr('Latest speed test')} · ${completedTime}`}
       aria-live="polite"
-      className="home-overview-subpanel w-full rounded-xl px-3 py-2.5"
+      title={`${tr('Latest speed test')} · ${completedTime}`}
+      className="home-network-speed-summary min-w-0"
     >
-      <div className="mb-2 flex items-center justify-between gap-2 text-xs text-muted">
-        <h3 className="font-medium">{tr('Latest speed test')}</h3>
-        <time dateTime={completedAt.toISOString()}>
-          {completedAt.toLocaleTimeString(getLocale(), {
-            hour: '2-digit',
-            minute: '2-digit'
-          })}
-        </time>
-      </div>
-      <dl className="grid grid-cols-2 gap-x-4 gap-y-2">
+      <time className="sr-only" dateTime={completedAt.toISOString()}>
+        {completedTime}
+      </time>
+      <dl className="grid grid-cols-2 gap-x-3 gap-y-1.5">
         {metrics.map(({ label, value, unit, Icon }) => (
-          <div key={label} className="min-w-0">
-            <dt className="flex items-center gap-1 text-[11px] leading-4 text-muted">
+          <div key={label} className="flex min-w-0 items-baseline gap-1">
+            <dt className="flex shrink-0 items-center gap-1 text-[11px] text-muted">
               <Icon className="size-3 shrink-0" aria-hidden="true" />
               {label}
             </dt>
-            <dd className="mt-0.5 whitespace-nowrap text-sm font-semibold leading-5 tabular-nums text-foreground">
-              {value} <span className="text-[11px] font-normal text-muted">{unit}</span>
+            <dd className="whitespace-nowrap text-xs font-semibold tabular-nums text-foreground">
+              {value} <span className="text-[10px] font-normal text-muted">{unit}</span>
             </dd>
           </div>
         ))}
