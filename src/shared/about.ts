@@ -18,6 +18,11 @@ export interface AboutInfo {
   documents: { id: string; name: string }[]
 }
 
+export const APPLICATION_LICENSE_DOCUMENT = {
+  id: 'application',
+  name: 'LICENSE.KokoroBox'
+} as const
+
 export const ABOUT_COMPONENTS = [
   {
     key: 'service',

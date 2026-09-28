@@ -4,7 +4,12 @@ import path from 'node:path'
 import { createRequire } from 'node:module'
 import { getServiceMeta } from '../service/api'
 import { servicePath } from '../utils/dirs'
-import { parseDependencyNotices, sysproxyBuildVersion, type AboutInfo } from '../../shared/about'
+import {
+  APPLICATION_LICENSE_DOCUMENT,
+  parseDependencyNotices,
+  sysproxyBuildVersion,
+  type AboutInfo
+} from '../../shared/about'
 
 async function licenseDocuments(): Promise<{ id: string; name: string; file: string }[]> {
   const roots = app.isPackaged
@@ -41,7 +46,11 @@ async function licenseDocuments(): Promise<{ id: string; name: string; file: str
 
 export async function readAboutLicense(id: unknown): Promise<string> {
   if (typeof id !== 'string') throw new Error('Invalid license document')
-  const document = (await licenseDocuments()).find((item) => item.id === id)
+  const document = (await licenseDocuments()).find((item) =>
+    id === APPLICATION_LICENSE_DOCUMENT.id
+      ? item.name === APPLICATION_LICENSE_DOCUMENT.name
+      : item.id === id
+  )
   if (!document) throw new Error('Unknown license document')
   return readFile(document.file, 'utf8')
 }
