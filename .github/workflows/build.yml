@@ -71,7 +71,7 @@ jobs:
           path: service-contract-source
           fetch-tags: true
           persist-credentials: false
-      - uses: actions/setup-go@v6
+      - uses: actions/setup-go@v7
         with:
           go-version-file: service-contract-source/go.mod
           cache-dependency-path: service-contract-source/go.sum
