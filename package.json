@@ -63,7 +63,7 @@
     "axios": "^1.20.0",
     "dayjs": "^1.11.23",
     "iconv-lite": "^0.7.3",
-    "kokorobox-native": "0.16.1",
+    "kokorobox-native": "0.16.2",
     "remark-gfm": "4.0.1",
     "tldts": "^7.4.15",
     "webdav": "^5.11.0",
