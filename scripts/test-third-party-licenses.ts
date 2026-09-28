@@ -1,9 +1,21 @@
 import assert from 'node:assert/strict'
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs'
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync, readFileSync, realpathSync } from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { test } from 'node:test'
 import { collectLicenses, packageRoot } from './third-party-licenses.ts'
+
+test('installed runtime dependencies have complete transitive license texts', () => {
+  const { dependencies } = JSON.parse(readFileSync('package.json', 'utf8')) as {
+    dependencies: Record<string, string>
+  }
+  const roots = Object.keys(dependencies).map((name) =>
+    realpathSync(path.join('node_modules', name))
+  )
+  const notices = collectLicenses(roots)
+  assert.match(notices, /webdav@/)
+  assert.match(notices, /Permission is hereby granted/)
+})
 
 function fixture(run: (root: string) => void) {
   const root = mkdtempSync(path.join(os.tmpdir(), 'kokoro-licenses-'))

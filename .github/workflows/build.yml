@@ -80,6 +80,7 @@ jobs:
       - run: pnpm test:speed-test
       - run: pnpm test:about
       - run: pnpm test:licenses
+      - run: pnpm test:backup
       - run: pnpm test:release
       - run: pnpm test:mihomo-alpha
       - run: pnpm test:macos-signing
