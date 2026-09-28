@@ -3,6 +3,7 @@ import { defineConfig } from 'electron-vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { thirdPartyLicenses } from './scripts/third-party-licenses'
+import { componentLicenses } from './scripts/component-licenses'
 import { systemCoreDefaultPath, systemCoreOnlyBuild, systemServicePath } from './scripts/build-env'
 
 const buildDefines = {
@@ -20,7 +21,7 @@ const omitExternalRendererResources = {
 
 export default defineConfig({
   main: {
-    plugins: [thirdPartyLicenses('main', true)],
+    plugins: [thirdPartyLicenses('main', true), componentLicenses()],
     define: buildDefines,
     build: {
       externalizeDeps: {

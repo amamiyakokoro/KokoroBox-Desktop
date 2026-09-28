@@ -26,7 +26,7 @@ test('third-party notices render as headings, a table, code and links', () => {
   assert.match(html, /<h1>Third-party notices<\/h1>/)
   assert.match(html, /<table>/)
   assert.match(html, /<th>Component<\/th>/)
-  assert.equal((html.match(/<tr>/g) || []).length, 10)
+  assert.equal((html.match(/<tr>/g) || []).length, 13)
   assert.match(html, /<code>LICENSE\.Sparkle<\/code>/)
   assert.match(html, /<button type="button" title="LICENSE\.Sparkle">License<\/button>/)
   assert.match(html, /href="https:\/\/github\.com\/sparkle-project\/Sparkle" target="_blank"/)

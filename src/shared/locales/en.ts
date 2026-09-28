@@ -25,6 +25,7 @@ export const messages: Readonly<Record<string, string>> = {
   Licenses: 'Licenses',
   'Third-party dependencies': 'Third-party dependencies',
   'Component versions': 'Component versions',
+  'Component licenses': 'Component licenses',
   'Application lifecycle': 'Application lifecycle',
   Stop: 'Stop',
   'Speed test failed. Check your connection and try again.':

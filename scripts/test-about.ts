@@ -2,6 +2,8 @@ import assert from 'node:assert/strict'
 import { readFileSync, existsSync, readdirSync } from 'node:fs'
 import { test } from 'node:test'
 import {
+  ABOUT_COMPONENTS,
+  aboutComponents,
   licenseProjectForDocument,
   parseDependencyNotices,
   sysproxyBuildVersion
@@ -38,6 +40,8 @@ test('central license backups exist and the application/flag licenses retain the
     'ProxyBridge',
     'WinDivert',
     'sysproxy-go',
+    'KokoroBoxService',
+    'KokoroBoxNative',
     'CloudflareSpeedtest'
   ]) {
     assert.ok(existsSync(`licenses/LICENSE.${name}`))
@@ -46,6 +50,42 @@ test('central license backups exist and the application/flag licenses retain the
   assert.equal(
     readFileSync('licenses/LICENSE.circle-flags', 'utf8'),
     readFileSync('src/renderer/src/assets/circle-flags/LICENSE.md', 'utf8')
+  )
+})
+
+test('component versions link only to their own available offline license documents', () => {
+  const documents = ABOUT_COMPONENTS.map((item, index) => ({
+    id: `${index}:${item.documentName}`,
+    name: item.documentName
+  }))
+  const components = aboutComponents({
+    app: '4.26.9-6',
+    service: '0.6.5',
+    native: '0.16.1',
+    sysproxy: 'v2.0.1',
+    electron: '44.4.2',
+    chromium: '152.0.7977.130',
+    node: '24.21.0',
+    dependencies: [],
+    documents
+  })
+  assert.equal(components.length, 7)
+  components.forEach((item, index) => assert.equal(item.document, documents[index]))
+  assert.equal(components[0].version, '0.6.5')
+  assert.equal(components[3].version, 'v2.0.1')
+  assert.equal(components[2].version, undefined)
+  assert.ok(components[2].document, 'license remains available when the version cannot be read')
+  assert.ok(aboutComponents().every((item) => !item.document))
+  assert.ok(
+    aboutComponents({
+      app: '1',
+      electron: '1',
+      chromium: '1',
+      node: '1',
+      dependencies: [],
+      documents: [{ id: 'application', name: 'LICENSE.KokoroBox' }]
+    }).every((item) => !item.document),
+    'do not substitute the application license for missing component licenses'
   )
 })
 

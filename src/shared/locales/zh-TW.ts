@@ -25,6 +25,7 @@ export const messages: Readonly<Record<string, string>> = {
   Licenses: '授權',
   'Third-party dependencies': '第三方依賴',
   'Component versions': '元件版本',
+  'Component licenses': '元件授權',
   'Application lifecycle': '應用程式生命週期',
   Stop: '停止',
   'Speed test failed. Check your connection and try again.': '測速失敗，請檢查連線後重試。',

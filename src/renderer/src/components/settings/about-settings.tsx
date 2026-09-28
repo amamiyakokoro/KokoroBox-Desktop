@@ -3,7 +3,11 @@ import { useEffect, useState } from 'react'
 import useSWR from 'swr'
 import { tr } from '../../../../shared/i18n'
 import { getAboutInfo, readAboutLicense } from '@renderer/utils/ipc'
-import { licenseProjectForDocument, type AboutInfo } from '../../../../shared/about'
+import {
+  aboutComponents,
+  licenseProjectForDocument,
+  type AboutInfo
+} from '../../../../shared/about'
 import SettingCard from '../base/base-setting-card'
 import SettingItem from '../base/base-setting-item'
 import Actions from './actions'
@@ -73,7 +77,7 @@ function LicenseRow({
 }: {
   title: string
   detail: string
-  onOpen: () => void
+  onOpen?: () => void
 }) {
   return (
     <div className="flex items-center gap-4 border-b border-separator py-3">
@@ -81,7 +85,13 @@ function LicenseRow({
         <p className="text-sm font-medium text-foreground">{title}</p>
         <p className="mt-1 text-xs text-muted">{detail}</p>
       </div>
-      <Button size="sm" variant="tertiary" className="shrink-0" onPress={onOpen}>
+      <Button
+        size="sm"
+        variant="tertiary"
+        className="shrink-0"
+        isDisabled={!onOpen}
+        onPress={onOpen}
+      >
         {tr('License')}
       </Button>
     </div>
@@ -98,20 +108,13 @@ function AboutDetailsDialog({ section, onClose }: { section: AboutSection; onClo
   const [licenseLimit, setLicenseLimit] = useState(30)
   useEffect(() => setLicenseLimit(30), [licenseSearch])
   const dependencies = data?.dependencies || []
-  const versions = [
-    ['KokoroBox Service', data?.service],
-    ['KokoroBox Native', data?.native],
-    ['ProxyBridge', data?.proxyBridge],
-    ['sysproxy-go', data?.sysproxy],
-    ['Electron', data?.electron],
-    ['Chromium', data?.chromium],
-    ['Node.js', data?.node]
-  ] as const
+  const components = aboutComponents(data)
+  const componentLicenseNames = new Set<string>(components.map((item) => item.documentName))
   const licenseQuery = licenseSearch.trim().toLowerCase()
   const licenseDocuments = data?.documents || []
   const supplemental = new Map(licenseDocuments.map((item) => [item.name, item.id]))
   const standaloneLicenses = licenseDocuments
-    .filter((item) => item.name !== 'LICENSE.KokoroBox')
+    .filter((item) => item.name !== 'LICENSE.KokoroBox' && !componentLicenseNames.has(item.name))
     .map((item) => ({ ...item, project: licenseProjectForDocument(item.name) }))
     .filter((item): item is typeof item & { project: string } => Boolean(item.project))
     .filter(
@@ -122,6 +125,12 @@ function AboutDetailsDialog({ section, onClose }: { section: AboutSection; onClo
     (item) =>
       !licenseQuery ||
       `${item.name} ${item.version} ${item.license}`.toLowerCase().includes(licenseQuery)
+  )
+  const licensedComponents = components.filter(
+    (item) =>
+      item.document &&
+      (!licenseQuery ||
+        `${item.name} ${item.version || ''} ${item.license}`.toLowerCase().includes(licenseQuery))
   )
   const applicationLicense = licenseDocuments.find((item) => item.name === 'LICENSE.KokoroBox')
   const thirdPartyNotices = licenseDocuments.find((item) => item.name === 'THIRD_PARTY_NOTICES.md')
@@ -170,18 +179,17 @@ function AboutDetailsDialog({ section, onClose }: { section: AboutSection; onClo
                         'Service shows the running version. Other components show the bundled version or source revision.'
                       )}
                     </p>
-                    {versions.map(([name, value]) => (
-                      <div
-                        key={name}
-                        className="min-w-0 border-b border-separator py-3 text-sm select-text"
-                      >
-                        <p className="font-medium text-foreground [overflow-wrap:anywhere]">
-                          {name}
-                        </p>
-                        <p className="mt-1 text-muted [overflow-wrap:anywhere]">
-                          {value || tr('Unavailable')}
-                        </p>
-                      </div>
+                    {components.map((item) => (
+                      <LicenseRow
+                        key={item.key}
+                        title={item.name}
+                        detail={`${item.version || tr('Unavailable')} · ${item.license}`}
+                        onOpen={
+                          item.document
+                            ? () => setDocument({ id: item.document!.id, title: item.name })
+                            : undefined
+                        }
+                      />
                     ))}
                   </>
                 )}
@@ -252,6 +260,17 @@ function AboutDetailsDialog({ section, onClose }: { section: AboutSection; onClo
                         }
                       />
                     )}
+                    {licensedComponents.length > 0 && (
+                      <h3 className="mt-5 text-sm font-semibold">{tr('Component licenses')}</h3>
+                    )}
+                    {licensedComponents.map((item) => (
+                      <LicenseRow
+                        key={item.key}
+                        title={item.name}
+                        detail={`${item.version || tr('Unavailable')} · ${item.license}`}
+                        onOpen={() => setDocument({ id: item.document!.id, title: item.name })}
+                      />
+                    ))}
                     {standaloneLicenses.length > 0 && (
                       <h3 className="mt-5 text-sm font-semibold">
                         {tr('Other third-party licenses')}
@@ -298,6 +317,7 @@ function AboutDetailsDialog({ section, onClose }: { section: AboutSection; onClo
                       !error &&
                       !showApplicationLicense &&
                       !showThirdPartyNotices &&
+                      licensedComponents.length === 0 &&
                       standaloneLicenses.length === 0 &&
                       licensedPackages.length === 0 && (
                         <p className="text-sm text-muted">

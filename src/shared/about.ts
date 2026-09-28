@@ -18,6 +18,34 @@ export interface AboutInfo {
   documents: { id: string; name: string }[]
 }
 
+export const ABOUT_COMPONENTS = [
+  {
+    key: 'service',
+    name: 'KokoroBox Service',
+    license: 'GPL-3.0',
+    documentName: 'LICENSE.KokoroBoxService'
+  },
+  {
+    key: 'native',
+    name: 'KokoroBox Native',
+    license: 'GPL-3.0-only',
+    documentName: 'LICENSE.KokoroBoxNative'
+  },
+  { key: 'proxyBridge', name: 'ProxyBridge', license: 'MIT', documentName: 'LICENSE.ProxyBridge' },
+  { key: 'sysproxy', name: 'sysproxy-go', license: 'GPL-3.0', documentName: 'LICENSE.sysproxy-go' },
+  { key: 'electron', name: 'Electron', license: 'MIT', documentName: 'LICENSE.Electron' },
+  { key: 'chromium', name: 'Chromium', license: 'BSD-3-Clause', documentName: 'LICENSE.Chromium' },
+  { key: 'node', name: 'Node.js', license: 'MIT', documentName: 'LICENSE.Node' }
+] as const
+
+export function aboutComponents(info?: AboutInfo) {
+  return ABOUT_COMPONENTS.map((component) => ({
+    ...component,
+    version: info?.[component.key],
+    document: info?.documents.find((document) => document.name === component.documentName)
+  }))
+}
+
 /** Resolve repository-relative notice links to the offline license inventory. */
 export function resolveLicenseDocumentLink(
   name: string,
@@ -57,6 +85,9 @@ export function licenseProjectForDocument(name: string): string | undefined {
   if (terms[name]) return terms[name]
   if (name.startsWith('LICENSE.')) {
     const projects: Record<string, string> = {
+      KokoroBoxService: 'KokoroBox Service',
+      KokoroBoxNative: 'KokoroBox Native',
+      Node: 'Node.js',
       CloudflareSpeedtest: 'Cloudflare Speedtest',
       Twemoji: 'Twemoji Mozilla',
       'circle-flags': 'circle-flags'
