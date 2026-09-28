@@ -1,5 +1,22 @@
 // Simplified Chinese localization. Keys are the canonical English source messages.
 export const messages: Readonly<Record<string, string>> = {
+  'Local backup': '本地备份',
+  'Export backup': '导出备份',
+  'Restore from file': '从文件还原',
+  'Export a ZIP file or restore a backup from this device.':
+    '导出 ZIP 文件，或从本机文件还原备份。',
+  'Includes settings, subscriptions, overrides, application rules and backgrounds.':
+    '包含设置、订阅、覆写、应用程序规则与背景。',
+  'Account credentials and service authorization stay on this device.':
+    '帐号凭据与服务授权保留在本机。',
+  'Save and restore the same ZIP backups on your WebDAV server.':
+    '在 WebDAV 服务器上保存或还原相同格式的 ZIP 备份。',
+  'Restore this backup?': '还原此备份？',
+  'Current settings will be replaced and KokoroBox will restart.':
+    '将覆盖目前的设置，并重新启动 KokoroBox。',
+  'Delete backup {0}': '删除备份 {0}',
+  'Unable to read backup: {0}': '无法读取备份：{0}',
+  'Backup upload failed': '备份上传失败',
   'Override help': '覆写说明',
   'YAML overrides merge objects; values and arrays replace the originals.':
     'YAML 覆写会合并对象；普通值与数组会替换原有内容。',

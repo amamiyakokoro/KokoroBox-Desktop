@@ -130,7 +130,14 @@ import {
   getCurrentProfileStr,
   getOverrideProfileStr
 } from '../core/factory'
-import { listWebdavBackups, webdavBackup, webdavDelete, webdavRestore } from '../resolve/backup'
+import {
+  listWebdavBackups,
+  localBackup,
+  localRestore,
+  webdavBackup,
+  webdavDelete,
+  webdavRestore
+} from '../resolve/backup'
 import { getInterfaces } from '../sys/interface'
 import {
   closeTrayIcon,
@@ -508,6 +515,8 @@ export function registerIpcMainHandlers(): void {
   ipcMain.handle('setupFirewall', ipcErrorWrapper(setupFirewall))
   ipcMain.handle('getInterfaces', getInterfaces)
   ipcMain.handle('webdavBackup', ipcErrorWrapper(webdavBackup))
+  ipcMain.handle('localBackup', ipcErrorWrapper(localBackup))
+  ipcMain.handle('localRestore', ipcErrorWrapper(localRestore))
   ipcMain.handle('webdavRestore', (_e, filename) => ipcErrorWrapper(webdavRestore)(filename))
   ipcMain.handle('listWebdavBackups', ipcErrorWrapper(listWebdavBackups))
   ipcMain.handle('webdavDelete', (_e, filename) => ipcErrorWrapper(webdavDelete)(filename))

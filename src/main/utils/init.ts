@@ -43,6 +43,7 @@ import { initKeyManager } from '../service/manager'
 import { getServiceMeta, isServiceConnectionError } from '../service/api'
 import { appendAppLog } from './log'
 import { configUriSchemes } from '../../shared/product-identity'
+import { applyPendingBackupRestore } from '../resolve/backup-archive'
 
 async function initDirs(): Promise<void> {
   if (!existsSync(dataDir())) {
@@ -315,6 +316,7 @@ function startBackgroundInit(appConfig: AppConfig): void {
 
 export async function init(): Promise<AppConfig> {
   await initDirs()
+  if (applyPendingBackupRestore(dataDir())) await getAppConfig(true)
   await Promise.all([initConfig(), initFiles()])
   await migration()
 

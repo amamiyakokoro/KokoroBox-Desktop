@@ -15,6 +15,7 @@
     "typecheck:web": "tsc --noEmit -p tsconfig.web.json --composite false",
     "typecheck": "pnpm run typecheck:node && pnpm run typecheck:web",
     "test:localization": "tsx --test scripts/test-localization.ts",
+    "test:backup": "tsx --test scripts/test-backup.ts",
     "test:override-user-agent": "tsx --test scripts/test-override-user-agent.ts",
     "test:pinned-https-agent": "tsx --test scripts/test-pinned-https-agent.ts",
     "test:main-process-errors": "tsx --test scripts/test-main-process-errors.ts",

@@ -395,6 +395,7 @@ function startPrimaryInstance(initialDeepLinks: string[]): void {
       let appConfig: AppConfig
       try {
         appConfig = await (initPromise ?? init())
+        setLocale(resolveLocale(appConfig.language, app.getPreferredSystemLanguages()))
       } catch (e) {
         void showNotification({
           title: tr('App initialization failed'),

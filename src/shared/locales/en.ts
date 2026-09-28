@@ -1,5 +1,22 @@
 // English source catalog. Keys are the canonical application-owned messages.
 export const messages: Readonly<Record<string, string>> = {
+  'Local backup': 'Local backup',
+  'Export backup': 'Export backup',
+  'Restore from file': 'Restore from file',
+  'Export a ZIP file or restore a backup from this device.':
+    'Export a ZIP file or restore a backup from this device.',
+  'Includes settings, subscriptions, overrides, application rules and backgrounds.':
+    'Includes settings, subscriptions, overrides, application rules and backgrounds.',
+  'Account credentials and service authorization stay on this device.':
+    'Account credentials and service authorization stay on this device.',
+  'Save and restore the same ZIP backups on your WebDAV server.':
+    'Save and restore the same ZIP backups on your WebDAV server.',
+  'Restore this backup?': 'Restore this backup?',
+  'Current settings will be replaced and KokoroBox will restart.':
+    'Current settings will be replaced and KokoroBox will restart.',
+  'Delete backup {0}': 'Delete backup {0}',
+  'Unable to read backup: {0}': 'Unable to read backup: {0}',
+  'Backup upload failed': 'Backup upload failed',
   'Override help': 'Override help',
   'YAML overrides merge objects; values and arrays replace the originals.':
     'YAML overrides merge objects; values and arrays replace the originals.',

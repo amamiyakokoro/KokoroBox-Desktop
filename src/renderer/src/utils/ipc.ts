@@ -637,7 +637,15 @@ export async function webdavBackup(): Promise<boolean> {
   return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('webdavBackup'))
 }
 
-export async function webdavRestore(filename: string): Promise<void> {
+export async function localBackup(): Promise<boolean> {
+  return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('localBackup'))
+}
+
+export async function localRestore(): Promise<boolean> {
+  return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('localRestore'))
+}
+
+export async function webdavRestore(filename: string): Promise<boolean> {
   return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('webdavRestore', filename))
 }
 

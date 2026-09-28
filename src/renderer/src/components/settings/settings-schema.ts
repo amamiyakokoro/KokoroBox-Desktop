@@ -544,6 +544,10 @@ export const getSettingsSchema = (): SettingsCategorySchema[] => {
       key: 'backup',
       label: tr('Backup and restore'),
       entries: [
+        entry('local-backup', tr('Local backup'), tr('Local backup'), {
+          panel: 'backup',
+          keywords: [tr('Export backup'), tr('Restore from file')]
+        }),
         entry('webdav-url', tr('WebDAV URL'), tr('WebDAV backup'), { panel: 'backup' }),
         entry('webdav-directory', tr('WebDAV backup directory'), tr('WebDAV backup'), {
           panel: 'backup'
