@@ -1,0 +1,107 @@
+.about-license-markdown {
+  color: var(--foreground);
+  font-size: 0.875rem;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+}
+
+.about-license-markdown > * + * {
+  margin-top: 1rem;
+}
+
+.about-license-markdown :is(h1, h2, h3, h4, h5, h6) {
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.about-license-markdown h1 {
+  font-size: 1.25rem;
+}
+
+.about-license-markdown h2 {
+  font-size: 1.125rem;
+}
+
+.about-license-markdown :is(a, button) {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.about-license-markdown button {
+  cursor: pointer;
+  text-align: left;
+}
+
+.about-license-markdown :is(a, button):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 0.25rem;
+}
+
+.about-license-markdown ul {
+  list-style: disc;
+  padding-left: 1.5rem;
+}
+
+.about-license-markdown ol {
+  list-style: decimal;
+  padding-left: 1.5rem;
+}
+
+.about-license-markdown li + li {
+  margin-top: 0.375rem;
+}
+
+.about-license-markdown code {
+  border-radius: 0.25rem;
+  background: var(--surface-secondary);
+  padding: 0.125rem 0.25rem;
+  font-size: 0.85em;
+}
+
+.about-license-markdown pre {
+  overflow-x: auto;
+  border-radius: 0.5rem;
+  background: var(--surface-secondary);
+  padding: 0.75rem;
+}
+
+.about-license-markdown pre code {
+  padding: 0;
+}
+
+.about-license-markdown blockquote {
+  border-left: 3px solid var(--separator);
+  padding-left: 0.75rem;
+  color: var(--muted);
+}
+
+.about-license-markdown__table {
+  overflow-x: auto;
+  border: 1px solid var(--separator);
+  border-radius: 0.5rem;
+}
+
+.about-license-markdown table {
+  width: 100%;
+  min-width: 42rem;
+  border-collapse: collapse;
+  font-size: 0.75rem;
+}
+
+.about-license-markdown :is(th, td) {
+  border-bottom: 1px solid var(--separator);
+  padding: 0.625rem 0.75rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.about-license-markdown th {
+  background: var(--surface-secondary);
+  font-weight: 600;
+}
+
+.about-license-markdown tbody tr:last-child td {
+  border-bottom: 0;
+}

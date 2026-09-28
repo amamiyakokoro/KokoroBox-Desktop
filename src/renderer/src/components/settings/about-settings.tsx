@@ -3,12 +3,26 @@ import { useEffect, useState } from 'react'
 import useSWR from 'swr'
 import { tr } from '../../../../shared/i18n'
 import { getAboutInfo, readAboutLicense } from '@renderer/utils/ipc'
-import { licenseProjectForDocument } from '../../../../shared/about'
+import { licenseProjectForDocument, type AboutInfo } from '../../../../shared/about'
 import SettingCard from '../base/base-setting-card'
 import SettingItem from '../base/base-setting-item'
 import Actions from './actions'
+import { LicenseDocument } from './license-document'
+import './license-document.css'
 
-function LicenseDialog({ id, title, onClose }: { id: string; title: string; onClose: () => void }) {
+function LicenseDialog({
+  id,
+  title,
+  documents,
+  onOpenDocument,
+  onClose
+}: {
+  id: string
+  title: string
+  documents: AboutInfo['documents']
+  onOpenDocument: (document: AboutInfo['documents'][number]) => void
+  onClose: () => void
+}) {
   const { data, error, isLoading, mutate } = useSWR(['about-license', id], () =>
     readAboutLicense(id)
   )
@@ -26,18 +40,20 @@ function LicenseDialog({ id, title, onClose }: { id: string; title: string; onCl
               <Modal.Heading>{title}</Modal.Heading>
               {isLoading && <Spinner size="sm" aria-label={tr('Loading')} />}
             </Modal.Header>
-            <Modal.Body>
+            <Modal.Body className="max-h-[60vh] min-w-0 overflow-y-auto">
               {error ? (
                 <div role="alert">
                   <p>{tr('Unable to load license information')}</p>
                   <Button onPress={() => void mutate()}>{tr('Retry')}</Button>
                 </div>
               ) : (
-                <pre className="max-h-[60vh] overflow-auto whitespace-pre-wrap break-words text-xs select-text">
-                  {data
-                    ?.split('\n\n' + '='.repeat(80) + '\n\n')
-                    .find((part) => part.startsWith(title + '\n')) || data}
-                </pre>
+                <LicenseDocument
+                  text={data || ''}
+                  name={documents.find((document) => document.id === id)?.name || title}
+                  title={title}
+                  documents={documents}
+                  onOpenDocument={onOpenDocument}
+                />
               )}
             </Modal.Body>
             <Modal.Footer>
@@ -302,6 +318,8 @@ function AboutDetailsDialog({ section, onClose }: { section: AboutSection; onClo
         <LicenseDialog
           id={document.id}
           title={document.title}
+          documents={licenseDocuments}
+          onOpenDocument={(document) => setDocument({ id: document.id, title: document.name })}
           onClose={() => setDocument(undefined)}
         />
       )}

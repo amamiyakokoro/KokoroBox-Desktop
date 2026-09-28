@@ -18,6 +18,25 @@ export interface AboutInfo {
   documents: { id: string; name: string }[]
 }
 
+/** Resolve repository-relative notice links to the offline license inventory. */
+export function resolveLicenseDocumentLink(
+  name: string,
+  href: string,
+  documents: AboutInfo['documents']
+): AboutInfo['documents'][number] | undefined {
+  if (!href || href.startsWith('#') || href.startsWith('//') || /^[\w+.-]+:/.test(href))
+    return undefined
+  try {
+    const base = name === 'THIRD_PARTY_NOTICES.md' ? name : `licenses/${name}`
+    const url = new URL(href, `https://licenses.invalid/${base}`)
+    if (!url.pathname.startsWith('/licenses/')) return undefined
+    const target = decodeURIComponent(url.pathname.slice('/licenses/'.length))
+    return documents.find((document) => document.name === target)
+  } catch {
+    return undefined
+  }
+}
+
 export function parseDependencyNotices(text: string, document: string): AboutDependency[] {
   return [...text.matchAll(/^([^\r\n]+)@([^\s]+)\r?\nLicense: ([^\r\n]+)/gm)].map(
     ([, name, version, license]) => ({ name, version, license, document })
