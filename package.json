@@ -66,7 +66,7 @@
     "kokorobox-native": "0.16.1",
     "remark-gfm": "4.0.1",
     "tldts": "^7.4.15",
-    "webdav": "^5.10.0",
+    "webdav": "^5.11.0",
     "ws": "^8.21.3",
     "yaml": "^2.9.1"
   },
