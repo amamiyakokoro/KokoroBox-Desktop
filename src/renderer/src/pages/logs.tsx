@@ -31,6 +31,7 @@ import {
   restartMihomoLogs
 } from '@renderer/utils/ipc'
 import type { AppRoutingLogEntry } from '../../../shared/app-routing-log'
+import { diagnosticLogLevel, isDiagnosticLogVisible } from '../../../shared/diagnostic-log'
 import {
   parseServiceLogs,
   type ServiceLogCursor,
@@ -84,6 +85,7 @@ const Logs: React.FC = () => {
   const routingRequest = useRef(0)
   const [serviceLogs, setServiceLogs] = useState<ServiceLogEntry[]>([])
   const [serviceError, setServiceError] = useState('')
+  const [diagnosticLevelFilter, setDiagnosticLevelFilter] = useState<LogLevel>('info')
   const serviceRequest = useRef(0)
   const serviceSnapshot = useRef<ServiceLogSnapshot | undefined>(undefined)
   const clearedServiceLogs = useRef<ServiceLogCursor | undefined>(undefined)
@@ -108,7 +110,8 @@ const Logs: React.FC = () => {
   const freshLogTimerRef = useRef<number | null>(null)
   const hasHydratedLogsRef = useRef(false)
   const previousLogIdsRef = useRef<string[]>([])
-  const activeLogLevelFilter = realtimeLogLevel ?? logLevel
+  const activeLogLevelFilter =
+    tab === 'core' ? (realtimeLogLevel ?? logLevel) : diagnosticLevelFilter
   const freshLogIdSet = useMemo(() => new Set(freshLogIds), [freshLogIds])
   const logsByLevel = useMemo(() => {
     if (activeLogLevelFilter === 'silent') return []
@@ -121,15 +124,22 @@ const Logs: React.FC = () => {
     })
   }, [logsByLevel, filter])
   const filteredRoutingLogs = useMemo(
-    () => routingLogs.filter((log) => includesIgnoreCase(log.message, filter)),
-    [routingLogs, filter]
+    () =>
+      routingLogs.filter(
+        (log) =>
+          isDiagnosticLogVisible(diagnosticLogLevel(log.level), diagnosticLevelFilter) &&
+          includesIgnoreCase(log.message, filter)
+      ),
+    [routingLogs, filter, diagnosticLevelFilter]
   )
   const filteredServiceLogs = useMemo(
     () =>
       serviceLogs.filter(
-        (log) => includesIgnoreCase(log.payload, filter) || includesIgnoreCase(log.type, filter)
+        (log) =>
+          isDiagnosticLogVisible(log.type, diagnosticLevelFilter) &&
+          (includesIgnoreCase(log.payload, filter) || includesIgnoreCase(log.type, filter))
       ),
-    [serviceLogs, filter]
+    [serviceLogs, filter, diagnosticLevelFilter]
   )
 
   const refreshServiceLogs = useCallback(async () => {
@@ -277,32 +287,35 @@ const Logs: React.FC = () => {
               placeholder={tr('Filter')}
               onChangeValue={setFilter}
             />
-            {tab === 'core' && (
-              <KokoSelect
-                aria-label={tr('Filter by log level')}
-                className="w-24 shrink-0"
-                density="toolbar"
-                options={[
-                  { id: 'silent', label: tr('Silent') },
-                  { id: 'error', label: tr('Error') },
-                  { id: 'warning', label: tr('Warning') },
-                  { id: 'info', label: tr('Info') },
-                  { id: 'debug', label: tr('Debug') }
-                ]}
-                value={activeLogLevelFilter}
-                variant="secondary"
-                onChange={async (value) => {
-                  if (value === activeLogLevelFilter) return
 
-                  try {
-                    if (!(await patchAppConfig({ realtimeLogLevel: value as LogLevel }))) return
-                    await restartMihomoLogs()
-                  } catch (error) {
-                    notify(error, { variant: 'danger' })
-                  }
-                }}
-              />
-            )}
+            <KokoSelect
+              aria-label={tr('Filter by log level')}
+              className="w-24 shrink-0"
+              density="toolbar"
+              options={[
+                { id: 'silent', label: tr('Silent') },
+                { id: 'error', label: tr('Error') },
+                { id: 'warning', label: tr('Warning') },
+                { id: 'info', label: tr('Info') },
+                { id: 'debug', label: tr('Debug') }
+              ]}
+              value={activeLogLevelFilter}
+              variant="secondary"
+              onChange={async (value) => {
+                if (value === activeLogLevelFilter) return
+                if (tab !== 'core') {
+                  setDiagnosticLevelFilter(value as LogLevel)
+                  return
+                }
+
+                try {
+                  if (!(await patchAppConfig({ realtimeLogLevel: value as LogLevel }))) return
+                  await restartMihomoLogs()
+                } catch (error) {
+                  notify(error, { variant: 'danger' })
+                }
+              }}
+            />
             <KokoToolbarIconButton
               isActive={trace}
               label={trace ? tr('Stop following new logs') : tr('Follow new logs')}
@@ -418,7 +431,7 @@ const Logs: React.FC = () => {
                 <LogItem
                   index={index}
                   time={log.time}
-                  type="info"
+                  type={diagnosticLogLevel(log.level)}
                   payload={log.message}
                   onOpenMenu={openContext}
                 />

@@ -4,6 +4,7 @@ import { existsSync } from 'fs'
 import { readFile, rm } from 'fs/promises'
 import { join, sep } from 'path'
 import * as native from 'kokorobox-native'
+import { createNativeSidecarLogReader } from '../../shared/diagnostic-log'
 import { getAppConfig } from '../config'
 import { dataDir } from '../utils/dirs'
 import { appendAppLog } from '../utils/log'
@@ -132,15 +133,18 @@ function spawnPresenter(): void {
   child = nextChild
 
   nextChild.stderr?.setEncoding('utf8')
+  const diagnostics = createNativeSidecarLogReader((line) => {
+    void appendAppLog(line).catch(() => {})
+  }, 'traffic-presenter')
   nextChild.stderr?.on('data', (chunk: string) => {
-    const message = chunk.trim().slice(0, 2000)
-    if (message) void appendAppLog(`[Traffic presenter]: ${message}\n`)
+    diagnostics.push(chunk)
   })
   nextChild.stdin?.on('error', () => {})
   nextChild.once('error', (error) => {
     void appendAppLog(`[Traffic presenter]: failed to start, ${error.message}\n`)
   })
   nextChild.once('close', (code, signal) => {
+    diagnostics.flush()
     if (child === nextChild) child = undefined
     if (expectedExits.has(nextChild) || !desired) return
     void appendAppLog(

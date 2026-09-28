@@ -1,3 +1,5 @@
+import { diagnosticLogLevel } from './diagnostic-log'
+
 export interface ServiceLogSnapshot {
   session: string
   offset: number
@@ -38,14 +40,7 @@ function jsonEnd(content: string, start: number): number | undefined {
 function normalizeEntry(raw: string): Pick<ServiceLogEntry, 'type' | 'time' | 'payload'> {
   try {
     const value = JSON.parse(raw) as Record<string, unknown>
-    const level = String(value.level ?? 'info').toLowerCase()
-    const type: LogLevel = ['error', 'fatal', 'panic', 'dpanic'].includes(level)
-      ? 'error'
-      : ['warn', 'warning'].includes(level)
-        ? 'warning'
-        : level === 'debug'
-          ? 'debug'
-          : 'info'
+    const type = diagnosticLogLevel(value.level)
     const message = String(value.msg ?? value.message ?? '')
     const details = Object.entries(value)
       .filter(([key]) => !['ts', 'level', 'msg', 'message'].includes(key))

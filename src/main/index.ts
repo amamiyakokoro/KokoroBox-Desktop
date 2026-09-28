@@ -19,6 +19,7 @@ import { rmSync } from 'fs'
 import { initShortcut } from './resolve/shortcut'
 import { initProfileUpdater } from './core/profileUpdater'
 import { startTrafficPresenter } from './resolve/trafficPresenter'
+import { startNativeLogCollection } from './resolve/nativeDiagnostics'
 import { showFloatingWindow } from './resolve/floatingWindow'
 import { getAppConfigSync } from './config/app'
 import { createMainWindowStateManager } from './resolve/windowState'
@@ -353,6 +354,8 @@ function startPrimaryInstance(initialDeepLinks: string[]): void {
   }
 
   useLinuxCustomRelaunch()
+  const stopNativeLogCollection = startNativeLogCollection()
+  app.once('will-quit', stopNativeLogCollection)
   // A packaged macOS app must settle in /Applications before configuration or
   // SMAppService initialization begins. Other platforms retain the parallel startup path.
   const initPromise = process.platform === 'darwin' && app.isPackaged ? undefined : init()
