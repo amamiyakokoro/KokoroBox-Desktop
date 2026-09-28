@@ -15,7 +15,7 @@ and `LICENSE.Sparkle`. ProxyBridge is from revision
 `84193638336c1c5bf77bfd3b15b25e3546f75795`, WinDivert from 2.2.2, and Sparkle from
 https://github.com/sparkle-project/Sparkle/blob/2.10.0/LICENSE.
 `LICENSE.sysproxy-go` is backed up from
-https://github.com/amamiyakokoro/sysproxy-go/blob/v1.0.4/LICENSE.
+https://github.com/amamiyakokoro/sysproxy-go/blob/v2.0.1/LICENSE.
 `LICENSE.KokoroBox` mirrors the application's root `LICENSE`.
 Build-supplied native notices still take precedence for the exact bundled artifact.
 Update these backups when the corresponding component changes version.
