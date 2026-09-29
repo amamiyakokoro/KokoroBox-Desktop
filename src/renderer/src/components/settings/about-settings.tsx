@@ -251,7 +251,7 @@ export default function AboutSettings() {
       <Actions
         sections={['version', 'updates']}
         versionDetails={
-          <SettingItem title={tr('Application license')} contentAlign="end">
+          <SettingItem title={tr('Application license')} contentAlign="end" divider>
             <Button
               size="sm"
               variant="tertiary"
