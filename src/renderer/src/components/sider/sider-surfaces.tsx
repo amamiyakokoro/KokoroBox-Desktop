@@ -49,6 +49,13 @@ const kokoStatusTone = (tone: SiderStatusTone): KokoStatusTone =>
 const siderItemTitleClassName = 'block min-w-0 text-sm font-semibold leading-5 text-foreground'
 const siderItemSubtitleClassName =
   'flex h-4 min-w-0 items-center gap-1 overflow-hidden text-xs leading-4'
+const siderItemSurfaceClassName =
+  'group overflow-hidden rounded-xl border bg-surface/85 shadow-none transition-[background-color,border-color,box-shadow,color] duration-150'
+const siderItemRestingSurfaceClassName =
+  'border-separator hover:border-accent/25 hover:bg-surface-secondary/70 hover:shadow-sm'
+const siderItemPrimaryClassName = 'min-h-14 min-w-0 flex-1 rounded-xl px-2.5 py-2 text-left'
+const siderItemFocusClassName =
+  'focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-accent'
 const siderActiveSurfaceClassName =
   'border-accent/45 bg-accent-soft/40 ring-1 ring-inset ring-accent/15 hover:border-accent/55 hover:bg-accent-soft/60'
 const siderActiveIconClassName =
@@ -80,13 +87,11 @@ const SiderItemIcon: React.FC<{
 }> = ({ active, children, className, prominence }) => (
   <span
     className={cn(
-      'flex size-8 shrink-0 items-center justify-center rounded-lg transition-colors duration-150',
+      'flex size-8 shrink-0 items-center justify-center rounded-lg text-xl transition-colors duration-150',
       !active &&
-        (prominence === 'navigation'
-          ? 'bg-transparent text-base text-muted group-hover:bg-surface-secondary/70 group-hover:text-foreground'
-          : prominence === 'account'
-            ? 'bg-accent-soft/35 text-lg text-accent-soft-foreground group-hover:bg-accent-soft/65 group-hover:text-accent-soft-foreground'
-            : 'bg-surface-secondary/70 text-xl text-muted group-hover:bg-surface-secondary/80 group-hover:text-foreground'),
+        (prominence === 'account'
+          ? 'bg-accent-soft/35 text-lg text-accent-soft-foreground group-hover:bg-accent-soft/65 group-hover:text-accent-soft-foreground'
+          : 'bg-surface-secondary/70 text-muted group-hover:bg-surface-secondary/80 group-hover:text-foreground'),
       active && siderActiveIconClassName,
       className
     )}
@@ -303,19 +308,22 @@ export const SiderNavItem: React.FC<SiderNavItemProps> = ({
   <div
     data-prominence={prominence}
     className={cn(
-      'group flex items-center rounded-xl border transition-[background-color,border-color,box-shadow,color] duration-150',
+      siderItemSurfaceClassName,
+      'flex items-center',
       active
         ? siderActiveSurfaceClassName
         : prominence === 'account'
           ? 'border-accent/20 bg-accent-soft/15 hover:border-accent/35 hover:bg-accent-soft/30 hover:shadow-sm'
-          : 'border-separator/60 bg-surface/55 hover:border-accent/25 hover:bg-surface-secondary/70 hover:shadow-sm'
+          : siderItemRestingSurfaceClassName
     )}
   >
     <button
       type="button"
       data-card-primary-action
       className={cn(
-        'grid min-w-0 flex-1 items-center gap-x-2.5 rounded-xl px-2.5 py-2 text-left focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-accent',
+        siderItemPrimaryClassName,
+        siderItemFocusClassName,
+        'grid items-center gap-x-2.5',
         trailing ? 'grid-cols-[2rem_minmax(0,1fr)]' : 'grid-cols-[2rem_minmax(0,1fr)_2rem]'
       )}
       aria-current={active ? 'page' : undefined}
@@ -375,9 +383,9 @@ export const SiderStatusCard: React.FC<SiderStatusCardProps> = ({
   onPress
 }) => {
   const primaryClassName = cn(
-    'sider-status-card__primary min-w-0 flex-1 px-2.5 py-2 text-left',
-    onPress &&
-      'focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-accent',
+    siderItemPrimaryClassName,
+    'sider-status-card__primary',
+    onPress && siderItemFocusClassName,
     metadata
       ? 'grid grid-cols-[2rem_minmax(0,1fr)_2rem] grid-rows-[1.25rem_1rem] items-center gap-x-2.5 gap-y-0.5'
       : 'flex items-center gap-2.5'
@@ -459,11 +467,11 @@ export const SiderStatusCard: React.FC<SiderStatusCardProps> = ({
   return (
     <div
       className={cn(
-        'group overflow-hidden rounded-xl border bg-surface/85 shadow-none transition-[background-color,border-color,box-shadow] duration-150',
+        siderItemSurfaceClassName,
         active
           ? siderActiveSurfaceClassName
           : onPress
-            ? 'border-separator hover:border-accent/25 hover:bg-surface-secondary/70 hover:shadow-sm'
+            ? siderItemRestingSurfaceClassName
             : 'border-separator'
       )}
     >
