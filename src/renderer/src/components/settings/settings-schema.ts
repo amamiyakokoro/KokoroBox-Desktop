@@ -412,7 +412,10 @@ export const getSettingsSchema = (): SettingsCategorySchema[] => {
       key: 'runtime',
       label: tr('Core runtime'),
       entries: [
-        entry('core-version', tr('Core version'), tr('Core runtime'), { panel: 'runtime' }),
+        entry('core-version', tr('Core source'), tr('Core runtime'), {
+          panel: 'runtime',
+          keywords: ['version', 'stable', 'preview']
+        }),
         entry('system-core-path', tr('Choose system core path'), tr('Core runtime'), {
           panel: 'runtime'
         }),

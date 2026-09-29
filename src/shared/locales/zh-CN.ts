@@ -1659,5 +1659,9 @@ export const messages: Readonly<Record<string, string>> = {
   'Changes are saved immediately and restart the core.': '更改会立即保存并重启核心。',
   'Save to apply changes to system proxy settings.': '点击“保存”应用系统代理设置更改。',
   'Save to apply changes and restart the core. Connections may be interrupted.':
-    '点击“保存”应用更改并重启核心，连接可能暂时中断。'
+    '点击“保存”应用更改并重启核心，连接可能暂时中断。',
+  'Core source': '核心来源',
+  'Update core': '更新核心',
+  'Advanced runtime options': '高级运行选项',
+  'Working...': '处理中…'
 }

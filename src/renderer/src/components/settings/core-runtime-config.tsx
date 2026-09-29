@@ -5,6 +5,8 @@ import { KokoSegmentedControl } from '../base/base-controls'
 import SettingCard from '../base/base-setting-card'
 import SettingItem from '../base/base-setting-item'
 import SettingsApplyNotice from '../base/base-settings-apply-notice'
+import SettingsAdvancedSection from '../base/base-settings-advanced-section'
+import useSWR from 'swr'
 import PermissionModal from '../mihomo/permission-modal'
 import ServiceModal from '../mihomo/service-modal'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
@@ -16,6 +18,9 @@ import {
   findSystemMihomo,
   initService,
   mihomoUpgrade,
+  mihomoVersion,
+  serviceStatus,
+  relaunchApp,
   restartCore,
   restartService,
   startService,
@@ -23,7 +28,11 @@ import {
 } from '@renderer/utils/ipc'
 import React, { useEffect, useState } from 'react'
 import { notify } from '@renderer/utils/notification'
-import { repairServiceAndPromptRestart } from '@renderer/utils/service-repair'
+import {
+  repairServiceAndPromptRestart,
+  useServiceRepairState
+} from '@renderer/utils/service-repair'
+import { normalizeCoreVersion } from '../sider/core-version'
 import { systemCoreOnlyBuild } from '../../../../shared/build-flags'
 
 let systemCorePathsCache: string[] | null = null
@@ -62,6 +71,39 @@ const CoreRuntimeConfig: React.FC<Props> = ({
 }) => {
   const { appConfig, patchAppConfig } = useAppConfig()
   const { controledMihomoConfig } = useControledMihomoConfig()
+  const { data: coreVersion } = useSWR('mihomoVersion', mihomoVersion, { refreshInterval: 10_000 })
+  const {
+    data: serviceState,
+    error: serviceError,
+    mutate: refreshService
+  } = useSWR('serviceStatus', serviceStatus, { refreshInterval: 10_000 })
+  const { repairing, restartRequired } = useServiceRepairState()
+  const statusLabels: Record<Awaited<ReturnType<typeof serviceStatus>>, string> = {
+    running: tr('Running'),
+    stopped: tr('Stopped'),
+    paused: tr('Paused'),
+    'not-installed': tr('Not installed'),
+    'requires-approval': tr('Awaiting system approval'),
+    'need-init': tr('Initialization required'),
+    unknown: tr('Unknown')
+  }
+  const serviceLabel = restartRequired
+    ? tr('Restart app')
+    : serviceState
+      ? statusLabels[serviceState]
+      : serviceError
+        ? tr('Unknown')
+        : tr('Checking')
+  const serviceDot =
+    restartRequired || repairing
+      ? 'bg-warning'
+      : serviceState === 'running'
+        ? 'bg-success'
+        : serviceState === 'not-installed'
+          ? 'bg-danger'
+          : serviceState === 'unknown' || !serviceState
+            ? 'bg-muted'
+            : 'bg-warning'
   const { tun } = controledMihomoConfig || {}
   const {
     core = 'mihomo',
@@ -153,7 +195,10 @@ const CoreRuntimeConfig: React.FC<Props> = ({
       )}
       {showServiceModal && (
         <ServiceModal
-          onChange={setShowServiceModal}
+          onChange={(open) => {
+            setShowServiceModal(open)
+            if (!open) void refreshService()
+          }}
           onInit={async () => {
             await initService()
             notify(tr('Service initialized'))
@@ -183,14 +228,20 @@ const CoreRuntimeConfig: React.FC<Props> = ({
       {sections.includes('runtime') && (
         <SettingCard header={sectionHeadings.runtime === false ? undefined : tr('Core runtime')}>
           <SettingsApplyNotice mode="restart-core" />
+          <SettingItem title={tr('Core version')} contentAlign="end" divider>
+            <span className="text-sm tabular-nums">
+              {normalizeCoreVersion(coreVersion?.version) || tr('Unknown')}
+            </span>
+          </SettingItem>
           <SettingItem
             contentAlign="end"
-            title={tr('Core version')}
+            title={tr('Core source')}
             actions={
               !systemCoreOnlyBuild && (core === 'mihomo' || core === 'mihomo-alpha') ? (
                 <Button
                   size="sm"
                   isIconOnly
+                  aria-label={tr('Update core')}
                   variant="ghost"
                   isPending={upgrading}
                   onPress={handleCoreUpgrade}
@@ -205,7 +256,7 @@ const CoreRuntimeConfig: React.FC<Props> = ({
               <span className="text-sm text-muted">{tr('System core')}</span>
             ) : (
               <KokoSelect
-                aria-label={tr('Core version')}
+                aria-label={tr('Core source')}
                 variant="secondary"
                 controlWidth="select"
                 value={core}
@@ -257,34 +308,12 @@ const CoreRuntimeConfig: React.FC<Props> = ({
           )}
           <SettingItem
             contentAlign="end"
-            title={tr('Core process priority')}
-            help={tr(
-              'Higher priorities may improve responsiveness under load, but real-time priority can reduce overall system responsiveness.'
-            )}
-            divider
-          >
-            <KokoSelect
-              aria-label={tr('Core process priority')}
-              variant="secondary"
-              controlWidth="select"
-              value={mihomoCpuPriority}
-              options={[
-                { id: 'PRIORITY_HIGHEST', label: tr('Real time') },
-                { id: 'PRIORITY_HIGH', label: tr('High') },
-                { id: 'PRIORITY_ABOVE_NORMAL', label: tr('Above normal') },
-                { id: 'PRIORITY_NORMAL', label: tr('Normal') },
-                { id: 'PRIORITY_BELOW_NORMAL', label: tr('Below normal') },
-                { id: 'PRIORITY_LOW', label: tr('Low') }
-              ]}
-              disallowEmptySelection
-              onChange={(value) =>
-                handleConfigChangeWithRestart('mihomoCpuPriority', value as Priority)
-              }
-            />
-          </SettingItem>
-          <SettingItem
-            contentAlign="end"
             title={tr('Run mode')}
+            description={
+              platform === 'darwin'
+                ? tr('macOS TUN requires the core to run through KokoroBox Service.')
+                : undefined
+            }
             help={tr(
               'Direct run starts the core with elevated permissions. System service keeps privileged features available in the background.'
             )}
@@ -321,26 +350,58 @@ const CoreRuntimeConfig: React.FC<Props> = ({
               />
             </SettingItem>
           )}
-          {corePermissionMode !== 'service' && platform !== 'win32' && (
+          <SettingsAdvancedSection
+            title={tr('Advanced runtime options')}
+            settingIds={['core-process-priority', 'startup-detection']}
+          >
             <SettingItem
               contentAlign="end"
-              title={tr('Startup detection method')}
+              title={tr('Core process priority')}
               help={tr(
-                'Post Up waits for the configured startup hook. Log parsing detects readiness from core logs.'
+                'Higher priorities may improve responsiveness under load, but real-time priority can reduce overall system responsiveness.'
               )}
               divider
             >
-              <KokoSegmentedControl
-                ariaLabel={tr('Startup detection method')}
-                selectedKey={coreStartupMode}
+              <KokoSelect
+                aria-label={tr('Core process priority')}
+                variant="secondary"
+                controlWidth="select"
+                value={mihomoCpuPriority}
                 options={[
-                  { id: 'post-up', label: 'Post Up' },
-                  { id: 'log', label: tr('Log parsing') }
+                  { id: 'PRIORITY_HIGHEST', label: tr('Real time') },
+                  { id: 'PRIORITY_HIGH', label: tr('High') },
+                  { id: 'PRIORITY_ABOVE_NORMAL', label: tr('Above normal') },
+                  { id: 'PRIORITY_NORMAL', label: tr('Normal') },
+                  { id: 'PRIORITY_BELOW_NORMAL', label: tr('Below normal') },
+                  { id: 'PRIORITY_LOW', label: tr('Low') }
                 ]}
-                onChange={(key) => handleConfigChangeWithRestart('coreStartupMode', key)}
+                disallowEmptySelection
+                onChange={(value) =>
+                  handleConfigChangeWithRestart('mihomoCpuPriority', value as Priority)
+                }
               />
             </SettingItem>
-          )}
+            {corePermissionMode !== 'service' && platform !== 'win32' && (
+              <SettingItem
+                contentAlign="end"
+                title={tr('Startup detection method')}
+                help={tr(
+                  'Post Up waits for the configured startup hook. Log parsing detects readiness from core logs.'
+                )}
+                divider
+              >
+                <KokoSegmentedControl
+                  ariaLabel={tr('Startup detection method')}
+                  selectedKey={coreStartupMode}
+                  options={[
+                    { id: 'post-up', label: 'Post Up' },
+                    { id: 'log', label: tr('Log parsing') }
+                  ]}
+                  onChange={(key) => handleConfigChangeWithRestart('coreStartupMode', key)}
+                />
+              </SettingItem>
+            )}
+          </SettingsAdvancedSection>
         </SettingCard>
       )}
       {sections.includes('service') && (
@@ -354,15 +415,40 @@ const CoreRuntimeConfig: React.FC<Props> = ({
               </Button>
             </SettingItem>
           )}
-          <SettingItem contentAlign="end" title={tr('Service status')}>
-            <Button
-              size="sm"
-              className="text-accent"
-              variant="secondary"
-              onPress={() => setShowServiceModal(true)}
-            >
-              {tr('Manage')}
-            </Button>
+          <SettingItem
+            contentAlign="end"
+            title={tr('Service status')}
+            description={
+              restartRequired ? tr('Restart KokoroBox to apply the service repair.') : undefined
+            }
+          >
+            <div className="flex min-w-0 flex-wrap items-center justify-end gap-3">
+              <span className="inline-flex items-center gap-2 text-sm" role="status">
+                <span
+                  className={`h-2 w-2 shrink-0 rounded-full ${serviceDot}`}
+                  aria-hidden="true"
+                />
+                {repairing ? tr('Working...') : serviceLabel}
+              </span>
+              {restartRequired && (
+                <Button
+                  size="sm"
+                  onPress={() =>
+                    void relaunchApp().catch((error) => notify(error, { variant: 'danger' }))
+                  }
+                >
+                  {tr('Restart app')}
+                </Button>
+              )}
+              <Button
+                size="sm"
+                className="text-accent"
+                variant="secondary"
+                onPress={() => setShowServiceModal(true)}
+              >
+                {tr('Manage')}
+              </Button>
+            </div>
           </SettingItem>
         </SettingCard>
       )}

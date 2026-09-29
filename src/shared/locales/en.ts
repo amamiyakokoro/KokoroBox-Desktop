@@ -1709,5 +1709,9 @@ export const messages: Readonly<Record<string, string>> = {
   'Save to apply changes to system proxy settings.':
     'Save to apply changes to system proxy settings.',
   'Save to apply changes and restart the core. Connections may be interrupted.':
-    'Save to apply changes and restart the core. Connections may be interrupted.'
+    'Save to apply changes and restart the core. Connections may be interrupted.',
+  'Core source': 'Core source',
+  'Update core': 'Update core',
+  'Advanced runtime options': 'Advanced runtime options',
+  'Working...': 'Working...'
 }
