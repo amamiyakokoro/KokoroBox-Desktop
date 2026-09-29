@@ -1732,5 +1732,36 @@ export const messages: Readonly<Record<string, string>> = {
   'Resolves domains for direct connections. Domain policies can take precedence when enabled below.':
     'Resolves domains for direct connections. Domain policies can take precedence when enabled below.',
   'Resolves proxy server hostnames so Mihomo can establish proxy connections.':
-    'Resolves proxy server hostnames so Mihomo can establish proxy connections.'
+    'Resolves proxy server hostnames so Mihomo can establish proxy connections.',
+  'Proxy listener ports. Set a port to 0 to disable that listener.':
+    'Proxy listener ports. Set a port to 0 to disable that listener.',
+  'Accepts both HTTP and SOCKS proxy connections on one port.':
+    'Accepts both HTTP and SOCKS proxy connections on one port.',
+  'Enabled proxy ports must be different.': 'Enabled proxy ports must be different.',
+  'Ports must be between 0 and 65535.': 'Ports must be between 0 and 65535.',
+  'Additional proxy listeners': 'Additional proxy listeners',
+  'Other devices connect to this computer’s LAN address and proxy port. The firewall must permit inbound connections.':
+    'Other devices connect to this computer’s LAN address and proxy port. The firewall must permit inbound connections.',
+  'Network interfaces': 'Network interfaces',
+  'Client address ranges in CIDR format, for example 192.168.1.0/24.':
+    'Client address ranges in CIDR format, for example 192.168.1.0/24.',
+  'Blocks matching proxy clients. A blocked range takes precedence over an allowed range.':
+    'Blocks matching proxy clients. A blocked range takes precedence over an allowed range.',
+  'Credentials for HTTP and SOCKS proxy clients, separate from the controller access key.':
+    'Credentials for HTTP and SOCKS proxy clients, separate from the controller access key.',
+  'Proxy clients in these ranges do not need the username and password above.':
+    'Proxy clients in these ranges do not need the username and password above.',
+  'LAN access and authentication': 'LAN access and authentication',
+  'Management API for dashboards and remote control; this is not a proxy listener.':
+    'Management API for dashboards and remote control; this is not a proxy listener.',
+  '127.0.0.1 limits access to this computer; 0.0.0.0 listens on all IPv4 interfaces. Include the port.':
+    '127.0.0.1 limits access to this computer; 0.0.0.0 listens on all IPv4 interfaces. Include the port.',
+  'Authenticates controller API requests. Use an access key when allowing remote access.':
+    'Authenticates controller API requests. Use an access key when allowing remote access.',
+  'Generate access key': 'Generate access key',
+  'Dashboard and browser access': 'Dashboard and browser access',
+  'Controls which browser origins may call the management API. It does not control proxy clients.':
+    'Controls which browser origins may call the management API. It does not control proxy clients.',
+  'Enter complete origins such as https://example.com. An empty list allows all origins.':
+    'Enter complete origins such as https://example.com. An empty list allows all origins.'
 }

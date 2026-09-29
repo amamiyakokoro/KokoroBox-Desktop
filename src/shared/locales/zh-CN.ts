@@ -1682,5 +1682,36 @@ export const messages: Readonly<Record<string, string>> = {
   'Resolves domains for direct connections. Domain policies can take precedence when enabled below.':
     '解析直连流量的域名；开启下方选项时，域名策略可以优先应用。',
   'Resolves proxy server hostnames so Mihomo can establish proxy connections.':
-    '解析代理服务器的域名，供 Mihomo 建立代理连接。'
+    '解析代理服务器的域名，供 Mihomo 建立代理连接。',
+  'Proxy listener ports. Set a port to 0 to disable that listener.':
+    '代理监听端口。将端口设为 0 可禁用该监听。',
+  'Accepts both HTTP and SOCKS proxy connections on one port.':
+    '同一个端口可接收 HTTP 和 SOCKS 代理连接。',
+  'Enabled proxy ports must be different.': '已启用的代理端口不能重复。',
+  'Ports must be between 0 and 65535.': '端口必须介于 0 到 65535。',
+  'Additional proxy listeners': '其他代理监听端口',
+  'Other devices connect to this computer’s LAN address and proxy port. The firewall must permit inbound connections.':
+    '其他设备通过本机的局域网地址与代理端口连接；防火墙需允许传入连接。',
+  'Network interfaces': '网络接口',
+  'Client address ranges in CIDR format, for example 192.168.1.0/24.':
+    '以 CIDR 格式指定客户端地址范围，例如 192.168.1.0/24。',
+  'Blocks matching proxy clients. A blocked range takes precedence over an allowed range.':
+    '阻止匹配范围的代理客户端；阻止范围优先于允许范围。',
+  'Credentials for HTTP and SOCKS proxy clients, separate from the controller access key.':
+    '供 HTTP 和 SOCKS 代理客户端使用的账号密码，与控制器访问密钥不同。',
+  'Proxy clients in these ranges do not need the username and password above.':
+    '这些范围内的代理客户端不必提供上方的账号密码。',
+  'LAN access and authentication': '局域网访问与认证',
+  'Management API for dashboards and remote control; this is not a proxy listener.':
+    '供控制面板和远程管理使用的 API，不是代理监听端口。',
+  '127.0.0.1 limits access to this computer; 0.0.0.0 listens on all IPv4 interfaces. Include the port.':
+    '127.0.0.1 仅供本机访问；0.0.0.0 监听所有 IPv4 接口。请包含端口号。',
+  'Authenticates controller API requests. Use an access key when allowing remote access.':
+    '验证控制器 API 请求；允许远程访问时请设置密钥。',
+  'Generate access key': '生成访问密钥',
+  'Dashboard and browser access': '控制面板与浏览器访问',
+  'Controls which browser origins may call the management API. It does not control proxy clients.':
+    '控制哪些浏览器来源可以调用管理 API，不影响代理客户端。',
+  'Enter complete origins such as https://example.com. An empty list allows all origins.':
+    '输入完整来源，例如 https://example.com。清空列表表示允许所有来源。'
 }

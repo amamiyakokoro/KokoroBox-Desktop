@@ -461,12 +461,22 @@ export const getSettingsSchema = (): SettingsCategorySchema[] => {
         entry('mihomo-tproxy-port', tr('TProxy port'), tr('Network and ports'), {
           panel: 'mihomo'
         }),
-        entry('mihomo-allow-lan', tr('Allow LAN connections'), tr('Network and ports'), {
-          panel: 'mihomo'
-        }),
-        entry('mihomo-authentication', tr('User authentication'), tr('Network and ports'), {
-          panel: 'mihomo'
-        }),
+        entry(
+          'mihomo-allow-lan',
+          tr('Allow LAN connections'),
+          tr('LAN access and authentication'),
+          {
+            panel: 'mihomo'
+          }
+        ),
+        entry(
+          'mihomo-authentication',
+          tr('User authentication'),
+          tr('LAN access and authentication'),
+          {
+            panel: 'mihomo'
+          }
+        ),
         entry('mihomo-controller', tr('Listen address'), tr('External controller'), {
           panel: 'mihomo'
         }),

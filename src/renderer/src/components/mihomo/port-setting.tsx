@@ -4,6 +4,7 @@ import { Button, Switch } from '@heroui/react'
 import SettingCard from '../base/base-setting-card'
 import SettingItem from '../base/base-setting-item'
 import EditableList from '../base/base-list-editor'
+import SettingsAdvancedSection from '../base/base-settings-advanced-section'
 
 import { platform } from '@renderer/utils/init'
 import { KokoTextField } from '../base/koko-form'
@@ -85,6 +86,9 @@ const PortSetting: React.FC<PortSettingProps> = ({ config, onChange, onValidatio
     <>
       {lanOpen && <InterfaceModal onClose={() => setLanOpen(false)} />}
       <SettingCard header={tr('Network and ports')}>
+        <p className="py-2 text-xs leading-5 text-muted">
+          {tr('Proxy listener ports. Set a port to 0 to disable that listener.')}
+        </p>
         <SettingItem title="IPv6" divider>
           <Switch isSelected={ipv6} size="sm" onChange={(value) => onChange({ ipv6: value })}>
             <Switch.Content>
@@ -94,7 +98,11 @@ const PortSetting: React.FC<PortSettingProps> = ({ config, onChange, onValidatio
             </Switch.Content>
           </Switch>
         </SettingItem>
-        <SettingItem title={tr('Mixed port')} divider>
+        <SettingItem
+          title={tr('Mixed port')}
+          description={tr('Accepts both HTTP and SOCKS proxy connections on one port.')}
+          divider
+        >
           <KokoTextField
             type="number"
             controlWidth="number"
@@ -109,76 +117,99 @@ const PortSetting: React.FC<PortSettingProps> = ({ config, onChange, onValidatio
             }}
           />
         </SettingItem>
-        <SettingItem title={tr('SOCKS port')} divider>
-          <KokoTextField
-            type="number"
-            controlWidth="number"
-            value={socksPortInput.toString()}
-            max={65535}
-            min={0}
-            isInvalid={hasPortError}
-            onChangeValue={(v) => {
-              const value = parseInt(v) || 0
-              setSocksPortInput(value)
-              onChange({ 'socks-port': value })
-            }}
-          />
-        </SettingItem>
-        <SettingItem title={tr('HTTP port')} divider>
-          <KokoTextField
-            type="number"
-            controlWidth="number"
-            value={httpPortInput.toString()}
-            max={65535}
-            min={0}
-            isInvalid={hasPortError}
-            onChangeValue={(v) => {
-              const value = parseInt(v) || 0
-              setHttpPortInput(value)
-              onChange({ port: value })
-            }}
-          />
-        </SettingItem>
-        {platform !== 'win32' && (
-          <SettingItem title={tr('Redir port')} divider>
+        {hasPortError && (
+          <p role="alert" className="py-2 text-xs text-danger">
+            {portConflict
+              ? tr('Enabled proxy ports must be different.')
+              : tr('Ports must be between 0 and 65535.')}
+          </p>
+        )}
+        <SettingsAdvancedSection
+          title={tr('Additional proxy listeners')}
+          settingIds={[
+            'mihomo-socks-port',
+            'mihomo-http-port',
+            'mihomo-redir-port',
+            'mihomo-tproxy-port'
+          ]}
+        >
+          <SettingItem title={tr('SOCKS port')} divider>
             <KokoTextField
               type="number"
               controlWidth="number"
-              value={redirPortInput.toString()}
+              value={socksPortInput.toString()}
               max={65535}
               min={0}
               isInvalid={hasPortError}
               onChangeValue={(v) => {
                 const value = parseInt(v) || 0
-                setRedirPortInput(value)
-                onChange({ 'redir-port': value })
+                setSocksPortInput(value)
+                onChange({ 'socks-port': value })
               }}
             />
           </SettingItem>
-        )}
-        {platform === 'linux' && (
-          <SettingItem title={tr('TProxy port')} divider>
+          <SettingItem title={tr('HTTP port')} divider>
             <KokoTextField
               type="number"
               controlWidth="number"
-              value={tproxyPortInput.toString()}
+              value={httpPortInput.toString()}
               max={65535}
               min={0}
               isInvalid={hasPortError}
               onChangeValue={(v) => {
                 const value = parseInt(v) || 0
-                setTproxyPortInput(value)
-                onChange({ 'tproxy-port': value })
+                setHttpPortInput(value)
+                onChange({ port: value })
               }}
             />
           </SettingItem>
-        )}
+          {platform !== 'win32' && (
+            <SettingItem title={tr('Redir port')} divider>
+              <KokoTextField
+                type="number"
+                controlWidth="number"
+                value={redirPortInput.toString()}
+                max={65535}
+                min={0}
+                isInvalid={hasPortError}
+                onChangeValue={(v) => {
+                  const value = parseInt(v) || 0
+                  setRedirPortInput(value)
+                  onChange({ 'redir-port': value })
+                }}
+              />
+            </SettingItem>
+          )}
+          {platform === 'linux' && (
+            <SettingItem title={tr('TProxy port')} divider>
+              <KokoTextField
+                type="number"
+                controlWidth="number"
+                value={tproxyPortInput.toString()}
+                max={65535}
+                min={0}
+                isInvalid={hasPortError}
+                onChangeValue={(v) => {
+                  const value = parseInt(v) || 0
+                  setTproxyPortInput(value)
+                  onChange({ 'tproxy-port': value })
+                }}
+              />
+            </SettingItem>
+          )}
+        </SettingsAdvancedSection>
+      </SettingCard>
+      <SettingCard header={tr('LAN access and authentication')}>
         <SettingItem
           title={tr('Allow LAN connections')}
+          description={tr(
+            'Other devices connect to this computer’s LAN address and proxy port. The firewall must permit inbound connections.'
+          )}
           actions={
             <Button
               size="sm"
               isIconOnly
+              aria-label={tr('Network interfaces')}
               variant="ghost"
               onPress={() => {
                 setLanOpen(true)
@@ -205,7 +236,10 @@ const PortSetting: React.FC<PortSettingProps> = ({ config, onChange, onValidatio
         </SettingItem>
         {allowLan && (
           <>
-            <SettingItem title={tr('Allowed IP ranges')} />
+            <SettingItem
+              title={tr('Allowed IP ranges')}
+              description={tr('Client address ranges in CIDR format, for example 192.168.1.0/24.')}
+            />
             <EditableList
               items={lanAllowedIpsInput}
               onChange={(items) => {
@@ -215,7 +249,12 @@ const PortSetting: React.FC<PortSettingProps> = ({ config, onChange, onValidatio
               }}
               placeholder={tr('IP range')}
             />
-            <SettingItem title={tr('Blocked IP ranges')} />
+            <SettingItem
+              title={tr('Blocked IP ranges')}
+              description={tr(
+                'Blocks matching proxy clients. A blocked range takes precedence over an allowed range.'
+              )}
+            />
             <EditableList
               items={lanDisallowedIpsInput}
               onChange={(items) => {
@@ -227,7 +266,12 @@ const PortSetting: React.FC<PortSettingProps> = ({ config, onChange, onValidatio
             />
           </>
         )}
-        <SettingItem title={tr('User authentication')} />
+        <SettingItem
+          title={tr('User authentication')}
+          description={tr(
+            'Credentials for HTTP and SOCKS proxy clients, separate from the controller access key.'
+          )}
+        />
         <EditableList
           items={authenticationInput}
           onChange={(items) => {
@@ -240,7 +284,12 @@ const PortSetting: React.FC<PortSettingProps> = ({ config, onChange, onValidatio
           parse={parseAuth}
           format={formatAuth}
         />
-        <SettingItem title={tr('IP ranges exempt from authentication')} />
+        <SettingItem
+          title={tr('IP ranges exempt from authentication')}
+          description={tr(
+            'Proxy clients in these ranges do not need the username and password above.'
+          )}
+        />
         <EditableList
           items={skipAuthPrefixesInput}
           onChange={(items) => {

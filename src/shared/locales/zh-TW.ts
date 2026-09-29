@@ -1687,5 +1687,36 @@ export const messages: Readonly<Record<string, string>> = {
   'Resolves domains for direct connections. Domain policies can take precedence when enabled below.':
     '解析直連流量的網域；開啟下方選項時，網域策略可以優先套用。',
   'Resolves proxy server hostnames so Mihomo can establish proxy connections.':
-    '解析代理伺服器的網域，供 Mihomo 建立代理連線。'
+    '解析代理伺服器的網域，供 Mihomo 建立代理連線。',
+  'Proxy listener ports. Set a port to 0 to disable that listener.':
+    '代理監聽埠。將埠設為 0 可停用該監聽。',
+  'Accepts both HTTP and SOCKS proxy connections on one port.':
+    '同一個埠可接收 HTTP 與 SOCKS 代理連線。',
+  'Enabled proxy ports must be different.': '已啟用的代理埠不可重複。',
+  'Ports must be between 0 and 65535.': '埠必須介於 0 到 65535。',
+  'Additional proxy listeners': '其他代理監聽埠',
+  'Other devices connect to this computer’s LAN address and proxy port. The firewall must permit inbound connections.':
+    '其他裝置透過本機的區域網路位址與代理埠連線；防火牆需允許傳入連線。',
+  'Network interfaces': '網路介面',
+  'Client address ranges in CIDR format, for example 192.168.1.0/24.':
+    '以 CIDR 格式指定用戶端位址範圍，例如 192.168.1.0/24。',
+  'Blocks matching proxy clients. A blocked range takes precedence over an allowed range.':
+    '封鎖符合範圍的代理用戶端；封鎖範圍優先於允許範圍。',
+  'Credentials for HTTP and SOCKS proxy clients, separate from the controller access key.':
+    '供 HTTP 與 SOCKS 代理用戶端使用的帳號密碼，與控制器存取金鑰不同。',
+  'Proxy clients in these ranges do not need the username and password above.':
+    '這些範圍內的代理用戶端不必提供上方的帳號密碼。',
+  'LAN access and authentication': '區域網路存取與認證',
+  'Management API for dashboards and remote control; this is not a proxy listener.':
+    '供控制面板與遠端管理使用的 API，不是代理監聽埠。',
+  '127.0.0.1 limits access to this computer; 0.0.0.0 listens on all IPv4 interfaces. Include the port.':
+    '127.0.0.1 僅供本機存取；0.0.0.0 監聽所有 IPv4 介面。請包含埠號。',
+  'Authenticates controller API requests. Use an access key when allowing remote access.':
+    '驗證控制器 API 請求；允許遠端存取時請設定金鑰。',
+  'Generate access key': '產生存取金鑰',
+  'Dashboard and browser access': '控制面板與瀏覽器存取',
+  'Controls which browser origins may call the management API. It does not control proxy clients.':
+    '控制哪些瀏覽器來源可以呼叫管理 API，不影響代理用戶端。',
+  'Enter complete origins such as https://example.com. An empty list allows all origins.':
+    '輸入完整來源，例如 https://example.com。清空清單表示允許所有來源。'
 }
