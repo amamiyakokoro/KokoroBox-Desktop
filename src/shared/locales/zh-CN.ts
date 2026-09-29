@@ -128,7 +128,6 @@ export const messages: Readonly<Record<string, string>> = {
   '{0} active routes': '{0} 条活跃路由',
   '{0}% used': '已使用 {0}%',
   '{0} remaining': '剩余 {0}',
-  'App routing': '应用分流',
   'Configured: {0}': '已配置：{0}',
   '{0} connections': '{0} 个连接',
   'Open subscriptions': '打开订阅',

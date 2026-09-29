@@ -130,7 +130,6 @@ export const messages: Readonly<Record<string, string>> = {
   '{0} active routes': '{0} active routes',
   '{0}% used': '{0}% used',
   '{0} remaining': '{0} remaining',
-  'App routing': 'App routing',
   'Configured: {0}': 'Configured: {0}',
   '{0} connections': '{0} connections',
   'Open subscriptions': 'Open subscriptions',
