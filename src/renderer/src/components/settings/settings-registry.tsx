@@ -19,7 +19,6 @@ import {
 import WebdavConfig from './webdav-config'
 import EnvSetting from '../mihomo/env-setting'
 import LogSetting from '../mihomo/log-setting'
-import SettingsApplyNotice from '../base/base-settings-apply-notice'
 import DNS from './network/dns-settings'
 import Mihomo from './network/mihomo-settings'
 import Sniffer from './network/sniffer-settings'
@@ -52,7 +51,6 @@ export interface SettingsCategoryDefinition extends Omit<SettingsCategorySchema,
 const categoryContent: Partial<Record<SettingsCategory, () => ReactNode>> = {
   general: () => (
     <>
-      <SettingsApplyNotice mode="automatic" />
       <GeneralConfig />
       <BackgroundBehaviorSettings />
     </>
@@ -104,19 +102,7 @@ const resolvePanelContent = (
 ): (() => ReactNode) => {
   const content = panelContent[category]?.[panel.key]
   if (!content) throw new Error(`Missing settings panel renderer: ${category}/${panel.key}`)
-  const automatic =
-    category === 'appearance' ||
-    (category === 'network' && panel.key === 'network-behavior') ||
-    (category === 'data' && panel.key === 'subscriptions') ||
-    (category === 'diagnostics' && panel.key === 'logs')
-  return automatic
-    ? () => (
-        <>
-          <SettingsApplyNotice mode="automatic" />
-          {content()}
-        </>
-      )
-    : content
+  return content
 }
 
 export const getSettingsCategories = (): SettingsCategoryDefinition[] =>

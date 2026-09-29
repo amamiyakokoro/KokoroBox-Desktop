@@ -1781,5 +1781,6 @@ export const messages: Readonly<Record<string, string>> = {
     '除有「儲存」或「確認」按鈕的欄位外，變更會自動儲存。',
   'Applying changes saves them and restarts the core. Use Save or Confirm where shown.':
     '套用變更會儲存並重啟核心；若有「儲存」或「確認」按鈕，請按下後套用。',
-  'Restart required': '需要重新啟動'
+  'Restart required': '需要重新啟動',
+  'Confirm to apply changes and restart the core.': '按「確認」套用變更並重啟核心。'
 }

@@ -1,6 +1,6 @@
 import { tr } from '../../../../shared/i18n'
 
-export type SettingsApplyMode = 'automatic' | 'restart-core' | 'save' | 'save-restart-core'
+export type SettingsApplyMode = 'save' | 'save-restart-core'
 
 export default function SettingsApplyNotice({
   mode,
@@ -9,11 +9,9 @@ export default function SettingsApplyNotice({
   mode: SettingsApplyMode
   isDirty?: boolean
 }) {
+  if (!isDirty) return null
+
   const descriptions: Record<SettingsApplyMode, string> = {
-    automatic: tr('Changes are saved automatically, except fields with Save or Confirm buttons.'),
-    'restart-core': tr(
-      'Applying changes saves them and restarts the core. Use Save or Confirm where shown.'
-    ),
     save: tr('Save to apply changes to system proxy settings.'),
     'save-restart-core': tr(
       'Save to apply changes and restart the core. Connections may be interrupted.'
@@ -21,11 +19,8 @@ export default function SettingsApplyNotice({
   }
 
   return (
-    <div className="px-3 pb-2 pt-3 text-xs leading-5 text-muted">
-      <p>{descriptions[mode]}</p>
-      <p role="status" aria-live="polite" className="empty:hidden font-medium text-accent">
-        {isDirty ? tr('Unsaved changes') : ''}
-      </p>
-    </div>
+    <p role="status" className="px-3 pb-2 pt-3 text-xs leading-5 text-muted">
+      {descriptions[mode]}
+    </p>
   )
 }

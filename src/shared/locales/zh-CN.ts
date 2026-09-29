@@ -1776,5 +1776,6 @@ export const messages: Readonly<Record<string, string>> = {
     '除有“保存”或“确认”按钮的字段外，更改会自动保存。',
   'Applying changes saves them and restarts the core. Use Save or Confirm where shown.':
     '应用更改会保存并重启核心；若有“保存”或“确认”按钮，请点击后应用。',
-  'Restart required': '需要重新启动'
+  'Restart required': '需要重新启动',
+  'Confirm to apply changes and restart the core.': '点击“确认”应用更改并重启核心。'
 }

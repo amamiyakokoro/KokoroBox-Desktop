@@ -4,7 +4,6 @@ import { KokoSelect } from '../base/koko-form'
 import { KokoSegmentedControl } from '../base/base-controls'
 import SettingCard from '../base/base-setting-card'
 import SettingItem from '../base/base-setting-item'
-import SettingsApplyNotice from '../base/base-settings-apply-notice'
 import SettingsAdvancedSection from '../base/base-settings-advanced-section'
 import useSWR from 'swr'
 import PermissionModal from '../mihomo/permission-modal'
@@ -229,7 +228,6 @@ const CoreRuntimeConfig: React.FC<Props> = ({
       )}
       {sections.includes('runtime') && (
         <SettingCard header={sectionHeadings.runtime === false ? undefined : tr('Core runtime')}>
-          <SettingsApplyNotice mode="restart-core" />
           <SettingItem title={tr('Core version')} contentAlign="end" divider>
             <span className="text-sm tabular-nums">
               {normalizeCoreVersion(coreVersion?.version) || tr('Unknown')}
@@ -238,6 +236,11 @@ const CoreRuntimeConfig: React.FC<Props> = ({
           <SettingItem
             contentAlign="end"
             title={tr('Core source')}
+            help={
+              !systemCoreOnlyBuild
+                ? tr('Changes are saved immediately and restart the core.')
+                : undefined
+            }
             actions={
               !systemCoreOnlyBuild && (core === 'mihomo' || core === 'mihomo-alpha') ? (
                 <Button
@@ -290,6 +293,7 @@ const CoreRuntimeConfig: React.FC<Props> = ({
             <SettingItem
               contentAlign="end"
               title={tr('Choose system core path')}
+              help={tr('Changes are saved immediately and restart the core.')}
               rootClassName="setting-item--stackable"
               divider
             >
@@ -321,9 +325,16 @@ const CoreRuntimeConfig: React.FC<Props> = ({
                 ? tr('macOS TUN requires the core to run through KokoroBox Service.')
                 : undefined
             }
-            help={tr(
-              'Direct run starts the core with elevated permissions. System service keeps privileged features available in the background.'
-            )}
+            help={
+              <>
+                <p>
+                  {tr(
+                    'Direct run starts the core with elevated permissions. System service keeps privileged features available in the background.'
+                  )}
+                </p>
+                <p>{tr('Changes are saved immediately and restart the core.')}</p>
+              </>
+            }
             divider
           >
             <KokoSegmentedControl
@@ -340,9 +351,16 @@ const CoreRuntimeConfig: React.FC<Props> = ({
             <SettingItem
               contentAlign="end"
               title={tr('Service core execution mode')}
-              help={tr(
-                'Automatic is recommended. Sandbox isolates the service core; Start directly runs it without sandboxing.'
-              )}
+              help={
+                <>
+                  <p>
+                    {tr(
+                      'Automatic is recommended. Sandbox isolates the service core; Start directly runs it without sandboxing.'
+                    )}
+                  </p>
+                  <p>{tr('Changes are saved immediately and restart the core.')}</p>
+                </>
+              }
               divider
             >
               <KokoSegmentedControl
@@ -364,9 +382,16 @@ const CoreRuntimeConfig: React.FC<Props> = ({
             <SettingItem
               contentAlign="end"
               title={tr('Core process priority')}
-              help={tr(
-                'Higher priorities may improve responsiveness under load, but real-time priority can reduce overall system responsiveness.'
-              )}
+              help={
+                <>
+                  <p>
+                    {tr(
+                      'Higher priorities may improve responsiveness under load, but real-time priority can reduce overall system responsiveness.'
+                    )}
+                  </p>
+                  <p>{tr('Changes are saved immediately and restart the core.')}</p>
+                </>
+              }
               divider
             >
               <KokoSelect
@@ -392,9 +417,16 @@ const CoreRuntimeConfig: React.FC<Props> = ({
               <SettingItem
                 contentAlign="end"
                 title={tr('Startup detection method')}
-                help={tr(
-                  'Post Up waits for the configured startup hook. Log parsing detects readiness from core logs.'
-                )}
+                help={
+                  <>
+                    <p>
+                      {tr(
+                        'Post Up waits for the configured startup hook. Log parsing detects readiness from core logs.'
+                      )}
+                    </p>
+                    <p>{tr('Changes are saved immediately and restart the core.')}</p>
+                  </>
+                }
                 divider
               >
                 <KokoSegmentedControl

@@ -3,7 +3,6 @@ import React, { useState } from 'react'
 import { Switch } from '@heroui/react'
 import SettingCard from '../base/base-setting-card'
 import SettingItem from '../base/base-setting-item'
-import SettingsApplyNotice from '../base/base-settings-apply-notice'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { restartCore } from '@renderer/utils/ipc'
 import EditableList from '../base/base-list-editor'
@@ -34,11 +33,11 @@ const EnvSetting: React.FC = () => {
 
   return (
     <>
-      <SettingsApplyNotice mode="restart-core" />
       <SettingCard header={tr('Certificate trust')}>
         <SettingItem
           contentAlign="end"
           title={tr('Disable system CAs')}
+          help={tr('Changes are saved immediately and restart the core.')}
           description={tr(
             'Stops loading system certificate authorities. This does not disable TLS certificate verification.'
           )}
@@ -61,6 +60,7 @@ const EnvSetting: React.FC = () => {
         <SettingItem
           contentAlign="end"
           title={tr('Disable built-in CAs')}
+          help={tr('Changes are saved immediately and restart the core.')}
           description={tr(
             'Stops loading the core’s bundled certificate authorities. Keep this off unless you use another trust source.'
           )}
@@ -84,6 +84,7 @@ const EnvSetting: React.FC = () => {
         <SettingItem
           contentAlign="end"
           title={tr('Disable loopback detection')}
+          help={tr('Changes are saved immediately and restart the core.')}
           description={tr(
             'Turns off the core’s proxy-loop detection. Leave off unless troubleshooting a specific compatibility issue.'
           )}
@@ -107,6 +108,7 @@ const EnvSetting: React.FC = () => {
           <SettingItem
             contentAlign="end"
             title={tr('Disable nftables')}
+            help={tr('Changes are saved immediately and restart the core.')}
             description={tr(
               'Disables the core’s nftables integration on Linux; it does not clear the system firewall.'
             )}
@@ -131,6 +133,7 @@ const EnvSetting: React.FC = () => {
         <SettingItem
           contentAlign="end"
           title={tr('Trusted path')}
+          help={tr('Confirm to apply changes and restart the core.')}
           description={tr(
             'Allows the core to read configuration resources outside its working directory. Add only paths your profiles need.'
           )}

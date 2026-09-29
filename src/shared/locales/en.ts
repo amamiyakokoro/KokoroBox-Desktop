@@ -1827,5 +1827,6 @@ export const messages: Readonly<Record<string, string>> = {
     'Changes are saved automatically, except fields with Save or Confirm buttons.',
   'Applying changes saves them and restarts the core. Use Save or Confirm where shown.':
     'Applying changes saves them and restarts the core. Use Save or Confirm where shown.',
-  'Restart required': 'Restart required'
+  'Restart required': 'Restart required',
+  'Confirm to apply changes and restart the core.': 'Confirm to apply changes and restart the core.'
 }
