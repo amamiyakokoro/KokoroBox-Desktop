@@ -234,7 +234,11 @@ test('application settings keep one clear navigation hierarchy in compact deskto
   assert.match(settings, /settings-panel-navigation[^"\n]*overflow-x-auto/)
   assert.match(styles, /\.settings-page \{[\s\S]*overflow-x: clip;/)
   assert.doesNotMatch(styles, /\.settings-container|\.settings-layout|\.settings-navigation/)
-  assert.doesNotMatch(styles, /@container settings/)
+  assert.match(styles, /\.settings-content-inner\s*\{[^}]*container-name: settings-panel;/)
+  assert.match(
+    styles,
+    /@container settings-panel \(max-width: 36rem\)\s*\{\s*:root \.settings-page \.setting-item\.setting-item--stackable\s*\{[^}]*grid-template-columns: minmax\(0, 1fr\);/
+  )
   assert.doesNotMatch(settings, /<KokoTextField/)
   assert.match(searchField, /<InputGroup/)
   assert.match(searchField, /inputRef\?: React\.Ref<HTMLInputElement>/)
@@ -444,6 +448,10 @@ test('feature settings only surface save actions for dirty embedded panels', () 
   assert.doesNotMatch(sectionProps, /action\?: ReactNode/)
   assert.doesNotMatch(shared, /<SettingsSection[\s\S]{0,160}action=\{action\}/)
   assert.doesNotMatch(layoutProps, /action\?: ReactNode/)
+  assert.match(layoutProps, /applyMode\?: SettingsApplyMode/)
+  assert.match(layoutProps, /isDirty\?: boolean/)
+  assert.match(shared, /applyMode = 'save-restart-core'/)
+  assert.match(shared, /<SettingsApplyNotice mode=\{applyMode\} isDirty=\{isDirty\} \/>/)
   assert.match(panelAction, /createContext<HTMLElement \| null>\(null\)/)
   assert.match(panelAction, /createPortal\(children, target\)/)
   assert.match(settings, /<SettingsPanelActionProvider target=\{panelActionTarget\}>/)
@@ -464,7 +472,10 @@ test('feature settings only surface save actions for dirty embedded panels', () 
       source,
       /<FeatureSettingsPanelAction action=\{embedded \? saveButton : undefined\} \/>/
     )
-    assert.match(source, /<FeatureSettingsLayout>/)
+    assert.match(source, /<FeatureSettingsLayout\b[^>]*isDirty=\{(?:changed|isDirty)\}>/)
+    if (page.endsWith('/system-proxy-settings.tsx')) {
+      assert.match(source, /<FeatureSettingsLayout applyMode="save"/)
+    }
     assert.doesNotMatch(source, /<FeatureSettingsSection[^>]*\saction=/)
     assert.doesNotMatch(source, /<FeatureSettingsLayout[^>]*action=/)
     assert.doesNotMatch(source, /mx-auto flex w-full max-w-\[1040px\] justify-end/)
@@ -1295,8 +1306,20 @@ test('desktop sidebar separates controls, live status and navigation', () => {
   assert.doesNotMatch(surfaces, /navigationStatusIndicatorClasses/)
   assert.doesNotMatch(surfaces, /bg-(?:success|warning|danger)-500/)
   assert.doesNotMatch(surfaces, /navigationStatusTextClasses/)
-  assert.match(navItem, /border-separator\/60 bg-surface\/55/)
-  assert.match(navItem, /hover:border-accent\/25 hover:bg-surface-secondary\/70 hover:shadow-sm/)
+  assert.match(
+    surfaces,
+    /const siderItemSurfaceClassName =[\s\S]*rounded-xl border bg-surface\/85 shadow-none/
+  )
+  assert.match(
+    surfaces,
+    /const siderItemRestingSurfaceClassName =[\s\S]*border-separator hover:border-accent\/25 hover:bg-surface-secondary\/70 hover:shadow-sm/
+  )
+  for (const card of [navItem, statusCard]) {
+    assert.match(card, /siderItemSurfaceClassName/)
+    assert.match(card, /siderItemRestingSurfaceClassName/)
+    assert.match(card, /siderItemPrimaryClassName/)
+    assert.match(card, /siderItemFocusClassName/)
+  }
   assert.match(navItem, /active\s*\? siderActiveSurfaceClassName/)
   assert.match(statusCard, /active\s*\? siderActiveSurfaceClassName/)
   assert.match(quickControl, /<ToggleButton/)
@@ -1308,7 +1331,10 @@ test('desktop sidebar separates controls, live status and navigation', () => {
   )
   assert.doesNotMatch(quickControl, /aria-current|siderActiveSurfaceClassName/)
   assert.doesNotMatch(navItem, /border-transparent/)
-  assert.match(surfaces, /prominence === 'navigation'[\s\S]*bg-transparent text-base/)
+  assert.match(
+    surfaces,
+    /prominence === 'account'[\s\S]*: 'bg-surface-secondary\/70 text-muted group-hover:bg-surface-secondary\/80 group-hover:text-foreground'/
+  )
   assert.match(surfaces, /hover:border-accent\/25/)
   assert.match(
     surfaces,
@@ -1334,7 +1360,6 @@ test('desktop sidebar separates controls, live status and navigation', () => {
     quickControl,
     /<SiderItemIcon active=\{enabled\} className="sider-quick-control__icon" prominence="status">/
   )
-  assert.match(surfaces, /: 'bg-surface-secondary\/70 text-xl text-muted/)
   assert.match(quickControl, /sider-quick-control__title whitespace-nowrap/)
   assert.match(surfaces, /interface SiderQuickControlProps \{[\s\S]*status: string/)
   assert.match(quickControl, /sider-quick-control__status/)
@@ -1359,7 +1384,6 @@ test('desktop sidebar separates controls, live status and navigation', () => {
   assert.match(quickControl, /shadow-sm transition-/)
   assert.match(quickControl, /hover:border-accent\/25[\s\S]*hover:shadow-md/)
   assert.match(quickControl, /border-accent\/35 bg-accent-soft\/20/)
-  assert.match(statusCard, /shadow-none[\s\S]*hover:shadow-sm/)
   assert.doesNotMatch(statusCard, /shadow-md/)
   assert.doesNotMatch(quickControl, /sider-quick-control__control/)
   assert.doesNotMatch(quickControl, /grid-cols-\[2rem_minmax\(0,1fr\)_auto\]/)
