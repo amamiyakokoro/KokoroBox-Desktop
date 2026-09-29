@@ -55,7 +55,7 @@ export default function NetworkCardBackgroundSettings() {
 
   return (
     <SettingCard header={tr('Network card background')}>
-      <SettingItem title={tr('Image')}>
+      <SettingItem title={tr('Image')} rootClassName="setting-item--stackable">
         <div className="flex w-full min-w-0 flex-col items-end gap-2">
           <KokoSegmentedControl
             ariaLabel={tr('Network card background')}

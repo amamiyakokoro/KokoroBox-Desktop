@@ -1771,5 +1771,17 @@ export const messages: Readonly<Record<string, string>> = {
   'Replacing the key pair immediately replaces the stored keys. Keep the old private key to decrypt older configuration.':
     'Replacing the key pair immediately replaces the stored keys. Keep the old private key to decrypt older configuration.',
   'URL, directory and username are saved automatically. Save a changed password explicitly, or use a backup action to save it and continue.':
-    'URL, directory and username are saved automatically. Save a changed password explicitly, or use a backup action to save it and continue.'
+    'URL, directory and username are saved automatically. Save a changed password explicitly, or use a backup action to save it and continue.',
+  'Image display': 'Image display',
+  'Image effects': 'Image effects',
+  'Scaled adapts the image to the available space. Original size displays it without resizing.':
+    'Scaled adapts the image to the available space. Original size displays it without resizing.',
+  'Cover fills the area and may crop the image. Contain shows the whole image and may leave empty space.':
+    'Cover fills the area and may crop the image. Contain shows the whole image and may leave empty space.',
+  'Controls the visibility of the background image.':
+    'Controls the visibility of the background image.',
+  'Adds a theme-colored layer over the image to improve text contrast.':
+    'Adds a theme-colored layer over the image to improve text contrast.',
+  'Controls card backgrounds without changing text opacity.':
+    'Controls card backgrounds without changing text opacity.'
 }

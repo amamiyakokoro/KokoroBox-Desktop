@@ -276,6 +276,7 @@ const SubscriptionIntegrationSettings: React.FC<Props> = ({
                   <SettingItem
                     contentAlign="end"
                     title={tr('Gist age public key')}
+                    rootClassName="setting-item--stackable"
                     description={tr('Used to encrypt synchronized configuration.')}
                     divider
                   >
@@ -322,6 +323,7 @@ const SubscriptionIntegrationSettings: React.FC<Props> = ({
                   <SettingItem
                     contentAlign="end"
                     title={tr('Gist age private key')}
+                    rootClassName="setting-item--stackable"
                     description={`${tr('Required to decrypt synchronized configuration. Keep this key private.')} ${tr('Back up this key separately. New WebDAV backups do not include it.')}`}
                   >
                     <div className="flex w-full min-w-0 flex-col gap-2">

@@ -285,7 +285,12 @@ const CoreRuntimeConfig: React.FC<Props> = ({
             )}
           </SettingItem>
           {core === 'system' && (
-            <SettingItem contentAlign="end" title={tr('Choose system core path')} divider>
+            <SettingItem
+              contentAlign="end"
+              title={tr('Choose system core path')}
+              rootClassName="setting-item--stackable"
+              divider
+            >
               <KokoSelect
                 aria-label={tr('System core path')}
                 variant="secondary"

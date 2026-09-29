@@ -1726,5 +1726,16 @@ export const messages: Readonly<Record<string, string>> = {
   'Replacing the key pair immediately replaces the stored keys. Keep the old private key to decrypt older configuration.':
     '替換金鑰組會立即取代已儲存的金鑰；請保留舊私鑰，以便解密舊設定。',
   'URL, directory and username are saved automatically. Save a changed password explicitly, or use a backup action to save it and continue.':
-    '網址、目錄與使用者名稱會自動儲存。變更密碼後請按「儲存」；執行備份操作也會先儲存再繼續。'
+    '網址、目錄與使用者名稱會自動儲存。變更密碼後請按「儲存」；執行備份操作也會先儲存再繼續。',
+  'Image display': '圖片顯示方式',
+  'Image effects': '圖片視覺效果',
+  'Scaled adapts the image to the available space. Original size displays it without resizing.':
+    '縮放會依可用空間調整圖片；原始尺寸則不調整圖片大小。',
+  'Cover fills the area and may crop the image. Contain shows the whole image and may leave empty space.':
+    '覆蓋會填滿區域，可能裁切圖片；完整顯示保留整張圖片，可能留白。',
+  'Controls the visibility of the background image.': '調整背景圖片的可見程度。',
+  'Adds a theme-colored layer over the image to improve text contrast.':
+    '在圖片上加入符合主題的遮罩，提升文字對比。',
+  'Controls card backgrounds without changing text opacity.':
+    '調整卡片底色的透明度，不改變文字透明度。'
 }

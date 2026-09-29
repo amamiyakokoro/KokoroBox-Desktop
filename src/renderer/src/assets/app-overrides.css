@@ -393,6 +393,23 @@ input[type='number'] {
   overflow-x: clip;
 }
 
+.settings-content-inner {
+  container-type: inline-size;
+  container-name: settings-panel;
+}
+
+@container settings-panel (max-width: 36rem) {
+  :root .settings-page .setting-item.setting-item--stackable {
+    grid-template-columns: minmax(0, 1fr);
+    gap: calc(var(--spacing) * 2);
+  }
+
+  .settings-page .setting-item--stackable .setting-item__content {
+    justify-content: flex-start;
+    width: 100%;
+  }
+}
+
 .settings-page .setting-item,
 .feature-settings-layout .setting-item {
   grid-template-columns: minmax(10rem, 34%) minmax(0, 1fr);

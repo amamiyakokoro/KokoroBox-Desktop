@@ -1,4 +1,4 @@
-import { Button, Label, Slider, Tooltip } from '@heroui/react'
+import { Button, Slider, Tooltip } from '@heroui/react'
 import { useEffect, useState } from 'react'
 import { LuImages } from 'react-icons/lu'
 import { tr } from '../../../../shared/i18n'
@@ -49,10 +49,7 @@ function BackgroundSlider({
       onChangeEnd={(next) => onCommit(Number(next))}
       className="w-full max-w-56"
     >
-      <div className="mb-1 flex justify-between gap-2">
-        <Label className="text-xs text-muted">{label}</Label>
-        <Slider.Output className="text-xs text-muted">{`${draft}${label === tr('Blur') ? ' px' : '%'}`}</Slider.Output>
-      </div>
+      <Slider.Output className="mb-1 block text-right text-xs text-muted">{`${draft}${label === tr('Blur') ? ' px' : '%'}`}</Slider.Output>
       <Slider.Track>
         <Slider.Fill />
         <Slider.Thumb />
@@ -135,147 +132,187 @@ export default function HomeBackgroundSettings() {
   }
 
   return (
-    <SettingCard header={tr('Home background')}>
-      <SettingItem title={tr('Image')} divider={choice === 'custom'}>
-        <div className="flex w-full min-w-0 flex-col items-end gap-2">
-          <KokoSegmentedControl
-            ariaLabel={tr('Home background')}
-            selectedKey={choice}
-            options={[
-              { id: 'none', label: tr('None') },
-              { id: 'default', label: tr('Default image') },
-              { id: 'custom', label: tr('Custom image') }
-            ]}
-            onChange={(next) => void selectBackground(next)}
-          />
-          {choice === 'custom' && (
-            <div className="flex max-w-full flex-wrap items-center justify-end gap-2">
-              {previewUrl && (
-                <div className="h-14 w-28 shrink-0 overflow-hidden rounded-lg border border-separator bg-surface-secondary/40">
-                  <img src={previewUrl} alt="" className="h-full w-full object-contain" />
-                </div>
-              )}
-              <Button size="sm" variant="secondary" onPress={() => void chooseImage()}>
-                {tr('Replace image')}
-              </Button>
-            </div>
-          )}
-        </div>
-      </SettingItem>
-      {choice === 'default' && (
-        <SettingItem title={tr('Built-in image')} divider>
-          <div className="flex items-center gap-3">
-            <div className="flex h-24 w-20 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-surface-secondary/40">
-              <img
-                src={homeBuiltInImages[selectedId]}
-                alt=""
-                className="h-full w-full object-contain"
-              />
-            </div>
-            <span className="text-xs tabular-nums text-muted">
-              {`${homeDefaultBackgroundIds.indexOf(selectedId) + 1} / ${homeDefaultBackgroundIds.length}`}
-            </span>
-            <Tooltip delay={0}>
-              <Tooltip.Trigger>
-                <Button
-                  size="sm"
-                  isIconOnly
-                  variant="secondary"
-                  className="app-nodrag"
-                  aria-label={tr('Switch default background')}
-                  isDisabled={pending}
-                  onPress={() => void switchSelectedBackground()}
-                >
-                  <LuImages aria-hidden="true" />
+    <>
+      <SettingCard header={tr('Home background')}>
+        <SettingItem
+          title={tr('Image')}
+          rootClassName="setting-item--stackable"
+          divider={choice === 'custom'}
+        >
+          <div className="flex w-full min-w-0 flex-col items-end gap-2">
+            <KokoSegmentedControl
+              ariaLabel={tr('Home background')}
+              selectedKey={choice}
+              options={[
+                { id: 'none', label: tr('None') },
+                { id: 'default', label: tr('Default image') },
+                { id: 'custom', label: tr('Custom image') }
+              ]}
+              onChange={(next) => void selectBackground(next)}
+            />
+            {choice === 'custom' && (
+              <div className="flex max-w-full flex-wrap items-center justify-end gap-2">
+                {previewUrl && (
+                  <div className="h-14 w-28 shrink-0 overflow-hidden rounded-lg border border-separator bg-surface-secondary/40">
+                    <img src={previewUrl} alt="" className="h-full w-full object-contain" />
+                  </div>
+                )}
+                <Button size="sm" variant="secondary" onPress={() => void chooseImage()}>
+                  {tr('Replace image')}
                 </Button>
-              </Tooltip.Trigger>
-              <Tooltip.Content>{tr('Switch default background')}</Tooltip.Content>
-            </Tooltip>
+              </div>
+            )}
           </div>
         </SettingItem>
+        {choice === 'default' && (
+          <SettingItem title={tr('Built-in image')} divider>
+            <div className="flex items-center gap-3">
+              <div className="flex h-24 w-20 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-surface-secondary/40">
+                <img
+                  src={homeBuiltInImages[selectedId]}
+                  alt=""
+                  className="h-full w-full object-contain"
+                />
+              </div>
+              <span className="text-xs tabular-nums text-muted">
+                {`${homeDefaultBackgroundIds.indexOf(selectedId) + 1} / ${homeDefaultBackgroundIds.length}`}
+              </span>
+              <Tooltip delay={0}>
+                <Tooltip.Trigger>
+                  <Button
+                    size="sm"
+                    isIconOnly
+                    variant="secondary"
+                    className="app-nodrag"
+                    aria-label={tr('Switch default background')}
+                    isDisabled={pending}
+                    onPress={() => void switchSelectedBackground()}
+                  >
+                    <LuImages aria-hidden="true" />
+                  </Button>
+                </Tooltip.Trigger>
+                <Tooltip.Content>{tr('Switch default background')}</Tooltip.Content>
+              </Tooltip>
+            </div>
+          </SettingItem>
+        )}
+      </SettingCard>
+      {choice !== 'none' && (
+        <SettingCard header={tr('Image display')}>
+          {choice !== 'none' && (
+            <>
+              <SettingItem title={tr('Horizontal alignment')} divider>
+                <KokoSegmentedControl
+                  ariaLabel={tr('Horizontal alignment')}
+                  selectedKey={resolved.position.split(' ')[0]}
+                  options={[
+                    { id: 'left', label: tr('Left') },
+                    { id: 'center', label: tr('Center') },
+                    { id: 'right', label: tr('Right') }
+                  ]}
+                  onChange={(alignment) => {
+                    const value = alignment as HomeBackgroundAlignment
+                    if (choice === 'custom') patchBackground({ alignment: value })
+                    else patchBuiltInAppearance({ alignment: value })
+                  }}
+                />
+              </SettingItem>
+              <SettingItem
+                title={tr('Scale image')}
+                description={tr(
+                  'Scaled adapts the image to the available space. Original size displays it without resizing.'
+                )}
+                divider
+              >
+                <KokoSegmentedControl
+                  ariaLabel={tr('Scale image')}
+                  selectedKey={resolved.scale ? 'scaled' : 'original'}
+                  options={[
+                    { id: 'scaled', label: tr('Scaled') },
+                    { id: 'original', label: tr('Original size') }
+                  ]}
+                  onChange={(size) => {
+                    const scale = size === 'scaled'
+                    if (choice === 'custom') patchBackground({ scale })
+                    else patchBuiltInAppearance({ scale })
+                  }}
+                />
+              </SettingItem>
+            </>
+          )}
+          {choice === 'custom' && background && (
+            <>
+              {resolved.scale && (
+                <SettingItem
+                  title={tr('Fit')}
+                  description={tr(
+                    'Cover fills the area and may crop the image. Contain shows the whole image and may leave empty space.'
+                  )}
+                  divider
+                >
+                  <KokoSegmentedControl
+                    ariaLabel={tr('Fit')}
+                    selectedKey={background.fit}
+                    options={[
+                      { id: 'cover', label: tr('Cover') },
+                      { id: 'contain', label: tr('Contain') }
+                    ]}
+                    onChange={(fit) => patchBackground({ fit: fit as HomeBackground['fit'] })}
+                  />
+                </SettingItem>
+              )}
+              <SettingItem title={tr('Vertical position')} divider>
+                <KokoSegmentedControl
+                  ariaLabel={tr('Vertical position')}
+                  selectedKey={resolved.position.split(' ')[1]}
+                  options={[
+                    { id: 'top', label: tr('Top') },
+                    { id: 'center', label: tr('Center') },
+                    { id: 'bottom', label: tr('Bottom') }
+                  ]}
+                  onChange={(position) =>
+                    patchBackground({ position: position as HomeBackground['position'] })
+                  }
+                />
+              </SettingItem>
+            </>
+          )}
+        </SettingCard>
       )}
       {choice !== 'none' && (
-        <>
-          <SettingItem title={tr('Horizontal alignment')} divider>
-            <KokoSegmentedControl
-              ariaLabel={tr('Horizontal alignment')}
-              selectedKey={resolved.position.split(' ')[0]}
-              options={[
-                { id: 'left', label: tr('Left') },
-                { id: 'center', label: tr('Center') },
-                { id: 'right', label: tr('Right') }
-              ]}
-              onChange={(alignment) => {
-                const value = alignment as HomeBackgroundAlignment
-                if (choice === 'custom') patchBackground({ alignment: value })
-                else patchBuiltInAppearance({ alignment: value })
-              }}
-            />
-          </SettingItem>
-          <SettingItem title={tr('Scale image')} divider>
-            <KokoSegmentedControl
-              ariaLabel={tr('Scale image')}
-              selectedKey={resolved.scale ? 'scaled' : 'original'}
-              options={[
-                { id: 'scaled', label: tr('Scaled') },
-                { id: 'original', label: tr('Original size') }
-              ]}
-              onChange={(size) => {
-                const scale = size === 'scaled'
-                if (choice === 'custom') patchBackground({ scale })
-                else patchBuiltInAppearance({ scale })
-              }}
-            />
-          </SettingItem>
-        </>
-      )}
-      {choice === 'custom' && background && (
-        <>
-          <SettingItem title={tr('Fit')} divider>
-            <KokoSegmentedControl
-              ariaLabel={tr('Fit')}
-              selectedKey={background.fit}
-              options={[
-                { id: 'cover', label: tr('Cover') },
-                { id: 'contain', label: tr('Contain') }
-              ]}
-              onChange={(fit) => patchBackground({ fit: fit as HomeBackground['fit'] })}
-            />
-          </SettingItem>
-          <SettingItem title={tr('Vertical position')} divider>
-            <KokoSegmentedControl
-              ariaLabel={tr('Vertical position')}
-              selectedKey={resolved.position.split(' ')[1]}
-              options={[
-                { id: 'top', label: tr('Top') },
-                { id: 'center', label: tr('Center') },
-                { id: 'bottom', label: tr('Bottom') }
-              ]}
-              onChange={(position) =>
-                patchBackground({ position: position as HomeBackground['position'] })
+        <SettingCard header={tr('Image effects')}>
+          {(
+            [
+              ['opacity', tr('Image opacity'), 100],
+              ['blur', tr('Blur'), 20],
+              ['overlay', tr('Overlay intensity'), 80],
+              ['cardOpacity', tr('Card background opacity'), 100]
+            ] as const
+          ).map(([setting, label, maximum]) => (
+            <SettingItem
+              key={setting}
+              title={label}
+              divider={setting !== 'cardOpacity'}
+              description={
+                setting === 'opacity'
+                  ? tr('Controls the visibility of the background image.')
+                  : setting === 'overlay'
+                    ? tr('Adds a theme-colored layer over the image to improve text contrast.')
+                    : setting === 'cardOpacity'
+                      ? tr('Controls card backgrounds without changing text opacity.')
+                      : undefined
               }
-            />
-          </SettingItem>
-        </>
+            >
+              <BackgroundSlider
+                label={label}
+                value={setting === 'cardOpacity' ? resolved.cardOpacity : resolved[setting]}
+                maximum={maximum}
+                onCommit={(value) => patchNumber(setting, value)}
+              />
+            </SettingItem>
+          ))}
+        </SettingCard>
       )}
-      {choice !== 'none' &&
-        (
-          [
-            ['opacity', tr('Image opacity'), 100],
-            ['blur', tr('Blur'), 20],
-            ['overlay', tr('Overlay intensity'), 80],
-            ['cardOpacity', tr('Card background opacity'), 100]
-          ] as const
-        ).map(([setting, label, maximum]) => (
-          <SettingItem key={setting} title={label} divider={setting !== 'cardOpacity'}>
-            <BackgroundSlider
-              label={label}
-              value={setting === 'cardOpacity' ? resolved.cardOpacity : resolved[setting]}
-              maximum={maximum}
-              onCommit={(value) => patchNumber(setting, value)}
-            />
-          </SettingItem>
-        ))}
-    </SettingCard>
+    </>
   )
 }
