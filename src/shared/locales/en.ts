@@ -1783,5 +1783,45 @@ export const messages: Readonly<Record<string, string>> = {
   'Adds a theme-colored layer over the image to improve text contrast.':
     'Adds a theme-colored layer over the image to improve text contrast.',
   'Controls card backgrounds without changing text opacity.':
-    'Controls card backgrounds without changing text opacity.'
+    'Controls card backgrounds without changing text opacity.',
+  'Certificate trust': 'Certificate trust',
+  'Stops loading system certificate authorities. This does not disable TLS certificate verification.':
+    'Stops loading system certificate authorities. This does not disable TLS certificate verification.',
+  'Stops loading the core’s bundled certificate authorities. Keep this off unless you use another trust source.':
+    'Stops loading the core’s bundled certificate authorities. Keep this off unless you use another trust source.',
+  'Core networking': 'Core networking',
+  'Turns off the core’s proxy-loop detection. Leave off unless troubleshooting a specific compatibility issue.':
+    'Turns off the core’s proxy-loop detection. Leave off unless troubleshooting a specific compatibility issue.',
+  'Disables the core’s nftables integration on Linux; it does not clear the system firewall.':
+    'Disables the core’s nftables integration on Linux; it does not clear the system firewall.',
+  'Trusted resources': 'Trusted resources',
+  'Allows the core to read configuration resources outside its working directory. Add only paths your profiles need.':
+    'Allows the core to read configuration resources outside its working directory. Add only paths your profiles need.',
+  'Exits KokoroBox and keeps the core running. Reopen the application to manage it.':
+    'Exits KokoroBox and keeps the core running. Reopen the application to manage it.',
+  'Releases the hidden window while keeping KokoroBox and its tray running. Open the tray to restore the window.':
+    'Releases the hidden window while keeping KokoroBox and its tray running. Open the tray to restore the window.',
+  'Release the window': 'Release the window',
+  'Interface names ignored when checking connectivity, for example a virtual adapter that stays online.':
+    'Interface names ignored when checking connectivity, for example a virtual adapter that stays online.',
+  'Matching a listed Wi-Fi name switches to Direct mode. Leaving it switches to Rule mode, not the previous mode.':
+    'Matching a listed Wi-Fi name switches to Direct mode. Leaving it switches to Rule mode, not the previous mode.',
+  'Windows TUN requires administrator privileges or KokoroBox Service.':
+    'Windows TUN requires administrator privileges or KokoroBox Service.',
+  'Repairs KokoroBox and core inbound rules for the selected run mode. It does not reset the entire Windows firewall or enable TUN.':
+    'Repairs KokoroBox and core inbound rules for the selected run mode. It does not reset the entire Windows firewall or enable TUN.',
+  'Mixed is the default. Change the stack only to address compatibility or performance issues.':
+    'Mixed is the default. Change the stack only to address compatibility or performance issues.',
+  'For example, any:53 intercepts DNS on port 53. Separate multiple targets with commas.':
+    'For example, any:53 intercepts DNS on port 53. Separate multiple targets with commas.',
+  'While enabled, it may replace system proxy settings changed by other applications.':
+    'While enabled, it may replace system proxy settings changed by other applications.',
+  'Off uses sniffing settings from the subscription; it does not disable sniffing. Changing this switch immediately restarts the core.':
+    'Off uses sniffing settings from the subscription; it does not disable sniffing. Changing this switch immediately restarts the core.',
+  'Excludes matching domains from sniffing. Use +.example.com to include the domain and its subdomains.':
+    'Excludes matching domains from sniffing. Use +.example.com to include the domain and its subdomains.',
+  'Provides alternative DNS answers selected by the fallback filters below.':
+    'Provides alternative DNS answers selected by the fallback filters below.',
+  'If the floating window is unstable, try disabling GPU acceleration in Performance settings.':
+    'If the floating window is unstable, try disabling GPU acceleration in Performance settings.'
 }

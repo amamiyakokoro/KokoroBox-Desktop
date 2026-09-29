@@ -84,7 +84,9 @@ const AppearanceConfig: React.FC<AppearanceConfigProps> = ({
           <SettingItem
             contentAlign="end"
             title={tr('Show floating window')}
-            help={tr('The floating window may crash the app unless GPU acceleration is disabled')}
+            help={tr(
+              'If the floating window is unstable, try disabling GPU acceleration in Performance settings.'
+            )}
             divider={!localShowFloating}
           >
             <Switch

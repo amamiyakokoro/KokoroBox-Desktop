@@ -33,60 +33,22 @@ const EnvSetting: React.FC = () => {
   const [safePathsInput, setSafePathsInput] = useState(safePaths)
 
   return (
-    <SettingCard>
+    <>
       <SettingsApplyNotice mode="restart-core" />
-      <SettingItem contentAlign="end" title={tr('Disable system CAs')} divider>
-        <Switch
-          size="sm"
-          isSelected={disableSystemCA}
-          onChange={(v) => {
-            handleConfigChangeWithRestart('disableSystemCA', v)
-          }}
+      <SettingCard header={tr('Certificate trust')}>
+        <SettingItem
+          contentAlign="end"
+          title={tr('Disable system CAs')}
+          description={tr(
+            'Stops loading system certificate authorities. This does not disable TLS certificate verification.'
+          )}
+          divider
         >
-          <Switch.Content>
-            <Switch.Control>
-              <Switch.Thumb />
-            </Switch.Control>
-          </Switch.Content>
-        </Switch>
-      </SettingItem>
-      <SettingItem contentAlign="end" title={tr('Disable built-in CAs')} divider>
-        <Switch
-          size="sm"
-          isSelected={disableEmbedCA}
-          onChange={(v) => {
-            handleConfigChangeWithRestart('disableEmbedCA', v)
-          }}
-        >
-          <Switch.Content>
-            <Switch.Control>
-              <Switch.Thumb />
-            </Switch.Control>
-          </Switch.Content>
-        </Switch>
-      </SettingItem>
-      <SettingItem contentAlign="end" title={tr('Disable loopback detection')} divider>
-        <Switch
-          size="sm"
-          isSelected={disableLoopbackDetector}
-          onChange={(v) => {
-            handleConfigChangeWithRestart('disableLoopbackDetector', v)
-          }}
-        >
-          <Switch.Content>
-            <Switch.Control>
-              <Switch.Thumb />
-            </Switch.Control>
-          </Switch.Content>
-        </Switch>
-      </SettingItem>
-      {platform == 'linux' && (
-        <SettingItem contentAlign="end" title={tr('Disable nftables')} divider>
           <Switch
             size="sm"
-            isSelected={disableNftables}
+            isSelected={disableSystemCA}
             onChange={(v) => {
-              handleConfigChangeWithRestart('disableNftables', v)
+              handleConfigChangeWithRestart('disableSystemCA', v)
             }}
           >
             <Switch.Content>
@@ -96,19 +58,95 @@ const EnvSetting: React.FC = () => {
             </Switch.Content>
           </Switch>
         </SettingItem>
-      )}
-      <SettingItem contentAlign="end" title={tr('Trusted path')}>
-        <PendingFieldAction
-          isVisible={safePathsInput.join('') != safePaths.join('')}
-          onPress={() => handleConfigChangeWithRestart('safePaths', safePathsInput)}
+        <SettingItem
+          contentAlign="end"
+          title={tr('Disable built-in CAs')}
+          description={tr(
+            'Stops loading the core’s bundled certificate authorities. Keep this off unless you use another trust source.'
+          )}
+        >
+          <Switch
+            size="sm"
+            isSelected={disableEmbedCA}
+            onChange={(v) => {
+              handleConfigChangeWithRestart('disableEmbedCA', v)
+            }}
+          >
+            <Switch.Content>
+              <Switch.Control>
+                <Switch.Thumb />
+              </Switch.Control>
+            </Switch.Content>
+          </Switch>
+        </SettingItem>
+      </SettingCard>
+      <SettingCard header={tr('Core networking')}>
+        <SettingItem
+          contentAlign="end"
+          title={tr('Disable loopback detection')}
+          description={tr(
+            'Turns off the core’s proxy-loop detection. Leave off unless troubleshooting a specific compatibility issue.'
+          )}
+          divider
+        >
+          <Switch
+            size="sm"
+            isSelected={disableLoopbackDetector}
+            onChange={(v) => {
+              handleConfigChangeWithRestart('disableLoopbackDetector', v)
+            }}
+          >
+            <Switch.Content>
+              <Switch.Control>
+                <Switch.Thumb />
+              </Switch.Control>
+            </Switch.Content>
+          </Switch>
+        </SettingItem>
+        {platform == 'linux' && (
+          <SettingItem
+            contentAlign="end"
+            title={tr('Disable nftables')}
+            description={tr(
+              'Disables the core’s nftables integration on Linux; it does not clear the system firewall.'
+            )}
+          >
+            <Switch
+              size="sm"
+              isSelected={disableNftables}
+              onChange={(v) => {
+                handleConfigChangeWithRestart('disableNftables', v)
+              }}
+            >
+              <Switch.Content>
+                <Switch.Control>
+                  <Switch.Thumb />
+                </Switch.Control>
+              </Switch.Content>
+            </Switch>
+          </SettingItem>
+        )}
+      </SettingCard>
+      <SettingCard header={tr('Trusted resources')}>
+        <SettingItem
+          contentAlign="end"
+          title={tr('Trusted path')}
+          description={tr(
+            'Allows the core to read configuration resources outside its working directory. Add only paths your profiles need.'
+          )}
+        >
+          <PendingFieldAction
+            isVisible={safePathsInput.join('') != safePaths.join('')}
+            onPress={() => handleConfigChangeWithRestart('safePaths', safePathsInput)}
+          />
+        </SettingItem>
+        <EditableList
+          items={safePathsInput}
+          onChange={(items) => setSafePathsInput(items as string[])}
+          divider={false}
         />
-      </SettingItem>
-      <EditableList
-        items={safePathsInput}
-        onChange={(items) => setSafePathsInput(items as string[])}
-        divider={false}
-      />{' '}
-    </SettingCard>
+      </SettingCard>
+    </>
   )
 }
 

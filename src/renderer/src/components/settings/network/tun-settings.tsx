@@ -131,10 +131,25 @@ const Tun: React.FC<Props> = ({ embedded = false }) => {
     <>
       <FeatureSettingsPanelAction action={embedded ? saveButton : undefined} />
       <FeatureSettingsLayout isDirty={changed}>
+        {platform === 'darwin' && (
+          <p className="px-4 py-2 text-xs text-muted">
+            {tr('macOS TUN requires the core to run through KokoroBox Service.')}
+          </p>
+        )}
+        {platform === 'win32' && (
+          <p className="px-4 py-2 text-xs text-muted">
+            {tr('Windows TUN requires administrator privileges or KokoroBox Service.')}
+          </p>
+        )}
         {(platform === 'win32' || platform === 'darwin') && (
           <FeatureSettingsSection title={tr('Platform integration')}>
             {platform === 'win32' && (
-              <SettingItem title={tr('Reset firewall')}>
+              <SettingItem
+                title={tr('Reset firewall')}
+                description={tr(
+                  'Repairs KokoroBox and core inbound rules for the selected run mode. It does not reset the entire Windows firewall or enable TUN.'
+                )}
+              >
                 <Button
                   size="sm"
                   variant="primary"
@@ -165,7 +180,14 @@ const Tun: React.FC<Props> = ({ embedded = false }) => {
         )}
 
         <FeatureSettingsSection title={tr('TUN routing')}>
-          <SettingItem title={tr('TUN network stack')} divider>
+          <SettingItem
+            title={tr('TUN network stack')}
+            description={tr(
+              'Mixed is the default. Change the stack only to address compatibility or performance issues.'
+            )}
+            rootClassName="setting-item--stackable"
+            divider
+          >
             <KokoSegmentedControl
               ariaLabel={tr('TUN network stack')}
               selectedKey={values.stack}
@@ -310,6 +332,10 @@ const Tun: React.FC<Props> = ({ embedded = false }) => {
           </SettingItem>
           <SettingItem
             title={tr('DNS hijacking targets, separated by commas')}
+            description={tr(
+              'For example, any:53 intercepts DNS on port 53. Separate multiple targets with commas.'
+            )}
+            rootClassName="setting-item--stackable"
             help={tr('Intercepts DNS traffic sent to these targets and forwards it to Mihomo.')}
             divider
           >

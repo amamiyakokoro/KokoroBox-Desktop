@@ -223,13 +223,26 @@ const BehaviorSettings: React.FC<Props> = ({
           </SettingItem>
           {autoLightweight && (
             <SettingSubgroup label={tr('Automatic lightweight mode')}>
-              <SettingItem contentAlign="end" title={tr('Lightweight mode behavior')} divider>
+              <SettingItem
+                contentAlign="end"
+                title={tr('Lightweight mode behavior')}
+                description={
+                  autoLightweightMode === 'core'
+                    ? tr(
+                        'Exits KokoroBox and keeps the core running. Reopen the application to manage it.'
+                      )
+                    : tr(
+                        'Releases the hidden window while keeping KokoroBox and its tray running. Open the tray to restore the window.'
+                      )
+                }
+                divider
+              >
                 <KokoSegmentedControl
                   ariaLabel={tr('Lightweight mode behavior')}
                   selectedKey={autoLightweightMode}
                   options={[
                     { id: 'core', label: tr('Keep only the core') },
-                    { id: 'tray', label: tr('Close only the renderer') }
+                    { id: 'tray', label: tr('Release the window') }
                   ]}
                   onChange={(v) => {
                     patchAppConfig({ autoLightweightMode: v as 'core' | 'tray' })
@@ -310,7 +323,13 @@ const BehaviorSettings: React.FC<Props> = ({
                   />
                 </div>
               </SettingItem>
-              <SettingItem contentAlign="end" title={tr('Interfaces excluded from detection')}>
+              <SettingItem
+                contentAlign="end"
+                title={tr('Interfaces excluded from detection')}
+                description={tr(
+                  'Interface names ignored when checking connectivity, for example a virtual adapter that stays online.'
+                )}
+              >
                 <PendingFieldAction
                   isVisible={bypass.length != networkDetectionBypass.length}
                   onPress={async () => {
@@ -325,6 +344,9 @@ const BehaviorSettings: React.FC<Props> = ({
           <SettingItem
             contentAlign="end"
             title={tr('Use direct connections on specified Wi-Fi SSIDs')}
+            description={tr(
+              'Matching a listed Wi-Fi name switches to Direct mode. Leaving it switches to Rule mode, not the previous mode.'
+            )}
           >
             <PendingFieldAction
               isVisible={pauseSSIDInput.join('') !== pauseSSIDArray.join('')}

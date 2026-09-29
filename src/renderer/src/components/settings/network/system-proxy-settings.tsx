@@ -303,6 +303,9 @@ const Sysproxy: React.FC<Props> = ({ embedded = false }) => {
         <FeatureSettingsSection title={tr('Reliability and exclusions')}>
           <SettingItem
             title={tr('System proxy watchdog')}
+            description={tr(
+              'While enabled, it may replace system proxy settings changed by other applications.'
+            )}
             help={tr('Restore the system proxy automatically if it is changed')}
             divider={!values.guard && values.mode === 'manual'}
           >

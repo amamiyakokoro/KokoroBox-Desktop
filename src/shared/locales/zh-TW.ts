@@ -1737,5 +1737,45 @@ export const messages: Readonly<Record<string, string>> = {
   'Adds a theme-colored layer over the image to improve text contrast.':
     '在圖片上加入符合主題的遮罩，提升文字對比。',
   'Controls card backgrounds without changing text opacity.':
-    '調整卡片底色的透明度，不改變文字透明度。'
+    '調整卡片底色的透明度，不改變文字透明度。',
+  'Certificate trust': '憑證信任來源',
+  'Stops loading system certificate authorities. This does not disable TLS certificate verification.':
+    '停止載入系統 CA，並非停用 TLS 憑證驗證。',
+  'Stops loading the core’s bundled certificate authorities. Keep this off unless you use another trust source.':
+    '停止載入核心內附的 CA；除非使用其他信任來源，否則請保持關閉。',
+  'Core networking': '核心網路行為',
+  'Turns off the core’s proxy-loop detection. Leave off unless troubleshooting a specific compatibility issue.':
+    '停用核心的代理迴環偵測；除非排查特定相容性問題，否則請保持關閉。',
+  'Disables the core’s nftables integration on Linux; it does not clear the system firewall.':
+    '停用核心在 Linux 上的 nftables 整合，不會清除系統防火牆。',
+  'Trusted resources': '可信任資源',
+  'Allows the core to read configuration resources outside its working directory. Add only paths your profiles need.':
+    '允許核心讀取工作目錄外的設定資源；只加入訂閱需要的路徑。',
+  'Exits KokoroBox and keeps the core running. Reopen the application to manage it.':
+    '退出 KokoroBox 並保留核心執行；需要管理時請重新開啟應用程式。',
+  'Releases the hidden window while keeping KokoroBox and its tray running. Open the tray to restore the window.':
+    '釋放隱藏的視窗，保留 KokoroBox 與托盤執行；透過托盤可重新開啟視窗。',
+  'Release the window': '釋放視窗',
+  'Interface names ignored when checking connectivity, for example a virtual adapter that stays online.':
+    '檢查連線時忽略的介面名稱，例如一直顯示連線中的虛擬網卡。',
+  'Matching a listed Wi-Fi name switches to Direct mode. Leaving it switches to Rule mode, not the previous mode.':
+    '連入清單中的 Wi-Fi 會切換為直連；離開時切換為規則模式，不會恢復之前的模式。',
+  'Windows TUN requires administrator privileges or KokoroBox Service.':
+    'Windows TUN 需要管理員權限或 KokoroBox Service。',
+  'Repairs KokoroBox and core inbound rules for the selected run mode. It does not reset the entire Windows firewall or enable TUN.':
+    '修復目前執行模式下 KokoroBox 與核心的傳入規則，不會重設整個 Windows 防火牆或開啟 TUN。',
+  'Mixed is the default. Change the stack only to address compatibility or performance issues.':
+    '預設為 Mixed；僅在處理相容性或效能問題時調整網路堆疊。',
+  'For example, any:53 intercepts DNS on port 53. Separate multiple targets with commas.':
+    '例如 any:53 攔截送往埠 53 的 DNS；多個目標以逗號分隔。',
+  'While enabled, it may replace system proxy settings changed by other applications.':
+    '啟用時可能會取代其他應用程式修改的系統代理設定。',
+  'Off uses sniffing settings from the subscription; it does not disable sniffing. Changing this switch immediately restarts the core.':
+    '關閉時使用訂閱中的嗅探設定，並非停用嗅探。切換此開關會立即重啟核心。',
+  'Excludes matching domains from sniffing. Use +.example.com to include the domain and its subdomains.':
+    '符合的網域不會嗅探；+.example.com 可包含該網域與其子網域。',
+  'Provides alternative DNS answers selected by the fallback filters below.':
+    '提供替代 DNS 回應，由下方的備用 DNS 篩選條件決定是否採用。',
+  'If the floating window is unstable, try disabling GPU acceleration in Performance settings.':
+    '若懸浮視窗不穩定，可嘗試在效能設定中停用 GPU 加速。'
 }

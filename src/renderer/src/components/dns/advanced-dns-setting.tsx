@@ -306,6 +306,9 @@ const AdvancedDnsSetting: React.FC<AdvancedDnsSettingProps> = ({
         />
         <DnsServerList
           title={tr('Fallback DNS servers')}
+          description={tr(
+            'Provides alternative DNS answers selected by the fallback filters below.'
+          )}
           items={fallback}
           onChange={onFallbackChange}
           onErrorChange={setFallbackError}
