@@ -10,8 +10,10 @@ export default function SettingsApplyNotice({
   isDirty?: boolean
 }) {
   const descriptions: Record<SettingsApplyMode, string> = {
-    automatic: tr('Changes are saved automatically, except fields with a Save button.'),
-    'restart-core': tr('Changes are saved immediately and restart the core.'),
+    automatic: tr('Changes are saved automatically, except fields with Save or Confirm buttons.'),
+    'restart-core': tr(
+      'Applying changes saves them and restarts the core. Use Save or Confirm where shown.'
+    ),
     save: tr('Save to apply changes to system proxy settings.'),
     'save-restart-core': tr(
       'Save to apply changes and restart the core. Connections may be interrupted.'

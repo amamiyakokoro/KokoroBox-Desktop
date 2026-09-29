@@ -88,22 +88,24 @@ const CoreRuntimeConfig: React.FC<Props> = ({
     unknown: tr('Unknown')
   }
   const serviceLabel = restartRequired
-    ? tr('Restart app')
-    : serviceState
-      ? statusLabels[serviceState]
-      : serviceError
-        ? tr('Unknown')
+    ? tr('Restart required')
+    : serviceError
+      ? tr('Unknown')
+      : serviceState
+        ? statusLabels[serviceState]
         : tr('Checking')
   const serviceDot =
     restartRequired || repairing
       ? 'bg-warning'
-      : serviceState === 'running'
-        ? 'bg-success'
-        : serviceState === 'not-installed'
-          ? 'bg-danger'
-          : serviceState === 'unknown' || !serviceState
-            ? 'bg-muted'
-            : 'bg-warning'
+      : serviceError
+        ? 'bg-muted'
+        : serviceState === 'running'
+          ? 'bg-success'
+          : serviceState === 'not-installed'
+            ? 'bg-danger'
+            : serviceState === 'unknown' || !serviceState
+              ? 'bg-muted'
+              : 'bg-warning'
   const { tun } = controledMihomoConfig || {}
   const {
     core = 'mihomo',

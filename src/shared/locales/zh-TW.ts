@@ -1776,5 +1776,10 @@ export const messages: Readonly<Record<string, string>> = {
   'Provides alternative DNS answers selected by the fallback filters below.':
     '提供替代 DNS 回應，由下方的備用 DNS 篩選條件決定是否採用。',
   'If the floating window is unstable, try disabling GPU acceleration in Performance settings.':
-    '若懸浮視窗不穩定，可嘗試在效能設定中停用 GPU 加速。'
+    '若懸浮視窗不穩定，可嘗試在效能設定中停用 GPU 加速。',
+  'Changes are saved automatically, except fields with Save or Confirm buttons.':
+    '除有「儲存」或「確認」按鈕的欄位外，變更會自動儲存。',
+  'Applying changes saves them and restarts the core. Use Save or Confirm where shown.':
+    '套用變更會儲存並重啟核心；若有「儲存」或「確認」按鈕，請按下後套用。',
+  'Restart required': '需要重新啟動'
 }

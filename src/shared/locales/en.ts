@@ -1822,5 +1822,10 @@ export const messages: Readonly<Record<string, string>> = {
   'Provides alternative DNS answers selected by the fallback filters below.':
     'Provides alternative DNS answers selected by the fallback filters below.',
   'If the floating window is unstable, try disabling GPU acceleration in Performance settings.':
-    'If the floating window is unstable, try disabling GPU acceleration in Performance settings.'
+    'If the floating window is unstable, try disabling GPU acceleration in Performance settings.',
+  'Changes are saved automatically, except fields with Save or Confirm buttons.':
+    'Changes are saved automatically, except fields with Save or Confirm buttons.',
+  'Applying changes saves them and restarts the core. Use Save or Confirm where shown.':
+    'Applying changes saves them and restarts the core. Use Save or Confirm where shown.',
+  'Restart required': 'Restart required'
 }
