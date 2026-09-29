@@ -108,7 +108,15 @@ const AdvancedDnsSetting: React.FC<AdvancedDnsSettingProps> = ({
   const content = (
     <>
       <FeatureSettingsSection title={tr('DNS routing')}>
-        <SettingItem title={tr('Follow routing rules for connections')} divider>
+        <SettingItem
+          title={tr('Follow routing rules for connections')}
+          description={
+            proxyServerNameserver.length === 0
+              ? tr('Configure Proxy DNS servers first to enable this option.')
+              : undefined
+          }
+          divider
+        >
           <Switch
             size="sm"
             isSelected={respectRules}
@@ -124,6 +132,9 @@ const AdvancedDnsSetting: React.FC<AdvancedDnsSettingProps> = ({
         </SettingItem>
         <DnsServerList
           title={tr('Direct-connection DNS servers')}
+          description={tr(
+            'Resolves domains for direct connections. Domain policies can take precedence when enabled below.'
+          )}
           items={directNameserver}
           onChange={onDirectNameserverChange}
           onErrorChange={setDirectNameserverError}
@@ -152,6 +163,9 @@ const AdvancedDnsSetting: React.FC<AdvancedDnsSettingProps> = ({
         </SettingItem>
         <DnsServerList
           title={tr('Proxy DNS servers')}
+          description={tr(
+            'Resolves proxy server hostnames so Mihomo can establish proxy connections.'
+          )}
           items={proxyServerNameserver}
           onChange={onProxyNameserverChange}
           onErrorChange={setProxyNameserverError}

@@ -49,6 +49,7 @@ const ValidatedInput: React.FC<ValidatedInputProps> = ({
 
 interface EditableListProps {
   title?: string
+  description?: string
   items:
     string[] | Record<string, string | string[]> | Array<{ key: string; value: string | string[] }>
   onChange: (items: unknown) => void
@@ -71,6 +72,7 @@ interface EditableListProps {
 
 const EditableList: React.FC<EditableListProps> = ({
   title,
+  description,
   items = [],
   onChange,
   placeholder = '',
@@ -173,6 +175,7 @@ const EditableList: React.FC<EditableListProps> = ({
         )}
       >
         {title && <h4 className="text-base font-medium">{title}</h4>}
+        {description && <p className="text-xs leading-5 text-muted">{description}</p>}
         {isKeyValueLayout && part1Label && part2Label ? (
           <div className="editable-list-key-value__header text-xs font-medium text-muted">
             <span>{part1Label}</span>

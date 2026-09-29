@@ -1668,5 +1668,24 @@ export const messages: Readonly<Record<string, string>> = {
   'Core source': '核心來源',
   'Update core': '更新核心',
   'Advanced runtime options': '進階執行選項',
-  'Working...': '處理中…'
+  'Working...': '處理中…',
+  'Configuration source': '設定來源',
+  'Off uses DNS settings from the subscription; it does not disable DNS. Changing this switch immediately restarts the core.':
+    '關閉時使用訂閱中的 DNS 設定，並非停用 DNS。切換此開關會立即重啟核心。',
+  'Subscription settings are in use. Enable override to edit the application settings below.':
+    '目前使用訂閱設定。開啟覆寫後可編輯下方的應用程式設定。',
+  'DNS preset': 'DNS 預設',
+  'Replaces the DNS server and routing values below, including fallback settings. Save to apply the preset.':
+    '取代下方的 DNS 伺服器與分流設定，包括備用 DNS 設定。按「儲存」才會套用。',
+  'Apply anti-pollution preset': '套用防污染預設',
+  'Resolves the hostnames of DNS servers, such as a DNS-over-HTTPS endpoint.':
+    '解析 DNS 伺服器本身的網域，例如 DNS-over-HTTPS 端點。',
+  'Resolves ordinary domain queries unless a domain-specific DNS policy applies.':
+    '處理一般網域查詢；若有符合的網域 DNS 策略，則依策略處理。',
+  'Configure Proxy DNS servers first to enable this option.':
+    '先設定代理伺服器 DNS，才能啟用此選項。',
+  'Resolves domains for direct connections. Domain policies can take precedence when enabled below.':
+    '解析直連流量的網域；開啟下方選項時，網域策略可以優先套用。',
+  'Resolves proxy server hostnames so Mihomo can establish proxy connections.':
+    '解析代理伺服器的網域，供 Mihomo 建立代理連線。'
 }

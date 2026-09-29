@@ -1,5 +1,5 @@
 import { tr } from '../../../../../shared/i18n'
-import { Switch, Tooltip } from '@heroui/react'
+import { Button, Switch, Tooltip } from '@heroui/react'
 import { KokoTextField } from '@renderer/components/base/koko-form'
 import { KokoSegmentedControl } from '@renderer/components/base/base-controls'
 import BasePage from '@renderer/components/base/base-page'
@@ -274,11 +274,17 @@ const DNS: React.FC<Props> = ({ embedded = false }) => {
     <>
       <FeatureSettingsPanelAction action={embedded ? saveButton : undefined} />
       <FeatureSettingsLayout isDirty={changed}>
-        <FeatureSettingsSection title={tr('DNS behavior')}>
-          <SettingItem title={tr('Override DNS settings')} divider>
+        <FeatureSettingsSection title={tr('Configuration source')}>
+          <SettingItem
+            title={tr('Override DNS settings')}
+            description={tr(
+              'Off uses DNS settings from the subscription; it does not disable DNS. Changing this switch immediately restarts the core.'
+            )}
+          >
             <Switch
               size="sm"
               isSelected={controlDns}
+              isDisabled={isSaving}
               onChange={async (value) => {
                 try {
                   await patchAppConfigOrThrow({ controlDns: value })
@@ -296,111 +302,96 @@ const DNS: React.FC<Props> = ({ embedded = false }) => {
               </Switch.Content>
             </Switch>
           </SettingItem>
-          <SettingItem title="IPv6" divider>
-            <Switch
-              size="sm"
-              isSelected={values.ipv6}
-              onChange={(v) => {
-                setValues({ ...values, ipv6: v })
-              }}
-            >
-              <Switch.Content>
-                <Switch.Control>
-                  <Switch.Thumb />
-                </Switch.Control>
-              </Switch.Content>
-            </Switch>
-          </SettingItem>
-          <SettingItem
-            title={tr('DNS policy')}
-            help={tr(
-              'Anti-pollution applies a curated preset. Custom keeps the DNS values below fully editable.'
-            )}
-            divider
-          >
-            <KokoSegmentedControl
-              ariaLabel={tr('DNS policy')}
-              selectedKey={isAntiPollutionPreset ? 'anti-pollution' : 'custom'}
-              options={[
-                { id: 'custom', label: tr('Custom') },
-                { id: 'anti-pollution', label: tr('Anti-pollution') }
-              ]}
-              onChange={(key) => {
-                if (key !== 'anti-pollution') return
-                setValues({
-                  ...values,
-                  ...antiPollutionDnsPreset,
-                  fallback: [],
-                  fallbackFilter: {},
-                  fallbackLazyQuery: false
-                })
-                setFakeIPFilterError(null)
-                setDefaultNameserverError(null)
-                setNameserverError(null)
-              }}
-            />
-          </SettingItem>
-          <SettingItem
-            title={tr('Domain mapping mode')}
-            help={tr(
-              'Fake IP improves domain-based routing. Real IP resolves normally. Remove mapping disables enhanced mapping.'
-            )}
-          >
-            <KokoSegmentedControl
-              ariaLabel={tr('Domain mapping mode')}
-              selectedKey={values.enhancedMode}
-              options={[
-                { id: 'fake-ip', label: tr('Fake IP') },
-                { id: 'redir-host', label: tr('Real IP') },
-                { id: 'normal', label: tr('Remove mapping') }
-              ]}
-              onChange={(key) => setValues({ ...values, enhancedMode: key as DnsMode })}
-            />
-          </SettingItem>
         </FeatureSettingsSection>
-
-        {values.enhancedMode === 'fake-ip' && (
-          <FeatureSettingsSection title={tr('Fake IP settings')}>
-            <SettingItem title={tr('Fake IP range (IPv4)')} divider>
-              <Tooltip delay={0} isOpen={!!fakeIPRangeError}>
-                <Tooltip.Trigger className="inline-flex w-full max-w-72">
-                  <KokoTextField
-                    controlWidth="full"
-                    inputClassName="font-mono"
-                    isInvalid={Boolean(fakeIPRangeError)}
-                    placeholder={tr('Example: 198.18.0.1/16')}
-                    value={values.fakeIPRange}
-                    onChangeValue={(v) => {
-                      setValues({ ...values, fakeIPRange: v })
-                      const r = isValidIPv4Cidr(v)
-                      setFakeIPRangeError(r.ok ? null : (r.error ?? tr('Invalid format')))
-                    }}
-                  />
-                </Tooltip.Trigger>
-                <Tooltip.Content
-                  className="bg-danger text-danger-foreground"
-                  placement="right"
-                  showArrow
-                  offset={15}
-                >
-                  {fakeIPRangeError}
-                </Tooltip.Content>
-              </Tooltip>
+        <fieldset disabled={!controlDns || isSaving} className="min-w-0 border-0 p-0 m-0">
+          {!controlDns && (
+            <p className="px-4 py-2 text-xs text-muted">
+              {tr(
+                'Subscription settings are in use. Enable override to edit the application settings below.'
+              )}
+            </p>
+          )}
+          <FeatureSettingsSection title={tr('DNS behavior')}>
+            <SettingItem title="IPv6" divider>
+              <Switch
+                size="sm"
+                isSelected={values.ipv6}
+                onChange={(v) => {
+                  setValues({ ...values, ipv6: v })
+                }}
+              >
+                <Switch.Content>
+                  <Switch.Control>
+                    <Switch.Thumb />
+                  </Switch.Control>
+                </Switch.Content>
+              </Switch>
             </SettingItem>
-            {values.ipv6 && (
-              <SettingItem title={tr('Fake IP range (IPv6)')} divider>
-                <Tooltip delay={0} isOpen={!!fakeIPRange6Error}>
+            <SettingItem
+              title={tr('DNS preset')}
+              description={tr(
+                'Replaces the DNS server and routing values below, including fallback settings. Save to apply the preset.'
+              )}
+              divider
+            >
+              <div className="flex flex-wrap items-center justify-end gap-2">
+                <span className="text-xs text-muted">
+                  {isAntiPollutionPreset ? tr('Anti-pollution') : tr('Custom')}
+                </span>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onPress={() => {
+                    setValues({
+                      ...values,
+                      ...antiPollutionDnsPreset,
+                      fallback: [],
+                      fallbackFilter: {},
+                      fallbackLazyQuery: false
+                    })
+                    setFakeIPFilterError(null)
+                    setDefaultNameserverError(null)
+                    setNameserverError(null)
+                  }}
+                >
+                  {tr('Apply anti-pollution preset')}
+                </Button>
+              </div>
+            </SettingItem>
+            <SettingItem
+              title={tr('Domain mapping mode')}
+              help={tr(
+                'Fake IP improves domain-based routing. Real IP resolves normally. Remove mapping disables enhanced mapping.'
+              )}
+            >
+              <KokoSegmentedControl
+                ariaLabel={tr('Domain mapping mode')}
+                selectedKey={values.enhancedMode}
+                options={[
+                  { id: 'fake-ip', label: tr('Fake IP') },
+                  { id: 'redir-host', label: tr('Real IP') },
+                  { id: 'normal', label: tr('Remove mapping') }
+                ]}
+                onChange={(key) => setValues({ ...values, enhancedMode: key as DnsMode })}
+              />
+            </SettingItem>
+          </FeatureSettingsSection>
+
+          {values.enhancedMode === 'fake-ip' && (
+            <FeatureSettingsSection title={tr('Fake IP settings')}>
+              <SettingItem title={tr('Fake IP range (IPv4)')} divider>
+                <Tooltip delay={0} isOpen={!!fakeIPRangeError}>
                   <Tooltip.Trigger className="inline-flex w-full max-w-72">
                     <KokoTextField
                       controlWidth="full"
                       inputClassName="font-mono"
-                      isInvalid={Boolean(fakeIPRange6Error)}
-                      placeholder={tr('Example: fc00::/18')}
-                      value={values.fakeIPRange6}
+                      isInvalid={Boolean(fakeIPRangeError)}
+                      placeholder={tr('Example: 198.18.0.1/16')}
+                      value={values.fakeIPRange}
                       onChangeValue={(v) => {
-                        setValues({ ...values, fakeIPRange6: v })
-                        const r = isValidIPv6Cidr(v)
-                        setFakeIPRange6Error(r.ok ? null : (r.error ?? tr('Invalid format')))
+                        setValues({ ...values, fakeIPRange: v })
+                        const r = isValidIPv4Cidr(v)
+                        setFakeIPRangeError(r.ok ? null : (r.error ?? tr('Invalid format')))
                       }}
                     />
                   </Tooltip.Trigger>
@@ -408,162 +399,198 @@ const DNS: React.FC<Props> = ({ embedded = false }) => {
                     className="bg-danger text-danger-foreground"
                     placement="right"
                     showArrow
-                    offset={10}
+                    offset={15}
                   >
-                    {fakeIPRange6Error}
+                    {fakeIPRangeError}
                   </Tooltip.Content>
                 </Tooltip>
               </SettingItem>
-            )}
-            <SettingItem title={tr('Fake-IP filter mode')} divider>
-              <KokoSegmentedControl
-                ariaLabel={tr('Fake-IP filter mode')}
-                selectedKey={values.fakeIPFilterMode}
-                options={[
-                  { id: 'blacklist', label: tr('Blacklist') },
-                  { id: 'whitelist', label: tr('Whitelist') },
-                  { id: 'rule', label: tr('Rules') }
-                ]}
-                onChange={(key) => {
-                  const fakeIPFilterMode = key as FilterMode
-                  setValues({ ...values, fakeIPFilterMode })
-                  const firstInvalid = values.fakeIPFilter.find((item) =>
-                    fakeIPFilterMode === 'rule' ? !item.trim() : !isValidDomainWildcard(item).ok
+              {values.ipv6 && (
+                <SettingItem title={tr('Fake IP range (IPv6)')} divider>
+                  <Tooltip delay={0} isOpen={!!fakeIPRange6Error}>
+                    <Tooltip.Trigger className="inline-flex w-full max-w-72">
+                      <KokoTextField
+                        controlWidth="full"
+                        inputClassName="font-mono"
+                        isInvalid={Boolean(fakeIPRange6Error)}
+                        placeholder={tr('Example: fc00::/18')}
+                        value={values.fakeIPRange6}
+                        onChangeValue={(v) => {
+                          setValues({ ...values, fakeIPRange6: v })
+                          const r = isValidIPv6Cidr(v)
+                          setFakeIPRange6Error(r.ok ? null : (r.error ?? tr('Invalid format')))
+                        }}
+                      />
+                    </Tooltip.Trigger>
+                    <Tooltip.Content
+                      className="bg-danger text-danger-foreground"
+                      placement="right"
+                      showArrow
+                      offset={10}
+                    >
+                      {fakeIPRange6Error}
+                    </Tooltip.Content>
+                  </Tooltip>
+                </SettingItem>
+              )}
+              <SettingItem title={tr('Fake-IP filter mode')} divider>
+                <KokoSegmentedControl
+                  ariaLabel={tr('Fake-IP filter mode')}
+                  selectedKey={values.fakeIPFilterMode}
+                  options={[
+                    { id: 'blacklist', label: tr('Blacklist') },
+                    { id: 'whitelist', label: tr('Whitelist') },
+                    { id: 'rule', label: tr('Rules') }
+                  ]}
+                  onChange={(key) => {
+                    const fakeIPFilterMode = key as FilterMode
+                    setValues({ ...values, fakeIPFilterMode })
+                    const firstInvalid = values.fakeIPFilter.find((item) =>
+                      fakeIPFilterMode === 'rule' ? !item.trim() : !isValidDomainWildcard(item).ok
+                    )
+                    setFakeIPFilterError(
+                      firstInvalid
+                        ? fakeIPFilterMode === 'rule'
+                          ? tr('Cannot be empty')
+                          : (isValidDomainWildcard(firstInvalid).error ?? tr('Invalid format'))
+                        : null
+                    )
+                  }}
+                />
+              </SettingItem>
+              <EditableList
+                title={tr('Fake IP filter')}
+                items={values.fakeIPFilter}
+                validate={(part) =>
+                  values.fakeIPFilterMode === 'rule'
+                    ? { ok: Boolean((part as string).trim()) }
+                    : isValidDomainWildcard(part as string)
+                }
+                onChange={(list) => {
+                  const arr = list as string[]
+                  setValues({ ...values, fakeIPFilter: arr })
+                  const firstInvalid = arr.find((f) =>
+                    values.fakeIPFilterMode === 'rule' ? !f.trim() : !isValidDomainWildcard(f).ok
                   )
                   setFakeIPFilterError(
                     firstInvalid
-                      ? fakeIPFilterMode === 'rule'
+                      ? values.fakeIPFilterMode === 'rule'
                         ? tr('Cannot be empty')
                         : (isValidDomainWildcard(firstInvalid).error ?? tr('Invalid format'))
                       : null
                   )
                 }}
+                placeholder={tr('Example: +.lan')}
+                inputClassName="font-mono"
+                newItemAppearance="subtle"
+                divider={false}
               />
-            </SettingItem>
+            </FeatureSettingsSection>
+          )}
+
+          <FeatureSettingsSection title={tr('DNS servers')}>
             <EditableList
-              title={tr('Fake IP filter')}
-              items={values.fakeIPFilter}
-              validate={(part) =>
-                values.fakeIPFilterMode === 'rule'
-                  ? { ok: Boolean((part as string).trim()) }
-                  : isValidDomainWildcard(part as string)
-              }
+              title={tr('Bootstrap DNS servers')}
+              description={tr(
+                'Resolves the hostnames of DNS servers, such as a DNS-over-HTTPS endpoint.'
+              )}
+              items={values.defaultNameserver}
+              validate={(part) => isValidDnsServer(part as string, true)}
               onChange={(list) => {
                 const arr = list as string[]
-                setValues({ ...values, fakeIPFilter: arr })
-                const firstInvalid = arr.find((f) =>
-                  values.fakeIPFilterMode === 'rule' ? !f.trim() : !isValidDomainWildcard(f).ok
-                )
-                setFakeIPFilterError(
+                setValues({ ...values, defaultNameserver: arr })
+                const firstInvalid = arr.find((f) => !isValidDnsServer(f, true).ok)
+                setDefaultNameserverError(
                   firstInvalid
-                    ? values.fakeIPFilterMode === 'rule'
-                      ? tr('Cannot be empty')
-                      : (isValidDomainWildcard(firstInvalid).error ?? tr('Invalid format'))
+                    ? (isValidDnsServer(firstInvalid, true).error ?? tr('Invalid format'))
                     : null
                 )
               }}
-              placeholder={tr('Example: +.lan')}
+              placeholder={tr('Example: 223.5.5.5')}
               inputClassName="font-mono"
               newItemAppearance="subtle"
+            />
+            <DnsServerList
+              title={tr('Default DNS servers')}
+              description={tr(
+                'Resolves ordinary domain queries unless a domain-specific DNS policy applies.'
+              )}
+              items={values.nameserver}
+              onChange={(arr) => {
+                setValues({ ...values, nameserver: arr })
+                const firstInvalid = arr.find((f) => !isValidDnsServer(f).ok)
+                setNameserverError(
+                  firstInvalid
+                    ? (isValidDnsServer(firstInvalid).error ?? tr('Invalid format'))
+                    : null
+                )
+              }}
+              onErrorChange={setNameserverError}
+              placeholder={tr('Example: https://dns.alidns.com/dns-query')}
               divider={false}
+              followRoutingRules={values.respectRules}
             />
           </FeatureSettingsSection>
-        )}
-
-        <FeatureSettingsSection title={tr('DNS servers')}>
-          <EditableList
-            title={tr('Bootstrap DNS servers')}
-            items={values.defaultNameserver}
-            validate={(part) => isValidDnsServer(part as string, true)}
-            onChange={(list) => {
-              const arr = list as string[]
-              setValues({ ...values, defaultNameserver: arr })
-              const firstInvalid = arr.find((f) => !isValidDnsServer(f, true).ok)
-              setDefaultNameserverError(
-                firstInvalid
-                  ? (isValidDnsServer(firstInvalid, true).error ?? tr('Invalid format'))
-                  : null
-              )
+          <AdvancedDnsSetting
+            key={draftRevision}
+            expandForSetting={advancedSetting}
+            respectRules={values.respectRules}
+            directNameserverFollowPolicy={values.directNameserverFollowPolicy}
+            preferH3={values.preferH3}
+            cacheAlgorithm={values.cacheAlgorithm}
+            directNameserver={values.directNameserver}
+            proxyServerNameserver={values.proxyServerNameserver}
+            fallback={values.fallback}
+            fallbackFilter={values.fallbackFilter}
+            fallbackLazyQuery={values.fallbackLazyQuery}
+            nameserverPolicy={values.nameserverPolicy}
+            proxyServerNameserverPolicy={values.proxyServerNameserverPolicy}
+            hosts={values.hosts}
+            useHosts={values.useHosts}
+            useSystemHosts={values.useSystemHosts}
+            onRespectRulesChange={(v) => {
+              setValues({
+                ...values,
+                respectRules: values.proxyServerNameserver.length === 0 ? false : v
+              })
             }}
-            placeholder={tr('Example: 223.5.5.5')}
-            inputClassName="font-mono"
-            newItemAppearance="subtle"
-          />
-          <DnsServerList
-            title={tr('Default DNS servers')}
-            items={values.nameserver}
-            onChange={(arr) => {
-              setValues({ ...values, nameserver: arr })
-              const firstInvalid = arr.find((f) => !isValidDnsServer(f).ok)
-              setNameserverError(
-                firstInvalid ? (isValidDnsServer(firstInvalid).error ?? tr('Invalid format')) : null
-              )
+            onDirectNameserverChange={(arr) => {
+              setValues({
+                ...values,
+                directNameserver: arr,
+                directNameserverFollowPolicy:
+                  arr.length === 0 ? false : values.directNameserverFollowPolicy
+              })
             }}
-            onErrorChange={setNameserverError}
-            placeholder={tr('Example: https://dns.alidns.com/dns-query')}
-            divider={false}
-            followRoutingRules={values.respectRules}
+            onDirectNameserverFollowPolicyChange={(v) =>
+              setValues({ ...values, directNameserverFollowPolicy: v })
+            }
+            onPreferH3Change={(v) => setValues({ ...values, preferH3: v })}
+            onCacheAlgorithmChange={(v) => setValues({ ...values, cacheAlgorithm: v })}
+            onProxyNameserverChange={(arr) => {
+              setValues({
+                ...values,
+                proxyServerNameserver: arr,
+                respectRules: arr.length === 0 ? false : values.respectRules,
+                proxyServerNameserverPolicy:
+                  arr.length === 0 ? {} : values.proxyServerNameserverPolicy
+              })
+            }}
+            onFallbackChange={(arr) => setValues({ ...values, fallback: arr })}
+            onFallbackFilterChange={(filter) => setValues({ ...values, fallbackFilter: filter })}
+            onFallbackLazyQueryChange={(v) => setValues({ ...values, fallbackLazyQuery: v })}
+            onNameserverPolicyChange={(newValue) => {
+              setValues({ ...values, nameserverPolicy: newValue })
+            }}
+            onProxyServerNameserverPolicyChange={(newValue) => {
+              setValues({ ...values, proxyServerNameserverPolicy: newValue })
+            }}
+            onUseSystemHostsChange={(v) => setValues({ ...values, useSystemHosts: v })}
+            onUseHostsChange={(v) => setValues({ ...values, useHosts: v })}
+            onHostsChange={(hostArr) => setValues({ ...values, hosts: hostArr })}
+            onErrorChange={setAdvancedDnsError}
           />
-        </FeatureSettingsSection>
-        <AdvancedDnsSetting
-          key={draftRevision}
-          expandForSetting={advancedSetting}
-          respectRules={values.respectRules}
-          directNameserverFollowPolicy={values.directNameserverFollowPolicy}
-          preferH3={values.preferH3}
-          cacheAlgorithm={values.cacheAlgorithm}
-          directNameserver={values.directNameserver}
-          proxyServerNameserver={values.proxyServerNameserver}
-          fallback={values.fallback}
-          fallbackFilter={values.fallbackFilter}
-          fallbackLazyQuery={values.fallbackLazyQuery}
-          nameserverPolicy={values.nameserverPolicy}
-          proxyServerNameserverPolicy={values.proxyServerNameserverPolicy}
-          hosts={values.hosts}
-          useHosts={values.useHosts}
-          useSystemHosts={values.useSystemHosts}
-          onRespectRulesChange={(v) => {
-            setValues({
-              ...values,
-              respectRules: values.proxyServerNameserver.length === 0 ? false : v
-            })
-          }}
-          onDirectNameserverChange={(arr) => {
-            setValues({
-              ...values,
-              directNameserver: arr,
-              directNameserverFollowPolicy:
-                arr.length === 0 ? false : values.directNameserverFollowPolicy
-            })
-          }}
-          onDirectNameserverFollowPolicyChange={(v) =>
-            setValues({ ...values, directNameserverFollowPolicy: v })
-          }
-          onPreferH3Change={(v) => setValues({ ...values, preferH3: v })}
-          onCacheAlgorithmChange={(v) => setValues({ ...values, cacheAlgorithm: v })}
-          onProxyNameserverChange={(arr) => {
-            setValues({
-              ...values,
-              proxyServerNameserver: arr,
-              respectRules: arr.length === 0 ? false : values.respectRules,
-              proxyServerNameserverPolicy:
-                arr.length === 0 ? {} : values.proxyServerNameserverPolicy
-            })
-          }}
-          onFallbackChange={(arr) => setValues({ ...values, fallback: arr })}
-          onFallbackFilterChange={(filter) => setValues({ ...values, fallbackFilter: filter })}
-          onFallbackLazyQueryChange={(v) => setValues({ ...values, fallbackLazyQuery: v })}
-          onNameserverPolicyChange={(newValue) => {
-            setValues({ ...values, nameserverPolicy: newValue })
-          }}
-          onProxyServerNameserverPolicyChange={(newValue) => {
-            setValues({ ...values, proxyServerNameserverPolicy: newValue })
-          }}
-          onUseSystemHostsChange={(v) => setValues({ ...values, useSystemHosts: v })}
-          onUseHostsChange={(v) => setValues({ ...values, useHosts: v })}
-          onHostsChange={(hostArr) => setValues({ ...values, hosts: hostArr })}
-          onErrorChange={setAdvancedDnsError}
-        />
+        </fieldset>
       </FeatureSettingsLayout>
     </>
   )

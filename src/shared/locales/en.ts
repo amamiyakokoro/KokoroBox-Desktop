@@ -1713,5 +1713,24 @@ export const messages: Readonly<Record<string, string>> = {
   'Core source': 'Core source',
   'Update core': 'Update core',
   'Advanced runtime options': 'Advanced runtime options',
-  'Working...': 'Working...'
+  'Working...': 'Working...',
+  'Configuration source': 'Configuration source',
+  'Off uses DNS settings from the subscription; it does not disable DNS. Changing this switch immediately restarts the core.':
+    'Off uses DNS settings from the subscription; it does not disable DNS. Changing this switch immediately restarts the core.',
+  'Subscription settings are in use. Enable override to edit the application settings below.':
+    'Subscription settings are in use. Enable override to edit the application settings below.',
+  'DNS preset': 'DNS preset',
+  'Replaces the DNS server and routing values below, including fallback settings. Save to apply the preset.':
+    'Replaces the DNS server and routing values below, including fallback settings. Save to apply the preset.',
+  'Apply anti-pollution preset': 'Apply anti-pollution preset',
+  'Resolves the hostnames of DNS servers, such as a DNS-over-HTTPS endpoint.':
+    'Resolves the hostnames of DNS servers, such as a DNS-over-HTTPS endpoint.',
+  'Resolves ordinary domain queries unless a domain-specific DNS policy applies.':
+    'Resolves ordinary domain queries unless a domain-specific DNS policy applies.',
+  'Configure Proxy DNS servers first to enable this option.':
+    'Configure Proxy DNS servers first to enable this option.',
+  'Resolves domains for direct connections. Domain policies can take precedence when enabled below.':
+    'Resolves domains for direct connections. Domain policies can take precedence when enabled below.',
+  'Resolves proxy server hostnames so Mihomo can establish proxy connections.':
+    'Resolves proxy server hostnames so Mihomo can establish proxy connections.'
 }

@@ -12,6 +12,7 @@ import { MdDeleteForever } from 'react-icons/md'
 
 interface DnsServerListProps {
   title: string
+  description?: string
   items: string[]
   onChange: (items: string[]) => void
   placeholder: string
@@ -28,6 +29,7 @@ const connectionChoices = [
 
 const DnsServerList: React.FC<DnsServerListProps> = ({
   title,
+  description,
   items,
   onChange,
   placeholder,
@@ -60,6 +62,7 @@ const DnsServerList: React.FC<DnsServerListProps> = ({
   return (
     <div className={cn('dns-server-list min-w-0', divider && 'border-b border-separator pb-4')}>
       <h4 className="mb-2 text-base font-medium">{title}</h4>
+      {description && <p className="mb-2 text-xs leading-5 text-muted">{description}</p>}
       <p className="mb-3 text-xs text-muted">
         {followRoutingRules
           ? tr('DNS connections follow the global routing rules.')
