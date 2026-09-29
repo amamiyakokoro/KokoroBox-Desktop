@@ -9,7 +9,6 @@ import {
   licenseProjectForDocument,
   type AboutInfo
 } from '../../../../shared/about'
-import SettingCard from '../base/base-setting-card'
 import SettingItem from '../base/base-setting-item'
 import Actions from './actions'
 import { LicenseDocument } from './license-document'
@@ -251,32 +250,37 @@ export default function AboutSettings() {
       <Actions
         sections={['version', 'updates']}
         versionDetails={
-          <SettingItem title={tr('Application license')} contentAlign="end" divider>
-            <Button
-              size="sm"
-              variant="tertiary"
-              aria-label={tr('Application license')}
-              onPress={() => setApplicationLicenseOpen(true)}
-            >
-              GPL-3.0
-            </Button>
-          </SettingItem>
+          <>
+            <SettingItem title={tr('Application license')} contentAlign="end" divider>
+              <Button
+                size="sm"
+                variant="tertiary"
+                aria-label={tr('Application license')}
+                onPress={() => setApplicationLicenseOpen(true)}
+              >
+                GPL-3.0
+              </Button>
+            </SettingItem>
+            {entries.map(([id, title], index) => (
+              <SettingItem
+                key={id}
+                title={title}
+                contentAlign="end"
+                divider={index < entries.length - 1}
+              >
+                <Button
+                  size="sm"
+                  variant="tertiary"
+                  aria-label={title}
+                  onPress={() => setSection(id)}
+                >
+                  {tr('Open')}
+                </Button>
+              </SettingItem>
+            ))}
+          </>
         }
       />
-      <SettingCard>
-        {entries.map(([id, title], index) => (
-          <SettingItem
-            key={id}
-            title={title}
-            contentAlign="end"
-            divider={index < entries.length - 1}
-          >
-            <Button size="sm" variant="tertiary" aria-label={title} onPress={() => setSection(id)}>
-              {tr('Open')}
-            </Button>
-          </SettingItem>
-        ))}
-      </SettingCard>
       {section && <AboutDetailsDialog section={section} onClose={() => setSection(undefined)} />}
       {applicationLicenseOpen && (
         <LicenseDialog
