@@ -4,6 +4,7 @@ import { KokoSelect } from '../base/koko-form'
 import { KokoSegmentedControl } from '../base/base-controls'
 import SettingCard from '../base/base-setting-card'
 import SettingItem from '../base/base-setting-item'
+import SettingsApplyNotice from '../base/base-settings-apply-notice'
 import PermissionModal from '../mihomo/permission-modal'
 import ServiceModal from '../mihomo/service-modal'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
@@ -181,6 +182,7 @@ const CoreRuntimeConfig: React.FC<Props> = ({
       )}
       {sections.includes('runtime') && (
         <SettingCard header={sectionHeadings.runtime === false ? undefined : tr('Core runtime')}>
+          <SettingsApplyNotice mode="restart-core" />
           <SettingItem
             contentAlign="end"
             title={tr('Core version')}

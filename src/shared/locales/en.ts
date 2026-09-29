@@ -1701,5 +1701,13 @@ export const messages: Readonly<Record<string, string>> = {
   'Anti-pollution applies a curated preset. Custom keeps the DNS values below fully editable.':
     'Anti-pollution applies a curated preset. Custom keeps the DNS values below fully editable.',
   'Fake IP improves domain-based routing. Real IP resolves normally. Remove mapping disables enhanced mapping.':
-    'Fake IP improves domain-based routing. Real IP resolves normally. Remove mapping disables enhanced mapping.'
+    'Fake IP improves domain-based routing. Real IP resolves normally. Remove mapping disables enhanced mapping.',
+  'Changes are saved automatically, except fields with a Save button.':
+    'Changes are saved automatically, except fields with a Save button.',
+  'Changes are saved immediately and restart the core.':
+    'Changes are saved immediately and restart the core.',
+  'Save to apply changes to system proxy settings.':
+    'Save to apply changes to system proxy settings.',
+  'Save to apply changes and restart the core. Connections may be interrupted.':
+    'Save to apply changes and restart the core. Connections may be interrupted.'
 }

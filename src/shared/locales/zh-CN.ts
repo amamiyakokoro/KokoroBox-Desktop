@@ -1653,5 +1653,11 @@ export const messages: Readonly<Record<string, string>> = {
   'Anti-pollution applies a curated preset. Custom keeps the DNS values below fully editable.':
     '防污染模式会应用整理过的预设值；自定义模式则保留下方 DNS 设置的完整编辑能力。',
   'Fake IP improves domain-based routing. Real IP resolves normally. Remove mapping disables enhanced mapping.':
-    'Fake IP 可增强域名分流；真实 IP 使用常规解析；移除映射会停用增强映射。'
+    'Fake IP 可增强域名分流；真实 IP 使用常规解析；移除映射会停用增强映射。',
+  'Changes are saved automatically, except fields with a Save button.':
+    '除有“保存”按钮的字段外，更改会自动保存。',
+  'Changes are saved immediately and restart the core.': '更改会立即保存并重启核心。',
+  'Save to apply changes to system proxy settings.': '点击“保存”应用系统代理设置更改。',
+  'Save to apply changes and restart the core. Connections may be interrupted.':
+    '点击“保存”应用更改并重启核心，连接可能暂时中断。'
 }

@@ -202,7 +202,7 @@ const Sysproxy: React.FC<Props> = ({ embedded = false }) => {
         />
       )}
       <FeatureSettingsPanelAction action={embedded ? saveButton : undefined} />
-      <FeatureSettingsLayout>
+      <FeatureSettingsLayout applyMode="save" isDirty={changed}>
         <FeatureSettingsSection title={tr('Proxy configuration')}>
           {(values.mode === 'manual' || (platform === 'linux' && values.terminalProxy)) && (
             <SettingItem

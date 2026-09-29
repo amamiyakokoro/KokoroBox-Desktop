@@ -130,7 +130,7 @@ const Tun: React.FC<Props> = ({ embedded = false }) => {
   const content = (
     <>
       <FeatureSettingsPanelAction action={embedded ? saveButton : undefined} />
-      <FeatureSettingsLayout>
+      <FeatureSettingsLayout isDirty={changed}>
         {(platform === 'win32' || platform === 'darwin') && (
           <FeatureSettingsSection title={tr('Platform integration')}>
             {platform === 'win32' && (

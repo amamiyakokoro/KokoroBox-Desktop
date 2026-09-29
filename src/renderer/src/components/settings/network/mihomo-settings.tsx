@@ -102,7 +102,7 @@ const Mihomo: React.FC<Props> = ({ embedded = false }) => {
   const content = (
     <>
       <FeatureSettingsPanelAction action={embedded ? saveButton : undefined} />
-      <FeatureSettingsLayout>
+      <FeatureSettingsLayout isDirty={isDirty}>
         <PortSetting
           config={values}
           onChange={stageChange}

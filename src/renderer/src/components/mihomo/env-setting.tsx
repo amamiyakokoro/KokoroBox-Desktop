@@ -3,6 +3,7 @@ import React, { useState } from 'react'
 import { Switch } from '@heroui/react'
 import SettingCard from '../base/base-setting-card'
 import SettingItem from '../base/base-setting-item'
+import SettingsApplyNotice from '../base/base-settings-apply-notice'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { restartCore } from '@renderer/utils/ipc'
 import EditableList from '../base/base-list-editor'
@@ -33,6 +34,7 @@ const EnvSetting: React.FC = () => {
 
   return (
     <SettingCard>
+      <SettingsApplyNotice mode="restart-core" />
       <SettingItem contentAlign="end" title={tr('Disable system CAs')} divider>
         <Switch
           size="sm"

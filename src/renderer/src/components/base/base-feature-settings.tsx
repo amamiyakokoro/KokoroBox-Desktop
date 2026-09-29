@@ -4,9 +4,12 @@ import React, { type ReactNode } from 'react'
 import { SettingCardModeProvider } from './base-setting-card'
 import SettingsPanelAction from './base-settings-panel-action'
 import SettingsSection from './base-settings-section'
+import SettingsApplyNotice, { type SettingsApplyMode } from './base-settings-apply-notice'
 
 interface FeatureSettingsLayoutProps {
   children: ReactNode
+  applyMode?: SettingsApplyMode
+  isDirty?: boolean
 }
 
 interface FeatureSettingsSectionProps {
@@ -63,9 +66,16 @@ export const FeatureSettingsSection: React.FC<FeatureSettingsSectionProps> = ({
   </SettingsSection>
 )
 
-const FeatureSettingsLayout: React.FC<FeatureSettingsLayoutProps> = ({ children }) => (
+const FeatureSettingsLayout: React.FC<FeatureSettingsLayoutProps> = ({
+  children,
+  applyMode = 'save-restart-core',
+  isDirty = false
+}) => (
   <SettingCardModeProvider value={false}>
-    <div className="feature-settings-layout mx-auto w-full max-w-[960px] pb-4 pt-1">{children}</div>
+    <div className="feature-settings-layout mx-auto w-full max-w-[960px] pb-4 pt-1">
+      <SettingsApplyNotice mode={applyMode} isDirty={isDirty} />
+      {children}
+    </div>
   </SettingCardModeProvider>
 )
 
