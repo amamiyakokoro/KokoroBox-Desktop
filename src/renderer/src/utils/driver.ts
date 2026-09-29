@@ -65,8 +65,9 @@ export async function createDriver(navigate: NavigateFunction): Promise<Driver> 
       popover: {
         title: tr('Welcome to KokoroBox'),
         description: tr(
-          'This interactive tour introduces the app. If you already know your way around, close it using the button at the top right. You can reopen the tour from settings at any time.'
+          'Learn how to add a subscription and enable the proxy. You can close this tour and reopen it from settings at any time.'
         ),
+        showButtons: ['next', 'close'],
         align: 'center'
       }
     },
@@ -240,9 +241,12 @@ export async function createDriver(navigate: NavigateFunction): Promise<Driver> 
     prevBtnText: tr('Back'),
     doneBtnText: tr('Done'),
     progressText: '{{current}} / {{total}}',
-    overlayOpacity: 0.9,
+    overlayOpacity: 0.55,
+    duration: 180,
     disableActiveInteraction: true,
-    animate: document.documentElement.dataset.reduceMotion !== 'true',
+    animate:
+      document.documentElement.dataset.reduceMotion !== 'true' &&
+      !window.matchMedia('(prefers-reduced-motion: reduce)').matches,
     steps: steps.map(({ route: _route, ...step }) => ({
       ...step,
       element:

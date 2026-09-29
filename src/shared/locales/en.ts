@@ -1828,5 +1828,8 @@ export const messages: Readonly<Record<string, string>> = {
   'Applying changes saves them and restarts the core. Use Save or Confirm where shown.':
     'Applying changes saves them and restarts the core. Use Save or Confirm where shown.',
   'Restart required': 'Restart required',
-  'Confirm to apply changes and restart the core.': 'Confirm to apply changes and restart the core.'
+  'Confirm to apply changes and restart the core.':
+    'Confirm to apply changes and restart the core.',
+  'Learn how to add a subscription and enable the proxy. You can close this tour and reopen it from settings at any time.':
+    'Learn how to add a subscription and enable the proxy. You can close this tour and reopen it from settings at any time.'
 }

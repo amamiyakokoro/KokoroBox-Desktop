@@ -1782,5 +1782,7 @@ export const messages: Readonly<Record<string, string>> = {
   'Applying changes saves them and restarts the core. Use Save or Confirm where shown.':
     '套用變更會儲存並重啟核心；若有「儲存」或「確認」按鈕，請按下後套用。',
   'Restart required': '需要重新啟動',
-  'Confirm to apply changes and restart the core.': '按「確認」套用變更並重啟核心。'
+  'Confirm to apply changes and restart the core.': '按「確認」套用變更並重啟核心。',
+  'Learn how to add a subscription and enable the proxy. You can close this tour and reopen it from settings at any time.':
+    '了解如何新增訂閱和啟用代理。你可以隨時關閉引導，並從設定中重新開啟。'
 }

@@ -1777,5 +1777,7 @@ export const messages: Readonly<Record<string, string>> = {
   'Applying changes saves them and restarts the core. Use Save or Confirm where shown.':
     '应用更改会保存并重启核心；若有“保存”或“确认”按钮，请点击后应用。',
   'Restart required': '需要重新启动',
-  'Confirm to apply changes and restart the core.': '点击“确认”应用更改并重启核心。'
+  'Confirm to apply changes and restart the core.': '点击“确认”应用更改并重启核心。',
+  'Learn how to add a subscription and enable the proxy. You can close this tour and reopen it from settings at any time.':
+    '了解如何添加订阅和启用代理。你可以随时关闭引导，并从设置中重新打开。'
 }
