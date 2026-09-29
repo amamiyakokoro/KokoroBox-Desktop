@@ -118,7 +118,7 @@ const AppRoutingCard: React.FC<Props> = ({ iconOnly = false }) => {
     >
       <SiderStatusCard
         icon={<MdOutlineAppShortcut />}
-        title={tr('Application routing')}
+        title={tr('App routing')}
         metadata={
           <div className="flex min-w-0 flex-nowrap items-center gap-1.5 whitespace-nowrap text-xs leading-4">
             <span className="shrink-0 whitespace-nowrap text-muted">{applicationCountLabel}</span>
