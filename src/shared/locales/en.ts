@@ -1763,5 +1763,13 @@ export const messages: Readonly<Record<string, string>> = {
   'Controls which browser origins may call the management API. It does not control proxy clients.':
     'Controls which browser origins may call the management API. It does not control proxy clients.',
   'Enter complete origins such as https://example.com. An empty list allows all origins.':
-    'Enter complete origins such as https://example.com. An empty list allows all origins.'
+    'Enter complete origins such as https://example.com. An empty list allows all origins.',
+  'Publishes runtime configuration using the GitHub API token above. Use ZIP backups to preserve the full application setup.':
+    'Publishes runtime configuration using the GitHub API token above. Use ZIP backups to preserve the full application setup.',
+  'Replace key pair': 'Replace key pair',
+  'Generate key pair': 'Generate key pair',
+  'Replacing the key pair immediately replaces the stored keys. Keep the old private key to decrypt older configuration.':
+    'Replacing the key pair immediately replaces the stored keys. Keep the old private key to decrypt older configuration.',
+  'URL, directory and username are saved automatically. Save a changed password explicitly, or use a backup action to save it and continue.':
+    'URL, directory and username are saved automatically. Save a changed password explicitly, or use a backup action to save it and continue.'
 }

@@ -205,7 +205,12 @@ const SubscriptionIntegrationSettings: React.FC<Props> = ({
       )}
 
       {hasGistSection && (
-        <SettingCard header={tr('Gist synchronization')}>
+        <SettingCard
+          header={tr('Gist synchronization')}
+          description={tr(
+            'Publishes runtime configuration using the GitHub API token above. Use ZIP backups to preserve the full application setup.'
+          )}
+        >
           <SettingItem
             contentAlign="end"
             title={tr('Sync runtime configuration to Gist')}
@@ -319,10 +324,10 @@ const SubscriptionIntegrationSettings: React.FC<Props> = ({
                     title={tr('Gist age private key')}
                     description={`${tr('Required to decrypt synchronized configuration. Keep this key private.')} ${tr('Back up this key separately. New WebDAV backups do not include it.')}`}
                   >
-                    <div className="flex w-full items-center gap-2">
-                      {gistAgeIdentityConfigured && !gistAgeIdentityDraft && (
-                        <span className="shrink-0 text-xs text-muted">{tr('Configured')}</span>
-                      )}
+                    <div className="flex w-full min-w-0 flex-col gap-2">
+                      <span className="text-xs text-muted" role="status">
+                        {gistAgeIdentityConfigured ? tr('Configured') : tr('Not configured')}
+                      </span>
                       <KokoTextField
                         aria-label={tr('Gist age private key')}
                         className="min-w-0 flex-1"
@@ -333,16 +338,6 @@ const SubscriptionIntegrationSettings: React.FC<Props> = ({
                         onChangeValue={setGistAgeIdentityDraft}
                         suffix={
                           <div className="flex items-center gap-1">
-                            <Button
-                              aria-label={tr('Generate Gist age private key')}
-                              isIconOnly
-                              size="sm"
-                              variant="ghost"
-                              isDisabled={gistAgeIdentitySaving}
-                              onPress={handleGenerateGistAgeKeyPair}
-                            >
-                              <LuRefreshCw className="text-lg" />
-                            </Button>
                             <Button
                               aria-label={tr('Copy Gist age private key')}
                               isIconOnly
@@ -372,22 +367,42 @@ const SubscriptionIntegrationSettings: React.FC<Props> = ({
                           </div>
                         }
                       />
-                      <Button
-                        size="sm"
-                        isDisabled={!gistAgeIdentityDraft.trim() || gistAgeIdentitySaving}
-                        onPress={() => void handleSaveGistAgeIdentity(gistAgeIdentityDraft)}
-                      >
-                        {tr('Save')}
-                      </Button>
-                      {gistAgeIdentityConfigured && (
+                      <div className="flex flex-wrap items-center justify-end gap-2">
                         <Button
                           size="sm"
-                          variant="ghost"
+                          variant="secondary"
                           isDisabled={gistAgeIdentitySaving}
-                          onPress={() => void handleSaveGistAgeIdentity('')}
+                          onPress={handleGenerateGistAgeKeyPair}
                         >
-                          {tr('Clear field')}
+                          <LuRefreshCw aria-hidden="true" />
+                          {gistAgeIdentityConfigured
+                            ? tr('Replace key pair')
+                            : tr('Generate key pair')}
                         </Button>
+                        <Button
+                          size="sm"
+                          isDisabled={!gistAgeIdentityDraft.trim() || gistAgeIdentitySaving}
+                          onPress={() => void handleSaveGistAgeIdentity(gistAgeIdentityDraft)}
+                        >
+                          {tr('Save')}
+                        </Button>
+                        {gistAgeIdentityConfigured && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            isDisabled={gistAgeIdentitySaving}
+                            onPress={() => void handleSaveGistAgeIdentity('')}
+                          >
+                            {tr('Clear field')}
+                          </Button>
+                        )}
+                      </div>
+                      {gistAgeIdentityConfigured && (
+                        <p className="text-xs leading-5 text-muted">
+                          {tr(
+                            'Replacing the key pair immediately replaces the stored keys. Keep the old private key to decrypt older configuration.'
+                          )}
+                        </p>
                       )}
                     </div>
                   </SettingItem>

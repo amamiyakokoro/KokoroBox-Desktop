@@ -168,6 +168,11 @@ const WebdavConfig: React.FC = () => {
         contentClassName="py-3"
       >
         <div className="@container">
+          <p className="mb-3 text-xs leading-5 text-muted">
+            {tr(
+              'URL, directory and username are saved automatically. Save a changed password explicitly, or use a backup action to save it and continue.'
+            )}
+          </p>
           <div className="grid grid-cols-1 gap-3 @min-[32rem]:grid-cols-2">
             <div
               className="@min-[32rem]:col-span-2"

@@ -1713,5 +1713,13 @@ export const messages: Readonly<Record<string, string>> = {
   'Controls which browser origins may call the management API. It does not control proxy clients.':
     '控制哪些浏览器来源可以调用管理 API，不影响代理客户端。',
   'Enter complete origins such as https://example.com. An empty list allows all origins.':
-    '输入完整来源，例如 https://example.com。清空列表表示允许所有来源。'
+    '输入完整来源，例如 https://example.com。清空列表表示允许所有来源。',
+  'Publishes runtime configuration using the GitHub API token above. Use ZIP backups to preserve the full application setup.':
+    '使用上方的 GitHub API Token 发布运行配置；完整的应用设置请使用 ZIP 备份保存。',
+  'Replace key pair': '替换密钥对',
+  'Generate key pair': '生成密钥对',
+  'Replacing the key pair immediately replaces the stored keys. Keep the old private key to decrypt older configuration.':
+    '替换密钥对会立即替换已保存的密钥；请保留旧私钥，以便解密旧配置。',
+  'URL, directory and username are saved automatically. Save a changed password explicitly, or use a backup action to save it and continue.':
+    '网址、目录和用户名会自动保存。更改密码后请点击“保存”；执行备份操作也会先保存再继续。'
 }
