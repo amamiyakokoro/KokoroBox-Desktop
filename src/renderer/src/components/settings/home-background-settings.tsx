@@ -199,47 +199,43 @@ export default function HomeBackgroundSettings() {
       </SettingCard>
       {choice !== 'none' && (
         <SettingCard header={tr('Image display')}>
-          {choice !== 'none' && (
-            <>
-              <SettingItem title={tr('Horizontal alignment')} divider>
-                <KokoSegmentedControl
-                  ariaLabel={tr('Horizontal alignment')}
-                  selectedKey={resolved.position.split(' ')[0]}
-                  options={[
-                    { id: 'left', label: tr('Left') },
-                    { id: 'center', label: tr('Center') },
-                    { id: 'right', label: tr('Right') }
-                  ]}
-                  onChange={(alignment) => {
-                    const value = alignment as HomeBackgroundAlignment
-                    if (choice === 'custom') patchBackground({ alignment: value })
-                    else patchBuiltInAppearance({ alignment: value })
-                  }}
-                />
-              </SettingItem>
-              <SettingItem
-                title={tr('Scale image')}
-                description={tr(
-                  'Scaled adapts the image to the available space. Original size displays it without resizing.'
-                )}
-                divider
-              >
-                <KokoSegmentedControl
-                  ariaLabel={tr('Scale image')}
-                  selectedKey={resolved.scale ? 'scaled' : 'original'}
-                  options={[
-                    { id: 'scaled', label: tr('Scaled') },
-                    { id: 'original', label: tr('Original size') }
-                  ]}
-                  onChange={(size) => {
-                    const scale = size === 'scaled'
-                    if (choice === 'custom') patchBackground({ scale })
-                    else patchBuiltInAppearance({ scale })
-                  }}
-                />
-              </SettingItem>
-            </>
-          )}
+          <SettingItem title={tr('Horizontal alignment')} divider>
+            <KokoSegmentedControl
+              ariaLabel={tr('Horizontal alignment')}
+              selectedKey={resolved.position.split(' ')[0]}
+              options={[
+                { id: 'left', label: tr('Left') },
+                { id: 'center', label: tr('Center') },
+                { id: 'right', label: tr('Right') }
+              ]}
+              onChange={(alignment) => {
+                const value = alignment as HomeBackgroundAlignment
+                if (choice === 'custom') patchBackground({ alignment: value })
+                else patchBuiltInAppearance({ alignment: value })
+              }}
+            />
+          </SettingItem>
+          <SettingItem
+            title={tr('Scale image')}
+            description={tr(
+              'Scaled adapts the image to the available space. Original size displays it without resizing.'
+            )}
+            divider
+          >
+            <KokoSegmentedControl
+              ariaLabel={tr('Scale image')}
+              selectedKey={resolved.scale ? 'scaled' : 'original'}
+              options={[
+                { id: 'scaled', label: tr('Scaled') },
+                { id: 'original', label: tr('Original size') }
+              ]}
+              onChange={(size) => {
+                const scale = size === 'scaled'
+                if (choice === 'custom') patchBackground({ scale })
+                else patchBuiltInAppearance({ scale })
+              }}
+            />
+          </SettingItem>
           {choice === 'custom' && background && (
             <>
               {resolved.scale && (
