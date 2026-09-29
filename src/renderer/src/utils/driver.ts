@@ -244,6 +244,7 @@ export async function createDriver(navigate: NavigateFunction): Promise<Driver> 
 
 export async function startTour(navigate: NavigateFunction): Promise<void> {
   const d = await createDriver(navigate)
+  await navigate('/', { flushSync: true })
   d.drive()
 }
 
