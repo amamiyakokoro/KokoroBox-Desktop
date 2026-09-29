@@ -268,9 +268,9 @@ const Logs: React.FC = () => {
               ariaLabel={tr('Log source')}
               density="toolbar"
               options={[
-                { id: 'core', label: tr('Core logs') },
-                { id: 'routing', label: tr('Application routing logs') },
-                { id: 'service', label: tr('Service logs') }
+                { id: 'core', label: tr('Core') },
+                { id: 'routing', label: tr('App routing') },
+                { id: 'service', label: tr('Service') }
               ]}
               selectedKey={tab}
               variant="secondary"
@@ -281,7 +281,7 @@ const Logs: React.FC = () => {
               }}
             />
             <KokoSearchField
-              className="min-w-36 flex-1"
+              className="min-w-20 flex-1 shrink"
               value={filter}
               aria-label={tr('Filter')}
               placeholder={tr('Filter')}

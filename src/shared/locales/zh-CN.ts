@@ -909,6 +909,8 @@ export const messages: Readonly<Record<string, string>> = {
   'Real time': '实时',
   'Live logs': '实时日志',
   'Log source': '日志来源',
+  'App routing': '应用分流',
+  Service: '服务',
   'Core logs': '内核日志',
   'Service logs': '服务日志',
   'No service logs yet.': '暂无服务日志。',

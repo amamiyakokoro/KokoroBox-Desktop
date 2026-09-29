@@ -913,6 +913,8 @@ export const messages: Readonly<Record<string, string>> = {
   'Real time': '即時',
   'Live logs': '即時日誌',
   'Log source': '日誌來源',
+  'App routing': '程式分流',
+  Service: '服務',
   'Core logs': '核心日誌',
   'Service logs': '服務日誌',
   'No service logs yet.': '尚無服務日誌。',

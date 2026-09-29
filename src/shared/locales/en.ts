@@ -943,6 +943,8 @@ export const messages: Readonly<Record<string, string>> = {
   'Real time': 'Real time',
   'Live logs': 'Live logs',
   'Log source': 'Log source',
+  'App routing': 'App routing',
+  Service: 'Service',
   'Core logs': 'Core logs',
   'Service logs': 'Service logs',
   'No service logs yet.': 'No service logs yet.',
