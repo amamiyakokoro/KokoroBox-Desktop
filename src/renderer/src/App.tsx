@@ -57,6 +57,7 @@ const App: React.FC = () => {
   const location = useLocation()
   const lastNonSettingsRouteRef = useRef('/')
   const settingsFocusMode = isSettingsFocusRoute(location.pathname)
+  const tourStartingRef = useRef(false)
   const { hasUnsavedChanges, confirmUnsavedChanges } = useUnsavedChanges()
   useDeferredRoutePreload()
 
@@ -106,14 +107,17 @@ const App: React.FC = () => {
   }, [siderWidthValue, resizing])
 
   useEffect(() => {
-    const tourShown = window.localStorage.getItem('tourShown')
-    if (!tourShown) {
-      window.localStorage.setItem('tourShown', 'true')
-      import('@renderer/utils/driver').then(({ startTour }) => {
-        startTour(navigate)
+    if (!appConfig || tourStartingRef.current || window.localStorage.getItem('tourShown')) return
+    tourStartingRef.current = true
+    void import('@renderer/utils/driver')
+      .then(({ startTour }) => startTour(navigate))
+      .then((started) => {
+        if (!started) tourStartingRef.current = false
       })
-    }
-  }, [])
+      .catch(() => {
+        tourStartingRef.current = false
+      })
+  }, [appConfig, navigate])
 
   useEffect(() => {
     void setNativeTheme(appTheme)

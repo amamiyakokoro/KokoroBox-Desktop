@@ -255,7 +255,7 @@ test('guided tour introduces Kokoro settings before profile import', () => {
   assert.ok(kokoroCardStep >= 0)
   assert.ok(kokoroPageStep > kokoroCardStep)
   assert.ok(profileStep > kokoroPageStep)
-  assert.match(tour.slice(kokoroCardStep, kokoroPageStep), /navigate\('\/kokoro'\)/)
+  assert.match(tour.slice(kokoroPageStep, profileStep), /route: '\/kokoro'/)
   const kokoroPage = readFileSync(
     'src/renderer/src/components/profiles/kokoro-subscription-modal.tsx',
     'utf8'

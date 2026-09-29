@@ -1,5 +1,5 @@
 import { tr } from '../../../../shared/i18n'
-import { Button } from '@heroui/react'
+import { Button, cn } from '@heroui/react'
 import React, { type ReactNode } from 'react'
 import { SettingCardModeProvider } from './base-setting-card'
 import SettingsPanelAction from './base-settings-panel-action'
@@ -8,6 +8,7 @@ import SettingsApplyNotice, { type SettingsApplyMode } from './base-settings-app
 
 interface FeatureSettingsLayoutProps {
   children: ReactNode
+  className?: string
   applyMode?: SettingsApplyMode
   isDirty?: boolean
 }
@@ -68,11 +69,14 @@ export const FeatureSettingsSection: React.FC<FeatureSettingsSectionProps> = ({
 
 const FeatureSettingsLayout: React.FC<FeatureSettingsLayoutProps> = ({
   children,
+  className,
   applyMode = 'save-restart-core',
   isDirty = false
 }) => (
   <SettingCardModeProvider value={false}>
-    <div className="feature-settings-layout mx-auto w-full max-w-[960px] pb-4 pt-1">
+    <div
+      className={cn('feature-settings-layout mx-auto w-full max-w-[960px] pb-4 pt-1', className)}
+    >
       <SettingsApplyNotice mode={applyMode} isDirty={isDirty} />
       {children}
     </div>

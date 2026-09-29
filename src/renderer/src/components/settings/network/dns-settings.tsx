@@ -273,7 +273,7 @@ const DNS: React.FC<Props> = ({ embedded = false }) => {
   const content = (
     <>
       <FeatureSettingsPanelAction action={embedded ? saveButton : undefined} />
-      <FeatureSettingsLayout isDirty={changed}>
+      <FeatureSettingsLayout className="dns-settings" isDirty={changed}>
         <FeatureSettingsSection title={tr('Configuration source')}>
           <SettingItem
             title={tr('Override DNS settings')}

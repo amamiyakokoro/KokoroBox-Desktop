@@ -130,7 +130,7 @@ const Tun: React.FC<Props> = ({ embedded = false }) => {
   const content = (
     <>
       <FeatureSettingsPanelAction action={embedded ? saveButton : undefined} />
-      <FeatureSettingsLayout isDirty={changed}>
+      <FeatureSettingsLayout className="tun-settings" isDirty={changed}>
         {platform === 'darwin' && (
           <p className="px-4 py-2 text-xs text-muted">
             {tr('macOS TUN requires the core to run through KokoroBox Service.')}
