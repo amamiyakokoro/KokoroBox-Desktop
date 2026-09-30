@@ -12,6 +12,7 @@ import FeatureSettingsLayout, {
 } from '@renderer/components/base/base-feature-settings'
 import PacEditorModal from '@renderer/components/sysproxy/pac-editor-modal'
 import UwpLoopbackModal from '@renderer/components/sysproxy/uwp-loopback-modal'
+import SystemProxyDiagnosticsAction from '@renderer/components/sysproxy/system-proxy-diagnostics-action'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { useSysProxyOperation } from '@renderer/hooks/use-sysproxy-operation'
 import { platform } from '@renderer/utils/init'
@@ -301,6 +302,7 @@ const Sysproxy: React.FC<Props> = ({ embedded = false }) => {
         </FeatureSettingsSection>
 
         <FeatureSettingsSection title={tr('Reliability and exclusions')}>
+          <SystemProxyDiagnosticsAction divider />
           <SettingItem
             title={tr('System proxy watchdog')}
             description={tr(

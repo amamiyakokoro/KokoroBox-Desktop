@@ -23,6 +23,8 @@ import DNS from './network/dns-settings'
 import Mihomo from './network/mihomo-settings'
 import Sniffer from './network/sniffer-settings'
 import Sysproxy from './network/system-proxy-settings'
+import SettingCard from '../base/base-setting-card'
+import SystemProxyDiagnosticsAction from '../sysproxy/system-proxy-diagnostics-action'
 import Tun from './network/tun-settings'
 import {
   getSettingsSchema,
@@ -90,6 +92,11 @@ const panelContent: Partial<Record<SettingsCategory, Record<string, () => ReactN
     'geo-data': () => <GeoDataSettings />
   },
   diagnostics: {
+    'system-proxy': () => (
+      <SettingCard>
+        <SystemProxyDiagnosticsAction />
+      </SettingCard>
+    ),
     logs: () => <LogSetting />,
     maintenance: () => <Actions sections={['application', 'diagnostics']} />,
     lifecycle: () => <Actions sections={['danger']} showVersionHeading={false} />

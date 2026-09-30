@@ -396,7 +396,10 @@ export const initServiceAPI = (km: KeyManager): void => {
   serviceAxios.interceptors.response.use((response) => response.data, handleServiceAxiosError)
 }
 
-export const createSignedServiceAxios = (baseURL = 'http://localhost'): AxiosInstance => {
+export const createSignedServiceAxios = (
+  baseURL = 'http://localhost',
+  recoverRuntime = true
+): AxiosInstance => {
   const instance = axios.create({
     baseURL,
     socketPath: serviceIpcPath(),
@@ -408,7 +411,12 @@ export const createSignedServiceAxios = (baseURL = 'http://localhost'): AxiosIns
 
   attachServiceAuth(instance)
 
-  instance.interceptors.response.use((response) => response.data, handleServiceAxiosError)
+  instance.interceptors.response.use(
+    (response) => response.data,
+    recoverRuntime
+      ? handleServiceAxiosError
+      : (error) => Promise.reject(createServiceAPIError(error))
+  )
 
   return instance
 }
@@ -515,9 +523,14 @@ export const bootstrapMacOSServiceAuth = async (publicKey: string): Promise<void
   }
 }
 
-export const getCoreStatus = async (): Promise<Record<string, unknown>> => {
-  const instance = getServiceAxios()
-  return await instance.get('/core')
+export const getCoreStatus = async (
+  timeoutMs?: number,
+  readOnly = false
+): Promise<Record<string, unknown>> => {
+  const instance = readOnly
+    ? createSignedServiceAxios('http://localhost', false)
+    : getServiceAxios()
+  return await instance.get('/core', timeoutMs ? { timeout: timeoutMs } : undefined)
 }
 
 export const getCoreDesiredStatus = async (): Promise<CoreDesiredStatus | undefined> => {

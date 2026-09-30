@@ -29,6 +29,7 @@ import { uploadRuntimeConfig } from '../resolve/gistApi'
 import { stopTrafficPresenter } from '../resolve/trafficPresenter'
 import {
   getCoreStatus,
+  ServiceAPIError,
   getCoreDesiredStatus,
   restartCore as restartServiceCore,
   startCore as startServiceCore,
@@ -386,6 +387,24 @@ async function stopLegacyDirectCore(): Promise<boolean> {
   }
   await rm(pidPath).catch(() => {})
   return stopped
+}
+
+/** Read-only diagnostic view of the same direct process/service managed here. */
+export async function getCoreRunningForDiagnostics(): Promise<boolean | null> {
+  const { corePermissionMode = 'elevated' } = await getAppConfig()
+  if (corePermissionMode !== 'service') {
+    const child = directCoreState.child
+    return !!child && child.exitCode === null && child.signalCode === null && !child.killed
+  }
+  const status = await serviceStatus(true).catch(() => 'unknown')
+  if (['stopped', 'paused', 'not-installed'].includes(status)) return false
+  try {
+    await getCoreStatus(2500, true)
+    return true
+  } catch (error) {
+    if (error instanceof ServiceAPIError && [409, 503].includes(error.status || 0)) return false
+    return null
+  }
 }
 
 export async function startCore(detached = false): Promise<Promise<void>[]> {

@@ -495,7 +495,9 @@ export async function restartService(): Promise<void> {
   }
 }
 
-export async function serviceStatus(): Promise<
+export async function serviceStatus(
+  readOnly = false
+): Promise<
   'running' | 'stopped' | 'not-installed' | 'requires-approval' | 'paused' | 'unknown' | 'need-init'
 > {
   let bundledMacOSRegistration = false
@@ -541,7 +543,8 @@ export async function serviceStatus(): Promise<
   if (commandState === undefined) {
     try {
       const { stdout, stderr } = await execFilePromise(execPath, ['service', 'status'], {
-        windowsHide: true
+        windowsHide: true,
+        ...(readOnly ? { timeout: 2500 } : {})
       })
       commandState = parseServiceLog(`${stdout}\n${stderr}`)?.status?.state
     } catch (error) {
@@ -554,6 +557,9 @@ export async function serviceStatus(): Promise<
   }
   if (commandState === 'stopped') return 'stopped'
   if (commandState === 'paused') return 'paused'
+
+  // Diagnostics must not invoke authentication migration or runtime recovery.
+  if (readOnly) return commandState === 'running' ? 'running' : 'unknown'
 
   return probeServiceHealth({
     ping,

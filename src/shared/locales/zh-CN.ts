@@ -1,5 +1,103 @@
 // Simplified Chinese localization. Keys are the canonical English source messages.
 export const messages: Readonly<Record<string, string>> = {
+  'System Proxy Diagnostics': '系统代理诊断',
+  'Run diagnostics': '运行诊断',
+  'Run again': '再次运行',
+  'Copy diagnostic report': '复制诊断报告',
+  'Check system configuration, core runtime and actual proxy connectivity.':
+    '检查系统配置、内核运行状态和实际代理连接。',
+  'Checks saved settings and actual proxy health. Each run makes one public HTTPS connectivity request. Settings change only when you select a suggested fix.':
+    '检查已保存的设置与实际代理健康状况。每次运行会发送一次公共 HTTPS 连接请求。只有选择建议的修复操作才会更改设置。',
+  'Running diagnostics...': '正在运行诊断...',
+  'Checked at {0}': '检查时间：{0}',
+  'Enable system proxy': '启用系统代理',
+  'Restore KokoroBox proxy settings': '恢复 KokoroBox 代理设置',
+  'Start core': '启动内核',
+  'Restart core': '重启内核',
+  Success: '成功',
+  Information: '信息',
+  'The suggested fix could not be completed. Refresh diagnostics and inspect the service or core logs.':
+    '无法完成建议的修复操作。请刷新诊断并检查服务或内核日志。',
+  'Diagnostics could not be completed. Check the service and core logs, then run again.':
+    '无法完成诊断。请检查服务和内核日志后再次运行。',
+  'Unable to copy diagnostic report': '无法复制诊断报告',
+  'Configured (address redacted)': '已配置（地址已隐藏）',
+  'Configured (URL redacted)': '已配置（URL 已隐藏）',
+  'Custom entry (redacted)': '自定义条目（已隐藏）',
+  'Expected: {0}\nCurrent: {1}': '预期：{0}\n当前：{1}',
+  'System Proxy': '系统代理',
+  'Configuration intent: {0}; ProxyEnable: {1}': '配置意图：{0}；ProxyEnable：{1}',
+  'Proxy address': '代理地址',
+  'PAC mode selects the proxy for each request': 'PAC 模式为每个请求选择代理',
+  'Proxy address matches KokoroBox': '代理地址与 KokoroBox 一致',
+  'Proxy address does not match KokoroBox': '代理地址与 KokoroBox 不一致',
+  'PAC configuration': 'PAC 配置',
+  'A PAC configuration is also active': '同时存在生效的 PAC 配置',
+  'KokoroBox PAC configuration active': 'KokoroBox PAC 配置已生效',
+  'KokoroBox PAC configuration unavailable': 'KokoroBox PAC 配置不可用',
+  'Detected PAC: {0}': '检测到的 PAC：{0}',
+  'PAC scripts can route requests differently from the fixed proxy. Review the configuration before restoring KokoroBox settings.':
+    'PAC 脚本可能使用与固定代理不同的请求路由。恢复 KokoroBox 设置前请检查配置。',
+  'Unable to read Windows user proxy configuration': '无法读取 Windows 用户代理配置',
+  'Windows configuration checks are unavailable on this platform': '此平台不支持 Windows 配置检查',
+  'Expected proxy endpoint': '预期代理端点',
+  'Local listener': '本地监听端口',
+  'Local proxy listener available': '本地代理监听端口可用',
+  'Local proxy port is not listening': '本地代理端口未监听',
+  'Core running': '内核运行中',
+  'Core not running': '内核未运行',
+  'Unable to verify core runtime state': '无法确认内核运行状态',
+  'Core configuration': '内核配置',
+  'Core configuration failed or is unavailable': '内核配置失败或不可用',
+  'Runtime configuration loaded': '运行配置已加载',
+  'System proxy port does not match the current core port': '系统代理端口与当前内核端口不一致',
+  'The running core did not return its loaded configuration. Inspect core logs for startup or configuration errors.':
+    '运行中的内核未返回已加载的配置。请检查内核日志中的启动或配置错误。',
+  'Expected port: {0}; current core port: {1}': '预期端口：{0}；当前内核端口：{1}',
+  'Proxy connectivity': '代理连接',
+  'Proxy connectivity successful': '代理连接成功',
+  'Unable to connect to local proxy': '无法连接本地代理',
+  'Local proxy reachable, but outbound connection failed': '本地代理可达，但出站连接失败',
+  'HTTPS request through the proxy to the connectivity endpoint. Result: {0}':
+    '通过代理向连接测试端点发送 HTTPS 请求。结果：{0}',
+  'Proxy conflicts': '代理冲突',
+  'System proxy configuration was changed': '系统代理配置已更改',
+  'No configuration conflict detected': '未检测到配置冲突',
+  'The current settings differ from KokoroBox. The application that changed them cannot be determined.':
+    '当前设置与 KokoroBox 不一致。无法确定是哪个应用更改了设置。',
+  'Proxy bypass': '代理绕过规则',
+  'Broad bypass rules may bypass most or all proxy traffic':
+    '过于宽泛的绕过规则可能导致大部分或全部流量绕过代理',
+  'Proxy bypass differs from KokoroBox settings': '代理绕过规则与 KokoroBox 设置不一致',
+  'AppContainer loopback': 'AppContainer 回环访问',
+  'Some Microsoft Store / UWP applications may require loopback access to use 127.0.0.1 proxies.':
+    '部分 Microsoft Store / UWP 应用需要回环访问权限才能使用 127.0.0.1 代理。',
+  'Loopback exemptions could not be inspected. No permissions were changed.':
+    '无法检查回环豁免。未更改任何权限。',
+  '{0} apps with loopback exemptions detected. A working Win32 proxy does not guarantee access for every AppContainer app. No permissions were changed.':
+    '检测到 {0} 个具有回环豁免的应用。Win32 代理正常不代表所有 AppContainer 应用都可访问。未更改任何权限。',
+  WinHTTP: 'WinHTTP',
+  'Advanced configuration (values redacted)': '高级配置（值已隐藏）',
+  'WinHTTP uses separate proxy configuration': 'WinHTTP 使用独立的代理配置',
+  'WinHTTP is separate from the Windows user proxy used by many desktop apps. It is not synchronized automatically.':
+    'WinHTTP 与许多桌面应用使用的 Windows 用户代理相互独立，不会自动同步。',
+  'Application proxy support': '应用代理支持',
+  'Some applications ignore the system proxy or use their own proxy settings.':
+    '部分应用会忽略系统代理或使用自己的代理设置。',
+  'This test verifies the local proxy path. Check the affected application settings if its network access still fails.':
+    '此测试验证本地代理路径。如果应用仍无法访问网络，请检查该应用的设置。',
+  'Unable to verify system proxy configuration': '无法确认系统代理配置',
+  'System proxy configuration does not match KokoroBox': '系统代理配置与 KokoroBox 不一致',
+  'System proxy is disabled': '系统代理已禁用',
+  'System proxy is enabled, but the local proxy is unavailable': '系统代理已启用，但本地代理不可用',
+  'The local proxy is unavailable': '本地代理不可用',
+  'Core runtime requires attention': '内核运行状态需要检查',
+  'Proxy is reachable, but outbound connectivity failed': '代理可达，但出站连接失败',
+  'Proxy connectivity works, but system configuration requires attention':
+    '代理连接正常，但系统配置需要检查',
+  'Proxy connectivity works; Windows system configuration was not checked':
+    '代理连接正常；未检查 Windows 系统配置',
+  'System proxy is working normally': '系统代理工作正常',
   'Local backup': '本地备份',
   'Export backup': '导出备份',
   'Restore from file': '从文件还原',

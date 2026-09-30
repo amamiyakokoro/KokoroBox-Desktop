@@ -640,6 +640,16 @@ export const getSettingsSchema = (): SettingsCategorySchema[] => {
 
   const diagnosticsPanels: SettingsPanelSchema[] = [
     {
+      key: 'system-proxy',
+      label: tr('System Proxy Diagnostics'),
+      entries: [
+        entry('system-proxy-diagnostics', tr('System Proxy Diagnostics'), tr('Diagnostics'), {
+          panel: 'system-proxy',
+          keywords: ['proxy', 'system proxy', 'connectivity', 'PAC', 'WinHTTP', 'UWP']
+        })
+      ]
+    },
+    {
       key: 'logs',
       label: tr('Application logs'),
       entries: [

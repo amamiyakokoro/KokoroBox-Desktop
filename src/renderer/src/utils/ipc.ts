@@ -2,6 +2,10 @@ import { TitleBarOverlayOptions } from 'electron'
 import { normalizeUwpLoopbackApps, type UwpLoopbackApp } from '../../../shared/types/uwp-loopback'
 import type { HomeBackground, PublicIpSnapshot } from '../../../shared/home'
 import type { SysProxyOperationState } from '../../../shared/sysproxy-operation'
+import type {
+  DiagnosticAction,
+  SystemProxyDiagnostics
+} from '../../../shared/system-proxy-diagnostics'
 import type { AppRoutingLogEntry } from '../../../shared/app-routing-log'
 import type { ServiceLogSnapshot } from '../../../shared/service-log'
 
@@ -74,6 +78,16 @@ export async function mihomoConfig(): Promise<ControllerConfigs> {
 
 export async function getSystemProxyEnabled(): Promise<boolean | null> {
   return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('getSystemProxyEnabled'))
+}
+
+export async function runSystemProxyDiagnostics(): Promise<SystemProxyDiagnostics> {
+  return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('runSystemProxyDiagnostics'))
+}
+
+export async function fixSystemProxyDiagnostic(action: DiagnosticAction): Promise<void> {
+  return ipcErrorWrapper(
+    await window.electron.ipcRenderer.invoke('fixSystemProxyDiagnostic', action)
+  )
 }
 
 export async function mihomoCloseConnection(id: string): Promise<void> {

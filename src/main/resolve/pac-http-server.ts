@@ -8,6 +8,11 @@ export class PacHttpServer {
   private script: string | undefined
   private pending: Promise<void> = Promise.resolve()
 
+  getUrl(): string | undefined {
+    const address = this.server?.address()
+    return address && typeof address !== 'string' ? localPacUrl(address.port) : undefined
+  }
+
   private enqueue<T>(operation: () => Promise<T>): Promise<T> {
     const result = this.pending.then(operation)
     this.pending = result.then(

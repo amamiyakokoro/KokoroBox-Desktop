@@ -1,5 +1,110 @@
 // English source catalog. Keys are the canonical application-owned messages.
 export const messages: Readonly<Record<string, string>> = {
+  'System Proxy Diagnostics': 'System Proxy Diagnostics',
+  'Run diagnostics': 'Run diagnostics',
+  'Run again': 'Run again',
+  'Copy diagnostic report': 'Copy diagnostic report',
+  'Check system configuration, core runtime and actual proxy connectivity.':
+    'Check system configuration, core runtime and actual proxy connectivity.',
+  'Checks saved settings and actual proxy health. Each run makes one public HTTPS connectivity request. Settings change only when you select a suggested fix.':
+    'Checks saved settings and actual proxy health. Each run makes one public HTTPS connectivity request. Settings change only when you select a suggested fix.',
+  'Running diagnostics...': 'Running diagnostics...',
+  'Checked at {0}': 'Checked at {0}',
+  'Enable system proxy': 'Enable system proxy',
+  'Restore KokoroBox proxy settings': 'Restore KokoroBox proxy settings',
+  'Start core': 'Start core',
+  'Restart core': 'Restart core',
+  Success: 'Success',
+  Information: 'Information',
+  'The suggested fix could not be completed. Refresh diagnostics and inspect the service or core logs.':
+    'The suggested fix could not be completed. Refresh diagnostics and inspect the service or core logs.',
+  'Diagnostics could not be completed. Check the service and core logs, then run again.':
+    'Diagnostics could not be completed. Check the service and core logs, then run again.',
+  'Unable to copy diagnostic report': 'Unable to copy diagnostic report',
+  'Configured (address redacted)': 'Configured (address redacted)',
+  'Configured (URL redacted)': 'Configured (URL redacted)',
+  'Custom entry (redacted)': 'Custom entry (redacted)',
+  'Expected: {0}\nCurrent: {1}': 'Expected: {0}\nCurrent: {1}',
+  'System Proxy': 'System Proxy',
+  'Configuration intent: {0}; ProxyEnable: {1}': 'Configuration intent: {0}; ProxyEnable: {1}',
+  'Proxy address': 'Proxy address',
+  'PAC mode selects the proxy for each request': 'PAC mode selects the proxy for each request',
+  'Proxy address matches KokoroBox': 'Proxy address matches KokoroBox',
+  'Proxy address does not match KokoroBox': 'Proxy address does not match KokoroBox',
+  'PAC configuration': 'PAC configuration',
+  'A PAC configuration is also active': 'A PAC configuration is also active',
+  'KokoroBox PAC configuration active': 'KokoroBox PAC configuration active',
+  'KokoroBox PAC configuration unavailable': 'KokoroBox PAC configuration unavailable',
+  'Detected PAC: {0}': 'Detected PAC: {0}',
+  'PAC scripts can route requests differently from the fixed proxy. Review the configuration before restoring KokoroBox settings.':
+    'PAC scripts can route requests differently from the fixed proxy. Review the configuration before restoring KokoroBox settings.',
+  'Unable to read Windows user proxy configuration':
+    'Unable to read Windows user proxy configuration',
+  'Windows configuration checks are unavailable on this platform':
+    'Windows configuration checks are unavailable on this platform',
+  'Expected proxy endpoint': 'Expected proxy endpoint',
+  'Local listener': 'Local listener',
+  'Local proxy listener available': 'Local proxy listener available',
+  'Local proxy port is not listening': 'Local proxy port is not listening',
+  'Core running': 'Core running',
+  'Core not running': 'Core not running',
+  'Unable to verify core runtime state': 'Unable to verify core runtime state',
+  'Core configuration': 'Core configuration',
+  'Core configuration failed or is unavailable': 'Core configuration failed or is unavailable',
+  'Runtime configuration loaded': 'Runtime configuration loaded',
+  'System proxy port does not match the current core port':
+    'System proxy port does not match the current core port',
+  'The running core did not return its loaded configuration. Inspect core logs for startup or configuration errors.':
+    'The running core did not return its loaded configuration. Inspect core logs for startup or configuration errors.',
+  'Expected port: {0}; current core port: {1}': 'Expected port: {0}; current core port: {1}',
+  'Proxy connectivity': 'Proxy connectivity',
+  'Proxy connectivity successful': 'Proxy connectivity successful',
+  'Unable to connect to local proxy': 'Unable to connect to local proxy',
+  'Local proxy reachable, but outbound connection failed':
+    'Local proxy reachable, but outbound connection failed',
+  'HTTPS request through the proxy to the connectivity endpoint. Result: {0}':
+    'HTTPS request through the proxy to the connectivity endpoint. Result: {0}',
+  'Proxy conflicts': 'Proxy conflicts',
+  'System proxy configuration was changed': 'System proxy configuration was changed',
+  'No configuration conflict detected': 'No configuration conflict detected',
+  'The current settings differ from KokoroBox. The application that changed them cannot be determined.':
+    'The current settings differ from KokoroBox. The application that changed them cannot be determined.',
+  'Proxy bypass': 'Proxy bypass',
+  'Broad bypass rules may bypass most or all proxy traffic':
+    'Broad bypass rules may bypass most or all proxy traffic',
+  'Proxy bypass differs from KokoroBox settings': 'Proxy bypass differs from KokoroBox settings',
+  'AppContainer loopback': 'AppContainer loopback',
+  'Some Microsoft Store / UWP applications may require loopback access to use 127.0.0.1 proxies.':
+    'Some Microsoft Store / UWP applications may require loopback access to use 127.0.0.1 proxies.',
+  'Loopback exemptions could not be inspected. No permissions were changed.':
+    'Loopback exemptions could not be inspected. No permissions were changed.',
+  '{0} apps with loopback exemptions detected. A working Win32 proxy does not guarantee access for every AppContainer app. No permissions were changed.':
+    '{0} apps with loopback exemptions detected. A working Win32 proxy does not guarantee access for every AppContainer app. No permissions were changed.',
+  WinHTTP: 'WinHTTP',
+  'Advanced configuration (values redacted)': 'Advanced configuration (values redacted)',
+  'WinHTTP uses separate proxy configuration': 'WinHTTP uses separate proxy configuration',
+  'WinHTTP is separate from the Windows user proxy used by many desktop apps. It is not synchronized automatically.':
+    'WinHTTP is separate from the Windows user proxy used by many desktop apps. It is not synchronized automatically.',
+  'Application proxy support': 'Application proxy support',
+  'Some applications ignore the system proxy or use their own proxy settings.':
+    'Some applications ignore the system proxy or use their own proxy settings.',
+  'This test verifies the local proxy path. Check the affected application settings if its network access still fails.':
+    'This test verifies the local proxy path. Check the affected application settings if its network access still fails.',
+  'Unable to verify system proxy configuration': 'Unable to verify system proxy configuration',
+  'System proxy configuration does not match KokoroBox':
+    'System proxy configuration does not match KokoroBox',
+  'System proxy is disabled': 'System proxy is disabled',
+  'System proxy is enabled, but the local proxy is unavailable':
+    'System proxy is enabled, but the local proxy is unavailable',
+  'The local proxy is unavailable': 'The local proxy is unavailable',
+  'Core runtime requires attention': 'Core runtime requires attention',
+  'Proxy is reachable, but outbound connectivity failed':
+    'Proxy is reachable, but outbound connectivity failed',
+  'Proxy connectivity works, but system configuration requires attention':
+    'Proxy connectivity works, but system configuration requires attention',
+  'Proxy connectivity works; Windows system configuration was not checked':
+    'Proxy connectivity works; Windows system configuration was not checked',
+  'System proxy is working normally': 'System proxy is working normally',
   'Local backup': 'Local backup',
   'Export backup': 'Export backup',
   'Restore from file': 'Restore from file',

@@ -101,6 +101,16 @@ export const mihomoConfig = async (): Promise<ControllerConfigs> => {
   return await instance.get('/configs')
 }
 
+/** A failed diagnostic read must not schedule service recovery or change proxy settings. */
+export async function mihomoConfigForDiagnostics(): Promise<ControllerConfigs> {
+  const { corePermissionMode = 'elevated' } = await getAppConfig()
+  const instance =
+    corePermissionMode === 'service'
+      ? createSignedServiceAxios('http://localhost/core/controller', false)
+      : await getAxios()
+  return await instance.get<ControllerConfigs, ControllerConfigs>('/configs', { timeout: 2500 })
+}
+
 export const patchMihomoConfig = async (patch: Partial<ControllerConfigs>): Promise<void> => {
   const instance = await getAxios()
   return await instance.patch('/configs', patch)

@@ -9,6 +9,10 @@ function FindProxyForURL(url, host) {
 
 const pacServer = new PacHttpServer()
 
+export function getActivePacUrl(): string | undefined {
+  return pacServer.getUrl()
+}
+
 export async function startPacServer(): Promise<number | undefined> {
   const { sysProxy } = await getAppConfig()
   const { mode = 'manual', pacScript } = sysProxy

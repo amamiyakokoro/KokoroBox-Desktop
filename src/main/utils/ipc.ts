@@ -87,6 +87,10 @@ import {
   revokeCorePermission
 } from '../core/permission'
 import { triggerSysProxy } from '../sys/sysproxy'
+import {
+  runSystemProxyDiagnostics,
+  fixSystemProxyDiagnostic
+} from '../sys/system-proxy-diagnostics'
 import { getAboutInfo, readAboutLicense } from '../resolve/about'
 import { getServiceLogs } from '../service/logs'
 import { changeSysProxy, getSysProxyOperationState } from '../sys/sysproxy-operation'
@@ -448,6 +452,10 @@ export function registerIpcMainHandlers(): void {
   ipcMain.handle('getOverride', (_e, id, ext) => ipcErrorWrapper(getOverride)(id, ext))
   ipcMain.handle('setOverride', (_e, id, ext, str) => ipcErrorWrapper(setOverride)(id, ext, str))
   ipcMain.handle('restartCore', ipcErrorWrapper(restartCore))
+  ipcMain.handle('runSystemProxyDiagnostics', ipcErrorWrapper(runSystemProxyDiagnostics))
+  ipcMain.handle('fixSystemProxyDiagnostic', (_e, action) =>
+    ipcErrorWrapper(fixSystemProxyDiagnostic)(action)
+  )
   ipcMain.handle('stopCore', ipcErrorWrapper(stopCore))
   ipcMain.handle('restartMihomoConnections', ipcErrorWrapper(restartMihomoConnections))
   ipcMain.handle('startMonitor', () => ipcErrorWrapper(startTrafficPresenterAndRestoreTray)())
