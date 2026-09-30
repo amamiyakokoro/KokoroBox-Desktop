@@ -12,6 +12,7 @@ export interface DiagnosticResult {
   summary: string
   details?: string
   action?: DiagnosticAction
+  actionHint?: string
 }
 
 export interface WindowsUserProxy {
@@ -23,37 +24,44 @@ export interface WindowsUserProxy {
 
 export interface ConnectivityResult {
   outcome: 'success' | 'unreachable' | 'outbound-failed'
-  reason?:
-    | 'timeout'
-    | 'connection-refused'
-    | 'proxy-authentication'
-    | 'tunnel-rejected'
-    | 'tls-failed'
-    | 'unexpected-response'
-    | 'network-error'
-    | 'invalid-port'
+  reason?: string
 }
 
 export interface SystemProxyDiagnosticInput {
+  coreRemediationUsesService?: boolean
   platform: string
   intentEnabled: boolean
   mode: 'manual' | 'auto'
   expectedProxy: string
-  expectedPort: number
+  expectedPort: number | null
   expectedBypass: string[]
   expectedPacUrl?: string
   windowsProxy?: WindowsUserProxy
   listenerAvailable: boolean
   coreRunning: boolean | null
   runtimePort?: number
+  runtimeUnavailable?: boolean
+  runtimeErrorCode?: string
+  winHttpErrorCode?: string
+  appContainerErrorCode?: string
   connectivity: ConnectivityResult
   loopbackExemptions?: number
   winHttp?: { mode: 'direct' | 'proxy' | 'advanced' | 'unknown'; server?: string }
 }
 
+export type SystemProxyOverallStatus =
+  | 'healthy'
+  | 'disabled'
+  | 'configuration-mismatch'
+  | 'core-unavailable'
+  | 'listener-unavailable'
+  | 'connectivity-failed'
+  | 'warning'
+  | 'configuration-unavailable'
+
 export interface SystemProxyDiagnostics {
   checkedAt: string
-  overall: { status: DiagnosticStatus; summary: string }
+  overall: { status: DiagnosticStatus; summary: string; kind: SystemProxyOverallStatus }
   state: {
     intentEnabled: boolean
     enabled: boolean | null
@@ -126,6 +134,27 @@ export function safeProxyBypass(value: string): string {
     : tr('Not configured')
 }
 
+export function safeDiagnosticCode(code?: string): string | undefined {
+  const allowed = [
+    'timeout',
+    'connection-refused',
+    'proxy-authentication',
+    'tunnel-rejected',
+    'tls-failed',
+    'unexpected-response',
+    'network-error',
+    'invalid-port',
+    'runtime-port-unavailable',
+    'service-unavailable',
+    'core-config-unavailable',
+    'core-config-failed',
+    'core-start-failed',
+    'core-restart-failed',
+    'core-exited'
+  ]
+  return code ? (allowed.includes(code) ? code : 'network-error') : undefined
+}
+
 export function buildSystemProxyDiagnostics(
   input: SystemProxyDiagnosticInput
 ): SystemProxyDiagnostics {
@@ -144,13 +173,18 @@ export function buildSystemProxyDiagnostics(
       ? pacMatches || current.enabled
       : current.enabled
     : null
-  const configMatches = current
-    ? mode === 'auto'
-      ? pacMatches && !current.enabled
-      : current.enabled && addressMatches && !unexpectedPac && bypassMatches
-    : null
+  const endpointKnown = input.expectedPort !== null
+  const configMatches =
+    current && (mode === 'auto' || endpointKnown)
+      ? mode === 'auto'
+        ? pacMatches && !current.enabled
+        : current.enabled && addressMatches && !unexpectedPac && bypassMatches
+      : null
   const changed =
-    !!current && (input.intentEnabled ? !configMatches : current.enabled || !!current.pacUrl)
+    !!current &&
+    (input.intentEnabled
+      ? !enabled || configMatches === false
+      : current.enabled || !!current.pacUrl)
   const broadBypass =
     !!current &&
     bypassEntries(current.override).some((entry) =>
@@ -165,10 +199,21 @@ export function buildSystemProxyDiagnostics(
     details?: string,
     action?: DiagnosticAction
   ): void => {
-    results.push({ id, title: tr(title), status, summary: tr(summary), details, action })
+    results.push({
+      id,
+      title: tr(title),
+      status,
+      summary: tr(summary),
+      details,
+      action,
+      actionHint:
+        input.coreRemediationUsesService && (action === 'start-core' || action === 'restart-core')
+          ? tr('This action switches the core to Service management.')
+          : undefined
+    })
   }
   const comparison = tr('Expected: {0}\nCurrent: {1}', [
-    safeProxyAddress(expectedProxy),
+    expectedProxy ? safeProxyAddress(expectedProxy) : tr('Unknown'),
     current ? safeProxyAddress(current.server) : tr('Unknown')
   ])
 
@@ -187,14 +232,16 @@ export function buildSystemProxyDiagnostics(
     add(
       'proxy-address',
       'Proxy address',
-      mode === 'auto' ? 'info' : addressMatches ? 'success' : 'error',
+      mode === 'auto' || !endpointKnown ? 'info' : addressMatches ? 'success' : 'error',
       mode === 'auto'
         ? 'PAC mode selects the proxy for each request'
-        : addressMatches
-          ? 'Proxy address matches KokoroBox'
-          : 'Proxy address does not match KokoroBox',
+        : !endpointKnown
+          ? 'Core configuration failed or is unavailable'
+          : addressMatches
+            ? 'Proxy address matches KokoroBox'
+            : 'Proxy address does not match KokoroBox',
       comparison,
-      mode === 'manual' && !addressMatches ? 'restore-system-proxy' : undefined
+      mode === 'manual' && endpointKnown && !addressMatches ? 'restore-system-proxy' : undefined
     )
     add(
       'pac',
@@ -230,7 +277,7 @@ export function buildSystemProxyDiagnostics(
       'Proxy address',
       'info',
       'Expected proxy endpoint',
-      safeProxyAddress(expectedProxy)
+      expectedProxy ? safeProxyAddress(expectedProxy) : tr('Unknown')
     )
   }
 
@@ -238,10 +285,12 @@ export function buildSystemProxyDiagnostics(
     'listener',
     'Local listener',
     input.listenerAvailable ? 'success' : 'error',
-    input.listenerAvailable
-      ? 'Local proxy listener available'
-      : 'Local proxy port is not listening',
-    safeProxyAddress(expectedProxy),
+    input.runtimeUnavailable
+      ? 'Unable to verify core runtime state'
+      : input.listenerAvailable
+        ? 'Local proxy listener available'
+        : 'Local proxy port is not listening',
+    expectedProxy ? safeProxyAddress(expectedProxy) : tr('Unknown'),
     !input.listenerAvailable && input.coreRunning === true ? 'restart-core' : undefined
   )
   add(
@@ -269,7 +318,7 @@ export function buildSystemProxyDiagnostics(
     input.runtimePort === undefined
       ? tr(
           'The running core did not return its loaded configuration. Inspect core logs for startup or configuration errors.'
-        )
+        ) + (input.runtimeErrorCode ? `\n${safeDiagnosticCode(input.runtimeErrorCode)}` : '')
       : tr('Expected port: {0}; current core port: {1}', [input.expectedPort, input.runtimePort]),
     input.coreRunning === true && !portMatches ? 'restart-core' : undefined
   )
@@ -277,13 +326,15 @@ export function buildSystemProxyDiagnostics(
     'connectivity',
     'Proxy connectivity',
     input.connectivity.outcome === 'success' ? 'success' : 'error',
-    input.connectivity.outcome === 'success'
-      ? 'Proxy connectivity successful'
-      : input.connectivity.outcome === 'unreachable'
-        ? 'Unable to connect to local proxy'
-        : 'Local proxy reachable, but outbound connection failed',
+    input.runtimeUnavailable
+      ? 'Unable to verify core runtime state'
+      : input.connectivity.outcome === 'success'
+        ? 'Proxy connectivity successful'
+        : input.connectivity.outcome === 'unreachable'
+          ? 'Unable to connect to local proxy'
+          : 'Local proxy reachable, but outbound connection failed',
     tr('HTTPS request through the proxy to the connectivity endpoint. Result: {0}', [
-      input.connectivity.reason || 'OK'
+      safeDiagnosticCode(input.connectivity.reason) || 'OK'
     ])
   )
 
@@ -291,8 +342,12 @@ export function buildSystemProxyDiagnostics(
     add(
       'conflicts',
       'Proxy conflicts',
-      changed ? 'warning' : 'success',
-      changed ? 'System proxy configuration was changed' : 'No configuration conflict detected',
+      changed ? 'warning' : mode === 'manual' && !endpointKnown ? 'info' : 'success',
+      changed
+        ? 'System proxy configuration was changed'
+        : mode === 'manual' && !endpointKnown
+          ? 'Unable to verify system proxy configuration'
+          : 'No configuration conflict detected',
       changed
         ? comparison +
             '\n' +
@@ -319,7 +374,7 @@ export function buildSystemProxyDiagnostics(
     add(
       'appcontainer',
       'AppContainer loopback',
-      'info',
+      input.appContainerErrorCode ? 'warning' : 'info',
       'Some Microsoft Store / UWP applications may require loopback access to use 127.0.0.1 proxies.',
       input.loopbackExemptions === undefined
         ? tr('Loopback exemptions could not be inspected. No permissions were changed.')
@@ -339,9 +394,9 @@ export function buildSystemProxyDiagnostics(
     add(
       'winhttp',
       'WinHTTP',
-      'info',
+      input.winHttpErrorCode ? 'warning' : 'info',
       'WinHTTP uses separate proxy configuration',
-      winHttpSummary +
+      (input.winHttpErrorCode ? tr('Unable to retrieve status') : winHttpSummary) +
         '\n' +
         tr(
           'WinHTTP is separate from the Windows user proxy used by many desktop apps. It is not synchronized automatically.'
@@ -360,34 +415,42 @@ export function buildSystemProxyDiagnostics(
 
   let overall: SystemProxyDiagnostics['overall']
   if (isWindows && !current)
-    overall = { status: 'error', summary: tr('Unable to verify system proxy configuration') }
+    overall = {
+      status: 'error',
+      summary: tr('Unable to verify system proxy configuration'),
+      kind: 'configuration-unavailable'
+    }
+  else if (enabled === false)
+    overall = { status: 'warning', summary: tr('System proxy is disabled'), kind: 'disabled' }
   else if (
     changed &&
-    (!enabled ||
-      (mode === 'manual' && !addressMatches) ||
-      unexpectedPac ||
-      (mode === 'auto' && !pacMatches))
+    ((mode === 'manual' && endpointKnown && !addressMatches) || (mode === 'auto' && !pacMatches))
   )
     overall = {
       status: 'error',
-      summary: tr('System proxy configuration does not match KokoroBox')
+      summary: tr('System proxy configuration does not match KokoroBox'),
+      kind: 'configuration-mismatch'
     }
-  else if (enabled === false)
-    overall = { status: 'warning', summary: tr('System proxy is disabled') }
+  else if (input.coreRunning !== true || !portMatches)
+    overall = {
+      status: 'error',
+      summary: tr('Core runtime requires attention'),
+      kind: 'core-unavailable'
+    }
   else if (!input.listenerAvailable)
     overall = {
       status: 'error',
+      kind: 'listener-unavailable',
       summary: tr(
         enabled
           ? 'System proxy is enabled, but the local proxy is unavailable'
           : 'The local proxy is unavailable'
       )
     }
-  else if (input.coreRunning !== true || !portMatches)
-    overall = { status: 'error', summary: tr('Core runtime requires attention') }
   else if (input.connectivity.outcome !== 'success')
     overall = {
       status: 'error',
+      kind: 'connectivity-failed',
       summary: tr(
         input.connectivity.outcome === 'unreachable'
           ? 'Unable to connect to local proxy'
@@ -397,14 +460,23 @@ export function buildSystemProxyDiagnostics(
   else if (unexpectedPac || broadBypass || changed)
     overall = {
       status: 'warning',
-      summary: tr('Proxy connectivity works, but system configuration requires attention')
+      summary: tr('Proxy connectivity works, but system configuration requires attention'),
+      kind: 'warning'
     }
   else if (!isWindows)
     overall = {
       status: 'info',
+      kind: 'warning',
       summary: tr('Proxy connectivity works; Windows system configuration was not checked')
     }
-  else overall = { status: 'success', summary: tr('System proxy is working normally') }
+  else
+    overall = {
+      status: 'success',
+      summary: tr('System proxy is working normally'),
+      kind: 'healthy'
+    }
+
+  if (!overall.kind) overall.kind = overall.status === 'info' ? 'warning' : 'connectivity-failed'
 
   const checkedAt = new Date().toISOString()
   return {

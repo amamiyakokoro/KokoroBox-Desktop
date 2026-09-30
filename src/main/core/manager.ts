@@ -29,7 +29,6 @@ import { uploadRuntimeConfig } from '../resolve/gistApi'
 import { stopTrafficPresenter } from '../resolve/trafficPresenter'
 import {
   getCoreStatus,
-  ServiceAPIError,
   getCoreDesiredStatus,
   restartCore as restartServiceCore,
   startCore as startServiceCore,
@@ -389,25 +388,27 @@ async function stopLegacyDirectCore(): Promise<boolean> {
   return stopped
 }
 
-/** Read-only diagnostic view of the same direct process/service managed here. */
-export async function getCoreRunningForDiagnostics(): Promise<boolean | null> {
+/** Explicit diagnostics repair: reuse the normal Service ownership transfer.
+ * Keep startup/config generation and stream setup together; never fall back to
+ * Desktop-managed core after the user has selected this Service repair. */
+export async function migrateCoreToServiceForDiagnostics(): Promise<void> {
   const { corePermissionMode = 'elevated' } = await getAppConfig()
-  if (corePermissionMode !== 'service') {
-    const child = directCoreState.child
-    return !!child && child.exitCode === null && child.signalCode === null && !child.killed
-  }
-  const status = await serviceStatus(true).catch(() => 'unknown')
-  if (['stopped', 'paused', 'not-installed'].includes(status)) return false
+  await patchAppConfig({ corePermissionMode: 'service' })
+  mainWindow?.webContents.send('appConfigUpdated')
   try {
-    await getCoreStatus(2500, true)
-    return true
+    const tasks = await startCore(false, true)
+    await Promise.all(tasks)
   } catch (error) {
-    if (error instanceof ServiceAPIError && [409, 503].includes(error.status || 0)) return false
-    return null
+    await patchAppConfig({ corePermissionMode })
+    mainWindow?.webContents.send('appConfigUpdated')
+    throw error
   }
 }
 
-export async function startCore(detached = false): Promise<Promise<void>[]> {
+export async function startCore(
+  detached = false,
+  requireService = false
+): Promise<Promise<void>[]> {
   const [appConfig, controlledMihomoConfig, profileConfig] = await Promise.all([
     getAppConfig(),
     getControledMihomoConfig(),
@@ -432,7 +433,7 @@ export async function startCore(detached = false): Promise<Promise<void>[]> {
   const effectiveCoreStartupMode = resolveCoreStartupMode(process.platform, coreStartupMode)
   const { 'log-level': logLevel, tun } = controlledMihomoConfig
   const { current } = profileConfig
-  let corePermissionMode = configuredCorePermissionMode
+  let corePermissionMode = requireService ? 'service' : configuredCorePermissionMode
   if (process.platform === 'darwin' && tun?.enable && corePermissionMode !== 'service') {
     corePermissionMode = 'service'
     await patchAppConfig({ corePermissionMode })
@@ -476,6 +477,7 @@ export async function startCore(detached = false): Promise<Promise<void>[]> {
       if (isServiceUnavailableError(error)) {
         const probe = await waitForServiceCoreConnection(error)
         if (!probe.reachable) {
+          if (requireService) throw probe.error ?? new Error('Service unavailable')
           return serviceCoreRuntime.fallbackToElevatedCore(detached, probe.error)
         }
         serviceCoreRunning = probe.running
@@ -558,6 +560,7 @@ export async function startCore(detached = false): Promise<Promise<void>[]> {
       if (isServiceUnavailableError(error)) {
         const probe = await waitForServiceCoreConnection(error)
         if (!probe.reachable) {
+          if (requireService) throw probe.error ?? new Error('Service unavailable')
           return serviceCoreRuntime.fallbackToElevatedCore(detached, probe.error)
         }
         await serviceCoreRuntime.startEventStream()

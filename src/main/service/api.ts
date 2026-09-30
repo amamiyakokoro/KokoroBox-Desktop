@@ -1,3 +1,7 @@
+import {
+  validateProxyRuntimeDiagnostics,
+  type ProxyRuntimeDiagnostics
+} from '../../shared/proxy-diagnostics-contract'
 import { tr } from '../../shared/i18n'
 import type { AppRoutingLogEntry } from '../../shared/app-routing-log'
 import { validateServiceLogSnapshot, type ServiceLogSnapshot } from '../../shared/service-log'
@@ -521,6 +525,22 @@ export const bootstrapMacOSServiceAuth = async (publicKey: string): Promise<void
   } catch (error) {
     throw createServiceAPIError(error)
   }
+}
+
+// Read-only diagnostics must never activate service fallback/recovery.
+export async function getProxyRuntimeDiagnostics(
+  direct = false,
+  probeConnectivity = true
+): Promise<ProxyRuntimeDiagnostics> {
+  const instance = createSignedServiceAxios('http://localhost', false)
+  return validateProxyRuntimeDiagnostics(
+    await instance.request({
+      method: serviceContract.proxyDiagnostics.method,
+      url: serviceContract.proxyDiagnostics.path,
+      params: { direct: String(direct), probe: String(probeConnectivity) },
+      timeout: 10_000
+    })
+  )
 }
 
 export const getCoreStatus = async (
@@ -1150,4 +1170,25 @@ export const releaseDnsLease = async (): Promise<void> => {
     method: serviceContract.dnsRelease.method,
     url: serviceContract.dnsRelease.path
   })
+}
+
+export async function prepareNativeProxyMutation(): Promise<void> {
+  await createSignedServiceAxios('http://localhost', false).post(
+    '/sysproxy/native/prepare',
+    undefined,
+    { timeout: 4000 }
+  )
+}
+export async function adoptNativeProxyMutation(settings: {
+  server?: string
+  url?: string
+  bypass: string
+  only_active_device: boolean
+  guard: boolean
+}): Promise<void> {
+  await createSignedServiceAxios('http://localhost', false).post(
+    '/sysproxy/native/adopt',
+    settings,
+    { timeout: 4000 }
+  )
 }

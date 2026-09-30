@@ -15,6 +15,11 @@ KokoroBox Desktop uses [`kokorobox-native`](https://github.com/amamiyakokoro/kok
 | Unix core permissions     | `getCorePrivilegeStatus`, `setCorePrivileges`   | Mihomo permission checks, grant, and revoke  |
 | Windows system operations | SID, explicit privilege relaunch, Firewall APIs | Routing and privileged setup                 |
 
+Windows [System Proxy Diagnostics](system-proxy-diagnostics.md) use Native's
+`getSystemProxyDiagnostics()` / `setSystemProxy()` for OS configuration and the
+Service's `/core/proxy-diagnostics` for loaded ports and runtime health. Desktop
+coordinates the two snapshots and presents sanitized results.
+
 Rust provides one typed snapshot for interface, macOS network-service, DNS, and SSID discovery. Windows SSID lookup uses the Native Wi-Fi API.
 
 Launch-at-login now uses native platform registration. On macOS, the returned

@@ -1,5 +1,7 @@
 // Simplified Chinese localization. Keys are the canonical English source messages.
 export const messages: Readonly<Record<string, string>> = {
+  'This action switches the core to Service management.': '此操作会将核心切换为 Service 管理。',
+  'Unable to retrieve status': '无法获取状态',
   'System Proxy Diagnostics': '系统代理诊断',
   'Run diagnostics': '运行诊断',
   'Run again': '再次运行',

@@ -62,7 +62,8 @@ function isTimeout(error: unknown): boolean {
 
 export function changeSysProxy(
   enable: boolean,
-  onlyActiveDevice: boolean
+  onlyActiveDevice: boolean,
+  apply?: () => Promise<'applied'>
 ): Promise<SysProxyOperationState> {
   const id = ++requestId
   const queuedAt = performance.now()
@@ -116,7 +117,12 @@ export function changeSysProxy(
       }
     }
     try {
-      const result = await triggerSysProxy(enable, onlyActiveDevice, false, options)
+      const result = apply
+        ? await apply().then((result) => {
+            systemApplied = true
+            return result
+          })
+        : await triggerSysProxy(enable, onlyActiveDevice, false, options)
       if (result === 'superseded' || id !== requestId) return getSysProxyOperationState()
       waitingForNetwork = result === 'waiting-network'
       const saveStartedAt = performance.now()

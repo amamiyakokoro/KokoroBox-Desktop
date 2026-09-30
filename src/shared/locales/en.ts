@@ -1,5 +1,8 @@
 // English source catalog. Keys are the canonical application-owned messages.
 export const messages: Readonly<Record<string, string>> = {
+  'This action switches the core to Service management.':
+    'This action switches the core to Service management.',
+  'Unable to retrieve status': 'Unable to retrieve status',
   'System Proxy Diagnostics': 'System Proxy Diagnostics',
   'Run diagnostics': 'Run diagnostics',
   'Run again': 'Run again',

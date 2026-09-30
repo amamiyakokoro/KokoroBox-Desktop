@@ -240,3 +240,22 @@ test('all platforms receive independent copies of the same default bypass values
   first.push('modified')
   assert.equal(defaultSystemProxyBypass('win32').includes('modified'), false)
 })
+
+test('native diagnostic remediation uses the operation queue and preserves confirmed state after a save error', async () => {
+  const operation = loadSysProxyOperation()
+  operation.setTrigger(async () => {
+    throw new Error('must not apply through legacy setter')
+  })
+  operation.setSaveError(new Error('save failed'))
+  let applied = false
+  await assert.rejects(
+    operation.api.changeSysProxy(true, false, async () => {
+      applied = true
+      return 'applied'
+    }),
+    /save failed/
+  )
+  assert.equal(applied, true)
+  assert.equal(operation.api.getSysProxyOperationState().confirmed, true)
+  assert.equal(operation.persisted(), false)
+})

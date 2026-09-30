@@ -1,23 +1,23 @@
-import { getAppConfig, getControledMihomoConfig } from '../config'
-import { getCoreRunningForDiagnostics, startCore, restartCore } from '../core/manager'
-import { mihomoConfigForDiagnostics } from '../core/mihomoApi'
-import { getActivePacUrl } from '../resolve/server'
+import { migrateCoreToServiceForDiagnostics } from '../core/manager'
+import { getAppConfig } from '../config'
+import { startCore, restartCore, getProxyRuntimeDiagnostics } from '../service/api'
+import { getActivePacUrl, startPacServer } from '../resolve/server'
+import { localPacUrl } from '../resolve/pac-http-server'
 import { appendAppLog } from '../utils/log'
 import { changeSysProxy } from './sysproxy-operation'
-import { defaultSystemProxyBypass, normalizeProxyHost } from '../../shared/system-proxy'
+import { applyNativeDiagnosticProxy } from './sysproxy'
+import { getNativeSystemProxyDiagnostics } from './native-system-proxy'
+import { defaultSystemProxyBypass } from '../../shared/system-proxy'
 import {
   buildSystemProxyDiagnostics,
-  safeProxyAddress,
   type DiagnosticAction,
   type SystemProxyDiagnosticInput,
   type SystemProxyDiagnostics
 } from '../../shared/system-proxy-diagnostics'
-import { probeProxyConnectivity, probeProxyListener } from './system-proxy-probes'
-import {
-  readLoopbackExemptionCount,
-  readWindowsUserProxy,
-  readWinHttpProxy
-} from './platform/windows-system-proxy'
+import type {
+  NativeSystemProxyDiagnostics,
+  ProxyRuntimeDiagnostics
+} from '../../shared/proxy-diagnostics-contract'
 
 let running: Promise<SystemProxyDiagnostics> | undefined
 let repair: Promise<void> | undefined
@@ -26,78 +26,89 @@ function log(message: string): void {
   void appendAppLog(`[SystemProxyDiagnostics] ${message}\n`).catch(() => {})
 }
 
-// Coalesce concurrent opens/refreshes. No timer and no background connectivity probes.
+// Coalesce concurrent opens/refreshes. No timer or background connectivity probes.
 export function runSystemProxyDiagnostics(): Promise<SystemProxyDiagnostics> {
   if (repair) return repair.then(() => runSystemProxyDiagnostics())
-  if (!running) {
+  if (!running)
     running = runChecks().finally(() => {
       running = undefined
     })
-  }
   return running
 }
 
+export function combineSystemProxyDiagnostics(
+  input: Pick<
+    SystemProxyDiagnosticInput,
+    | 'platform'
+    | 'intentEnabled'
+    | 'mode'
+    | 'expectedBypass'
+    | 'expectedPacUrl'
+    | 'coreRemediationUsesService'
+  >,
+  native?: NativeSystemProxyDiagnostics,
+  runtime?: ProxyRuntimeDiagnostics
+): SystemProxyDiagnostics {
+  const port = runtime?.proxy.port ?? null
+  const host = runtime?.proxy.host ?? '127.0.0.1'
+  const windows = native?.windows
+  const current =
+    native?.status === 'available' && typeof native.enabled === 'boolean' && windows
+      ? {
+          enabled: native.enabled,
+          server: windows.proxyServer ?? '',
+          override: windows.proxyOverride ?? '',
+          pacUrl: windows.autoConfigUrl ?? ''
+        }
+      : undefined
+  return buildSystemProxyDiagnostics({
+    ...input,
+    expectedPort: port,
+    expectedProxy: port ? `${host.includes(':') ? `[${host}]` : host}:${port}` : '',
+    windowsProxy: current,
+    listenerAvailable: runtime?.listener.available ?? false,
+    coreRunning: runtime?.core.running ?? null,
+    runtimePort: runtime?.core.ready && port ? port : undefined,
+    runtimeUnavailable: !runtime,
+    runtimeErrorCode: runtime?.core.errorCode,
+    connectivity: {
+      outcome: runtime?.connectivity.outcome ?? 'unreachable',
+      reason: runtime?.connectivity.errorCode ?? (!runtime ? 'service-unavailable' : undefined)
+    },
+    loopbackExemptions:
+      windows?.appContainer.status === 'available'
+        ? (windows.appContainer.loopbackExemptionCount ?? undefined)
+        : undefined,
+    appContainerErrorCode:
+      windows?.appContainer.status === 'unavailable' ? 'appcontainer-read-failed' : undefined,
+    winHttp:
+      windows?.winHttp.status === 'available'
+        ? { mode: windows.winHttp.mode ?? 'unknown', server: windows.winHttp.proxy ?? undefined }
+        : undefined,
+    winHttpErrorCode: windows?.winHttp.status === 'unavailable' ? 'winhttp-read-failed' : undefined
+  })
+}
+
 async function runChecks(): Promise<SystemProxyDiagnostics> {
-  const { sysProxy } = await getAppConfig()
-  const { 'mixed-port': expectedPort = 7890 } = await getControledMihomoConfig()
-  const host = normalizeProxyHost(sysProxy.host || '')
-  const expectedProxy = `${host}:${expectedPort}`
-  const probeHost = host.replace(/^\[|\]$/g, '')
-  const input: SystemProxyDiagnosticInput = {
-    platform: process.platform,
-    intentEnabled: sysProxy.enable,
-    mode: sysProxy.mode || 'manual',
-    expectedProxy,
-    expectedPort,
-    expectedBypass: sysProxy.bypass ?? defaultSystemProxyBypass(process.platform),
-    expectedPacUrl: getActivePacUrl(),
-    listenerAvailable: false,
-    coreRunning: null,
-    connectivity: { outcome: 'unreachable' }
-  }
-  log(`Expected proxy: ${safeProxyAddress(expectedProxy)}`)
-  // A. Actual user configuration, never the toggle/lease confirmation.
-  if (process.platform === 'win32') {
-    try {
-      input.windowsProxy = await readWindowsUserProxy()
-      log(`Windows proxy: ${input.windowsProxy.enabled ? 'enabled' : 'disabled'}`)
-    } catch {
-      log('Windows proxy: read unavailable')
-    }
-  }
-  // B. A successful TCP handshake only establishes listener availability.
-  input.listenerAvailable = await probeProxyListener(probeHost, expectedPort)
-  log(`Local listener ${input.listenerAvailable ? 'reachable' : 'unavailable'}`)
-  // C. Reuse core manager state, then inspect the live controller configuration.
-  input.coreRunning = await getCoreRunningForDiagnostics()
-  try {
-    const config = await mihomoConfigForDiagnostics()
-    if (typeof config['mixed-port'] === 'number') input.runtimePort = config['mixed-port']
-    // A responsive live controller proves a core is running even if service status is unknown.
-    input.coreRunning = true
-  } catch {
-    log('Core runtime configuration: unavailable')
-  }
-  // D. Independently open an HTTPS CONNECT tunnel and validate the public response.
-  input.connectivity = await probeProxyConnectivity(probeHost, expectedPort)
-  log(
-    `Connectivity test: ${input.connectivity.outcome}${input.connectivity.reason ? ` (${input.connectivity.reason})` : ''}`
+  const { sysProxy, corePermissionMode } = await getAppConfig()
+  // Independent domains survive one another's failure. No Desktop-side probes.
+  const [native, runtime] = await Promise.allSettled([
+    getNativeSystemProxyDiagnostics(),
+    getProxyRuntimeDiagnostics(corePermissionMode !== 'service')
+  ])
+  const result = combineSystemProxyDiagnostics(
+    {
+      platform: process.platform,
+      intentEnabled: sysProxy.enable,
+      mode: sysProxy.mode || 'manual',
+      expectedBypass: sysProxy.bypass ?? defaultSystemProxyBypass(process.platform),
+      expectedPacUrl: getActivePacUrl(),
+      coreRemediationUsesService: corePermissionMode !== 'service'
+    },
+    native.status === 'fulfilled' ? native.value : undefined,
+    runtime.status === 'fulfilled' ? runtime.value : undefined
   )
-  // E/F are evaluated from the registry snapshot; G/H are informational, read-only.
-  if (process.platform === 'win32') {
-    try {
-      input.loopbackExemptions = readLoopbackExemptionCount()
-    } catch {
-      log('AppContainer inspection: unavailable')
-    }
-    try {
-      input.winHttp = await readWinHttpProxy()
-    } catch {
-      log('WinHTTP inspection: unavailable')
-    }
-  }
-  const result = buildSystemProxyDiagnostics(input)
-  for (const check of result.results) log(`check=${check.id} status=${check.status}`)
+  log(`Diagnostics completed; overall status: ${result.overall.kind}`)
   return result
 }
 
@@ -109,23 +120,47 @@ export function fixSystemProxyDiagnostic(action: DiagnosticAction): Promise<void
     switch (action) {
       case 'enable-system-proxy':
       case 'restore-system-proxy': {
-        const { sysProxy, onlyActiveDevice = false } = await getAppConfig()
+        const { sysProxy, onlyActiveDevice = false, corePermissionMode } = await getAppConfig()
         const enable = action === 'enable-system-proxy' || sysProxy.enable
-        const result = await changeSysProxy(enable, onlyActiveDevice)
-        if (result.phase !== 'idle' || result.confirmed !== enable)
+        const mode = sysProxy.mode || 'manual'
+        // Fetch the service's current endpoint again; never repair with stale UI config.
+        const runtime = enable
+          ? await getProxyRuntimeDiagnostics(corePermissionMode !== 'service', false)
+          : undefined
+        if (enable && !runtime?.proxy.port)
           throw new Error(
-            'System proxy change has not been confirmed. Run diagnostics again after checking service availability.'
+            'Core runtime proxy port is unavailable. Start the core and run diagnostics again.'
           )
+        const pacPort = enable && mode === 'auto' ? await startPacServer() : undefined
+        if (enable && mode === 'auto' && pacPort === undefined)
+          throw new Error('PAC server did not start')
+        const result = await changeSysProxy(enable, onlyActiveDevice, async () => {
+          await applyNativeDiagnosticProxy(
+            {
+              mode: enable ? mode : 'disabled',
+              host: runtime?.proxy.host,
+              port: runtime?.proxy.port ?? undefined,
+              bypass: sysProxy.bypass ?? defaultSystemProxyBypass(process.platform),
+              pacUrl: pacPort === undefined ? undefined : localPacUrl(pacPort)
+            },
+            onlyActiveDevice,
+            !!sysProxy.guard,
+            !!sysProxy.guardNotify
+          )
+          return 'applied'
+        })
+        if (result.phase !== 'idle' || result.confirmed !== enable)
+          throw new Error('System proxy change has not been confirmed. Run diagnostics again.')
         return
       }
-      case 'start-core': {
-        const tasks = await startCore()
-        await Promise.all(tasks)
+      case 'start-core':
+      case 'restart-core': {
+        const { corePermissionMode } = await getAppConfig()
+        if (corePermissionMode !== 'service') await migrateCoreToServiceForDiagnostics()
+        else if (action === 'start-core') await startCore()
+        else await restartCore()
         return
       }
-      case 'restart-core':
-        await restartCore()
-        return
       default:
         throw new Error('Unknown system proxy diagnostic action')
     }

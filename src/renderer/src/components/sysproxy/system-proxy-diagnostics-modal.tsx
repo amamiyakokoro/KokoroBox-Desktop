@@ -153,15 +153,19 @@ const SystemProxyDiagnosticsModal: React.FC<{ onClose: () => void }> = ({ onClos
                           </p>
                         )}
                         {check.action && (
-                          <Button
-                            className="mt-2"
-                            size="sm"
-                            variant="secondary"
-                            isDisabled={busy}
-                            onPress={() => void run(check.action)}
-                          >
-                            {actionLabels[check.action]}
-                          </Button>
+                          <div className="mt-2 flex flex-wrap items-center gap-2">
+                            <Button
+                              size="sm"
+                              variant="secondary"
+                              isDisabled={busy}
+                              onPress={() => void run(check.action)}
+                            >
+                              {actionLabels[check.action]}
+                            </Button>
+                            {check.actionHint && (
+                              <span className="text-xs text-muted">{check.actionHint}</span>
+                            )}
+                          </div>
                         )}
                       </div>
                     </div>

@@ -1,3 +1,6 @@
+import { setNativeSystemProxy, assertNativeSystemProxyAvailable } from './native-system-proxy'
+import type { NativeSystemProxySettings } from '../../shared/proxy-diagnostics-contract'
+import { prepareNativeProxyMutation, adoptNativeProxyMutation } from '../service/api'
 import { tr } from '../../shared/i18n'
 import { getAppConfig, getControledMihomoConfig } from '../config'
 import { startPacServer, stopPacServer } from '../resolve/server'
@@ -347,4 +350,39 @@ async function shouldNotifySysproxyGuardEvent(event: ServiceSysproxyEvent): Prom
   if (key === lastSysproxyGuardNotificationKey) return false
   lastSysproxyGuardNotificationKey = key
   return true
+}
+
+/** Explicit diagnostics remediation, using the service-authoritative endpoint.
+ * Preserve lease cleanup and guard behavior while Native owns the OS mutation. */
+export async function applyNativeDiagnosticProxy(
+  settings: NativeSystemProxySettings,
+  onlyActiveDevice: boolean,
+  guard: boolean,
+  guardNotify: boolean
+): Promise<void> {
+  assertNativeSystemProxyAvailable()
+  // Invalidate queued retries and in-flight lease renewal recovery before handoff.
+  ++triggerSysProxyRequest
+  cancelPendingSysProxyRetry()
+  stopSysproxyLeaseRenewal()
+  await triggerSysProxyTask
+  await prepareNativeProxyMutation()
+  await setNativeSystemProxy(settings)
+  if (settings.mode === 'disabled') {
+    await stopPacServer()
+    updateSysproxyGuardEventStream(false)
+    return
+  }
+  await adoptNativeProxyMutation({
+    server:
+      settings.mode === 'manual'
+        ? `${settings.host?.includes(':') ? `[${settings.host}]` : settings.host}:${settings.port}`
+        : undefined,
+    url: settings.mode === 'auto' ? settings.pacUrl : undefined,
+    bypass: settings.bypass.join(','),
+    only_active_device: onlyActiveDevice,
+    guard
+  })
+  updateSysproxyGuardEventStream(guard && guardNotify)
+  startSysproxyLeaseRenewal(onlyActiveDevice, false)
 }

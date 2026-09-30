@@ -1,20 +1,14 @@
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
-import { EventEmitter } from 'node:events'
-import http from 'node:http'
-import net, { type AddressInfo } from 'node:net'
-import type { Duplex } from 'node:stream'
 import { test } from 'node:test'
 import ts from 'typescript'
 import { setLocale } from '../src/shared/i18n'
 import { defaultSystemProxyBypass } from '../src/shared/system-proxy'
 import {
   buildSystemProxyDiagnostics,
-  safeProxyAddress,
   type SystemProxyDiagnosticInput
 } from '../src/shared/system-proxy-diagnostics'
-import { probeProxyConnectivity, probeProxyListener } from '../src/main/sys/system-proxy-probes'
 
 setLocale('en')
 
@@ -74,7 +68,7 @@ test('disabled intent is distinct from Windows disabled while UI intent is enabl
   assert.equal(mismatch.result.state.enabled, false)
   assert.equal(mismatch.result.state.intentEnabled, true)
   assert.equal(mismatch.item.summary, 'System proxy configuration was changed')
-  assert.equal(mismatch.result.overall.status, 'error')
+  assert.equal(mismatch.result.overall.kind, 'disabled')
 })
 
 test('wrong Windows proxy port shows real expected/current addresses with an explicit repair', () => {
@@ -274,164 +268,6 @@ function load<T>(
   return module.exports as T
 }
 
-test('Windows adapters parse empty, hexadecimal and localized registry/dump output without executing writes', async () => {
-  const calls: { file: string; args: string[] }[] = []
-  const native = load<typeof import('../src/main/sys/platform/windows-system-proxy')>(
-    'src/main/sys/platform/windows-system-proxy.ts',
-    {
-      'kokorobox-native': { listUwpLoopbackApps: () => [{ enabled: true }, { enabled: false }] },
-      'node:child_process': {
-        execFile: (
-          file: string,
-          args: string[],
-          _options: unknown,
-          callback: (error: unknown, result: { stdout: string }) => void
-        ) => {
-          calls.push({ file, args })
-          callback(null, { stdout: '' })
-        }
-      }
-    }
-  )
-  const parsed = native.parseWindowsProxyRegistry(
-    'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\r\n    AutoConfigURL    REG_SZ    \r\n    ProxyServer    REG_SZ    127.0.0.1:8123\r\n    ProxyEnable    REG_DWORD    0x1\r\n    ProxyOverride    REG_SZ    <local>\r\n'
-  )
-  assert.deepEqual(parsed, {
-    enabled: true,
-    server: '127.0.0.1:8123',
-    override: '<local>',
-    pacUrl: ''
-  })
-  assert.equal(native.parseWindowsProxyRegistry(' ProxyEnable REG_DWORD 0x0').enabled, false)
-  assert.deepEqual(native.parseWinHttpDump('# 当前配置\npushd winhttp\nreset proxy\npopd'), {
-    mode: 'direct'
-  })
-  assert.deepEqual(
-    native.parseWinHttpDump('set proxy proxy-server="127.0.0.1:8123" bypass-list="<local>"'),
-    { mode: 'proxy', server: '127.0.0.1:8123' }
-  )
-  assert.deepEqual(native.parseWinHttpDump('set advproxy settings="private"'), { mode: 'advanced' })
-  assert.equal(native.parseWinHttpDump('unrecognized').mode, 'unknown')
-  assert.equal(native.readLoopbackExemptionCount(), 1)
-  await native.readWindowsUserProxy()
-  await native.readWinHttpProxy()
-  assert.deepEqual(
-    calls.map((call) => call.args),
-    [
-      ['query', 'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings'],
-      ['winhttp', 'dump']
-    ]
-  )
-})
-
-test('on-demand engine coalesces simultaneous runs, checks in order and repairs only on explicit action', async () => {
-  const calls: string[] = []
-  const logs: string[] = []
-  let enabled = false
-  let probeCount = 0
-  const engine = load<typeof import('../src/main/sys/system-proxy-diagnostics')>(
-    'src/main/sys/system-proxy-diagnostics.ts',
-    {
-      '../config': {
-        getAppConfig: async () => ({ sysProxy: { enable: enabled }, onlyActiveDevice: true }),
-        getControledMihomoConfig: async () => ({ 'mixed-port': 8123 })
-      },
-      '../core/manager': {
-        getCoreRunningForDiagnostics: async () => {
-          calls.push('core')
-          return true
-        },
-        startCore: async () => {
-          calls.push('start-core')
-          return [Promise.resolve()]
-        },
-        restartCore: async () => {
-          calls.push('restart-core')
-        }
-      },
-      '../core/mihomoApi': {
-        mihomoConfigForDiagnostics: async () => {
-          calls.push('config')
-          return { 'mixed-port': 8123, secret: 'must-not-leak' }
-        }
-      },
-      '../resolve/server': { getActivePacUrl: () => undefined },
-      '../utils/log': {
-        appendAppLog: async (message: string) => {
-          logs.push(message)
-        }
-      },
-      './sysproxy-operation': {
-        changeSysProxy: async (next: boolean, onlyActive: boolean) => {
-          calls.push(`apply:${next}`)
-          assert.equal(onlyActive, true)
-          return { phase: 'idle', confirmed: next }
-        }
-      },
-      '../../shared/system-proxy': {
-        defaultSystemProxyBypass,
-        normalizeProxyHost: () => '127.0.0.1'
-      },
-      '../../shared/system-proxy-diagnostics': { buildSystemProxyDiagnostics, safeProxyAddress },
-      './system-proxy-probes': {
-        probeProxyListener: async (host: string, port: number) => {
-          calls.push('listener')
-          assert.equal(host, '127.0.0.1')
-          assert.equal(port, 8123)
-          return true
-        },
-        probeProxyConnectivity: async () => {
-          calls.push('connectivity')
-          probeCount++
-          return { outcome: 'success' }
-        }
-      },
-      './platform/windows-system-proxy': {
-        readWindowsUserProxy: async () => {
-          calls.push('registry')
-          return input().windowsProxy
-        },
-        readLoopbackExemptionCount: () => {
-          calls.push('loopback')
-          return 0
-        },
-        readWinHttpProxy: async () => {
-          calls.push('winhttp')
-          return { mode: 'direct' }
-        }
-      }
-    },
-    'win32'
-  )
-  assert.deepEqual(calls, [])
-  const first = engine.runSystemProxyDiagnostics()
-  assert.equal(first, engine.runSystemProxyDiagnostics())
-  await first
-  assert.deepEqual(calls, [
-    'registry',
-    'listener',
-    'core',
-    'config',
-    'connectivity',
-    'loopback',
-    'winhttp'
-  ])
-  assert.equal(probeCount, 1)
-  assert.doesNotMatch(logs.join(''), /must-not-leak/)
-  await engine.fixSystemProxyDiagnostic('restore-system-proxy')
-  assert.equal(calls.at(-1), 'apply:false')
-  enabled = true
-  await engine.fixSystemProxyDiagnostic('restore-system-proxy')
-  assert.equal(calls.at(-1), 'apply:true')
-  await engine.fixSystemProxyDiagnostic('start-core')
-  assert.equal(calls.at(-1), 'start-core')
-  await engine.fixSystemProxyDiagnostic('restart-core')
-  assert.equal(calls.at(-1), 'restart-core')
-  assert.equal(probeCount, 1)
-  await engine.runSystemProxyDiagnostics()
-  assert.equal(probeCount, 2)
-})
-
 test('unexpected enable while intent is disabled is a configuration conflict', () => {
   const { result, item } = check({ intentEnabled: false }, 'conflicts')
   assert.equal(item.status, 'warning')
@@ -552,129 +388,508 @@ test('read-only service status does not probe authenticated health or migrate se
   assert.equal(probes, 1)
 })
 
-async function listen(server: net.Server): Promise<number> {
-  await new Promise<void>((resolve) => {
-    server.listen(0, '127.0.0.1', resolve)
-  })
-  return (server.address() as AddressInfo).port
+function nativeSnapshot(
+  patch: Partial<NativeSystemProxyDiagnostics> = {}
+): NativeSystemProxyDiagnostics {
+  return {
+    platform: 'windows',
+    status: 'available',
+    enabled: true,
+    proxies: {
+      http: { host: '127.0.0.1', port: 18423 },
+      https: { host: '127.0.0.1', port: 18423 }
+    },
+    pac: { enabled: false },
+    bypass: defaultSystemProxyBypass('win32'),
+    windows: {
+      proxyServer: '127.0.0.1:18423',
+      proxyOverride: defaultSystemProxyBypass('win32').join(';'),
+      autoConfigUrl: '',
+      winHttp: { status: 'available', mode: 'direct' },
+      appContainer: { supported: true, status: 'available', loopbackExemptionCount: 0 }
+    },
+    ...patch
+  }
+}
+function runtimeSnapshot(patch: Partial<ProxyRuntimeDiagnostics> = {}): ProxyRuntimeDiagnostics {
+  return {
+    core: { running: true, ready: true },
+    proxy: { host: '127.0.0.1', port: 18423 },
+    listener: { available: true },
+    connectivity: { available: true, outcome: 'success' },
+    ...patch
+  }
+}
+function diagnosticEngine(overrides: Record<string, unknown> = {}) {
+  return load<typeof import('../src/main/sys/system-proxy-diagnostics')>(
+    'src/main/sys/system-proxy-diagnostics.ts',
+    {
+      '../core/manager': { migrateCoreToServiceForDiagnostics: async () => {} },
+      '../config': {
+        getAppConfig: async () => ({ sysProxy: { enable: true }, corePermissionMode: 'service' })
+      },
+      '../service/api': {
+        getProxyRuntimeDiagnostics: async () => runtimeSnapshot(),
+        startCore: async () => {},
+        restartCore: async () => {}
+      },
+      '../resolve/server': { getActivePacUrl: () => undefined, startPacServer: async () => 34567 },
+      '../resolve/pac-http-server': {
+        localPacUrl: (port: number) => `http://127.0.0.1:${port}/pac`
+      },
+      '../utils/log': { appendAppLog: async () => {} },
+      './sysproxy-operation': {
+        changeSysProxy: async () => {
+          throw new Error('unexpected mutation')
+        }
+      },
+      './sysproxy': {
+        applyNativeDiagnosticProxy: async () => {
+          throw new Error('unexpected mutation')
+        }
+      },
+      './native-system-proxy': { getNativeSystemProxyDiagnostics: async () => nativeSnapshot() },
+      '../../shared/system-proxy': { defaultSystemProxyBypass },
+      '../../shared/system-proxy-diagnostics': { buildSystemProxyDiagnostics },
+      ...overrides
+    },
+    'win32'
+  )
 }
 
-test('real TCP and HTTP CONNECT probes distinguish no listener, outbound rejection, authentication and timeout', async (t) => {
-  const sockets = new Set<Duplex>()
-  const server = http.createServer()
-  server.on('connection', (socket) => {
-    sockets.add(socket)
-    socket.on('close', () => sockets.delete(socket))
+test('structured Native/Service integration covers Windows health, conflicts and partial failures', () => {
+  const { combineSystemProxyDiagnostics: combine } = diagnosticEngine()
+  const base = {
+    platform: 'win32',
+    intentEnabled: true,
+    mode: 'manual' as const,
+    expectedBypass: defaultSystemProxyBypass('win32')
+  }
+  const cases: Array<{
+    name: string
+    native?: NativeSystemProxyDiagnostics
+    runtime?: ProxyRuntimeDiagnostics
+    kind: string
+    intent?: boolean
+  }> = [
+    { name: 'healthy', native: nativeSnapshot(), runtime: runtimeSnapshot(), kind: 'healthy' },
+    {
+      name: 'disabled',
+      native: nativeSnapshot({ enabled: false }),
+      runtime: runtimeSnapshot(),
+      kind: 'disabled',
+      intent: false
+    },
+    {
+      name: 'desired ON actual OFF',
+      native: nativeSnapshot({ enabled: false }),
+      runtime: runtimeSnapshot(),
+      kind: 'disabled'
+    },
+    {
+      name: 'wrong port',
+      native: nativeSnapshot({
+        windows: { ...nativeSnapshot().windows!, proxyServer: '127.0.0.1:18424' }
+      }),
+      runtime: runtimeSnapshot(),
+      kind: 'configuration-mismatch'
+    },
+    {
+      name: 'stopped',
+      native: nativeSnapshot(),
+      runtime: runtimeSnapshot({
+        core: { running: false, ready: false },
+        proxy: { host: '127.0.0.1', port: null }
+      }),
+      kind: 'core-unavailable'
+    },
+    {
+      name: 'listener down',
+      native: nativeSnapshot(),
+      runtime: runtimeSnapshot({
+        listener: { available: false, errorCode: 'connection-refused' },
+        connectivity: { available: false, outcome: 'unreachable' }
+      }),
+      kind: 'listener-unavailable'
+    },
+    {
+      name: 'outbound down',
+      native: nativeSnapshot(),
+      runtime: runtimeSnapshot({
+        connectivity: { available: false, outcome: 'outbound-failed', errorCode: 'timeout' }
+      }),
+      kind: 'connectivity-failed'
+    },
+    {
+      name: 'PAC warning',
+      native: nativeSnapshot({
+        windows: { ...nativeSnapshot().windows!, autoConfigUrl: 'https://private/pac?secret' }
+      }),
+      runtime: runtimeSnapshot(),
+      kind: 'warning'
+    },
+    {
+      name: 'broad bypass',
+      native: nativeSnapshot({ windows: { ...nativeSnapshot().windows!, proxyOverride: '*' } }),
+      runtime: runtimeSnapshot(),
+      kind: 'warning'
+    },
+    {
+      name: 'WinHTTP unavailable',
+      native: nativeSnapshot({
+        windows: {
+          ...nativeSnapshot().windows!,
+          winHttp: { status: 'unavailable', errorCode: 'winhttp-read-failed' }
+        }
+      }),
+      runtime: runtimeSnapshot(),
+      kind: 'healthy'
+    },
+    {
+      name: 'AppContainer unavailable',
+      native: nativeSnapshot({
+        windows: {
+          ...nativeSnapshot().windows!,
+          appContainer: {
+            supported: true,
+            status: 'unavailable',
+            errorCode: 'appcontainer-read-failed'
+          }
+        }
+      }),
+      runtime: runtimeSnapshot(),
+      kind: 'healthy'
+    },
+    {
+      name: 'native partially failed',
+      native: nativeSnapshot({ status: 'unavailable', enabled: null }),
+      runtime: runtimeSnapshot(),
+      kind: 'configuration-unavailable'
+    },
+    { name: 'service failed', native: nativeSnapshot(), kind: 'core-unavailable' }
+  ]
+  for (const c of cases) {
+    const result = combine({ ...base, intentEnabled: c.intent ?? true }, c.native, c.runtime)
+    assert.equal(result.overall.kind, c.kind, c.name)
+    assert.equal(
+      result.state.enabled,
+      c.native?.status === 'available' ? c.native.enabled : null,
+      c.name
+    )
+    assert.equal(result.state.intentEnabled, c.intent ?? true, c.name)
+    assert.equal(
+      result.results.find((row) => row.id === 'connectivity')?.status,
+      c.runtime?.connectivity.available ? 'success' : 'error',
+      c.name
+    )
+    assert.doesNotMatch(result.report, /private|secret/)
+    if (c.name === 'service failed') {
+      assert.equal(result.results.find((row) => row.id === 'system-proxy')?.status, 'success')
+      assert.equal(result.state.matchesExpectedConfig, null)
+      assert.equal(result.results.find((row) => row.id === 'conflicts')?.status, 'info')
+      assert.equal(result.results.find((row) => row.id === 'proxy-address')?.action, undefined)
+    }
+    if (c.name === 'native partially failed')
+      assert.equal(result.results.find((row) => row.id === 'winhttp')?.status, 'info')
+    if (c.name === 'WinHTTP unavailable')
+      assert.equal(result.results.find((row) => row.id === 'winhttp')?.status, 'warning')
+    if (c.name === 'AppContainer unavailable')
+      assert.equal(result.results.find((row) => row.id === 'appcontainer')?.status, 'warning')
+  }
+})
+
+test('on-demand orchestration coalesces, refreshes and routes explicit actions to Native/Service', async () => {
+  const calls: string[] = [],
+    logs: string[] = []
+  let intent = true
+  const engine = diagnosticEngine({
+    '../core/manager': { migrateCoreToServiceForDiagnostics: async () => {} },
+    '../config': {
+      getAppConfig: async () => ({
+        sysProxy: { enable: intent },
+        corePermissionMode: 'service',
+        onlyActiveDevice: true
+      }),
+      getControledMihomoConfig: () => {
+        throw new Error('Desktop must not infer runtime port')
+      }
+    },
+    '../service/api': {
+      getProxyRuntimeDiagnostics: async () => {
+        calls.push('service')
+        return runtimeSnapshot()
+      },
+      startCore: async () => {
+        calls.push('service-start')
+      },
+      restartCore: async () => {
+        calls.push('service-restart')
+      }
+    },
+    './native-system-proxy': {
+      getNativeSystemProxyDiagnostics: async () => {
+        calls.push('native')
+        return nativeSnapshot()
+      }
+    },
+    '../utils/log': {
+      appendAppLog: async (value: string) => {
+        logs.push(value)
+      }
+    },
+    './sysproxy-operation': {
+      changeSysProxy: async (
+        enable: boolean,
+        onlyActive: boolean,
+        apply: () => Promise<string>
+      ) => {
+        assert.equal(onlyActive, true)
+        await apply()
+        intent = enable
+        return { phase: 'idle', confirmed: enable }
+      }
+    },
+    './sysproxy': {
+      applyNativeDiagnosticProxy: async (settings: NativeSystemProxySettings) => {
+        calls.push(`native-write:${settings.mode}`)
+        if (settings.mode !== 'disabled') assert.equal(settings.port, 18423)
+      }
+    }
   })
-  const port = await listen(server)
-  t.after(() => {
-    for (const socket of sockets) socket.destroy()
-    server.close()
+  assert.deepEqual(calls, [])
+  const first = engine.runSystemProxyDiagnostics()
+  assert.equal(first, engine.runSystemProxyDiagnostics())
+  await first
+  assert.deepEqual(calls, ['native', 'service'])
+  assert.equal(logs.length, 1)
+  assert.match(logs[0], /overall status: healthy/)
+  await engine.fixSystemProxyDiagnostic('restore-system-proxy')
+  assert.deepEqual(calls.slice(-2), ['service', 'native-write:manual'])
+  intent = false
+  await engine.fixSystemProxyDiagnostic('restore-system-proxy')
+  assert.equal(calls.at(-1), 'native-write:disabled')
+  await engine.fixSystemProxyDiagnostic('enable-system-proxy')
+  assert.equal(calls.at(-1), 'native-write:manual')
+  await engine.fixSystemProxyDiagnostic('start-core')
+  assert.equal(calls.at(-1), 'service-start')
+  await engine.fixSystemProxyDiagnostic('restart-core')
+  assert.equal(calls.at(-1), 'service-restart')
+  await engine.runSystemProxyDiagnostics()
+  assert.deepEqual(calls.slice(-2), ['native', 'service'])
+})
+
+test('failed backend calls leave the independent domain visible and cannot repair with a guessed port', async () => {
+  const nativeFailed = diagnosticEngine({
+    './native-system-proxy': {
+      getNativeSystemProxyDiagnostics: async () => {
+        throw new Error('private Windows error')
+      }
+    }
   })
-  let mode = 'reject'
-  server.on('connect', (request, socket) => {
-    assert.equal(request.url, 'www.gstatic.com:443')
-    assert.equal(request.headers['proxy-authorization'], undefined)
-    if (mode === 'reject') socket.end('HTTP/1.1 502 Bad Gateway\r\n\r\n')
-    if (mode === 'auth') socket.end('HTTP/1.1 407 Proxy Authentication Required\r\n\r\n')
+  const nativeResult = await nativeFailed.runSystemProxyDiagnostics()
+  assert.equal(nativeResult.results.find((row) => row.id === 'connectivity')?.status, 'success')
+  assert.doesNotMatch(nativeResult.report, /private Windows error/)
+  const serviceFailed = diagnosticEngine({
+    '../service/api': {
+      getProxyRuntimeDiagnostics: async () => {
+        throw new Error('private service error')
+      }
+    }
   })
-  assert.equal(await probeProxyListener('127.0.0.1', port), true)
-  assert.deepEqual(await probeProxyConnectivity('127.0.0.1', port), {
-    outcome: 'outbound-failed',
-    reason: 'tunnel-rejected'
+  const serviceResult = await serviceFailed.runSystemProxyDiagnostics()
+  assert.equal(serviceResult.results.find((row) => row.id === 'system-proxy')?.status, 'success')
+  assert.doesNotMatch(serviceResult.report, /private service error|Result: OK/)
+  assert.match(serviceResult.report, /service-unavailable/)
+  await assert.rejects(
+    serviceFailed.fixSystemProxyDiagnostic('restore-system-proxy'),
+    /private service error/
+  )
+})
+
+test('service DTO validation rejects guessed/invalid ports and retains only diagnostic fields', () => {
+  assert.throws(() =>
+    validateProxyRuntimeDiagnostics(
+      runtimeSnapshot({ proxy: { host: 'remote.example', port: 18423 } })
+    )
+  )
+  assert.throws(() =>
+    validateProxyRuntimeDiagnostics(runtimeSnapshot({ proxy: { host: '127.0.0.1', port: 0 } }))
+  )
+  const result = validateProxyRuntimeDiagnostics({
+    ...runtimeSnapshot(),
+    config: { token: 'SECRET' }
   })
-  mode = 'auth'
-  assert.deepEqual(await probeProxyConnectivity('127.0.0.1', port), {
-    outcome: 'outbound-failed',
-    reason: 'proxy-authentication'
+  assert.doesNotMatch(JSON.stringify(result), /SECRET|config/)
+  const summary = buildSystemProxyDiagnostics(
+    input({
+      connectivity: { outcome: 'outbound-failed', reason: 'https://token:secret@private.example' }
+    })
+  )
+  assert.doesNotMatch(summary.report, /token|secret|private/)
+})
+
+test('desktop diagnostic boundary contains no low-level OS/runtime operations', () => {
+  const source = readFileSync('src/main/sys/system-proxy-diagnostics.ts', 'utf8')
+  assert.doesNotMatch(
+    source,
+    /execFile|child_process|node:net|node:http|node:https|readWindowsUserProxy|probeProxy|mihomoConfig|getControledMihomoConfig|getCoreRunningForDiagnostics/
+  )
+})
+
+import {
+  validateProxyRuntimeDiagnostics,
+  type NativeSystemProxyDiagnostics,
+  type ProxyRuntimeDiagnostics,
+  type NativeSystemProxySettings
+} from '../src/shared/proxy-diagnostics-contract'
+
+test('direct core remediation explains and uses the existing Service ownership transfer', async () => {
+  let migrated = 0
+  const engine = diagnosticEngine({
+    '../config': {
+      getAppConfig: async () => ({ sysProxy: { enable: true }, corePermissionMode: 'elevated' })
+    },
+    '../core/manager': {
+      migrateCoreToServiceForDiagnostics: async () => {
+        migrated++
+      }
+    },
+    '../service/api': {
+      getProxyRuntimeDiagnostics: async (direct: boolean) => {
+        assert.equal(direct, true)
+        return runtimeSnapshot({
+          listener: { available: false },
+          connectivity: { available: false, outcome: 'unreachable' }
+        })
+      },
+      startCore: async () => {
+        throw new Error('must transfer ownership first')
+      },
+      restartCore: async () => {
+        throw new Error('must transfer ownership first')
+      }
+    }
   })
-  mode = 'hang'
-  assert.deepEqual(await probeProxyConnectivity('127.0.0.1', port, 60), {
-    outcome: 'outbound-failed',
-    reason: 'timeout'
-  })
-  assert.deepEqual(await probeProxyConnectivity('127.0.0.1', 0), {
-    outcome: 'unreachable',
-    reason: 'invalid-port'
-  })
-  for (const socket of sockets) socket.destroy()
-  await new Promise<void>((resolve) => {
-    server.close(() => resolve())
-  })
-  assert.equal(await probeProxyListener('127.0.0.1', port), false)
-  assert.deepEqual(await probeProxyConnectivity('127.0.0.1', port), {
-    outcome: 'unreachable',
-    reason: 'connection-refused'
+  const result = await engine.runSystemProxyDiagnostics()
+  const listener = result.results.find((row) => row.id === 'listener')!
+  assert.equal(listener.action, 'restart-core')
+  assert.match(listener.actionHint!, /Service management/)
+  await engine.fixSystemProxyDiagnostic('restart-core')
+  await engine.fixSystemProxyDiagnostic('start-core')
+  assert.equal(migrated, 2)
+})
+
+test('Service ownership transfer restores permission intent on failure and prohibits elevated fallback', async () => {
+  for (const fail of [false, true]) {
+    const modes: string[] = []
+    const migrate = isolatedExport<
+      typeof import('../src/main/core/manager').migrateCoreToServiceForDiagnostics
+    >('src/main/core/manager.ts', 'migrateCoreToServiceForDiagnostics', {
+      getAppConfig: async () => ({ corePermissionMode: 'elevated' }),
+      patchAppConfig: async (patch: { corePermissionMode: string }) => {
+        modes.push(patch.corePermissionMode)
+      },
+      mainWindow: undefined,
+      startCore: async (detached: boolean, requireService: boolean) => {
+        assert.equal(detached, false)
+        assert.equal(requireService, true)
+        if (fail) throw new Error('service offline')
+        return [Promise.resolve()]
+      }
+    })
+    if (fail) await assert.rejects(migrate(), /service offline/)
+    else await migrate()
+    assert.deepEqual(modes, fail ? ['service', 'elevated'] : ['service'])
+  }
+})
+
+test('runtime IPC is read-only and has a bounded deadline; repair does not issue a public probe', async () => {
+  const calls: unknown[] = []
+  const get = isolatedExport<typeof import('../src/main/service/api').getProxyRuntimeDiagnostics>(
+    'src/main/service/api.ts',
+    'getProxyRuntimeDiagnostics',
+    {
+      createSignedServiceAxios: (base: string, recover: boolean) => {
+        assert.equal(base, 'http://localhost')
+        assert.equal(recover, false)
+        return {
+          request: async (request: unknown) => {
+            calls.push(request)
+            return runtimeSnapshot()
+          }
+        }
+      },
+      serviceContract: { proxyDiagnostics: { method: 'GET', path: '/core/proxy-diagnostics' } },
+      validateProxyRuntimeDiagnostics
+    }
+  )
+  await get(true, false)
+  assert.deepEqual(calls[0], {
+    method: 'GET',
+    url: '/core/proxy-diagnostics',
+    params: { direct: 'true', probe: 'false' },
+    timeout: 10000
   })
 })
 
-test('a successful CONNECT must still get a verified HTTPS 204 response; redirects fail', async (t) => {
-  const server = http.createServer()
-  const sockets = new Set<Duplex>()
-  server.on('connect', (_request, socket) => {
-    sockets.add(socket)
-    socket.write('HTTP/1.1 200 Connection Established\r\n\r\n')
-    socket.on('close', () => sockets.delete(socket))
-  })
-  const port = await listen(server)
-  t.after(() => {
-    for (const socket of sockets) socket.destroy()
-    server.close()
-  })
-  let statusCode = 204
-  let requests = 0
-  const probes = load<typeof import('../src/main/sys/system-proxy-probes')>(
-    'src/main/sys/system-proxy-probes.ts',
-    {
-      'node:https': {
-        Agent: class {
-          createConnection?: () => unknown
-          destroy() {
-            /* mock agent has no pool */
-          }
-        },
-        request: (
-          url: string,
-          options: { agent: { createConnection: () => unknown } },
-          callback: (response: unknown) => void
-        ) => {
-          requests++
-          assert.equal(url, 'https://www.gstatic.com/generate_204')
-          options.agent.createConnection()
-          const request = new EventEmitter() as EventEmitter & {
-            end: () => void
-            destroy: () => void
-          }
-          request.end = () =>
-            callback({
-              statusCode,
-              destroy() {
-                /* mock response has no socket */
-              }
-            })
-          request.destroy = () => {}
-          return request
-        }
-      },
-      'node:tls': {
-        connect: (options: {
-          socket: net.Socket
-          servername: string
-          rejectUnauthorized: boolean
-        }) => {
-          assert.ok(options.socket instanceof net.Socket)
-          assert.equal(options.servername, 'www.gstatic.com')
-          assert.equal(options.rejectUnauthorized, true)
-          return options.socket
-        }
-      }
+test('native remediation invalidates legacy retries before guard handoff and starts renewal after adoption', async () => {
+  const events: string[] = []
+  const generation = 1
+  const apply = isolatedExport<
+    typeof import('../src/main/sys/sysproxy').applyNativeDiagnosticProxy
+  >('src/main/sys/sysproxy.ts', 'applyNativeDiagnosticProxy', {
+    assertNativeSystemProxyAvailable: () => {},
+    triggerSysProxyRequest: generation,
+    cancelPendingSysProxyRetry: () => {
+      events.push('cancel-retry')
+    },
+    stopSysproxyLeaseRenewal: () => {
+      events.push('stop-renewal')
+    },
+    triggerSysProxyTask: Promise.resolve(),
+    prepareNativeProxyMutation: async () => {
+      events.push('prepare')
+    },
+    setNativeSystemProxy: async () => {
+      events.push('native')
+    },
+    adoptNativeProxyMutation: async (settings: { server: string }) => {
+      assert.equal(settings.server, '127.0.0.1:18423')
+      events.push('adopt')
+    },
+    updateSysproxyGuardEventStream: () => {
+      events.push('events')
+    },
+    startSysproxyLeaseRenewal: () => {
+      events.push('renew')
+    },
+    stopPacServer: async () => {
+      events.push('stop-pac')
     }
-  )
-  assert.deepEqual(await probes.probeProxyConnectivity('127.0.0.1', port), { outcome: 'success' })
-  statusCode = 302
-  assert.deepEqual(await probes.probeProxyConnectivity('127.0.0.1', port), {
-    outcome: 'outbound-failed',
-    reason: 'unexpected-response'
   })
-  assert.equal(requests, 2)
+  await apply(
+    { mode: 'manual', host: '127.0.0.1', port: 18423, bypass: ['<local>'] },
+    true,
+    true,
+    true
+  )
+  assert.deepEqual(events, [
+    'cancel-retry',
+    'stop-renewal',
+    'prepare',
+    'native',
+    'adopt',
+    'events',
+    'renew'
+  ])
+  events.length = 0
+  await apply({ mode: 'disabled', bypass: [] }, true, false, false)
+  assert.deepEqual(events, [
+    'cancel-retry',
+    'stop-renewal',
+    'prepare',
+    'native',
+    'stop-pac',
+    'events'
+  ])
 })
