@@ -287,7 +287,12 @@ export function buildLinuxSystemProxyDiagnostics(
       summary: tr('System proxy configuration does not match KokoroBox')
     }
   else if (
-    ['core-unavailable', 'listener-unavailable', 'connectivity-failed'].includes(base.overall.kind)
+    [
+      'runtime-unavailable',
+      'core-unavailable',
+      'listener-unavailable',
+      'connectivity-failed'
+    ].includes(base.overall.kind)
   ) {
     overall = base.overall
   } else if (environmentConflict)

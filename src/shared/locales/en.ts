@@ -2010,5 +2010,26 @@ export const messages: Readonly<Record<string, string>> = {
   'System proxy behavior can vary by application.':
     'System proxy behavior can vary by application.',
   'Some command-line or sandboxed applications use their own proxy configuration. Environment proxy variables are separate and were not changed.':
-    'Some command-line or sandboxed applications use their own proxy configuration. Environment proxy variables are separate and were not changed.'
+    'Some command-line or sandboxed applications use their own proxy configuration. Environment proxy variables are separate and were not changed.',
+  'Runtime diagnostics': 'Runtime diagnostics',
+  'The running Service does not support proxy diagnostics':
+    'The running Service does not support proxy diagnostics',
+  'Service authentication is required': 'Service authentication is required',
+  'Service access was denied': 'Service access was denied',
+  'Service diagnostics timed out': 'Service diagnostics timed out',
+  'Service returned invalid diagnostic data': 'Service returned invalid diagnostic data',
+  'Service diagnostics request failed': 'Service diagnostics request failed',
+  'Unable to contact KokoroBox Service': 'Unable to contact KokoroBox Service',
+  'Update KokoroBox Service if needed, then restart Service from Core runtime settings and run diagnostics again. The bundled Service and the running Service may be different versions.':
+    'Update KokoroBox Service if needed, then restart Service from Core runtime settings and run diagnostics again. The bundled Service and the running Service may be different versions.',
+  'Initialize or repair Service authentication in Core runtime settings, then run diagnostics again.':
+    'Initialize or repair Service authentication in Core runtime settings, then run diagnostics again.',
+  'Check Service status in Core runtime settings and run diagnostics again. Core, listener and connectivity results remain unknown until runtime diagnostics are available.':
+    'Check Service status in Core runtime settings and run diagnostics again. Core, listener and connectivity results remain unknown until runtime diagnostics are available.',
+  'Runtime diagnostics are unavailable. Core configuration has not been checked.':
+    'Runtime diagnostics are unavailable. Core configuration has not been checked.',
+  'No runtime diagnostic result was received. Proxy connectivity has not been verified.':
+    'No runtime diagnostic result was received. Proxy connectivity has not been verified.',
+  'Proxy runtime diagnostics are unavailable': 'Proxy runtime diagnostics are unavailable',
+  'Not checked': 'Not checked'
 }

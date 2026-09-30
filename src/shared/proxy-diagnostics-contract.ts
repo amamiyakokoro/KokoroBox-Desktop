@@ -110,6 +110,43 @@ export interface ProxyRuntimeDiagnostics {
   }
 }
 
+export type ProxyRuntimeDiagnosticsFailure =
+  | 'service-diagnostics-unsupported'
+  | 'service-authentication-required'
+  | 'service-permission-denied'
+  | 'service-timeout'
+  | 'service-response-invalid'
+  | 'service-request-failed'
+  | 'service-unavailable'
+
+/** Transport failures describe missing evidence, never a stopped or failed core.
+ * Return only fixed codes; HTTP bodies, credentials and raw errors stay private. */
+export function proxyRuntimeDiagnosticsFailure(error: unknown): ProxyRuntimeDiagnosticsFailure {
+  const value = error as { code?: string; status?: number; response?: { status?: number } } | null
+  const code = value?.code
+  if (
+    code &&
+    [
+      'service-diagnostics-unsupported',
+      'service-authentication-required',
+      'service-permission-denied',
+      'service-timeout',
+      'service-response-invalid',
+      'service-request-failed',
+      'service-unavailable'
+    ].includes(code)
+  )
+    return code as ProxyRuntimeDiagnosticsFailure
+  const status = value?.status ?? value?.response?.status
+  if (status === 404 || status === 405) return 'service-diagnostics-unsupported'
+  if (status === 401) return 'service-authentication-required'
+  if (status === 403) return 'service-permission-denied'
+  if (status === 408 || status === 504 || ['ECONNABORTED', 'ETIMEDOUT'].includes(code ?? ''))
+    return 'service-timeout'
+  if (status !== undefined) return 'service-request-failed'
+  return 'service-unavailable'
+}
+
 export function validateProxyRuntimeDiagnostics(value: unknown): ProxyRuntimeDiagnostics {
   if (!value || typeof value !== 'object') throw new Error('Invalid proxy runtime diagnostics')
   const v = value as ProxyRuntimeDiagnostics

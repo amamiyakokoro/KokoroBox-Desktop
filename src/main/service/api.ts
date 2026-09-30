@@ -1,4 +1,5 @@
 import {
+  proxyRuntimeDiagnosticsFailure,
   validateProxyRuntimeDiagnostics,
   type ProxyRuntimeDiagnostics
 } from '../../shared/proxy-diagnostics-contract'
@@ -49,12 +50,17 @@ type ServiceAuthRequestConfig = InternalAxiosRequestConfig & {
 
 export class ServiceAPIError extends Error {
   status?: number
+  code?: string
   responseData?: unknown
 
-  constructor(message: string, options?: { status?: number; responseData?: unknown }) {
+  constructor(
+    message: string,
+    options?: { status?: number; code?: string; responseData?: unknown }
+  ) {
     super(message)
     this.name = 'ServiceAPIError'
     this.status = options?.status
+    this.code = options?.code
     this.responseData = options?.responseData
   }
 }
@@ -350,9 +356,10 @@ function createServiceAPIError(error: unknown): unknown {
   const serviceError = error as {
     response?: { data?: unknown; status?: number }
     message?: string
+    code?: string
   }
 
-  if (serviceError.response?.data) {
+  if (serviceError.response) {
     const message = getResponseErrorMessage(
       serviceError.response.data,
       serviceError.message || tr('Request failed')
@@ -360,12 +367,13 @@ function createServiceAPIError(error: unknown): unknown {
 
     return new ServiceAPIError(message, {
       status: serviceError.response.status,
+      code: serviceError.code,
       responseData: serviceError.response.data
     })
   }
 
   if (error instanceof Error) {
-    return new ServiceAPIError(error.message)
+    return new ServiceAPIError(error.message, { code: serviceError.code })
   }
 
   return error
@@ -533,14 +541,24 @@ export async function getProxyRuntimeDiagnostics(
   probeConnectivity = true
 ): Promise<ProxyRuntimeDiagnostics> {
   const instance = createSignedServiceAxios('http://localhost', false)
-  return validateProxyRuntimeDiagnostics(
-    await instance.request({
+  let response: unknown
+  try {
+    response = await instance.request({
       method: serviceContract.proxyDiagnostics.method,
       url: serviceContract.proxyDiagnostics.path,
       params: { direct: String(direct), probe: String(probeConnectivity) },
       timeout: 10_000
     })
-  )
+  } catch (error) {
+    const code = proxyRuntimeDiagnosticsFailure(error)
+    throw Object.assign(new Error(code), { code })
+  }
+  try {
+    return validateProxyRuntimeDiagnostics(response)
+  } catch {
+    const code = 'service-response-invalid'
+    throw Object.assign(new Error(code), { code })
+  }
 }
 
 export const getCoreStatus = async (

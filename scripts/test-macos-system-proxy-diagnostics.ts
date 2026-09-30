@@ -270,7 +270,13 @@ test('Service unavailable preserves OS configuration and does not invent a port 
   assert.equal(row(result, 'http-proxy').status, 'info')
   assert.equal(result.state.matchesExpectedConfig, null)
   assert.equal(row(result, 'http-proxy').action, undefined)
-  assert.equal(result.overall.kind, 'core-unavailable')
+  assert.equal(result.overall.kind, 'runtime-unavailable')
+  assert.equal(result.state.listenerAvailable, null)
+  assert.equal(result.state.connectivityAvailable, null)
+  for (const id of ['core', 'core-config', 'listener', 'connectivity']) {
+    assert.equal(row(result, id).status, 'info')
+    assert.equal(row(result, id).action, undefined)
+  }
   assert.doesNotMatch(result.report, /Result: OK|7890/)
 })
 test('both IPv4 and IPv6 primary services are checked rather than selecting an arbitrary active interface', () => {

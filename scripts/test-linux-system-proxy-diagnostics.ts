@@ -218,7 +218,11 @@ test('Native and Service failures preserve the other domain and do not invent ru
   assert.equal(missingService.state.matchesExpectedConfig, null)
   assert.equal(row(missingService, 'http-proxy').status, 'info')
   assert.doesNotMatch(missingService.report, /Result: OK|7890/)
-  assert.equal(missingService.overall.kind, 'core-unavailable')
+  assert.equal(missingService.overall.kind, 'runtime-unavailable')
+  assert.equal(missingService.state.listenerAvailable, null)
+  assert.equal(missingService.state.connectivityAvailable, null)
+  for (const id of ['core', 'core-config', 'listener', 'connectivity'])
+    assert.equal(row(missingService, id).status, 'info')
 })
 test('Linux reports redact remote hosts, credentials, arbitrary PAC and custom bypass', () => {
   const state = native()

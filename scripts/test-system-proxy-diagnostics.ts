@@ -309,7 +309,12 @@ function isolatedExport<T>(
         ))
   )
   assert.ok(statement)
-  const compiled = ts.transpileModule(statement.getText(source), {
+  const isolatedSource =
+    ts.isFunctionDeclaration(statement) &&
+    !statement.modifiers?.some((modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword)
+      ? `export ${statement.getText(source)}`
+      : statement.getText(source)
+  const compiled = ts.transpileModule(isolatedSource, {
     compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 }
   }).outputText
   const exports: Record<string, unknown> = {}
@@ -454,6 +459,7 @@ function diagnosticEngine(
         }
       },
       './native-system-proxy': { getNativeSystemProxyDiagnostics: async () => nativeSnapshot() },
+      '../../shared/proxy-diagnostics-contract': { proxyRuntimeDiagnosticsFailure },
       '../../shared/system-proxy': { defaultSystemProxyBypass },
       '../../shared/system-proxy-diagnostics': { buildSystemProxyDiagnostics },
       '../../shared/linux-system-proxy-diagnostics': { buildLinuxSystemProxyDiagnostics },
@@ -573,7 +579,7 @@ test('structured Native/Service integration covers Windows health, conflicts and
       runtime: runtimeSnapshot(),
       kind: 'configuration-unavailable'
     },
-    { name: 'service failed', native: nativeSnapshot(), kind: 'core-unavailable' }
+    { name: 'service failed', native: nativeSnapshot(), kind: 'runtime-unavailable' }
   ]
   for (const c of cases) {
     const result = combine({ ...base, intentEnabled: c.intent ?? true }, c.native, c.runtime)
@@ -586,7 +592,7 @@ test('structured Native/Service integration covers Windows health, conflicts and
     assert.equal(result.state.intentEnabled, c.intent ?? true, c.name)
     assert.equal(
       result.results.find((row) => row.id === 'connectivity')?.status,
-      c.runtime?.connectivity.available ? 'success' : 'error',
+      !c.runtime ? 'info' : c.runtime.connectivity.available ? 'success' : 'error',
       c.name
     )
     assert.doesNotMatch(result.report, /private|secret/)
@@ -785,6 +791,7 @@ test('desktop diagnostic boundary contains no low-level OS/runtime operations', 
 
 import {
   validateProxyRuntimeDiagnostics,
+  proxyRuntimeDiagnosticsFailure,
   type NativeSystemProxyDiagnostics,
   type ProxyRuntimeDiagnostics,
   type NativeSystemProxySettings
@@ -867,7 +874,8 @@ test('runtime IPC is read-only and has a bounded deadline; repair does not issue
         }
       },
       serviceContract: { proxyDiagnostics: { method: 'GET', path: '/core/proxy-diagnostics' } },
-      validateProxyRuntimeDiagnostics
+      validateProxyRuntimeDiagnostics,
+      proxyRuntimeDiagnosticsFailure
     }
   )
   await get(true, false)
@@ -877,6 +885,90 @@ test('runtime IPC is read-only and has a bounded deadline; repair does not issue
     params: { direct: 'true', probe: 'false' },
     timeout: 10000
   })
+})
+
+test('runtime transport failures retain stable causes without exposing response bodies', async () => {
+  const cases: [unknown, string][] = [
+    [{ response: { status: 404, data: 'SECRET' } }, 'service-diagnostics-unsupported'],
+    [{ status: 405 }, 'service-diagnostics-unsupported'],
+    [{ status: 401 }, 'service-authentication-required'],
+    [{ status: 403 }, 'service-permission-denied'],
+    [{ status: 408 }, 'service-timeout'],
+    [{ status: 504 }, 'service-timeout'],
+    [Object.assign(new Error('SECRET'), { code: 'ECONNABORTED' }), 'service-timeout'],
+    [{ code: 'ETIMEDOUT' }, 'service-timeout'],
+    [{ status: 500 }, 'service-request-failed'],
+    [new Error('SECRET'), 'service-unavailable'],
+    [{ code: 'service-response-invalid' }, 'service-response-invalid']
+  ]
+  for (const [error, code] of cases) {
+    assert.equal(proxyRuntimeDiagnosticsFailure(error), code)
+    const get = isolatedExport<typeof import('../src/main/service/api').getProxyRuntimeDiagnostics>(
+      'src/main/service/api.ts',
+      'getProxyRuntimeDiagnostics',
+      {
+        createSignedServiceAxios: (_: string, recover: boolean) => {
+          assert.equal(recover, false)
+          return {
+            request: async () => {
+              throw error
+            }
+          }
+        },
+        serviceContract: { proxyDiagnostics: { method: 'GET', path: '/core/proxy-diagnostics' } },
+        validateProxyRuntimeDiagnostics,
+        proxyRuntimeDiagnosticsFailure
+      }
+    )
+    await assert.rejects(get(), (failure: Error & { code?: string }) => {
+      assert.equal(failure.message, code)
+      assert.equal(failure.code, code)
+      assert.doesNotMatch(JSON.stringify(failure), /SECRET/)
+      return true
+    })
+  }
+  const invalid = isolatedExport<
+    typeof import('../src/main/service/api').getProxyRuntimeDiagnostics
+  >('src/main/service/api.ts', 'getProxyRuntimeDiagnostics', {
+    createSignedServiceAxios: () => ({ request: async () => ({ private: 'SECRET' }) }),
+    serviceContract: { proxyDiagnostics: { method: 'GET', path: '/core/proxy-diagnostics' } },
+    validateProxyRuntimeDiagnostics,
+    proxyRuntimeDiagnosticsFailure
+  })
+  await assert.rejects(invalid(), {
+    message: 'service-response-invalid',
+    code: 'service-response-invalid'
+  })
+})
+
+test('Service error wrapping retains empty HTTP response status and transport timeout codes', () => {
+  class WrappedError extends Error {
+    status?: number
+    code?: string
+    constructor(message: string, options: { status?: number; code?: string }) {
+      super(message)
+      Object.assign(this, options)
+    }
+  }
+  const wrap = isolatedExport<(error: unknown) => WrappedError>(
+    'src/main/service/api.ts',
+    'createServiceAPIError',
+    {
+      ServiceAPIError: WrappedError,
+      getResponseErrorMessage: (_: unknown, fallback: string) => fallback,
+      tr: (message: string) => message
+    }
+  )
+  assert.equal(
+    proxyRuntimeDiagnosticsFailure(wrap({ response: { status: 404, data: '' } })),
+    'service-diagnostics-unsupported'
+  )
+  assert.equal(
+    proxyRuntimeDiagnosticsFailure(
+      wrap(Object.assign(new Error('timeout'), { code: 'ECONNABORTED' }))
+    ),
+    'service-timeout'
+  )
 })
 
 test('native remediation invalidates legacy retries before guard handoff and starts renewal after adoption', async () => {
@@ -976,7 +1068,7 @@ test('macOS orchestration uses Native OS facts and Service endpoint, preserving 
       ]
     }
   }
-  for (const failure of ['none', 'native', 'service']) {
+  for (const failure of ['none', 'native', 'service', 'unsupported', 'timeout']) {
     const logs: string[] = []
     const engine = diagnosticEngine(
       {
@@ -989,6 +1081,10 @@ test('macOS orchestration uses Native OS facts and Service endpoint, preserving 
         '../service/api': {
           getProxyRuntimeDiagnostics: async () => {
             if (failure === 'service') throw new Error('private service error')
+            if (failure === 'unsupported')
+              throw Object.assign(new Error('private service error'), { status: 404 })
+            if (failure === 'timeout')
+              throw Object.assign(new Error('private service error'), { code: 'ETIMEDOUT' })
             return runtimeSnapshot()
           }
         },
@@ -1013,10 +1109,37 @@ test('macOS orchestration uses Native OS facts and Service endpoint, preserving 
       assert.equal(result.overall.kind, 'configuration-unavailable')
       assert.equal(row('connectivity').status, 'success')
     } else {
-      assert.equal(result.overall.kind, 'core-unavailable')
+      assert.equal(result.overall.kind, 'runtime-unavailable')
       assert.equal(row('http-proxy').summary, `127.0.0.1:${endpoint.port}`)
       assert.match(row('http-proxy').details!, /Expected: Unknown/)
       assert.equal(result.state.matchesExpectedConfig, null)
+      assert.equal(result.state.coreRunning, null)
+      assert.equal(result.state.listenerAvailable, null)
+      assert.equal(result.state.connectivityAvailable, null)
+      assert.equal(result.overall.status, 'warning')
+      assert.equal(row('runtime-diagnostics').status, 'warning')
+      for (const id of ['core', 'core-config', 'listener', 'connectivity']) {
+        assert.equal(row(id).status, 'info')
+        assert.equal(row(id).action, undefined)
+      }
+      assert.equal(row('core-config').summary, 'Not checked')
+      assert.equal(row('connectivity').summary, 'Not checked')
+      assert.doesNotMatch(result.report, /Core configuration failed|HTTPS request through/)
+      const code =
+        failure === 'unsupported'
+          ? 'service-diagnostics-unsupported'
+          : failure === 'timeout'
+            ? 'service-timeout'
+            : 'service-unavailable'
+      assert.match(row('runtime-diagnostics').details!, new RegExp(code))
+      assert.match(logs[0], new RegExp(code))
+      if (failure === 'unsupported') {
+        assert.equal(
+          row('runtime-diagnostics').summary,
+          'The running Service does not support proxy diagnostics'
+        )
+        assert.match(row('runtime-diagnostics').details!, /restart Service/)
+      }
     }
     assert.equal(logs.length, 1)
     assert.match(logs[0], /platform: darwin; overall status:/)

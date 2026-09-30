@@ -16,9 +16,11 @@ import {
   type SystemProxyDiagnosticInput,
   type SystemProxyDiagnostics
 } from '../../shared/system-proxy-diagnostics'
-import type {
-  NativeSystemProxyDiagnostics,
-  ProxyRuntimeDiagnostics
+import {
+  proxyRuntimeDiagnosticsFailure,
+  type NativeSystemProxyDiagnostics,
+  type ProxyRuntimeDiagnostics,
+  type ProxyRuntimeDiagnosticsFailure
 } from '../../shared/proxy-diagnostics-contract'
 
 let running: Promise<SystemProxyDiagnostics> | undefined
@@ -49,7 +51,8 @@ export function combineSystemProxyDiagnostics(
     | 'coreRemediationUsesService'
   >,
   native?: NativeSystemProxyDiagnostics,
-  runtime?: ProxyRuntimeDiagnostics
+  runtime?: ProxyRuntimeDiagnostics,
+  runtimeFailure?: ProxyRuntimeDiagnosticsFailure
 ): SystemProxyDiagnostics {
   const port = runtime?.proxy.port ?? null
   const host = runtime?.proxy.host ?? '127.0.0.1'
@@ -72,10 +75,12 @@ export function combineSystemProxyDiagnostics(
     coreRunning: runtime?.core.running ?? null,
     runtimePort: runtime?.core.ready && port ? port : undefined,
     runtimeUnavailable: !runtime,
-    runtimeErrorCode: runtime?.core.errorCode,
+    runtimeErrorCode: runtime?.core.errorCode ?? runtimeFailure,
     connectivity: {
       outcome: runtime?.connectivity.outcome ?? 'unreachable',
-      reason: runtime?.connectivity.errorCode ?? (!runtime ? 'service-unavailable' : undefined)
+      reason:
+        runtime?.connectivity.errorCode ??
+        (!runtime ? (runtimeFailure ?? 'service-unavailable') : undefined)
     },
     loopbackExemptions:
       windows?.appContainer.status === 'available'
@@ -113,10 +118,11 @@ async function runChecks(): Promise<SystemProxyDiagnostics> {
       coreRemediationUsesService: corePermissionMode !== 'service'
     },
     native.status === 'fulfilled' ? native.value : undefined,
-    runtime.status === 'fulfilled' ? runtime.value : undefined
+    runtime.status === 'fulfilled' ? runtime.value : undefined,
+    runtime.status === 'rejected' ? proxyRuntimeDiagnosticsFailure(runtime.reason) : undefined
   )
   log(
-    `Diagnostics completed; platform: ${process.platform}; overall status: ${result.overall.kind}`
+    `Diagnostics completed; platform: ${process.platform}; overall status: ${result.overall.kind}${runtime.status === 'rejected' ? `; runtime: ${proxyRuntimeDiagnosticsFailure(runtime.reason)}` : ''}`
   )
   return result
 }

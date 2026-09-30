@@ -1942,5 +1942,25 @@ export const messages: Readonly<Record<string, string>> = {
     '网络扩展或 VPN 软件可能改变流量路由。',
   'System proxy behavior can vary by application.': '系统代理行为可能因应用程序而异。',
   'Some command-line or sandboxed applications use their own proxy configuration. Environment proxy variables are separate and were not changed.':
-    '某些命令行或沙盒应用程序使用自己的代理配置。环境代理变量独立于系统代理，未被修改。'
+    '某些命令行或沙盒应用程序使用自己的代理配置。环境代理变量独立于系统代理，未被修改。',
+  'Runtime diagnostics': '运行状态诊断',
+  'The running Service does not support proxy diagnostics': '运行中的 Service 不支持代理诊断',
+  'Service authentication is required': '需要 Service 验证',
+  'Service access was denied': 'Service 访问被拒绝',
+  'Service diagnostics timed out': 'Service 诊断超时',
+  'Service returned invalid diagnostic data': 'Service 返回无效的诊断数据',
+  'Service diagnostics request failed': 'Service 诊断请求失败',
+  'Unable to contact KokoroBox Service': '无法连接到 KokoroBox Service',
+  'Update KokoroBox Service if needed, then restart Service from Core runtime settings and run diagnostics again. The bundled Service and the running Service may be different versions.':
+    '必要时更新 KokoroBox Service，然后在“内核运行”设置中重启 Service，再运行诊断。应用附带的 Service 与运行中的 Service 可能是不同版本。',
+  'Initialize or repair Service authentication in Core runtime settings, then run diagnostics again.':
+    '在“内核运行”设置中初始化或修复 Service 验证，然后再运行诊断。',
+  'Check Service status in Core runtime settings and run diagnostics again. Core, listener and connectivity results remain unknown until runtime diagnostics are available.':
+    '在“内核运行”设置中检查 Service 状态，然后再运行诊断。取得运行状态诊断前，核心、监听及连接结果均为未知。',
+  'Runtime diagnostics are unavailable. Core configuration has not been checked.':
+    '无法取得运行状态诊断，尚未检查核心配置。',
+  'No runtime diagnostic result was received. Proxy connectivity has not been verified.':
+    '未收到运行状态诊断结果，尚未验证代理连接。',
+  'Proxy runtime diagnostics are unavailable': '无法取得代理运行状态诊断',
+  'Not checked': '尚未检查'
 }

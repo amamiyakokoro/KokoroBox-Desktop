@@ -58,6 +58,7 @@ export type SystemProxyOverallStatus =
   | 'connectivity-failed'
   | 'warning'
   | 'configuration-unavailable'
+  | 'runtime-unavailable'
 
 export interface SystemProxyDiagnostics {
   checkedAt: string
@@ -66,9 +67,9 @@ export interface SystemProxyDiagnostics {
     intentEnabled: boolean
     enabled: boolean | null
     matchesExpectedConfig: boolean | null
-    listenerAvailable: boolean
+    listenerAvailable: boolean | null
     coreRunning: boolean | null
-    connectivityAvailable: boolean
+    connectivityAvailable: boolean | null
   }
   results: DiagnosticResult[]
   report: string
@@ -151,6 +152,12 @@ export function safeDiagnosticCode(code?: string): string | undefined {
     'invalid-port',
     'runtime-port-unavailable',
     'service-unavailable',
+    'service-diagnostics-unsupported',
+    'service-authentication-required',
+    'service-permission-denied',
+    'service-timeout',
+    'service-response-invalid',
+    'service-request-failed',
     'core-config-unavailable',
     'core-config-failed',
     'core-start-failed',
@@ -286,12 +293,47 @@ export function buildSystemProxyDiagnostics(
     )
   }
 
+  if (input.runtimeUnavailable) {
+    const code =
+      safeDiagnosticCode(input.runtimeErrorCode ?? input.connectivity.reason) ??
+      'service-unavailable'
+    const summaries: Record<string, string> = {
+      'service-diagnostics-unsupported': tr(
+        'The running Service does not support proxy diagnostics'
+      ),
+      'service-authentication-required': tr('Service authentication is required'),
+      'service-permission-denied': tr('Service access was denied'),
+      'service-timeout': tr('Service diagnostics timed out'),
+      'service-response-invalid': tr('Service returned invalid diagnostic data'),
+      'service-request-failed': tr('Service diagnostics request failed'),
+      'service-unavailable': tr('Unable to contact KokoroBox Service')
+    }
+    const guidance =
+      code === 'service-diagnostics-unsupported'
+        ? tr(
+            'Update KokoroBox Service if needed, then restart Service from Core runtime settings and run diagnostics again. The bundled Service and the running Service may be different versions.'
+          )
+        : ['service-authentication-required', 'service-permission-denied'].includes(code)
+          ? tr(
+              'Initialize or repair Service authentication in Core runtime settings, then run diagnostics again.'
+            )
+          : tr(
+              'Check Service status in Core runtime settings and run diagnostics again. Core, listener and connectivity results remain unknown until runtime diagnostics are available.'
+            )
+    add(
+      'runtime-diagnostics',
+      'Runtime diagnostics',
+      'warning',
+      summaries[code] ?? summaries['service-unavailable'],
+      `${guidance}\n${code}`
+    )
+  }
   add(
     'listener',
     'Local listener',
-    input.listenerAvailable ? 'success' : 'error',
+    input.runtimeUnavailable ? 'info' : input.listenerAvailable ? 'success' : 'error',
     input.runtimeUnavailable
-      ? 'Unable to verify core runtime state'
+      ? 'Not checked'
       : input.listenerAvailable
         ? 'Local proxy listener available'
         : 'Local proxy port is not listening',
@@ -301,7 +343,11 @@ export function buildSystemProxyDiagnostics(
   add(
     'core',
     'Core',
-    input.coreRunning === true ? 'success' : 'error',
+    input.runtimeUnavailable || input.coreRunning === null
+      ? 'info'
+      : input.coreRunning === true
+        ? 'success'
+        : 'error',
     input.coreRunning === true
       ? 'Core running'
       : input.coreRunning === false
@@ -314,33 +360,47 @@ export function buildSystemProxyDiagnostics(
   add(
     'core-config',
     'Core configuration',
-    input.runtimePort === undefined || !portMatches ? 'error' : 'success',
-    input.runtimePort === undefined
-      ? 'Core configuration failed or is unavailable'
-      : portMatches
-        ? 'Runtime configuration loaded'
-        : 'System proxy port does not match the current core port',
-    input.runtimePort === undefined
-      ? tr(
-          'The running core did not return its loaded configuration. Inspect core logs for startup or configuration errors.'
-        ) + (input.runtimeErrorCode ? `\n${safeDiagnosticCode(input.runtimeErrorCode)}` : '')
-      : tr('Expected port: {0}; current core port: {1}', [input.expectedPort, input.runtimePort]),
+    input.runtimeUnavailable
+      ? 'info'
+      : input.runtimePort === undefined || !portMatches
+        ? 'error'
+        : 'success',
+    input.runtimeUnavailable
+      ? 'Not checked'
+      : input.runtimePort === undefined
+        ? 'Core configuration failed or is unavailable'
+        : portMatches
+          ? 'Runtime configuration loaded'
+          : 'System proxy port does not match the current core port',
+    input.runtimeUnavailable
+      ? tr('Runtime diagnostics are unavailable. Core configuration has not been checked.')
+      : input.runtimePort === undefined
+        ? tr(
+            'The running core did not return its loaded configuration. Inspect core logs for startup or configuration errors.'
+          ) + (input.runtimeErrorCode ? `\n${safeDiagnosticCode(input.runtimeErrorCode)}` : '')
+        : tr('Expected port: {0}; current core port: {1}', [input.expectedPort, input.runtimePort]),
     input.coreRunning === true && !portMatches ? 'restart-core' : undefined
   )
   add(
     'connectivity',
     'Proxy connectivity',
-    input.connectivity.outcome === 'success' ? 'success' : 'error',
     input.runtimeUnavailable
-      ? 'Unable to verify core runtime state'
+      ? 'info'
+      : input.connectivity.outcome === 'success'
+        ? 'success'
+        : 'error',
+    input.runtimeUnavailable
+      ? 'Not checked'
       : input.connectivity.outcome === 'success'
         ? 'Proxy connectivity successful'
         : input.connectivity.outcome === 'unreachable'
           ? 'Unable to connect to local proxy'
           : 'Local proxy reachable, but outbound connection failed',
-    tr('HTTPS request through the proxy to the connectivity endpoint. Result: {0}', [
-      safeDiagnosticCode(input.connectivity.reason) || 'OK'
-    ])
+    input.runtimeUnavailable
+      ? tr('No runtime diagnostic result was received. Proxy connectivity has not been verified.')
+      : tr('HTTPS request through the proxy to the connectivity endpoint. Result: {0}', [
+          safeDiagnosticCode(input.connectivity.reason) || 'OK'
+        ])
   )
 
   if (current) {
@@ -436,6 +496,12 @@ export function buildSystemProxyDiagnostics(
       summary: tr('System proxy configuration does not match KokoroBox'),
       kind: 'configuration-mismatch'
     }
+  else if (input.runtimeUnavailable)
+    overall = {
+      status: 'warning',
+      summary: tr('Proxy runtime diagnostics are unavailable'),
+      kind: 'runtime-unavailable'
+    }
   else if (input.coreRunning !== true || !portMatches)
     overall = {
       status: 'error',
@@ -491,9 +557,11 @@ export function buildSystemProxyDiagnostics(
       intentEnabled: input.intentEnabled,
       enabled,
       matchesExpectedConfig: configMatches,
-      listenerAvailable: input.listenerAvailable,
+      listenerAvailable: input.runtimeUnavailable ? null : input.listenerAvailable,
       coreRunning: input.coreRunning,
-      connectivityAvailable: input.connectivity.outcome === 'success'
+      connectivityAvailable: input.runtimeUnavailable
+        ? null
+        : input.connectivity.outcome === 'success'
     },
     results,
     report: [

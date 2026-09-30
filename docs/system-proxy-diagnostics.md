@@ -177,6 +177,19 @@ AppContainer inspection failures warn on their own rows without failing otherwis
 healthy connectivity. PAC and bypass differences remain warnings unless the
 active proxy address or selected PAC mode conflicts.
 
+A failed Service diagnostic request produces `runtime-unavailable`, not a core
+configuration or connectivity failure. Core, configuration, listener and
+connectivity rows remain informational and unverified; listener/connectivity
+state is null. A separate warning retains stable causes for unsupported endpoints
+(HTTP 404/405), authentication (401), permission (403), timeout, invalid response
+or other request failures. Raw errors and response bodies never enter the report.
+Confirmed runtime failures from a valid Service response still produce errors.
+
+On macOS, updating the app's bundled Service binary does not necessarily replace
+an already running daemon. An unsupported endpoint explains how to update/restart
+Service in Core runtime settings and run diagnostics again. Diagnostics never
+restart Service automatically or infer the runtime endpoint from OS/UI settings.
+
 The renderer and clipboard receive only sanitized diagnostic results. Arbitrary
 PAC URLs, credentials, non-local endpoints, custom bypass domains, raw backend
 errors and full core configuration are omitted. Each layer logs its own work;
