@@ -18,7 +18,7 @@ https://github.com/sparkle-project/Sparkle/blob/2.10.0/LICENSE.
 https://github.com/amamiyakokoro/sysproxy-go/blob/v2.0.2/LICENSE.
 `LICENSE.KokoroBox` mirrors the application's root `LICENSE`.
 `LICENSE.KokoroBoxService` and `LICENSE.KokoroBoxNative` retain the full licenses
-from Service v0.6.8 and Native v0.16.2 respectively. They are first-party component
+from Service v0.6.9 and Native v0.16.3 respectively. They are first-party component
 licenses, available from the component version list in About.
 Build-supplied native notices still take precedence for the exact bundled artifact.
 Update these backups when the corresponding component changes version.
