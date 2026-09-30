@@ -224,6 +224,46 @@ test('Native and Service failures preserve the other domain and do not invent ru
   for (const id of ['core', 'core-config', 'listener', 'connectivity'])
     assert.equal(row(missingService, id).status, 'info')
 })
+test('desktop reader failures explain the cause while preserving runtime and resolver results', () => {
+  for (const [errorCode, reason] of [
+    [
+      'backend-unavailable',
+      'KDE configuration reader is unavailable (kreadconfig6 / kreadconfig5).'
+    ],
+    ['backend-permission-denied', 'Permission was denied while inspecting desktop proxy settings.'],
+    [
+      'backend-read-failed',
+      'The desktop proxy configuration reader failed or returned invalid settings.'
+    ],
+    ['timeout', 'Reading desktop proxy settings timed out. Run diagnostics again.'],
+    ['native-timeout', 'Reading desktop proxy settings timed out. Run diagnostics again.']
+  ]) {
+    const state = native('kde')
+    state.status = 'unavailable'
+    state.errorCode = errorCode
+    state.enabled = undefined
+    state.linux!.environment = [{ name: 'HTTPS_PROXY', endpoint, bypass: [], valid: true }]
+    const result = buildLinuxSystemProxyDiagnostics(input(), state)
+    assert.equal(result.overall.kind, 'configuration-unavailable')
+    assert.equal(result.state.enabled, null)
+    assert.equal(row(result, 'system-proxy').details, reason)
+    assert.ok(row(result, 'proxy-backend').details?.includes(reason))
+    assert.equal(row(result, 'connectivity').status, 'success')
+    assert.ok(row(result, 'environment').details?.includes(`HTTPS_PROXY: 127.0.0.1:${port}`))
+    assert.ok(row(result, 'portal').details?.includes(`127.0.0.1:${port}`))
+    assert.ok(result.report.includes(reason))
+  }
+  const state = native()
+  state.status = 'unavailable'
+  state.errorCode = 'backend-unavailable'
+  assert.equal(
+    row(buildLinuxSystemProxyDiagnostics(input(), state), 'system-proxy').details,
+    'GNOME configuration reader is unavailable (gsettings).'
+  )
+  state.errorCode = 'SECRET untrusted native output'
+  assert.doesNotMatch(buildLinuxSystemProxyDiagnostics(input(), state).report, /SECRET/)
+})
+
 test('Linux reports redact remote hosts, credentials, arbitrary PAC and custom bypass', () => {
   const state = native()
   state.proxies.http = { host: 'SECRET.internal', port }

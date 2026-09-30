@@ -31,6 +31,24 @@ function broad(entries: string[], kde = false): boolean {
   )
 }
 
+function inspectionFailure(native?: NativeSystemProxyDiagnostics): string | undefined {
+  switch (native?.errorCode) {
+    case 'backend-unavailable':
+      return native.linux?.backend === 'kde'
+        ? tr('KDE configuration reader is unavailable (kreadconfig6 / kreadconfig5).')
+        : tr('GNOME configuration reader is unavailable (gsettings).')
+    case 'backend-permission-denied':
+      return tr('Permission was denied while inspecting desktop proxy settings.')
+    case 'backend-read-failed':
+      return tr('The desktop proxy configuration reader failed or returned invalid settings.')
+    case 'timeout':
+    case 'native-timeout':
+      return tr('Reading desktop proxy settings timed out. Run diagnostics again.')
+    default:
+      return undefined
+  }
+}
+
 // Linux has several independent consumers of proxy settings. None represents all
 // applications. Native has already inspected/parsed them; only compare and present.
 export function buildLinuxSystemProxyDiagnostics(
@@ -41,6 +59,7 @@ export function buildLinuxSystemProxyDiagnostics(
   const linux = native?.linux
   const supported = !!linux && ['gnome', 'kde'].includes(linux.backend)
   const available = native?.status === 'available' && supported
+  const failure = !available && supported ? inspectionFailure(native) : undefined
   const enabled = available && typeof native.enabled === 'boolean' ? native.enabled : null
   const endpointKnown = !!input.expectedPort
   const manual = linux?.mode === 'manual'
@@ -99,8 +118,9 @@ export function buildLinuxSystemProxyDiagnostics(
       : linux?.backend === 'environment'
         ? 'Environment variables (process scope)'
         : 'No supported desktop proxy backend detected',
-    (!available && supported ? tr('Unable to retrieve desktop proxy settings') + '\n' : '') +
-      tr('Linux desktop proxy settings do not apply to every application.')
+    (!available && supported
+      ? (failure ?? tr('Unable to retrieve desktop proxy settings')) + '\n'
+      : '') + tr('Linux desktop proxy settings do not apply to every application.')
   )
   if (available) {
     const modes = {
@@ -186,7 +206,8 @@ export function buildLinuxSystemProxyDiagnostics(
       supported || !native ? 'warning' : 'info',
       supported || !native
         ? 'Unable to retrieve desktop proxy settings'
-        : 'No supported desktop proxy backend detected'
+        : 'No supported desktop proxy backend detected',
+      failure
     )
   }
 

@@ -134,7 +134,11 @@ GNOME reads only mode, HTTP/HTTPS/SOCKS host/port, PAC URL and ignore-hosts usin
 fixed `gsettings get` arguments. It parses GVariant strings/arrays inside Native,
 including typed empty arrays. Deprecated `use-same-proxy` and HTTP `enabled` keys
 are ignored. KDE uses `kreadconfig6` / `kreadconfig5` rather than a hand-written
-home-file parser, preserving KConfig defaults and cascaded locations. Modes
+home-file parser, preserving KConfig defaults and cascaded locations. The reader
+is selected by querying `ProxyType`, with a fallback to KDE 5 when the KDE 6
+utility is absent. The queried mode is reused in the snapshot. Missing readers,
+permission failures, invalid settings and timeouts produce distinct diagnostic
+details while preserving runtime, environment and Portal results. Modes
 none/manual/PAC/WPAD/environment, legacy host-space-port values and reversed
 exceptions are normalized. KDE environment mode resolves configured variable
 names inside Native. All utility calls have one shared 1.5-second deadline,

@@ -1891,6 +1891,16 @@ export const messages: Readonly<Record<string, string>> = {
   'GNOME GSettings': 'GNOME GSettings',
   'KDE / KIO': 'KDE / KIO',
   'Unable to retrieve desktop proxy settings': '無法讀取桌面代理設定',
+  'KDE configuration reader is unavailable (kreadconfig6 / kreadconfig5).':
+    'KDE 設定讀取工具不可用（kreadconfig6 / kreadconfig5）。',
+  'GNOME configuration reader is unavailable (gsettings).':
+    'GNOME 設定讀取工具不可用（gsettings）。',
+  'Permission was denied while inspecting desktop proxy settings.':
+    '檢查桌面代理設定時遭到權限拒絕。',
+  'The desktop proxy configuration reader failed or returned invalid settings.':
+    '桌面代理設定讀取工具執行失敗，或回傳無效設定。',
+  'Reading desktop proxy settings timed out. Run diagnostics again.':
+    '讀取桌面代理設定逾時，請重新執行診斷。',
   'No supported desktop proxy backend detected': '未偵測到支援的桌面代理後端',
   'Linux desktop proxy settings do not apply to every application.':
     'Linux 桌面代理設定不適用於所有應用程式。',

@@ -1945,6 +1945,16 @@ export const messages: Readonly<Record<string, string>> = {
   'GNOME GSettings': 'GNOME GSettings',
   'KDE / KIO': 'KDE / KIO',
   'Unable to retrieve desktop proxy settings': 'Unable to retrieve desktop proxy settings',
+  'KDE configuration reader is unavailable (kreadconfig6 / kreadconfig5).':
+    'KDE configuration reader is unavailable (kreadconfig6 / kreadconfig5).',
+  'GNOME configuration reader is unavailable (gsettings).':
+    'GNOME configuration reader is unavailable (gsettings).',
+  'Permission was denied while inspecting desktop proxy settings.':
+    'Permission was denied while inspecting desktop proxy settings.',
+  'The desktop proxy configuration reader failed or returned invalid settings.':
+    'The desktop proxy configuration reader failed or returned invalid settings.',
+  'Reading desktop proxy settings timed out. Run diagnostics again.':
+    'Reading desktop proxy settings timed out. Run diagnostics again.',
   'No supported desktop proxy backend detected': 'No supported desktop proxy backend detected',
   'Linux desktop proxy settings do not apply to every application.':
     'Linux desktop proxy settings do not apply to every application.',
