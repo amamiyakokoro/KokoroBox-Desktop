@@ -361,6 +361,16 @@ input[type='number'] {
   min-height: calc(var(--spacing) * 11);
   height: auto;
   padding-block: calc(var(--spacing) * 1.5);
+  padding-inline: 0;
+}
+
+.page-settings-drawer-body {
+  container-type: inline-size;
+  container-name: page-settings;
+}
+
+:root:lang(en) .page-settings-drawer .setting-item--compact {
+  grid-template-columns: minmax(0, 1fr) auto;
 }
 
 .page-settings-drawer .setting-item--compact.setting-item--described {
@@ -377,15 +387,44 @@ input[type='number'] {
   line-height: 1.4;
   white-space: normal;
   overflow-wrap: anywhere;
+  font-weight: 500;
+}
+
+.page-settings-drawer .setting-item__description {
+  margin-top: calc(var(--spacing) * 1);
+  line-height: 1.5;
 }
 
 .page-settings-drawer .setting-item__content {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
 }
 
 .page-settings-drawer .setting-item__divider {
   margin-block: 0;
+}
+
+/* Long text and actions get the full row instead of competing with one another. */
+:root .page-settings-drawer .setting-item.page-settings-item--stacked {
+  grid-template-columns: minmax(0, 1fr);
+  row-gap: calc(var(--spacing) * 2);
+}
+
+.page-settings-drawer .page-settings-item--stacked .setting-item__content {
+  justify-content: flex-start;
+}
+
+/* Keep inline switches, but let wider fields breathe in narrow desktop windows. */
+@container page-settings (max-width: 22rem) {
+  :root .page-settings-drawer .setting-item.page-settings-item--field {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: calc(var(--spacing) * 1.5);
+  }
+
+  .page-settings-drawer .page-settings-item--field .setting-item__content {
+    justify-content: flex-start;
+  }
 }
 
 .settings-page {

@@ -19,7 +19,11 @@ const ProfileSettingDrawer: React.FC<Props> = ({ onClose }) => {
   return (
     <PageSettingsDrawer title={tr('Subscription settings')} onClose={onClose}>
       <PageSettingsSection title={tr('Display')}>
-        <SettingItem title={tr('Show date')} {...settingItemProps}>
+        <SettingItem
+          title={tr('Show date')}
+          {...settingItemProps}
+          rootClassName="page-settings-item--field"
+        >
           <KokoSegmentedControl
             ariaLabel={tr('Show date')}
             selectedKey={profileDisplayDate}
@@ -42,7 +46,7 @@ const ProfileSettingDrawer: React.FC<Props> = ({ onClose }) => {
           'Global subscription and Gist settings are managed in Application settings.'
         )}
       >
-        <div className="px-1 pb-1">
+        <div className="pt-2 pb-1">
           <Button
             size="sm"
             variant="secondary"

@@ -54,10 +54,16 @@ const ProxySettingDrawer: React.FC<Props> = (props) => {
   return (
     <PageSettingsDrawer title={tr('Proxy group settings')} onClose={onClose} width="wide">
       <PageSettingsSection title={tr('Display')}>
-        <SettingItem title={tr('Proxy columns')} {...settingItemProps} divider>
+        <SettingItem
+          title={tr('Proxy columns')}
+          {...settingItemProps}
+          rootClassName="page-settings-item--field"
+        >
           <KokoSelect
             aria-label={tr('Proxy columns')}
             controlWidth="select"
+            className="w-48"
+            density="compact"
             options={[
               { id: 'auto', label: tr('Automatic') },
               { id: '1', label: tr('1 column') },
@@ -75,7 +81,11 @@ const ProxySettingDrawer: React.FC<Props> = (props) => {
             }}
           />
         </SettingItem>
-        <SettingItem title={tr('Proxy sort order')} {...settingItemProps} divider>
+        <SettingItem
+          title={tr('Proxy sort order')}
+          {...settingItemProps}
+          rootClassName="page-settings-item--field"
+        >
           <KokoSegmentedControl
             ariaLabel={tr('Proxy sort order')}
             selectedKey={proxyDisplayOrder}
@@ -91,10 +101,16 @@ const ProxySettingDrawer: React.FC<Props> = (props) => {
             }}
           />
         </SettingItem>
-        <SettingItem title={tr('Extra proxy group information')} {...settingItemProps} divider>
+        <SettingItem
+          title={tr('Extra proxy group information')}
+          {...settingItemProps}
+          rootClassName="page-settings-item--field"
+        >
           <KokoSelect
             aria-label={tr('Extra proxy group information')}
             controlWidth="select"
+            className="w-48"
+            density="compact"
             options={[
               { id: 'hidden', label: tr('Hide') },
               { id: 'single', label: tr('Single line') },
@@ -109,10 +125,16 @@ const ProxySettingDrawer: React.FC<Props> = (props) => {
             }}
           />
         </SettingItem>
-        <SettingItem title={tr('Extra proxy information')} {...settingItemProps} divider>
+        <SettingItem
+          title={tr('Extra proxy information')}
+          {...settingItemProps}
+          rootClassName="page-settings-item--field"
+        >
           <KokoSelect
             aria-label={tr('Extra proxy information')}
             controlWidth="select"
+            className="w-48"
+            density="compact"
             options={[
               { id: 'hidden', label: tr('Hide') },
               { id: 'single', label: tr('Single line') },
@@ -127,11 +149,7 @@ const ProxySettingDrawer: React.FC<Props> = (props) => {
             }}
           />
         </SettingItem>
-        <SettingItem
-          title={tr('Show selected proxies in nested groups')}
-          {...settingItemProps}
-          divider
-        >
+        <SettingItem title={tr('Show selected proxies in nested groups')} {...settingItemProps}>
           <Switch
             aria-label={tr('Show selected proxies in nested groups')}
             isSelected={showGroupSelectedProxy}
@@ -146,7 +164,7 @@ const ProxySettingDrawer: React.FC<Props> = (props) => {
             </Switch.Content>
           </Switch>
         </SettingItem>
-        <SettingItem title={tr('Show proxy details on hover')} {...settingItemProps} divider>
+        <SettingItem title={tr('Show proxy details on hover')} {...settingItemProps}>
           <Switch
             aria-label={tr('Show proxy details on hover')}
             isSelected={showProxyDetailTooltip}
@@ -179,11 +197,7 @@ const ProxySettingDrawer: React.FC<Props> = (props) => {
       </PageSettingsSection>
 
       <PageSettingsSection title={tr('Selection behavior')}>
-        <SettingItem
-          title={tr('Disconnect when switching proxies')}
-          {...settingItemProps}
-          divider={autoCloseConnection}
-        >
+        <SettingItem title={tr('Disconnect when switching proxies')} {...settingItemProps}>
           <Switch
             aria-label={tr('Disconnect when switching proxies')}
             isSelected={autoCloseConnection}
@@ -199,10 +213,16 @@ const ProxySettingDrawer: React.FC<Props> = (props) => {
           </Switch>
         </SettingItem>
         {autoCloseConnection && (
-          <SettingItem title={tr('Interrupt mode')} {...settingItemProps}>
+          <SettingItem
+            title={tr('Interrupt mode')}
+            {...settingItemProps}
+            rootClassName="page-settings-item--field"
+          >
             <KokoSelect
               aria-label={tr('Interrupt mode')}
               controlWidth="select"
+              className="w-48"
+              density="compact"
               options={[
                 { id: 'all', label: tr('All connections') },
                 { id: 'group', label: tr('Current group only') }
@@ -220,10 +240,16 @@ const ProxySettingDrawer: React.FC<Props> = (props) => {
       </PageSettingsSection>
 
       <PageSettingsSection title={tr('Latency testing')}>
-        <SettingItem title={tr('Test URL source')} {...settingItemProps} divider>
+        <SettingItem
+          title={tr('Test URL source')}
+          {...settingItemProps}
+          rootClassName="page-settings-item--field"
+        >
           <KokoSelect
             aria-label={tr('Test URL source')}
             controlWidth="select"
+            className="w-48"
+            density="compact"
             options={[
               { id: 'group', label: tr('Use group configuration') },
               { id: 'global', label: tr('Use a shared URL') }
@@ -238,7 +264,11 @@ const ProxySettingDrawer: React.FC<Props> = (props) => {
           />
         </SettingItem>
         {delayTestUrlScope === 'global' ? (
-          <SettingItem title={tr('Latency test URL')} {...settingItemProps} divider>
+          <SettingItem
+            title={tr('Latency test URL')}
+            {...settingItemProps}
+            rootClassName="page-settings-item--stacked"
+          >
             <KokoTextField
               aria-label={tr('Latency test URL')}
               controlWidth="url"
@@ -252,11 +282,7 @@ const ProxySettingDrawer: React.FC<Props> = (props) => {
             />
           </SettingItem>
         ) : null}
-        <SettingItem
-          title={tr('Test latency with the proxy group API')}
-          {...settingItemProps}
-          divider
-        >
+        <SettingItem title={tr('Test latency with the proxy group API')} {...settingItemProps}>
           <Switch
             aria-label={tr('Test latency with the proxy group API')}
             isSelected={delayTestUseGroupApi}
@@ -272,7 +298,7 @@ const ProxySettingDrawer: React.FC<Props> = (props) => {
           </Switch>
         </SettingItem>
         {!delayTestUseGroupApi && (
-          <SettingItem title={tr('Concurrent latency tests')} {...settingItemProps} divider>
+          <SettingItem title={tr('Concurrent latency tests')} {...settingItemProps}>
             <KokoTextField
               aria-label={tr('Concurrent latency tests')}
               controlWidth="number"

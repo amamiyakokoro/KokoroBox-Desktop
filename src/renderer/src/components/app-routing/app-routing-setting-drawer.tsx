@@ -47,10 +47,15 @@ const AppRoutingSettingDrawer: React.FC<Props> = (props) => {
   return (
     <PageSettingsDrawer title={tr('Application routing settings')} onClose={onClose}>
       <PageSettingsSection title={tr('Rule defaults')}>
-        <SettingItem title={tr('Default action for new rules')} {...settingItemProps} divider>
+        <SettingItem
+          title={tr('Default action for new rules')}
+          {...settingItemProps}
+          rootClassName="page-settings-item--field"
+        >
           <KokoSelect
             aria-label={tr('Default action for new rules')}
             controlWidth="select"
+            className="w-40"
             density="compact"
             variant="secondary"
             disallowEmptySelection
@@ -64,10 +69,15 @@ const AppRoutingSettingDrawer: React.FC<Props> = (props) => {
             onChange={(value) => onDefaultActionChange(value as AppRoutingAction)}
           />
         </SettingItem>
-        <SettingItem title={tr('Default protocol for new rules')} {...settingItemProps}>
+        <SettingItem
+          title={tr('Default protocol for new rules')}
+          {...settingItemProps}
+          rootClassName="page-settings-item--field"
+        >
           <KokoSelect
             aria-label={tr('Default protocol for new rules')}
             controlWidth="select"
+            className="w-40"
             density="compact"
             variant="secondary"
             disallowEmptySelection
@@ -113,7 +123,6 @@ const AppRoutingSettingDrawer: React.FC<Props> = (props) => {
             'Log application routing destinations and decisions. Enable only while troubleshooting.'
           )}
           {...settingItemProps}
-          divider={isMac || isWindows}
         >
           <Switch
             aria-label={tr('Diagnostic logging')}
@@ -135,6 +144,7 @@ const AppRoutingSettingDrawer: React.FC<Props> = (props) => {
               'Open System Settings and request approval for the KokoroBox Network Extension again.'
             )}
             {...settingItemProps}
+            rootClassName="page-settings-item--stacked"
           >
             <Button
               size="sm"
@@ -154,6 +164,7 @@ const AppRoutingSettingDrawer: React.FC<Props> = (props) => {
               'Check and repair the ProxyBridge relay rules for 34010/TCP and 34011/UDP.'
             )}
             {...settingItemProps}
+            rootClassName="page-settings-item--stacked"
           >
             <Button
               size="sm"

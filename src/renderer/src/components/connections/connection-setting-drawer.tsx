@@ -43,7 +43,7 @@ const ConnectionSettingDrawer: React.FC<Props> = (props) => {
   return (
     <PageSettingsDrawer title={tr('Connection settings')} onClose={onClose}>
       <PageSettingsSection title={tr('Display')}>
-        <SettingItem title={tr('Show app icon')} {...settingItemProps} divider>
+        <SettingItem title={tr('Show app icon')} {...settingItemProps}>
           <Switch
             aria-label={tr('Show app icon')}
             isSelected={displayIcon}
@@ -58,7 +58,7 @@ const ConnectionSettingDrawer: React.FC<Props> = (props) => {
             </Switch.Content>
           </Switch>
         </SettingItem>
-        <SettingItem title={tr('Show app name')} {...settingItemProps} divider>
+        <SettingItem title={tr('Show app name')} {...settingItemProps}>
           <Switch
             aria-label={tr('Show app name')}
             isSelected={displayAppName}
@@ -91,11 +91,7 @@ const ConnectionSettingDrawer: React.FC<Props> = (props) => {
       </PageSettingsSection>
 
       <PageSettingsSection title={tr('Grouping and sorting')}>
-        <SettingItem
-          title={tr('Group by process')}
-          {...settingItemProps}
-          divider={connectionGroupByProcess}
-        >
+        <SettingItem title={tr('Group by process')} {...settingItemProps}>
           <Switch
             aria-label={tr('Group by process')}
             isSelected={connectionGroupByProcess}
@@ -111,11 +107,16 @@ const ConnectionSettingDrawer: React.FC<Props> = (props) => {
           </Switch>
         </SettingItem>
         {connectionGroupByProcess && (
-          <SettingItem title={tr('Group sort order')} {...settingItemProps}>
-            <div className="flex items-center justify-end gap-2">
+          <SettingItem
+            title={tr('Group sort order')}
+            {...settingItemProps}
+            rootClassName="page-settings-item--field"
+          >
+            <div className="flex min-w-0 max-w-full items-center gap-1.5">
               <KokoSelect
                 aria-label={tr('Group sort field')}
                 controlWidth="select"
+                className="w-44"
                 density="compact"
                 disallowEmptySelection
                 options={[
