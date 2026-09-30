@@ -1,6 +1,6 @@
 # System Proxy Diagnostics boundaries
 
-The Windows diagnostics UI remains in Settings → Diagnostics, with its existing
+The diagnostics UI remains in Settings → Diagnostics, with its existing
 Network settings shortcut. The toggle expresses intent; diagnostics compare that
 intent with actual OS configuration and separately report runtime health.
 
@@ -30,8 +30,9 @@ The diagnostic response uses common platform, availability, enabled, protocol
 endpoints, PAC and bypass fields. `windows` contains registry values, WinHTTP
 status and AppContainer information. Each secondary item has its own availability
 and stable error code. Registry failure therefore does not discard WinHTTP or
-AppContainer information. macOS/Linux currently return `unsupported` with an
-unknown enabled state; adding OS support requires no new IPC entry point.
+AppContainer information. Linux adds `linux` details for desktop/backend/mode,
+process-scoped environment variables and Portal resolution. macOS still returns
+`unsupported` with an unknown enabled state; no new IPC entry point is required.
 
 Windows uses Registry, WinINet, WinHTTP and NetworkIsolation APIs rather than
 utilities. Calls execute asynchronously in the user process, so HKCU refers to
@@ -47,8 +48,10 @@ mixed port is disabled. Missing configuration produces a null port, never a
 static configuration guess.
 
 `direct=true` diagnoses the existing Windows direct core through the fixed
-KokoroBox controller pipe. No caller-supplied socket path or proxy port is
-accepted. Managed cores use the existing Service core manager and its private
+KokoroBox controller pipe. On Unix, it supports the fixed standard, unprivileged
+and external-core controller sockets already used by Desktop. No caller-supplied
+socket path or proxy port is accepted. Permission failures remain unknown rather
+than becoming a false stopped-core result. Managed cores use the existing Service core manager and its private
 controller. Core startup errors reuse existing lifecycle state and return codes,
 not raw log/configuration text.
 
@@ -62,7 +65,7 @@ performing another public connectivity test.
 
 ## Actions and lease integration
 
-Restore/enable/disable use Native, with a freshly obtained Service endpoint.
+Windows diagnostics restore/enable/disable use Native, with a freshly obtained Service endpoint.
 The operation queue still persists intent and publishes toggle state.
 `POST /sysproxy/native/prepare` suspends the old Service guard and lease before
 Native writes; `POST /sysproxy/native/adopt` confirms and adopts that configuration
@@ -75,6 +78,54 @@ explains the switch to Service management; the existing ownership-transfer/start
 orchestrator generates the launch profile and stops the legacy direct core.
 This explicit repair cannot silently fall back to a directly launched core.
 Failure restores the previous permission intent and remains visible to the user.
+
+## Linux diagnostics (first phase)
+
+Native selects the active desktop from `XDG_CURRENT_DESKTOP` / `DESKTOP_SESSION`,
+and confirms the selected backend can be read. An installed GNOME schema does
+not make an unrelated compositor a GNOME desktop. Supported backends are GNOME
+(including desktops using GNOME settings) and KDE Plasma/KIO. Other desktops
+use an informational `environment` or `unsupported` backend, with `enabled: null`.
+Environment variables are never written or treated as a desktop-wide setter.
+
+GNOME reads only mode, HTTP/HTTPS/SOCKS host/port, PAC URL and ignore-hosts using
+fixed `gsettings get` arguments. It parses GVariant strings/arrays inside Native,
+including typed empty arrays. Deprecated `use-same-proxy` and HTTP `enabled` keys
+are ignored. KDE uses `kreadconfig6` / `kreadconfig5` rather than a hand-written
+home-file parser, preserving KConfig defaults and cascaded locations. Modes
+none/manual/PAC/WPAD/environment, legacy host-space-port values and reversed
+exceptions are normalized. KDE environment mode resolves configured variable
+names inside Native. All utility calls have one shared 1.5-second deadline,
+bounded output, null stderr, and terminate/reap timed-out children. No shell runs.
+
+The eight usual lowercase/uppercase proxy variables are inspected only in
+KokoroBox's inherited process environment. URI credentials, paths and queries
+are removed before IPC; other processes may inherit different values. Desktop
+compares safe endpoints with the Service endpoint and warns about differences,
+invalid values or unusually broad `no_proxy`. It does not export any variables.
+
+Native queries the user-session D-Bus
+`org.freedesktop.portal.ProxyResolver.Lookup` for the HTTPS connectivity target,
+with a one-second method timeout inside the shared diagnostic budget. Portal
+results are structured endpoints/direct status, never raw D-Bus/command output.
+This is resolver information, not another public connectivity probe. A direct
+or different Portal response warns when a matching desktop proxy is expected;
+unavailable Portal information is an informational row and does not fail runtime.
+It cannot guarantee access for every Flatpak or sandboxed application.
+
+Desktop reuses the Windows evaluator's runtime rows and Service actions. Linux
+configuration rows compare both HTTP and HTTPS and preserve desired/actual state.
+Unsupported desktops still receive core/listener/connectivity results, without
+claiming a healthy global system proxy. Backend failures preserve environment and
+Portal information; Service failures preserve OS settings. The modal and existing
+Run again / Copy report behavior are unchanged, with English and both Chinese
+catalogs. Linux OS diagnostics are read-only in this phase: conflicts instruct the
+user to review desktop network settings; start/restart retain Service management.
+The existing Linux System Proxy toggle/setter is outside this change.
+
+References: [GNOME proxy schema](https://github.com/GNOME/gsettings-desktop-schemas/blob/master/schemas/org.gnome.system.proxy.gschema.xml.in),
+[KDE proxy settings](https://docs.kde.org/stable_kf6/en/kio-extras/kcontrol6/proxy/),
+[XDG Portal ProxyResolver](https://flatpak.github.io/xdg-desktop-portal/docs/doc-org.freedesktop.portal.ProxyResolver.html).
 
 ## Partial results, privacy and deployment
 
@@ -102,7 +153,13 @@ backend failures, on-demand/coalesced refresh, sanitized reports, remediation,
 Service migration and bounded IPC. Service tests use real local TCP and TLS/CONNECT
 fixtures for closed ports, tunnel rejection, authentication, timeout, verified
 204 success and redirect failure, plus loaded mixed/HTTP ports and failed config.
-Native tests cover endpoint/settings validation and redacted diagnostic logging.
+Native tests cover endpoint/settings validation, Linux backend/mode parsing,
+credential removal, bounded utility execution and redacted diagnostic logging.
+Linux Desktop tests cover GNOME/KDE matches, disabled intent/state conflicts,
+wrong/missing HTTPS ports, runtime failures, PAC/WPAD/reversed exceptions, broad
+bypass, both environment casings, Portal mismatch/unavailability, unsupported
+desktops and independent Native/Service failure. Linux session behavior must
+also be verified on GNOME and Plasma with rebuilt artifacts.
 
 Run the Desktop `test:system-proxy`, `test:service-contract`, `test:service-auth`,
 `test:runtime-recovery` and `test:localization` scripts; Native's Rust library and

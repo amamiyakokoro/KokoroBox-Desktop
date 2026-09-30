@@ -121,6 +121,10 @@ function bypassEntries(value: string): string[] {
 export function safeProxyBypass(value: string): string {
   const standard = new Set([
     ...defaultSystemProxyBypass('win32'),
+    ...defaultSystemProxyBypass('linux'),
+    '127.0.0.0/8',
+    '0.0.0.0/0',
+    '::/0',
     '*',
     '*.*',
     'http://*',

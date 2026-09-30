@@ -5,6 +5,7 @@ import { test } from 'node:test'
 import ts from 'typescript'
 import { setLocale } from '../src/shared/i18n'
 import { defaultSystemProxyBypass } from '../src/shared/system-proxy'
+import { buildLinuxSystemProxyDiagnostics } from '../src/shared/linux-system-proxy-diagnostics'
 import {
   buildSystemProxyDiagnostics,
   type SystemProxyDiagnosticInput
@@ -451,6 +452,7 @@ function diagnosticEngine(overrides: Record<string, unknown> = {}) {
       './native-system-proxy': { getNativeSystemProxyDiagnostics: async () => nativeSnapshot() },
       '../../shared/system-proxy': { defaultSystemProxyBypass },
       '../../shared/system-proxy-diagnostics': { buildSystemProxyDiagnostics },
+      '../../shared/linux-system-proxy-diagnostics': { buildLinuxSystemProxyDiagnostics },
       ...overrides
     },
     'win32'
@@ -596,6 +598,46 @@ test('structured Native/Service integration covers Windows health, conflicts and
     if (c.name === 'AppContainer unavailable')
       assert.equal(result.results.find((row) => row.id === 'appcontainer')?.status, 'warning')
   }
+})
+
+test('Linux orchestration compares structured desktop configuration with the Service endpoint', () => {
+  const engine = diagnosticEngine()
+  const snapshot: NativeSystemProxyDiagnostics = {
+    platform: 'linux',
+    status: 'available',
+    enabled: true,
+    proxies: {
+      http: { host: '127.0.0.1', port: 19351 },
+      https: { host: '127.0.0.1', port: 19351 }
+    },
+    bypass: defaultSystemProxyBypass('linux'),
+    pac: { enabled: false },
+    linux: {
+      desktopEnvironment: 'GNOME',
+      backend: 'gnome',
+      mode: 'manual',
+      reversedBypass: false,
+      environment: [],
+      portal: { status: 'unavailable', direct: false, proxies: [] }
+    }
+  }
+  const settings = {
+    platform: 'linux',
+    intentEnabled: true,
+    mode: 'manual' as const,
+    expectedBypass: defaultSystemProxyBypass('linux')
+  }
+  const result = engine.combineSystemProxyDiagnostics(settings, snapshot, runtimeSnapshot())
+  assert.equal(result.overall.kind, 'configuration-mismatch')
+  assert.match(
+    result.results.find((row) => row.id === 'http-proxy')!.details!,
+    /Expected: 127.0.0.1:18423\nCurrent: 127.0.0.1:19351/
+  )
+  assert.equal(result.results.find((row) => row.id === 'connectivity')?.status, 'success')
+  const failedService = engine.combineSystemProxyDiagnostics(settings, snapshot, undefined)
+  assert.equal(failedService.state.matchesExpectedConfig, null)
+  assert.equal(failedService.state.enabled, true)
+  assert.doesNotMatch(failedService.report, /Windows|Result: OK/)
 })
 
 test('on-demand orchestration coalesces, refreshes and routes explicit actions to Native/Service', async () => {

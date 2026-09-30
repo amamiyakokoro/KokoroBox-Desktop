@@ -1885,5 +1885,39 @@ export const messages: Readonly<Record<string, string>> = {
   'Restart required': '需要重新啟動',
   'Confirm to apply changes and restart the core.': '按「確認」套用變更並重啟核心。',
   'Learn how to add a subscription and enable the proxy. You can close this tour and reopen it from settings at any time.':
-    '了解如何新增訂閱和啟用代理。你可以隨時關閉引導，並從設定中重新開啟。'
+    '了解如何新增訂閱和啟用代理。你可以隨時關閉引導，並從設定中重新開啟。',
+  'Desktop Environment': '桌面環境',
+  'Proxy Backend': '代理後端',
+  'GNOME GSettings': 'GNOME GSettings',
+  'KDE / KIO': 'KDE / KIO',
+  'Unable to retrieve desktop proxy settings': '無法讀取桌面代理設定',
+  'No supported desktop proxy backend detected': '未偵測到支援的桌面代理後端',
+  'Linux desktop proxy settings do not apply to every application.':
+    'Linux 桌面代理設定不適用於所有應用程式。',
+  'Configuration intent: {0}; actual desktop proxy: {1}': '設定意圖：{0}；實際桌面代理：{1}',
+  'HTTP Proxy': 'HTTP 代理',
+  'HTTPS Proxy': 'HTTPS 代理',
+  'SOCKS Proxy': 'SOCKS 代理',
+  'Automatic proxy discovery (WPAD)': '自動代理探索 (WPAD)',
+  'Proxy is used only for addresses in the exceptions list': '僅對例外清單中的位址使用代理',
+  'Review the proxy configuration in your desktop network settings. No settings were changed.':
+    '請在桌面網路設定中檢查代理設定。未修改任何設定。',
+  'Environment Proxy': '環境代理',
+  'Environment proxy conflicts with KokoroBox': '環境代理與 KokoroBox 衝突',
+  'Environment proxy variables detected': '偵測到環境代理變數',
+  'Only the environment inherited by KokoroBox is inspected. Other processes may have different variables; these are not desktop-wide settings.':
+    '僅檢查 KokoroBox 繼承的環境。其他程序可能使用不同的變數；這些不是桌面全域設定。',
+  'XDG Portal Proxy': 'XDG Portal 代理',
+  'Sandboxed applications may see a different proxy configuration':
+    '沙盒應用程式可能讀取到不同的代理設定',
+  'Portal proxy resolution available': 'Portal 代理解析可用',
+  'ProxyResolver was queried for the HTTPS connectivity endpoint. This is configuration information, not a connectivity test or a guarantee for every sandboxed application.':
+    '已向 ProxyResolver 查詢 HTTPS 連通性檢測端點。這是設定資訊，不是連通性測試，也不保證所有沙盒應用程式都能連線。',
+  'Proxy runtime works; desktop proxy settings could not be inspected':
+    '代理執行正常；無法檢查桌面代理設定',
+  'Proxy runtime works; no supported desktop proxy backend detected':
+    '代理執行正常；未偵測到支援的桌面代理後端',
+  'Proxy runtime works; desktop configuration uses a separate proxy resolver':
+    '代理執行正常；桌面設定使用獨立的代理解析器',
+  'Environment variables (process scope)': '環境變數（程序範圍）'
 }

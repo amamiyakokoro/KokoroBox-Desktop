@@ -1939,5 +1939,41 @@ export const messages: Readonly<Record<string, string>> = {
   'Confirm to apply changes and restart the core.':
     'Confirm to apply changes and restart the core.',
   'Learn how to add a subscription and enable the proxy. You can close this tour and reopen it from settings at any time.':
-    'Learn how to add a subscription and enable the proxy. You can close this tour and reopen it from settings at any time.'
+    'Learn how to add a subscription and enable the proxy. You can close this tour and reopen it from settings at any time.',
+  'Desktop Environment': 'Desktop Environment',
+  'Proxy Backend': 'Proxy Backend',
+  'GNOME GSettings': 'GNOME GSettings',
+  'KDE / KIO': 'KDE / KIO',
+  'Unable to retrieve desktop proxy settings': 'Unable to retrieve desktop proxy settings',
+  'No supported desktop proxy backend detected': 'No supported desktop proxy backend detected',
+  'Linux desktop proxy settings do not apply to every application.':
+    'Linux desktop proxy settings do not apply to every application.',
+  'Configuration intent: {0}; actual desktop proxy: {1}':
+    'Configuration intent: {0}; actual desktop proxy: {1}',
+  'HTTP Proxy': 'HTTP Proxy',
+  'HTTPS Proxy': 'HTTPS Proxy',
+  'SOCKS Proxy': 'SOCKS Proxy',
+  'Automatic proxy discovery (WPAD)': 'Automatic proxy discovery (WPAD)',
+  'Proxy is used only for addresses in the exceptions list':
+    'Proxy is used only for addresses in the exceptions list',
+  'Review the proxy configuration in your desktop network settings. No settings were changed.':
+    'Review the proxy configuration in your desktop network settings. No settings were changed.',
+  'Environment Proxy': 'Environment Proxy',
+  'Environment proxy conflicts with KokoroBox': 'Environment proxy conflicts with KokoroBox',
+  'Environment proxy variables detected': 'Environment proxy variables detected',
+  'Only the environment inherited by KokoroBox is inspected. Other processes may have different variables; these are not desktop-wide settings.':
+    'Only the environment inherited by KokoroBox is inspected. Other processes may have different variables; these are not desktop-wide settings.',
+  'XDG Portal Proxy': 'XDG Portal Proxy',
+  'Sandboxed applications may see a different proxy configuration':
+    'Sandboxed applications may see a different proxy configuration',
+  'Portal proxy resolution available': 'Portal proxy resolution available',
+  'ProxyResolver was queried for the HTTPS connectivity endpoint. This is configuration information, not a connectivity test or a guarantee for every sandboxed application.':
+    'ProxyResolver was queried for the HTTPS connectivity endpoint. This is configuration information, not a connectivity test or a guarantee for every sandboxed application.',
+  'Proxy runtime works; desktop proxy settings could not be inspected':
+    'Proxy runtime works; desktop proxy settings could not be inspected',
+  'Proxy runtime works; no supported desktop proxy backend detected':
+    'Proxy runtime works; no supported desktop proxy backend detected',
+  'Proxy runtime works; desktop configuration uses a separate proxy resolver':
+    'Proxy runtime works; desktop configuration uses a separate proxy resolver',
+  'Environment variables (process scope)': 'Environment variables (process scope)'
 }

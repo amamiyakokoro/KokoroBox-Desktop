@@ -8,6 +8,7 @@ import { changeSysProxy } from './sysproxy-operation'
 import { applyNativeDiagnosticProxy } from './sysproxy'
 import { getNativeSystemProxyDiagnostics } from './native-system-proxy'
 import { defaultSystemProxyBypass } from '../../shared/system-proxy'
+import { buildLinuxSystemProxyDiagnostics } from '../../shared/linux-system-proxy-diagnostics'
 import {
   buildSystemProxyDiagnostics,
   type DiagnosticAction,
@@ -61,7 +62,7 @@ export function combineSystemProxyDiagnostics(
           pacUrl: windows.autoConfigUrl ?? ''
         }
       : undefined
-  return buildSystemProxyDiagnostics({
+  const diagnosticInput: SystemProxyDiagnosticInput = {
     ...input,
     expectedPort: port,
     expectedProxy: port ? `${host.includes(':') ? `[${host}]` : host}:${port}` : '',
@@ -86,7 +87,10 @@ export function combineSystemProxyDiagnostics(
         ? { mode: windows.winHttp.mode ?? 'unknown', server: windows.winHttp.proxy ?? undefined }
         : undefined,
     winHttpErrorCode: windows?.winHttp.status === 'unavailable' ? 'winhttp-read-failed' : undefined
-  })
+  }
+  return input.platform === 'linux'
+    ? buildLinuxSystemProxyDiagnostics(diagnosticInput, native)
+    : buildSystemProxyDiagnostics(diagnosticInput)
 }
 
 async function runChecks(): Promise<SystemProxyDiagnostics> {
@@ -120,6 +124,8 @@ export function fixSystemProxyDiagnostic(action: DiagnosticAction): Promise<void
     switch (action) {
       case 'enable-system-proxy':
       case 'restore-system-proxy': {
+        if (process.platform === 'linux')
+          throw new Error('Configure the proxy in your desktop network settings')
         const { sysProxy, onlyActiveDevice = false, corePermissionMode } = await getAppConfig()
         const enable = action === 'enable-system-proxy' || sysProxy.enable
         const mode = sysProxy.mode || 'manual'
