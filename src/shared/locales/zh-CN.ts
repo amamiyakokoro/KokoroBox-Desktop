@@ -1913,5 +1913,34 @@ export const messages: Readonly<Record<string, string>> = {
     '代理运行正常；未检测到支持的桌面代理后端',
   'Proxy runtime works; desktop configuration uses a separate proxy resolver':
     '代理运行正常；桌面配置使用独立的代理解析器',
-  'Environment variables (process scope)': '环境变量（进程范围）'
+  'Environment variables (process scope)': '环境变量（进程范围）',
+  'PAC and Auto Proxy Discovery remain unchanged when restoring manual proxies. If either is active, the watchdog and automatic lease cleanup stay paused.':
+    '恢复手动代理时会保留 PAC 和自动代理发现设置。若任一设置已启用，监控与自动租约清理将保持暂停。',
+  'Network Service': '网络服务',
+  'Network Location': '网络位置',
+  'Unable to determine the active Network Service': '无法确定当前使用的网络服务',
+  'The current default IPv4 and IPv6 services are checked. A proxy on an inactive service does not prove the active service is configured.':
+    '检查当前 IPv4 和 IPv6 默认路由使用的网络服务。闲置服务配置了代理，不代表当前服务也已配置。',
+  'Unable to determine the Network Location': '无法确定网络位置',
+  'Switching Network Service or Network Location can change proxy settings.':
+    '切换网络服务或网络位置可能改变代理设置。',
+  'Unable to read macOS effective proxy configuration': '无法读取 macOS 的有效代理配置',
+  'Proxy is not configured for the active network service': '当前使用的网络服务未配置代理',
+  'Configuration intent: {0}; effective system proxy: {1}': '配置意图：{0}；有效系统代理：{1}',
+  'Other Network Services': '其他网络服务',
+  'Proxy settings on other services are diagnostic context only': '其他服务的代理设置仅供诊断参考',
+  'Automatic Proxy Configuration': '自动代理配置',
+  'A PAC configuration is active and may affect how applications select a proxy. Diagnostics do not disable it.':
+    'PAC 配置已启用，可能影响应用程序选择代理的方式。诊断不会禁用此配置。',
+  'Auto Proxy Discovery': '自动代理发现',
+  'Automatic proxy discovery may select a different proxy. Diagnostics do not change this setting.':
+    '自动代理发现可能选择其他代理。诊断不会修改此设置。',
+  'Check the currently active Network Service and Network Location. The application that changed the configuration cannot be determined.':
+    '请检查当前使用的网络服务与网络位置。无法确定是哪个应用程序改变了配置。',
+  'VPN / Network Extension': 'VPN / 网络扩展',
+  'Network extensions or VPN software may alter traffic routing.':
+    '网络扩展或 VPN 软件可能改变流量路由。',
+  'System proxy behavior can vary by application.': '系统代理行为可能因应用程序而异。',
+  'Some command-line or sandboxed applications use their own proxy configuration. Environment proxy variables are separate and were not changed.':
+    '某些命令行或沙盒应用程序使用自己的代理配置。环境代理变量独立于系统代理，未被修改。'
 }

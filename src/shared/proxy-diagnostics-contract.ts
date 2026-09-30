@@ -5,6 +5,41 @@ export interface ProxyEndpoint {
   host: string
   port: number
 }
+export interface MacProxyProtocol {
+  enabled: boolean
+  endpoint?: ProxyEndpoint | null
+}
+export interface MacProxyState {
+  http: MacProxyProtocol
+  https: MacProxyProtocol
+  socks: MacProxyProtocol
+  pacEnabled: boolean
+  pacUrl?: string | null
+  autoDiscovery: boolean
+  bypass: string[]
+  excludeSimpleHostnames: boolean
+}
+export interface MacNetworkService {
+  id: string
+  name: string
+  interface?: string | null
+  enabled: boolean
+  active: boolean
+  primary: boolean
+  status: 'available' | 'unavailable'
+  proxies?: MacProxyState | null
+}
+export interface MacOSProxyDetails {
+  effective?: MacProxyState | null
+  activeServiceIds: string[]
+  services: MacNetworkService[]
+  networkLocation?: string | null
+  locationErrorCode?: string | null
+  serviceErrorCode?: string | null
+}
+export interface NativeSystemProxyMutation {
+  automaticSettingsPreserved: boolean
+}
 export interface NativeSystemProxyDiagnostics {
   platform: 'windows' | 'darwin' | 'linux'
   status: 'available' | 'unavailable' | 'unsupported'
@@ -17,6 +52,7 @@ export interface NativeSystemProxyDiagnostics {
   }
   pac?: { enabled: boolean; url?: string | null } | null
   bypass: string[]
+  macos?: MacOSProxyDetails | null
   linux?: {
     desktopEnvironment: string
     backend: 'gnome' | 'kde' | 'environment' | 'unsupported'
@@ -60,6 +96,7 @@ export interface NativeSystemProxySettings {
   port?: number
   bypass: string[]
   pacUrl?: string
+  onlyActiveDevice?: boolean
 }
 export interface ProxyRuntimeDiagnostics {
   core: { running: boolean | null; ready: boolean; errorCode?: string }

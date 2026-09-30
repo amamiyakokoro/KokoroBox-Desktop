@@ -1,13 +1,16 @@
 import * as native from 'kokorobox-native'
 import type {
   NativeSystemProxyDiagnostics,
+  NativeSystemProxyMutation,
   NativeSystemProxySettings
 } from '../../shared/proxy-diagnostics-contract'
 
 // Older native binaries expose neither API. Never fall back to registry commands.
 const systemProxy = native as unknown as {
   getSystemProxyDiagnostics?: () => Promise<NativeSystemProxyDiagnostics>
-  setSystemProxy?: (settings: NativeSystemProxySettings) => Promise<void>
+  setSystemProxy?: (
+    settings: NativeSystemProxySettings
+  ) => Promise<NativeSystemProxyMutation | void>
 }
 
 export async function getNativeSystemProxyDiagnostics(): Promise<NativeSystemProxyDiagnostics> {
@@ -19,9 +22,16 @@ export function assertNativeSystemProxyAvailable(): void {
   if (!systemProxy.setSystemProxy) throw new Error('native-system-proxy-unavailable')
 }
 
-export async function setNativeSystemProxy(settings: NativeSystemProxySettings): Promise<void> {
+export async function setNativeSystemProxy(
+  settings: NativeSystemProxySettings
+): Promise<NativeSystemProxyMutation | void> {
   assertNativeSystemProxyAvailable()
-  await bounded(systemProxy.setSystemProxy!(settings), 4000)
+  // Read-only diagnostics stay short. An explicit macOS repair may wait for
+  // Native's existing administrator dialog (it has its own bounded deadline).
+  return bounded(
+    systemProxy.setSystemProxy!(settings),
+    process.platform === 'darwin' ? 120000 : 4000
+  )
 }
 
 function bounded<T>(task: Promise<T>, timeoutMs: number): Promise<T> {

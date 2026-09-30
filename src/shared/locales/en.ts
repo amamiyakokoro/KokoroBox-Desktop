@@ -1975,5 +1975,40 @@ export const messages: Readonly<Record<string, string>> = {
     'Proxy runtime works; no supported desktop proxy backend detected',
   'Proxy runtime works; desktop configuration uses a separate proxy resolver':
     'Proxy runtime works; desktop configuration uses a separate proxy resolver',
-  'Environment variables (process scope)': 'Environment variables (process scope)'
+  'Environment variables (process scope)': 'Environment variables (process scope)',
+  'PAC and Auto Proxy Discovery remain unchanged when restoring manual proxies. If either is active, the watchdog and automatic lease cleanup stay paused.':
+    'PAC and Auto Proxy Discovery remain unchanged when restoring manual proxies. If either is active, the watchdog and automatic lease cleanup stay paused.',
+  'Network Service': 'Network Service',
+  'Network Location': 'Network Location',
+  'Unable to determine the active Network Service':
+    'Unable to determine the active Network Service',
+  'The current default IPv4 and IPv6 services are checked. A proxy on an inactive service does not prove the active service is configured.':
+    'The current default IPv4 and IPv6 services are checked. A proxy on an inactive service does not prove the active service is configured.',
+  'Unable to determine the Network Location': 'Unable to determine the Network Location',
+  'Switching Network Service or Network Location can change proxy settings.':
+    'Switching Network Service or Network Location can change proxy settings.',
+  'Unable to read macOS effective proxy configuration':
+    'Unable to read macOS effective proxy configuration',
+  'Proxy is not configured for the active network service':
+    'Proxy is not configured for the active network service',
+  'Configuration intent: {0}; effective system proxy: {1}':
+    'Configuration intent: {0}; effective system proxy: {1}',
+  'Other Network Services': 'Other Network Services',
+  'Proxy settings on other services are diagnostic context only':
+    'Proxy settings on other services are diagnostic context only',
+  'Automatic Proxy Configuration': 'Automatic Proxy Configuration',
+  'A PAC configuration is active and may affect how applications select a proxy. Diagnostics do not disable it.':
+    'A PAC configuration is active and may affect how applications select a proxy. Diagnostics do not disable it.',
+  'Auto Proxy Discovery': 'Auto Proxy Discovery',
+  'Automatic proxy discovery may select a different proxy. Diagnostics do not change this setting.':
+    'Automatic proxy discovery may select a different proxy. Diagnostics do not change this setting.',
+  'Check the currently active Network Service and Network Location. The application that changed the configuration cannot be determined.':
+    'Check the currently active Network Service and Network Location. The application that changed the configuration cannot be determined.',
+  'VPN / Network Extension': 'VPN / Network Extension',
+  'Network extensions or VPN software may alter traffic routing.':
+    'Network extensions or VPN software may alter traffic routing.',
+  'System proxy behavior can vary by application.':
+    'System proxy behavior can vary by application.',
+  'Some command-line or sandboxed applications use their own proxy configuration. Environment proxy variables are separate and were not changed.':
+    'Some command-line or sandboxed applications use their own proxy configuration. Environment proxy variables are separate and were not changed.'
 }

@@ -367,9 +367,15 @@ export async function applyNativeDiagnosticProxy(
   stopSysproxyLeaseRenewal()
   await triggerSysProxyTask
   await prepareNativeProxyMutation()
-  await setNativeSystemProxy(settings)
+  const mutation = await setNativeSystemProxy({ ...settings, onlyActiveDevice })
   if (settings.mode === 'disabled') {
     await stopPacServer()
+    updateSysproxyGuardEventStream(false)
+    return
+  }
+  if (mutation?.automaticSettingsPreserved) {
+    // Legacy lease cleanup/watchdog setters would erase the automatic settings
+    // which Native deliberately preserved. Keep them suspended in this case.
     updateSysproxyGuardEventStream(false)
     return
   }

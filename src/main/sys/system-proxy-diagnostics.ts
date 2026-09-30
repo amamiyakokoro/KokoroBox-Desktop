@@ -9,6 +9,7 @@ import { applyNativeDiagnosticProxy } from './sysproxy'
 import { getNativeSystemProxyDiagnostics } from './native-system-proxy'
 import { defaultSystemProxyBypass } from '../../shared/system-proxy'
 import { buildLinuxSystemProxyDiagnostics } from '../../shared/linux-system-proxy-diagnostics'
+import { buildMacOSSystemProxyDiagnostics } from '../../shared/macos-system-proxy-diagnostics'
 import {
   buildSystemProxyDiagnostics,
   type DiagnosticAction,
@@ -88,9 +89,11 @@ export function combineSystemProxyDiagnostics(
         : undefined,
     winHttpErrorCode: windows?.winHttp.status === 'unavailable' ? 'winhttp-read-failed' : undefined
   }
-  return input.platform === 'linux'
-    ? buildLinuxSystemProxyDiagnostics(diagnosticInput, native)
-    : buildSystemProxyDiagnostics(diagnosticInput)
+  return input.platform === 'darwin'
+    ? buildMacOSSystemProxyDiagnostics(diagnosticInput, native)
+    : input.platform === 'linux'
+      ? buildLinuxSystemProxyDiagnostics(diagnosticInput, native)
+      : buildSystemProxyDiagnostics(diagnosticInput)
 }
 
 async function runChecks(): Promise<SystemProxyDiagnostics> {
@@ -112,7 +115,9 @@ async function runChecks(): Promise<SystemProxyDiagnostics> {
     native.status === 'fulfilled' ? native.value : undefined,
     runtime.status === 'fulfilled' ? runtime.value : undefined
   )
-  log(`Diagnostics completed; overall status: ${result.overall.kind}`)
+  log(
+    `Diagnostics completed; platform: ${process.platform}; overall status: ${result.overall.kind}`
+  )
   return result
 }
 

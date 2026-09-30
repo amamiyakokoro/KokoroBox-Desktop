@@ -31,8 +31,9 @@ endpoints, PAC and bypass fields. `windows` contains registry values, WinHTTP
 status and AppContainer information. Each secondary item has its own availability
 and stable error code. Registry failure therefore does not discard WinHTTP or
 AppContainer information. Linux adds `linux` details for desktop/backend/mode,
-process-scoped environment variables and Portal resolution. macOS still returns
-`unsupported` with an unknown enabled state; no new IPC entry point is required.
+process-scoped environment variables and Portal resolution. macOS adds `macos`
+details for effective settings, services in the current Network Location and
+the primary IPv4/IPv6 services. No new IPC entry point is required.
 
 Windows uses Registry, WinINet, WinHTTP and NetworkIsolation APIs rather than
 utilities. Calls execute asynchronously in the user process, so HKCU refers to
@@ -65,7 +66,7 @@ performing another public connectivity test.
 
 ## Actions and lease integration
 
-Windows diagnostics restore/enable/disable use Native, with a freshly obtained Service endpoint.
+Windows and macOS diagnostics restore/enable/disable use Native, with a freshly obtained Service endpoint.
 The operation queue still persists intent and publishes toggle state.
 `POST /sysproxy/native/prepare` suspends the old Service guard and lease before
 Native writes; `POST /sysproxy/native/adopt` confirms and adopts that configuration
@@ -78,6 +79,47 @@ explains the switch to Service management; the existing ownership-transfer/start
 orchestrator generates the launch profile and stops the legacy direct core.
 This explicit repair cannot silently fall back to a directly launched core.
 Failure restores the previous permission intent and remains visible to the user.
+
+## macOS diagnostics
+
+Native reads SystemConfiguration directly: `SCDynamicStoreCopyProxies` provides
+effective protocol settings; the IPv4/IPv6 global dynamic-store entries identify
+the primary Network Services. The current `SCNetworkSet` supplies Network
+Location and service membership. Per-service settings prefer dynamic state and
+fall back to the service's Proxies protocol configuration. Missing secondary
+context has stable error codes and does not discard effective settings.
+
+Desktop compares effective HTTP and HTTPS independently with the Service's live
+endpoint, and checks both primary services when IPv4 and IPv6 use different
+services. A matching proxy on an inactive service cannot establish health.
+Switching to an unconfigured primary service is identified separately, with
+other services shown as context. PAC and Auto Proxy Discovery are warnings in
+manual mode when HTTP/HTTPS still match; Network Location is context, not a
+failure. VPN/Network Extension and application behavior rows are informational.
+The existing modal, refresh, report and Service runtime/remediation APIs are reused.
+
+Explicit Native writes use a locked SCPreferences transaction, commit and apply.
+The existing `onlyActiveDevice` intent is preserved: enabled services with live
+addresses are targeted when true; all enabled services in the current location
+remain targets when false. Manual restoration sets HTTP, HTTPS and SOCKS, and
+preserves PAC and discovery. Disable leaves foreign PAC and discovery unchanged;
+it may disable KokoroBox's local PAC. No environment variables are modified.
+
+Read-only diagnostics never prompt for elevation. If a write is denied, Native
+reuses its existing AppleScript administrator mechanism once with fixed,
+quoted `networksetup` mutation arguments. This fallback is bounded at 90 seconds;
+Desktop permits 120 seconds for that explicit action, while reads remain bounded
+at four seconds. Raw command output never crosses IPC.
+
+The legacy Service guard and lease cleanup can clear macOS automatic settings.
+Native therefore returns `automaticSettingsPreserved` after a mutation. Desktop
+keeps that guard, lease renewal and automatic cleanup suspended when preserving
+PAC/discovery, rather than adopting a lease whose cleanup would erase them.
+The repair action explains this tradeoff. Ordinary repairs without automatic
+settings retain the existing adoption and crash-cleanup behavior.
+
+References: [Apple SystemConfiguration](https://developer.apple.com/documentation/systemconfiguration),
+[Network configuration](https://developer.apple.com/documentation/systemconfiguration/scnetworkconfiguration).
 
 ## Linux diagnostics (first phase)
 
@@ -160,6 +202,15 @@ wrong/missing HTTPS ports, runtime failures, PAC/WPAD/reversed exceptions, broad
 bypass, both environment casings, Portal mismatch/unavailability, unsupported
 desktops and independent Native/Service failure. Linux session behavior must
 also be verified on GNOME and Plasma with rebuilt artifacts.
+
+macOS tests cover independent HTTP/HTTPS settings, disabled intent/state, wrong
+ports, changed primary service/location, inactive-only proxy settings, distinct
+IPv4/IPv6 services, PAC/discovery/bypass warnings, independent runtime failures,
+partial Native results, safe reports, scope forwarding and guard suspension.
+Native tests check normalization and both API/fallback mutation plans without
+changing host settings. A rebuilt NAPI binding was exercised against this Mac
+for read-only effective/service/location retrieval. Actual privileged writes and
+live service/location switching still require manual verification.
 
 Run the Desktop `test:system-proxy`, `test:service-contract`, `test:service-auth`,
 `test:runtime-recovery` and `test:localization` scripts; Native's Rust library and

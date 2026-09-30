@@ -122,6 +122,7 @@ export function safeProxyBypass(value: string): string {
   const standard = new Set([
     ...defaultSystemProxyBypass('win32'),
     ...defaultSystemProxyBypass('linux'),
+    ...defaultSystemProxyBypass('darwin'),
     '127.0.0.0/8',
     '0.0.0.0/0',
     '::/0',

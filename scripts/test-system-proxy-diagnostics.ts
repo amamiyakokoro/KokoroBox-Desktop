@@ -6,6 +6,7 @@ import ts from 'typescript'
 import { setLocale } from '../src/shared/i18n'
 import { defaultSystemProxyBypass } from '../src/shared/system-proxy'
 import { buildLinuxSystemProxyDiagnostics } from '../src/shared/linux-system-proxy-diagnostics'
+import { buildMacOSSystemProxyDiagnostics } from '../src/shared/macos-system-proxy-diagnostics'
 import {
   buildSystemProxyDiagnostics,
   type SystemProxyDiagnosticInput
@@ -421,7 +422,10 @@ function runtimeSnapshot(patch: Partial<ProxyRuntimeDiagnostics> = {}): ProxyRun
     ...patch
   }
 }
-function diagnosticEngine(overrides: Record<string, unknown> = {}) {
+function diagnosticEngine(
+  overrides: Record<string, unknown> = {},
+  platform: NodeJS.Platform = 'win32'
+) {
   return load<typeof import('../src/main/sys/system-proxy-diagnostics')>(
     'src/main/sys/system-proxy-diagnostics.ts',
     {
@@ -453,9 +457,10 @@ function diagnosticEngine(overrides: Record<string, unknown> = {}) {
       '../../shared/system-proxy': { defaultSystemProxyBypass },
       '../../shared/system-proxy-diagnostics': { buildSystemProxyDiagnostics },
       '../../shared/linux-system-proxy-diagnostics': { buildLinuxSystemProxyDiagnostics },
+      '../../shared/macos-system-proxy-diagnostics': { buildMacOSSystemProxyDiagnostics },
       ...overrides
     },
-    'win32'
+    platform
   )
 }
 
@@ -934,4 +939,155 @@ test('native remediation invalidates legacy retries before guard handoff and sta
     'stop-pac',
     'events'
   ])
+})
+
+test('macOS orchestration uses Native OS facts and Service endpoint, preserving independent failures', async () => {
+  const endpoint = runtimeSnapshot().proxy
+  const proxies = {
+    http: { enabled: true, endpoint: { ...endpoint, port: endpoint.port! } },
+    https: { enabled: true, endpoint: { ...endpoint, port: endpoint.port! } },
+    socks: { enabled: false },
+    pacEnabled: false,
+    autoDiscovery: false,
+    excludeSimpleHostnames: true,
+    bypass: defaultSystemProxyBypass('darwin')
+  }
+  const native: NativeSystemProxyDiagnostics = {
+    platform: 'darwin',
+    status: 'available',
+    enabled: true,
+    proxies: {},
+    pac: { enabled: false },
+    bypass: proxies.bypass,
+    macos: {
+      effective: proxies,
+      activeServiceIds: ['ethernet'],
+      networkLocation: 'Office',
+      services: [
+        {
+          id: 'ethernet',
+          name: 'Ethernet',
+          enabled: true,
+          active: true,
+          primary: true,
+          status: 'available',
+          proxies
+        }
+      ]
+    }
+  }
+  for (const failure of ['none', 'native', 'service']) {
+    const logs: string[] = []
+    const engine = diagnosticEngine(
+      {
+        './native-system-proxy': {
+          getNativeSystemProxyDiagnostics: async () => {
+            if (failure === 'native') throw new Error('private native error')
+            return native
+          }
+        },
+        '../service/api': {
+          getProxyRuntimeDiagnostics: async () => {
+            if (failure === 'service') throw new Error('private service error')
+            return runtimeSnapshot()
+          }
+        },
+        '../utils/log': {
+          appendAppLog: async (message: string) => {
+            logs.push(message)
+          }
+        }
+      },
+      'darwin'
+    )
+    const result = await engine.runSystemProxyDiagnostics()
+    const row = (id: string) => result.results.find((r) => r.id === id)!
+    if (failure === 'none') {
+      assert.equal(result.overall.kind, 'healthy')
+      assert.match(
+        row('http-proxy').details!,
+        new RegExp(`Expected: 127\\.0\\.0\\.1:${endpoint.port}`)
+      )
+      assert.equal(row('network-location').summary, 'Office')
+    } else if (failure === 'native') {
+      assert.equal(result.overall.kind, 'configuration-unavailable')
+      assert.equal(row('connectivity').status, 'success')
+    } else {
+      assert.equal(result.overall.kind, 'core-unavailable')
+      assert.equal(row('http-proxy').summary, `127.0.0.1:${endpoint.port}`)
+      assert.match(row('http-proxy').details!, /Expected: Unknown/)
+      assert.equal(result.state.matchesExpectedConfig, null)
+    }
+    assert.equal(logs.length, 1)
+    assert.match(logs[0], /platform: darwin; overall status:/)
+    assert.doesNotMatch(result.report + logs.join(), /private .* error|7890|WinHTTP|AppContainer/)
+  }
+})
+
+test('preserved macOS PAC/discovery suspend legacy cleanup and forward the selected service scope', async () => {
+  const events: string[] = []
+  const apply = isolatedExport<
+    typeof import('../src/main/sys/sysproxy').applyNativeDiagnosticProxy
+  >('src/main/sys/sysproxy.ts', 'applyNativeDiagnosticProxy', {
+    assertNativeSystemProxyAvailable: () => {},
+    triggerSysProxyRequest: 0,
+    cancelPendingSysProxyRetry: () => events.push('cancel'),
+    stopSysproxyLeaseRenewal: () => events.push('stop-renewal'),
+    triggerSysProxyTask: Promise.resolve(),
+    prepareNativeProxyMutation: async () => {
+      events.push('prepare')
+    },
+    setNativeSystemProxy: async (settings: NativeSystemProxySettings) => {
+      assert.equal(settings.onlyActiveDevice, true)
+      events.push('native')
+      return { automaticSettingsPreserved: true }
+    },
+    updateSysproxyGuardEventStream: (enabled: boolean) => {
+      assert.equal(enabled, false)
+      events.push('stop-events')
+    },
+    adoptNativeProxyMutation: async () => {
+      throw new Error('would resume unsafe cleanup')
+    },
+    startSysproxyLeaseRenewal: () => {
+      throw new Error('would resume unsafe guard')
+    },
+    stopPacServer: async () => {
+      throw new Error('must preserve PAC server')
+    }
+  })
+  await apply(
+    { mode: 'manual', host: '127.0.0.1', port: runtimeSnapshot().proxy.port!, bypass: [] },
+    true,
+    true,
+    true
+  )
+  assert.deepEqual(events, ['cancel', 'stop-renewal', 'prepare', 'native', 'stop-events'])
+})
+
+test('macOS Native reads stay short while explicit repair permits a bounded administrator dialog', async () => {
+  const deadlines: number[] = []
+  const deps = {
+    systemProxy: {
+      getSystemProxyDiagnostics: async () => nativeSnapshot(),
+      setSystemProxy: async () => ({ automaticSettingsPreserved: true })
+    },
+    bounded: async (task: Promise<unknown>, deadline: number) => {
+      deadlines.push(deadline)
+      return task
+    },
+    assertNativeSystemProxyAvailable: () => {},
+    process: { platform: 'darwin' }
+  }
+  const get = isolatedExport<
+    typeof import('../src/main/sys/native-system-proxy').getNativeSystemProxyDiagnostics
+  >('src/main/sys/native-system-proxy.ts', 'getNativeSystemProxyDiagnostics', deps)
+  const set = isolatedExport<
+    typeof import('../src/main/sys/native-system-proxy').setNativeSystemProxy
+  >('src/main/sys/native-system-proxy.ts', 'setNativeSystemProxy', deps)
+  await get()
+  assert.deepEqual(await set({ mode: 'manual', host: '127.0.0.1', port: 18423, bypass: [] }), {
+    automaticSettingsPreserved: true
+  })
+  assert.deepEqual(deadlines, [4000, 120000])
 })
