@@ -119,18 +119,30 @@
   grid-template-columns: minmax(0, 1fr) auto;
 }
 
+.dns-server-list__field {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.dns-server-list__row[data-new-item='true'] .dns-server-list__field,
 .dns-server-list__row[data-has-connection='true'] .dns-server-list__field {
   grid-column: 1 / -1;
 }
 
 .dns-server-list__connection {
   grid-column: 1;
+  grid-row: 2;
 }
 
 .dns-server-list__delete {
   grid-column: 2;
+  grid-row: 1;
   align-self: end;
   justify-self: end;
+}
+
+.dns-server-list__row[data-has-connection='true'] .dns-server-list__delete {
+  grid-row: 2;
 }
 
 @container (min-width: 36rem) {
@@ -160,10 +172,17 @@
     grid-template-columns: minmax(16rem, 1fr) minmax(10rem, 14rem) auto;
   }
 
-  .dns-server-list__row[data-has-connection='true'] .dns-server-list__field,
-  .dns-server-list__connection,
-  .dns-server-list__delete {
-    grid-column: auto;
+  .dns-server-list__row[data-has-connection='true'] .dns-server-list__field {
+    grid-column: 1;
+  }
+
+  .dns-server-list__connection {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .dns-server-list__row[data-has-connection='true'] .dns-server-list__delete {
+    grid-column: 3;
     grid-row: 1;
   }
 }
