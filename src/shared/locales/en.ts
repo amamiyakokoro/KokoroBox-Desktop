@@ -1833,6 +1833,10 @@ export const messages: Readonly<Record<string, string>> = {
   'Replaces the DNS server and routing values below, including fallback settings. Save to apply the preset.':
     'Replaces the DNS server and routing values below, including fallback settings. Save to apply the preset.',
   'Apply anti-pollution preset': 'Apply anti-pollution preset',
+  'Overseas mode': 'Overseas mode',
+  'Apply overseas preset': 'Apply overseas preset',
+  'Anti-pollution uses regional DNS routing. Overseas uses Cloudflare and Google DNS with DoH/DoT. Save to apply the selected preset.':
+    'Anti-pollution uses regional DNS routing. Overseas uses Cloudflare and Google DNS with DoH/DoT. Save to apply the selected preset.',
   'Resolves the hostnames of DNS servers, such as a DNS-over-HTTPS endpoint.':
     'Resolves the hostnames of DNS servers, such as a DNS-over-HTTPS endpoint.',
   'Resolves ordinary domain queries unless a domain-specific DNS policy applies.':

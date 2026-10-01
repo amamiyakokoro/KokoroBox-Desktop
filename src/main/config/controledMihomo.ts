@@ -65,6 +65,10 @@ export async function patchControledMihomoConfig(patch: Partial<MihomoConfig>): 
       currentConfig.dns['proxy-server-nameserver-policy'] =
         patch.dns['proxy-server-nameserver-policy']
     }
+    if (patch.dns?.['fallback-filter']) {
+      currentConfig.dns = currentConfig.dns || {}
+      currentConfig.dns['fallback-filter'] = patch.dns['fallback-filter']
+    }
     if (patch.dns?.['use-hosts']) {
       currentConfig.hosts = patch.hosts
     }

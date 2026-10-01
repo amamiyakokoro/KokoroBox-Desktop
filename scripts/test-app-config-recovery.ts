@@ -371,6 +371,36 @@ test('missing controlled DNS is initialized without changing the default templat
   assert.deepEqual(loaded.persisted().dns, { ...defaults.dns, nameserver: ['custom.example'] })
 })
 
+test('controlled DNS saves replace routing and fallback policy maps rather than retaining old keys', async () => {
+  const loaded = loadTransactionalControlledConfigModule()
+  await loaded.api.patchControledMihomoConfig({
+    dns: {
+      'nameserver-policy': { 'geosite:cn': ['223.5.5.5'] },
+      'proxy-server-nameserver-policy': { '+.example.com': ['119.29.29.29'] },
+      fallback: ['https://dns.alidns.com/dns-query'],
+      'fallback-filter': { geoip: true, 'geoip-code': 'CN' }
+    }
+  })
+  await loaded.api.patchControledMihomoConfig({
+    dns: {
+      'nameserver-policy': { '+.arpa': ['system'] },
+      'proxy-server-nameserver-policy': {},
+      fallback: [],
+      'fallback-filter': {}
+    }
+  })
+  for (const dns of [
+    loaded.persisted().dns,
+    (await loaded.api.getControledMihomoConfig()).dns,
+    loaded.generatedConfigs.at(-1)?.dns
+  ]) {
+    assert.deepEqual(dns?.['nameserver-policy'], { '+.arpa': ['system'] })
+    assert.deepEqual(dns?.['proxy-server-nameserver-policy'], {})
+    assert.deepEqual(dns?.['fallback-filter'], {})
+    assert.deepEqual(dns?.fallback, [])
+  }
+})
+
 test('shared private atomic writer replaces files with owner-only permissions', async (t) => {
   const configPath = withConfigPath(t)
   writeFileSync(configPath, 'old', { mode: 0o644 })

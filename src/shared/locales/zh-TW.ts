@@ -1781,6 +1781,10 @@ export const messages: Readonly<Record<string, string>> = {
   'Replaces the DNS server and routing values below, including fallback settings. Save to apply the preset.':
     '取代下方的 DNS 伺服器與分流設定，包括備用 DNS 設定。按「儲存」才會套用。',
   'Apply anti-pollution preset': '套用防污染預設',
+  'Overseas mode': '海外模式',
+  'Apply overseas preset': '套用海外預設',
+  'Anti-pollution uses regional DNS routing. Overseas uses Cloudflare and Google DNS with DoH/DoT. Save to apply the selected preset.':
+    '防污染模式依地區分流 DNS；海外模式使用 Cloudflare 與 Google 的 DNS、DoH／DoT。按「儲存」套用所選預設。',
   'Resolves the hostnames of DNS servers, such as a DNS-over-HTTPS endpoint.':
     '解析 DNS 伺服器本身的網域，例如 DNS-over-HTTPS 端點。',
   'Resolves ordinary domain queries unless a domain-specific DNS policy applies.':

@@ -27,27 +27,12 @@ import {
 import { useSettingsSave } from '@renderer/hooks/use-settings-save'
 import { useUnsavedChangesGuard } from '@renderer/hooks/use-unsaved-changes'
 import { useSearchParams } from 'react-router-dom'
-
-const defaultFakeIpFilter = ['+.lan', '+.local', 'time.*.com', 'ntp.*.com', '+.market.xiaomi.com']
-
-const antiPollutionDnsPreset = {
-  enhancedMode: 'fake-ip' as DnsMode,
-  fakeIPFilterMode: 'blacklist' as FilterMode,
-  fakeIPFilter: defaultFakeIpFilter,
-  respectRules: true,
-  defaultNameserver: ['tls://223.5.5.5', 'tls://119.29.29.29'],
-  // `#<name>` selects a concrete Mihomo proxy group; `PROXY` is not a
-  // built-in outbound. Do not ship a preset that assumes such a group exists.
-  nameserver: ['https://1.1.1.1/dns-query', 'https://8.8.8.8/dns-query'],
-  proxyServerNameserver: ['https://doh.pub/dns-query', 'https://dns.alidns.com/dns-query'],
-  directNameserver: ['https://doh.pub/dns-query', 'https://dns.alidns.com/dns-query'],
-  directNameserverFollowPolicy: true,
-  nameserverPolicy: {
-    '+.arpa': ['system'],
-    'geosite:cn': ['https://doh.pub/dns-query', 'https://dns.alidns.com/dns-query'],
-    'geosite:geolocation-!cn': ['https://1.1.1.1/dns-query', 'https://8.8.8.8/dns-query']
-  }
-}
+import {
+  applyDnsPreset,
+  defaultDnsFakeIpFilter,
+  getDnsPresetMode,
+  type DnsPresetMode
+} from '../../../../../shared/dns-presets'
 
 interface Props {
   embedded?: boolean
@@ -69,7 +54,7 @@ const DNS: React.FC<Props> = ({ embedded = false }) => {
     ipv6 = false,
     'fake-ip-range': fakeIPRange = '198.18.0.1/16',
     'fake-ip-range6': fakeIPRange6 = '',
-    'fake-ip-filter': fakeIPFilter = defaultFakeIpFilter,
+    'fake-ip-filter': fakeIPFilter = defaultDnsFakeIpFilter,
     'enhanced-mode': enhancedMode = 'fake-ip',
     'fake-ip-filter-mode': fakeIPFilterMode = 'blacklist',
     'use-hosts': useHosts = false,
@@ -154,25 +139,20 @@ const DNS: React.FC<Props> = ({ embedded = false }) => {
         Boolean(fakeIPFilterError) ||
         hasDnsErrors
       : hasDnsErrors
-  const isAntiPollutionPreset =
-    values.enhancedMode === antiPollutionDnsPreset.enhancedMode &&
-    values.fakeIPFilterMode === antiPollutionDnsPreset.fakeIPFilterMode &&
-    values.respectRules === antiPollutionDnsPreset.respectRules &&
-    JSON.stringify(values.defaultNameserver) ===
-      JSON.stringify(antiPollutionDnsPreset.defaultNameserver) &&
-    JSON.stringify(values.nameserver) === JSON.stringify(antiPollutionDnsPreset.nameserver) &&
-    JSON.stringify(values.proxyServerNameserver) ===
-      JSON.stringify(antiPollutionDnsPreset.proxyServerNameserver) &&
-    JSON.stringify(values.directNameserver) ===
-      JSON.stringify(antiPollutionDnsPreset.directNameserver) &&
-    values.directNameserverFollowPolicy === antiPollutionDnsPreset.directNameserverFollowPolicy &&
-    values.fallback.length === 0 &&
-    JSON.stringify(values.nameserverPolicy) ===
-      JSON.stringify(antiPollutionDnsPreset.nameserverPolicy)
+  const dnsPresetMode = getDnsPresetMode(values)
 
   const setValues = (v: typeof values): void => {
     originSetValues(v)
     setChanged(true)
+  }
+
+  const selectDnsPreset = (mode: DnsPresetMode): void => {
+    setValues(applyDnsPreset(values, mode))
+    setFakeIPFilterError(null)
+    setDefaultNameserverError(null)
+    setNameserverError(null)
+    setAdvancedDnsError(false)
+    setDraftRevision((value) => value + 1)
   }
 
   const onSave = async (patch: Partial<MihomoConfig>): Promise<boolean> => {
@@ -330,31 +310,27 @@ const DNS: React.FC<Props> = ({ embedded = false }) => {
             <SettingItem
               title={tr('DNS preset')}
               description={tr(
-                'Replaces the DNS server and routing values below, including fallback settings. Save to apply the preset.'
+                'Anti-pollution uses regional DNS routing. Overseas uses Cloudflare and Google DNS with DoH/DoT. Save to apply the selected preset.'
               )}
               divider
             >
               <div className="flex flex-wrap items-center justify-end gap-2">
                 <span className="text-xs text-muted">
-                  {isAntiPollutionPreset ? tr('Anti-pollution') : tr('Custom')}
+                  {dnsPresetMode === 'anti-pollution'
+                    ? tr('Anti-pollution')
+                    : dnsPresetMode === 'overseas'
+                      ? tr('Overseas mode')
+                      : tr('Custom')}
                 </span>
                 <Button
                   size="sm"
                   variant="secondary"
-                  onPress={() => {
-                    setValues({
-                      ...values,
-                      ...antiPollutionDnsPreset,
-                      fallback: [],
-                      fallbackFilter: {},
-                      fallbackLazyQuery: false
-                    })
-                    setFakeIPFilterError(null)
-                    setDefaultNameserverError(null)
-                    setNameserverError(null)
-                  }}
+                  onPress={() => selectDnsPreset('anti-pollution')}
                 >
                   {tr('Apply anti-pollution preset')}
+                </Button>
+                <Button size="sm" variant="secondary" onPress={() => selectDnsPreset('overseas')}>
+                  {tr('Apply overseas preset')}
                 </Button>
               </div>
             </SettingItem>
