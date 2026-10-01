@@ -157,6 +157,7 @@ if (userDataMigration.status === 'conflict' || userDataMigration.status === 'fai
 const syncConfig = getAppConfigSync()
 setLocale(resolveLocale(syncConfig.language, app.getPreferredSystemLanguages()))
 app.setName('KokoroBox')
+if (process.platform === 'linux') app.setDesktopName('kokorobox.desktop')
 
 function exitApp(): void {
   app.exit()

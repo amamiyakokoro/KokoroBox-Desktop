@@ -127,6 +127,8 @@ dmg:
   writeUpdateInfo: false
 linux:
   executableName: kokorobox
+  icon: build/icon.png
+  syncDesktopName: true
   extraResources:
     - from: './node_modules/kokorobox-native-linux-${arch}-gnu/kokorobox-traffic-presenter'
       to: 'traffic-presenter/kokorobox-traffic-presenter'

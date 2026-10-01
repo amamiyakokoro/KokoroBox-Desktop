@@ -15,6 +15,8 @@ test "$(readlink -f /usr/bin/kokorobox)" = /opt/kokorobox/kokorobox
 test -x /opt/kokorobox/kokorobox
 test -u /opt/kokorobox/chrome-sandbox
 grep -qx 'Name=KokoroBox' /usr/share/applications/kokorobox.desktop
+grep -qx 'Icon=kokorobox' /usr/share/applications/kokorobox.desktop
+grep -qx 'StartupWMClass=kokorobox' /usr/share/applications/kokorobox.desktop
 grep -q 'x-scheme-handler/kokoro' /usr/share/applications/kokorobox.desktop
 
 while IFS= read -r -d '' binary; do

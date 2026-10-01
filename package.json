@@ -1,5 +1,6 @@
 {
   "name": "kokorobox-desktop",
+  "desktopName": "kokorobox.desktop",
   "version": "4.26.9-9",
   "description": "KokoroBox",
   "main": "./out/main/index.js",

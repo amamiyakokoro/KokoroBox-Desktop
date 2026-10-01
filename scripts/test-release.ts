@@ -822,6 +822,62 @@ test('RPM renderer smoke test terminates the complete Electron process group', (
   assert.match(smokeTest, /process\.exit\(0\)/)
 })
 
+test('Linux launchers match Electron window identity and use the KokoroBox icon', async () => {
+  const require = createRequire(import.meta.url)
+  const { LinuxTargetHelper } =
+    require('app-builder-lib/out/targets/LinuxTargetHelper.js') as typeof import('app-builder-lib/out/targets/LinuxTargetHelper.js')
+  const { convertIcon } =
+    require('app-builder-lib/out/util/iconConverter.js') as typeof import('app-builder-lib/out/util/iconConverter.js')
+  const config = parse(readFileSync('electron-builder.yml', 'utf8'))
+  const metadata = JSON.parse(readFileSync('package.json', 'utf8'))
+  const desktopName = 'kokorobox.desktop'
+  assert.equal(metadata.desktopName, desktopName)
+  const temp = mkdtempSync(path.join(os.tmpdir(), 'kokorobox-linux-icon-'))
+  try {
+    const helper = new LinuxTargetHelper({
+      projectDir: process.cwd(),
+      config,
+      info: { metadata },
+      executableName: config.linux.executableName,
+      platformSpecificBuildOptions: config.linux,
+      appInfo: {
+        productName: 'kokorobox', // scripts/package-linux.ts packaging override
+        sanitizedProductName: 'kokorobox',
+        description: metadata.description
+      },
+      fileAssociations: [],
+      getDefaultFrameworkIcon: () => null,
+      resolveIcon: async (sources: string[], fallbackSources: string[], format: 'set') => {
+        const result = await convertIcon({
+          sources,
+          fallbackSources,
+          roots: [path.resolve(config.directories.buildResources), process.cwd()],
+          format,
+          outDir: temp
+        })
+        assert.equal(result.isFallback, false)
+        return result.icons
+      }
+    } as unknown as ConstructorParameters<typeof LinuxTargetHelper>[0])
+    assert.equal(`${helper.getDesktopFileName('kokorobox-desktop')}.desktop`, desktopName)
+    const desktop = await helper.computeDesktopEntry(config.linux)
+    assert.match(desktop, /^Name=KokoroBox$/m)
+    assert.match(desktop, /^Icon=kokorobox$/m)
+    assert.match(desktop, /^StartupWMClass=kokorobox$/m)
+    assert.match(desktop, /^Exec=\/opt\/kokorobox\/kokorobox %U$/m)
+    assert.match(
+      readFileSync('aur/kokorobox-electron-git/kokorobox.desktop', 'utf8'),
+      /^StartupWMClass=kokorobox$/m
+    )
+    const icons = await helper.icons
+    assert.ok(icons.some((icon) => icon.size >= 256))
+    const largest = icons.at(-1)!
+    assert.deepEqual(readFileSync(largest.file), readFileSync('resources/icon.png'))
+  } finally {
+    rmSync(temp, { recursive: true, force: true })
+  }
+})
+
 test('CI macOS config loads through electron-builder and preserves PKG installation settings', async () => {
   const { getConfig, validateConfiguration } = createRequire(import.meta.url)(
     'app-builder-lib/out/util/config/config.js'
