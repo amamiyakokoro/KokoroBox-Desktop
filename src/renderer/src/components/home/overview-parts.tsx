@@ -268,12 +268,20 @@ export function OverviewActiveChips({ features }: { features: OverviewActiveFeat
     'redir-host': 'Redir-Host',
     dns: 'DNS',
     sysproxy: tr('System proxy'),
-    'app-routing': tr('App routing')
+    'app-routing': tr('App routing'),
+    'lan-allowed': tr('LAN connections allowed'),
+    'lan-local-only': tr('Local connections only'),
+    'lan-unknown': tr('LAN status unknown')
   }
   return (
     <OverviewChipGroup>
       {features.map((feature) => (
-        <Chip key={feature} size="sm" variant="soft" color="accent">
+        <Chip
+          key={feature}
+          size="sm"
+          variant="soft"
+          color={feature === 'lan-local-only' || feature === 'lan-unknown' ? 'default' : 'accent'}
+        >
           {labels[feature]}
         </Chip>
       ))}

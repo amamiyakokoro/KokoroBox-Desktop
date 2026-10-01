@@ -4,7 +4,15 @@ export interface OverviewConfiguredFeature {
 }
 
 export type OverviewActiveFeature =
-  'tun' | 'fake-ip' | 'redir-host' | 'dns' | 'sysproxy' | 'app-routing'
+  | 'tun'
+  | 'fake-ip'
+  | 'redir-host'
+  | 'dns'
+  | 'sysproxy'
+  | 'app-routing'
+  | 'lan-allowed'
+  | 'lan-local-only'
+  | 'lan-unknown'
 
 export function activeOverviewFeatures(options: {
   coreRunning: boolean
@@ -13,6 +21,7 @@ export function activeOverviewFeatures(options: {
   dnsMode?: DnsMode
   systemProxyConfirmed: boolean | null
   appRoutingRunning: boolean
+  allowLan?: boolean
 }): OverviewActiveFeature[] {
   const features: OverviewActiveFeature[] = []
   if (options.coreRunning && options.tunEnabled) features.push('tun')
@@ -27,6 +36,15 @@ export function activeOverviewFeatures(options: {
   }
   if (options.systemProxyConfirmed === true) features.push('sysproxy')
   if (options.coreRunning && options.appRoutingRunning) features.push('app-routing')
+  if (options.coreRunning) {
+    features.push(
+      options.allowLan === true
+        ? 'lan-allowed'
+        : options.allowLan === false
+          ? 'lan-local-only'
+          : 'lan-unknown'
+    )
+  }
   return features
 }
 

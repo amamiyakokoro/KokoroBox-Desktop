@@ -825,6 +825,9 @@ export const messages: Readonly<Record<string, string>> = {
   'Restart the app to apply GPU acceleration changes':
     '修改 GPU 加速設定需要重新啟動應用程式才能生效',
   'Allow LAN connections': '允許區域網連線',
+  'LAN connections allowed': '允許區域網路連線',
+  'Local connections only': '僅限本機連線',
+  'LAN status unknown': '區域網路狀態未知',
   'Always on top': '保持置頂',
   'Allowed origins': '允許的來源',
   'Allow private network access': '允許私有網路存取',

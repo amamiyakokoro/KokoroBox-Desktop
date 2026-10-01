@@ -504,7 +504,8 @@ const Home = () => {
     dnsEnabled: generatedRuntime?.dns?.enable,
     dnsMode: generatedRuntime?.dns?.['enhanced-mode'],
     systemProxyConfirmed: observedSystemProxyEnabled ?? systemProxyOperation.confirmed,
-    appRoutingRunning: routingStatus?.state === 'running' && routingStatus.mihomoAvailable
+    appRoutingRunning: routingStatus?.state === 'running' && routingStatus.mihomoAvailable,
+    allowLan: controllerRuntimeError ? undefined : controllerRuntime?.['allow-lan']
   })
   const runtimeFeaturesLoading =
     runtime.mihomo !== 'stopped' &&

@@ -129,11 +129,18 @@ test('runtime chips report only confirmed active behavior and the DNS mode actua
     dnsEnabled: true,
     dnsMode: 'fake-ip',
     systemProxyConfirmed: true,
-    appRoutingRunning: true
+    appRoutingRunning: true,
+    allowLan: true
   })
-  assert.deepEqual(features, ['tun', 'fake-ip', 'sysproxy', 'app-routing'])
+  assert.deepEqual(features, ['tun', 'fake-ip', 'sysproxy', 'app-routing', 'lan-allowed'])
   const html = renderToStaticMarkup(<OverviewActiveChips features={features} />)
-  for (const label of ['TUN', 'Fake IP', 'System proxy', 'App routing']) {
+  for (const label of [
+    'TUN',
+    'Fake IP',
+    'System proxy',
+    'App routing',
+    'LAN connections allowed'
+  ]) {
     assert.match(html, new RegExp(`>${label}<`))
   }
 
@@ -146,7 +153,7 @@ test('runtime chips report only confirmed active behavior and the DNS mode actua
       systemProxyConfirmed: null,
       appRoutingRunning: false
     }),
-    ['redir-host']
+    ['redir-host', 'lan-unknown']
   )
   assert.deepEqual(
     activeOverviewFeatures({
@@ -167,8 +174,30 @@ test('runtime chips report only confirmed active behavior and the DNS mode actua
       systemProxyConfirmed: false,
       appRoutingRunning: false
     }),
-    ['dns']
+    ['dns', 'lan-unknown']
   )
+})
+
+test('LAN status distinguishes allowed, local-only and unknown without claiming a stopped core is open', () => {
+  const options = {
+    coreRunning: true,
+    systemProxyConfirmed: null,
+    appRoutingRunning: false
+  }
+  assert.deepEqual(activeOverviewFeatures({ ...options, allowLan: true }), ['lan-allowed'])
+  const localOnly = activeOverviewFeatures({ ...options, allowLan: false })
+  assert.deepEqual(localOnly, ['lan-local-only'])
+  const localOnlyHtml = renderToStaticMarkup(<OverviewActiveChips features={localOnly} />)
+  assert.match(localOnlyHtml, /Local connections only/)
+  assert.match(localOnlyHtml, /chip--default/)
+  assert.doesNotMatch(localOnlyHtml, /LAN connections allowed/)
+
+  const unknown = activeOverviewFeatures(options)
+  assert.deepEqual(unknown, ['lan-unknown'])
+  const unknownHtml = renderToStaticMarkup(<OverviewActiveChips features={unknown} />)
+  assert.match(unknownHtml, /LAN status unknown/)
+  assert.doesNotMatch(unknownHtml, /LAN connections allowed|Local connections only/)
+  assert.deepEqual(activeOverviewFeatures({ ...options, coreRunning: false, allowLan: true }), [])
 })
 
 test('configured features are distinct from runtime activity', () => {
