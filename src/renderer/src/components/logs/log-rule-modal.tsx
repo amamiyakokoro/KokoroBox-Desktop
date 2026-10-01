@@ -110,6 +110,7 @@ export default function LogRuleModal({
               <KokoSelect
                 aria-label={tr('Rule type')}
                 label={tr('Rule type')}
+                variant="secondary"
                 value={type}
                 isDisabled={loading || saving}
                 options={(['DOMAIN-SUFFIX', 'DOMAIN', 'PROCESS-NAME'] as const).map((id) => ({
@@ -123,12 +124,13 @@ export default function LogRuleModal({
                 }}
               />
               <TextField isDisabled={loading || saving} value={payload} onChange={setPayload}>
-                <Label>{tr('Rule content')}</Label>
-                <Input />
+                <Label className="mb-1 text-xs text-muted">{tr('Rule content')}</Label>
+                <Input variant="secondary" />
               </TextField>
               <KokoSelect
                 aria-label={tr('Rule target')}
                 label={tr('Rule target')}
+                variant="secondary"
                 value={target}
                 isDisabled={loading || saving}
                 options={(data?.options.targets || []).map((id) => ({ id, label: id }))}
