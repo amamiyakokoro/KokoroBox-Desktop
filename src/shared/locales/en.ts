@@ -2041,5 +2041,31 @@ export const messages: Readonly<Record<string, string>> = {
   'No runtime diagnostic result was received. Proxy connectivity has not been verified.':
     'No runtime diagnostic result was received. Proxy connectivity has not been verified.',
   'Proxy runtime diagnostics are unavailable': 'Proxy runtime diagnostics are unavailable',
-  'Not checked': 'Not checked'
+  'Core DNS resolution': 'Core DNS resolution',
+  'System DNS resolution': 'System DNS resolution',
+  'DNS resolution successful': 'DNS resolution successful',
+  'DNS resolution failed': 'DNS resolution failed',
+  'DNS resolution could not be checked': 'DNS resolution could not be checked',
+  'Current network DNS': 'Current network DNS',
+
+  'Inspect DNS and upstream resolver settings': 'Inspect DNS and upstream resolver settings',
+  'Network interface: {0}': 'Network interface: {0}',
+  'Current DNS: {0}': 'Current DNS: {0}',
+  'Bootstrap DNS: {0}': 'Bootstrap DNS: {0}',
+
+  'DNS resolution requires attention': 'DNS resolution requires attention',
+
+  'Checks proxy health and DNS resolution using fixed public test domains. Each run makes one public HTTPS connectivity request. Settings change only when you select a suggested fix.':
+    'Checks proxy health and DNS resolution using fixed public test domains. Each run makes one public HTTPS connectivity request. Settings change only when you select a suggested fix.',
+  'Not checked': 'Not checked',
+  'Try replacing bootstrap DNS with the current system DNS':
+    'Try replacing bootstrap DNS with the current system DNS',
+  'This saves the current system DNS addresses as KokoroBox bootstrap DNS and restarts the core. Upstream resolver or proxy failures may still require a different fix.':
+    'This saves the current system DNS addresses as KokoroBox bootstrap DNS and restarts the core. Upstream resolver or proxy failures may still require a different fix.',
+  'Enable DNS settings control in KokoroBox or update bootstrap DNS in your profile, then run diagnostics again.':
+    'Enable DNS settings control in KokoroBox or update bootstrap DNS in your profile, then run diagnostics again.',
+  'No usable system DNS addresses could be read. Configure bootstrap DNS in KokoroBox DNS settings, then run diagnostics again.':
+    'No usable system DNS addresses could be read. Configure bootstrap DNS in KokoroBox DNS settings, then run diagnostics again.',
+  'Saves bootstrap DNS and restarts the core.': 'Saves bootstrap DNS and restarts the core.',
+  'Use system DNS as bootstrap DNS': 'Use system DNS as bootstrap DNS'
 }

@@ -1,5 +1,8 @@
 import * as native from 'kokorobox-native'
+import { isIP } from 'node:net'
+import { validateDNSResolutionDiagnostics } from '../../shared/proxy-diagnostics-contract'
 import type {
+  NativeSystemDNSDiagnostics,
   NativeSystemProxyDiagnostics,
   NativeSystemProxyMutation,
   NativeSystemProxySettings
@@ -7,10 +10,33 @@ import type {
 
 // Older native binaries expose neither API. Never fall back to registry commands.
 const systemProxy = native as unknown as {
+  getSystemDnsDiagnostics?: () => Promise<NativeSystemDNSDiagnostics>
   getSystemProxyDiagnostics?: () => Promise<NativeSystemProxyDiagnostics>
   setSystemProxy?: (
     settings: NativeSystemProxySettings
   ) => Promise<NativeSystemProxyMutation | void>
+}
+
+export async function getNativeSystemDNSDiagnostics(): Promise<NativeSystemDNSDiagnostics> {
+  if (!systemProxy.getSystemDnsDiagnostics) throw new Error('native-dns-unavailable')
+  const value = await bounded(systemProxy.getSystemDnsDiagnostics(), 6000)
+  const dns = validateDNSResolutionDiagnostics(value)
+  if (
+    !Array.isArray(value.servers) ||
+    value.servers.length > 32 ||
+    value.servers.some((ip) => typeof ip !== 'string' || !isIP(ip)) ||
+    (value.interface != null &&
+      (typeof value.interface !== 'string' || value.interface.length > 256)) ||
+    (value.service != null && (typeof value.service !== 'string' || value.service.length > 256))
+  ) {
+    throw new Error('native-dns-response-invalid')
+  }
+  return {
+    ...dns,
+    interface: value.interface,
+    service: value.service,
+    servers: [...value.servers]
+  }
 }
 
 export async function getNativeSystemProxyDiagnostics(): Promise<NativeSystemProxyDiagnostics> {

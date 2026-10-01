@@ -7,6 +7,8 @@ import { setLocale } from '../src/shared/i18n'
 import { defaultSystemProxyBypass } from '../src/shared/system-proxy'
 import { buildLinuxSystemProxyDiagnostics } from '../src/shared/linux-system-proxy-diagnostics'
 import { buildMacOSSystemProxyDiagnostics } from '../src/shared/macos-system-proxy-diagnostics'
+import { appendDNSDiagnostics, canRepairDNS } from '../src/shared/dns-diagnostics'
+import { bootstrapDNSAddresses } from '../src/main/sys/dns-bootstrap'
 import {
   buildSystemProxyDiagnostics,
   type SystemProxyDiagnosticInput
@@ -435,6 +437,11 @@ function diagnosticEngine(
     'src/main/sys/system-proxy-diagnostics.ts',
     {
       '../core/manager': { migrateCoreToServiceForDiagnostics: async () => {} },
+      '../core/factory': {
+        getRuntimeConfig: async () => ({ dns: { 'default-nameserver': ['tls://223.5.5.5'] } })
+      },
+      './dns-bootstrap': { bootstrapDNSAddresses },
+      '../../shared/dns-diagnostics': { appendDNSDiagnostics, canRepairDNS },
       '../config': {
         getAppConfig: async () => ({ sysProxy: { enable: true }, corePermissionMode: 'service' })
       },
@@ -458,17 +465,157 @@ function diagnosticEngine(
           throw new Error('unexpected mutation')
         }
       },
-      './native-system-proxy': { getNativeSystemProxyDiagnostics: async () => nativeSnapshot() },
       '../../shared/proxy-diagnostics-contract': { proxyRuntimeDiagnosticsFailure },
       '../../shared/system-proxy': { defaultSystemProxyBypass },
       '../../shared/system-proxy-diagnostics': { buildSystemProxyDiagnostics },
       '../../shared/linux-system-proxy-diagnostics': { buildLinuxSystemProxyDiagnostics },
       '../../shared/macos-system-proxy-diagnostics': { buildMacOSSystemProxyDiagnostics },
-      ...overrides
+      ...overrides,
+      './native-system-proxy': {
+        getNativeSystemProxyDiagnostics: async () => nativeSnapshot(),
+        getNativeSystemDNSDiagnostics: async () => {
+          throw new Error('old-native')
+        },
+        ...(overrides['./native-system-proxy'] as object)
+      }
     },
     platform
   )
 }
+
+test('DNS repair copies system DNS into bootstrap on all platforms and never writes OS DNS', async () => {
+  for (const platform of ['win32', 'darwin', 'linux'] as const) {
+    let bootstrap = ['tls://223.5.5.5']
+    const writes: unknown[] = []
+    let restarts = 0
+    const dns = {
+      outcome: 'failed' as const,
+      queries: ['www.gstatic.com', 'example.com'].map((domain) => ({
+        domain,
+        outcome: 'failed' as const
+      })),
+      interface: platform === 'win32' ? 'Wi-Fi' : 'en0',
+      service: platform === 'darwin' ? 'Wi-Fi' : null,
+      servers: ['192.168.1.1', '2606:4700:4700::1111']
+    }
+    const engine = diagnosticEngine(
+      {
+        '../core/manager': {
+          restartCore: async () => {
+            restarts++
+          },
+          migrateCoreToServiceForDiagnostics: async () => {
+            throw new Error('Must not change core ownership')
+          }
+        },
+        '../config': {
+          getAppConfig: async () => ({ sysProxy: { enable: true }, corePermissionMode: 'service' }),
+          patchControledMihomoConfig: async (patch: Partial<MihomoConfig>) => {
+            writes.push(patch)
+            bootstrap = [...patch.dns!['default-nameserver']!]
+          }
+        },
+        '../core/factory': {
+          getRuntimeConfig: async () => ({ dns: { 'default-nameserver': bootstrap } })
+        },
+        './native-system-proxy': {
+          getNativeSystemDNSDiagnostics: async () => dns,
+          setNativeSystemDNS: async () => {
+            throw new Error('OS DNS must not be changed')
+          }
+        }
+      },
+      platform
+    )
+    await assert.rejects(
+      engine.fixSystemProxyDiagnostic('restore-bootstrap-dns'),
+      /Run DNS diagnostics/
+    )
+    const diagnostic = await engine.runSystemProxyDiagnostics()
+    assert.equal(writes.length, 0)
+    assert.equal(
+      diagnostic.results.find((row) => row.id === 'dns-settings')?.action,
+      'restore-bootstrap-dns'
+    )
+    await engine.fixSystemProxyDiagnostic('restore-bootstrap-dns')
+    assert.deepEqual(writes, [{ dns: { 'default-nameserver': dns.servers } }])
+    assert.equal(restarts, 1)
+    await assert.rejects(
+      engine.fixSystemProxyDiagnostic('restore-bootstrap-dns'),
+      /Run DNS diagnostics/
+    )
+    bootstrap = ['tls://223.5.5.5']
+    await engine.runSystemProxyDiagnostics()
+    bootstrap = ['tls://1.1.1.1']
+    await assert.rejects(
+      engine.fixSystemProxyDiagnostic('restore-bootstrap-dns'),
+      /Bootstrap DNS changed/
+    )
+    assert.equal(writes.length, 1)
+    bootstrap = ['tls://223.5.5.5']
+    await engine.runSystemProxyDiagnostics()
+    dns.servers = ['192.168.2.1']
+    await assert.rejects(
+      engine.fixSystemProxyDiagnostic('restore-bootstrap-dns'),
+      /System DNS changed/
+    )
+    assert.equal(writes.length, 1)
+  }
+})
+
+test('bootstrap repair respects DNS ownership and does not conceal save or restart failures', async () => {
+  for (const failure of ['ownership', 'save', 'effective-config', 'restart']) {
+    let controlled = true
+    let bootstrap = ['tls://223.5.5.5']
+    let ready = true
+    let writes = 0
+    let restarts = 0
+    const dns = {
+      outcome: 'failed' as const,
+      queries: ['www.gstatic.com', 'example.com'].map((domain) => ({
+        domain,
+        outcome: 'failed' as const
+      })),
+      interface: 'Wi-Fi',
+      servers: ['192.168.1.1']
+    }
+    const engine = diagnosticEngine({
+      '../config': {
+        getAppConfig: async () => ({
+          sysProxy: { enable: true },
+          corePermissionMode: 'service',
+          controlDns: controlled
+        }),
+        patchControledMihomoConfig: async (patch: Partial<MihomoConfig>) => {
+          writes++
+          if (failure === 'save') throw new Error('save failed')
+          if (failure !== 'effective-config') bootstrap = [...patch.dns!['default-nameserver']!]
+        }
+      },
+      '../core/factory': {
+        getRuntimeConfig: async () => ({ dns: { 'default-nameserver': bootstrap } })
+      },
+      '../core/manager': {
+        restartCore: async () => {
+          restarts++
+          ready = failure !== 'restart'
+        }
+      },
+      '../service/api': {
+        getProxyRuntimeDiagnostics: async () => runtimeSnapshot({ core: { running: true, ready } })
+      },
+      './native-system-proxy': { getNativeSystemDNSDiagnostics: async () => dns }
+    })
+    await engine.runSystemProxyDiagnostics()
+    if (failure === 'ownership') controlled = false
+    await assert.rejects(
+      engine.fixSystemProxyDiagnostic('restore-bootstrap-dns'),
+      /not managed|save failed|overridden|restart failed/
+    )
+    assert.equal(writes, failure === 'ownership' ? 0 : 1)
+    assert.equal(restarts, failure === 'restart' ? 1 : 0)
+  }
+})
 
 test('structured Native/Service integration covers Windows health, conflicts and partial failures', () => {
   const { combineSystemProxyDiagnostics: combine } = diagnosticEngine()

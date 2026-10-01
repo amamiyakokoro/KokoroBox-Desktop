@@ -1978,5 +1978,31 @@ export const messages: Readonly<Record<string, string>> = {
   'No runtime diagnostic result was received. Proxy connectivity has not been verified.':
     '未收到執行狀態診斷結果，尚未驗證代理連線。',
   'Proxy runtime diagnostics are unavailable': '無法取得代理執行狀態診斷',
-  'Not checked': '尚未檢查'
+  'Core DNS resolution': '核心 DNS 解析',
+  'System DNS resolution': '系統 DNS 解析',
+  'DNS resolution successful': 'DNS 解析成功',
+  'DNS resolution failed': 'DNS 解析失敗',
+  'DNS resolution could not be checked': '無法檢查 DNS 解析',
+  'Current network DNS': '目前網路的 DNS',
+
+  'Inspect DNS and upstream resolver settings': '請檢查 DNS 與上游解析器設定',
+  'Network interface: {0}': '網路介面：{0}',
+  'Current DNS: {0}': '目前 DNS：{0}',
+  'Bootstrap DNS: {0}': 'Bootstrap DNS：{0}',
+
+  'DNS resolution requires attention': 'DNS 解析需要處理',
+
+  'Checks proxy health and DNS resolution using fixed public test domains. Each run makes one public HTTPS connectivity request. Settings change only when you select a suggested fix.':
+    '使用固定的公開測試網域檢查代理健康狀態與 DNS 解析。每次執行會發送一次公開 HTTPS 連線請求。只有點選建議的修復操作才會修改設定。',
+  'Not checked': '尚未檢查',
+  'Try replacing bootstrap DNS with the current system DNS':
+    '嘗試將 bootstrap DNS 改為目前的系統 DNS',
+  'This saves the current system DNS addresses as KokoroBox bootstrap DNS and restarts the core. Upstream resolver or proxy failures may still require a different fix.':
+    '將目前的系統 DNS 位址儲存為 KokoroBox 的 bootstrap DNS，並重新啟動核心。上游解析器或代理問題仍可能需要其他修復方式。',
+  'Enable DNS settings control in KokoroBox or update bootstrap DNS in your profile, then run diagnostics again.':
+    '請在 KokoroBox 啟用 DNS 設定接管，或在設定檔中更新 bootstrap DNS，再執行診斷。',
+  'No usable system DNS addresses could be read. Configure bootstrap DNS in KokoroBox DNS settings, then run diagnostics again.':
+    '無法取得可用的系統 DNS 位址。請在 KokoroBox 的 DNS 設定中設定 bootstrap DNS，再執行診斷。',
+  'Saves bootstrap DNS and restarts the core.': '儲存 bootstrap DNS 並重新啟動核心。',
+  'Use system DNS as bootstrap DNS': '將系統 DNS 用作 bootstrap DNS'
 }

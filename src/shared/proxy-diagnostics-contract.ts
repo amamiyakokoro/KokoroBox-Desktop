@@ -99,6 +99,7 @@ export interface NativeSystemProxySettings {
   onlyActiveDevice?: boolean
 }
 export interface ProxyRuntimeDiagnostics {
+  dns?: DNSResolutionDiagnostics
   core: { running: boolean | null; ready: boolean; errorCode?: string }
   proxy: { host: string; port: number | null }
   listener: { available: boolean; errorCode?: string }
@@ -107,6 +108,43 @@ export interface ProxyRuntimeDiagnostics {
     outcome: 'success' | 'unreachable' | 'outbound-failed'
     latencyMs?: number
     errorCode?: string
+  }
+}
+
+export interface DNSResolutionDiagnostics {
+  outcome: 'success' | 'failed' | 'unavailable'
+  queries: { domain: string; outcome: 'success' | 'failed' | 'unavailable' }[]
+}
+export interface NativeSystemDNSDiagnostics extends DNSResolutionDiagnostics {
+  interface?: string | null
+  service?: string | null
+  servers: string[]
+}
+
+export function validateDNSResolutionDiagnostics(value: unknown): DNSResolutionDiagnostics {
+  const v = value as DNSResolutionDiagnostics | undefined
+  const outcomes = ['success', 'failed', 'unavailable']
+  if (
+    !v ||
+    !outcomes.includes(v.outcome) ||
+    !Array.isArray(v.queries) ||
+    v.queries.length !== 2 ||
+    !['www.gstatic.com', 'example.com'].every(
+      (domain) => v.queries.filter((q) => q?.domain === domain).length === 1
+    ) ||
+    v.queries.some((q) => !q || !outcomes.includes(q.outcome)) ||
+    v.outcome !==
+      (v.queries.some((q) => q.outcome === 'failed')
+        ? 'failed'
+        : v.queries.some((q) => q.outcome === 'unavailable')
+          ? 'unavailable'
+          : 'success')
+  ) {
+    throw new Error('Invalid DNS diagnostics')
+  }
+  return {
+    outcome: v.outcome,
+    queries: v.queries.map((q) => ({ domain: q.domain, outcome: q.outcome }))
   }
 }
 
@@ -167,8 +205,18 @@ export function validateProxyRuntimeDiagnostics(value: unknown): ProxyRuntimeDia
   ) {
     throw new Error('Invalid proxy runtime diagnostics')
   }
+  // An invalid optional DNS extension cannot discard independent runtime facts.
+  let dns: DNSResolutionDiagnostics | undefined
+  if (v.dns !== undefined) {
+    try {
+      dns = validateDNSResolutionDiagnostics(v.dns)
+    } catch {
+      /* DNS evidence unavailable. */
+    }
+  }
   // Do not pass service extensions (or accidentally supplied private config) on.
   return {
+    ...(dns === undefined ? {} : { dns }),
     core: { running: v.core.running, ready: v.core.ready, errorCode: v.core.errorCode },
     proxy: { host: v.proxy.host, port: v.proxy.port },
     listener: { available: v.listener.available, errorCode: v.listener.errorCode },

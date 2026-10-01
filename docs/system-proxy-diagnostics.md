@@ -22,6 +22,46 @@ Service do not import or call one another.
 
 ## Native contract
 
+### DNS diagnostics
+
+Desktop requests Native `getSystemDnsDiagnostics()` and consumes the optional
+`dns` field of Service runtime diagnostics. Both use fixed public test domains
+(`www.gstatic.com` and `example.com`), independently of application logs.
+Native checks the OS resolver and reads the primary network's current DNS.
+Service queries the live Mihomo controller's `/dns/query` with A and AAAA;
+either family can establish success. Unsupported/disabled APIs remain unknown.
+`probe=false` suppresses public connectivity and core DNS probes.
+
+On DNS resolution failure, the modal and report show the primary network
+interface, current system DNS and bootstrap DNS. The explicit **Use system DNS
+as bootstrap DNS** action copies usable system DNS IP addresses into KokoroBox's
+`dns.default-nameserver`, regenerates the profile, and restarts the existing core
+through Desktop's normal lifecycle. No OS DNS settings or core ownership modes
+are changed. Only the bootstrap list is patched; nameserver, fallback and other
+DNS configuration are preserved.
+
+The main process owns the repair plan. It rechecks DNS settings control, the
+bootstrap configuration, network identity and system DNS before saving. A changed
+snapshot requires fresh diagnostics. The repair verifies the effective generated
+bootstrap list before restarting and checks core readiness afterward. It does
+not offer an automatic fix if DNS is inherited from a profile, system DNS is
+unknown/unusable, or bootstrap DNS already matches. Profile-managed DNS receives
+manual configuration guidance. Loopback, multicast, link-local and fake-IP DNS
+addresses are excluded from bootstrap repair to avoid resolver loops.
+
+Windows uses IP Helper for network DNS; macOS uses SystemConfiguration. Linux
+reads per-link DNS from NetworkManager/systemd-resolved, falls back to
+`/etc/resolv.conf` for inspection, and supports IPv6-only default routes. Native
+exposes no OS DNS mutation API for diagnostics and requires no administrator
+permission for these read-only checks.
+
+New Native and Service builds provide DNS diagnostics. Publish Native before
+advancing Desktop's pinned dependency, and release Service before updating the
+bundled stable tag, following the existing release workflow. Older versions
+leave missing DNS checks unavailable without a Desktop-side fallback.
+
+API reference: [Mihomo DNS controller](https://github.com/MetaCubeX/mihomo/blob/Meta/hub/route/dns.go).
+
 `kokorobox-native` exposes `getSystemProxyDiagnostics()` and
 `setSystemProxy(settings)`. Settings select `manual`, `auto`, or `disabled`; the
 same setter covers enable, restore, and clear, without redundant APIs.

@@ -8,6 +8,7 @@ import type {
 } from '../../../../shared/system-proxy-diagnostics'
 import { fixSystemProxyDiagnostic, runSystemProxyDiagnostics } from '@renderer/utils/ipc'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
+import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'
 
 const statusStyles: Record<DiagnosticStatus, string> = {
   success: 'text-success',
@@ -31,7 +32,8 @@ const actionLabels: Record<DiagnosticAction, string> = {
   'enable-system-proxy': tr('Enable system proxy'),
   'restore-system-proxy': tr('Restore KokoroBox proxy settings'),
   'start-core': tr('Start core'),
-  'restart-core': tr('Restart core')
+  'restart-core': tr('Restart core'),
+  'restore-bootstrap-dns': tr('Use system DNS as bootstrap DNS')
 }
 
 const SystemProxyDiagnosticsModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
@@ -42,6 +44,7 @@ const SystemProxyDiagnosticsModal: React.FC<{ onClose: () => void }> = ({ onClos
   const active = useRef(false)
   const pending = useRef(false)
   const { mutateAppConfig } = useAppConfig()
+  const { mutateControledMihomoConfig } = useControledMihomoConfig()
 
   const run = async (action?: DiagnosticAction): Promise<void> => {
     if (pending.current) return
@@ -51,8 +54,12 @@ const SystemProxyDiagnosticsModal: React.FC<{ onClose: () => void }> = ({ onClos
     setCopied(false)
     try {
       if (action) {
-        await fixSystemProxyDiagnostic(action)
-        await mutateAppConfig()
+        try {
+          await fixSystemProxyDiagnostic(action)
+        } finally {
+          await mutateAppConfig()
+          if (action === 'restore-bootstrap-dns') await mutateControledMihomoConfig()
+        }
       }
       const next = await runSystemProxyDiagnostics()
       if (active.current) setResult(next)
@@ -107,7 +114,7 @@ const SystemProxyDiagnosticsModal: React.FC<{ onClose: () => void }> = ({ onClos
             <Modal.Body className="gap-3" aria-busy={busy}>
               <p className="text-xs leading-5 text-muted">
                 {tr(
-                  'Checks saved settings and actual proxy health. Each run makes one public HTTPS connectivity request. Settings change only when you select a suggested fix.'
+                  'Checks proxy health and DNS resolution using fixed public test domains. Each run makes one public HTTPS connectivity request. Settings change only when you select a suggested fix.'
                 )}
               </p>
               <div role="status" aria-live="polite">

@@ -3,7 +3,11 @@ import { defaultSystemProxyBypass } from './system-proxy'
 
 export type DiagnosticStatus = 'success' | 'warning' | 'error' | 'info'
 export type DiagnosticAction =
-  'enable-system-proxy' | 'restore-system-proxy' | 'start-core' | 'restart-core'
+  | 'enable-system-proxy'
+  | 'restore-system-proxy'
+  | 'start-core'
+  | 'restart-core'
+  | 'restore-bootstrap-dns'
 
 export interface DiagnosticResult {
   id: string
@@ -59,6 +63,7 @@ export type SystemProxyOverallStatus =
   | 'warning'
   | 'configuration-unavailable'
   | 'runtime-unavailable'
+  | 'dns-failed'
 
 export interface SystemProxyDiagnostics {
   checkedAt: string
