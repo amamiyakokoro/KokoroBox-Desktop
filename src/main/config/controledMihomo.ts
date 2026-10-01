@@ -43,11 +43,10 @@ export async function patchControledMihomoConfig(patch: Partial<MihomoConfig>): 
     if (!controlDns) {
       delete currentConfig.dns
       delete currentConfig.hosts
-    } else {
-      // 从不接管状态恢复
-      if (currentConfig.dns?.ipv6 === undefined) {
-        currentConfig.dns = structuredClone(defaultControledMihomoConfig.dns)
-      }
+    } else if (!currentConfig.dns) {
+      // Restore defaults only when DNS settings are absent. An omitted IPv6
+      // option does not mean existing custom DNS settings should be reset.
+      currentConfig.dns = structuredClone(defaultControledMihomoConfig.dns)
     }
     if (!controlSniff) {
       delete currentConfig.sniffer
