@@ -4,7 +4,7 @@ import { Button, Chip, Input, Label, TextField, Tooltip } from '@heroui/react'
 import { KokoSelect } from '../base/koko-form'
 import { getKokoroDefaultRules, replaceKokoroDefaultRules } from '@renderer/utils/ipc'
 import { notify } from '@renderer/utils/notification'
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { LuArrowDown, LuArrowUp, LuPlus, LuRefreshCw, LuSave, LuTrash2 } from 'react-icons/lu'
 import KokoroSectionHeading from './kokoro-section-heading'
 
@@ -24,8 +24,12 @@ const KokoroDefaultRules: React.FC = () => {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string>()
+  const requestInFlight = useRef(false)
+  const busy = loading || saving
 
   const load = useCallback(async (): Promise<void> => {
+    if (requestInFlight.current) return
+    requestInFlight.current = true
     setLoading(true)
     setError(undefined)
     try {
@@ -38,6 +42,7 @@ const KokoroDefaultRules: React.FC = () => {
     } catch (loadError) {
       setError(errorMessage(loadError))
     } finally {
+      requestInFlight.current = false
       setLoading(false)
     }
   }, [])
@@ -122,7 +127,8 @@ const KokoroDefaultRules: React.FC = () => {
   }
 
   const save = async (): Promise<void> => {
-    if (!ruleSet || validationError) return
+    if (!ruleSet || validationError || requestInFlight.current) return
+    requestInFlight.current = true
     setSaving(true)
     setError(undefined)
     try {
@@ -135,12 +141,16 @@ const KokoroDefaultRules: React.FC = () => {
     } catch (saveError) {
       setError(errorMessage(saveError))
     } finally {
+      requestInFlight.current = false
       setSaving(false)
     }
   }
 
   return (
-    <section className="flex min-w-0 flex-col overflow-hidden rounded-xl border border-separator/70 bg-surface transition-colors focus-within:border-accent/35">
+    <section
+      aria-busy={busy}
+      className="flex min-w-0 flex-col overflow-hidden rounded-xl border border-separator/70 bg-surface transition-colors focus-within:border-accent/35"
+    >
       <header className="flex items-start justify-between gap-3 border-b border-separator/70 px-4 py-3">
         <div className="min-w-0">
           <KokoroSectionHeading
@@ -164,19 +174,23 @@ const KokoroDefaultRules: React.FC = () => {
               isIconOnly
               variant="ghost"
               aria-label={tr('Reload')}
-              isDisabled={loading || saving}
+              isDisabled={busy}
               onPress={() => void load()}
             >
-              <LuRefreshCw className={loading ? 'animate-spin' : ''} />
+              <LuRefreshCw className={loading ? 'animate-spin motion-reduce:animate-none' : ''} />
             </Button>
           </Tooltip.Trigger>
           <Tooltip.Content>{tr('Reload')}</Tooltip.Content>
         </Tooltip>
       </header>
 
-      {loading ? (
-        <div className="flex min-h-52 items-center justify-center">
-          <LuRefreshCw className="animate-spin text-xl text-accent-soft-foreground" />
+      {loading && !ruleSet ? (
+        <div
+          role="status"
+          aria-label={tr('Loading')}
+          className="flex min-h-52 items-center justify-center"
+        >
+          <LuRefreshCw className="animate-spin text-xl text-accent-soft-foreground motion-reduce:animate-none" />
         </div>
       ) : options && ruleSet ? (
         <>
@@ -202,6 +216,7 @@ const KokoroDefaultRules: React.FC = () => {
                       label={tr('Rule type')}
                       labelPlacement="inside"
                       className="min-w-0"
+                      isDisabled={busy}
                       disallowEmptySelection
                       options={options.rule_types.map((type) => ({
                         id: type,
@@ -217,6 +232,7 @@ const KokoroDefaultRules: React.FC = () => {
                       label={tr('Rule target')}
                       labelPlacement="inside"
                       className="min-w-0"
+                      isDisabled={busy}
                       disallowEmptySelection
                       options={targetOptions.map((target) => ({ id: target, label: target }))}
                       value={rule.target}
@@ -230,7 +246,7 @@ const KokoroDefaultRules: React.FC = () => {
                             isIconOnly
                             variant="ghost"
                             aria-label={tr('Move up')}
-                            isDisabled={index === 0 || rule.type === 'MATCH'}
+                            isDisabled={busy || index === 0 || rule.type === 'MATCH'}
                             onPress={() => moveRule(index, -1)}
                           >
                             <LuArrowUp />
@@ -246,7 +262,9 @@ const KokoroDefaultRules: React.FC = () => {
                             variant="ghost"
                             aria-label={tr('Move down')}
                             isDisabled={
-                              index === rules.length - 1 || rules[index + 1]?.type === 'MATCH'
+                              busy ||
+                              index === rules.length - 1 ||
+                              rules[index + 1]?.type === 'MATCH'
                             }
                             onPress={() => moveRule(index, 1)}
                           >
@@ -262,6 +280,7 @@ const KokoroDefaultRules: React.FC = () => {
                             isIconOnly
                             variant="ghost"
                             className="text-danger"
+                            isDisabled={busy}
                             aria-label={tr('Delete')}
                             onPress={() =>
                               setRules((current) =>
@@ -284,6 +303,7 @@ const KokoroDefaultRules: React.FC = () => {
                         label={tr('Rule content')}
                         labelPlacement="inside"
                         className="min-w-0 flex-1"
+                        isDisabled={busy}
                         placeholder={tr('Select a RULE-SET provider')}
                         options={domainProviders.map((provider) => ({
                           id: provider.name,
@@ -296,7 +316,7 @@ const KokoroDefaultRules: React.FC = () => {
                       <TextField
                         aria-label={tr('Rule content')}
                         className="min-w-0 flex-1"
-                        isDisabled={rule.type === 'MATCH'}
+                        isDisabled={busy || rule.type === 'MATCH'}
                         value={rule.payload || ''}
                         onChange={(value) => updateRule(index, { payload: value })}
                       >
@@ -336,7 +356,7 @@ const KokoroDefaultRules: React.FC = () => {
                 <Button
                   size="sm"
                   variant="secondary"
-                  isDisabled={rules.length >= maxRules || options.rule_types.length === 0}
+                  isDisabled={busy || rules.length >= maxRules || options.rule_types.length === 0}
                   onPress={addRule}
                 >
                   <LuPlus />
@@ -345,7 +365,7 @@ const KokoroDefaultRules: React.FC = () => {
                 <Button
                   size="sm"
                   variant="primary"
-                  isDisabled={!isDirty || Boolean(validationError)}
+                  isDisabled={busy || !isDirty || Boolean(validationError)}
                   isPending={saving}
                   onPress={() => void save()}
                 >
@@ -359,7 +379,7 @@ const KokoroDefaultRules: React.FC = () => {
       ) : (
         <div className="flex min-h-52 flex-col items-center justify-center gap-3 text-center">
           <p className="text-sm text-danger">{error || tr('Failed to load the Kokoro rule set')}</p>
-          <Button size="sm" variant="secondary" onPress={() => void load()}>
+          <Button size="sm" variant="secondary" isDisabled={busy} onPress={() => void load()}>
             {tr('Reload')}
           </Button>
         </div>

@@ -1966,7 +1966,7 @@ test('Kokoro account options and default rules use clear desktop sections and sa
   assert.match(rules, /aria-label=\{tr\('Delete'\)\}/)
   assert.match(rules, /aria-live="polite"/)
   assert.match(rules, /tr\('Unsaved changes'\)/)
-  assert.match(rules, /isDisabled=\{!isDirty \|\| Boolean\(validationError\)\}/)
+  assert.match(rules, /isDisabled=\{busy \|\| !isDirty \|\| Boolean\(validationError\)\}/)
   assert.match(rules, /variant="secondary"[\s\S]*tr\('Add rule'\)/)
   assert.match(rules, /variant="primary"[\s\S]*tr\('Save rules'\)/)
   assert.match(rules, /replaceKokoroDefaultRules\(ruleSet\.revision, rules\)/)
