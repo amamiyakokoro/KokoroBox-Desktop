@@ -335,7 +335,7 @@ test('service-owned Process Router archives extract only the fixed runtime bundl
 test('stable Mihomo builds pin the requested release', () => {
   const prepare = readFileSync('scripts/prepare.ts', 'utf8')
 
-  assert.match(prepare, /const MIHOMO_STABLE_VERSION = 'v1\.19\.31'/)
+  assert.match(prepare, /const MIHOMO_STABLE_VERSION = 'v1\.19\.32'/)
   assert.match(prepare, /releases\/download\/\$\{MIHOMO_STABLE_VERSION\}\/version\.txt/)
   assert.match(prepare, /MIHOMO_VERSION !== MIHOMO_STABLE_VERSION/)
   assert.doesNotMatch(prepare, /mihomo\/releases\/latest\/download\/version\.txt/)

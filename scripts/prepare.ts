@@ -65,7 +65,7 @@ const MIHOMO_ALPHA_MAP = {
 }
 
 /* ======= mihomo release ======= */
-const MIHOMO_STABLE_VERSION = 'v1.19.31'
+const MIHOMO_STABLE_VERSION = 'v1.19.32'
 const MIHOMO_VERSION_URL = `https://github.com/MetaCubeX/mihomo/releases/download/${MIHOMO_STABLE_VERSION}/version.txt`
 const MIHOMO_URL_PREFIX = `https://github.com/MetaCubeX/mihomo/releases/download`
 let MIHOMO_VERSION: string
