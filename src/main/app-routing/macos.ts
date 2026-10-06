@@ -11,6 +11,8 @@ import { macAppRoutingExtensionPath } from '../utils/dirs'
 import { appRoutingSocksPort } from './profile'
 import { canConnectToAppRoutingListener } from './health'
 import { buildMacAppRoutingConfiguration } from './macos-profile'
+import { createMacRoutingLogStore, type MacRoutingLog } from './macos-logs'
+import { tr } from '../../shared/i18n'
 
 // Native operations have their own bounded waits. This outer limit prevents a
 // broken OS callback from holding an Electron worker indefinitely.
@@ -110,3 +112,24 @@ export async function openMacAppRoutingSystemSettings(): Promise<void> {
   }
   await invokeWithTimeout(openMacosApplicationRoutingSettings())
 }
+
+const routingLogsBridge = native as unknown as {
+  getMacosApplicationRoutingLogs?: () => Promise<MacRoutingLog[]>
+  clearMacosApplicationRoutingLogs?: () => Promise<unknown>
+}
+const macRoutingLogs = createMacRoutingLogStore(
+  async () => {
+    if (!routingLogsBridge.getMacosApplicationRoutingLogs) {
+      throw new Error(tr('Application routing logs require an updated KokoroBox Native.'))
+    }
+    return await invokeWithTimeout(routingLogsBridge.getMacosApplicationRoutingLogs())
+  },
+  async () => {
+    if (!routingLogsBridge.clearMacosApplicationRoutingLogs) {
+      throw new Error(tr('Application routing logs require an updated KokoroBox Native.'))
+    }
+    await invokeWithTimeout(routingLogsBridge.clearMacosApplicationRoutingLogs())
+  }
+)
+export const getMacAppRoutingLogs = macRoutingLogs.get
+export const clearMacAppRoutingLogs = macRoutingLogs.clear

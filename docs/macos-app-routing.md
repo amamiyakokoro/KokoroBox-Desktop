@@ -55,6 +55,28 @@ rolling build number: macOS treats every version change as an extension replacem
 the user to approve that replacement. Increment both pinned extension version fields only when
 the bundled provider changes. Ordinary Desktop updates then keep the already-approved extension.
 
+## Routing logs
+
+The Desktop **Live logs → App routing** tab reads the provider through the
+Native `getMacosApplicationRoutingLogs` API. **Diagnostic logging** in Application
+routing settings enables connection records. Activity and error records are
+available independently. The provider retains at most 500 entries and drains up
+to 100 per read; Desktop serializes reads with clears and retains a 500-entry
+history, including stable IDs for the existing log view. Clear removes both
+provider entries and Desktop history after the provider acknowledges it.
+
+TCP records contain the application, destination, port and Proxy/Direct/Block
+result. UDP proxy records keep per-destination deduplication; UDP Direct/Block
+records use unknown destinations because those flows are not opened for packet
+inspection. Excluded local-network traffic is not recorded. Logs remain in memory
+and are not saved to disk.
+
+This requires a Native build exporting `getMacosApplicationRoutingLogs` and
+`clearMacosApplicationRoutingLogs` (these are newer than 0.16.6). An older Native
+package produces an update-required message; Windows and Linux continue to read
+and clear their logs through Service. A signed app and approved System Extension
+are required to verify live provider messaging on a Mac.
+
 ## Apple configuration
 
 The Apple Developer account must have these identifiers and capabilities enabled:

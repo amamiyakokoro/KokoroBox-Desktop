@@ -78,6 +78,8 @@ const providerSource = readFileSync(
 )
 if (
   !providerSource.includes('case "replaceKokoroBoxConfiguration":') ||
+  !providerSource.includes('case "getLogs":') ||
+  !providerSource.includes('case "clearLogs":') ||
   !providerSource.includes('try installKokoroBoxConfiguration(data)') ||
   !providerSource.includes('case processName = "PROCESS_NAME"') ||
   !providerSource.includes('configuration.proxyUdpDns') ||

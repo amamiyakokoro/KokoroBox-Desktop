@@ -1,5 +1,4 @@
 import { ipcMain } from 'electron'
-import { tr } from '../../shared/i18n'
 import { restartCore } from '../core/manager'
 import { getApplicationPaths, getAppRoutingIcon, scanAppRoutingDirectory } from '../sys/misc'
 import { getAppRoutingConfig } from './config'
@@ -9,7 +8,11 @@ import {
   repairAppRoutingFirewall,
   replaceAppRoutingConfig
 } from './manager'
-import { openMacAppRoutingSystemSettings } from './macos'
+import {
+  clearMacAppRoutingLogs,
+  getMacAppRoutingLogs,
+  openMacAppRoutingSystemSettings
+} from './macos'
 import { clearProcessRouterLogs, getProcessRouterLogs } from '../service/api'
 
 async function invokeSafely<T>(
@@ -35,13 +38,15 @@ export function registerAppRoutingIpcHandlers(): void {
   )
   ipcMain.handle('getAppRoutingStatus', () => getAppRoutingStatus())
   ipcMain.handle('getAppRoutingLogs', () =>
-    invokeSafely(() => {
-      if (process.platform === 'darwin')
-        throw new Error(tr('Application routing logs are unavailable on macOS.'))
-      return getProcessRouterLogs()
-    })
+    invokeSafely(() =>
+      process.platform === 'darwin' ? getMacAppRoutingLogs() : getProcessRouterLogs()
+    )
   )
-  ipcMain.handle('clearAppRoutingLogs', () => invokeSafely(clearProcessRouterLogs))
+  ipcMain.handle('clearAppRoutingLogs', () =>
+    invokeSafely(() =>
+      process.platform === 'darwin' ? clearMacAppRoutingLogs() : clearProcessRouterLogs()
+    )
+  )
   ipcMain.handle('refreshAppRoutingStatus', () => invokeSafely(refreshAppRoutingStatus))
   ipcMain.handle('repairAppRoutingFirewall', () => invokeSafely(repairAppRoutingFirewall))
   ipcMain.handle('replaceAppRoutingConfig', (_event, config: AppRoutingConfig) =>

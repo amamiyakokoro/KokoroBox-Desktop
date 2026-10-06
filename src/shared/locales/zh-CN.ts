@@ -1024,6 +1024,8 @@ export const messages: Readonly<Record<string, string>> = {
     '暂无应用分流日志，请在应用分流设置中开启诊断日志。',
   'Application routing logs require an updated KokoroBox Service.':
     '应用分流日志需要更新 KokoroBox Service。',
+  'Application routing logs require an updated KokoroBox Native.':
+    '应用分流日志需要更新 KokoroBox Native。',
   'Application routing logs are unavailable on macOS.': 'macOS 目前无法读取应用分流日志。',
   'Follow new logs': '跟随新日志',
   'Stop following new logs': '停止跟随新日志',

@@ -1,6 +1,6 @@
 {
   "proxyBridgeRepository": "https://github.com/amamiyakokoro/ProxyBridge.git",
-  "proxyBridgeRevision": "84193638336c1c5bf77bfd3b15b25e3546f75795",
-  "macOSSystemExtensionVersion": "3.26.9",
-  "macOSSystemExtensionBundleVersion": "1001635"
+  "proxyBridgeRevision": "9ea86ba348f2e17f21d7ae0ac4eb87f1ae5789de",
+  "macOSSystemExtensionVersion": "3.26.10",
+  "macOSSystemExtensionBundleVersion": "1001636"
 }

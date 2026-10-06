@@ -1066,6 +1066,8 @@ export const messages: Readonly<Record<string, string>> = {
     'No application routing logs yet. Enable diagnostic logging in Application routing settings.',
   'Application routing logs require an updated KokoroBox Service.':
     'Application routing logs require an updated KokoroBox Service.',
+  'Application routing logs require an updated KokoroBox Native.':
+    'Application routing logs require an updated KokoroBox Native.',
   'Application routing logs are unavailable on macOS.':
     'Application routing logs are unavailable on macOS.',
   'Follow new logs': 'Follow new logs',
