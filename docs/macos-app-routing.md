@@ -71,8 +71,8 @@ records use unknown destinations because those flows are not opened for packet
 inspection. Excluded local-network traffic is not recorded. Logs remain in memory
 and are not saved to disk.
 
-This requires a Native build exporting `getMacosApplicationRoutingLogs` and
-`clearMacosApplicationRoutingLogs` (these are newer than 0.16.6). An older Native
+This requires Native 0.16.7 or later, exporting `getMacosApplicationRoutingLogs` and
+`clearMacosApplicationRoutingLogs`. An older Native
 package produces an update-required message; Windows and Linux continue to read
 and clear their logs through Service. A signed app and approved System Extension
 are required to verify live provider messaging on a Mac.

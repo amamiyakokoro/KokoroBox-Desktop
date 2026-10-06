@@ -36,8 +36,8 @@ importers:
         specifier: ^0.7.3
         version: 0.7.3
       kokorobox-native:
-        specifier: 0.16.6
-        version: 0.16.6
+        specifier: 0.16.7
+        version: 0.16.7
       remark-gfm:
         specifier: 4.0.1
         version: 4.0.1
@@ -2473,46 +2473,46 @@ packages:
   keyv@5.6.0:
     resolution: {integrity: sha512-CYDD3SOtsHtyXeEORYRx2qBtpDJFjRTGXUtmNEMGyzYOKj1TE3tycdlho7kA1Ufx9OYWZzg52QFBGALTirzDSw==}
 
-  kokorobox-native-darwin-arm64@0.16.6:
-    resolution: {integrity: sha512-06wERdXd6udiP0mGe0T0gWr0lnu4DSC9pLy9jwNI1zEIg493TBZwNh0zMpTujrx1thWaOA0oH1N0GEkrJZvPVw==}
+  kokorobox-native-darwin-arm64@0.16.7:
+    resolution: {integrity: sha512-nJeh7lc4vK03BC6ThQjYphYLYygjfqp0l9SpAJjqj3DswrTQA8DISaYFKMkb8WGAc46R9kZ9QFKejxhfJ0NDHQ==}
     engines: {node: '>=16'}
     cpu: [arm64]
     os: [darwin]
 
-  kokorobox-native-darwin-x64@0.16.6:
-    resolution: {integrity: sha512-5kkC0NvvKMYh+Y6I9EtRUegQ6L+HUkhc6Pfw+xmmmVnxTdZLidX44ahfDhdQxWgHOihoX09oJh4FmJKqzWMzSg==}
+  kokorobox-native-darwin-x64@0.16.7:
+    resolution: {integrity: sha512-dHOEwqBeOtTy0lPr66UstpuC3i2Ybhc+DJZJTim7ne3IpqOagXeO0IWAC8p9KDnf9OCBYzSQp92+A8Nse9JRIw==}
     engines: {node: '>=16'}
     cpu: [x64]
     os: [darwin]
 
-  kokorobox-native-linux-arm64-gnu@0.16.6:
-    resolution: {integrity: sha512-zg3O/k3PYDQAO4XfO1JiuPfRBxkx0Z176Dh9EXOTnW3ioEMKRPIiDWIKx8RzkRICJDt6uzIsKMTnjbOG+WjBsw==}
+  kokorobox-native-linux-arm64-gnu@0.16.7:
+    resolution: {integrity: sha512-EYHR+GAyAJVIeFGSoflOqPkCWMndJEmAJ6DVSa9BopETDMOztgTp7AHic2YBZsgxWqMHrD87s2DrPYeV0BIduQ==}
     engines: {node: '>=16'}
     cpu: [arm64]
     os: [linux]
     libc: [glibc]
 
-  kokorobox-native-linux-x64-gnu@0.16.6:
-    resolution: {integrity: sha512-j995i2gdA0QWVzx8puXXroy46/wpMzUMPub7AV/fkvqMJ/5lqtc1pZz7lB5wlLxgl9HkwTFAiK++VJtr90fOUg==}
+  kokorobox-native-linux-x64-gnu@0.16.7:
+    resolution: {integrity: sha512-AoDfYyc/+RM6Vhjd+sATKQOBa50MPNj4ikoqNPEBFsgqXfll2IGOQwDTofP2UXOFoa8NIcrq5K97MzxXyfW65g==}
     engines: {node: '>=16'}
     cpu: [x64]
     os: [linux]
     libc: [glibc]
 
-  kokorobox-native-win32-arm64-msvc@0.16.6:
-    resolution: {integrity: sha512-X831XUhwujD+mUIl8/I7lSHDLyF+O2ECuXCElQSK7LdwIV/RqbQcFWJ8GYEe0llY8BQhhQQOdi6NrNjalCNanA==}
+  kokorobox-native-win32-arm64-msvc@0.16.7:
+    resolution: {integrity: sha512-1XelBtW04PA4K3perQUnLsl4qvYRv7FAvOZs6JgPVC5DkC8LkzjSf6PeZOsTIcHkrQLx4sU2MGcJcVYIGIDasA==}
     engines: {node: '>=16'}
     cpu: [arm64]
     os: [win32]
 
-  kokorobox-native-win32-x64-msvc@0.16.6:
-    resolution: {integrity: sha512-bM3fK2j0C0NI5QoiHvD0QxmWwFCQnuLsV3CJL/eIwaFAq3+12aS3+E9o9Zo66Y0kBVCLGu33w89K0JkI/y7ZOg==}
+  kokorobox-native-win32-x64-msvc@0.16.7:
+    resolution: {integrity: sha512-ICwIFEBUERf7FjSprM+25PAFvmhyAmVbb3pKitKpOQ+J4ewAaDKh8PorlCSkUn+GUePV+Vnjtsd0XZW4TSlnkA==}
     engines: {node: '>=16'}
     cpu: [x64]
     os: [win32]
 
-  kokorobox-native@0.16.6:
-    resolution: {integrity: sha512-MC6WgL4BtrdIES+qRyaeXV/B2wKNYA+oxMg62UBbYaXEwzxq4OnmHKTb0gFvcFAEl9slzcrH60ukfVJ4ZTG72w==}
+  kokorobox-native@0.16.7:
+    resolution: {integrity: sha512-qXKAkceksu1mWUOwgzbWatrHrqNGUcW5qXgqkBfHEvXvted9ieJUC9YbEqUyaAykvM5vb3slm7ZJKGNDjSuN/w==}
     engines: {node: '>=16'}
 
   layerr@3.0.0:
@@ -6444,32 +6444,32 @@ snapshots:
     dependencies:
       '@keyv/serialize': 1.1.1
 
-  kokorobox-native-darwin-arm64@0.16.6:
+  kokorobox-native-darwin-arm64@0.16.7:
     optional: true
 
-  kokorobox-native-darwin-x64@0.16.6:
+  kokorobox-native-darwin-x64@0.16.7:
     optional: true
 
-  kokorobox-native-linux-arm64-gnu@0.16.6:
+  kokorobox-native-linux-arm64-gnu@0.16.7:
     optional: true
 
-  kokorobox-native-linux-x64-gnu@0.16.6:
+  kokorobox-native-linux-x64-gnu@0.16.7:
     optional: true
 
-  kokorobox-native-win32-arm64-msvc@0.16.6:
+  kokorobox-native-win32-arm64-msvc@0.16.7:
     optional: true
 
-  kokorobox-native-win32-x64-msvc@0.16.6:
+  kokorobox-native-win32-x64-msvc@0.16.7:
     optional: true
 
-  kokorobox-native@0.16.6:
+  kokorobox-native@0.16.7:
     optionalDependencies:
-      kokorobox-native-darwin-arm64: 0.16.6
-      kokorobox-native-darwin-x64: 0.16.6
-      kokorobox-native-linux-arm64-gnu: 0.16.6
-      kokorobox-native-linux-x64-gnu: 0.16.6
-      kokorobox-native-win32-arm64-msvc: 0.16.6
-      kokorobox-native-win32-x64-msvc: 0.16.6
+      kokorobox-native-darwin-arm64: 0.16.7
+      kokorobox-native-darwin-x64: 0.16.7
+      kokorobox-native-linux-arm64-gnu: 0.16.7
+      kokorobox-native-linux-x64-gnu: 0.16.7
+      kokorobox-native-win32-arm64-msvc: 0.16.7
+      kokorobox-native-win32-x64-msvc: 0.16.7
 
   layerr@3.0.0: {}
 
