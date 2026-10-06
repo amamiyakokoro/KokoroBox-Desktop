@@ -104,3 +104,12 @@ Service versions advertising `coreProfileValidation` expose
 executable when it matches the selected core, otherwise its existing binary
 preparation path. Validation does not save launch intent or restart the core.
 Older binaries use the centralized bounded Desktop compatibility path.
+
+## Service process status compatibility
+
+`getServiceProcessStatus` queries the platform Service manager first. When the
+OS probe fails or reports unknown, Native runs only the validated KokoroBox
+Service executable with `service status`, bounded to 2.5 seconds and bounded
+output. Native parses recognized structured states and returns unknown for
+malformed output. Desktop retains registration/approval and authentication
+policy; its CLI parser is used only by older Native binaries.
