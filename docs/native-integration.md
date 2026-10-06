@@ -78,3 +78,16 @@ executable and owner. They cannot prove the original creation time. Older Native
 binaries fail closed when asked to clean up a persisted process; a live Node
 ChildProcess remains eligible for normal direct-mode shutdown. The new Native
 APIs must be released before enabling persisted cleanup in packaged Desktop.
+
+## Application-routing coordination
+
+Native's `reconcileMacosApplicationRouting` serializes the fixed loopback SOCKS5
+handshake, policy acknowledgement and provider health refresh. Only a running
+response acknowledges a policy. Desktop retains the status refresh cadence and
+UI approval guidance; older Native binaries retain the previous Desktop path.
+
+Windows/Linux Service versions advertising `processRouterEvents` push status
+snapshots at `/process-router/events`. Desktop sends a ping every five seconds
+to renew the existing twenty-second client lease. Server snapshots do not renew
+it. The Service Manager owns process/firewall reconciliation; older Service
+versions retain Desktop status polling. Reconnection resubmits current intent.

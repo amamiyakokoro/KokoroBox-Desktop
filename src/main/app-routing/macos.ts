@@ -1,3 +1,4 @@
+import * as native from 'kokorobox-native'
 import { existsSync } from 'fs'
 import {
   applyMacosApplicationRouting,
@@ -8,6 +9,7 @@ import {
 import { isAppRoutingRuleEffectivelyEnabled } from '../../shared/app-routing'
 import { macAppRoutingExtensionPath } from '../utils/dirs'
 import { appRoutingSocksPort } from './profile'
+import { canConnectToAppRoutingListener } from './health'
 import { buildMacAppRoutingConfiguration } from './macos-profile'
 
 // Native operations have their own bounded waits. This outer limit prevents a
@@ -34,30 +36,48 @@ async function invokeWithTimeout<T>(operation: Promise<T>): Promise<T> {
   }
 }
 
-export async function reconcileMacAppRouting(
-  config: AppRoutingConfig,
-  proxyAvailable: boolean
-): Promise<AppRoutingStatus> {
+export async function reconcileMacAppRouting(config: AppRoutingConfig): Promise<AppRoutingStatus> {
   if (!existsSync(macAppRoutingExtensionPath())) {
     throw new Error('macOS application-routing system extension is not installed')
   }
-  const configuration = buildMacAppRoutingConfiguration(config, proxyAvailable)
-  const policyKey = JSON.stringify(configuration)
-  let response = await invokeWithTimeout(getMacosApplicationRoutingStatus())
-  const providerHealthCheckDue =
-    response.state === 'running' &&
-    Date.now() - lastProviderHealthCheckAt >= providerHealthCheckIntervalMs
-  if (
-    policyKey !== activePolicyKey ||
-    response.state === 'disabled' ||
-    response.state === 'error' ||
-    providerHealthCheckDue
-  ) {
-    response = await invokeWithTimeout(applyMacosApplicationRouting(configuration))
-    // Starting only describes the session, not acceptance of this policy.
-    // A changed policy must be retried once the provider is connected.
-    activePolicyKey = response.state === 'running' ? policyKey : ''
-    lastProviderHealthCheckAt = response.state === 'running' ? Date.now() : 0
+  const bridge = native as unknown as {
+    reconcileMacosApplicationRouting?: (
+      configuration: ReturnType<typeof buildMacAppRoutingConfiguration>
+    ) => Promise<
+      Awaited<ReturnType<typeof getMacosApplicationRoutingStatus>> & { proxyAvailable: boolean }
+    >
+  }
+  let proxyAvailable = false
+  let response: Awaited<ReturnType<typeof getMacosApplicationRoutingStatus>>
+  if (bridge.reconcileMacosApplicationRouting) {
+    const snapshot = await invokeWithTimeout(
+      bridge.reconcileMacosApplicationRouting(buildMacAppRoutingConfiguration(config, false))
+    )
+    response = snapshot
+    proxyAvailable = snapshot.proxyAvailable
+  } else {
+    const requiresProxy = config.rules.some(
+      (rule) => isAppRoutingRuleEffectivelyEnabled(config, rule) && rule.action === 'proxy'
+    )
+    proxyAvailable = requiresProxy && (await canConnectToAppRoutingListener(appRoutingSocksPort))
+    const configuration = buildMacAppRoutingConfiguration(config, proxyAvailable)
+    const policyKey = JSON.stringify(configuration)
+    response = await invokeWithTimeout(getMacosApplicationRoutingStatus())
+    const providerHealthCheckDue =
+      response.state === 'running' &&
+      Date.now() - lastProviderHealthCheckAt >= providerHealthCheckIntervalMs
+    if (
+      policyKey !== activePolicyKey ||
+      response.state === 'disabled' ||
+      response.state === 'error' ||
+      providerHealthCheckDue
+    ) {
+      response = await invokeWithTimeout(applyMacosApplicationRouting(configuration))
+      // Starting only describes the session, not acceptance of this policy.
+      // A changed policy must be retried once the provider is connected.
+      activePolicyKey = response.state === 'running' ? policyKey : ''
+      lastProviderHealthCheckAt = response.state === 'running' ? Date.now() : 0
+    }
   }
   const protectedApplicationCount = config.rules.filter(
     (rule) => isAppRoutingRuleEffectivelyEnabled(config, rule) && rule.action === 'proxy'

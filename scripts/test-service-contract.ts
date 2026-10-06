@@ -45,6 +45,7 @@ test('older Service metadata treats missing capabilities as unsupported', () => 
     sysproxyPacServer: false,
     sysproxyNetworkReconcile: false,
     dnsLease: false,
+    processRouterEvents: false,
     processRouter: false,
     windowsUwpLoopback: false,
     serviceLogs: false
