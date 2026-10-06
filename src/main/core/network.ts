@@ -6,6 +6,7 @@ import {
   setDnsLease,
   setSysDns
 } from '../service/api'
+import { createDnsLeaseController } from './dns-lease-controller'
 import { triggerSysProxy } from '../sys/sysproxy'
 import { appendAppLog } from '../utils/log'
 import { observeNetworkContext, readNetworkContext } from '../sys/network-context'
@@ -17,8 +18,16 @@ export interface NetworkCoreController {
 }
 
 let setPublicDNSTimer: NodeJS.Timeout | null = null
-let dnsLeaseRenewTimer: NodeJS.Timeout | null = null
-let dnsLeaseGeneration = 0
+let dnsSetupGeneration = 0
+const dnsLeaseController = createDnsLeaseController({
+  acquire: () => setDnsLease(['223.5.5.5']),
+  renew: renewDnsLease,
+  release: releaseDnsLease,
+  isMissingLease: (error) => error instanceof ServiceAPIError && error.status === 409,
+  onError: (error) => {
+    void appendAppLog(`[Network]: DNS lease renewal failed, ${error}\n`).catch(() => {})
+  }
+})
 let stopNetworkContextObserver: (() => void) | null = null
 let networkDetectionGeneration = 0
 let networkDownHandled = false
@@ -40,50 +49,20 @@ async function restoreLegacyDNS(originDNS: string): Promise<void> {
   await patchAppConfig({ originDNS: undefined })
 }
 
-function stopDnsLeaseRenewal(): void {
-  dnsLeaseGeneration++
-  if (dnsLeaseRenewTimer) clearTimeout(dnsLeaseRenewTimer)
-  dnsLeaseRenewTimer = null
-}
-
-function startDnsLeaseRenewal(): void {
-  stopDnsLeaseRenewal()
-  const generation = dnsLeaseGeneration
-  const renew = async (): Promise<void> => {
-    if (generation !== dnsLeaseGeneration) return
-    try {
-      await renewDnsLease()
-    } catch (error) {
-      if (error instanceof ServiceAPIError && error.status === 409) {
-        try {
-          await setDnsLease(['223.5.5.5'])
-        } catch (recoveryError) {
-          await appendAppLog(`[Network]: DNS lease recovery failed, ${recoveryError}\n`).catch(
-            () => {}
-          )
-        }
-      } else {
-        await appendAppLog(`[Network]: DNS lease renewal failed, ${error}\n`).catch(() => {})
-      }
-    }
-    if (generation === dnsLeaseGeneration) {
-      dnsLeaseRenewTimer = setTimeout(() => void renew(), 20_000)
-    }
-  }
-  dnsLeaseRenewTimer = setTimeout(() => void renew(), 20_000)
-}
-
 export async function setPublicDNS(): Promise<void> {
   if (process.platform !== 'darwin') return
+  const generation = ++dnsSetupGeneration
   if (setPublicDNSTimer) clearTimeout(setPublicDNSTimer)
   setPublicDNSTimer = null
   if ((await readNetworkContext()).online) {
     const { originDNS, autoSetDNSMode = 'none' } = await getAppConfig()
+    if (generation !== dnsSetupGeneration) return
     if (originDNS) await restoreLegacyDNS(originDNS)
+    if (generation !== dnsSetupGeneration) return
     if (autoSetDNSMode === 'none') return
-    await setDnsLease(['223.5.5.5'])
-    startDnsLeaseRenewal()
+    await dnsLeaseController.start()
   } else {
+    if (generation !== dnsSetupGeneration) return
     setPublicDNSTimer = setTimeout(() => {
       void setPublicDNS().catch((error) => {
         void appendAppLog(`[Network]: DNS lease setup failed, ${error}\n`).catch(() => {})
@@ -94,12 +73,12 @@ export async function setPublicDNS(): Promise<void> {
 
 export async function recoverDNS(): Promise<void> {
   if (process.platform !== 'darwin') return
+  ++dnsSetupGeneration
   if (setPublicDNSTimer) clearTimeout(setPublicDNSTimer)
   setPublicDNSTimer = null
-  stopDnsLeaseRenewal()
+  await dnsLeaseController.stop()
   const { originDNS } = await getAppConfig()
   if (originDNS) await restoreLegacyDNS(originDNS)
-  await releaseDnsLease()
 }
 
 export async function startNetworkDetectionController(
