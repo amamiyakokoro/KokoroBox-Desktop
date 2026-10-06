@@ -1,3 +1,8 @@
+import {
+  validateCoreValidationResult,
+  type CoreValidationOptions,
+  type CoreValidationResult
+} from '../../shared/core-validation'
 import { validateServicePacUrl } from '../../shared/service-pac'
 import {
   proxyRuntimeDiagnosticsFailure,
@@ -1225,5 +1230,19 @@ export async function adoptNativeProxyMutation(settings: {
     '/sysproxy/native/adopt',
     settings,
     { timeout: 4000 }
+  )
+}
+
+export async function validateServiceCoreProfile(
+  options: CoreValidationOptions
+): Promise<CoreValidationResult> {
+  await requireServiceCapability('coreProfileValidation')
+  return validateCoreValidationResult(
+    await getServiceAxios().request({
+      method: serviceContract.coreProfileValidation.method,
+      url: serviceContract.coreProfileValidation.path,
+      data: options,
+      timeout: 15_000
+    })
   )
 }

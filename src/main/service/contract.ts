@@ -2,6 +2,7 @@ export const serviceContract = {
   meta: { method: 'GET', path: '/meta' },
   serviceLogs: { method: 'GET', path: '/service/logs' },
   coreDesired: { method: 'GET', path: '/core/desired' },
+  coreProfileValidation: { method: 'POST', path: '/core/profile/validate' },
   proxyDiagnostics: { method: 'GET', path: '/core/proxy-diagnostics' },
   prepareNativeProxy: { method: 'POST', path: '/sysproxy/native/prepare' },
   adoptNativeProxy: { method: 'POST', path: '/sysproxy/native/adopt' },
@@ -27,6 +28,7 @@ export const serviceContract = {
 } as const
 
 export interface ServiceCapabilities {
+  coreProfileValidation: boolean
   coreDesiredState: boolean
   sysproxyLease: boolean
   sysproxyEvents: boolean
@@ -48,6 +50,7 @@ export interface ServiceMeta {
 export const supportedServiceApiVersion = 1
 
 const capabilityNames = [
+  'coreProfileValidation',
   'coreDesiredState',
   'sysproxyLease',
   'sysproxyEvents',
@@ -64,6 +67,7 @@ export const legacyServiceMeta: ServiceMeta = {
   serviceVersion: 'legacy',
   apiVersion: 0,
   capabilities: {
+    coreProfileValidation: false,
     coreDesiredState: false,
     sysproxyLease: false,
     sysproxyEvents: false,

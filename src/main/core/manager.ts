@@ -447,9 +447,7 @@ export async function startCore(
   }
 
   await generateProfile()
-  if (useServiceCore || detached) {
-    await checkProfile()
-  }
+  if (detached) await checkProfile()
   let stoppedLegacyDirectCore = false
   let serviceCoreRunning = false
   if (useServiceCore) {
@@ -485,6 +483,7 @@ export async function startCore(
       }
     }
   }
+  if (useServiceCore) await checkProfile(true)
   if (!serviceCoreRunning && !useServiceCore) {
     await stopCore()
   }

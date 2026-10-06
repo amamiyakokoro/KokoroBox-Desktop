@@ -39,6 +39,7 @@ test('older Service metadata treats missing capabilities as unsupported', () => 
   })
 
   assert.deepEqual(meta.capabilities, {
+    coreProfileValidation: false,
     coreDesiredState: true,
     sysproxyLease: false,
     sysproxyEvents: false,

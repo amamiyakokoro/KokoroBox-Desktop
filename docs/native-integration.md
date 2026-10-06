@@ -91,3 +91,16 @@ snapshots at `/process-router/events`. Desktop sends a ping every five seconds
 to renew the existing twenty-second client lease. Server snapshots do not renew
 it. The Service Manager owns process/firewall reconciliation; older Service
 versions retain Desktop status polling. Reconnection resubmits current intent.
+
+## Mihomo profile validation
+
+`validateCoreProfile` accepts an executable, config path, working directory and
+trusted paths. Native runs only `-t -f <config> -d <work>` with a ten-second
+deadline and bounded stdout/stderr. Results distinguish valid, invalid, timeout
+and output-limit outcomes. Desktop retains localized error formatting.
+
+Service versions advertising `coreProfileValidation` expose
+`POST /core/profile/validate` with the same DTO. Service uses the active protected
+executable when it matches the selected core, otherwise its existing binary
+preparation path. Validation does not save launch intent or restart the core.
+Older binaries use the centralized bounded Desktop compatibility path.
