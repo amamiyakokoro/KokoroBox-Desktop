@@ -8,24 +8,34 @@ function FindProxyForURL(url, host) {
 `
 
 const pacServer = new PacHttpServer()
+let servicePacUrl: string | undefined
+
+export function setActiveServicePacUrl(url: string): void {
+  servicePacUrl = url
+}
 
 export function getActivePacUrl(): string | undefined {
-  return pacServer.getUrl()
+  return servicePacUrl ?? pacServer.getUrl()
+}
+
+export async function getConfiguredPacScript(): Promise<string> {
+  const { sysProxy } = await getAppConfig()
+  const { 'mixed-port': port = 7890 } = await getControledMihomoConfig()
+  return (sysProxy.pacScript || defaultPacScript).replaceAll('%mixed-port%', port.toString())
 }
 
 export async function startPacServer(): Promise<number | undefined> {
+  servicePacUrl = undefined
   const { sysProxy } = await getAppConfig()
-  const { mode = 'manual', pacScript } = sysProxy
+  const { mode = 'manual' } = sysProxy
   if (mode !== 'auto') {
     await pacServer.stop()
     return undefined
   }
-  let script = pacScript || defaultPacScript
-  const { 'mixed-port': port = 7890 } = await getControledMihomoConfig()
-  script = script.replaceAll('%mixed-port%', port.toString())
-  return await pacServer.start(script)
+  return await pacServer.start(await getConfiguredPacScript())
 }
 
 export async function stopPacServer(): Promise<void> {
+  servicePacUrl = undefined
   await pacServer.stop()
 }

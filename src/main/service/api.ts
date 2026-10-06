@@ -1,3 +1,4 @@
+import { validateServicePacUrl } from '../../shared/service-pac'
 import {
   proxyRuntimeDiagnosticsFailure,
   validateProxyRuntimeDiagnostics,
@@ -1099,6 +1100,22 @@ export const setPac = async (
       guard
     }
   })
+}
+
+/** New Service owns PAC serving and the proxy lease together. */
+export async function setServicePac(
+  script: string,
+  onlyActiveDevice: boolean,
+  useRegistry: boolean,
+  guard: boolean
+): Promise<string> {
+  await requireServiceCapability('sysproxyPacServer')
+  const value = await getServiceAxios().request({
+    method: serviceContract.sysproxyPac.method,
+    url: serviceContract.sysproxyPac.path,
+    data: { script, only_active_device: onlyActiveDevice, use_registry: useRegistry, guard }
+  })
+  return validateServicePacUrl(value)
 }
 
 export const setProxy = async (

@@ -42,6 +42,7 @@ test('older Service metadata treats missing capabilities as unsupported', () => 
     coreDesiredState: true,
     sysproxyLease: false,
     sysproxyEvents: false,
+    sysproxyPacServer: false,
     sysproxyNetworkReconcile: false,
     dnsLease: false,
     processRouter: false,
