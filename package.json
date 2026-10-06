@@ -67,9 +67,9 @@
     "iconv-lite": "^0.7.3",
     "kokorobox-native": "0.16.5",
     "remark-gfm": "4.0.1",
-    "tldts": "^7.4.15",
+    "tldts": "^7.4.16",
     "webdav": "^5.11.0",
-    "ws": "^8.21.3",
+    "ws": "^8.22.0",
     "yaml": "^2.9.1"
   },
   "devDependencies": {
@@ -90,7 +90,7 @@
     "@types/pubsub-js": "^1.8.6",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
-    "@types/ws": "^8.18.1",
+    "@types/ws": "^8.18.2",
     "@vitejs/plugin-react": "^6.1.1",
     "driver.js": "^1.8.0",
     "electron": "^44.5.1",
