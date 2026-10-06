@@ -517,7 +517,8 @@ export async function serviceStatus(
 
   // Native owns the platform-specific OS status probe. Keep the Service CLI
   // fallback for older native builds and Linux machines using another init.
-  const nativeStatus = native as typeof native & {
+  // Installed older binaries may omit APIs declared by the current SDK.
+  const nativeStatus = native as unknown as {
     getServiceProcessStatus?: (
       executable: string
     ) => Promise<'running' | 'stopped' | 'paused' | 'not-installed' | 'unknown'>
