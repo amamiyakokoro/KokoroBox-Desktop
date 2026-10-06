@@ -47,7 +47,7 @@ export async function reconcileMacAppRouting(config: AppRoutingConfig): Promise<
       Awaited<ReturnType<typeof getMacosApplicationRoutingStatus>> & { proxyAvailable: boolean }
     >
   }
-  let proxyAvailable = false
+  let proxyAvailable: boolean
   let response: Awaited<ReturnType<typeof getMacosApplicationRoutingStatus>>
   if (bridge.reconcileMacosApplicationRouting) {
     const snapshot = await invokeWithTimeout(

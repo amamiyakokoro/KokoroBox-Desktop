@@ -7,7 +7,8 @@ export function createProcessRouterEventStream(
   onConnected: () => void,
   connect: () => WebSocket,
   onError: (error: unknown) => void = () => {},
-  heartbeatMs = 5000
+  heartbeatMs = 5000,
+  onDisconnected: () => void = () => {}
 ) {
   let socket: WebSocket | undefined
   let reconnect: NodeJS.Timeout | undefined
@@ -52,12 +53,16 @@ export function createProcessRouterEventStream(
       if (socket !== ws) return
       socket = undefined
       clearHeartbeat()
+      onDisconnected()
       retry()
     })
   }
   const retry = (error?: unknown): void => {
     if (stopped || reconnect) return
-    if (error) onError(error)
+    if (error) {
+      onError(error)
+      onDisconnected()
+    }
     reconnect = setTimeout(() => {
       reconnect = undefined
       open()

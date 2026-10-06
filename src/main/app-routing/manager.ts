@@ -1,3 +1,4 @@
+import { tr } from '../../shared/i18n'
 import { BrowserWindow } from 'electron'
 import {
   appRoutingSupported,
@@ -46,6 +47,18 @@ const serviceEvents = createProcessRouterEventStream(
   () => createServiceWebSocket('/process-router/events'),
   (error) => {
     void appendAppLog(`[App routing]: status stream failed, ${error}\n`).catch(() => {})
+  },
+  5000,
+  () => {
+    if (stopping || !serviceEventsEnabled) return
+    publishStatus({
+      ...status,
+      state: 'error',
+      mihomoAvailable: false,
+      message: tr(
+        'Cannot connect to KokoroBox Service. Check its status in Overview before trying again.'
+      )
+    })
   }
 )
 

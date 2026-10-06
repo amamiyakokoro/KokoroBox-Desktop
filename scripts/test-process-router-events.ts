@@ -20,6 +20,7 @@ test('router stream renews only while active and stops reconnecting after shutdo
   const socket = new Socket()
   let connects = 0
   let connected = 0
+  let disconnected = 0
   const stream = createProcessRouterEventStream(
     () => {},
     () => {
@@ -30,7 +31,10 @@ test('router stream renews only while active and stops reconnecting after shutdo
       return socket as unknown as WebSocket
     },
     () => {},
-    1
+    1,
+    () => {
+      disconnected++
+    }
   )
   stream.start()
   stream.start()
@@ -39,11 +43,14 @@ test('router stream renews only while active and stops reconnecting after shutdo
   assert.equal(connects, 1)
   assert.equal(connected, 1)
   assert.ok(socket.pings > 0)
+  socket.emit('close')
+  assert.equal(disconnected, 1)
   stream.stop()
   const pings = socket.pings
   socket.emit('close')
   await delay(10)
   assert.equal(socket.pings, pings)
+  assert.equal(disconnected, 1)
   assert.equal(connects, 1)
 })
 test('malformed router snapshots are rejected without publishing stale state', () => {
