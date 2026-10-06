@@ -1,6 +1,7 @@
 import { tr } from '../../../shared/i18n'
 import BasePage from '@renderer/components/base/base-page'
 import LogItem from '@renderer/components/logs/log-item'
+import { ServiceLogMessage } from '@renderer/components/logs/service-log-message'
 import { KokoSearchField } from '@renderer/components/base/koko-search-field'
 import { KokoTabs } from '@renderer/components/base/base-controls'
 import { KokoToolbar, KokoToolbarIconButton } from '@renderer/components/base/koko-toolbar'
@@ -403,6 +404,7 @@ const Logs: React.FC = () => {
                     time={log.time}
                     type={log.type}
                     payload={log.payload}
+                    content={log.fields ? <ServiceLogMessage entry={log} /> : undefined}
                     onOpenMenu={openContext}
                   />
                 )}

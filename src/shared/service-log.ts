@@ -13,6 +13,8 @@ export interface ServiceLogEntry {
   type: LogLevel
   time?: string
   payload: string
+  message?: string
+  fields?: Record<string, unknown>
 }
 
 export interface ServiceLogCursor {
@@ -37,18 +39,24 @@ function jsonEnd(content: string, start: number): number | undefined {
   return undefined
 }
 
-function normalizeEntry(raw: string): Pick<ServiceLogEntry, 'type' | 'time' | 'payload'> {
+function normalizeEntry(
+  raw: string
+): Pick<ServiceLogEntry, 'type' | 'time' | 'payload' | 'message' | 'fields'> {
   try {
     const value = JSON.parse(raw) as Record<string, unknown>
     const type = diagnosticLogLevel(value.level)
     const message = String(value.msg ?? value.message ?? '')
-    const details = Object.entries(value)
-      .filter(([key]) => !['ts', 'level', 'msg', 'message'].includes(key))
+    const fields = Object.fromEntries(
+      Object.entries(value).filter(([key]) => !['ts', 'level', 'msg', 'message'].includes(key))
+    )
+    const details = Object.entries(fields)
       .map(([key, value]) => `${key}=${JSON.stringify(value)}`)
       .join(' · ')
     return {
       type,
       time: typeof value.ts === 'string' ? value.ts : undefined,
+      message,
+      fields,
       payload: [message, details].filter(Boolean).join('\n') || raw
     }
   } catch {

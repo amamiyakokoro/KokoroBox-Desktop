@@ -82,6 +82,7 @@ function getLevelLabel(type: LogLevel): string {
 interface Props extends ControllerLog {
   index: number
   animateOnMount?: boolean
+  content?: React.ReactNode
   onOpenMenu?: (event: React.MouseEvent | React.KeyboardEvent, log: ControllerLog) => void
 }
 
@@ -137,18 +138,22 @@ const LogItemComponent: React.FC<Props> = (props) => {
       </time>
       <KokoLogLevelBadge type={type} />
       <div className="min-w-0 select-text break-words font-mono text-xs leading-5">
-        <div className="whitespace-pre-wrap text-foreground">
-          {message.primary.map((token, tokenIndex) => (
-            <KokoLogToken key={`${tokenIndex}:${token.value}`} token={token} />
-          ))}
-        </div>
-        {message.secondary?.length ? (
-          <div className="mt-0.5 whitespace-pre-wrap text-[11px] leading-4 text-muted">
-            {message.secondary.map((token, tokenIndex) => (
-              <KokoLogToken key={`${tokenIndex}:${token.value}`} token={token} />
-            ))}
-          </div>
-        ) : null}
+        {props.content ?? (
+          <>
+            <div className="whitespace-pre-wrap text-foreground">
+              {message.primary.map((token, tokenIndex) => (
+                <KokoLogToken key={`${tokenIndex}:${token.value}`} token={token} />
+              ))}
+            </div>
+            {message.secondary?.length ? (
+              <div className="mt-0.5 whitespace-pre-wrap text-[11px] leading-4 text-muted">
+                {message.secondary.map((token, tokenIndex) => (
+                  <KokoLogToken key={`${tokenIndex}:${token.value}`} token={token} />
+                ))}
+              </div>
+            ) : null}
+          </>
+        )}
       </div>
     </div>
   )

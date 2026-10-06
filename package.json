@@ -28,7 +28,7 @@
     "test:dns": "tsx --test scripts/test-dns.ts scripts/test-dns-lease-controller.ts",
     "test:runtime-recovery": "tsx --test scripts/test-settings-failures.ts scripts/test-runtime-recovery.ts scripts/test-override-execution.ts scripts/test-traffic-history.ts scripts/test-core-firewall.ts",
     "test:settings": "tsx --test scripts/test-settings.ts scripts/test-tour-navigation.ts",
-    "test:logs": "tsx --test scripts/test-log-actions.ts scripts/test-service-logs.ts scripts/test-diagnostic-logs.ts",
+    "test:logs": "tsx --tsconfig tsconfig.web.json --test scripts/test-log-actions.ts scripts/test-service-logs.ts scripts/test-diagnostic-logs.ts scripts/test-service-log-display.tsx",
     "test:yaml": "tsx --test scripts/test-yaml.ts",
     "test:home": "tsx --tsconfig tsconfig.web.json --test scripts/test-home-data.ts scripts/test-home-background.ts scripts/test-home-ui.tsx scripts/test-home-overview.tsx scripts/test-home-app-metadata.ts",
     "test:ui-native": "tsx --test scripts/test-ui-native-contract.ts",
