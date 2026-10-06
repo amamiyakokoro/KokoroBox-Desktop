@@ -63,3 +63,18 @@ elevated-command helper.
 Keep application policy and UI state in Desktop. Move functionality into the
 native package when it represents a reusable, security-sensitive, or
 platform-specific OS operation.
+
+## Verified core process cleanup
+
+Desktop records a direct core's PID, canonical executable and creation identity.
+Native's `inspectCoreProcess` and `stopCoreProcess` verify Mihomo's executable and
+user identity before stopping it. Linux uses pidfd (and fails closed on kernels
+without it); Windows retains the verified process handle. macOS rechecks the
+path and microsecond creation time before each signal, but has no pidfd and
+cannot eliminate the final check-to-signal race.
+
+Legacy PID-only records are adopted only after Native verifies the current
+executable and owner. They cannot prove the original creation time. Older Native
+binaries fail closed when asked to clean up a persisted process; a live Node
+ChildProcess remains eligible for normal direct-mode shutdown. The new Native
+APIs must be released before enabling persisted cleanup in packaged Desktop.

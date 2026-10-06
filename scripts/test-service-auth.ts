@@ -416,9 +416,10 @@ test('service core handoff removes legacy direct processes and repairs occupied 
   )
   assert.match(
     coreManagerSource,
-    /directCoreState\.child = child[\s\S]*writeFile\(path\.join\(dataDir\(\), 'core\.pid'\), child\.pid\.toString\(\)\)/
+    /directCoreState\.child = child[\s\S]*await captureCoreProcess\(child\.pid, corePath\)[\s\S]*JSON\.stringify\(identity\)/
   )
-  assert.match(coreManagerSource, /pid > 0 && pid !== process\.pid/)
+  assert.match(coreManagerSource, /record && pid !== process\.pid/)
+  assert.doesNotMatch(coreManagerSource, /process\.kill\(pid/)
   assert.match(
     coreManagerSource,
     /export async function stopCore[\s\S]*await stopLegacyDirectCore\(\)/

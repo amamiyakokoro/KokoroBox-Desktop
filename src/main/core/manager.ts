@@ -53,6 +53,11 @@ import {
 import { createCoreHookWaiter, createCoreStartupHook } from './startupHook'
 import { resolveCoreStartupMode } from './coreHookPath'
 import { stopChildProcess } from './process-control'
+import {
+  captureCoreProcess,
+  parseCoreProcessRecord,
+  stopRecordedCoreProcess
+} from './native-process'
 import { recoverDNS, setPublicDNS, startNetworkDetectionController } from './network'
 import { checkProfile } from './profile-check'
 import {
@@ -367,22 +372,11 @@ async function stopLegacyDirectCore(): Promise<boolean> {
     return stopped
   }
 
-  const pid = parseInt(pidString.trim())
-  if (Number.isInteger(pid) && pid > 0 && pid !== process.pid && !stoppedPids.has(pid)) {
-    try {
-      process.kill(pid, 0)
-      stopped = true
-      process.kill(pid, 'SIGINT')
-      await delay(1000)
-      try {
-        process.kill(pid, 0)
-        process.kill(pid, 'SIGKILL')
-      } catch {
-        // already stopped
-      }
-    } catch {
-      // stale pid file or process is no longer accessible
-    }
+  const record = parseCoreProcessRecord(pidString)
+  const pid = typeof record === 'number' ? record : record?.pid
+  if (record && pid !== process.pid && !stoppedPids.has(pid!)) {
+    const { core = 'mihomo' } = await getAppConfig()
+    stopped = (await stopRecordedCoreProcess(record, mihomoCorePath(core))) || stopped
   }
   await rm(pidPath).catch(() => {})
   return stopped
@@ -594,9 +588,16 @@ export async function startCore(
   })
   directCoreState.child = child
   if (child.pid) {
-    await writeFile(path.join(dataDir(), 'core.pid'), child.pid.toString()).catch((error) =>
-      appendAppLog(`[Manager]: persist direct core pid failed, ${error}\n`)
-    )
+    try {
+      const identity = await captureCoreProcess(child.pid, corePath)
+      await writeFile(
+        path.join(dataDir(), 'core.pid'),
+        identity ? JSON.stringify(identity) : child.pid.toString(),
+        { mode: 0o600 }
+      )
+    } catch (error) {
+      await appendAppLog(`[Manager]: persist direct core identity failed, ${error}\n`)
+    }
   }
   let startupOutput = ''
   let configurationRejected = false
