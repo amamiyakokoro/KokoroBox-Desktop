@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
+import { isDeepStrictEqual } from 'node:util'
 import ts from 'typescript'
 import { createKokoroRuleSaver } from '../src/main/kokoro/rule-save'
 
@@ -109,4 +110,210 @@ test('a persisted subscription with a failed core restart reports a refresh warn
   assert.deepEqual(result.subscriptionRefreshErrors, ['Active: core port already in use'])
   assert.deepEqual(writes, ['write', 'rename'])
   await writeProfileContent('inactive', 'rules: []', undefined, true)
+})
+
+function deferred<T>() {
+  let resolve!: (value: T) => void
+  const promise = new Promise<T>((complete) => {
+    resolve = complete
+  })
+  return { promise, resolve }
+}
+
+function refreshHarness() {
+  const initial = {
+    id: 'subscription',
+    name: 'Original',
+    type: 'remote',
+    autoUpdate: false,
+    kokoro: { settings: { profile_auto_update: false } }
+  } as ProfileItem
+  let config: ProfileConfig = { items: [structuredClone(initial)] }
+  let content: string | undefined = 'old'
+  const download = deferred<{ content: string }>()
+  let commitWait: Promise<void> = Promise.resolve()
+  const calls: string[] = []
+  const functions = loadFunctions(
+    'src/main/config/profile.ts',
+    [
+      'withProfileMutation',
+      'refreshKokoroProfile',
+      'addProfileItem',
+      'commitPreparedProfile',
+      'updateProfileItem',
+      'updateProfileItemUnlocked',
+      'removeProfileItem',
+      'removeProfileItemUnlocked',
+      'clearKokoroProfiles',
+      'clearKokoroProfilesUnlocked'
+    ],
+    {
+      profileMutationPromise: Promise.resolve(),
+      getProfileItem: async (id: string) =>
+        structuredClone(config.items.find((item) => item.id === id)),
+      getProfileConfig: async () => structuredClone(config),
+      setProfileConfigUnlocked: async (next: ProfileConfig) => {
+        config = structuredClone(next)
+      },
+      isDeepStrictEqual,
+      prepareProfile: async (item: ProfileItem) => {
+        calls.push('download')
+        const downloaded = await download.promise
+        return { item: { ...item, updated: 123 }, content: downloaded.content }
+      },
+      writeProfileContent: async (_id: string, nextContent: string) => {
+        calls.push('commit')
+        await commitWait
+        content = nextContent
+      },
+      addProfileUpdater: async () => {
+        calls.push('schedule')
+      },
+      delProfileUpdater: async () => {
+        calls.push('unschedule')
+      },
+      existsSync: () => content !== undefined,
+      profilePath: () => '/profile.yaml',
+      mihomoProfileWorkDir: () => '/work',
+      rm: async () => {
+        content = undefined
+      },
+      restartCore: async () => {
+        calls.push('restart')
+      },
+      tr: (message: string) => message
+    }
+  )
+  return {
+    refreshKokoroProfile: functions.refreshKokoroProfile,
+    addProfileItem: functions.addProfileItem,
+    updateProfileItem: functions.updateProfileItem,
+    removeProfileItem: functions.removeProfileItem,
+    clearKokoroProfiles: functions.clearKokoroProfiles,
+    initial,
+    download,
+    calls,
+    state: () => ({ config, content }),
+    blockCommit: (wait: Promise<void>) => {
+      commitWait = wait
+    }
+  }
+}
+
+async function flush() {
+  await new Promise<void>((resolve) => {
+    setImmediate(resolve)
+  })
+}
+
+test('deleting a subscription during download prevents its content and metadata from being recreated', async () => {
+  const h = refreshHarness()
+  const refresh = h.refreshKokoroProfile('subscription')
+  await flush()
+  await h.removeProfileItem('subscription')
+  h.download.resolve({ content: 'new' })
+  await refresh
+  assert.deepEqual(h.state(), { config: { items: [] }, content: undefined })
+  assert.deepEqual(h.calls, ['download', 'unschedule'])
+})
+
+test('editing a subscription during download preserves new settings and rejects the stale refresh', async () => {
+  const h = refreshHarness()
+  const refresh = h.refreshKokoroProfile('subscription')
+  await flush()
+  const edited = { ...h.initial, name: 'User edit', autoUpdate: true }
+  await h.updateProfileItem(edited)
+  h.download.resolve({ content: 'new' })
+  await assert.rejects(refresh, /Subscription changed during refresh/)
+  assert.deepEqual(h.state(), { config: { items: [edited] }, content: 'old' })
+  assert.deepEqual(h.calls, ['download'])
+})
+
+test('deletion waits for an already committing refresh and removes the final file and updater', async () => {
+  const h = refreshHarness()
+  const commit = deferred<void>()
+  h.blockCommit(commit.promise)
+  const refresh = h.refreshKokoroProfile('subscription')
+  h.download.resolve({ content: 'new' })
+  await flush()
+  assert.ok(h.calls.includes('commit'))
+  const removal = h.removeProfileItem('subscription')
+  await flush()
+  assert.equal(h.state().config.items.length, 1)
+  commit.resolve()
+  await Promise.all([refresh, removal])
+  assert.deepEqual(h.state(), { config: { items: [] }, content: undefined })
+  assert.equal(h.calls.at(-1), 'unschedule')
+})
+
+test('clearing Kokoro subscriptions during download cannot restore them, and the mutation queue recovers after failure', async () => {
+  const h = refreshHarness()
+  const refresh = h.refreshKokoroProfile('subscription')
+  await flush()
+  await h.clearKokoroProfiles()
+  h.download.resolve({ content: 'new' })
+  await refresh
+  assert.equal(h.state().config.items.length, 0)
+  assert.equal(h.state().content, undefined)
+  await assert.rejects(h.updateProfileItem(h.initial), /Profile not found/)
+  await h.removeProfileItem('subscription')
+})
+
+test('an unchanged subscription refresh commits downloaded content without selecting an inactive profile', async () => {
+  const h = refreshHarness()
+  const refresh = h.refreshKokoroProfile('subscription')
+  h.download.resolve({ content: 'new' })
+  await refresh
+  assert.equal(h.state().content, 'new')
+  assert.equal(h.state().config.current, undefined)
+  assert.equal(h.state().config.items[0].updated, 123)
+  assert.deepEqual(h.calls, ['download', 'commit', 'unschedule', 'schedule'])
+})
+
+test('manual and scheduled Kokoro refreshes use the guarded path and cannot recreate a deleted profile', async () => {
+  const h = refreshHarness()
+  const refresh = h.addProfileItem(h.initial)
+  await flush()
+  await h.removeProfileItem('subscription')
+  h.download.resolve({ content: 'new' })
+  assert.equal(await refresh, 'subscription')
+  assert.equal(h.state().config.items.length, 0)
+  assert.equal(h.state().content, undefined)
+  assert.deepEqual(h.calls, ['download', 'unschedule'])
+})
+
+test('preparing a Kokoro subscription validates the download before committing any content', async () => {
+  let fail = false
+  const calls: string[] = []
+  const { prepareProfile } = loadFunctions('src/main/config/profile.ts', ['prepareProfile'], {
+    downloadKokoroProfile: async () => {
+      calls.push('download')
+      return { content: 'rules: []', profileName: 'Remote' }
+    },
+    parseYaml: () => {
+      calls.push('parse')
+    },
+    validateMihomoProfileContent: async () => {
+      calls.push('validate')
+      if (fail) throw new Error('invalid profile')
+    },
+    writeProfileContent: () => {
+      assert.fail('preparation must not write')
+    },
+    setProfileStrUnlocked: () => {
+      assert.fail('preparation must not write')
+    }
+  })
+  const input = {
+    id: 'profile',
+    name: 'User name',
+    type: 'remote',
+    kokoro: { settings: { profile_auto_update: false } }
+  }
+  const prepared = (await prepareProfile(input)) as { item: ProfileItem; content: string }
+  assert.equal(prepared.content, 'rules: []')
+  assert.equal(prepared.item.name, 'User name')
+  assert.deepEqual(calls, ['download', 'parse', 'validate'])
+  fail = true
+  await assert.rejects(prepareProfile(input), /invalid profile/)
 })

@@ -1,5 +1,6 @@
 // Simplified Chinese localization. Keys are the canonical English source messages.
 export const messages: Readonly<Record<string, string>> = {
+  'Subscription changed during refresh. Please retry.': '订阅在更新期间已变更，请重试。',
   'This action switches the core to Service management.': '此操作会将核心切换为 Service 管理。',
   'Unable to retrieve status': '无法获取状态',
   'System Proxy Diagnostics': '系统代理诊断',
