@@ -315,7 +315,7 @@ export function buildLinuxSystemProxyDiagnostics(
       'connectivity-failed'
     ].includes(base.overall.kind)
   ) {
-    overall = base.overall
+    // Runtime failures take precedence over desktop/environment warnings.
   } else if (environmentConflict)
     overall = {
       kind: 'warning',

@@ -19,6 +19,8 @@ import {
   shouldSeedDefaultAppConfig,
   writeAppConfigFile
 } from '../src/main/config/app-loader'
+import { isDeepStrictEqual } from 'node:util'
+import { assertManagedConfig } from '../src/shared/managed-id'
 import { deepMerge } from '../src/main/utils/merge'
 import { writePrivateTextFileAtomic } from '../src/main/config/atomic-file'
 
@@ -423,9 +425,18 @@ function loadTransactionalProfileConfigModule() {
   }).outputText
   const noOp = async () => undefined
   const dependencies: Record<string, unknown> = {
+    'node:util': { isDeepStrictEqual },
+    '../../shared/managed-id': { assertManagedConfig },
+    '../utils/log': { appendAppLog: noOp },
+    './profile-key-transaction': {
+      recoverProfileKeyTransaction: noOp,
+      writeProfileKeyTransaction: noOp,
+      readProfileKeySnapshot: noOp
+    },
     '../../shared/i18n': { tr: (message: string) => message },
     './controledMihomo': { getControledMihomoConfig: async () => ({}) },
     '../utils/dirs': {
+      dataDir: () => '/mock',
       mihomoProfileWorkDir: (id: string) => `/mock/work/${id}`,
       mihomoWorkDir: () => '/mock/work',
       profileConfigPath: () => '/mock/profile.yaml',

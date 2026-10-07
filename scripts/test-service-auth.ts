@@ -202,7 +202,14 @@ test('Windows service probes hide consoles and privileged actions use constraine
   assert.match(kokoroProfileSource, /validateMihomoProfile\(/)
   assert.match(trafficPresenterSource, /spawn\(executable,[\s\S]*windowsHide: true/)
   assert.doesNotMatch(miscSource, /enableLoopback\.exe|openUWPTool/)
-  assert.equal((updaterSource.match(/windowsHide: true/g) || []).length, 3)
+  const detachedSource = readFileSync(resolve('src/main/resolve/detached-process.ts'), 'utf8')
+  assert.equal((updaterSource.match(/await launchDetachedProcess\(/g) || []).length, 2)
+  assert.match(
+    detachedSource,
+    /spawnProcess\(file, args, \{ detached: true, stdio: 'ignore', windowsHide: true \}\)/
+  )
+  assert.doesNotMatch(detachedSource, /shell: true/)
+  assert.match(updaterSource, /execFile\)[\s\S]*windowsHide: true/)
   assert.match(updaterSource, /portable-update[\s\S]*--parent-pid/)
   assert.doesNotMatch(updaterSource, /shell: true|\['\/C'/)
 })
