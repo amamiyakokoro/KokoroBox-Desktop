@@ -10,7 +10,10 @@ import { isAppRoutingRuleEffectivelyEnabled } from '../../shared/app-routing'
 import { macAppRoutingExtensionPath } from '../utils/dirs'
 import { appRoutingSocksPort } from './profile'
 import { canConnectToAppRoutingListener } from './health'
-import { buildMacAppRoutingConfiguration } from './macos-profile'
+import {
+  buildMacAppRoutingConfiguration,
+  buildMacAppRoutingDesiredConfiguration
+} from './macos-profile'
 import { createMacRoutingLogStore, type MacRoutingLog } from './macos-logs'
 import { tr } from '../../shared/i18n'
 
@@ -53,7 +56,7 @@ export async function reconcileMacAppRouting(config: AppRoutingConfig): Promise<
   let response: Awaited<ReturnType<typeof getMacosApplicationRoutingStatus>>
   if (bridge.reconcileMacosApplicationRouting) {
     const snapshot = await invokeWithTimeout(
-      bridge.reconcileMacosApplicationRouting(buildMacAppRoutingConfiguration(config, false))
+      bridge.reconcileMacosApplicationRouting(buildMacAppRoutingDesiredConfiguration(config))
     )
     response = snapshot
     proxyAvailable = snapshot.proxyAvailable

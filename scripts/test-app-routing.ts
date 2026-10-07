@@ -51,6 +51,7 @@ import {
 } from '../src/renderer/src/components/connections/connection-identity'
 import {
   buildMacAppRoutingConfiguration,
+  buildMacAppRoutingDesiredConfiguration,
   macAppRoutingOperatingSystemSupported
 } from '../src/main/app-routing/macos-profile'
 import { macOSBundleVersion } from './macos-bundle-version'
@@ -67,6 +68,87 @@ function rule(overrides: Partial<AppRoutingRule> = {}): AppRoutingRule {
     ...overrides
   }
 }
+
+test('Native reconciliation preserves Proxy intent and recovers when its listener becomes healthy', async () => {
+  const config = normalizeAppRoutingConfig({
+    version: 1,
+    enabled: true,
+    failClosed: true,
+    proxyUdpDns: true,
+    defaultAction: 'proxy',
+    defaultProtocol: 'both',
+    diagnosticLogging: false,
+    rules: [
+      rule({ processPattern: 'codex', sourcePath: undefined, identifierKind: 'macos-process-name' })
+    ]
+  })
+  assert.equal(buildMacAppRoutingConfiguration(config, false).rules[0].action, 'BLOCK')
+  const desired = buildMacAppRoutingDesiredConfiguration(config)
+  assert.equal(desired.proxyAvailable, false)
+  assert.equal(desired.rules[0].action, 'PROXY')
+  let healthy = true
+  const native = {
+    reconcileMacosApplicationRouting: async (configuration: typeof desired) => {
+      // Mirror the Native coordinator's decision to probe only requested Proxy rules.
+      const requiresProxy = configuration.rules.some(
+        (rule) => rule.enabled && rule.action === 'PROXY'
+      )
+      return {
+        state: 'running',
+        needsUserApproval: false,
+        proxyAvailable: requiresProxy && healthy
+      }
+    }
+  }
+  const compiled = ts.transpileModule(readFileSync('src/main/app-routing/macos.ts', 'utf8'), {
+    compilerOptions: {
+      module: ts.ModuleKind.CommonJS,
+      target: ts.ScriptTarget.ES2022,
+      esModuleInterop: true
+    }
+  }).outputText
+  const exports: {
+    reconcileMacAppRouting?: (config: AppRoutingConfig) => Promise<AppRoutingStatus>
+  } = {}
+  new Function('require', 'exports', compiled)((name: string) => {
+    switch (name) {
+      case 'kokorobox-native':
+        return native
+      case 'fs':
+        return { existsSync: () => true }
+      case '../../shared/app-routing':
+        return { isAppRoutingRuleEffectivelyEnabled }
+      case '../utils/dirs':
+        return { macAppRoutingExtensionPath: () => '/test/extension' }
+      case './profile':
+        return { appRoutingSocksPort }
+      case './health':
+        return {
+          canConnectToAppRoutingListener: () => {
+            assert.fail('Native owns the probe')
+          }
+        }
+      case './macos-profile':
+        return { buildMacAppRoutingConfiguration, buildMacAppRoutingDesiredConfiguration }
+      case './macos-logs':
+        return { createMacRoutingLogStore: () => ({ get: async () => [], clear: async () => {} }) }
+      case '../../shared/i18n':
+        return { tr: (message: string) => message }
+      default:
+        throw new Error(`Unexpected dependency: ${name}`)
+    }
+  }, exports)
+  const reconcile = exports.reconcileMacAppRouting!
+  const running = await reconcile(config)
+  assert.equal(running.state, 'running')
+  assert.equal(running.mihomoAvailable, true)
+  healthy = false
+  const blocked = await reconcile(config)
+  assert.equal(blocked.state, 'degraded')
+  assert.equal(blocked.protectedApplicationCount, 1)
+  healthy = true
+  assert.equal((await reconcile(config)).state, 'running')
+})
 
 test('gives application-routing connections a stable cross-privilege display identity', () => {
   const serviceConnection = {
