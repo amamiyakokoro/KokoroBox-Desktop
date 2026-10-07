@@ -1,3 +1,4 @@
+import { assertManagedConfig } from '../../shared/managed-id'
 import { isDeepStrictEqual } from 'node:util'
 import { tr } from '../../shared/i18n'
 import { getControledMihomoConfig } from './controledMihomo'
@@ -41,10 +42,12 @@ export async function getProfileConfig(force = false): Promise<ProfileConfig> {
     profileConfig = parseYaml(data) || { items: [] }
   }
   if (typeof profileConfig !== 'object') profileConfig = { items: [] }
+  assertManagedConfig(profileConfig, 'profile')
   return structuredClone(profileConfig)
 }
 
 async function setProfileConfigUnlocked(config: ProfileConfig): Promise<void> {
+  assertManagedConfig(config, 'profile')
   const nextConfig = structuredClone(config)
   const previousPromise = profileConfigWritePromise
   const currentPromise = (async () => {

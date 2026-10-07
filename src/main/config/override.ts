@@ -1,3 +1,4 @@
+import { assertManagedConfig } from '../../shared/managed-id'
 import { tr } from '../../shared/i18n'
 import { overrideConfigPath, overridePath } from '../utils/dirs'
 import { getControledMihomoConfig } from './controledMihomo'
@@ -20,10 +21,12 @@ export async function getOverrideConfig(force = false): Promise<OverrideConfig> 
     overrideConfig = parseYaml<OverrideConfig>(data) || { items: [] }
   }
   if (typeof overrideConfig !== 'object') overrideConfig = { items: [] }
+  assertManagedConfig(overrideConfig, 'override')
   return structuredClone(overrideConfig)
 }
 
 export async function setOverrideConfig(config: OverrideConfig): Promise<void> {
+  assertManagedConfig(config, 'override')
   const nextConfig = structuredClone(config)
   const previousPromise = writePromise
   const currentPromise = (async () => {

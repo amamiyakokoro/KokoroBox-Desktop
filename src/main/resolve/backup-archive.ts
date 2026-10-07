@@ -1,3 +1,4 @@
+import { assertManagedConfig } from '../../shared/managed-id'
 import AdmZip from 'adm-zip'
 import {
   existsSync,
@@ -104,9 +105,7 @@ function validateEntries(zip: AdmZip): BackupEntry[] {
       throw new Error(`Invalid backup configuration: ${name}`)
     }
     if (name === 'profile.yaml' || name === 'override.yaml') {
-      if (!Array.isArray((value as { items?: unknown }).items)) {
-        throw new Error(`Invalid backup configuration: ${name}`)
-      }
+      assertManagedConfig(value, name === 'profile.yaml' ? 'profile' : 'override')
     }
     if (name === 'config.yaml') file.data = sanitizeConfig(file.data)
   }

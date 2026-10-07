@@ -1,3 +1,4 @@
+import { assertManagedId } from '../../shared/managed-id'
 import { tr } from '../../shared/i18n'
 import { is } from '@electron-toolkit/utils'
 import { existsSync, mkdirSync } from 'fs'
@@ -173,6 +174,7 @@ export function profilesDir(): string {
 }
 
 export function profilePath(id: string): string {
+  assertManagedId(id)
   return path.join(profilesDir(), `${id}.yaml`)
 }
 
@@ -185,6 +187,8 @@ export function overrideConfigPath(): string {
 }
 
 export function overridePath(id: string, ext: 'js' | 'yaml' | 'log'): string {
+  assertManagedId(id)
+  if (!['js', 'yaml', 'log'].includes(ext)) throw new Error('Invalid override extension')
   return path.join(overrideDir(), `${id}.${ext}`)
 }
 
@@ -193,6 +197,7 @@ export function mihomoWorkDir(): string {
 }
 
 export function mihomoProfileWorkDir(id: string | undefined): string {
+  if (id !== undefined) assertManagedId(id)
   return path.join(mihomoWorkDir(), id || 'default')
 }
 
