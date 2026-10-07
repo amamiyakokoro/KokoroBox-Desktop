@@ -1,8 +1,19 @@
+import {
+  recoverProfileKeyTransaction,
+  writeProfileKeyTransaction,
+  readProfileKeySnapshot
+} from './profile-key-transaction'
 import { assertManagedConfig } from '../../shared/managed-id'
 import { isDeepStrictEqual } from 'node:util'
 import { tr } from '../../shared/i18n'
 import { getControledMihomoConfig } from './controledMihomo'
-import { mihomoProfileWorkDir, mihomoWorkDir, profileConfigPath, profilePath } from '../utils/dirs'
+import {
+  dataDir,
+  mihomoProfileWorkDir,
+  mihomoWorkDir,
+  profileConfigPath,
+  profilePath
+} from '../utils/dirs'
 import { addProfileUpdater, delProfileUpdater } from '../core/profileUpdater'
 import { readFile, writeFile, rm, mkdir, rename } from 'fs/promises'
 import { fileToStr, repairManagedFilePermissions } from 'kokorobox-native'
@@ -23,7 +34,7 @@ import { validateMihomoProfileContent } from '../kokoro/profile-check'
 import { createPinnedHttpsAgent } from '../utils/pinnedHttpsAgent'
 import { writePrivateTextFileAtomic } from './atomic-file'
 
-let profileConfig: ProfileConfig // profile.yaml
+let profileConfig: ProfileConfig | undefined // profile.yaml
 let profileConfigWritePromise: Promise<void> = Promise.resolve()
 let profileMutationPromise: Promise<unknown> = Promise.resolve()
 
@@ -37,6 +48,7 @@ const FILE_PERMISSION_ELEVATION_REQUIRED = 'FILE_PERMISSION_ELEVATION_REQUIRED'
 
 export async function getProfileConfig(force = false): Promise<ProfileConfig> {
   await profileConfigWritePromise
+  await recoverProfileKeyTransaction(dataDir())
   if (force || !profileConfig) {
     const data = await readFile(profileConfigPath(), 'utf-8')
     profileConfig = parseYaml(data) || { items: [] }
@@ -90,24 +102,43 @@ async function updateProfileItemUnlocked(item: ProfileItem): Promise<void> {
   const oldItem = config.items[index]
   const shouldRewriteProfile =
     oldItem.ageRecipient !== item.ageRecipient || oldItem.ageIdentity !== item.ageIdentity
-  let profileContent: string | undefined
-
   if (shouldRewriteProfile && existsSync(profilePath(item.id))) {
     const rawProfile = await readFile(profilePath(item.id), 'utf-8')
+    let plaintext: string
     try {
-      profileContent = await decryptProfileContent(rawProfile, oldItem)
+      plaintext = await decryptProfileContent(rawProfile, oldItem)
     } catch {
-      profileContent = await decryptProfileContent(rawProfile, item)
+      plaintext = await decryptProfileContent(rawProfile, item)
     }
+    await replaceProfilePair(config, item, rawProfile, plaintext)
+  } else {
+    config.items[index] = item
+    await setProfileConfigUnlocked(config)
   }
-
-  config.items[index] = item
   if (!item.autoUpdate) await delProfileUpdater(item.id)
-  await setProfileConfigUnlocked(config)
+}
 
-  if (profileContent !== undefined) {
-    await writeProfileContent(item.id, profileContent, item, false)
-  }
+async function replaceProfilePair(
+  config: ProfileConfig,
+  item: ProfileItem,
+  oldContent: string,
+  plaintext: string
+): Promise<void> {
+  const nextContent = item.ageRecipient
+    ? await encryptAgeText(plaintext, item.ageRecipient)
+    : plaintext
+  const oldConfig = stringifyYaml(config)
+  config.items = config.items.map((previous) => (previous.id === item.id ? item : previous))
+  profileConfig = undefined
+  await writeProfileKeyTransaction(
+    dataDir(),
+    item.id,
+    oldConfig,
+    oldContent,
+    stringifyYaml(config),
+    nextContent
+  )
+  profileConfig = structuredClone(config)
 }
 
 interface AddProfileItemOptions {
@@ -121,10 +152,26 @@ async function commitPreparedProfile(
   options: AddProfileItemOptions = {}
 ): Promise<string> {
   const { item: newItem, content } = prepared
-  await writeProfileContent(newItem.id, content, newItem, options.restartCurrent !== false)
   const config = await getProfileConfig()
-  if (await getProfileItem(newItem.id)) {
-    await updateProfileItemUnlocked(newItem)
+  const previous = config.items.find((item) => item.id === newItem.id)
+  const changedKey =
+    previous &&
+    (previous.ageIdentity !== newItem.ageIdentity || previous.ageRecipient !== newItem.ageRecipient)
+  const keyTransaction = Boolean(changedKey && existsSync(profilePath(newItem.id)))
+  if (keyTransaction) {
+    await replaceProfilePair(
+      config,
+      newItem,
+      await readFile(profilePath(newItem.id), 'utf8'),
+      content
+    )
+    if (options.restartCurrent !== false && config.current === newItem.id)
+      await restartCore({ throwOnError: true })
+  } else {
+    await writeProfileContent(newItem.id, content, newItem, options.restartCurrent !== false)
+  }
+  if (previous) {
+    if (!keyTransaction) await updateProfileItemUnlocked(newItem)
   } else {
     config.items.push(newItem)
     await setProfileConfigUnlocked(config)
@@ -385,12 +432,10 @@ async function prepareProfile(
 }
 
 export async function getProfileStr(id: string | undefined): Promise<string> {
-  if (existsSync(profilePath(id || 'default'))) {
-    const data = await readFile(profilePath(id || 'default'), 'utf-8')
-    return await decryptProfileContent(data, await getProfileItem(id))
-  } else {
-    return stringifyYaml(defaultProfile)
-  }
+  const snapshot = await readProfileKeySnapshot(dataDir(), id || 'default')
+  return snapshot.content === undefined
+    ? stringifyYaml(defaultProfile)
+    : await decryptProfileContent(snapshot.content, snapshot.item)
 }
 
 export async function addKokoroProfile(settings: KokoroSubscriptionSettings): Promise<string> {
@@ -450,13 +495,7 @@ async function clearKokoroProfilesUnlocked(): Promise<void> {
 }
 
 export async function getProfileParseStr(id: string | undefined): Promise<string> {
-  let data: string
-  if (existsSync(profilePath(id || 'default'))) {
-    data = await readFile(profilePath(id || 'default'), 'utf-8')
-  } else {
-    data = stringifyYaml(defaultProfile)
-  }
-  data = await decryptProfileContent(data, await getProfileItem(id))
+  const data = await getProfileStr(id)
   const profile = deepMerge(parseYaml<object>(data), {})
   return stringifyYaml(profile)
 }

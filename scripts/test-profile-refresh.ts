@@ -317,3 +317,32 @@ test('preparing a Kokoro subscription validates the download before committing a
   fail = true
   await assert.rejects(prepareProfile(input), /invalid profile/)
 })
+
+test('age rewrites prepare encryption before committing a transaction and do not publish new keys on failure', async () => {
+  const cache: ProfileConfig = {
+    items: [{ id: 'p', ageRecipient: 'old' }] as ProfileItem[]
+  }
+  let transactions = 0
+  const config = structuredClone(cache)
+  const { replaceProfilePair } = loadFunctions(
+    'src/main/config/profile.ts',
+    ['replaceProfilePair'],
+    {
+      encryptAgeText: async () => {
+        throw new Error('invalid recipient')
+      },
+      stringifyYaml: JSON.stringify,
+      writeProfileKeyTransaction: async () => {
+        transactions++
+      },
+      dataDir: () => '/fixture',
+      profileConfig: cache
+    }
+  )
+  await assert.rejects(
+    replaceProfilePair(config, { id: 'p', ageRecipient: 'new' }, 'old ciphertext', 'plaintext'),
+    /invalid recipient/
+  )
+  assert.equal(transactions, 0)
+  assert.equal(config.items[0].ageRecipient, 'old')
+})
