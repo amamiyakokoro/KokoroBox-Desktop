@@ -1,5 +1,7 @@
 // English source catalog. Keys are the canonical application-owned messages.
 export const messages: Readonly<Record<string, string>> = {
+  'Override changed during refresh. Please retry.':
+    'Override changed during refresh. Please retry.',
   'Subscription changed during refresh. Please retry.':
     'Subscription changed during refresh. Please retry.',
   'This action switches the core to Service management.':

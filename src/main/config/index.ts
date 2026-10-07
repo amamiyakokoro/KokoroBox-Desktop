@@ -26,7 +26,6 @@ export {
   getOverrideItem,
   addOverrideItem,
   removeOverrideItem,
-  createOverride,
   getOverride,
   setOverride,
   updateOverrideItem

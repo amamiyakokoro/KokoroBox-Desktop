@@ -2,6 +2,9 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
 import ts from 'typescript'
+import { randomUUID } from 'node:crypto'
+import { isDeepStrictEqual } from 'node:util'
+import { assertManagedConfig } from '../src/shared/managed-id'
 
 type RequestConfig = {
   headers?: Record<string, string>
@@ -22,6 +25,9 @@ function loadOverrideModule(
     isAxiosError: () => false
   }
   const dependencies: Record<string, unknown> = {
+    'node:crypto': { randomUUID },
+    'node:util': { isDeepStrictEqual },
+    '../../shared/managed-id': { assertManagedConfig },
     '../../shared/i18n': { tr: (message: string) => message },
     '../utils/dirs': {
       overrideConfigPath: () => '/mock/override.yaml',
@@ -81,7 +87,7 @@ function loadOverrideModule(
 
 test('remote overrides persist and send their custom User-Agent', async () => {
   const loaded = loadOverrideModule()
-  const item = await loaded.api.createOverride({
+  await loaded.api.addOverrideItem({
     type: 'remote',
     ext: 'yaml',
     name: 'Remote override',
@@ -89,6 +95,7 @@ test('remote overrides persist and send their custom User-Agent', async () => {
     ua: '  CustomClient/1.0  '
   })
 
+  const item = (await loaded.api.getOverrideConfig()).items[0]
   assert.equal(item.ua, 'CustomClient/1.0')
   assert.equal(loaded.getRequest()?.config.headers?.['User-Agent'], 'CustomClient/1.0')
   assert.equal(loaded.getDefaultUserAgentCalls(), 0)
@@ -96,13 +103,14 @@ test('remote overrides persist and send their custom User-Agent', async () => {
 
 test('remote overrides use the application User-Agent when left blank', async () => {
   const loaded = loadOverrideModule('KokoroBox/fallback')
-  const item = await loaded.api.createOverride({
+  await loaded.api.addOverrideItem({
     type: 'remote',
     ext: 'yaml',
     url: 'https://example.invalid/override.yaml',
     ua: '   '
   })
 
+  const item = (await loaded.api.getOverrideConfig()).items[0]
   assert.equal(item.ua, undefined)
   assert.equal(loaded.getRequest()?.config.headers?.['User-Agent'], 'KokoroBox/fallback')
   assert.equal(loaded.getDefaultUserAgentCalls(), 1)
@@ -114,20 +122,13 @@ test('local override creation waits for persistent content writes', async () => 
   })
 
   await assert.rejects(
-    loaded.api.createOverride({
+    loaded.api.addOverrideItem({
       type: 'local',
       ext: 'yaml',
       file: 'rules: []'
     }),
     /write failure/
   )
-})
-
-test('override updates are awaited and do not trigger a duplicate config write', () => {
-  const source = readFileSync('src/main/config/override.ts', 'utf8')
-
-  assert.match(source, /await updateOverrideItem\(newItem\)\s+return/)
-  assert.match(source, /case 'local':[\s\S]*?await setOverride\(id, newItem\.ext, data\)/)
 })
 
 test('failed override config writes do not mutate the shared cache', async () => {

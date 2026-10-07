@@ -1,5 +1,6 @@
 // Traditional Chinese (Taiwan) localization. Keys are the canonical English source messages.
 export const messages: Readonly<Record<string, string>> = {
+  'Override changed during refresh. Please retry.': '覆寫在更新期間已變更，請重試。',
   'Subscription changed during refresh. Please retry.': '訂閱在更新期間已變更，請重試。',
   'This action switches the core to Service management.': '此操作會將核心切換為 Service 管理。',
   'Unable to retrieve status': '無法取得狀態',

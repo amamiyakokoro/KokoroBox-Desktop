@@ -17,7 +17,7 @@
     "typecheck": "pnpm run typecheck:node && pnpm run typecheck:web",
     "test:localization": "tsx --test scripts/test-localization.ts",
     "test:backup": "tsx --test scripts/test-backup.ts scripts/test-managed-id.ts",
-    "test:override-user-agent": "tsx --test scripts/test-override-user-agent.ts",
+    "test:override-user-agent": "tsx --test scripts/test-override-user-agent.ts scripts/test-override-refresh.ts",
     "test:pinned-https-agent": "tsx --test scripts/test-pinned-https-agent.ts",
     "test:main-process-errors": "tsx --test scripts/test-main-process-errors.ts scripts/test-ipc-results.ts",
     "test:gist-filenames": "tsx --test scripts/test-gist-filenames.ts",
