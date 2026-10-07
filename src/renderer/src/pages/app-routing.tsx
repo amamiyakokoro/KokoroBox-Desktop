@@ -83,6 +83,7 @@ const AppRouting: React.FC = () => {
   const [groupEditor, setGroupEditor] = useState<{ id?: string; name: string }>()
   const [deletingGroupId, setDeletingGroupId] = useState<string>()
   const [openingSettings, setOpeningSettings] = useState(false)
+  const [checkingApproval, setCheckingApproval] = useState(false)
   const [preparingService, setPreparingService] = useState(false)
   const [repairingFirewall, setRepairingFirewall] = useState(false)
   const { repairing: repairingService, restartRequired: serviceRestartRequired } =
@@ -109,6 +110,22 @@ const AppRouting: React.FC = () => {
       notify(error, { variant: 'danger' })
     } finally {
       setOpeningSettings(false)
+    }
+  }
+  const checkApprovalStatus = async (): Promise<void> => {
+    if (checkingApproval) return
+    setCheckingApproval(true)
+    try {
+      const next = await refresh()
+      if (next) {
+        notify(tr('Application routing status: {0}', [getAppRoutingStatusLabel(next)]), {
+          variant:
+            next.state === 'running' ? 'success' : next.state === 'error' ? 'danger' : 'warning',
+          body: getAppRoutingStatusMessage(next.message, next.protectedApplicationCount)
+        })
+      }
+    } finally {
+      setCheckingApproval(false)
     }
   }
   const [isSettingDrawerOpen, setIsSettingDrawerOpen] = useState(false)
@@ -422,21 +439,33 @@ const AppRouting: React.FC = () => {
                 <li>{tr('Enable KokoroBox, then complete the macOS confirmation prompt.')}</li>
                 <li>
                   {tr(
-                    'Return to KokoroBox; application routing will continue starting automatically.'
+                    'Return to KokoroBox and click “I enabled it — check now” to verify routing.'
                   )}
                 </li>
               </ol>
+              {status?.state === 'degraded' && (
+                <p className="text-sm text-warning-soft-foreground">
+                  {tr(
+                    'If routing remains safely blocked, start or restart the Mihomo core and check again.'
+                  )}
+                </p>
+              )}
               <div className="flex flex-wrap gap-2">
                 <Button
                   variant="primary"
-                  isDisabled={saving}
+                  isDisabled={saving || checkingApproval}
                   isPending={openingSettings}
                   onPress={() => void openApprovalSettings()}
                 >
                   <MdOpenInNew className="text-base" />
                   {tr('Open System Settings and Request Approval')}
                 </Button>
-                <Button variant="secondary" isDisabled={saving} onPress={() => void refresh()}>
+                <Button
+                  variant="secondary"
+                  isDisabled={saving || openingSettings}
+                  isPending={checkingApproval}
+                  onPress={() => void checkApprovalStatus()}
+                >
                   <MdRefresh className="text-base" />
                   {tr('I enabled it — check now')}
                 </Button>

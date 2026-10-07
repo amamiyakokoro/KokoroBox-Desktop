@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { test } from 'node:test'
+import ts from 'typescript'
 import { shouldShowMacAppRoutingApprovalGuidance } from '../src/renderer/src/utils/app-routing-status'
 import {
   appRoutingSupported,
@@ -918,6 +919,46 @@ test('macOS approval guidance returns promptly and remains visible across app re
   assert.match(settingsDrawer, /onPress=\{onOpenSystemSettings\}/)
   assert.match(page, /getAppRoutingStatusMessage/)
   assert.match(statusMessages, /Network Extension did not acknowledge the update/)
+})
+
+test('manual routing checks wait for reconciliation and return the newly verified status', async () => {
+  // Exercise the production IPC operation with isolated OS boundaries.
+  const source = ts.createSourceFile(
+    'manager.ts',
+    readFileSync('src/main/app-routing/manager.ts', 'utf8'),
+    ts.ScriptTarget.ES2022,
+    true
+  )
+  const operation = source.statements.find(
+    (node) => ts.isFunctionDeclaration(node) && node.name?.text === 'refreshAppRoutingStatus'
+  )
+  assert.ok(operation)
+  const compiled = ts.transpileModule(operation.getText(source), {
+    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 }
+  }).outputText
+  let finish!: () => void
+  const reconciliation = new Promise<void>((resolve) => {
+    finish = resolve
+  })
+  let current: AppRoutingStatus = { supported: true, state: 'starting', mihomoAvailable: false }
+  let reads = 0
+  const check = new Function(
+    'reconcileAppRouting',
+    'getAppRoutingStatus',
+    `const exports = {}; ${compiled}; return exports.refreshAppRoutingStatus;`
+  )(
+    () => reconciliation,
+    () => {
+      reads++
+      return current
+    }
+  ) as () => Promise<AppRoutingStatus>
+  const result = check()
+  assert.equal(reads, 0, 'must not return the previous status while the OS check is pending')
+  current = { supported: true, state: 'running', mihomoAvailable: true }
+  finish()
+  assert.deepEqual(await result, current)
+  assert.equal(reads, 1)
 })
 
 test('macOS health polling does not publish a transient start status', () => {

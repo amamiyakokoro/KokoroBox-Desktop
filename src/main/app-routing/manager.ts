@@ -348,7 +348,7 @@ export async function repairAppRoutingFirewall(): Promise<AppRoutingStatus> {
 }
 
 export async function refreshAppRoutingStatus(): Promise<AppRoutingStatus> {
-  void reconcileAppRouting()
+  await reconcileAppRouting()
   return getAppRoutingStatus()
 }
 

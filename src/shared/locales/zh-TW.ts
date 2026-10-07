@@ -575,6 +575,11 @@ export const messages: Readonly<Record<string, string>> = {
     '返回 KokoroBox；程式分流會自動繼續啟動。',
   'Open System Settings and Request Approval': '開啟系統設定並要求批准',
   'Open System Settings': '開啟系統設定',
+  'Application routing status: {0}': '程式分流狀態：{0}',
+  'Return to KokoroBox and click “I enabled it — check now” to verify routing.':
+    '返回 KokoroBox，點擊「我已啟用，立即檢查」以確認分流狀態。',
+  'If routing remains safely blocked, start or restart the Mihomo core and check again.':
+    '若分流仍處於安全封鎖狀態，請啟動或重新啟動 Mihomo 核心後再次檢查。',
   'I enabled it — check now': '我已啟用，立即檢查',
   'The macOS system extension is not installed': 'macOS 系統延伸功能未安裝',
   'The Network Extension rejected the application-routing rules. Check the rules and try again.':

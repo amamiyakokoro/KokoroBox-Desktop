@@ -19,7 +19,7 @@ export function useAppRouting(): {
   saving: boolean
   supported: boolean
   icons: Record<string, string>
-  refresh: () => Promise<void>
+  refresh: () => Promise<AppRoutingStatus | undefined>
   save: (config: AppRoutingConfig) => Promise<boolean>
   addApplications: (groupId?: string, identifierKind?: AppRoutingIdentifierKind) => Promise<void>
   scanDirectory: (groupId?: string) => Promise<void>
@@ -100,11 +100,14 @@ export function useAppRouting(): {
     }
   }
 
-  const refresh = async (): Promise<void> => {
+  const refresh = async (): Promise<AppRoutingStatus | undefined> => {
     try {
-      setStatus(await refreshAppRoutingStatus())
+      const next = await refreshAppRoutingStatus()
+      setStatus(next)
+      return next
     } catch (error) {
       notify(error, { variant: 'danger' })
+      return undefined
     }
   }
 

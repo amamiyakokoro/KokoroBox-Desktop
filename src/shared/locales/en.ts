@@ -593,6 +593,11 @@ export const messages: Readonly<Record<string, string>> = {
     'Return to KokoroBox; application routing will continue starting automatically.',
   'Open System Settings and Request Approval': 'Open System Settings and Request Approval',
   'Open System Settings': 'Open System Settings',
+  'Application routing status: {0}': 'Application routing status: {0}',
+  'Return to KokoroBox and click “I enabled it — check now” to verify routing.':
+    'Return to KokoroBox and click “I enabled it — check now” to verify routing.',
+  'If routing remains safely blocked, start or restart the Mihomo core and check again.':
+    'If routing remains safely blocked, start or restart the Mihomo core and check again.',
   'I enabled it — check now': 'I enabled it — check now',
   'The macOS system extension is not installed': 'The macOS system extension is not installed',
   'The Network Extension rejected the application-routing rules. Check the rules and try again.':
