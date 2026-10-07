@@ -87,6 +87,15 @@ in the Rust-linked `.node`, which could terminate Electron with SIGSEGV. Native
 CI now tests the version-to-pane mapping and checks both macOS architecture
 artifacts for these unresolved runtime symbols before publication.
 
+Native 0.16.9 targets `com.apple.ExtensionsPreferences` with the Network Extension
+`extensionPointIdentifier` and `bundleIdentifier=com.amamiyakokoro.app` on macOS
+15+. Older macOS versions retain the Security-pane approval destination.
+
+**I enabled it — check now** waits for reconciliation before returning a fresh
+status and shows progress and the result. Enabling the extension alone does not
+make the Mihomo SOCKS5 listener available: if routing remains safely blocked, the
+UI explains the proxy health failure and suggests starting or restarting the core.
+
 ## Apple configuration
 
 The Apple Developer account must have these identifiers and capabilities enabled:
