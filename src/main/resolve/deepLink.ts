@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto'
 import { tr } from '../../shared/i18n'
 import { ipcMain, type BrowserWindow, type IpcMainEvent } from 'electron'
 import { addOverrideItem, addProfileItem } from '../config'
@@ -11,6 +12,65 @@ interface DeepLinkContext {
   getMainWindow: () => BrowserWindow | null
   createWindow: () => Promise<void>
   showWindow: () => number
+}
+
+let confirmationQueue: Promise<unknown> = Promise.resolve()
+
+function showImportConfirmation(
+  kind: 'profile' | 'override',
+  url: string,
+  name: string | null | undefined,
+  context: DeepLinkContext
+): Promise<boolean> {
+  const result = confirmationQueue.then(async () => {
+    if (!context.getMainWindow()) await context.createWindow()
+    const window = context.getMainWindow()
+    if (!window || window.isDestroyed()) return false
+    const requestId = randomUUID()
+    const channel = `${kind}-install-confirm-result`
+    return await new Promise<boolean>((resolve) => {
+      let settled = false
+      const finish = (confirmed: boolean): void => {
+        if (settled) return
+        settled = true
+        clearTimeout(deadline)
+        clearTimeout(showTimer)
+        ipcMain.off(channel, onReply)
+        window.off('closed', onClosed)
+        resolve(confirmed)
+      }
+      const onReply = (
+        event: IpcMainEvent,
+        reply: { requestId?: unknown; confirmed?: unknown } | null
+      ): void => {
+        if (
+          event.sender !== window.webContents ||
+          !reply ||
+          reply.requestId !== requestId ||
+          typeof reply.confirmed !== 'boolean'
+        )
+          return
+        finish(reply.confirmed)
+      }
+      const onClosed = (): void => finish(false)
+      const deadline = setTimeout(() => finish(false), 5 * 60_000)
+      const showTimer = setTimeout(() => {
+        if (window.isDestroyed()) {
+          finish(false)
+          return
+        }
+        try {
+          window.webContents.send(`show-${kind}-install-confirm`, { requestId, url, name })
+        } catch {
+          finish(false)
+        }
+      }, context.showWindow())
+      ipcMain.on(channel, onReply)
+      window.once('closed', onClosed)
+    })
+  })
+  confirmationQueue = result.catch(() => undefined)
+  return result
 }
 
 export async function handleDeepLink(url: string, context: DeepLinkContext): Promise<void> {
@@ -126,20 +186,7 @@ async function showProfileInstallConfirm(
     }
   }
 
-  return new Promise((resolve) => {
-    const delay = context.showWindow()
-    setTimeout(() => {
-      context.getMainWindow()?.webContents.send('show-profile-install-confirm', {
-        url,
-        name: extractedName || name
-      })
-      const handleConfirm = (_event: IpcMainEvent, confirmed: boolean): void => {
-        ipcMain.off('profile-install-confirm-result', handleConfirm)
-        resolve(confirmed)
-      }
-      ipcMain.once('profile-install-confirm-result', handleConfirm)
-    }, delay)
-  })
+  return await showImportConfirmation('profile', url, extractedName || name, context)
 }
 
 function parseFilename(str: string): string {
@@ -154,28 +201,7 @@ async function showOverrideInstallConfirm(
   name: string | null,
   context: DeepLinkContext
 ): Promise<boolean> {
-  if (!context.getMainWindow()) {
-    await context.createWindow()
-  }
-  return new Promise((resolve) => {
-    let finalName = name ?? undefined
-    if (!finalName) {
-      const urlObj = new URL(url)
-      const pathName = urlObj.pathname.split('/').pop()
-      finalName = pathName ? decodeURIComponent(pathName) : undefined
-    }
-
-    const delay = context.showWindow()
-    setTimeout(() => {
-      context.getMainWindow()?.webContents.send('show-override-install-confirm', {
-        url,
-        name: finalName
-      })
-      const handleConfirm = (_event: IpcMainEvent, confirmed: boolean): void => {
-        ipcMain.off('override-install-confirm-result', handleConfirm)
-        resolve(confirmed)
-      }
-      ipcMain.once('override-install-confirm-result', handleConfirm)
-    }, delay)
-  })
+  const pathName = new URL(url).pathname.split('/').pop()
+  const finalName = name ?? (pathName ? decodeURIComponent(pathName) : undefined)
+  return await showImportConfirmation('override', url, finalName, context)
 }

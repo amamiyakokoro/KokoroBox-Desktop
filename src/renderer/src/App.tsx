@@ -182,10 +182,12 @@ const App: React.FC = () => {
   const [showProfileInstallConfirm, setShowProfileInstallConfirm] = useState(false)
   const [showOverrideInstallConfirm, setShowOverrideInstallConfirm] = useState(false)
   const [profileInstallData, setProfileInstallData] = useState<{
+    requestId: string
     url: string
     name?: string | null
   }>()
   const [overrideInstallData, setOverrideInstallData] = useState<{
+    requestId: string
     url: string
     name?: string | null
   }>()
@@ -227,14 +229,14 @@ const App: React.FC = () => {
     }
     const handleShowProfileInstallConfirm = (
       _event: unknown,
-      data: { url: string; name?: string | null }
+      data: { requestId: string; url: string; name?: string | null }
     ): void => {
       setProfileInstallData(data)
       setShowProfileInstallConfirm(true)
     }
     const handleShowOverrideInstallConfirm = (
       _event: unknown,
-      data: { url: string; name?: string | null }
+      data: { requestId: string; url: string; name?: string | null }
     ): void => {
       setOverrideInstallData(data)
       setShowOverrideInstallConfirm(true)
@@ -263,12 +265,18 @@ const App: React.FC = () => {
 
   const handleProfileInstallConfirm = (confirmed: boolean): void => {
     setShowProfileInstallConfirm(false)
-    window.electron.ipcRenderer.send('profile-install-confirm-result', confirmed)
+    window.electron.ipcRenderer.send('profile-install-confirm-result', {
+      requestId: profileInstallData?.requestId,
+      confirmed
+    })
   }
 
   const handleOverrideInstallConfirm = (confirmed: boolean): void => {
     setShowOverrideInstallConfirm(false)
-    window.electron.ipcRenderer.send('override-install-confirm-result', confirmed)
+    window.electron.ipcRenderer.send('override-install-confirm-result', {
+      requestId: overrideInstallData?.requestId,
+      confirmed
+    })
   }
 
   return (
