@@ -1,3 +1,4 @@
+import { appendAppLog } from '../utils/log'
 import {
   recoverProfileKeyTransaction,
   writeProfileKeyTransaction,
@@ -79,16 +80,22 @@ export async function getProfileItem(id: string | undefined): Promise<ProfileIte
 
 async function changeCurrentProfileUnlocked(id: string): Promise<void> {
   const config = await getProfileConfig()
+  if (id !== 'default' && !config.items.some((item) => item.id === id))
+    throw new Error('Profile not found')
   const current = config.current
   config.current = id
   await setProfileConfigUnlocked(config)
   try {
-    await restartCore()
-  } catch (e) {
+    await restartCore({ throwOnError: true })
+  } catch (error) {
     config.current = current
-    throw e
-  } finally {
     await setProfileConfigUnlocked(config)
+    try {
+      await restartCore({ throwOnError: true })
+    } catch (restoreError) {
+      await appendAppLog(`[Profile]: failed to restart previous profile, ${restoreError}\n`)
+    }
+    throw error
   }
 }
 
@@ -172,6 +179,7 @@ async function commitPreparedProfile(
   }
   if (previous) {
     if (!keyTransaction) await updateProfileItemUnlocked(newItem)
+    else if (!newItem.autoUpdate) await delProfileUpdater(newItem.id)
   } else {
     config.items.push(newItem)
     await setProfileConfigUnlocked(config)

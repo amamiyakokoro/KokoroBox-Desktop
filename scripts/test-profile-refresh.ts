@@ -346,3 +346,71 @@ test('age rewrites prepare encryption before committing a transaction and do not
   assert.equal(transactions, 0)
   assert.equal(config.items[0].ageRecipient, 'old')
 })
+
+test('strict stop failures preserve Service ownership and prevent a restart from launching another core', async () => {
+  const calls: string[] = []
+  const failure = new Error('Service refused stop')
+  const { stopCore } = loadFunctions('src/main/core/manager.ts', ['stopCore'], {
+    serviceCoreRuntime: {
+      pauseAutoResume: () => {},
+      clearStreams: () => {},
+      isManaged: () => true,
+      setManaged: () => calls.push('unmanaged'),
+      stopEventHandlers: () => calls.push('unsubscribed')
+    },
+    recoverDNS: async () => {},
+    getAppConfig: async () => ({ corePermissionMode: 'service' }),
+    stopServiceCore: async () => {
+      throw failure
+    },
+    appendAppLog: async () => {},
+    stopLegacyDirectCore: async () => calls.push('direct-stop'),
+    getAxios: async () => {}
+  })
+  await assert.rejects(
+    stopCore(false, undefined, { throwOnError: true }),
+    (error) => error === failure
+  )
+  assert.deepEqual(calls, [])
+  const { restartCore } = loadFunctions('src/main/core/manager.ts', ['restartCore'], {
+    beginExpectedNetworkTransition: () => () => {},
+    clearTailscaleAuthNotifications: () => {},
+    stopCore,
+    startCore: () => {
+      assert.fail('must not start after an unconfirmed stop')
+    },
+    showNotification: async () => {},
+    tr: (message: string) => message
+  })
+  await assert.rejects(restartCore({ throwOnError: true }), (error) => error === failure)
+  await stopCore()
+  assert.deepEqual(calls, ['unmanaged', 'unsubscribed', 'direct-stop'])
+})
+
+test('failed profile switches restore the previous selection and restart that profile', async () => {
+  let current = 'old'
+  const writes: string[] = []
+  let restarts = 0
+  const failure = new Error('new profile invalid')
+  const { changeCurrentProfileUnlocked } = loadFunctions(
+    'src/main/config/profile.ts',
+    ['changeCurrentProfileUnlocked'],
+    {
+      getProfileConfig: async () => ({ current, items: [{ id: 'new' }, { id: 'old' }] }),
+      setProfileConfigUnlocked: async (config: ProfileConfig) => {
+        current = config.current!
+        writes.push(current)
+      },
+      restartCore: async (options: { throwOnError: boolean }) => {
+        assert.equal(options.throwOnError, true)
+        if (++restarts === 1) throw failure
+      },
+      appendAppLog: async () => {}
+    }
+  )
+  await assert.rejects(changeCurrentProfileUnlocked('new'), (error) => error === failure)
+  assert.equal(current, 'old')
+  assert.deepEqual(writes, ['new', 'old'])
+  assert.equal(restarts, 2)
+  await assert.rejects(changeCurrentProfileUnlocked('missing'), /Profile not found/)
+})

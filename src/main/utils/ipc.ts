@@ -464,12 +464,14 @@ export function registerIpcMainHandlers(): void {
   ipcMain.handle('updateOverrideItem', (_e, item) => ipcErrorWrapper(updateOverrideItem)(item))
   ipcMain.handle('getOverride', (_e, id, ext) => ipcErrorWrapper(getOverride)(id, ext))
   ipcMain.handle('setOverride', (_e, id, ext, str) => ipcErrorWrapper(setOverride)(id, ext, str))
-  ipcMain.handle('restartCore', ipcErrorWrapper(restartCore))
+  ipcMain.handle('restartCore', () => ipcErrorWrapper(restartCore)({ throwOnError: true }))
   ipcMain.handle('runSystemProxyDiagnostics', ipcErrorWrapper(runSystemProxyDiagnostics))
   ipcMain.handle('fixSystemProxyDiagnostic', (_e, action) =>
     ipcErrorWrapper(fixSystemProxyDiagnostic)(action)
   )
-  ipcMain.handle('stopCore', ipcErrorWrapper(stopCore))
+  ipcMain.handle('stopCore', () =>
+    ipcErrorWrapper(stopCore)(false, undefined, { throwOnError: true })
+  )
   ipcMain.handle('restartMihomoConnections', ipcErrorWrapper(restartMihomoConnections))
   ipcMain.handle('startMonitor', () => ipcErrorWrapper(startTrafficPresenterAndRestoreTray)())
   ipcMain.handle('triggerSysProxy', (_e, enable, onlyActiveDevice, useRegistry) =>

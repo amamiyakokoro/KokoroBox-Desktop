@@ -741,7 +741,11 @@ export async function startCore(
   return effectiveCoreStartupMode === 'post-up' ? waitForCoreReadyByHook() : waitForCoreReadyByLog()
 }
 
-export async function stopCore(force = false, serviceRequestTimeoutMs?: number): Promise<void> {
+export async function stopCore(
+  force = false,
+  serviceRequestTimeoutMs?: number,
+  options: { throwOnError?: boolean } = {}
+): Promise<void> {
   serviceCoreRuntime.pauseAutoResume()
 
   try {
@@ -757,13 +761,18 @@ export async function stopCore(force = false, serviceRequestTimeoutMs?: number):
   const { corePermissionMode = 'elevated' } = await getAppConfig()
   const shouldStopServiceCore = serviceCoreRuntime.isManaged() || corePermissionMode === 'service'
   if (shouldStopServiceCore) {
+    let stopped = false
     try {
       await stopServiceCore(serviceRequestTimeoutMs)
+      stopped = true
     } catch (error) {
       await appendAppLog(`[Manager]: stop service core failed, ${error}\n`)
+      if (options.throwOnError) throw error
     } finally {
-      serviceCoreRuntime.setManaged(false)
-      serviceCoreRuntime.stopEventHandlers()
+      if (stopped || !options.throwOnError) {
+        serviceCoreRuntime.setManaged(false)
+        serviceCoreRuntime.stopEventHandlers()
+      }
     }
   }
 
@@ -848,7 +857,7 @@ export async function restartCore(options: { throwOnError?: boolean } = {}): Pro
   const finishNetworkTransition = beginExpectedNetworkTransition()
   try {
     clearTailscaleAuthNotifications()
-    await stopCore()
+    await stopCore(false, undefined, { throwOnError: true })
     const promises = await startCore()
     await Promise.all(promises)
   } catch (e) {
