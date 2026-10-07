@@ -4,11 +4,19 @@ import { parseYaml } from '../utils/yaml'
 import { app, shell } from 'electron'
 import { getAppConfig, getControledMihomoConfig } from '../config'
 import { getGitHubToken } from '../config/github-token'
-import { dataDir, exePath, isPortable, resourcesDir, resourcesFilesDir, servicePath } from '../utils/dirs'
+import {
+  dataDir,
+  exePath,
+  isPortable,
+  resourcesDir,
+  resourcesFilesDir,
+  servicePath
+} from '../utils/dirs'
 import { copyFile, rm, writeFile, readFile, statfs } from 'fs/promises'
 import path from 'path'
 import { existsSync } from 'fs'
-import { execFile, spawn } from 'child_process'
+import { execFile } from 'child_process'
+import { launchDetachedProcess } from './detached-process'
 import { promisify } from 'util'
 import { createHash } from 'crypto'
 import os from 'os'
@@ -141,9 +149,8 @@ async function stagePortableUpdater(): Promise<{ path: string; argumentsPrefix: 
     await copyFile(packagedUpdaterPath, updaterPath)
     return { path: updaterPath, argumentsPrefix: [] }
   }
-  const resolveNativeUpdater = (
-    native as typeof native & { getPortableUpdaterPath?: () => string }
-  ).getPortableUpdaterPath
+  const resolveNativeUpdater = (native as typeof native & { getPortableUpdaterPath?: () => string })
+    .getPortableUpdaterPath
   if (typeof resolveNativeUpdater === 'function') {
     try {
       await copyFile(resolveNativeUpdater(), updaterPath)
@@ -305,11 +312,7 @@ export async function downloadAndInstallUpdate(
       await ensureWindowsInstallerTempSpace()
       await pauseSysProxy()
       await pauseServiceFallbackForAppUpdate()
-      spawn(path.join(dataDir(), file), ['/S', '--updated', '--force-run'], {
-        detached: true,
-        stdio: 'ignore',
-        windowsHide: true
-      }).unref()
+      await launchDetachedProcess(path.join(dataDir(), file), ['/S', '--updated', '--force-run'])
       appUpdateInstalling = true
     }
     if (!systemCoreOnlyBuild && file.endsWith('.7z')) {
@@ -318,26 +321,17 @@ export async function downloadAndInstallUpdate(
       await pauseSysProxy()
       await pauseServiceFallbackForAppUpdate()
       await stopServiceForPortableUpdate()
-      const updaterProcess = spawn(
-        updater.path,
-        [
-          ...updater.argumentsPrefix,
-          '--parent-pid',
-          String(process.pid),
-          '--archive',
-          path.join(dataDir(), file),
-          '--extractor',
-          path.join(dataDir(), '7za.exe'),
-          '--application',
-          exePath()
-        ],
-        { detached: true, stdio: 'ignore', windowsHide: true }
-      )
-      await new Promise<void>((resolve, reject) => {
-        updaterProcess.once('spawn', resolve)
-        updaterProcess.once('error', reject)
-      })
-      updaterProcess.unref()
+      await launchDetachedProcess(updater.path, [
+        ...updater.argumentsPrefix,
+        '--parent-pid',
+        String(process.pid),
+        '--archive',
+        path.join(dataDir(), file),
+        '--extractor',
+        path.join(dataDir(), '7za.exe'),
+        '--application',
+        exePath()
+      ])
       appUpdateInstalling = true
     }
     if (appUpdateInstalling) {

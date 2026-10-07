@@ -38,7 +38,7 @@
     "test:uwp-loopback": "tsx --test scripts/test-uwp-loopback.ts",
     "test:native-migrations": "tsx --test scripts/test-native-migrations.ts scripts/test-native-process.ts scripts/test-profile-validation.ts",
     "test:traffic-presenter": "tsx --test scripts/test-traffic-presenter.ts",
-    "test:release": "tsx --test scripts/test-release.ts",
+    "test:release": "tsx --test scripts/test-release.ts scripts/test-update-launch.ts",
     "test:mihomo-alpha": "tsx --test scripts/test-mihomo-alpha-release.ts",
     "test:macos-signing": "tsx --test scripts/test-macos-signing.ts",
     "test:macos-sparkle": "tsx --test scripts/test-macos-sparkle.ts",
