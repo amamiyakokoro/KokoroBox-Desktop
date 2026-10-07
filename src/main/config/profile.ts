@@ -176,6 +176,7 @@ async function commitPreparedProfile(
       await restartCore({ throwOnError: true })
   } else {
     await writeProfileContent(newItem.id, content, newItem, options.restartCurrent !== false)
+    newItem.updated = Date.now()
   }
   if (previous) {
     if (!keyTransaction) await updateProfileItemUnlocked(newItem)
@@ -200,8 +201,10 @@ export function changeCurrentProfile(id: string): Promise<void> {
   return withProfileMutation(() => changeCurrentProfileUnlocked(id))
 }
 
-export function updateProfileItem(item: ProfileItem): Promise<void> {
-  return withProfileMutation(() => updateProfileItemUnlocked(item))
+export async function updateProfileItem(item: ProfileItem): Promise<void> {
+  await withProfileMutation(() => updateProfileItemUnlocked(item))
+  const latest = await getProfileItem(item.id)
+  if (latest) await addProfileUpdater(latest)
 }
 
 export function removeProfileItem(id: string): Promise<void> {
@@ -366,6 +369,7 @@ async function prepareProfile(
               proxy: { protocol: 'http', host: '127.0.0.1', port: mixedPort }
             }),
           headers: { 'User-Agent': newItem.ua || (await getUserAgent()) },
+          timeout: 30_000,
           responseType: 'text'
         })
       } catch (error) {
