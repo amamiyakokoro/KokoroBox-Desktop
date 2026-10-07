@@ -11,7 +11,7 @@ import type { ServiceLogSnapshot } from '../../../shared/service-log'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function ipcErrorWrapper(response: any): any {
-  if (typeof response === 'object' && 'invokeError' in response) {
+  if (response !== null && typeof response === 'object' && 'invokeError' in response) {
     throw response.invokeError
   } else {
     return response

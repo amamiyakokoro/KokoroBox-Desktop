@@ -19,7 +19,7 @@
     "test:backup": "tsx --test scripts/test-backup.ts scripts/test-managed-id.ts",
     "test:override-user-agent": "tsx --test scripts/test-override-user-agent.ts",
     "test:pinned-https-agent": "tsx --test scripts/test-pinned-https-agent.ts",
-    "test:main-process-errors": "tsx --test scripts/test-main-process-errors.ts",
+    "test:main-process-errors": "tsx --test scripts/test-main-process-errors.ts scripts/test-ipc-results.ts",
     "test:gist-filenames": "tsx --test scripts/test-gist-filenames.ts",
     "test:core-hook-path": "tsx --test scripts/test-core-hook-path.ts",
     "test:user-data-migration": "tsx --test scripts/test-user-data-migration.ts",
