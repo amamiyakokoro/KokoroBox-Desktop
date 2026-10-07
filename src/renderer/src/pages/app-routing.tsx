@@ -21,7 +21,8 @@ import {
 } from '@renderer/utils/service-repair'
 import {
   getAppRoutingStatusLabel,
-  getAppRoutingStatusMessage
+  getAppRoutingStatusMessage,
+  shouldShowMacAppRoutingApprovalGuidance
 } from '@renderer/utils/app-routing-status'
 import { Button, Card, Chip, Separator, Switch } from '@heroui/react'
 import { KokoActionMenu } from '@renderer/components/base/koko-collections'
@@ -395,15 +396,21 @@ const AppRouting: React.FC = () => {
           </Switch>
         </section>
 
-        {needsMacApproval && (
+        {shouldShowMacAppRoutingApprovalGuidance(isMac, config?.enabled ?? false, status) && (
           <Card className="border border-warning/40 bg-warning-soft/40">
             <Card.Content className="gap-3">
               <div>
                 <h3 className="font-semibold text-warning-soft-foreground">
-                  {tr('Network Extension approval required')}
+                  {needsMacApproval
+                    ? tr('Network Extension approval required')
+                    : tr('macOS Network Extension')}
                 </h3>
                 <p className="mt-1 text-sm text-warning-soft-foreground">
-                  {tr('macOS needs your approval before application routing can start.')}
+                  {needsMacApproval
+                    ? tr('macOS needs your approval before application routing can start.')
+                    : tr(
+                        'Open System Settings and request approval for the KokoroBox Network Extension again.'
+                      )}
                 </p>
               </div>
               <ol className="list-decimal space-y-1 pl-5 text-sm text-warning-soft-foreground">

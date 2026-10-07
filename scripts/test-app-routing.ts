@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { test } from 'node:test'
+import { shouldShowMacAppRoutingApprovalGuidance } from '../src/renderer/src/utils/app-routing-status'
 import {
   appRoutingSupported,
   appRoutingExecutableName,
@@ -852,6 +853,44 @@ test('Windows and Linux application routing use only the privileged service life
   assert.doesNotMatch(installer, /kokoroboxServiceWasRunning/)
   assert.match(installer, /customUnInstall[\s\S]*'"\$R1" service uninstall'/)
   assert.match(installer, /!macro customUnInstall/)
+})
+
+test('macOS safely blocked routing offers reapproval without mislabeling proxy health as permission state', () => {
+  assert.equal(
+    shouldShowMacAppRoutingApprovalGuidance(true, true, {
+      state: 'degraded',
+      needsUserApproval: false
+    }),
+    true
+  )
+  assert.equal(
+    shouldShowMacAppRoutingApprovalGuidance(true, true, {
+      state: 'starting',
+      needsUserApproval: true
+    }),
+    true
+  )
+  for (const state of ['running', 'disabled', 'starting'] as const) {
+    assert.equal(
+      shouldShowMacAppRoutingApprovalGuidance(true, true, { state, needsUserApproval: false }),
+      false
+    )
+  }
+  assert.equal(
+    shouldShowMacAppRoutingApprovalGuidance(true, false, {
+      state: 'degraded',
+      needsUserApproval: false
+    }),
+    false
+  )
+  assert.equal(
+    shouldShowMacAppRoutingApprovalGuidance(false, true, {
+      state: 'degraded',
+      needsUserApproval: true
+    }),
+    false
+  )
+  assert.equal(shouldShowMacAppRoutingApprovalGuidance(true, true), false)
 })
 
 test('macOS approval guidance returns promptly and remains visible across app restarts', () => {
