@@ -21,7 +21,9 @@ type NativeNetworkMonitor = {
 const nativeNetworkMonitor = native as unknown as NativeNetworkMonitor
 
 async function notifyListeners(context: ObservableNetworkContext): Promise<void> {
-  await Promise.allSettled(Array.from(listeners, (listener) => listener(context)))
+  await Promise.allSettled(
+    Array.from(listeners, (listener) => Promise.resolve().then(() => listener(context)))
+  )
 }
 
 async function runWatcher(generation: number): Promise<void> {
@@ -56,17 +58,27 @@ function ensureWatcher(): void {
     })
     .finally(() => {
       watcherPromise = undefined
-      if (listeners.size > 0 && generation === watcherGeneration) ensureWatcher()
+      if (listeners.size > 0) ensureWatcher()
     })
 }
 
 export function observeNetworkContext(listener: NetworkContextListener): () => void {
   listeners.add(listener)
-  if (currentContext) void listener(currentContext)
+  if (currentContext) {
+    const context = currentContext
+    void Promise.resolve()
+      .then(() => listener(context))
+      .catch((error) =>
+        appendAppLog(`[Network]: context listener failed, ${error}\n`).catch(() => {})
+      )
+  }
   ensureWatcher()
   return () => {
     listeners.delete(listener)
-    if (listeners.size === 0) watcherGeneration++
+    if (listeners.size === 0) {
+      watcherGeneration++
+      currentContext = undefined
+    }
   }
 }
 

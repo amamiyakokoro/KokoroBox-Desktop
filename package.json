@@ -34,7 +34,7 @@
     "test:ui-native": "tsx --test scripts/test-ui-native-contract.ts",
     "test:service-auth": "tsx --test scripts/test-service-auth.ts",
     "test:service-contract": "tsx --test scripts/test-service-contract.ts",
-    "test:system-proxy": "tsx --test scripts/test-system-proxy.ts scripts/test-system-proxy-diagnostics.ts scripts/test-linux-system-proxy-diagnostics.ts scripts/test-macos-system-proxy-diagnostics.ts scripts/test-dns-diagnostics.ts scripts/test-service-pac.ts",
+    "test:system-proxy": "tsx --test scripts/test-system-proxy.ts scripts/test-system-proxy-diagnostics.ts scripts/test-linux-system-proxy-diagnostics.ts scripts/test-macos-system-proxy-diagnostics.ts scripts/test-dns-diagnostics.ts scripts/test-service-pac.ts scripts/test-network-context.ts",
     "test:uwp-loopback": "tsx --test scripts/test-uwp-loopback.ts",
     "test:native-migrations": "tsx --test scripts/test-native-migrations.ts scripts/test-native-process.ts scripts/test-profile-validation.ts",
     "test:traffic-presenter": "tsx --test scripts/test-traffic-presenter.ts",
