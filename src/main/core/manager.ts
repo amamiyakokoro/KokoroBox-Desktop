@@ -844,7 +844,7 @@ function clearTailscaleAuthNotifications(name?: string): void {
   }
 }
 
-export async function restartCore(): Promise<void> {
+export async function restartCore(options: { throwOnError?: boolean } = {}): Promise<void> {
   const finishNetworkTransition = beginExpectedNetworkTransition()
   try {
     clearTailscaleAuthNotifications()
@@ -853,6 +853,7 @@ export async function restartCore(): Promise<void> {
     await Promise.all(promises)
   } catch (e) {
     void showNotification({ title: tr('Failed to start core'), body: `${e}`, variant: 'danger' })
+    if (options.throwOnError) throw e
   } finally {
     finishNetworkTransition()
   }

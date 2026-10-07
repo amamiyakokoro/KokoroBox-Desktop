@@ -57,7 +57,7 @@ export function registerAppRoutingIpcHandlers(): void {
         previous.enabled !== saved.enabled ||
         (saved.enabled && previous.proxyUdpDns !== saved.proxyUdpDns)
       ) {
-        await restartCore()
+        await restartCore({ throwOnError: true })
       }
       return saved
     })

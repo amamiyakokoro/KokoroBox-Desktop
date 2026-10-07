@@ -429,7 +429,7 @@ async function writeProfileContent(
     await rm(tempPath, { force: true }).catch(() => {})
     throw error
   }
-  if (shouldRestartCurrent && current === id) await restartCore()
+  if (shouldRestartCurrent && current === id) await restartCore({ throwOnError: true })
 }
 
 export async function getProfile(id: string | undefined): Promise<MihomoConfig> {
