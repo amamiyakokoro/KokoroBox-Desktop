@@ -77,6 +77,16 @@ package produces an update-required message; Windows and Linux continue to read
 and clear their logs through Service. A signed app and approved System Extension
 are required to verify live provider messaging on a Mac.
 
+## Settings navigation
+
+Native 0.16.8 fixes a main-process crash while opening the Network Extension
+settings pane, including the automatic first-install approval path. The bridge
+selects the pane using `NSProcessInfo.operatingSystemVersion`. A Clang
+`@available` check previously introduced an unresolved availability runtime helper
+in the Rust-linked `.node`, which could terminate Electron with SIGSEGV. Native
+CI now tests the version-to-pane mapping and checks both macOS architecture
+artifacts for these unresolved runtime symbols before publication.
+
 ## Apple configuration
 
 The Apple Developer account must have these identifiers and capabilities enabled:
