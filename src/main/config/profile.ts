@@ -129,6 +129,13 @@ export async function addProfileItem(item: Partial<ProfileItem>): Promise<string
   return await addProfileItemWithOptions(item)
 }
 
+export async function refreshKokoroProfile(id: string): Promise<void> {
+  // Use the latest settings and skip subscriptions removed before this refresh starts.
+  const item = await getProfileItem(id)
+  if (item?.type !== 'remote' || !item.kokoro) return
+  await addProfileItemWithOptions(item, { selectIfEmpty: false })
+}
+
 export async function removeProfileItem(id: string): Promise<void> {
   const config = await getProfileConfig()
   config.items = config.items?.filter((item) => item.id !== id)

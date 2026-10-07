@@ -362,7 +362,7 @@ export async function getKokoroDefaultRules(): Promise<KokoroDefaultRules> {
 export async function replaceKokoroDefaultRules(
   expectedRevision: number,
   rules: KokoroCustomRuleInput[]
-): Promise<KokoroRuleSet> {
+): Promise<KokoroRuleSaveResult> {
   return ipcErrorWrapper(
     await window.electron.ipcRenderer.invoke('replaceKokoroDefaultRules', expectedRevision, rules)
   )

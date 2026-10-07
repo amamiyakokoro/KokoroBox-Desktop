@@ -648,6 +648,11 @@ export const messages: Readonly<Record<string, string>> = {
   'Too many Kokoro requests. Please try again later': 'Kokoro 請求過於頻繁，請稍後再試',
   'The Kokoro default rule set does not exist': 'Kokoro 預設規則集不存在',
   'Failed to load the Kokoro rule set': 'Kokoro 規則集載入失敗',
+  'Add to the top of the Kokoro default rule set. Kokoro subscriptions refresh automatically after saving.':
+    '新增至 Kokoro 預設規則集頂部。儲存後會自動更新 Kokoro 訂閱。',
+  'Kokoro rules saved, but subscription refresh failed': 'Kokoro 規則已儲存，但訂閱更新失敗',
+  'Edit only the default rule set used by Kokoro profiles. Rules run in this order. Kokoro subscriptions refresh automatically after saving.':
+    '僅編輯 Kokoro 設定使用的預設規則集。規則依此順序執行，儲存後會自動更新 Kokoro 訂閱。',
   'Kokoro default rule set saved': 'Kokoro 預設規則集已儲存',
   'MATCH does not require rule content': 'MATCH 不需要規則內容',
   'Only one MATCH rule is allowed; it must be last and cannot use REJECT':

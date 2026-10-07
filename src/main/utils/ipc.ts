@@ -180,6 +180,8 @@ import {
   startKokoroLogin
 } from '../kokoro/client'
 import { registerAppRoutingIpcHandlers } from '../app-routing/ipc'
+import { createKokoroRuleSaver } from '../kokoro/rule-save'
+import { refreshKokoroProfile } from '../config/profile'
 import { resumeAppRoutingAfterServiceInitialization } from '../app-routing/manager'
 
 function ipcErrorWrapper<T>( // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -432,8 +434,19 @@ export function registerIpcMainHandlers(): void {
   ipcMain.handle('startKokoroLogin', () => ipcErrorWrapper(startKokoroLogin)())
   ipcMain.handle('cancelKokoroLogin', () => ipcErrorWrapper(cancelKokoroLogin)())
   ipcMain.handle('getKokoroDefaultRules', () => ipcErrorWrapper(getKokoroDefaultRules)())
+  const saveKokoroRules = createKokoroRuleSaver({
+    save: replaceKokoroDefaultRules,
+    getProfiles: getProfileConfig,
+    refreshProfile: refreshKokoroProfile
+  })
   ipcMain.handle('replaceKokoroDefaultRules', (_e, expectedRevision, rules) =>
-    ipcErrorWrapper(replaceKokoroDefaultRules)(expectedRevision, rules)
+    ipcErrorWrapper(async () => {
+      const result = await saveKokoroRules(expectedRevision, rules)
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('profileConfigUpdated')
+      }
+      return result
+    })()
   )
   ipcMain.handle('addKokoroProfile', (_e, settings) => ipcErrorWrapper(addKokoroProfile)(settings))
   ipcMain.handle('revokeKokoroSession', () =>

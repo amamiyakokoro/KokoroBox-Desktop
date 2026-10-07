@@ -76,8 +76,15 @@ export default function LogRuleModal({
     setSaving(true)
     setError('')
     try {
-      await replaceKokoroDefaultRules(data.ruleSet.revision, nextRules)
-      notify(tr('Kokoro default rule set saved'), { variant: 'success' })
+      const result = await replaceKokoroDefaultRules(data.ruleSet.revision, nextRules)
+      if (result.subscriptionRefreshErrors.length > 0) {
+        notify(tr('Kokoro rules saved, but subscription refresh failed'), {
+          variant: 'warning',
+          body: result.subscriptionRefreshErrors.join('\n')
+        })
+      } else {
+        notify(tr('Kokoro default rule set saved'), { variant: 'success' })
+      }
       onClose()
     } catch (cause) {
       setError(String(cause instanceof Error ? cause.message : cause))
@@ -104,7 +111,7 @@ export default function LogRuleModal({
             <Modal.Body className="flex flex-col gap-4">
               <p className="text-sm text-muted">
                 {tr(
-                  'Add to the top of the Kokoro default rule set. Refresh the Kokoro subscription to apply it.'
+                  'Add to the top of the Kokoro default rule set. Kokoro subscriptions refresh automatically after saving.'
                 )}
               </p>
               <KokoSelect

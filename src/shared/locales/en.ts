@@ -674,6 +674,12 @@ export const messages: Readonly<Record<string, string>> = {
     'Too many Kokoro requests. Please try again later',
   'The Kokoro default rule set does not exist': 'The Kokoro default rule set does not exist',
   'Failed to load the Kokoro rule set': 'Failed to load the Kokoro rule set',
+  'Add to the top of the Kokoro default rule set. Kokoro subscriptions refresh automatically after saving.':
+    'Add to the top of the Kokoro default rule set. Kokoro subscriptions refresh automatically after saving.',
+  'Kokoro rules saved, but subscription refresh failed':
+    'Kokoro rules saved, but subscription refresh failed',
+  'Edit only the default rule set used by Kokoro profiles. Rules run in this order. Kokoro subscriptions refresh automatically after saving.':
+    'Edit only the default rule set used by Kokoro profiles. Rules run in this order. Kokoro subscriptions refresh automatically after saving.',
   'Kokoro default rule set saved': 'Kokoro default rule set saved',
   'MATCH does not require rule content': 'MATCH does not require rule content',
   'Only one MATCH rule is allowed; it must be last and cannot use REJECT':

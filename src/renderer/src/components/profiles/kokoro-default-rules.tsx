@@ -132,12 +132,20 @@ const KokoroDefaultRules: React.FC = () => {
     setSaving(true)
     setError(undefined)
     try {
-      const nextRuleSet = await replaceKokoroDefaultRules(ruleSet.revision, rules)
+      const result = await replaceKokoroDefaultRules(ruleSet.revision, rules)
+      const nextRuleSet = result.ruleSet
       const nextRules = editableRules(nextRuleSet)
       setRuleSet(nextRuleSet)
       setRules(nextRules)
       setSavedRules(nextRules)
-      notify(tr('Kokoro default rule set saved'), { variant: 'success' })
+      if (result.subscriptionRefreshErrors.length > 0) {
+        notify(tr('Kokoro rules saved, but subscription refresh failed'), {
+          variant: 'warning',
+          body: result.subscriptionRefreshErrors.join('\n')
+        })
+      } else {
+        notify(tr('Kokoro default rule set saved'), { variant: 'success' })
+      }
     } catch (saveError) {
       setError(errorMessage(saveError))
     } finally {
@@ -164,7 +172,9 @@ const KokoroDefaultRules: React.FC = () => {
             }
           />
           <p className="mt-1 text-xs leading-5 text-muted">
-            {tr('Edit only the default rule set used by Kokoro profiles. Rules run in this order.')}
+            {tr(
+              'Edit only the default rule set used by Kokoro profiles. Rules run in this order. Kokoro subscriptions refresh automatically after saving.'
+            )}
           </p>
         </div>
         <Tooltip delay={0}>
