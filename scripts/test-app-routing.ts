@@ -1233,3 +1233,70 @@ test('Windows packaging consumes the service-owned process router payload', () =
   assert.doesNotMatch(workflow, /Build Windows x64 Application Routing Sidecar/)
   assert.doesNotMatch(workflow, /build-proxybridge\.ps1/)
 })
+
+test('routing DNS changes restart the core before saving completes, without restarting for ordinary rule edits', async () => {
+  const compiled = ts.transpileModule(readFileSync('src/main/app-routing/ipc.ts', 'utf8'), {
+    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 }
+  }).outputText
+  const handlers = new Map<string, (...args: unknown[]) => Promise<unknown>>()
+  let previous = normalizeAppRoutingConfig({
+    version: 1,
+    enabled: true,
+    proxyUdpDns: false,
+    failClosed: true,
+    defaultAction: 'proxy',
+    defaultProtocol: 'both',
+    diagnosticLogging: false,
+    rules: []
+  })
+  let restarts = 0
+  let finish: (() => void) | undefined
+  const exports = {}
+  new Function('require', 'exports', compiled)((id: string) => {
+    if (id === 'electron') {
+      return {
+        ipcMain: {
+          handle: (name: string, handler: (...args: unknown[]) => Promise<unknown>) =>
+            handlers.set(name, handler)
+        }
+      }
+    }
+    if (id === '../core/manager') {
+      return {
+        restartCore: async () => {
+          restarts++
+          await new Promise<void>((resolve) => {
+            finish = resolve
+          })
+        }
+      }
+    }
+    if (id === './config') return { getAppRoutingConfig: async () => previous }
+    if (id === './manager')
+      return { replaceAppRoutingConfig: async (next: AppRoutingConfig) => next }
+    return {}
+  }, exports)
+  ;(exports as { registerAppRoutingIpcHandlers: () => void }).registerAppRoutingIpcHandlers()
+  const save = handlers.get('replaceAppRoutingConfig')!
+  for (const proxyUdpDns of [true, false]) {
+    const next = { ...previous, proxyUdpDns }
+    let completed = false
+    const pending = save(undefined, next).then((result) => {
+      completed = true
+      return result
+    })
+    await new Promise<void>((resolve) => {
+      setImmediate(resolve)
+    })
+    assert.equal(completed, false)
+    finish!()
+    assert.deepEqual(await pending, next)
+    previous = next
+  }
+  assert.equal(restarts, 2)
+  await save(undefined, { ...previous, diagnosticLogging: true })
+  assert.equal(restarts, 2)
+  previous = { ...previous, enabled: false }
+  await save(undefined, { ...previous, proxyUdpDns: true })
+  assert.equal(restarts, 2, 'disabled routing does not need a DNS listener')
+})

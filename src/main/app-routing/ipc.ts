@@ -53,7 +53,12 @@ export function registerAppRoutingIpcHandlers(): void {
     invokeSafely(async () => {
       const previous = await getAppRoutingConfig()
       const saved = await replaceAppRoutingConfig(config)
-      if (previous.enabled !== saved.enabled) await restartCore()
+      if (
+        previous.enabled !== saved.enabled ||
+        (saved.enabled && previous.proxyUdpDns !== saved.proxyUdpDns)
+      ) {
+        await restartCore()
+      }
       return saved
     })
   )
