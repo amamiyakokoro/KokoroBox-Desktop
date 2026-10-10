@@ -207,6 +207,32 @@ test('gives application-routing connections a stable cross-privilege display ide
   )
 })
 
+test('Linux TProxy routing displays and groups by the originating process', () => {
+  const connection = {
+    metadata: {
+      process: 'codex',
+      processPath: '/home/user/.local/bin/codex',
+      sourceIP: '192.168.1.10',
+      inboundName: 'kokorobox-app-routing',
+      inboundPort: '7894',
+      type: 'TProxy'
+    }
+  }
+  assert.equal(isAppRoutingConnection(connection), true)
+  assert.equal(connectionIdentityKey(connection), 'codex')
+  assert.equal(connectionIdentityLabel(connection, 'Application routing'), 'codex')
+  const otherApp = { metadata: { ...connection.metadata, process: 'firefox' } }
+  assert.notEqual(connectionIdentityKey(connection), connectionIdentityKey(otherApp))
+
+  const pathOnly = { metadata: { ...connection.metadata, process: '' } }
+  assert.equal(connectionIdentityLabel(pathOnly, 'Application routing'), 'codex')
+  assert.equal(connectionIdentityKey(pathOnly), 'codex')
+
+  const unresolved = { metadata: { ...pathOnly.metadata, processPath: '' } }
+  assert.equal(connectionIdentityLabel(unresolved, 'Application routing'), 'Application routing')
+  assert.equal(connectionIdentityKey(unresolved), appRoutingGroupKey)
+})
+
 test('application routing supports Windows x64, macOS, and Linux desktop architectures', () => {
   assert.equal(appRoutingSupported('win32', 'x64'), true)
   assert.equal(appRoutingSupported('win32', 'arm64'), false)

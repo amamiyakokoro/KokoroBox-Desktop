@@ -4,6 +4,7 @@ export const appRoutingGroupKey = `inbound:${appRoutingInboundName}`
 
 interface ConnectionIdentityMetadata {
   process?: string
+  processPath?: string
   sourceIP?: string
   inboundName?: string
   inboundPort?: string
@@ -30,7 +31,9 @@ export function isAppRoutingConnection(connection: ConnectionIdentitySource): bo
 }
 
 export function connectionIdentityKey(connection: ConnectionIdentitySource): string {
-  if (isAppRoutingConnection(connection)) return appRoutingGroupKey
+  if (isAppRoutingConnection(connection)) {
+    return appRoutingProcessName(connection) || appRoutingGroupKey
+  }
   if (connection.metadata.process) return connection.metadata.process
   return connection.metadata.sourceIP || ''
 }
@@ -39,7 +42,17 @@ export function connectionIdentityLabel(
   connection: ConnectionIdentitySource,
   appRoutingLabel: string
 ): string {
-  if (isAppRoutingConnection(connection)) return appRoutingLabel
+  if (isAppRoutingConnection(connection)) {
+    return appRoutingProcessName(connection) || appRoutingLabel
+  }
   if (connection.metadata.process) return connection.metadata.process
   return connection.metadata.sourceIP || ''
+}
+
+function appRoutingProcessName(connection: ConnectionIdentitySource): string {
+  const { metadata } = connection
+  // Linux TProxy preserves the original socket's owner. SOCKS connections may
+  // instead identify the forwarding router, which is not the originating app.
+  if (!metadata.type?.toLowerCase().startsWith('tproxy')) return ''
+  return metadata.process?.trim() || metadata.processPath?.split(/[\\/]/).pop()?.trim() || ''
 }
