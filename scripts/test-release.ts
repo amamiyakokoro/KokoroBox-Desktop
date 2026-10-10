@@ -726,6 +726,27 @@ test('AUR publication uses KokoroBox package names and layouts', () => {
   }
 })
 
+test('Linux packages assign root ownership before enabling core setuid', () => {
+  for (const packageName of ['kokorobox-rolling-bin', 'kokorobox-git', 'kokorobox-electron-git']) {
+    const pkgbuild = readFileSync(`aur/${packageName}/PKGBUILD`, 'utf8')
+    const ownership = pkgbuild.indexOf('chown -R root:root')
+    assert.ok(ownership >= 0, `${packageName} must normalize extracted ownership`)
+    for (const core of ['mihomo', 'mihomo-alpha']) {
+      const grant = pkgbuild.search(
+        new RegExp(
+          `chmod 4755 "\\$(?:pkgdir|\\{pkgdir\\})/opt/kokorobox/resources/sidecar/${core}"`
+        )
+      )
+      assert.ok(grant > ownership, `${packageName}: ${core} must become root-owned before setuid`)
+    }
+    assert.equal(pkgbuild.indexOf('chown ', ownership + 1), -1, 'chown clears setuid bits')
+    assert.doesNotMatch(pkgbuild, /chmod \+sx/)
+  }
+  const postinst = readFileSync('build/linux/postinst', 'utf8')
+  assert.match(postinst, /chown root:root "\$core" && chmod 4755 "\$core"/)
+  assert.doesNotMatch(postinst, /chmod \+sx/)
+})
+
 test('service release download tolerates GitHub asset publication delay', () => {
   const prepare = readFileSync('scripts/prepare.ts', 'utf8')
   assert.match(prepare, /name: 'kokorobox-service',[\s\S]*retry: 24,[\s\S]*retryDelayMs: 5000/)

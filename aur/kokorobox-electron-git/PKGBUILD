@@ -48,12 +48,12 @@ package() {
     asar extract $srcdir/${_pkgname}/dist/linux-unpacked/resources/app.asar ${pkgdir}/opt/kokorobox
     cp -r $srcdir/${_pkgname}/extra/sidecar ${pkgdir}/opt/kokorobox/resources/
     cp -r $srcdir/${_pkgname}/extra/files ${pkgdir}/opt/kokorobox/resources/
+    chown -R root:root "${pkgdir}"
     chmod +x ${pkgdir}/opt/kokorobox/resources/files/kokorobox-service
-    chmod +sx ${pkgdir}/opt/kokorobox/resources/sidecar/mihomo
-    chmod +sx ${pkgdir}/opt/kokorobox/resources/sidecar/mihomo-alpha
+    chmod 4755 "${pkgdir}/opt/kokorobox/resources/sidecar/mihomo"
+    chmod 4755 "${pkgdir}/opt/kokorobox/resources/sidecar/mihomo-alpha"
     install -Dm755 "${_pkgname}.sh" "${pkgdir}/usr/bin/${_pkgname}"
     install -Dm644 "${_pkgname}.desktop" "${pkgdir}/usr/share/applications/${_pkgname}.desktop"
     install -Dm644 "${pkgdir}/opt/kokorobox/resources/icon.png" "${pkgdir}/usr/share/icons/hicolor/512x512/apps/${_pkgname}.png"
 
-    chown -R root:root ${pkgdir}
 }
