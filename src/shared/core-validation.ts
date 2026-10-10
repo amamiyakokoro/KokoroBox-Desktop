@@ -44,7 +44,11 @@ export async function validateCoreProfileWithProviders(
 ): Promise<void> {
   const result =
     serviceMode && (await actions.serviceAvailable())
-      ? await actions.service(options)
+      ? await actions.service({
+          ...options,
+          // Service's chroot mounts the work directory; -f may point outside it.
+          safePaths: [...new Set([...options.safePaths, options.configPath])]
+        })
       : actions.native
         ? await actions.native(options)
         : await actions.legacy(options)

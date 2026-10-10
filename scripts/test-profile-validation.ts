@@ -3,7 +3,8 @@ import { test } from 'node:test'
 import {
   validateCoreValidationResult,
   assertCoreProfileValid,
-  validateCoreProfileWithProviders
+  validateCoreProfileWithProviders,
+  type CoreValidationOptions
 } from '../src/shared/core-validation'
 test('validation preserves useful errors and rejects unbounded or malformed responses', () => {
   assert.throws(
@@ -25,12 +26,52 @@ test('validation preserves useful errors and rejects unbounded or malformed resp
   )
 })
 
-const options = {
+const options: CoreValidationOptions = {
   executable: '/tmp/mihomo',
   configPath: '/tmp/config',
   workDir: '/tmp',
   safePaths: []
 }
+test('Service sandbox can validate a config outside its working directory', async () => {
+  const original = {
+    executable: '/opt/kokorobox/resources/sidecar/mihomo',
+    configPath: '/home/user/.config/KokoroBox/work/config.yaml',
+    workDir: '/home/user/.config/KokoroBox/test',
+    safePaths: ['/home/user/rules']
+  }
+  await validateCoreProfileWithProviders(original, true, {
+    serviceAvailable: async () => true,
+    service: async (request) => {
+      assert.deepEqual(request, {
+        ...original,
+        safePaths: ['/home/user/rules', original.configPath]
+      })
+      // Model the sandbox's missing-file failure unless the file is mounted.
+      return request.safePaths.includes(request.configPath)
+        ? { outcome: 'valid', output: '' }
+        : { outcome: 'invalid', output: 'Initial configuration directory error' }
+    },
+    legacy: async () => {
+      throw new Error('unexpected legacy validation')
+    }
+  })
+  assert.deepEqual(original.safePaths, ['/home/user/rules'])
+})
+
+test('Service validation does not duplicate an already trusted config path', async () => {
+  const trusted = { ...options, safePaths: [options.configPath] }
+  await validateCoreProfileWithProviders(trusted, true, {
+    serviceAvailable: async () => true,
+    service: async (request) => {
+      assert.deepEqual(request.safePaths, [options.configPath])
+      return { outcome: 'valid', output: '' }
+    },
+    legacy: async () => {
+      throw new Error('unexpected legacy validation')
+    }
+  })
+})
+
 test('Service validation is authoritative and cannot fall back after rejecting a profile', async () => {
   let nativeCalls = 0
   await assert.rejects(
@@ -60,7 +101,9 @@ test('older Service uses Native, and direct mode never probes Service', async ()
     service: async () => {
       throw new Error('unexpected Service validation')
     },
-    native: async () => {
+    native: async (request: typeof options) => {
+      assert.equal(request, options)
+      assert.deepEqual(request.safePaths, [])
       nativeCalls++
       return { outcome: 'valid' as const, output: '' }
     },
@@ -80,7 +123,9 @@ test('older Native retains the bounded compatibility validator', async () => {
     service: async () => {
       throw new Error('unexpected Service validation')
     },
-    legacy: async () => {
+    legacy: async (request) => {
+      assert.equal(request, options)
+      assert.deepEqual(request.safePaths, [])
       calls++
       return { outcome: 'valid', output: '' }
     }

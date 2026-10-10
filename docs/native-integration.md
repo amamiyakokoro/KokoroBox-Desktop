@@ -103,6 +103,9 @@ Service versions advertising `coreProfileValidation` expose
 `POST /core/profile/validate` with the same DTO. Service uses the active protected
 executable when it matches the selected core, otherwise its existing binary
 preparation path. Validation does not save launch intent or restart the core.
+Desktop includes the exact config file in the validation request's trusted paths
+so Service's chroot can read it when it is outside the validation working
+directory. This does not change the saved trusted paths or core launch settings.
 Older binaries use the centralized bounded Desktop compatibility path.
 
 ## Service process status compatibility
