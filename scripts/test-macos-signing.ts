@@ -307,7 +307,7 @@ for (const kind of ['PKG', 'App', 'DMG'] as const) {
   test(`${kind}: retries transient ticket retrieval with bounded backoff`, () => {
     let calls = 0
     const delays: number[] = []
-    const run: CommandRunner = (label, command, args, env, timeout) => {
+    const run: CommandRunner = (label, command, args, _env, timeout) => {
       assert.equal(label, `Staple ${kind} ticket`)
       assert.equal(command, '/usr/bin/xcrun')
       assert.deepEqual(args, ['stapler', 'staple', 'signed artifact'])
