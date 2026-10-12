@@ -1,5 +1,9 @@
 // English source catalog. Keys are the canonical application-owned messages.
 export const messages: Readonly<Record<string, string>> = {
+  'Override changed during refresh. Please retry.':
+    'Override changed during refresh. Please retry.',
+  'Subscription changed during refresh. Please retry.':
+    'Subscription changed during refresh. Please retry.',
   'This action switches the core to Service management.':
     'This action switches the core to Service management.',
   'Unable to retrieve status': 'Unable to retrieve status',
@@ -593,6 +597,11 @@ export const messages: Readonly<Record<string, string>> = {
     'Return to KokoroBox; application routing will continue starting automatically.',
   'Open System Settings and Request Approval': 'Open System Settings and Request Approval',
   'Open System Settings': 'Open System Settings',
+  'Application routing status: {0}': 'Application routing status: {0}',
+  'Return to KokoroBox and click “I enabled it — check now” to verify routing.':
+    'Return to KokoroBox and click “I enabled it — check now” to verify routing.',
+  'If routing remains safely blocked, start or restart the Mihomo core and check again.':
+    'If routing remains safely blocked, start or restart the Mihomo core and check again.',
   'I enabled it — check now': 'I enabled it — check now',
   'The macOS system extension is not installed': 'The macOS system extension is not installed',
   'The Network Extension rejected the application-routing rules. Check the rules and try again.':
@@ -674,6 +683,12 @@ export const messages: Readonly<Record<string, string>> = {
     'Too many Kokoro requests. Please try again later',
   'The Kokoro default rule set does not exist': 'The Kokoro default rule set does not exist',
   'Failed to load the Kokoro rule set': 'Failed to load the Kokoro rule set',
+  'Add to the top of the Kokoro default rule set. Kokoro subscriptions refresh automatically after saving.':
+    'Add to the top of the Kokoro default rule set. Kokoro subscriptions refresh automatically after saving.',
+  'Kokoro rules saved, but subscription refresh failed':
+    'Kokoro rules saved, but subscription refresh failed',
+  'Edit only the default rule set used by Kokoro profiles. Rules run in this order. Kokoro subscriptions refresh automatically after saving.':
+    'Edit only the default rule set used by Kokoro profiles. Rules run in this order. Kokoro subscriptions refresh automatically after saving.',
   'Kokoro default rule set saved': 'Kokoro default rule set saved',
   'MATCH does not require rule content': 'MATCH does not require rule content',
   'Only one MATCH rule is allowed; it must be last and cannot use REJECT':
@@ -1066,6 +1081,8 @@ export const messages: Readonly<Record<string, string>> = {
     'No application routing logs yet. Enable diagnostic logging in Application routing settings.',
   'Application routing logs require an updated KokoroBox Service.':
     'Application routing logs require an updated KokoroBox Service.',
+  'Application routing logs require an updated KokoroBox Native.':
+    'Application routing logs require an updated KokoroBox Native.',
   'Application routing logs are unavailable on macOS.':
     'Application routing logs are unavailable on macOS.',
   'Follow new logs': 'Follow new logs',
@@ -1833,6 +1850,10 @@ export const messages: Readonly<Record<string, string>> = {
   'Replaces the DNS server and routing values below, including fallback settings. Save to apply the preset.':
     'Replaces the DNS server and routing values below, including fallback settings. Save to apply the preset.',
   'Apply anti-pollution preset': 'Apply anti-pollution preset',
+  'Overseas mode': 'Overseas mode',
+  'Apply overseas preset': 'Apply overseas preset',
+  'Anti-pollution uses regional DNS routing. Overseas uses Cloudflare and Google DNS with DoH/DoT. Save to apply the selected preset.':
+    'Anti-pollution uses regional DNS routing. Overseas uses Cloudflare and Google DNS with DoH/DoT. Save to apply the selected preset.',
   'Resolves the hostnames of DNS servers, such as a DNS-over-HTTPS endpoint.':
     'Resolves the hostnames of DNS servers, such as a DNS-over-HTTPS endpoint.',
   'Resolves ordinary domain queries unless a domain-specific DNS policy applies.':

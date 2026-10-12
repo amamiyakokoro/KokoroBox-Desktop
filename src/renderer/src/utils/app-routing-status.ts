@@ -1,5 +1,13 @@
 import { tr } from '../../../shared/i18n'
 
+export function shouldShowMacAppRoutingApprovalGuidance(
+  isMac: boolean,
+  enabled: boolean,
+  status?: Pick<AppRoutingStatus, 'state' | 'needsUserApproval'>
+): boolean {
+  return isMac && Boolean(status?.needsUserApproval || (enabled && status?.state === 'degraded'))
+}
+
 export function getAppRoutingStatusLabel(status?: AppRoutingStatus): string {
   if (!status) return tr('Loading')
   const labels: Record<AppRoutingRuntimeState, string> = {

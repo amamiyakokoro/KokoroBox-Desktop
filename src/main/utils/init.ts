@@ -1,3 +1,4 @@
+import { recoverProfileKeyTransaction } from '../config/profile-key-transaction'
 import {
   appConfigPath,
   controledMihomoConfigPath,
@@ -316,6 +317,7 @@ function startBackgroundInit(appConfig: AppConfig): void {
 
 export async function init(): Promise<AppConfig> {
   await initDirs()
+  await recoverProfileKeyTransaction(dataDir())
   if (applyPendingBackupRestore(dataDir())) await getAppConfig(true)
   await Promise.all([initConfig(), initFiles()])
   await migration()

@@ -39,11 +39,14 @@ test('older Service metadata treats missing capabilities as unsupported', () => 
   })
 
   assert.deepEqual(meta.capabilities, {
+    coreProfileValidation: false,
     coreDesiredState: true,
     sysproxyLease: false,
     sysproxyEvents: false,
+    sysproxyPacServer: false,
     sysproxyNetworkReconcile: false,
     dnsLease: false,
+    processRouterEvents: false,
     processRouter: false,
     windowsUwpLoopback: false,
     serviceLogs: false

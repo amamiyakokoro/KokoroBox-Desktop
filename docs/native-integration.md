@@ -63,3 +63,56 @@ elevated-command helper.
 Keep application policy and UI state in Desktop. Move functionality into the
 native package when it represents a reusable, security-sensitive, or
 platform-specific OS operation.
+
+## Verified core process cleanup
+
+Desktop records a direct core's PID, canonical executable and creation identity.
+Native's `inspectCoreProcess` and `stopCoreProcess` verify Mihomo's executable and
+user identity before stopping it. Linux uses pidfd (and fails closed on kernels
+without it); Windows retains the verified process handle. macOS rechecks the
+path and microsecond creation time before each signal, but has no pidfd and
+cannot eliminate the final check-to-signal race.
+
+Legacy PID-only records are adopted only after Native verifies the current
+executable and owner. They cannot prove the original creation time. Older Native
+binaries fail closed when asked to clean up a persisted process; a live Node
+ChildProcess remains eligible for normal direct-mode shutdown. The new Native
+APIs must be released before enabling persisted cleanup in packaged Desktop.
+
+## Application-routing coordination
+
+Native's `reconcileMacosApplicationRouting` serializes the fixed loopback SOCKS5
+handshake, policy acknowledgement and provider health refresh. Only a running
+response acknowledges a policy. Desktop retains the status refresh cadence and
+UI approval guidance; older Native binaries retain the previous Desktop path.
+
+Windows/Linux Service versions advertising `processRouterEvents` push status
+snapshots at `/process-router/events`. Desktop sends a ping every five seconds
+to renew the existing twenty-second client lease. Server snapshots do not renew
+it. The Service Manager owns process/firewall reconciliation; older Service
+versions retain Desktop status polling. Reconnection resubmits current intent.
+
+## Mihomo profile validation
+
+`validateCoreProfile` accepts an executable, config path, working directory and
+trusted paths. Native runs only `-t -f <config> -d <work>` with a ten-second
+deadline and bounded stdout/stderr. Results distinguish valid, invalid, timeout
+and output-limit outcomes. Desktop retains localized error formatting.
+
+Service versions advertising `coreProfileValidation` expose
+`POST /core/profile/validate` with the same DTO. Service uses the active protected
+executable when it matches the selected core, otherwise its existing binary
+preparation path. Validation does not save launch intent or restart the core.
+Desktop includes the exact config file in the validation request's trusted paths
+so Service's chroot can read it when it is outside the validation working
+directory. This does not change the saved trusted paths or core launch settings.
+Older binaries use the centralized bounded Desktop compatibility path.
+
+## Service process status compatibility
+
+`getServiceProcessStatus` queries the platform Service manager first. When the
+OS probe fails or reports unknown, Native runs only the validated KokoroBox
+Service executable with `service status`, bounded to 2.5 seconds and bounded
+output. Native parses recognized structured states and returns unknown for
+malformed output. Desktop retains registration/approval and authentication
+policy; its CLI parser is used only by older Native binaries.

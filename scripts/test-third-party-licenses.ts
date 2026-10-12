@@ -77,5 +77,5 @@ test('finds package owner above nested module-format package.json files', () =>
     pkg(root, 'owner')
     mkdirSync(path.join(root, 'dist'))
     writeFileSync(path.join(root, 'dist/package.json'), '{"type":"module"}')
-    assert.equal(packageRoot(path.join(root, 'dist/index.js?worker')), root)
+    assert.equal(packageRoot(path.join(root, 'dist/index.js?worker')), realpathSync(root))
   }))

@@ -2,6 +2,8 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { test } from 'node:test'
+import ts from 'typescript'
+import { shouldShowMacAppRoutingApprovalGuidance } from '../src/renderer/src/utils/app-routing-status'
 import {
   appRoutingSupported,
   appRoutingExecutableName,
@@ -49,6 +51,7 @@ import {
 } from '../src/renderer/src/components/connections/connection-identity'
 import {
   buildMacAppRoutingConfiguration,
+  buildMacAppRoutingDesiredConfiguration,
   macAppRoutingOperatingSystemSupported
 } from '../src/main/app-routing/macos-profile'
 import { macOSBundleVersion } from './macos-bundle-version'
@@ -65,6 +68,87 @@ function rule(overrides: Partial<AppRoutingRule> = {}): AppRoutingRule {
     ...overrides
   }
 }
+
+test('Native reconciliation preserves Proxy intent and recovers when its listener becomes healthy', async () => {
+  const config = normalizeAppRoutingConfig({
+    version: 1,
+    enabled: true,
+    failClosed: true,
+    proxyUdpDns: true,
+    defaultAction: 'proxy',
+    defaultProtocol: 'both',
+    diagnosticLogging: false,
+    rules: [
+      rule({ processPattern: 'codex', sourcePath: undefined, identifierKind: 'macos-process-name' })
+    ]
+  })
+  assert.equal(buildMacAppRoutingConfiguration(config, false).rules[0].action, 'BLOCK')
+  const desired = buildMacAppRoutingDesiredConfiguration(config)
+  assert.equal(desired.proxyAvailable, false)
+  assert.equal(desired.rules[0].action, 'PROXY')
+  let healthy = true
+  const native = {
+    reconcileMacosApplicationRouting: async (configuration: typeof desired) => {
+      // Mirror the Native coordinator's decision to probe only requested Proxy rules.
+      const requiresProxy = configuration.rules.some(
+        (rule) => rule.enabled && rule.action === 'PROXY'
+      )
+      return {
+        state: 'running',
+        needsUserApproval: false,
+        proxyAvailable: requiresProxy && healthy
+      }
+    }
+  }
+  const compiled = ts.transpileModule(readFileSync('src/main/app-routing/macos.ts', 'utf8'), {
+    compilerOptions: {
+      module: ts.ModuleKind.CommonJS,
+      target: ts.ScriptTarget.ES2022,
+      esModuleInterop: true
+    }
+  }).outputText
+  const exports: {
+    reconcileMacAppRouting?: (config: AppRoutingConfig) => Promise<AppRoutingStatus>
+  } = {}
+  new Function('require', 'exports', compiled)((name: string) => {
+    switch (name) {
+      case 'kokorobox-native':
+        return native
+      case 'fs':
+        return { existsSync: () => true }
+      case '../../shared/app-routing':
+        return { isAppRoutingRuleEffectivelyEnabled }
+      case '../utils/dirs':
+        return { macAppRoutingExtensionPath: () => '/test/extension' }
+      case './profile':
+        return { appRoutingSocksPort }
+      case './health':
+        return {
+          canConnectToAppRoutingListener: () => {
+            assert.fail('Native owns the probe')
+          }
+        }
+      case './macos-profile':
+        return { buildMacAppRoutingConfiguration, buildMacAppRoutingDesiredConfiguration }
+      case './macos-logs':
+        return { createMacRoutingLogStore: () => ({ get: async () => [], clear: async () => {} }) }
+      case '../../shared/i18n':
+        return { tr: (message: string) => message }
+      default:
+        throw new Error(`Unexpected dependency: ${name}`)
+    }
+  }, exports)
+  const reconcile = exports.reconcileMacAppRouting!
+  const running = await reconcile(config)
+  assert.equal(running.state, 'running')
+  assert.equal(running.mihomoAvailable, true)
+  healthy = false
+  const blocked = await reconcile(config)
+  assert.equal(blocked.state, 'degraded')
+  assert.equal(blocked.protectedApplicationCount, 1)
+  healthy = true
+  assert.equal((await reconcile(config)).state, 'running')
+})
 
 test('gives application-routing connections a stable cross-privilege display identity', () => {
   const serviceConnection = {
@@ -121,6 +205,32 @@ test('gives application-routing connections a stable cross-privilege display ide
     connectionIdentityLabel(resolvedConnection, 'Application routing'),
     'Application routing'
   )
+})
+
+test('Linux TProxy routing displays and groups by the originating process', () => {
+  const connection = {
+    metadata: {
+      process: 'codex',
+      processPath: '/home/user/.local/bin/codex',
+      sourceIP: '192.168.1.10',
+      inboundName: 'kokorobox-app-routing',
+      inboundPort: '7894',
+      type: 'TProxy'
+    }
+  }
+  assert.equal(isAppRoutingConnection(connection), true)
+  assert.equal(connectionIdentityKey(connection), 'codex')
+  assert.equal(connectionIdentityLabel(connection, 'Application routing'), 'codex')
+  const otherApp = { metadata: { ...connection.metadata, process: 'firefox' } }
+  assert.notEqual(connectionIdentityKey(connection), connectionIdentityKey(otherApp))
+
+  const pathOnly = { metadata: { ...connection.metadata, process: '' } }
+  assert.equal(connectionIdentityLabel(pathOnly, 'Application routing'), 'codex')
+  assert.equal(connectionIdentityKey(pathOnly), 'codex')
+
+  const unresolved = { metadata: { ...pathOnly.metadata, processPath: '' } }
+  assert.equal(connectionIdentityLabel(unresolved, 'Application routing'), 'Application routing')
+  assert.equal(connectionIdentityKey(unresolved), appRoutingGroupKey)
 })
 
 test('application routing supports Windows x64, macOS, and Linux desktop architectures', () => {
@@ -854,6 +964,44 @@ test('Windows and Linux application routing use only the privileged service life
   assert.match(installer, /!macro customUnInstall/)
 })
 
+test('macOS safely blocked routing offers reapproval without mislabeling proxy health as permission state', () => {
+  assert.equal(
+    shouldShowMacAppRoutingApprovalGuidance(true, true, {
+      state: 'degraded',
+      needsUserApproval: false
+    }),
+    true
+  )
+  assert.equal(
+    shouldShowMacAppRoutingApprovalGuidance(true, true, {
+      state: 'starting',
+      needsUserApproval: true
+    }),
+    true
+  )
+  for (const state of ['running', 'disabled', 'starting'] as const) {
+    assert.equal(
+      shouldShowMacAppRoutingApprovalGuidance(true, true, { state, needsUserApproval: false }),
+      false
+    )
+  }
+  assert.equal(
+    shouldShowMacAppRoutingApprovalGuidance(true, false, {
+      state: 'degraded',
+      needsUserApproval: false
+    }),
+    false
+  )
+  assert.equal(
+    shouldShowMacAppRoutingApprovalGuidance(false, true, {
+      state: 'degraded',
+      needsUserApproval: true
+    }),
+    false
+  )
+  assert.equal(shouldShowMacAppRoutingApprovalGuidance(true, true), false)
+})
+
 test('macOS approval guidance returns promptly and remains visible across app restarts', () => {
   const coordinator = readFileSync('src/main/app-routing/macos.ts', 'utf8')
   const page = readFileSync('src/renderer/src/pages/app-routing.tsx', 'utf8')
@@ -879,6 +1027,46 @@ test('macOS approval guidance returns promptly and remains visible across app re
   assert.match(settingsDrawer, /onPress=\{onOpenSystemSettings\}/)
   assert.match(page, /getAppRoutingStatusMessage/)
   assert.match(statusMessages, /Network Extension did not acknowledge the update/)
+})
+
+test('manual routing checks wait for reconciliation and return the newly verified status', async () => {
+  // Exercise the production IPC operation with isolated OS boundaries.
+  const source = ts.createSourceFile(
+    'manager.ts',
+    readFileSync('src/main/app-routing/manager.ts', 'utf8'),
+    ts.ScriptTarget.ES2022,
+    true
+  )
+  const operation = source.statements.find(
+    (node) => ts.isFunctionDeclaration(node) && node.name?.text === 'refreshAppRoutingStatus'
+  )
+  assert.ok(operation)
+  const compiled = ts.transpileModule(operation.getText(source), {
+    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 }
+  }).outputText
+  let finish!: () => void
+  const reconciliation = new Promise<void>((resolve) => {
+    finish = resolve
+  })
+  let current: AppRoutingStatus = { supported: true, state: 'starting', mihomoAvailable: false }
+  let reads = 0
+  const check = new Function(
+    'reconcileAppRouting',
+    'getAppRoutingStatus',
+    `const exports = {}; ${compiled}; return exports.refreshAppRoutingStatus;`
+  )(
+    () => reconciliation,
+    () => {
+      reads++
+      return current
+    }
+  ) as () => Promise<AppRoutingStatus>
+  const result = check()
+  assert.equal(reads, 0, 'must not return the previous status while the OS check is pending')
+  current = { supported: true, state: 'running', mihomoAvailable: true }
+  finish()
+  assert.deepEqual(await result, current)
+  assert.equal(reads, 1)
 })
 
 test('macOS health polling does not publish a transient start status', () => {
@@ -1070,4 +1258,71 @@ test('Windows packaging consumes the service-owned process router payload', () =
   assert.equal(sourceManifest.winDivertArchiveSha256, undefined)
   assert.doesNotMatch(workflow, /Build Windows x64 Application Routing Sidecar/)
   assert.doesNotMatch(workflow, /build-proxybridge\.ps1/)
+})
+
+test('routing DNS changes restart the core before saving completes, without restarting for ordinary rule edits', async () => {
+  const compiled = ts.transpileModule(readFileSync('src/main/app-routing/ipc.ts', 'utf8'), {
+    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 }
+  }).outputText
+  const handlers = new Map<string, (...args: unknown[]) => Promise<unknown>>()
+  let previous = normalizeAppRoutingConfig({
+    version: 1,
+    enabled: true,
+    proxyUdpDns: false,
+    failClosed: true,
+    defaultAction: 'proxy',
+    defaultProtocol: 'both',
+    diagnosticLogging: false,
+    rules: []
+  })
+  let restarts = 0
+  let finish: (() => void) | undefined
+  const exports = {}
+  new Function('require', 'exports', compiled)((id: string) => {
+    if (id === 'electron') {
+      return {
+        ipcMain: {
+          handle: (name: string, handler: (...args: unknown[]) => Promise<unknown>) =>
+            handlers.set(name, handler)
+        }
+      }
+    }
+    if (id === '../core/manager') {
+      return {
+        restartCore: async () => {
+          restarts++
+          await new Promise<void>((resolve) => {
+            finish = resolve
+          })
+        }
+      }
+    }
+    if (id === './config') return { getAppRoutingConfig: async () => previous }
+    if (id === './manager')
+      return { replaceAppRoutingConfig: async (next: AppRoutingConfig) => next }
+    return {}
+  }, exports)
+  ;(exports as { registerAppRoutingIpcHandlers: () => void }).registerAppRoutingIpcHandlers()
+  const save = handlers.get('replaceAppRoutingConfig')!
+  for (const proxyUdpDns of [true, false]) {
+    const next = { ...previous, proxyUdpDns }
+    let completed = false
+    const pending = save(undefined, next).then((result) => {
+      completed = true
+      return result
+    })
+    await new Promise<void>((resolve) => {
+      setImmediate(resolve)
+    })
+    assert.equal(completed, false)
+    finish!()
+    assert.deepEqual(await pending, next)
+    previous = next
+  }
+  assert.equal(restarts, 2)
+  await save(undefined, { ...previous, diagnosticLogging: true })
+  assert.equal(restarts, 2)
+  previous = { ...previous, enabled: false }
+  await save(undefined, { ...previous, proxyUdpDns: true })
+  assert.equal(restarts, 2, 'disabled routing does not need a DNS listener')
 })

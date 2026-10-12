@@ -1,7 +1,9 @@
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
+import { parse, stringify } from 'yaml'
 import { parseDnsServerEndpoint, serializeDnsServerEndpoint } from '../src/shared/dns-server.ts'
+import { applyDnsPreset, getDnsPreset, getDnsPresetMode } from '../src/shared/dns-presets.ts'
 import { isValidDnsServer } from '../src/renderer/src/utils/validate.ts'
 
 test('DNS endpoint connection selector round-trips Mihomo syntax', () => {
@@ -40,25 +42,101 @@ test('default DNS template does not blacklist every Fake-IP mapping', () => {
 })
 
 test('anti-pollution preset does not assume a proxy group named PROXY', () => {
-  const page = readFileSync('src/renderer/src/components/settings/network/dns-settings.tsx', 'utf8')
-  assert.doesNotMatch(page, /antiPollutionDnsPreset[\s\S]*?#PROXY/)
+  const preset = getDnsPreset('anti-pollution')
+  assert.doesNotMatch(JSON.stringify(preset), /#PROXY/)
 })
 
 test('anti-pollution DNS defaults respect rules and use redundant TLS bootstrap servers', () => {
-  const page = readFileSync('src/renderer/src/components/settings/network/dns-settings.tsx', 'utf8')
+  const preset = getDnsPreset('anti-pollution')
+  assert.equal(preset.respectRules, true)
+  assert.deepEqual(preset.defaultNameserver, ['tls://223.5.5.5', 'tls://119.29.29.29'])
+  assert.equal(getDnsPresetMode(preset), 'anti-pollution')
+})
 
-  assert.match(page, /respectRules: true/)
-  assert.match(page, /defaultNameserver: \['tls:\/\/223\.5\.5\.5', 'tls:\/\/119\.29\.29\.29'\]/)
-  assert.match(page, /values\.respectRules === antiPollutionDnsPreset\.respectRules/)
+test('overseas DNS uses Cloudflare and Google bootstrap, DoH and DoT for all resolver roles', () => {
+  const preset = getDnsPreset('overseas')
+  assert.deepEqual(preset.defaultNameserver, ['1.1.1.1', '8.8.8.8'])
+  for (const server of preset.defaultNameserver)
+    assert.equal(isValidDnsServer(server, true).ok, true)
+  const encrypted = [
+    'https://cloudflare-dns.com/dns-query',
+    'https://dns.google/dns-query',
+    'tls://one.one.one.one',
+    'tls://dns.google'
+  ]
+  for (const servers of [
+    preset.nameserver,
+    preset.proxyServerNameserver,
+    preset.directNameserver
+  ]) {
+    assert.deepEqual(servers, encrypted)
+    for (const server of servers) assert.equal(isValidDnsServer(server).ok, true, server)
+  }
+  assert.equal(preset.respectRules, false)
+  assert.equal(preset.directNameserverFollowPolicy, false)
+  assert.deepEqual(preset.nameserverPolicy, { '+.arpa': ['system'] })
+  assert.equal(getDnsPresetMode(preset), 'overseas')
+})
+
+test('switching DNS presets clears previous routing and fallback while preserving unrelated settings', () => {
+  const current = {
+    ...getDnsPreset('anti-pollution'),
+    fallback: ['https://dns.alidns.com/dns-query'],
+    fallbackFilter: { geoip: true, 'geoip-code': 'CN' },
+    fallbackLazyQuery: true,
+    proxyServerNameserverPolicy: { 'geosite:cn': ['223.5.5.5'] },
+    ipv6: true,
+    hosts: [{ domain: 'custom.local', value: '192.168.1.2' }],
+    fakeIPRange: '198.18.0.1/16',
+    preferH3: true
+  }
+  const overseas = applyDnsPreset(current, 'overseas')
+  assert.equal(getDnsPresetMode(overseas), 'overseas')
+  assert.deepEqual(overseas.fallback, [])
+  assert.deepEqual(overseas.fallbackFilter, {})
+  assert.equal(overseas.fallbackLazyQuery, false)
+  assert.deepEqual(overseas.proxyServerNameserverPolicy, {})
+  assert.equal(overseas.ipv6, true)
+  assert.deepEqual(overseas.hosts, current.hosts)
+  assert.equal(overseas.fakeIPRange, current.fakeIPRange)
+  assert.equal(overseas.preferH3, true)
+  assert.ok('geosite:cn' in current.nameserverPolicy)
+  assert.deepEqual(current.fallback, ['https://dns.alidns.com/dns-query'])
+  const antiPollution = applyDnsPreset(overseas, 'anti-pollution')
+  assert.equal(getDnsPresetMode(antiPollution), 'anti-pollution')
+  assert.equal(antiPollution.respectRules, true)
+  assert.ok('geosite:cn' in antiPollution.nameserverPolicy)
+  assert.equal(getDnsPresetMode(applyDnsPreset(antiPollution, 'overseas')), 'overseas')
+})
+
+test('preset detection survives serialization and recognizes edited resolver policies', () => {
+  for (const mode of ['anti-pollution', 'overseas'] as const) {
+    const preset = getDnsPreset(mode)
+    const restored = parse(stringify(preset))
+    restored.nameserverPolicy = Object.fromEntries(
+      Object.entries(restored.nameserverPolicy).reverse()
+    )
+    assert.equal(getDnsPresetMode(restored), mode)
+    restored.proxyServerNameserverPolicy = { '+.example.com': ['9.9.9.9'] }
+    assert.equal(getDnsPresetMode(restored), 'custom')
+    assert.equal(getDnsPresetMode({ ...preset, nameserver: ['9.9.9.9'] }), 'custom')
+    assert.equal(getDnsPresetMode({ ...preset, fakeIPFilter: ['*'] }), 'custom')
+  }
+})
+
+test('DNS preset drafts and resolver roles have independent mutable lists', () => {
+  const preset = getDnsPreset('overseas')
+  preset.nameserver.push('9.9.9.9')
+  preset.fakeIPFilter.push('+.example.com')
+  assert.equal(preset.directNameserver.includes('9.9.9.9'), false)
+  assert.equal(getDnsPreset('overseas').nameserver.includes('9.9.9.9'), false)
+  assert.equal(getDnsPreset('overseas').fakeIPFilter.includes('+.example.com'), false)
 })
 
 test('global DNS rule routing hides redundant per-server connection selectors', () => {
   const component = readFileSync('src/renderer/src/components/dns/dns-server-list.tsx', 'utf8')
   const page = readFileSync('src/renderer/src/components/settings/network/dns-settings.tsx', 'utf8')
-  const advanced = readFileSync(
-    'src/renderer/src/components/dns/advanced-dns-setting.tsx',
-    'utf8'
-  )
+  const advanced = readFileSync('src/renderer/src/components/dns/advanced-dns-setting.tsx', 'utf8')
 
   assert.match(component, /followRoutingRules = false/)
   assert.match(component, /!ipOnly && !followRoutingRules/)
@@ -70,14 +148,8 @@ test('DNS settings use sectioned, container-responsive list editors', () => {
   const page = readFileSync('src/renderer/src/components/settings/network/dns-settings.tsx', 'utf8')
   const advanced = readFileSync('src/renderer/src/components/dns/advanced-dns-setting.tsx', 'utf8')
   const servers = readFileSync('src/renderer/src/components/dns/dns-server-list.tsx', 'utf8')
-  const editor = readFileSync(
-    'src/renderer/src/components/base/base-list-editor.tsx',
-    'utf8'
-  )
-  const registry = readFileSync(
-    'src/renderer/src/components/settings/settings-schema.ts',
-    'utf8'
-  )
+  const editor = readFileSync('src/renderer/src/components/base/base-list-editor.tsx', 'utf8')
+  const registry = readFileSync('src/renderer/src/components/settings/settings-schema.ts', 'utf8')
   const styles = readFileSync('src/renderer/src/assets/app-overrides.css', 'utf8')
 
   assert.match(
@@ -125,7 +197,10 @@ test('DNS settings use sectioned, container-responsive list editors', () => {
   assert.match(servers, /text-danger\/70/)
   assert.doesNotMatch(servers, /text-warning/)
 
-  assert.match(styles, /\.editable-list-key-value,[\s\S]*\.dns-server-list \{[\s\S]*container-type: inline-size/)
+  assert.match(
+    styles,
+    /\.editable-list-key-value,[\s\S]*\.dns-server-list \{[\s\S]*container-type: inline-size/
+  )
   assert.match(styles, /@container \(min-width: 36rem\)/)
   assert.match(styles, /minmax\(10rem, 0\.8fr\) minmax\(16rem, 1\.8fr\) auto/)
   assert.match(styles, /minmax\(16rem, 1fr\) minmax\(10rem, 14rem\) auto/)

@@ -517,15 +517,20 @@ export async function serviceStatus(
 
   // Native owns the platform-specific OS status probe. Keep the Service CLI
   // fallback for older native builds and Linux machines using another init.
-  const nativeStatus = native as typeof native & {
+  // Installed older binaries may omit APIs declared by the current SDK.
+  const nativeStatus = native as unknown as {
+    getServiceProcessStatus?: (
+      executable: string
+    ) => Promise<'running' | 'stopped' | 'paused' | 'not-installed' | 'unknown'>
     getWindowsServiceStatus?: () => 'running' | 'stopped' | 'paused' | 'not-installed' | 'unknown'
     getLinuxServiceStatus?: () => Promise<'running' | 'stopped' | 'not-installed' | 'unknown'>
     getMacosServiceProcessStatus?: () => Promise<
       'running' | 'stopped' | 'not-installed' | 'unknown'
     >
   }
-  const queryNativeStatus =
-    process.platform === 'win32'
+  const queryNativeStatus = nativeStatus.getServiceProcessStatus
+    ? () => nativeStatus.getServiceProcessStatus!(execPath)
+    : process.platform === 'win32'
       ? nativeStatus.getWindowsServiceStatus
       : process.platform === 'linux'
         ? nativeStatus.getLinuxServiceStatus
@@ -536,7 +541,8 @@ export async function serviceStatus(
     try {
       commandState = await queryNativeStatus()
     } catch {
-      // The native OS probe is unavailable; retain the Service CLI fallback.
+      // New Native owns its bounded CLI fallback. Never repeat that command here.
+      if (nativeStatus.getServiceProcessStatus) commandState = 'unknown'
     }
   }
 

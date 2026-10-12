@@ -273,3 +273,15 @@ Run the Desktop `test:system-proxy`, `test:service-contract`, `test:service-auth
 `test:runtime-recovery` and `test:localization` scripts; Native's Rust library and
 NAPI diagnostic tests; and Service's `go test ./...`. Windows runtime behavior
 must also be exercised with the newly built Native/Service artifacts on Windows.
+
+## Service-owned PAC serving
+
+A Service advertising `sysproxyPacServer` accepts a bounded `script` instead of
+`url` on `POST /sysproxy/pac`. It serves the text at a loopback-only `/pac` URL,
+returns `{ "url": "http://127.0.0.1:<port>/pac" }`, and binds the HTTP server to
+the proxy lease. Replacement, disable, lease expiry and service shutdown close
+the old listener. The Service does not execute PAC JavaScript.
+
+Desktop retains editing and mixed-port substitution. Older Service binaries
+continue using Desktop's existing PAC server. Explicit Native diagnostics repair
+also uses the Desktop listener before suspending and adopting the Service lease.

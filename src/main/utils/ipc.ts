@@ -180,6 +180,8 @@ import {
   startKokoroLogin
 } from '../kokoro/client'
 import { registerAppRoutingIpcHandlers } from '../app-routing/ipc'
+import { createKokoroRuleSaver } from '../kokoro/rule-save'
+import { refreshKokoroProfile } from '../config/profile'
 import { resumeAppRoutingAfterServiceInitialization } from '../app-routing/manager'
 
 function ipcErrorWrapper<T>( // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -432,8 +434,19 @@ export function registerIpcMainHandlers(): void {
   ipcMain.handle('startKokoroLogin', () => ipcErrorWrapper(startKokoroLogin)())
   ipcMain.handle('cancelKokoroLogin', () => ipcErrorWrapper(cancelKokoroLogin)())
   ipcMain.handle('getKokoroDefaultRules', () => ipcErrorWrapper(getKokoroDefaultRules)())
+  const saveKokoroRules = createKokoroRuleSaver({
+    save: replaceKokoroDefaultRules,
+    getProfiles: getProfileConfig,
+    refreshProfile: refreshKokoroProfile
+  })
   ipcMain.handle('replaceKokoroDefaultRules', (_e, expectedRevision, rules) =>
-    ipcErrorWrapper(replaceKokoroDefaultRules)(expectedRevision, rules)
+    ipcErrorWrapper(async () => {
+      const result = await saveKokoroRules(expectedRevision, rules)
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('profileConfigUpdated')
+      }
+      return result
+    })()
   )
   ipcMain.handle('addKokoroProfile', (_e, settings) => ipcErrorWrapper(addKokoroProfile)(settings))
   ipcMain.handle('revokeKokoroSession', () =>
@@ -451,12 +464,14 @@ export function registerIpcMainHandlers(): void {
   ipcMain.handle('updateOverrideItem', (_e, item) => ipcErrorWrapper(updateOverrideItem)(item))
   ipcMain.handle('getOverride', (_e, id, ext) => ipcErrorWrapper(getOverride)(id, ext))
   ipcMain.handle('setOverride', (_e, id, ext, str) => ipcErrorWrapper(setOverride)(id, ext, str))
-  ipcMain.handle('restartCore', ipcErrorWrapper(restartCore))
+  ipcMain.handle('restartCore', () => ipcErrorWrapper(restartCore)({ throwOnError: true }))
   ipcMain.handle('runSystemProxyDiagnostics', ipcErrorWrapper(runSystemProxyDiagnostics))
   ipcMain.handle('fixSystemProxyDiagnostic', (_e, action) =>
     ipcErrorWrapper(fixSystemProxyDiagnostic)(action)
   )
-  ipcMain.handle('stopCore', ipcErrorWrapper(stopCore))
+  ipcMain.handle('stopCore', () =>
+    ipcErrorWrapper(stopCore)(false, undefined, { throwOnError: true })
+  )
   ipcMain.handle('restartMihomoConnections', ipcErrorWrapper(restartMihomoConnections))
   ipcMain.handle('startMonitor', () => ipcErrorWrapper(startTrafficPresenterAndRestoreTray)())
   ipcMain.handle('triggerSysProxy', (_e, enable, onlyActiveDevice, useRegistry) =>

@@ -19,6 +19,8 @@ import {
   shouldSeedDefaultAppConfig,
   writeAppConfigFile
 } from '../src/main/config/app-loader'
+import { isDeepStrictEqual } from 'node:util'
+import { assertManagedConfig } from '../src/shared/managed-id'
 import { deepMerge } from '../src/main/utils/merge'
 import { writePrivateTextFileAtomic } from '../src/main/config/atomic-file'
 
@@ -230,15 +232,17 @@ test('secret migration removes WebDAV password from primary config and recovery 
   assert.equal(backup.webdavPassword, undefined)
 })
 
-function loadTransactionalControlledConfigModule() {
+function loadTransactionalControlledConfigModule(
+  initialConfig: Partial<MihomoConfig> = {
+    dns: { enable: true },
+    sniffer: { enable: true }
+  }
+) {
   const defaultConfig = {
     dns: { enable: true, ipv6: true, nameserver: ['default.example'] },
     sniffer: { enable: true }
   } as Partial<MihomoConfig>
-  let persistedConfig = {
-    dns: { enable: true },
-    sniffer: { enable: true }
-  } as Partial<MihomoConfig>
+  let persistedConfig = structuredClone(initialConfig)
   let writeError: Error | undefined
   const generatedConfigs: Partial<MihomoConfig>[] = []
   const source = ts.transpileModule(readFileSync('src/main/config/controledMihomo.ts', 'utf8'), {
@@ -323,6 +327,82 @@ test('controlled Mihomo writes are serialized without mutating defaults or faile
   assert.deepEqual(loaded.persisted().dns?.nameserver, ['saved.example'])
 })
 
+test('unrelated controlled config patches preserve custom DNS without an IPv6 field across reloads', async () => {
+  const dns: MihomoDNSConfig = {
+    enable: true,
+    'default-nameserver': ['tls://1.1.1.1'],
+    nameserver: ['https://custom.example/dns-query'],
+    'nameserver-policy': { 'example.com': ['https://policy.example/dns-query'] },
+    'fake-ip-filter': ['custom.example'],
+    'proxy-server-nameserver': []
+  }
+  for (const existing of [dns, { ...dns, ipv6: false }, { ...dns, ipv6: true }, {}]) {
+    const loaded = loadTransactionalControlledConfigModule({ dns: existing })
+    await loaded.api.patchControledMihomoConfig({ 'mixed-port': 18341 })
+    assert.deepEqual(loaded.persisted().dns, existing)
+    assert.deepEqual(loaded.generatedConfigs.at(-1)?.dns, existing)
+    assert.deepEqual((await loaded.api.getControledMihomoConfig(true)).dns, existing)
+    // Startup migrations can patch unrelated, newly introduced core options.
+    await loaded.api.patchControledMihomoConfig({ 'tcp-concurrent': true })
+    assert.deepEqual(loaded.persisted().dns, existing)
+    assert.equal(loaded.persisted()['mixed-port'], 18341)
+  }
+})
+
+test('partial DNS edits preserve unedited custom DNS fields when IPv6 is omitted', async () => {
+  const dns: MihomoDNSConfig = {
+    enable: false,
+    nameserver: [],
+    'default-nameserver': ['tls://1.1.1.1'],
+    'nameserver-policy': { 'example.com': 'system' }
+  }
+  const loaded = loadTransactionalControlledConfigModule({ dns })
+  const nameserver = ['https://changed.example/dns-query']
+  await loaded.api.patchControledMihomoConfig({ dns: { nameserver } })
+  assert.deepEqual(loaded.persisted().dns, { ...dns, nameserver })
+  assert.deepEqual(loaded.generatedConfigs.at(-1)?.dns, { ...dns, nameserver })
+})
+
+test('missing controlled DNS is initialized without changing the default template', async () => {
+  const loaded = loadTransactionalControlledConfigModule({ sniffer: { enable: true } })
+  const defaults = structuredClone(loaded.defaultConfig)
+  await loaded.api.patchControledMihomoConfig({ 'mixed-port': 18341 })
+  assert.deepEqual(loaded.persisted().dns, defaults.dns)
+  await loaded.api.patchControledMihomoConfig({ dns: { nameserver: ['custom.example'] } })
+  assert.deepEqual(loaded.defaultConfig, defaults)
+  assert.deepEqual(loaded.persisted().dns, { ...defaults.dns, nameserver: ['custom.example'] })
+})
+
+test('controlled DNS saves replace routing and fallback policy maps rather than retaining old keys', async () => {
+  const loaded = loadTransactionalControlledConfigModule()
+  await loaded.api.patchControledMihomoConfig({
+    dns: {
+      'nameserver-policy': { 'geosite:cn': ['223.5.5.5'] },
+      'proxy-server-nameserver-policy': { '+.example.com': ['119.29.29.29'] },
+      fallback: ['https://dns.alidns.com/dns-query'],
+      'fallback-filter': { geoip: true, 'geoip-code': 'CN' }
+    }
+  })
+  await loaded.api.patchControledMihomoConfig({
+    dns: {
+      'nameserver-policy': { '+.arpa': ['system'] },
+      'proxy-server-nameserver-policy': {},
+      fallback: [],
+      'fallback-filter': {}
+    }
+  })
+  for (const dns of [
+    loaded.persisted().dns,
+    (await loaded.api.getControledMihomoConfig()).dns,
+    loaded.generatedConfigs.at(-1)?.dns
+  ]) {
+    assert.deepEqual(dns?.['nameserver-policy'], { '+.arpa': ['system'] })
+    assert.deepEqual(dns?.['proxy-server-nameserver-policy'], {})
+    assert.deepEqual(dns?.['fallback-filter'], {})
+    assert.deepEqual(dns?.fallback, [])
+  }
+})
+
 test('shared private atomic writer replaces files with owner-only permissions', async (t) => {
   const configPath = withConfigPath(t)
   writeFileSync(configPath, 'old', { mode: 0o644 })
@@ -345,9 +425,18 @@ function loadTransactionalProfileConfigModule() {
   }).outputText
   const noOp = async () => undefined
   const dependencies: Record<string, unknown> = {
+    'node:util': { isDeepStrictEqual },
+    '../../shared/managed-id': { assertManagedConfig },
+    '../utils/log': { appendAppLog: noOp },
+    './profile-key-transaction': {
+      recoverProfileKeyTransaction: noOp,
+      writeProfileKeyTransaction: noOp,
+      readProfileKeySnapshot: noOp
+    },
     '../../shared/i18n': { tr: (message: string) => message },
     './controledMihomo': { getControledMihomoConfig: async () => ({}) },
     '../utils/dirs': {
+      dataDir: () => '/mock',
       mihomoProfileWorkDir: (id: string) => `/mock/work/${id}`,
       mihomoWorkDir: () => '/mock/work',
       profileConfigPath: () => '/mock/profile.yaml',

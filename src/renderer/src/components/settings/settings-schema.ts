@@ -261,7 +261,15 @@ export const getSettingsSchema = (): SettingsCategorySchema[] => {
         entry('dns-ipv6', 'IPv6', tr('DNS settings'), { panel: 'dns' }),
         entry('dns-policy', tr('DNS preset'), tr('DNS settings'), {
           panel: 'dns',
-          keywords: ['policy', 'anti-pollution']
+          keywords: [
+            'policy',
+            'anti-pollution',
+            tr('Overseas mode'),
+            'Cloudflare',
+            'Google',
+            'DoH',
+            'DoT'
+          ]
         }),
         entry('dns-mapping-mode', tr('Domain mapping mode'), tr('DNS settings'), { panel: 'dns' }),
         entry('dns-fake-ip-range', tr('Fake IP range (IPv4)'), tr('Fake IP settings'), {

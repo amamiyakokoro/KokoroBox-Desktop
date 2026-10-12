@@ -1,5 +1,7 @@
 // Simplified Chinese localization. Keys are the canonical English source messages.
 export const messages: Readonly<Record<string, string>> = {
+  'Override changed during refresh. Please retry.': '覆写在更新期间已变更，请重试。',
+  'Subscription changed during refresh. Please retry.': '订阅在更新期间已变更，请重试。',
   'This action switches the core to Service management.': '此操作会将核心切换为 Service 管理。',
   'Unable to retrieve status': '无法获取状态',
   'System Proxy Diagnostics': '系统代理诊断',
@@ -573,6 +575,11 @@ export const messages: Readonly<Record<string, string>> = {
     '返回 KokoroBox；应用分流会自动继续启动。',
   'Open System Settings and Request Approval': '打开系统设置并请求批准',
   'Open System Settings': '打开系统设置',
+  'Application routing status: {0}': '应用分流状态：{0}',
+  'Return to KokoroBox and click “I enabled it — check now” to verify routing.':
+    '返回 KokoroBox，点击“我已启用，立即检查”以确认分流状态。',
+  'If routing remains safely blocked, start or restart the Mihomo core and check again.':
+    '如果分流仍处于安全封锁状态，请启动或重启 Mihomo 内核后再次检查。',
   'I enabled it — check now': '我已启用，立即检查',
   'The macOS system extension is not installed': 'macOS 系统扩展未安装',
   'The Network Extension rejected the application-routing rules. Check the rules and try again.':
@@ -645,6 +652,11 @@ export const messages: Readonly<Record<string, string>> = {
   'Too many Kokoro requests. Please try again later': 'Kokoro 请求过于频繁，请稍后重试',
   'The Kokoro default rule set does not exist': 'Kokoro 默认规则集不存在',
   'Failed to load the Kokoro rule set': 'Kokoro 规则集加载失败',
+  'Add to the top of the Kokoro default rule set. Kokoro subscriptions refresh automatically after saving.':
+    '添加到 Kokoro 默认规则集顶部。保存后会自动更新 Kokoro 订阅。',
+  'Kokoro rules saved, but subscription refresh failed': 'Kokoro 规则已保存，但订阅更新失败',
+  'Edit only the default rule set used by Kokoro profiles. Rules run in this order. Kokoro subscriptions refresh automatically after saving.':
+    '仅编辑 Kokoro 配置使用的默认规则集。规则按此顺序执行，保存后会自动更新 Kokoro 订阅。',
   'Kokoro default rule set saved': 'Kokoro 默认规则集已保存',
   'MATCH does not require rule content': 'MATCH 不需要规则内容',
   'Only one MATCH rule is allowed; it must be last and cannot use REJECT':
@@ -1024,6 +1036,8 @@ export const messages: Readonly<Record<string, string>> = {
     '暂无应用分流日志，请在应用分流设置中开启诊断日志。',
   'Application routing logs require an updated KokoroBox Service.':
     '应用分流日志需要更新 KokoroBox Service。',
+  'Application routing logs require an updated KokoroBox Native.':
+    '应用分流日志需要更新 KokoroBox Native。',
   'Application routing logs are unavailable on macOS.': 'macOS 目前无法读取应用分流日志。',
   'Follow new logs': '跟随新日志',
   'Stop following new logs': '停止跟随新日志',
@@ -1775,6 +1789,10 @@ export const messages: Readonly<Record<string, string>> = {
   'Replaces the DNS server and routing values below, including fallback settings. Save to apply the preset.':
     '替换下方的 DNS 服务器和分流设置，包括备用 DNS 设置。点击“保存”才会应用。',
   'Apply anti-pollution preset': '应用防污染预设',
+  'Overseas mode': '海外模式',
+  'Apply overseas preset': '应用海外预设',
+  'Anti-pollution uses regional DNS routing. Overseas uses Cloudflare and Google DNS with DoH/DoT. Save to apply the selected preset.':
+    '防污染模式按地区分流 DNS；海外模式使用 Cloudflare 与 Google 的 DNS、DoH／DoT。点击“保存”应用所选预设。',
   'Resolves the hostnames of DNS servers, such as a DNS-over-HTTPS endpoint.':
     '解析 DNS 服务器自身的域名，例如 DNS-over-HTTPS 端点。',
   'Resolves ordinary domain queries unless a domain-specific DNS policy applies.':

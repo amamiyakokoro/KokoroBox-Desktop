@@ -1,16 +1,14 @@
 import { tr } from '../../shared/i18n'
-import { execFile } from 'child_process'
 import { mkdir, mkdtemp, rm, writeFile } from 'fs/promises'
 import path from 'path'
-import { promisify } from 'util'
 import { getAppConfig } from '../config/app'
 import { mihomoCorePath, mihomoTestDir } from '../utils/dirs'
 
-const execFilePromise = promisify(execFile)
+import { validateMihomoProfile } from '../core/profile-validation'
 
 export async function validateMihomoProfileContent(content: string): Promise<void> {
   const appConfig = await getAppConfig()
-  const { core = 'mihomo', safePaths = [] } = appConfig
+  const { core = 'mihomo', safePaths = [], corePermissionMode = 'elevated' } = appConfig
   const testRoot = mihomoTestDir()
   await mkdir(testRoot, { recursive: true })
   const testDir = await mkdtemp(path.join(testRoot, 'kokoro-'))
@@ -18,25 +16,20 @@ export async function validateMihomoProfileContent(content: string): Promise<voi
 
   try {
     await writeFile(configPath, content, { encoding: 'utf-8', mode: 0o600 })
-    await execFilePromise(mihomoCorePath(core), ['-t', '-f', configPath, '-d', testDir], {
-      env: { ...process.env, SAFE_PATHS: safePaths.join(path.delimiter) },
-      windowsHide: process.platform === 'win32'
-    })
+    await validateMihomoProfile(
+      {
+        executable: mihomoCorePath(core),
+        configPath,
+        workDir: testDir,
+        safePaths
+      },
+      corePermissionMode === 'service'
+    )
   } catch (error) {
     if (!(error instanceof Error)) throw error
-    const execError = error as Error & { stdout?: string; stderr?: string }
-    const output = [execError.stdout, execError.stderr]
-      .filter((value): value is string => typeof value === 'string' && value.trim().length > 0)
-      .join('\n')
-    const errorLines = output
-      .split('\n')
-      .filter((line) => line.includes('level=error'))
-      .map((line) => line.split('level=error', 2)[1]?.trim() || line.trim())
-    throw new Error(
-      tr('Kokoro configuration validation failed: {0}', [
-        errorLines.join('\n') || output.trim() || error.message
-      ])
-    )
+    throw new Error(tr('Kokoro configuration validation failed: {0}', [error.message]), {
+      cause: error
+    })
   } finally {
     await rm(testDir, { recursive: true, force: true })
   }

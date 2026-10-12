@@ -55,6 +55,47 @@ rolling build number: macOS treats every version change as an extension replacem
 the user to approve that replacement. Increment both pinned extension version fields only when
 the bundled provider changes. Ordinary Desktop updates then keep the already-approved extension.
 
+## Routing logs
+
+The Desktop **Live logs → App routing** tab reads the provider through the
+Native `getMacosApplicationRoutingLogs` API. **Diagnostic logging** in Application
+routing settings enables connection records. Activity and error records are
+available independently. The provider retains at most 500 entries and drains up
+to 100 per read; Desktop serializes reads with clears and retains a 500-entry
+history, including stable IDs for the existing log view. Clear removes both
+provider entries and Desktop history after the provider acknowledges it.
+
+TCP records contain the application, destination, port and Proxy/Direct/Block
+result. UDP proxy records keep per-destination deduplication; UDP Direct/Block
+records use unknown destinations because those flows are not opened for packet
+inspection. Excluded local-network traffic is not recorded. Logs remain in memory
+and are not saved to disk.
+
+This requires Native 0.16.7 or later, exporting `getMacosApplicationRoutingLogs` and
+`clearMacosApplicationRoutingLogs`. An older Native
+package produces an update-required message; Windows and Linux continue to read
+and clear their logs through Service. A signed app and approved System Extension
+are required to verify live provider messaging on a Mac.
+
+## Settings navigation
+
+Native 0.16.8 fixes a main-process crash while opening the Network Extension
+settings pane, including the automatic first-install approval path. The bridge
+selects the pane using `NSProcessInfo.operatingSystemVersion`. A Clang
+`@available` check previously introduced an unresolved availability runtime helper
+in the Rust-linked `.node`, which could terminate Electron with SIGSEGV. Native
+CI now tests the version-to-pane mapping and checks both macOS architecture
+artifacts for these unresolved runtime symbols before publication.
+
+Native 0.16.9 targets `com.apple.ExtensionsPreferences` with the Network Extension
+`extensionPointIdentifier` and `bundleIdentifier=com.amamiyakokoro.app` on macOS
+15+. Older macOS versions retain the Security-pane approval destination.
+
+**I enabled it — check now** waits for reconciliation before returning a fresh
+status and shows progress and the result. Enabling the extension alone does not
+make the Mihomo SOCKS5 listener available: if routing remains safely blocked, the
+UI explains the proxy health failure and suggests starting or restarting the core.
+
 ## Apple configuration
 
 The Apple Developer account must have these identifiers and capabilities enabled:

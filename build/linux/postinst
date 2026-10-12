@@ -33,8 +33,9 @@ if [ ! -f '/usr/bin/sparkle' ] || [ -L '/usr/bin/sparkle' ]; then
 fi
 
 chmod 4755 '/opt/kokorobox/chrome-sandbox' || true
-chmod +sx /opt/kokorobox/resources/sidecar/mihomo
-chmod +sx /opt/kokorobox/resources/sidecar/mihomo-alpha
+for core in /opt/kokorobox/resources/sidecar/mihomo /opt/kokorobox/resources/sidecar/mihomo-alpha; do
+    chown root:root "$core" && chmod 4755 "$core"
+done
 
 restore_kokorobox_service_if_was_running() {
     SERVICE_NAME='KokoroBoxService'

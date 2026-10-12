@@ -142,10 +142,7 @@ test('native title bar controls keep contrast with the resolved color scheme', (
 })
 
 test('KokoroBox-owned surfaces share the native wind-chime brand mark', () => {
-  const icon = readFileSync(
-    'src/renderer/src/components/base/kokorobox-icon.tsx',
-    'utf8'
-  )
+  const icon = readFileSync('src/renderer/src/components/base/kokorobox-icon.tsx', 'utf8')
   const app = readFileSync('src/renderer/src/App.tsx', 'utf8')
   const floatingApp = readFileSync('src/renderer/src/FloatingApp.tsx', 'utf8')
 
@@ -154,12 +151,12 @@ test('KokoroBox-owned surfaces share the native wind-chime brand mark', () => {
   assert.match(icon, /aria-hidden="true"/)
   assert.match(icon, /SVGProps<SVGSVGElement>/)
   assert.equal(icon.match(/<path /g)?.length, 1)
-  assert.equal(app.match(/<KokoroBoxIcon /g)?.length, 2)
-  assert.equal(
-    app.match(/platform !== 'darwin' && (?:\(\s*)?<KokoroBoxIcon/g)?.length,
-    2
-  )
-  assert.match(app, /<h3 className="text-lg font-bold leading-8">KokoroBox<\/h3>/)
+  const brand = readFileSync('src/renderer/src/components/base/kokoro-brand-link.tsx', 'utf8')
+  assert.equal(app.match(/<KokoroBrandLink[ >]/g)?.length, 2)
+  assert.equal(brand.match(/<KokoroBoxIcon /g)?.length, 1)
+  assert.match(brand, /to="\/"/)
+  assert.match(brand, /aria-label=\{tr\('Home'\)\}/)
+  assert.match(brand, /className="text-lg font-bold leading-8">KokoroBox<\/span>/)
   assert.equal(floatingApp.match(/<KokoroBoxIcon /g)?.length, 1)
   assert.doesNotMatch(app, /MihomoIcon/)
   assert.doesNotMatch(floatingApp, /MihomoIcon/)
@@ -168,9 +165,7 @@ test('KokoroBox-owned surfaces share the native wind-chime brand mark', () => {
 })
 
 test('active source uses native semantic tokens without a legacy theme bridge', () => {
-  const sourceFiles = collectFiles('src').filter((file) =>
-    /\.(?:css|[cm]?[jt]sx?)$/.test(file)
-  )
+  const sourceFiles = collectFiles('src').filter((file) => /\.(?:css|[cm]?[jt]sx?)$/.test(file))
 
   for (const file of sourceFiles) {
     assert.doesNotMatch(
@@ -329,7 +324,10 @@ test('Koko fields expose application semantics instead of the HeroUI v2 Input AP
 test('the native-first ownership contract documents the migration boundary', () => {
   const contract = readFileSync('docs/ui-native-first.md', 'utf8')
 
-  assert.match(contract, /KokoroBox controls layout; HeroUI controls component appearance/)
+  assert.match(
+    contract,
+    /KokoroBox owns:[\s\S]*page and inspector layout[\s\S]*HeroUI v3 owns:[\s\S]*button shape and press states/
+  )
   assert.match(contract, /Do not add selectors for HeroUI internal classes/)
   assert.match(contract, /canonical `@heroui\/react` and `@heroui\/styles` packages/)
   assert.match(contract, /React Aria `I18nProvider`/)
@@ -460,10 +458,7 @@ test('interactive cards use native buttons with independent sibling actions', ()
 })
 
 test('sidebar quick controls use one native toggle target', () => {
-  const surfaces = readFileSync(
-    'src/renderer/src/components/sider/sider-surfaces.tsx',
-    'utf8'
-  )
+  const surfaces = readFileSync('src/renderer/src/components/sider/sider-surfaces.tsx', 'utf8')
   const quickControl = surfaces.slice(surfaces.indexOf('export const SiderQuickControl'))
   const controls = [
     'src/renderer/src/components/sider/sysproxy-switcher.tsx',

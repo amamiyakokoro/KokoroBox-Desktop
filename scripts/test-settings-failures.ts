@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
 import vm from 'node:vm'
 import ts from 'typescript'
+import { applyDnsPreset, getDnsPreset, getDnsPresetMode } from '../src/shared/dns-presets'
 
 // Execute the production action itself with IPC/cache dependencies replaced.
 // This tests ordering and failure propagation without mounting the Electron UI.
@@ -150,6 +151,77 @@ test('DNS toggle does not restart after controlled-config persistence fails', as
   })
   await change(true)
   assert.deepEqual(calls, ['save', 'apply', 'error'])
+})
+
+test('selecting overseas DNS stages a valid draft without saving or restarting the core', async () => {
+  const values = getDnsPreset('anti-pollution')
+  let staged = values
+  const cleared: string[] = []
+  let revision = 0
+  const select = action(
+    'src/renderer/src/components/settings/network/dns-settings.tsx',
+    'selectDnsPreset',
+    {
+      values,
+      applyDnsPreset,
+      setValues: (next: typeof values) => {
+        staged = next
+      },
+      setFakeIPFilterError: (error: unknown) => {
+        assert.equal(error, null)
+        cleared.push('fake-ip')
+      },
+      setDefaultNameserverError: (error: unknown) => {
+        assert.equal(error, null)
+        cleared.push('bootstrap')
+      },
+      setNameserverError: (error: unknown) => {
+        assert.equal(error, null)
+        cleared.push('nameserver')
+      },
+      setAdvancedDnsError: (error: boolean) => {
+        assert.equal(error, false)
+        cleared.push('advanced')
+      },
+      setDraftRevision: (update: (value: number) => number) => {
+        revision = update(revision)
+      },
+      restartCore: () => assert.fail('Preset selection must wait for Save'),
+      patchControledMihomoConfigOrThrow: () => assert.fail('Preset selection must wait for Save')
+    }
+  )
+  await select('overseas')
+  assert.equal(getDnsPresetMode(staged), 'overseas')
+  assert.equal(getDnsPresetMode(values), 'anti-pollution')
+  assert.deepEqual(cleared, ['fake-ip', 'bootstrap', 'nameserver', 'advanced'])
+  assert.equal(revision, 1)
+})
+
+test('DNS Save serializes overseas resolvers and explicitly clears previous DNS policies', async () => {
+  const values = { ...getDnsPreset('overseas'), useHosts: false }
+  let patch: Partial<MihomoConfig> | undefined
+  const save = action(
+    'src/renderer/src/components/settings/network/dns-settings.tsx',
+    'saveChanges',
+    {
+      values,
+      onSave: async (next: Partial<MihomoConfig>) => {
+        patch = next
+        return true
+      }
+    }
+  )
+  assert.equal(await save(), true)
+  assert.ok(patch?.dns)
+  assert.deepEqual(patch.dns['default-nameserver'], ['1.1.1.1', '8.8.8.8'])
+  assert.deepEqual(patch.dns.nameserver, values.nameserver)
+  assert.deepEqual(patch.dns['proxy-server-nameserver'], values.proxyServerNameserver)
+  assert.deepEqual(patch.dns['direct-nameserver'], values.directNameserver)
+  assert.deepEqual(patch.dns['nameserver-policy'], { '+.arpa': ['system'] })
+  assert.deepEqual(patch.dns['proxy-server-nameserver-policy'], {})
+  assert.deepEqual(patch.dns['fallback-filter'], {})
+  assert.deepEqual(patch.dns.fallback, [])
+  assert.equal(patch.dns['respect-rules'], false)
 })
 
 test('GPU settings are saved atomically and failed saves cannot relaunch the app', async () => {

@@ -3,7 +3,12 @@ import type { NativeSystemProxySettings } from '../../shared/proxy-diagnostics-c
 import { prepareNativeProxyMutation, adoptNativeProxyMutation } from '../service/api'
 import { tr } from '../../shared/i18n'
 import { getAppConfig, getControledMihomoConfig } from '../config'
-import { startPacServer, stopPacServer } from '../resolve/server'
+import {
+  getConfiguredPacScript,
+  setActiveServicePacUrl,
+  startPacServer,
+  stopPacServer
+} from '../resolve/server'
 import { localPacUrl } from '../resolve/pac-http-server'
 import { defaultSystemProxyBypass, normalizeProxyHost } from '../../shared/system-proxy'
 import { net } from 'electron'
@@ -13,6 +18,7 @@ import {
   getServiceMeta,
   renewSysProxyLease,
   setPac,
+  setServicePac,
   setProxy,
   startServiceSysproxyEventStream,
   stopServiceSysproxyEventStream,
@@ -232,19 +238,34 @@ async function setSysProxy(
   options: TriggerSysProxyOptions = {}
 ): Promise<void> {
   const defaultBypass = defaultSystemProxyBypass(process.platform)
-  const pacPort = await timed('pac', options, startPacServer)
   const { sysProxy } = await getAppConfig()
   const { mode, host, bypass = defaultBypass, terminalProxy = false } = sysProxy
+  const servicePAC = mode === 'auto' && (await getServiceMeta()).capabilities.sysproxyPacServer
+  const pacPort = await timed('pac', options, async () => {
+    if (servicePAC) {
+      await stopPacServer()
+      return undefined
+    }
+    return startPacServer()
+  })
   const guard = !!sysProxy.guard
   const guardNotify = guard && !!sysProxy.guardNotify
   const { 'mixed-port': port = 7890 } = await getControledMihomoConfig()
 
   switch (mode || 'manual') {
     case 'auto': {
-      if (pacPort === undefined) throw new Error('PAC server did not start')
-      await timed('service', options, () =>
-        setPac(localPacUrl(pacPort), '', onlyActiveDevice, useRegistry, guard)
-      )
+      if (servicePAC) {
+        const script = await getConfiguredPacScript()
+        const url = await timed('service', options, () =>
+          setServicePac(script, onlyActiveDevice, useRegistry, guard)
+        )
+        setActiveServicePacUrl(url)
+      } else {
+        if (pacPort === undefined) throw new Error('PAC server did not start')
+        await timed('service', options, () =>
+          setPac(localPacUrl(pacPort), '', onlyActiveDevice, useRegistry, guard)
+        )
+      }
       options.onSystemApplied?.()
       updateSysproxyGuardEventStream(guardNotify)
       startSysproxyLeaseRenewal(onlyActiveDevice, useRegistry)

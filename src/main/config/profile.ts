@@ -1,6 +1,20 @@
+import { appendAppLog } from '../utils/log'
+import {
+  recoverProfileKeyTransaction,
+  writeProfileKeyTransaction,
+  readProfileKeySnapshot
+} from './profile-key-transaction'
+import { assertManagedConfig } from '../../shared/managed-id'
+import { isDeepStrictEqual } from 'node:util'
 import { tr } from '../../shared/i18n'
 import { getControledMihomoConfig } from './controledMihomo'
-import { mihomoProfileWorkDir, mihomoWorkDir, profileConfigPath, profilePath } from '../utils/dirs'
+import {
+  dataDir,
+  mihomoProfileWorkDir,
+  mihomoWorkDir,
+  profileConfigPath,
+  profilePath
+} from '../utils/dirs'
 import { addProfileUpdater, delProfileUpdater } from '../core/profileUpdater'
 import { readFile, writeFile, rm, mkdir, rename } from 'fs/promises'
 import { fileToStr, repairManagedFilePermissions } from 'kokorobox-native'
@@ -21,21 +35,32 @@ import { validateMihomoProfileContent } from '../kokoro/profile-check'
 import { createPinnedHttpsAgent } from '../utils/pinnedHttpsAgent'
 import { writePrivateTextFileAtomic } from './atomic-file'
 
-let profileConfig: ProfileConfig // profile.yaml
+let profileConfig: ProfileConfig | undefined // profile.yaml
 let profileConfigWritePromise: Promise<void> = Promise.resolve()
+let profileMutationPromise: Promise<unknown> = Promise.resolve()
+
+function withProfileMutation<T>(operation: () => Promise<T>): Promise<T> {
+  const result = profileMutationPromise.then(operation)
+  profileMutationPromise = result.catch(() => undefined)
+  return result
+}
+
 const FILE_PERMISSION_ELEVATION_REQUIRED = 'FILE_PERMISSION_ELEVATION_REQUIRED'
 
 export async function getProfileConfig(force = false): Promise<ProfileConfig> {
   await profileConfigWritePromise
+  await recoverProfileKeyTransaction(dataDir())
   if (force || !profileConfig) {
     const data = await readFile(profileConfigPath(), 'utf-8')
     profileConfig = parseYaml(data) || { items: [] }
   }
   if (typeof profileConfig !== 'object') profileConfig = { items: [] }
+  assertManagedConfig(profileConfig, 'profile')
   return structuredClone(profileConfig)
 }
 
-export async function setProfileConfig(config: ProfileConfig): Promise<void> {
+async function setProfileConfigUnlocked(config: ProfileConfig): Promise<void> {
+  assertManagedConfig(config, 'profile')
   const nextConfig = structuredClone(config)
   const previousPromise = profileConfigWritePromise
   const currentPromise = (async () => {
@@ -53,22 +78,28 @@ export async function getProfileItem(id: string | undefined): Promise<ProfileIte
   return items.find((item) => item.id === id)
 }
 
-export async function changeCurrentProfile(id: string): Promise<void> {
+async function changeCurrentProfileUnlocked(id: string): Promise<void> {
   const config = await getProfileConfig()
+  if (id !== 'default' && !config.items.some((item) => item.id === id))
+    throw new Error('Profile not found')
   const current = config.current
   config.current = id
-  await setProfileConfig(config)
+  await setProfileConfigUnlocked(config)
   try {
-    await restartCore()
-  } catch (e) {
+    await restartCore({ throwOnError: true })
+  } catch (error) {
     config.current = current
-    throw e
-  } finally {
-    await setProfileConfig(config)
+    await setProfileConfigUnlocked(config)
+    try {
+      await restartCore({ throwOnError: true })
+    } catch (restoreError) {
+      await appendAppLog(`[Profile]: failed to restart previous profile, ${restoreError}\n`)
+    }
+    throw error
   }
 }
 
-export async function updateProfileItem(item: ProfileItem): Promise<void> {
+async function updateProfileItemUnlocked(item: ProfileItem): Promise<void> {
   const config = await getProfileConfig()
   const index = config.items.findIndex((i) => i.id === item.id)
   if (index === -1) {
@@ -78,24 +109,43 @@ export async function updateProfileItem(item: ProfileItem): Promise<void> {
   const oldItem = config.items[index]
   const shouldRewriteProfile =
     oldItem.ageRecipient !== item.ageRecipient || oldItem.ageIdentity !== item.ageIdentity
-  let profileContent: string | undefined
-
   if (shouldRewriteProfile && existsSync(profilePath(item.id))) {
     const rawProfile = await readFile(profilePath(item.id), 'utf-8')
+    let plaintext: string
     try {
-      profileContent = await decryptProfileContent(rawProfile, oldItem)
+      plaintext = await decryptProfileContent(rawProfile, oldItem)
     } catch {
-      profileContent = await decryptProfileContent(rawProfile, item)
+      plaintext = await decryptProfileContent(rawProfile, item)
     }
+    await replaceProfilePair(config, item, rawProfile, plaintext)
+  } else {
+    config.items[index] = item
+    await setProfileConfigUnlocked(config)
   }
-
-  config.items[index] = item
   if (!item.autoUpdate) await delProfileUpdater(item.id)
-  await setProfileConfig(config)
+}
 
-  if (profileContent !== undefined) {
-    await writeProfileContent(item.id, profileContent, item, false)
-  }
+async function replaceProfilePair(
+  config: ProfileConfig,
+  item: ProfileItem,
+  oldContent: string,
+  plaintext: string
+): Promise<void> {
+  const nextContent = item.ageRecipient
+    ? await encryptAgeText(plaintext, item.ageRecipient)
+    : plaintext
+  const oldConfig = stringifyYaml(config)
+  config.items = config.items.map((previous) => (previous.id === item.id ? item : previous))
+  profileConfig = undefined
+  await writeProfileKeyTransaction(
+    dataDir(),
+    item.id,
+    oldConfig,
+    oldContent,
+    stringifyYaml(config),
+    nextContent
+  )
+  profileConfig = structuredClone(config)
 }
 
 interface AddProfileItemOptions {
@@ -104,32 +154,122 @@ interface AddProfileItemOptions {
   selectIfEmpty?: boolean
 }
 
-async function addProfileItemWithOptions(
-  item: Partial<ProfileItem>,
+async function commitPreparedProfile(
+  prepared: { item: ProfileItem; content: string },
   options: AddProfileItemOptions = {}
 ): Promise<string> {
-  const newItem = await createProfile(item, options)
+  const { item: newItem, content } = prepared
   const config = await getProfileConfig()
-  if (await getProfileItem(newItem.id)) {
-    await updateProfileItem(newItem)
+  const previous = config.items.find((item) => item.id === newItem.id)
+  const changedKey =
+    previous &&
+    (previous.ageIdentity !== newItem.ageIdentity || previous.ageRecipient !== newItem.ageRecipient)
+  const keyTransaction = Boolean(changedKey && existsSync(profilePath(newItem.id)))
+  if (keyTransaction) {
+    await replaceProfilePair(
+      config,
+      newItem,
+      await readFile(profilePath(newItem.id), 'utf8'),
+      content
+    )
+    if (options.restartCurrent !== false && config.current === newItem.id)
+      await restartCore({ throwOnError: true })
+  } else {
+    await writeProfileContent(newItem.id, content, newItem, options.restartCurrent !== false)
+    newItem.updated = Date.now()
+  }
+  if (previous) {
+    if (!keyTransaction) await updateProfileItemUnlocked(newItem)
+    else if (!newItem.autoUpdate) await delProfileUpdater(newItem.id)
   } else {
     config.items.push(newItem)
-    await setProfileConfig(config)
+    await setProfileConfigUnlocked(config)
   }
 
   const savedConfig = await getProfileConfig()
   if (options.selectIfEmpty !== false && !savedConfig.current) {
-    await changeCurrentProfile(newItem.id)
+    await changeCurrentProfileUnlocked(newItem.id)
   }
-  await addProfileUpdater(newItem)
   return newItem.id
 }
 
+export function setProfileConfig(config: ProfileConfig): Promise<void> {
+  return withProfileMutation(() => setProfileConfigUnlocked(config))
+}
+
+export function changeCurrentProfile(id: string): Promise<void> {
+  return withProfileMutation(() => changeCurrentProfileUnlocked(id))
+}
+
+export async function updateProfileItem(item: ProfileItem): Promise<void> {
+  await withProfileMutation(() => updateProfileItemUnlocked(item))
+  const latest = await getProfileItem(item.id)
+  if (latest) await addProfileUpdater(latest)
+}
+
+export function removeProfileItem(id: string): Promise<void> {
+  return withProfileMutation(() => removeProfileItemUnlocked(id))
+}
+
+export function clearKokoroProfiles(): Promise<void> {
+  return withProfileMutation(clearKokoroProfilesUnlocked)
+}
+
+export function setProfileStr(id: string, content: string, item?: ProfileItem): Promise<void> {
+  return withProfileMutation(() => setProfileStrUnlocked(id, content, item))
+}
+
+async function addProfileItemWithOptions(
+  item: Partial<ProfileItem>,
+  options: AddProfileItemOptions = {}
+): Promise<string> {
+  const previous = item.id ? await getProfileItem(item.id) : undefined
+  const prepared = await prepareProfile(item, options)
+  const id = await withProfileMutation(async () => {
+    if (previous) {
+      const latest = await getProfileItem(previous.id)
+      if (!latest) return previous.id
+      if (!isDeepStrictEqual(latest, previous)) {
+        throw new Error(tr('Subscription changed during refresh. Please retry.'))
+      }
+    }
+    return await commitPreparedProfile(prepared, options)
+  })
+  const saved = await getProfileItem(id)
+  if (saved) await addProfileUpdater(saved)
+  return id
+}
+
 export async function addProfileItem(item: Partial<ProfileItem>): Promise<string> {
+  // Manual and scheduled Kokoro refreshes must use the same guarded commit path.
+  if (item.id && item.type === 'remote' && item.kokoro) {
+    await refreshKokoroProfile(item.id)
+    return item.id
+  }
   return await addProfileItemWithOptions(item)
 }
 
-export async function removeProfileItem(id: string): Promise<void> {
+export async function refreshKokoroProfile(id: string): Promise<void> {
+  const item = await getProfileItem(id)
+  if (item?.type !== 'remote' || !item.kokoro) return
+  // Keep the network wait outside the mutation queue so edits/deletions can proceed.
+  const prepared = await prepareProfile(item)
+  const refreshed = await withProfileMutation(async () => {
+    const latest = await getProfileItem(id)
+    if (!latest) return false
+    if (!isDeepStrictEqual(latest, item)) {
+      throw new Error(tr('Subscription changed during refresh. Please retry.'))
+    }
+    await commitPreparedProfile(prepared, { selectIfEmpty: false })
+    return true
+  })
+  if (refreshed) {
+    const latest = await getProfileItem(id)
+    if (latest) await addProfileUpdater(latest)
+  }
+}
+
+async function removeProfileItemUnlocked(id: string): Promise<void> {
   const config = await getProfileConfig()
   config.items = config.items?.filter((item) => item.id !== id)
   let shouldRestart = false
@@ -141,7 +281,7 @@ export async function removeProfileItem(id: string): Promise<void> {
       config.current = undefined
     }
   }
-  await setProfileConfig(config)
+  await setProfileConfigUnlocked(config)
   if (existsSync(profilePath(id))) {
     await rm(profilePath(id))
   }
@@ -161,10 +301,11 @@ export async function getCurrentProfileItem(): Promise<ProfileItem> {
   )
 }
 
-export async function createProfile(
+async function prepareProfile(
   item: Partial<ProfileItem>,
   options: AddProfileItemOptions = {}
-): Promise<ProfileItem> {
+): Promise<{ item: ProfileItem; content: string }> {
+  let content = ''
   const id = item.id || new Date().getTime().toString(16)
   const newItem = {
     id,
@@ -199,7 +340,7 @@ export async function createProfile(
         if (downloaded.subscriptionUserinfo) {
           newItem.extra = parseSubinfo(downloaded.subscriptionUserinfo)
         }
-        await writeProfileContent(id, downloaded.content, newItem, options.restartCurrent !== false)
+        content = downloaded.content
         break
       }
 
@@ -228,6 +369,7 @@ export async function createProfile(
               proxy: { protocol: 'http', host: '127.0.0.1', port: mixedPort }
             }),
           headers: { 'User-Agent': newItem.ua || (await getUserAgent()) },
+          timeout: 30_000,
           responseType: 'text'
         })
       } catch (error) {
@@ -289,25 +431,23 @@ export async function createProfile(
           )
         }
       }
-      await setProfileStr(id, data, newItem)
+      content = data
       break
     }
     case 'local': {
       const data = await decryptProfileContent(item.file || '', newItem)
-      await setProfileStr(id, data, newItem)
+      content = data
       break
     }
   }
-  return newItem
+  return { item: newItem, content }
 }
 
 export async function getProfileStr(id: string | undefined): Promise<string> {
-  if (existsSync(profilePath(id || 'default'))) {
-    const data = await readFile(profilePath(id || 'default'), 'utf-8')
-    return await decryptProfileContent(data, await getProfileItem(id))
-  } else {
-    return stringifyYaml(defaultProfile)
-  }
+  const snapshot = await readProfileKeySnapshot(dataDir(), id || 'default')
+  return snapshot.content === undefined
+    ? stringifyYaml(defaultProfile)
+    : await decryptProfileContent(snapshot.content, snapshot.item)
 }
 
 export async function addKokoroProfile(settings: KokoroSubscriptionSettings): Promise<string> {
@@ -345,7 +485,7 @@ export async function addKokoroProfile(settings: KokoroSubscriptionSettings): Pr
   return newProfileId
 }
 
-export async function clearKokoroProfiles(): Promise<void> {
+async function clearKokoroProfilesUnlocked(): Promise<void> {
   const config = await getProfileConfig()
   const removed = config.items.filter((item) => item.kokoro)
   if (removed.length === 0) return
@@ -354,7 +494,7 @@ export async function clearKokoroProfiles(): Promise<void> {
   config.items = config.items.filter((item) => !removedIds.has(item.id))
   const currentRemoved = Boolean(config.current && removedIds.has(config.current))
   if (currentRemoved) config.current = config.items[0]?.id
-  await setProfileConfig(config)
+  await setProfileConfigUnlocked(config)
 
   await Promise.all(
     removed.map(async (item) => {
@@ -367,18 +507,12 @@ export async function clearKokoroProfiles(): Promise<void> {
 }
 
 export async function getProfileParseStr(id: string | undefined): Promise<string> {
-  let data: string
-  if (existsSync(profilePath(id || 'default'))) {
-    data = await readFile(profilePath(id || 'default'), 'utf-8')
-  } else {
-    data = stringifyYaml(defaultProfile)
-  }
-  data = await decryptProfileContent(data, await getProfileItem(id))
+  const data = await getProfileStr(id)
   const profile = deepMerge(parseYaml<object>(data), {})
   return stringifyYaml(profile)
 }
 
-export async function setProfileStr(
+async function setProfileStrUnlocked(
   id: string,
   content: string,
   item?: ProfileItem
@@ -422,7 +556,7 @@ async function writeProfileContent(
     await rm(tempPath, { force: true }).catch(() => {})
     throw error
   }
-  if (shouldRestartCurrent && current === id) await restartCore()
+  if (shouldRestartCurrent && current === id) await restartCore({ throwOnError: true })
 }
 
 export async function getProfile(id: string | undefined): Promise<MihomoConfig> {

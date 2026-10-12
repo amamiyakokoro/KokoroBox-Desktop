@@ -53,6 +53,11 @@ import {
 import { createCoreHookWaiter, createCoreStartupHook } from './startupHook'
 import { resolveCoreStartupMode } from './coreHookPath'
 import { stopChildProcess } from './process-control'
+import {
+  captureCoreProcess,
+  parseCoreProcessRecord,
+  stopRecordedCoreProcess
+} from './native-process'
 import { recoverDNS, setPublicDNS, startNetworkDetectionController } from './network'
 import { checkProfile } from './profile-check'
 import {
@@ -367,22 +372,11 @@ async function stopLegacyDirectCore(): Promise<boolean> {
     return stopped
   }
 
-  const pid = parseInt(pidString.trim())
-  if (Number.isInteger(pid) && pid > 0 && pid !== process.pid && !stoppedPids.has(pid)) {
-    try {
-      process.kill(pid, 0)
-      stopped = true
-      process.kill(pid, 'SIGINT')
-      await delay(1000)
-      try {
-        process.kill(pid, 0)
-        process.kill(pid, 'SIGKILL')
-      } catch {
-        // already stopped
-      }
-    } catch {
-      // stale pid file or process is no longer accessible
-    }
+  const record = parseCoreProcessRecord(pidString)
+  const pid = typeof record === 'number' ? record : record?.pid
+  if (record && pid !== process.pid && !stoppedPids.has(pid!)) {
+    const { core = 'mihomo' } = await getAppConfig()
+    stopped = (await stopRecordedCoreProcess(record, mihomoCorePath(core))) || stopped
   }
   await rm(pidPath).catch(() => {})
   return stopped
@@ -453,9 +447,7 @@ export async function startCore(
   }
 
   await generateProfile()
-  if (useServiceCore || detached) {
-    await checkProfile()
-  }
+  if (detached) await checkProfile()
   let stoppedLegacyDirectCore = false
   let serviceCoreRunning = false
   if (useServiceCore) {
@@ -491,6 +483,7 @@ export async function startCore(
       }
     }
   }
+  if (useServiceCore) await checkProfile(true)
   if (!serviceCoreRunning && !useServiceCore) {
     await stopCore()
   }
@@ -594,9 +587,16 @@ export async function startCore(
   })
   directCoreState.child = child
   if (child.pid) {
-    await writeFile(path.join(dataDir(), 'core.pid'), child.pid.toString()).catch((error) =>
-      appendAppLog(`[Manager]: persist direct core pid failed, ${error}\n`)
-    )
+    try {
+      const identity = await captureCoreProcess(child.pid, corePath)
+      await writeFile(
+        path.join(dataDir(), 'core.pid'),
+        identity ? JSON.stringify(identity) : child.pid.toString(),
+        { mode: 0o600 }
+      )
+    } catch (error) {
+      await appendAppLog(`[Manager]: persist direct core identity failed, ${error}\n`)
+    }
   }
   let startupOutput = ''
   let configurationRejected = false
@@ -741,7 +741,11 @@ export async function startCore(
   return effectiveCoreStartupMode === 'post-up' ? waitForCoreReadyByHook() : waitForCoreReadyByLog()
 }
 
-export async function stopCore(force = false, serviceRequestTimeoutMs?: number): Promise<void> {
+export async function stopCore(
+  force = false,
+  serviceRequestTimeoutMs?: number,
+  options: { throwOnError?: boolean } = {}
+): Promise<void> {
   serviceCoreRuntime.pauseAutoResume()
 
   try {
@@ -757,13 +761,18 @@ export async function stopCore(force = false, serviceRequestTimeoutMs?: number):
   const { corePermissionMode = 'elevated' } = await getAppConfig()
   const shouldStopServiceCore = serviceCoreRuntime.isManaged() || corePermissionMode === 'service'
   if (shouldStopServiceCore) {
+    let stopped = false
     try {
       await stopServiceCore(serviceRequestTimeoutMs)
+      stopped = true
     } catch (error) {
       await appendAppLog(`[Manager]: stop service core failed, ${error}\n`)
+      if (options.throwOnError) throw error
     } finally {
-      serviceCoreRuntime.setManaged(false)
-      serviceCoreRuntime.stopEventHandlers()
+      if (stopped || !options.throwOnError) {
+        serviceCoreRuntime.setManaged(false)
+        serviceCoreRuntime.stopEventHandlers()
+      }
     }
   }
 
@@ -844,15 +853,16 @@ function clearTailscaleAuthNotifications(name?: string): void {
   }
 }
 
-export async function restartCore(): Promise<void> {
+export async function restartCore(options: { throwOnError?: boolean } = {}): Promise<void> {
   const finishNetworkTransition = beginExpectedNetworkTransition()
   try {
     clearTailscaleAuthNotifications()
-    await stopCore()
+    await stopCore(false, undefined, { throwOnError: true })
     const promises = await startCore()
     await Promise.all(promises)
   } catch (e) {
     void showNotification({ title: tr('Failed to start core'), body: `${e}`, variant: 'danger' })
+    if (options.throwOnError) throw e
   } finally {
     finishNetworkTransition()
   }

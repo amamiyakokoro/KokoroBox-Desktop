@@ -2,6 +2,7 @@ export const serviceContract = {
   meta: { method: 'GET', path: '/meta' },
   serviceLogs: { method: 'GET', path: '/service/logs' },
   coreDesired: { method: 'GET', path: '/core/desired' },
+  coreProfileValidation: { method: 'POST', path: '/core/profile/validate' },
   proxyDiagnostics: { method: 'GET', path: '/core/proxy-diagnostics' },
   prepareNativeProxy: { method: 'POST', path: '/sysproxy/native/prepare' },
   adoptNativeProxy: { method: 'POST', path: '/sysproxy/native/adopt' },
@@ -17,6 +18,7 @@ export const serviceContract = {
   processRouterStart: { method: 'POST', path: '/process-router/start' },
   processRouterStop: { method: 'POST', path: '/process-router/stop' },
   processRouterRules: { method: 'PUT', path: '/process-router/rules' },
+  processRouterEvents: { method: 'GET', path: '/process-router/events' },
   processRouterStatus: { method: 'GET', path: '/process-router/status' },
   processRouterLogs: { method: 'GET', path: '/process-router/logs' },
   processRouterLogsClear: { method: 'DELETE', path: '/process-router/logs' },
@@ -26,11 +28,14 @@ export const serviceContract = {
 } as const
 
 export interface ServiceCapabilities {
+  coreProfileValidation: boolean
   coreDesiredState: boolean
   sysproxyLease: boolean
   sysproxyEvents: boolean
+  sysproxyPacServer: boolean
   sysproxyNetworkReconcile: boolean
   dnsLease: boolean
+  processRouterEvents: boolean
   processRouter: boolean
   windowsUwpLoopback: boolean
   serviceLogs: boolean
@@ -45,11 +50,14 @@ export interface ServiceMeta {
 export const supportedServiceApiVersion = 1
 
 const capabilityNames = [
+  'coreProfileValidation',
   'coreDesiredState',
   'sysproxyLease',
   'sysproxyEvents',
+  'sysproxyPacServer',
   'sysproxyNetworkReconcile',
   'dnsLease',
+  'processRouterEvents',
   'processRouter',
   'windowsUwpLoopback',
   'serviceLogs'
@@ -59,11 +67,14 @@ export const legacyServiceMeta: ServiceMeta = {
   serviceVersion: 'legacy',
   apiVersion: 0,
   capabilities: {
+    coreProfileValidation: false,
     coreDesiredState: false,
     sysproxyLease: false,
     sysproxyEvents: false,
+    sysproxyPacServer: false,
     sysproxyNetworkReconcile: false,
     dnsLease: false,
+    processRouterEvents: false,
     processRouter: false,
     windowsUwpLoopback: false,
     serviceLogs: false

@@ -372,6 +372,11 @@ interface KokoroDefaultRules {
   options: KokoroCustomRulesOptions
 }
 
+interface KokoroRuleSaveResult {
+  ruleSet: KokoroRuleSet
+  subscriptionRefreshErrors: string[]
+}
+
 interface OverrideConfig {
   items: OverrideItem[]
 }

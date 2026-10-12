@@ -1,3 +1,4 @@
+import { tr } from '../../shared/i18n'
 import { BrowserWindow } from 'electron'
 import {
   appRoutingSupported,
@@ -6,11 +7,12 @@ import {
 } from '../../shared/app-routing'
 import { appendAppLog } from '../utils/log'
 import { getAppRoutingConfig, saveAppRoutingConfig } from './config'
-import { appRoutingProxyPort, appRoutingSocksPort } from './profile'
+import { appRoutingProxyPort } from './profile'
 import { prepareAppRoutingConfig } from './rules'
-import { canConnectToAppRoutingListener } from './health'
 import {
   getProcessRouterStatus,
+  getServiceMeta,
+  createServiceWebSocket,
   repairProcessRouterFirewall,
   replaceProcessRouterRules,
   startProcessRouter,
@@ -23,6 +25,7 @@ import {
   buildServiceProcessRouterRules,
   validateServiceProcessRouterStatus
 } from './service-protocol'
+import { createProcessRouterEventStream } from '../service/process-router-events'
 import { reconcileMacAppRouting, stopMacAppRouting } from './macos'
 import { macAppRoutingOperatingSystemSupported } from './macos-profile'
 
@@ -33,6 +36,32 @@ let operation: Promise<void> | undefined
 let reconcileRequested = false
 let configGeneration = 0
 let servicePolicyKey = ''
+let serviceEventsEnabled = false
+const serviceEvents = createProcessRouterEventStream(
+  publishServiceStatus,
+  () => {
+    if (stopping) return
+    servicePolicyKey = ''
+    void reconcileAppRouting()
+  },
+  () => createServiceWebSocket('/process-router/events'),
+  (error) => {
+    void appendAppLog(`[App routing]: status stream failed, ${error}\n`).catch(() => {})
+  },
+  5000,
+  () => {
+    if (stopping || !serviceEventsEnabled) return
+    publishStatus({
+      ...status,
+      state: 'error',
+      mihomoAvailable: false,
+      message: tr(
+        'Cannot connect to KokoroBox Service. Check its status in Overview before trying again.'
+      )
+    })
+  }
+)
+
 let serviceStopped = false
 let serviceAuthenticationBlocked = false
 let status: AppRoutingStatus = {
@@ -128,6 +157,8 @@ async function reconcileService(config: AppRoutingConfig): Promise<void> {
   if (serviceAuthenticationBlocked) {
     throw new Error('KokoroBox Service 认证已失效，请在内核设置中重置认证')
   }
+  serviceEventsEnabled = (await getServiceMeta()).capabilities.processRouterEvents
+  if (serviceEventsEnabled) serviceEvents.start()
   const policyKey = String(configGeneration)
   const platform = process.platform === 'linux' ? 'linux' : 'windows'
   const proxyPort = appRoutingProxyPort(process.platform)
@@ -142,6 +173,7 @@ async function reconcileService(config: AppRoutingConfig): Promise<void> {
       servicePolicyKey = policyKey
       serviceStopped = false
     } else {
+      if (serviceEventsEnabled) return
       serviceStatus = validateServiceProcessRouterStatus(
         await getProcessRouterStatus(),
         process.platform
@@ -162,6 +194,8 @@ async function reconcileService(config: AppRoutingConfig): Promise<void> {
 }
 
 async function disableServiceRouter(allowUnavailable = false): Promise<void> {
+  serviceEvents.stop()
+  serviceEventsEnabled = false
   if (serviceStopped) return
   try {
     await stopProcessRouter()
@@ -213,11 +247,7 @@ async function reconcile(): Promise<void> {
       })
       return
     }
-    const requiresMihomo = enabledRules.some((rule) => rule.action === 'proxy')
-    const mihomoAvailable = requiresMihomo
-      ? await canConnectToAppRoutingListener(appRoutingSocksPort)
-      : false
-    publishStatus(await reconcileMacAppRouting(config, mihomoAvailable))
+    publishStatus(await reconcileMacAppRouting(config))
     return
   }
   if (!config.enabled || enabledRules.length === 0) {
@@ -268,7 +298,7 @@ export async function initializeAppRouting(): Promise<void> {
   stopping = false
   monitor = setInterval(() => {
     // A health poll must not enqueue another pass behind a slow OS operation.
-    if (!operation) void reconcileAppRouting()
+    if (!operation && !serviceEventsEnabled) void reconcileAppRouting()
   }, probeIntervalMs)
   monitor.unref()
   // Network/System Extension activation is controlled by macOS and may wait
@@ -318,12 +348,14 @@ export async function repairAppRoutingFirewall(): Promise<AppRoutingStatus> {
 }
 
 export async function refreshAppRoutingStatus(): Promise<AppRoutingStatus> {
-  void reconcileAppRouting()
+  await reconcileAppRouting()
   return getAppRoutingStatus()
 }
 
 export async function stopAppRouting(): Promise<void> {
   stopping = true
+  serviceEvents.stop()
+  serviceEventsEnabled = false
   reconcileRequested = false
   if (monitor) clearInterval(monitor)
   monitor = undefined

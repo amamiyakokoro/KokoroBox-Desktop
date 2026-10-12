@@ -1,4 +1,10 @@
 import {
+  validateCoreValidationResult,
+  type CoreValidationOptions,
+  type CoreValidationResult
+} from '../../shared/core-validation'
+import { validateServicePacUrl } from '../../shared/service-pac'
+import {
   proxyRuntimeDiagnosticsFailure,
   validateProxyRuntimeDiagnostics,
   type ProxyRuntimeDiagnostics
@@ -1101,6 +1107,22 @@ export const setPac = async (
   })
 }
 
+/** New Service owns PAC serving and the proxy lease together. */
+export async function setServicePac(
+  script: string,
+  onlyActiveDevice: boolean,
+  useRegistry: boolean,
+  guard: boolean
+): Promise<string> {
+  await requireServiceCapability('sysproxyPacServer')
+  const value = await getServiceAxios().request({
+    method: serviceContract.sysproxyPac.method,
+    url: serviceContract.sysproxyPac.path,
+    data: { script, only_active_device: onlyActiveDevice, use_registry: useRegistry, guard }
+  })
+  return validateServicePacUrl(value)
+}
+
 export const setProxy = async (
   server: string,
   bypass?: string,
@@ -1208,5 +1230,19 @@ export async function adoptNativeProxyMutation(settings: {
     '/sysproxy/native/adopt',
     settings,
     { timeout: 4000 }
+  )
+}
+
+export async function validateServiceCoreProfile(
+  options: CoreValidationOptions
+): Promise<CoreValidationResult> {
+  await requireServiceCapability('coreProfileValidation')
+  return validateCoreValidationResult(
+    await getServiceAxios().request({
+      method: serviceContract.coreProfileValidation.method,
+      url: serviceContract.coreProfileValidation.path,
+      data: options,
+      timeout: 15_000
+    })
   )
 }

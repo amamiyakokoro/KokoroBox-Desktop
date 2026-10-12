@@ -12,7 +12,6 @@ export {
   setProfileConfig,
   addProfileItem,
   removeProfileItem,
-  createProfile,
   getProfileStr,
   getProfileParseStr,
   setProfileStr,
@@ -27,7 +26,6 @@ export {
   getOverrideItem,
   addOverrideItem,
   removeOverrideItem,
-  createOverride,
   getOverride,
   setOverride,
   updateOverrideItem

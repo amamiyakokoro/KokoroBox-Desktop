@@ -39,6 +39,7 @@ const ConnectionItemComponent: React.FC<Props> = ({
     () => connectionIdentityLabel(info, tr('Application routing')).replace(/\.exe$/, ''),
     [
       info.metadata.process,
+      info.metadata.processPath,
       info.metadata.sourceIP,
       info.metadata.inboundName,
       info.metadata.inboundPort,

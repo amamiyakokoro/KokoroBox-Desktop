@@ -198,11 +198,18 @@ test('Windows service probes hide consoles and privileged actions use constraine
   assert.match(dirsSource, /findExecutables\(/)
   assert.doesNotMatch(dirsSource, /execFileSync\('where\.exe'/)
   assert.doesNotMatch(dirsSource, /execSync\(`which/)
-  assert.match(coreProfileSource, /windowsHide: process\.platform === 'win32'/)
-  assert.match(kokoroProfileSource, /windowsHide: process\.platform === 'win32'/)
+  assert.match(coreProfileSource, /validateMihomoProfile\(/)
+  assert.match(kokoroProfileSource, /validateMihomoProfile\(/)
   assert.match(trafficPresenterSource, /spawn\(executable,[\s\S]*windowsHide: true/)
   assert.doesNotMatch(miscSource, /enableLoopback\.exe|openUWPTool/)
-  assert.equal((updaterSource.match(/windowsHide: true/g) || []).length, 3)
+  const detachedSource = readFileSync(resolve('src/main/resolve/detached-process.ts'), 'utf8')
+  assert.equal((updaterSource.match(/await launchDetachedProcess\(/g) || []).length, 2)
+  assert.match(
+    detachedSource,
+    /spawnProcess\(file, args, \{ detached: true, stdio: 'ignore', windowsHide: true \}\)/
+  )
+  assert.doesNotMatch(detachedSource, /shell: true/)
+  assert.match(updaterSource, /execFile\)[\s\S]*windowsHide: true/)
   assert.match(updaterSource, /portable-update[\s\S]*--parent-pid/)
   assert.doesNotMatch(updaterSource, /shell: true|\['\/C'/)
 })
@@ -416,9 +423,10 @@ test('service core handoff removes legacy direct processes and repairs occupied 
   )
   assert.match(
     coreManagerSource,
-    /directCoreState\.child = child[\s\S]*writeFile\(path\.join\(dataDir\(\), 'core\.pid'\), child\.pid\.toString\(\)\)/
+    /directCoreState\.child = child[\s\S]*await captureCoreProcess\(child\.pid, corePath\)[\s\S]*JSON\.stringify\(identity\)/
   )
-  assert.match(coreManagerSource, /pid > 0 && pid !== process\.pid/)
+  assert.match(coreManagerSource, /record && pid !== process\.pid/)
+  assert.doesNotMatch(coreManagerSource, /process\.kill\(pid/)
   assert.match(
     coreManagerSource,
     /export async function stopCore[\s\S]*await stopLegacyDirectCore\(\)/

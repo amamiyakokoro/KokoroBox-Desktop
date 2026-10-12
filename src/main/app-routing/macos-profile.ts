@@ -19,6 +19,22 @@ export function buildMacAppRoutingConfiguration(
   config: AppRoutingConfig,
   proxyAvailable: boolean
 ): MacosApplicationRoutingConfiguration {
+  return buildConfiguration(config, proxyAvailable, false)
+}
+
+// Native reconciliation owns the health probe. Preserve PROXY intent so it
+// knows a listener is required; proxyAvailable starts false for fail-closed use.
+export function buildMacAppRoutingDesiredConfiguration(
+  config: AppRoutingConfig
+): MacosApplicationRoutingConfiguration {
+  return buildConfiguration(config, false, true)
+}
+
+function buildConfiguration(
+  config: AppRoutingConfig,
+  proxyAvailable: boolean,
+  preserveProxyIntent: boolean
+): MacosApplicationRoutingConfiguration {
   validateAppRoutingConfig(config)
   const invalidRule = config.rules.find(
     (rule) =>
@@ -44,7 +60,7 @@ export function buildMacAppRoutingConfiguration(
             ? 'PROCESS_NAME'
             : 'SIGNING_IDENTIFIER',
         ruleProtocol: protocolValue(rule.protocol),
-        action: (rule.action === 'proxy' && !proxyAvailable
+        action: (rule.action === 'proxy' && !proxyAvailable && !preserveProxyIntent
           ? 'BLOCK'
           : rule.action.toUpperCase()) as 'PROXY' | 'DIRECT' | 'BLOCK',
         enabled: isAppRoutingRuleEffectivelyEnabled(config, rule),

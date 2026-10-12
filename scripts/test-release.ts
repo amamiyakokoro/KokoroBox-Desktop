@@ -270,20 +270,20 @@ test('update drawer keeps package-manager guidance exclusive to Linux', () => {
 })
 
 test('stable builds pin verified service releases while rolling builds follow pre-release', () => {
-  assert.equal(KOKOROBOX_SERVICE_STABLE_TAG, 'v0.6.12')
+  assert.equal(KOKOROBOX_SERVICE_STABLE_TAG, 'v0.6.13')
   assert.deepEqual(kokoroboxServiceAsset('win32', 'x64', 'stable'), {
     downloadURL:
-      'https://github.com/amamiyakokoro/kokorobox-service/releases/download/v0.6.12/kokorobox-service-windows-amd64-v3.exe',
+      'https://github.com/amamiyakokoro/kokorobox-service/releases/download/v0.6.13/kokorobox-service-windows-amd64-v3.exe',
     filename: 'kokorobox-service-windows-amd64-v3.exe',
     sha256URL:
-      'https://github.com/amamiyakokoro/kokorobox-service/releases/download/v0.6.12/kokorobox-service-windows-amd64-v3.exe.sha256',
-    tag: 'v0.6.12',
+      'https://github.com/amamiyakokoro/kokorobox-service/releases/download/v0.6.13/kokorobox-service-windows-amd64-v3.exe.sha256',
+    tag: 'v0.6.13',
     processRouter: {
       downloadURL:
-        'https://github.com/amamiyakokoro/kokorobox-service/releases/download/v0.6.12/kokorobox-service-windows-amd64-v3-process-router.zip',
+        'https://github.com/amamiyakokoro/kokorobox-service/releases/download/v0.6.13/kokorobox-service-windows-amd64-v3-process-router.zip',
       filename: 'kokorobox-service-windows-amd64-v3-process-router.zip',
       sha256URL:
-        'https://github.com/amamiyakokoro/kokorobox-service/releases/download/v0.6.12/kokorobox-service-windows-amd64-v3-process-router.zip.sha256'
+        'https://github.com/amamiyakokoro/kokorobox-service/releases/download/v0.6.13/kokorobox-service-windows-amd64-v3-process-router.zip.sha256'
     }
   })
   assert.equal(kokoroboxServiceAsset('win32', 'arm64', 'stable').processRouter, undefined)
@@ -724,6 +724,27 @@ test('AUR publication uses KokoroBox package names and layouts', () => {
     assert.match(pkgbuild, new RegExp(`^pkgname=${packageName}$`, 'm'))
     assert.match(pkgbuild, /\/opt\/kokorobox/)
   }
+})
+
+test('Linux packages assign root ownership before enabling core setuid', () => {
+  for (const packageName of ['kokorobox-rolling-bin', 'kokorobox-git', 'kokorobox-electron-git']) {
+    const pkgbuild = readFileSync(`aur/${packageName}/PKGBUILD`, 'utf8')
+    const ownership = pkgbuild.indexOf('chown -R root:root')
+    assert.ok(ownership >= 0, `${packageName} must normalize extracted ownership`)
+    for (const core of ['mihomo', 'mihomo-alpha']) {
+      const grant = pkgbuild.search(
+        new RegExp(
+          `chmod 4755 "\\$(?:pkgdir|\\{pkgdir\\})/opt/kokorobox/resources/sidecar/${core}"`
+        )
+      )
+      assert.ok(grant > ownership, `${packageName}: ${core} must become root-owned before setuid`)
+    }
+    assert.equal(pkgbuild.indexOf('chown ', ownership + 1), -1, 'chown clears setuid bits')
+    assert.doesNotMatch(pkgbuild, /chmod \+sx/)
+  }
+  const postinst = readFileSync('build/linux/postinst', 'utf8')
+  assert.match(postinst, /chown root:root "\$core" && chmod 4755 "\$core"/)
+  assert.doesNotMatch(postinst, /chmod \+sx/)
 })
 
 test('service release download tolerates GitHub asset publication delay', () => {
