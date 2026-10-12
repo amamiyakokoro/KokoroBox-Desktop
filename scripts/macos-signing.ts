@@ -47,6 +47,20 @@ export type CommandRunner = (
   env: NodeJS.ProcessEnv,
   timeout?: number
 ) => string
+
+export class SigningCommandError extends Error {
+  readonly exitCode: number | null
+  readonly timedOut: boolean
+
+  constructor(label: string, exitCode: number | null, timedOut = false) {
+    super(
+      `${label} failed (${timedOut ? 'timed out' : `exit code ${exitCode ?? 'unavailable'}`}). Command arguments and raw output are withheld.`
+    )
+    this.exitCode = exitCode
+    this.timedOut = timedOut
+  }
+}
+
 export const runCommand: CommandRunner = (label, command, args, env, timeout = 120_000) => {
   const result = spawnSync(command, args, {
     encoding: 'utf8',
@@ -57,11 +71,49 @@ export const runCommand: CommandRunner = (label, command, args, env, timeout = 1
   })
   if (result.error || result.status !== 0) {
     // Process errors contain argv (including passwords). Never propagate or log them.
-    throw new Error(
-      `${label} failed. Check the credential/configuration for this step; command arguments and raw output are withheld.`
+    throw new SigningCommandError(
+      label,
+      result.status,
+      result.error != null && 'code' in result.error && result.error.code === 'ETIMEDOUT'
     )
   }
   return command === '/usr/bin/codesign' ? result.stdout + result.stderr : result.stdout
+}
+
+const waitForTicketRetry = (milliseconds: number) => {
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, milliseconds)
+}
+
+export function stapleTicket(
+  kind: 'PKG' | 'App' | 'DMG',
+  artifact: string,
+  env: NodeJS.ProcessEnv,
+  run: CommandRunner = runCommand,
+  wait: (milliseconds: number) => void = waitForTicketRetry
+) {
+  const label = `Staple ${kind} ticket`
+  const attempts = 5
+  for (let attempt = 0; attempt < attempts; attempt++) {
+    try {
+      run(label, '/usr/bin/xcrun', ['stapler', 'staple', artifact], env, 60_000)
+      return
+    } catch (error) {
+      // After Accepted, CloudKit ticket retrieval may still fail. Retry only
+      // stapler's ticket/service errors or a timeout; other signing steps fail immediately.
+      if (
+        !(error instanceof SigningCommandError) ||
+        (!error.timedOut && ![65, 68, 75].includes(error.exitCode ?? -1)) ||
+        attempt === attempts - 1
+      ) {
+        throw error
+      }
+      const delay = 15_000 * 2 ** attempt
+      console.log(
+        `${label}: ${error.timedOut ? 'timed out' : `exit code ${error.exitCode}`}; retry ${attempt + 2}/${attempts} in ${delay / 1000}s`
+      )
+      wait(delay)
+    }
+  }
 }
 
 export function validateSigningEnvironment(env: NodeJS.ProcessEnv) {
@@ -354,7 +406,8 @@ export function assertAccepted(response: string): string {
 export function signMacRelease(
   env: NodeJS.ProcessEnv,
   run: CommandRunner = runCommand,
-  projectDir = process.cwd()
+  projectDir = process.cwd(),
+  waitForRetry: (milliseconds: number) => void = waitForTicketRetry
 ) {
   validateSigningEnvironment(env)
   const arch = env.TARGET_ARCH!
@@ -612,7 +665,7 @@ export function signMacRelease(
     )
     const notarizationId = assertAccepted(result)
     console.log(`Apple accepted notarization ${notarizationId}; stapling and verifying the ticket`)
-    run('Staple PKG ticket', '/usr/bin/xcrun', ['stapler', 'staple', pkgPath], childEnv, 5 * 60_000)
+    stapleTicket('PKG', pkgPath, childEnv, run, waitForRetry)
     run('Validate PKG ticket', '/usr/bin/xcrun', ['stapler', 'validate', pkgPath], childEnv)
     run(
       'Assess PKG with Gatekeeper',
@@ -652,7 +705,7 @@ export function signMacRelease(
       47 * 60_000
     )
     const appNotarizationId = assertAccepted(appResult)
-    run('Staple App ticket', '/usr/bin/xcrun', ['stapler', 'staple', appPath], childEnv, 5 * 60_000)
+    stapleTicket('App', appPath, childEnv, run, waitForRetry)
     run('Validate App ticket', '/usr/bin/xcrun', ['stapler', 'validate', appPath], childEnv)
     run(
       'Assess App with Gatekeeper',
@@ -721,7 +774,7 @@ export function signMacRelease(
       47 * 60_000
     )
     const dmgNotarizationId = assertAccepted(dmgResult)
-    run('Staple DMG ticket', '/usr/bin/xcrun', ['stapler', 'staple', dmgPath], childEnv, 5 * 60_000)
+    stapleTicket('DMG', dmgPath, childEnv, run, waitForRetry)
     run('Validate DMG ticket', '/usr/bin/xcrun', ['stapler', 'validate', dmgPath], childEnv)
     run(
       'Assess DMG with Gatekeeper',

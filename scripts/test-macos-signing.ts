@@ -28,6 +28,8 @@ import {
   cleanupSigning,
   decodeCertificate,
   runCommand,
+  SigningCommandError,
+  stapleTicket,
   sanitizedChildEnvironment,
   signMacRelease,
   signingConfig,
@@ -293,11 +295,141 @@ test('child process environment omits credentials and process failures do not ex
         ),
       (error) => {
         assert.doesNotMatch(String(error), /fake-secret|process.stderr|fake-token/)
+        assert.ok(error instanceof SigningCommandError)
+        assert.equal(error.exitCode, 1)
         return true
       }
     )
   })
 })
+
+for (const kind of ['PKG', 'App', 'DMG'] as const) {
+  test(`${kind}: retries transient ticket retrieval with bounded backoff`, () => {
+    let calls = 0
+    const delays: number[] = []
+    const run: CommandRunner = (label, command, args, env, timeout) => {
+      assert.equal(label, `Staple ${kind} ticket`)
+      assert.equal(command, '/usr/bin/xcrun')
+      assert.deepEqual(args, ['stapler', 'staple', 'signed artifact'])
+      assert.equal(timeout, 60_000)
+      if (++calls < 4) throw new SigningCommandError(label, [65, 68, 75][calls - 1])
+      return ''
+    }
+    stapleTicket(kind, 'signed artifact', {}, run, (delay) => delays.push(delay))
+    assert.equal(calls, 4)
+    assert.deepEqual(delays, [15_000, 30_000, 60_000])
+  })
+}
+
+test('ticket timeouts retry but permanent failures stop immediately', () => {
+  let calls = 0
+  const delays: number[] = []
+  stapleTicket(
+    'PKG',
+    'signed artifact',
+    {},
+    (label) => {
+      if (++calls === 1) throw new SigningCommandError(label, null, true)
+      return ''
+    },
+    (delay) => delays.push(delay)
+  )
+  assert.equal(calls, 2)
+  assert.deepEqual(delays, [15_000])
+  for (const code of [1, 66, 77, null]) {
+    calls = 0
+    assert.throws(() =>
+      stapleTicket(
+        'PKG',
+        'signed artifact',
+        {},
+        (label) => {
+          calls++
+          throw new SigningCommandError(label, code)
+        },
+        () => assert.fail('Permanent failures must not wait')
+      )
+    )
+    assert.equal(calls, 1)
+  }
+})
+
+test('persistent ticket failures exhaust the bounded retry budget', () => {
+  let calls = 0
+  const delays: number[] = []
+  assert.throws(
+    () =>
+      stapleTicket(
+        'DMG',
+        'signed artifact',
+        {},
+        (label) => {
+          calls++
+          throw new SigningCommandError(label, 68)
+        },
+        (delay) => delays.push(delay)
+      ),
+    SigningCommandError
+  )
+  assert.equal(calls, 5)
+  assert.deepEqual(delays, [15_000, 30_000, 60_000, 120_000])
+})
+
+test('command timeouts retain safe retry metadata without exposing raw process errors', () => {
+  assert.throws(
+    () =>
+      runCommand('Test timeout', process.execPath, ['-e', 'setTimeout(() => {}, 10000)'], {}, 30),
+    (error) => {
+      assert.ok(error instanceof SigningCommandError)
+      assert.equal(error.timedOut, true)
+      assert.doesNotMatch(String(error), /setTimeout|spawnSync/)
+      return true
+    }
+  )
+})
+
+for (const kind of ['PKG', 'App', 'DMG'] as const) {
+  test(`${kind}: recovered stapling still validates before producing the release receipt`, () => {
+    fixture((env, directory) => {
+      const mock = mockRunner(env, directory)
+      let attempts = 0
+      const delays: number[] = []
+      const run: CommandRunner = (label, ...args) => {
+        if (label === `Staple ${kind} ticket` && ++attempts < 3)
+          throw new SigningCommandError(label, 68)
+        return mock.run(label, ...args)
+      }
+      signMacRelease(env, run, directory, (delay) => delays.push(delay))
+      assert.equal(attempts, 3)
+      assert.deepEqual(delays, [15_000, 30_000])
+      assert.ok(mock.calls.includes(`Validate ${kind} ticket`))
+      assert.equal(existsSync(path.join(directory, 'dist', 'macos-signing-arm64.json')), true)
+    })
+  })
+
+  test(`${kind}: exhausted stapling retries clean credentials and withhold the release receipt`, () => {
+    fixture((env, directory) => {
+      const mock = mockRunner(env, directory)
+      let attempts = 0
+      const run: CommandRunner = (label, ...args) => {
+        if (label === `Staple ${kind} ticket`) {
+          attempts++
+          throw new SigningCommandError(label, 68)
+        }
+        return mock.run(label, ...args)
+      }
+      assert.throws(() => signMacRelease(env, run, directory, () => {}), SigningCommandError)
+      assert.equal(attempts, 5)
+      assert.equal(existsSync(path.join(directory, 'dist', 'macos-signing-arm64.json')), false)
+      assert.ok(!mock.calls.includes(`Validate ${kind} ticket`))
+      assert.ok(mock.calls.includes('Restore Keychain search list'))
+      assert.equal(
+        readdirSync(directory).some((name) => name.startsWith('kokorobox-signing-')),
+        false
+      )
+    })
+  })
+}
 
 test('Developer ID checks reject ad-hoc, wrong-team, unhardened and untimestamped signatures', () => {
   assertDeveloperId(details, teamId)
