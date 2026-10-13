@@ -55,6 +55,13 @@ rolling build number: macOS treats every version change as an extension replacem
 the user to approve that replacement. Increment both pinned extension version fields only when
 the bundled provider changes. Ordinary Desktop updates then keep the already-approved extension.
 
+Extension 3.26.12 (bundle 1001638) includes the ProxyBridge PR #242 backport: a
+higher file descriptor soft limit, cleanup of failed UDP opens and relay errors,
+and SOCKS5 control-connection monitoring. It also includes bounded proxy
+handshakes, idle UDP cleanup, and process-name cache protection against PID reuse.
+The Service and Native APIs remain compatible; the provider upgrade is delivered
+by Desktop packaging.
+
 ## Routing logs
 
 The Desktop **Live logs → App routing** tab reads the provider through the
