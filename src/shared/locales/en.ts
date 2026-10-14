@@ -1,5 +1,79 @@
 // English source catalog. Keys are the canonical application-owned messages.
 export const messages: Readonly<Record<string, string>> = {
+  'Authentication required': 'Authentication required',
+  'Not required for this configuration': 'Not required for this configuration',
+  'Approval required': 'Approval required',
+  'Mihomo core': 'Mihomo core',
+  'Settings not applied': 'Settings not applied',
+  'Not ready': 'Not ready',
+  'Core proxy listener': 'Core proxy listener',
+  Available: 'Available',
+  Unconfirmed: 'Unconfirmed',
+  'Application-routing proxy endpoint': 'Application-routing proxy endpoint',
+  'Restart KokoroBox to finish service repair': 'Restart KokoroBox to finish service repair',
+  'The service repair is saved. Restart KokoroBox, then check the status again.':
+    'The service repair is saved. Restart KokoroBox, then check the status again.',
+  'Allow the background service in macOS settings. Network Extension approval is a separate setting.':
+    'Allow the background service in macOS settings. Network Extension approval is a separate setting.',
+  'Service authentication needs repair': 'Service authentication needs repair',
+  'The service may be running, but KokoroBox cannot authenticate. Repair its authentication before restarting the core.':
+    'The service may be running, but KokoroBox cannot authenticate. Repair its authentication before restarting the core.',
+  'Install or repair the service, then check the status again.':
+    'Install or repair the service, then check the status again.',
+  'Repair or reinstall KokoroBox. Opening approval settings cannot restore a missing extension.':
+    'Repair or reinstall KokoroBox. Opening approval settings cannot restore a missing extension.',
+  'Application routing is unsupported': 'Application routing is unsupported',
+  'This platform cannot run application routing. Review the platform requirements before enabling it.':
+    'This platform cannot run application routing. Review the platform requirements before enabling it.',
+  'Core settings could not be applied': 'Core settings could not be applied',
+  'Core configuration could not be confirmed. Review the active subscription, overrides and core logs before retrying.':
+    'Core configuration could not be confirmed. Review the active subscription, overrides and core logs before retrying.',
+  'Mihomo core is stopped': 'Mihomo core is stopped',
+  'Start the core, then check whether the configured proxy features are available.':
+    'Start the core, then check whether the configured proxy features are available.',
+  'Mihomo core is not ready': 'Mihomo core is not ready',
+  'The core is running, but its controller is not ready. Inspect the core settings and logs before retrying.':
+    'The core is running, but its controller is not ready. Inspect the core settings and logs before retrying.',
+  'Runtime status could not be confirmed': 'Runtime status could not be confirmed',
+  'Unavailable status is not proof that the core is stopped. Run diagnostics or inspect the logs before changing settings.':
+    'Unavailable status is not proof that the core is stopped. Run diagnostics or inspect the logs before changing settings.',
+  'Application-routing proxy endpoint unavailable':
+    'Application-routing proxy endpoint unavailable',
+  'The routing module is active, but its proxy endpoint is unavailable. Proxy traffic remains safely blocked. Start or restart the core, then check again.':
+    'The routing module is active, but its proxy endpoint is unavailable. Proxy traffic remains safely blocked. Start or restart the core, then check again.',
+  'Core proxy listener is not configured': 'Core proxy listener is not configured',
+  'Enable a local HTTP or mixed proxy listener in core settings, then check again.':
+    'Enable a local HTTP or mixed proxy listener in core settings, then check again.',
+  'Core proxy listener unavailable': 'Core proxy listener unavailable',
+  'The core is running, but its configured proxy listener is unavailable. Inspect the listener settings and restart the core.':
+    'The core is running, but its configured proxy listener is unavailable. Inspect the listener settings and restart the core.',
+  'Application-routing firewall needs repair': 'Application-routing firewall needs repair',
+  'The routing firewall could not be confirmed. Repair it before retrying application routing.':
+    'The routing firewall could not be confirmed. Repair it before retrying application routing.',
+  'Application routing is enabled, but no active application rules are configured.':
+    'Application routing is enabled, but no active application rules are configured.',
+  'Application-routing settings could not be confirmed':
+    'Application-routing settings could not be confirmed',
+  'Check the routing rules and logs, then retry. This status does not establish that macOS approval is missing.':
+    'Check the routing rules and logs, then retry. This status does not establish that macOS approval is missing.',
+  'Restore the configured proxy settings, then run diagnostics again.':
+    'Restore the configured proxy settings, then run diagnostics again.',
+  'DNS resolution needs attention': 'DNS resolution needs attention',
+  'Inspect the DNS diagnostic results. Repair is offered only when current system DNS is suitable.':
+    'Inspect the DNS diagnostic results. Repair is offered only when current system DNS is suitable.',
+  'Proxy connectivity needs attention': 'Proxy connectivity needs attention',
+  'The local proxy is available, but the outbound connectivity check failed. Inspect the selected proxy and core logs.':
+    'The local proxy is available, but the outbound connectivity check failed. Inspect the selected proxy and core logs.',
+  'Open service settings': 'Open service settings',
+  'Repair routing firewall': 'Repair routing firewall',
+  'Open application routing': 'Open application routing',
+  'Open core settings': 'Open core settings',
+  'View logs': 'View logs',
+  'Open application settings': 'Open application settings',
+  'Status and recovery': 'Status and recovery',
+  'Return to KokoroBox and select Check again to verify routing.':
+    'Return to KokoroBox and select Check again to verify routing.',
+  'Checking runtime status...': 'Checking runtime status...',
   'Override changed during refresh. Please retry.':
     'Override changed during refresh. Please retry.',
   'Subscription changed during refresh. Please retry.':

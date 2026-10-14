@@ -1,3 +1,4 @@
+import RuntimeRecoveryPanel from '../components/runtime/runtime-recovery-panel'
 import OverviewSpeedTest, { type CompletedSpeedTestResult } from '../components/home/speed-test'
 import { OverviewTrafficCard } from '@renderer/components/home/traffic-card'
 import { Button, Surface, Tooltip } from '@heroui/react'
@@ -19,6 +20,7 @@ import {
 } from 'react-icons/lu'
 import { Link } from 'react-router-dom'
 import useSWR from 'swr'
+import { applyRecoveryPreferences } from '../../../shared/runtime-recovery'
 import { getLocale, tr } from '../../../shared/i18n'
 import { isAppRoutingRuleEffectivelyEnabled } from '../../../shared/app-routing'
 import {
@@ -41,10 +43,10 @@ import {
   OverviewActiveChips,
   OverviewConfiguredChips,
   OverviewStat,
-  OverviewStatusLine,
   OverviewSubscriptionIdentity,
   OverviewUsageSummary
 } from '@renderer/components/home/overview-parts'
+import { useRuntimeRecovery } from '@renderer/hooks/use-runtime-recovery'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { useSysProxyOperation } from '@renderer/hooks/use-sysproxy-operation'
 import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'
@@ -53,13 +55,7 @@ import { useHomeDefaultBackgroundSwitch } from '@renderer/hooks/use-home-default
 import { useProfileConfig } from '@renderer/hooks/use-profile-config'
 import { activeOverviewFeatures, configuredOverviewFeatures } from '@renderer/utils/home-overview'
 import { platform } from '@renderer/utils/init'
-import { notify } from '@renderer/utils/notification'
-import {
-  repairServiceAndPromptRestart,
-  useServiceRepairState
-} from '@renderer/utils/service-repair'
 import { nextProfileUpdateAt } from '../../../shared/profile-update'
-import { systemCoreOnlyBuild } from '../../../shared/build-flags'
 import { homeBuiltInImages } from '@renderer/utils/home-background-assets'
 import {
   getAppRoutingStatus,
@@ -72,7 +68,6 @@ import {
   getSystemProxyEnabled,
   mihomoConfig,
   mihomoVersion,
-  relaunchApp,
   serviceStatus,
   startHomeNetworkObservation,
   stopHomeNetworkObservation
@@ -81,7 +76,6 @@ import './home.css'
 
 dayjs.extend(relativeTime)
 
-type ServiceState = Awaited<ReturnType<typeof serviceStatus>>
 type SpeedTestSummary = CompletedSpeedTestResult & { completedAt: number }
 
 let lastCompletedSpeedTest: SpeedTestSummary | undefined
@@ -154,24 +148,6 @@ function OverviewSpeedTestSummary({ result }: { result: SpeedTestSummary }) {
       </dl>
     </section>
   )
-}
-
-function serviceStateLabel(state: ServiceState | undefined): string {
-  switch (state) {
-    case 'running':
-      return tr('Running')
-    case 'requires-approval':
-      return tr('Requires approval')
-    case 'need-init':
-      return tr('Needs setup')
-    case 'stopped':
-    case 'paused':
-      return tr('Stopped')
-    case 'not-installed':
-      return tr('Not installed')
-    default:
-      return tr('Unavailable')
-  }
 }
 
 function selectedGlobalProxy(groups: ControllerMixedGroup[]): {
@@ -251,8 +227,7 @@ const Home = () => {
   const publicIp = publicIpSnapshot.info
   const [refreshingIp, setRefreshingIp] = useState(false)
   const [speedTestSummary, setSpeedTestSummary] = useState(lastCompletedSpeedTest)
-  const { repairing: repairingService, restartRequired: serviceRestartRequired } =
-    useServiceRepairState()
+  const { data: recoverySnapshot, error: recoveryError } = useRuntimeRecovery()
   const [refreshSignal, setRefreshSignal] = useState(0)
   const [revealed, setRevealed] = useState(false)
   const [backgroundUrl, setBackgroundUrl] = useState<string>()
@@ -448,29 +423,9 @@ const Home = () => {
     profile?.extra?.expire &&
     profile.extra.expire > 0 &&
     dayjs.unix(profile.extra.expire).diff(dayjs(), 'day') <= 7
-  const serviceExpected =
-    appConfig?.corePermissionMode === 'service' ||
-    appConfig?.sysProxy.enable === true ||
-    appConfig?.autoSetDNSMode === 'service' ||
-    (routingStatus && !['disabled', 'unsupported'].includes(routingStatus.state))
-  const attention =
-    serviceState === 'requires-approval'
-      ? {
-          text: tr('KokoroBox Service requires approval.'),
-          path: '/settings?section=core&panel=runtime'
-        }
-      : serviceExpected && serviceState && serviceState !== 'running'
-        ? {
-            text: tr('KokoroBox Service is unavailable.'),
-            path: '/settings?section=core&panel=runtime'
-          }
-        : routingStatus?.needsUserApproval ||
-            routingStatus?.state === 'degraded' ||
-            routingStatus?.state === 'error'
-          ? { text: tr('Application routing needs attention.'), path: '/app-routing' }
-          : expiresSoon
-            ? { text: tr('The current subscription expires soon.'), path: '/profiles' }
-            : undefined
+  const attention = expiresSoon
+    ? { text: tr('The current subscription expires soon.'), path: '/profiles' }
+    : undefined
 
   const usage = (profile?.extra?.download ?? 0) + (profile?.extra?.upload ?? 0)
   const quota = profile?.extra?.total ?? 0
@@ -522,30 +477,13 @@ const Home = () => {
     mixedPort <= 65535
       ? mixedPort
       : undefined
+  const recovery =
+    recoverySnapshot && !recoveryError
+      ? applyRecoveryPreferences(recoverySnapshot, appConfig, routingConfig, routingStatus)
+      : undefined
   const mihomoVersionLabel = normalizeCoreVersion(coreVersion?.version)
   const serviceVersionLabel = displayServiceVersion(serviceVersion)
   const exitIsLastKnown = publicIpSnapshot.stale || (!coreLoading && runtime.mihomo === 'stopped')
-  const serviceTone =
-    serviceState === 'running'
-      ? 'success'
-      : serviceState === 'requires-approval' || serviceState === 'need-init'
-        ? 'warning'
-        : serviceExpected && serviceState
-          ? 'danger'
-          : 'neutral'
-  const serviceRepairAvailable =
-    !systemCoreOnlyBuild &&
-    (serviceState === 'not-installed' ||
-      serviceState === 'need-init' ||
-      (serviceExpected && serviceState === 'unknown'))
-  const handleRepairService = async (): Promise<void> => {
-    try {
-      await repairServiceAndPromptRestart()
-      void refreshService()
-    } catch (error) {
-      notify(error, { variant: 'danger' })
-    }
-  }
 
   return (
     <BasePage
@@ -793,13 +731,17 @@ const Home = () => {
                   </span>
                 }
                 value={
-                  coreLoading && !coreStopped
+                  !recoverySnapshot && !recoveryError
                     ? tr('Loading')
-                    : runtime.mihomo === 'system-service'
-                      ? tr('System service')
-                      : runtime.mihomo === 'direct-run'
-                        ? tr('Direct run')
-                        : tr('Stopped')
+                    : !recovery || recovery.core === 'unknown'
+                      ? tr('Unknown')
+                      : recovery.core === 'stopped'
+                        ? tr('Stopped')
+                        : recovery.core === 'not-ready'
+                          ? tr('Not ready')
+                          : recovery.coreMode === 'service'
+                            ? tr('System service')
+                            : tr('Direct run')
                 }
                 secondary={
                   runtime.mihomo !== 'stopped' && mihomoVersionLabel
@@ -823,50 +765,19 @@ const Home = () => {
                 )}
               </div>
               <div className="home-overview-subpanel mt-4 rounded-xl px-3 py-2.5">
-                <OverviewStatusLine
-                  label={tr('KokoroBox Service')}
-                  status={
-                    serviceExpected && serviceState === 'unknown'
-                      ? tr('The service may not be installed')
-                      : serviceStateLabel(runtime.service as ServiceState | undefined)
-                  }
-                  tone={serviceTone}
-                  version={serviceState === 'running' ? serviceVersionLabel : undefined}
-                />
-                {(serviceRepairAvailable || serviceRestartRequired) && (
-                  <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-2">
-                    {serviceRestartRequired && (
-                      <span className="text-xs text-muted">
-                        {tr('Restart KokoroBox to apply the service repair.')}
-                      </span>
-                    )}
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      isPending={repairingService}
-                      isDisabled={repairingService}
-                      onPress={() => {
-                        if (serviceRestartRequired) {
-                          void relaunchApp().catch((error) => notify(error, { variant: 'danger' }))
-                        } else {
-                          void handleRepairService()
-                        }
-                      }}
-                    >
-                      {serviceRestartRequired
-                        ? tr('Restart app')
-                        : serviceState === 'need-init'
-                          ? tr('Initialize')
-                          : tr('Repair service')}
-                    </Button>
-                  </div>
-                )}
                 {configuredFeatures.length > 0 && (
                   <div className="mt-3">
                     <div className="mb-1 text-xs text-muted">{tr('Configured')}</div>
                     <OverviewConfiguredChips features={configuredFeatures} />
                   </div>
                 )}
+              </div>
+              <div className="mt-4 border-t border-separator/60 pt-3">
+                <RuntimeRecoveryPanel
+                  routingConfig={routingConfig}
+                  routingStatus={routingStatus}
+                  serviceVersion={serviceVersionLabel}
+                />
               </div>
               {activeMixedPort !== undefined && (
                 <dl className="mt-3 flex min-w-0 items-center justify-between gap-2 border-t border-separator/40 px-1 pt-3 pb-0.5 text-xs">

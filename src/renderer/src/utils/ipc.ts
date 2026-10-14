@@ -18,6 +18,12 @@ function ipcErrorWrapper(response: any): any {
   }
 }
 
+export async function getRuntimeRecoverySnapshot(): Promise<
+  import('../../../shared/runtime-recovery').RuntimeRecoverySnapshot
+> {
+  return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('getRuntimeRecoverySnapshot'))
+}
+
 export async function getHomePublicIp(forceRefresh = false): Promise<PublicIpSnapshot> {
   return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('getHomePublicIp', forceRefresh))
 }

@@ -1,5 +1,76 @@
 // Traditional Chinese (Taiwan) localization. Keys are the canonical English source messages.
 export const messages: Readonly<Record<string, string>> = {
+  'Authentication required': '需要認證',
+  'Not required for this configuration': '此設定不需要',
+  'Approval required': '需要批准',
+  'Mihomo core': 'Mihomo 核心',
+  'Settings not applied': '設定未成功套用',
+  'Not ready': '尚未就緒',
+  'Core proxy listener': '核心代理監聽入口',
+  Available: '可用',
+  Unconfirmed: '尚未確認',
+  'Application-routing proxy endpoint': '程式分流代理入口',
+  'Restart KokoroBox to finish service repair': '重新啟動 KokoroBox 以完成服務修復',
+  'The service repair is saved. Restart KokoroBox, then check the status again.':
+    '服務修復已儲存。請重新啟動 KokoroBox 後再次檢查狀態。',
+  'Allow the background service in macOS settings. Network Extension approval is a separate setting.':
+    '請在 macOS 設定中允許背景服務。網路延伸功能需要另行批准。',
+  'Service authentication needs repair': '服務認證需要修復',
+  'The service may be running, but KokoroBox cannot authenticate. Repair its authentication before restarting the core.':
+    '服務可能正在執行，但 KokoroBox 無法通過認證。請先修復認證，再重新啟動核心。',
+  'Install or repair the service, then check the status again.': '請安裝或修復服務後再次檢查狀態。',
+  'Repair or reinstall KokoroBox. Opening approval settings cannot restore a missing extension.':
+    '請修復或重新安裝 KokoroBox。開啟批准設定無法還原缺少的延伸功能。',
+  'Application routing is unsupported': '不支援程式分流',
+  'This platform cannot run application routing. Review the platform requirements before enabling it.':
+    '此平台無法執行程式分流。請先確認平台需求再啟用。',
+  'Core settings could not be applied': '無法套用核心設定',
+  'Core configuration could not be confirmed. Review the active subscription, overrides and core logs before retrying.':
+    '無法確認核心設定。請檢查目前訂閱、覆寫與核心日誌後再重試。',
+  'Mihomo core is stopped': 'Mihomo 核心已停止',
+  'Start the core, then check whether the configured proxy features are available.':
+    '請啟動核心後檢查已設定的代理功能是否可用。',
+  'Mihomo core is not ready': 'Mihomo 核心尚未就緒',
+  'The core is running, but its controller is not ready. Inspect the core settings and logs before retrying.':
+    '核心正在執行，但控制器尚未就緒。請檢查核心設定與日誌後再重試。',
+  'Runtime status could not be confirmed': '無法確認執行狀態',
+  'Unavailable status is not proof that the core is stopped. Run diagnostics or inspect the logs before changing settings.':
+    '無法取得狀態不代表核心已停止。請先執行診斷或檢查日誌，再變更設定。',
+  'Application-routing proxy endpoint unavailable': '程式分流代理入口無法使用',
+  'The routing module is active, but its proxy endpoint is unavailable. Proxy traffic remains safely blocked. Start or restart the core, then check again.':
+    '分流模組正在執行，但代理入口無法使用。代理流量仍維持安全封鎖。請啟動或重新啟動核心後再次檢查。',
+  'Core proxy listener is not configured': '尚未設定核心代理監聽入口',
+  'Enable a local HTTP or mixed proxy listener in core settings, then check again.':
+    '請在核心設定中啟用本機 HTTP 或 mixed 代理監聽入口後再次檢查。',
+  'Core proxy listener unavailable': '核心代理監聽入口無法使用',
+  'The core is running, but its configured proxy listener is unavailable. Inspect the listener settings and restart the core.':
+    '核心正在執行，但已設定的代理監聽入口無法使用。請檢查監聽設定並重新啟動核心。',
+  'Application-routing firewall needs repair': '程式分流防火牆需要修復',
+  'The routing firewall could not be confirmed. Repair it before retrying application routing.':
+    '無法確認分流防火牆狀態。請先修復防火牆後再重試程式分流。',
+  'Application routing is enabled, but no active application rules are configured.':
+    '已啟用程式分流，但尚未設定有效的應用程式規則。',
+  'Application-routing settings could not be confirmed': '無法確認程式分流設定',
+  'Check the routing rules and logs, then retry. This status does not establish that macOS approval is missing.':
+    '請檢查分流規則與日誌後重試。此狀態無法證明 macOS 批准權限缺失。',
+  'Restore the configured proxy settings, then run diagnostics again.':
+    '請還原已設定的代理設定後重新執行診斷。',
+  'DNS resolution needs attention': 'DNS 解析需要檢查',
+  'Inspect the DNS diagnostic results. Repair is offered only when current system DNS is suitable.':
+    '請檢查 DNS 診斷結果。只有目前系統 DNS 適用時才會提供修復操作。',
+  'Proxy connectivity needs attention': '代理連線需要檢查',
+  'The local proxy is available, but the outbound connectivity check failed. Inspect the selected proxy and core logs.':
+    '本機代理可用，但對外連線檢查失敗。請檢查選取的代理與核心日誌。',
+  'Open service settings': '開啟服務設定',
+  'Repair routing firewall': '修復分流防火牆',
+  'Open application routing': '開啟程式分流',
+  'Open core settings': '開啟核心設定',
+  'View logs': '查看日誌',
+  'Open application settings': '開啟應用程式設定',
+  'Status and recovery': '狀態與修復',
+  'Return to KokoroBox and select Check again to verify routing.':
+    '返回 KokoroBox 並點選「再次檢查」以確認分流狀態。',
+  'Checking runtime status...': '正在檢查執行狀態...',
   'Override changed during refresh. Please retry.': '覆寫在更新期間已變更，請重試。',
   'Subscription changed during refresh. Please retry.': '訂閱在更新期間已變更，請重試。',
   'This action switches the core to Service management.': '此操作會將核心切換為 Service 管理。',

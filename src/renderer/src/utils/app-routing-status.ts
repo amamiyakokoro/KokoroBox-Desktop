@@ -5,7 +5,7 @@ export function shouldShowMacAppRoutingApprovalGuidance(
   enabled: boolean,
   status?: Pick<AppRoutingStatus, 'state' | 'needsUserApproval'>
 ): boolean {
-  return isMac && Boolean(status?.needsUserApproval || (enabled && status?.state === 'degraded'))
+  return isMac && enabled && status?.needsUserApproval === true
 }
 
 export function getAppRoutingStatusLabel(status?: AppRoutingStatus): string {

@@ -1,3 +1,4 @@
+import RuntimeRecoveryPanel from '../components/runtime/runtime-recovery-panel'
 import { tr } from '../../../shared/i18n'
 import BasePage from '@renderer/components/base/base-page'
 import { AppRoutingRuleRow } from '@renderer/components/app-routing/rule-row'
@@ -9,20 +10,15 @@ import {
   initService,
   installService,
   openAppRoutingSystemSettings,
-  relaunchApp,
   repairAppRoutingFirewall,
   serviceStatus,
   startService
 } from '@renderer/utils/ipc'
 import { notify } from '@renderer/utils/notification'
-import {
-  repairServiceAndPromptRestart,
-  useServiceRepairState
-} from '@renderer/utils/service-repair'
+import { useServiceRepairState } from '@renderer/utils/service-repair'
 import {
   getAppRoutingStatusLabel,
-  getAppRoutingStatusMessage,
-  shouldShowMacAppRoutingApprovalGuidance
+  getAppRoutingStatusMessage
 } from '@renderer/utils/app-routing-status'
 import { Button, Card, Chip, Separator, Switch } from '@heroui/react'
 import { KokoActionMenu } from '@renderer/components/base/koko-collections'
@@ -36,7 +32,6 @@ import {
   MdInfoOutline,
   MdKeyboardArrowDown,
   MdMoreHoriz,
-  MdOpenInNew,
   MdRefresh,
   MdTune
 } from 'react-icons/md'
@@ -83,7 +78,6 @@ const AppRouting: React.FC = () => {
   const [groupEditor, setGroupEditor] = useState<{ id?: string; name: string }>()
   const [deletingGroupId, setDeletingGroupId] = useState<string>()
   const [openingSettings, setOpeningSettings] = useState(false)
-  const [checkingApproval, setCheckingApproval] = useState(false)
   const [preparingService, setPreparingService] = useState(false)
   const [repairingFirewall, setRepairingFirewall] = useState(false)
   const { repairing: repairingService, restartRequired: serviceRestartRequired } =
@@ -112,22 +106,6 @@ const AppRouting: React.FC = () => {
       setOpeningSettings(false)
     }
   }
-  const checkApprovalStatus = async (): Promise<void> => {
-    if (checkingApproval) return
-    setCheckingApproval(true)
-    try {
-      const next = await refresh()
-      if (next) {
-        notify(tr('Application routing status: {0}', [getAppRoutingStatusLabel(next)]), {
-          variant:
-            next.state === 'running' ? 'success' : next.state === 'error' ? 'danger' : 'warning',
-          body: getAppRoutingStatusMessage(next.message, next.protectedApplicationCount)
-        })
-      }
-    } finally {
-      setCheckingApproval(false)
-    }
-  }
   const [isSettingDrawerOpen, setIsSettingDrawerOpen] = useState(false)
   const [settingDrawerKey, setSettingDrawerKey] = useState(0)
   const currentStatusMessage = getAppRoutingStatusMessage(
@@ -136,13 +114,6 @@ const AppRouting: React.FC = () => {
   )
   const currentStatusTone = statusTone(status)
   const needsMacApproval = isMac && config?.enabled && status?.needsUserApproval === true
-  const needsWindowsServiceRepair =
-    isWindows &&
-    status?.state === 'error' &&
-    (status.message === 'KokoroBox Service 认证已失效，请在内核设置中重置认证' ||
-      status.message === 'KokoroBox Service 尚未初始化，请初始化服务后重试' ||
-      status.message === 'Windows 应用分流需要已安装、初始化并运行 KokoroBox Service' ||
-      status.message?.toLowerCase().includes('service is not initialized'))
   const displayedProxyPort = status?.proxyPort ?? (isLinux ? 7894 : 7891)
   const displayedProxyProtocol = isLinux ? 'TPROXY' : 'SOCKS5'
   const backendLabel =
@@ -221,17 +192,6 @@ const AppRouting: React.FC = () => {
     if (!config) return
     if (enabled && isWindows && !(await prepareWindowsService())) return
     await save({ ...config, enabled })
-  }
-  const repairWindowsService = async (): Promise<void> => {
-    if (!isWindows || preparingService || repairingService) return
-    try {
-      // A healthy service can still leave routing paused after an earlier auth error.
-      // Explicit initialization also clears that pause through the main-process IPC.
-      await repairServiceAndPromptRestart({ initializeRunningService: true })
-      await refresh()
-    } catch (error) {
-      notify(error, { variant: 'danger' })
-    }
   }
   const repairWindowsFirewall = async (): Promise<void> => {
     if (!isWindows || repairingFirewall) return
@@ -352,44 +312,6 @@ const AppRouting: React.FC = () => {
                 {currentStatusMessage}
               </p>
             )}
-            {isMac &&
-              !needsMacApproval &&
-              config?.enabled &&
-              ['starting', 'error'].includes(status?.state ?? '') && (
-                <Button
-                  className="mt-2"
-                  size="sm"
-                  variant="secondary"
-                  onPress={() => void refresh()}
-                >
-                  {tr('Retry')}
-                </Button>
-              )}
-            {isWindows && (needsWindowsServiceRepair || serviceRestartRequired) && (
-              <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-2">
-                {serviceRestartRequired && (
-                  <span className="text-xs text-muted">
-                    {tr('Restart KokoroBox to apply the service repair.')}
-                  </span>
-                )}
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  isPending={repairingService}
-                  isDisabled={saving || preparingService || repairingService}
-                  onPress={() => {
-                    if (serviceRestartRequired) {
-                      void relaunchApp().catch((error) => notify(error, { variant: 'danger' }))
-                    } else {
-                      void repairWindowsService()
-                    }
-                  }}
-                >
-                  <MdRefresh className="text-base" />
-                  {serviceRestartRequired ? tr('Restart app') : tr('Repair service')}
-                </Button>
-              </div>
-            )}
           </div>
           <Switch
             className="mt-0.5 shrink-0"
@@ -413,66 +335,15 @@ const AppRouting: React.FC = () => {
           </Switch>
         </section>
 
-        {shouldShowMacAppRoutingApprovalGuidance(isMac, config?.enabled ?? false, status) && (
-          <Card className="border border-warning/40 bg-warning-soft/40">
-            <Card.Content className="gap-3">
-              <div>
-                <h3 className="font-semibold text-warning-soft-foreground">
-                  {needsMacApproval
-                    ? tr('Network Extension approval required')
-                    : tr('macOS Network Extension')}
-                </h3>
-                <p className="mt-1 text-sm text-warning-soft-foreground">
-                  {needsMacApproval
-                    ? tr('macOS needs your approval before application routing can start.')
-                    : tr(
-                        'Open System Settings and request approval for the KokoroBox Network Extension again.'
-                      )}
-                </p>
-              </div>
-              <ol className="list-decimal space-y-1 pl-5 text-sm text-warning-soft-foreground">
-                <li>
-                  {tr(
-                    'In System Settings, go to General → Login Items & Extensions → Network Extensions.'
-                  )}
-                </li>
-                <li>{tr('Enable KokoroBox, then complete the macOS confirmation prompt.')}</li>
-                <li>
-                  {tr(
-                    'Return to KokoroBox and click “I enabled it — check now” to verify routing.'
-                  )}
-                </li>
-              </ol>
-              {status?.state === 'degraded' && (
-                <p className="text-sm text-warning-soft-foreground">
-                  {tr(
-                    'If routing remains safely blocked, start or restart the Mihomo core and check again.'
-                  )}
-                </p>
-              )}
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  variant="primary"
-                  isDisabled={saving || checkingApproval}
-                  isPending={openingSettings}
-                  onPress={() => void openApprovalSettings()}
-                >
-                  <MdOpenInNew className="text-base" />
-                  {tr('Open System Settings and Request Approval')}
-                </Button>
-                <Button
-                  variant="secondary"
-                  isDisabled={saving || openingSettings}
-                  isPending={checkingApproval}
-                  onPress={() => void checkApprovalStatus()}
-                >
-                  <MdRefresh className="text-base" />
-                  {tr('I enabled it — check now')}
-                </Button>
-              </div>
-            </Card.Content>
-          </Card>
-        )}
+        <Card>
+          <Card.Content>
+            <RuntimeRecoveryPanel
+              routingConfig={config}
+              routingStatus={status}
+              busy={saving || preparingService || repairingFirewall || openingSettings}
+            />
+          </Card.Content>
+        </Card>
 
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div className="min-w-0">

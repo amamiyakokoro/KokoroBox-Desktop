@@ -1,3 +1,4 @@
+import RuntimeRecoveryPanel from '../runtime/runtime-recovery-panel'
 import { Button, Modal } from '@heroui/react'
 import React, { useEffect, useRef, useState } from 'react'
 import { tr } from '../../../../shared/i18n'
@@ -135,6 +136,9 @@ const SystemProxyDiagnosticsModal: React.FC<{ onClose: () => void }> = ({ onClos
                 <p role="alert" className="text-sm text-danger">
                   {error}
                 </p>
+              )}
+              {result && (
+                <RuntimeRecoveryPanel diagnostics={result} onDiagnostics={run} busy={busy} />
               )}
               {result && !busy && (
                 <div className="divide-y divide-separator/60">

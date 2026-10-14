@@ -945,14 +945,17 @@ test('Windows and Linux application routing use only the privileged service life
   assert.match(page, /prepareWindowsService = async/)
   assert.match(page, /nextStatus === 'not-installed'[\s\S]*await installService\(\)/)
   assert.match(page, /nextStatus !== 'running'[\s\S]*await initService\(\)/)
-  assert.match(page, /status\.message === 'KokoroBox Service 认证已失效，请在内核设置中重置认证'/)
-  assert.match(page, /needsWindowsServiceRepair/)
-  assert.match(page, /tr\('Repair service'\)/)
-  assert.match(page, /repairWindowsService = async/)
-  assert.match(page, /await repairServiceAndPromptRestart\(\{ initializeRunningService: true \}\)/)
-  assert.match(page, /void repairWindowsService\(\)/)
-  assert.match(page, /useServiceRepairState\(\)/)
-  assert.match(page, /serviceRestartRequired \? tr\('Restart app'\) : tr\('Repair service'\)/)
+  const recoveryPanel = readFileSync(
+    'src/renderer/src/components/runtime/runtime-recovery-panel.tsx',
+    'utf8'
+  )
+  assert.match(page, /RuntimeRecoveryPanel/)
+  assert.match(
+    recoveryPanel,
+    /await repairServiceAndPromptRestart\(\{ initializeRunningService: true \}\)/
+  )
+  assert.match(recoveryPanel, /useServiceRepairState\(\)/)
+  assert.match(recoveryPanel, /case 'restart-app':[\s\S]*await relaunchApp\(\)/)
   assert.match(serviceProtocol, /typeof value\.firewall_ready !== 'boolean'/)
   assert.match(serviceProtocol, /application routing without firewall protection/)
   assert.doesNotMatch(installer, /process-router firewall/)
@@ -964,13 +967,13 @@ test('Windows and Linux application routing use only the privileged service life
   assert.match(installer, /!macro customUnInstall/)
 })
 
-test('macOS safely blocked routing offers reapproval without mislabeling proxy health as permission state', () => {
+test('macOS approval guidance requires explicit permission evidence', () => {
   assert.equal(
     shouldShowMacAppRoutingApprovalGuidance(true, true, {
       state: 'degraded',
       needsUserApproval: false
     }),
-    true
+    false
   )
   assert.equal(
     shouldShowMacAppRoutingApprovalGuidance(true, true, {
@@ -1012,14 +1015,20 @@ test('macOS approval guidance returns promptly and remains visible across app re
   )
   const hook = readFileSync('src/renderer/src/hooks/use-app-routing.ts', 'utf8')
 
-  assert.match(page, /isPending=\{openingSettings\}/)
   assert.match(page, /notify\(error, \{ variant: 'danger' \}\)/)
   assert.match(coordinator, /openMacosApplicationRoutingSettings\(\)/)
   assert.match(coordinator, /needsUserApproval: response\.needsUserApproval/)
   assert.match(hook, /refreshAppRoutingStatus/)
   assert.match(page, /needsMacApproval/)
-  assert.match(page, /Open System Settings and Request Approval/)
-  assert.match(page, /I enabled it — check now/)
+  const panel = readFileSync(
+    'src/renderer/src/components/runtime/runtime-recovery-panel.tsx',
+    'utf8'
+  )
+  const view = readFileSync('src/renderer/src/components/runtime/recovery-guidance.tsx', 'utf8')
+  assert.match(page, /RuntimeRecoveryPanel/)
+  assert.match(panel, /await openAppRoutingSystemSettings\(\)/)
+  assert.match(panel, /await refreshAppRoutingStatus\(\)/)
+  assert.match(view, /Return to KokoroBox and select Check again to verify routing/)
   assert.match(page, /isMac=\{isMac\}/)
   assert.match(page, /onOpenSystemSettings=\{\(\) => void openApprovalSettings\(\)\}/)
   assert.match(settingsDrawer, /\{isMac && \(/)

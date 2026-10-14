@@ -1,3 +1,4 @@
+import { getRuntimeRecoverySnapshot } from '../sys/runtime-recovery'
 import { tr } from '../../shared/i18n'
 import { isGitHubTokenConfigured, setGitHubToken } from '../config/github-token'
 import { isWebdavPasswordConfigured, setWebdavPassword } from '../config/webdav-password'
@@ -465,6 +466,7 @@ export function registerIpcMainHandlers(): void {
   ipcMain.handle('getOverride', (_e, id, ext) => ipcErrorWrapper(getOverride)(id, ext))
   ipcMain.handle('setOverride', (_e, id, ext, str) => ipcErrorWrapper(setOverride)(id, ext, str))
   ipcMain.handle('restartCore', () => ipcErrorWrapper(restartCore)({ throwOnError: true }))
+  ipcMain.handle('getRuntimeRecoverySnapshot', () => ipcErrorWrapper(getRuntimeRecoverySnapshot)())
   ipcMain.handle('runSystemProxyDiagnostics', ipcErrorWrapper(runSystemProxyDiagnostics))
   ipcMain.handle('fixSystemProxyDiagnostic', (_e, action) =>
     ipcErrorWrapper(fixSystemProxyDiagnostic)(action)
