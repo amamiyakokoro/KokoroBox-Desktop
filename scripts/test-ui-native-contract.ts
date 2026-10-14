@@ -60,7 +60,7 @@ test('HeroUI v3 uses canonical packages without migration aliases', () => {
   assert.equal(packageJson.devDependencies['@heroui-v3/styles'], undefined)
   assert.equal(packageJson.devDependencies['framer-motion'], undefined)
   assert.equal(packageJson.devDependencies['react-aria-components'], undefined)
-  assert.equal(packageJson.devDependencies['react-aria'], '^3.52.1')
+  assert.equal(packageJson.devDependencies['react-aria'], '^3.53.0')
   for (const file of sourceFiles) {
     assert.doesNotMatch(readFileSync(file, 'utf8'), /@heroui-v3/, `${file} uses a migration alias`)
   }
