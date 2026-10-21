@@ -218,6 +218,7 @@ const AppRouting: React.FC = () => {
 
   return (
     <BasePage
+      tourId="app-routing"
       title={tr('Application routing')}
       contentClassName="no-scrollbar"
       header={
@@ -226,6 +227,7 @@ const AppRouting: React.FC = () => {
           isIconOnly
           className="app-nodrag"
           variant="ghost"
+          data-tour="app-routing-settings"
           aria-label={tr('Application routing settings')}
           onPress={() => {
             setSettingDrawerKey((key) => key + 1)

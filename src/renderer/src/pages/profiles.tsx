@@ -169,6 +169,7 @@ const Profiles: React.FC = () => {
 
   return (
     <BasePage
+      tourId="profiles"
       ref={pageRef}
       title={tr('Subscriptions')}
       contentClassName="no-scrollbar"
@@ -331,7 +332,7 @@ const Profiles: React.FC = () => {
       />
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
         <CollectionDropZone active={fileOver} label={tr('Drop to import')}>
-          <CollectionGrid>
+          <CollectionGrid className="profiles-tour-list">
             <SortableContext
               items={sortedItems.map((item) => {
                 return item.id

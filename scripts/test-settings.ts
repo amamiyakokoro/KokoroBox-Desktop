@@ -945,7 +945,7 @@ test('migrated HeroUI v3 cards preserve layout safety without requiring v2 spaci
   assert.match(profile, /<CollectionCard isBusy=\{selecting\} isCurrent=\{isCurrent\}>/)
   assert.match(profile, /<Card\.Content className="[^"]*\bpx-3\b/)
   assert.match(profile, /<Card\.Footer className="[^"]*\bpx-3\b/)
-  assert.match(profilesPage, /<CollectionGrid>/)
+  assert.match(profilesPage, /<CollectionGrid(?:\s[^>]*)?>/)
   assert.doesNotMatch(profilesPage, /sm:grid-cols-2|lg:grid-cols-3|xl:grid-cols-4/)
 })
 
@@ -982,7 +982,7 @@ test('profile and override pages share the collection management layout contract
   for (const page of [profiles, overrides]) {
     assert.match(page, /<CollectionImportToolbar/)
     assert.match(page, /<CollectionDropZone active=\{fileOver\}/)
-    assert.match(page, /<CollectionGrid>/)
+    assert.match(page, /<CollectionGrid(?:\s[^>]*)?>/)
     assert.match(page, /<CollectionEmptyState/)
     assert.doesNotMatch(page, /grid-cols-2|repeat\(auto-fit/)
   }
@@ -2016,7 +2016,7 @@ test('operational lists use compact hierarchy without changing their behavior', 
 
   assert.match(rulesPage, /<RulesWorkspace view="routing" \/>/)
   assert.match(resourcesPage, /<RulesWorkspace view="collections" \/>/)
-  assert.match(rulesWorkspace, /<BasePage title=\{tr\('Rules'\)\}/)
+  assert.match(rulesWorkspace, /<BasePage[\s\S]*?title=\{tr\('Rules'\)\}/)
   assert.match(rulesWorkspace, /<KokoTabs/)
   assert.match(rulesWorkspace, /<KokoToolbar aria-label=\{tr\('Rules'\)\}>/)
   assert.match(rulesWorkspace, /<KokoSearchField/)
@@ -2134,7 +2134,7 @@ test('operational lists use compact hierarchy without changing their behavior', 
   assert.match(sidebarSettings, /legacyKey: 'resourceCardStatus'/)
   assert.doesNotMatch(sidebarSettings, /title: tr\('Rule collections'\)/)
 
-  assert.match(overridesPage, /<CollectionGrid>/)
+  assert.match(overridesPage, /<CollectionGrid(?:\s[^>]*)?>/)
   assert.doesNotMatch(overridesPage, /lg:grid-cols-3|xl:grid-cols-4/)
   assert.match(overridesPage, /addOverrideItem/)
   assert.match(overrideItem, /<CollectionCard/)

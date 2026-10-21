@@ -31,7 +31,11 @@ const RulesWorkspace = ({ view }: Props): React.JSX.Element => {
   }, [])
 
   return (
-    <BasePage title={tr('Rules')} contentClassName="overflow-y-hidden">
+    <BasePage
+      tourId={view === 'routing' ? 'rules' : undefined}
+      title={tr('Rules')}
+      contentClassName="overflow-y-hidden"
+    >
       <div className="flex h-full min-h-0 flex-col">
         <div className="no-scrollbar shrink-0 overflow-x-auto">
           <KokoToolbar aria-label={tr('Rules')}>
@@ -73,7 +77,7 @@ const RulesWorkspace = ({ view }: Props): React.JSX.Element => {
           </KokoToolbar>
           <Separator />
         </div>
-        <div className="min-h-0 flex-1">
+        <div data-tour="rules-content" className="min-h-0 flex-1">
           {view === 'routing' ? (
             <RoutingRulesView filter={filter} />
           ) : (

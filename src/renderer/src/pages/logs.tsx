@@ -261,7 +261,7 @@ const Logs: React.FC = () => {
   }, [maxLogEntries])
 
   return (
-    <BasePage title={tr('Live logs')} contentClassName="logs-page overflow-y-hidden">
+    <BasePage tourId="logs" title={tr('Live logs')} contentClassName="logs-page overflow-y-hidden">
       <div className="flex h-full min-h-0 flex-col">
         <div className="no-scrollbar sticky top-0 z-40 overflow-x-auto bg-surface">
           <KokoToolbar aria-label={tr('Live logs')}>
@@ -359,7 +359,7 @@ const Logs: React.FC = () => {
           </KokoToolbar>
           <Separator />
         </div>
-        <div className="min-h-0 flex-1 bg-surface py-1">
+        <div data-tour="logs-content" className="min-h-0 flex-1 bg-surface py-1">
           {tab === 'core' ? (
             <Virtuoso
               className="h-full pr-1"

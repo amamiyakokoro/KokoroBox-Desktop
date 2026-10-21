@@ -169,6 +169,7 @@ const Override: React.FC = () => {
 
   return (
     <BasePage
+      tourId="override"
       ref={pageRef}
       title={tr('Overrides')}
       contentClassName="override-page no-scrollbar"
@@ -179,6 +180,7 @@ const Override: React.FC = () => {
             variant="ghost"
             isIconOnly
             className="app-nodrag"
+            data-tour="override-help"
             aria-label={tr('Override help')}
             onPress={() => setShowHelpModal(true)}
           >
@@ -188,6 +190,7 @@ const Override: React.FC = () => {
       }
     >
       <CollectionImportToolbar
+        className="overrides-tour-import"
         createAction={
           <KokoActionMenu
             ariaLabel={tr('Overrides')}
@@ -270,7 +273,7 @@ const Override: React.FC = () => {
       />
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
         <CollectionDropZone active={fileOver} label={tr('Drop to import')}>
-          <CollectionGrid>
+          <CollectionGrid className="overrides-tour-list">
             <SortableContext
               items={sortedItems.map((item) => {
                 return item.id

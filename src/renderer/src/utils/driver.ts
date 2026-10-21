@@ -2,10 +2,19 @@ import { tr } from '../../../shared/i18n'
 import type { DriveStep, Driver } from 'driver.js'
 import type { NavigateFunction } from 'react-router-dom'
 import { createTourNavigation, type TourPage } from './tour-navigation'
+import {
+  pageTourIds,
+  pageTourRoutes,
+  pageTourSelector,
+  pageTourSteps,
+  pageTourStorageKey,
+  type PageTourId
+} from './page-tours'
 
 type TourStep = DriveStep & { route?: string }
 
 const pageSelectors: Record<string, string> = {
+  ...Object.fromEntries(pageTourIds.map((id) => [pageTourRoutes[id], pageTourSelector(id)])),
   '/': '.home-overview',
   '/kokoro': '.kokoro-settings-guide',
   '/profiles': '.profiles-sticky',
@@ -18,6 +27,7 @@ let driverInstance: Driver | null = null
 let tourNavigation: ReturnType<typeof createTourNavigation> | null = null
 let startingTour: Promise<boolean> | null = null
 let cssLoaded = false
+let activePageTour: PageTourId | null = null
 
 function visibleElement(selector: string): Element | undefined {
   return Array.from(document.querySelectorAll(selector)).find(
@@ -55,12 +65,8 @@ async function loadDriverModule(): Promise<typeof import('driver.js')> {
   return import('driver.js')
 }
 
-export async function createDriver(navigate: NavigateFunction): Promise<Driver> {
-  const { driver } = await loadDriverModule()
-  tourNavigation?.cancel()
-  driverInstance?.destroy()
-
-  const steps: TourStep[] = [
+function welcomeTourSteps(): TourStep[] {
+  return [
     {
       popover: {
         title: tr('Welcome to KokoroBox'),
@@ -235,6 +241,19 @@ export async function createDriver(navigate: NavigateFunction): Promise<Driver> 
       }
     }
   ]
+}
+
+export async function createDriver(
+  navigate: NavigateFunction,
+  pageTourId?: PageTourId
+): Promise<Driver> {
+  const { driver } = await loadDriverModule()
+  tourNavigation?.cancel()
+  driverInstance?.destroy()
+
+  const steps: TourStep[] = pageTourId
+    ? pageTourSteps(pageTourId).map((step) => ({ ...step, route: pageTourRoutes[pageTourId] }))
+    : welcomeTourSteps()
   const instance = driver({
     showProgress: true,
     nextBtnText: tr('Next'),
@@ -254,7 +273,11 @@ export async function createDriver(navigate: NavigateFunction): Promise<Driver> 
           ? () =>
               visibleElement(step.element as string) ??
               visibleElement(
-                (step.element as string).endsWith('-card') ? '.side' : '.main .content'
+                pageTourId
+                  ? pageTourSelector(pageTourId)
+                  : (step.element as string).endsWith('-card')
+                    ? '.side'
+                    : '.main .content'
               ) ??
               document.body
           : step.element
@@ -265,7 +288,10 @@ export async function createDriver(navigate: NavigateFunction): Promise<Driver> 
     onPrevClick: (_element, _step, { index }) => {
       void navigation.goTo((index ?? 0) - 1).catch(console.error)
     },
-    onDestroyed: () => navigation.cancel(),
+    onDestroyed: () => {
+      navigation.cancel()
+      activePageTour = null
+    },
     onPopoverRender: (popover) => {
       popover.closeButton.setAttribute('aria-label', tr('Close'))
     }
@@ -289,6 +315,7 @@ export async function createDriver(navigate: NavigateFunction): Promise<Driver> 
       popover.previousButton.disabled = pending || instance.isFirstStep()
     }
   })
+  activePageTour = pageTourId ?? null
   driverInstance = instance
   tourNavigation = navigation
   return instance
@@ -309,4 +336,35 @@ export function startTour(navigate: NavigateFunction): Promise<boolean> {
 
 export function getDriver(): Driver | null {
   return driverInstance
+}
+
+/** Start one page guide without interrupting a welcome tour or another page. */
+export function startPageTour(
+  id: PageTourId,
+  navigate: NavigateFunction,
+  options: { signal?: AbortSignal; replay?: boolean } = {}
+): Promise<boolean> {
+  if (options.signal?.aborted || startingTour || driverInstance?.isActive())
+    return Promise.resolve(false)
+  if (!options.replay && window.localStorage.getItem(pageTourStorageKey(id)))
+    return Promise.resolve(false)
+  startingTour = (async () => {
+    const instance = await createDriver(navigate, id)
+    if (options.signal?.aborted) {
+      instance.destroy()
+      return false
+    }
+    const started = (await tourNavigation?.goTo(0, true)) ?? false
+    if (started) window.localStorage.setItem(pageTourStorageKey(id), 'true')
+    return started
+  })().finally(() => {
+    startingTour = null
+  })
+  return startingTour
+}
+
+export function cancelPageTour(id: PageTourId): void {
+  if (activePageTour !== id) return
+  tourNavigation?.cancel()
+  driverInstance?.destroy()
 }

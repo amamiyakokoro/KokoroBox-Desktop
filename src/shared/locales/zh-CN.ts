@@ -1,5 +1,49 @@
 // Simplified Chinese localization. Keys are the canonical English source messages.
 export const messages: Readonly<Record<string, string>> = {
+  'Open page guide': '打开本页教程',
+  'Paste a subscription URL and import it here. Use the plus menu to sign in to Kokoro or import a local file.':
+    '在此粘贴订阅链接并导入。也可以从加号菜单登录 Kokoro，或导入本地文件。',
+  'The plus menu can also create a blank local profile. Choose this when you want to write your own configuration.':
+    '加号菜单也能创建空白本地配置，适合自行编写配置。',
+  'Select a profile to activate it. Each card offers update and edit actions; its settings also control automatic updates and enabled overrides.':
+    '点击订阅卡片即可切换使用。卡片提供更新与编辑操作，也能设置自动更新及启用的覆写。',
+  'Application routing sends selected apps through local Mihomo without requiring system proxy or TUN. Check the status here before enabling it.':
+    '应用分流让指定应用程序通过本地 Mihomo 连接，无需开启系统代理或 TUN。启用前可在此查看状态。',
+  'Select an application or enter a matching pattern, then choose Proxy, Direct, or Block in its rule. Rules match from top to bottom.':
+    '选择应用程序或输入匹配条件，再在规则中选择代理、直连或阻止。规则从上到下依次匹配。',
+  'Open settings for default rule actions, UDP DNS handling, and diagnostic logging. Expand Status and recovery when routing needs attention.':
+    '在设置中调整新规则的默认行为、UDP DNS 处理与诊断日志。分流异常时可展开“状态与修复”。',
+  'Proxy groups choose which server handles traffic. Rule mode uses the group selected by a matching rule; Global mode uses the global group. Direct mode does not use proxy groups.':
+    '代理组决定流量使用哪个节点。规则模式按命中规则选择组，全局模式使用全局组，直连模式则不使用代理组。',
+  'Search for a group here. Expand a group to view its servers, select a server, and check latency where available.':
+    '在此搜索代理组。展开组后可查看节点、切换节点，并在支持时检查延迟。',
+  'Adjust group layout, ordering, and latency-test behavior in settings. Automatic groups select servers according to their own policy.':
+    '在设置中调整组布局、排序与延迟测试方式。自动组会按各自策略选择节点。',
+  'Switch between active connections and closed records. Filter and sort the list to find an application, destination, or connection.':
+    '切换查看活动连接与已关闭记录，利用筛选和排序查找应用程序、目标或连接。',
+  'Open a connection to inspect its destination, matched rule, proxy chain, and traffic. The list can be empty when no applications are connecting.':
+    '点击连接可查看目标、命中规则、代理链与流量。没有应用程序连接时，列表可能为空。',
+  'Pause the display to inspect live traffic, or use settings to group connections by application. Closing a connection interrupts that connection.':
+    '可暂停画面更新以检查实时流量，或在设置中按应用程序分组。关闭连接会中断该连接。',
+  'Switch between routing rules and rule collections. Use search to find a domain, network, process, or collection.':
+    '切换查看路由规则与规则集合，利用搜索查找域名、网段、程序或集合。',
+  'Routing rules are evaluated in order, and the first match decides the route. This page shows the rules currently loaded by the core.':
+    '路由规则按顺序匹配，由第一条命中的规则决定路由。此页显示核心当前加载的规则。',
+  'Rule collections contain remote rule sets and can be refreshed from their tab. To change routing rules, edit the profile or its overrides, or use Kokoro rule settings.':
+    '规则集合包含远程规则集，可切换标签页进行更新。要修改路由规则，请编辑订阅或覆写，或使用 Kokoro 规则设置。',
+  'Import an override URL or use the plus menu to create YAML or JavaScript overrides. Overrides customize a profile without editing its downloaded content.':
+    '导入覆写链接，或从加号菜单创建 YAML、JavaScript 覆写，无需修改下载的原始内容即可自定义订阅配置。',
+  'Creating an override does not apply it automatically. Enable it on each profile that should use it in the subscription settings.':
+    '创建覆写后不会自动应用。请到订阅设置，为需要使用的订阅启用该覆写。',
+  'Open Help for YAML merge syntax, JavaScript examples, and the order in which overrides are applied.':
+    '打开帮助可查看 YAML 合并语法、JavaScript 示例及覆写应用顺序。',
+  'Choose Core, App routing, or Service logs to inspect the component involved in a problem. A source can be empty until it produces new records.':
+    '按问题来源选择核心、应用分流或后台服务日志。在组件产生新记录前，来源可能为空。',
+  'Inspect timestamps, levels, and messages here. Open a log entry menu to copy information or create a rule when supported.':
+    '在此查看时间、级别与消息。打开日志条目的菜单可复制信息，或在支持时创建规则。',
+  'Filter by text or level and toggle following new logs. Clear removes displayed records; it does not repair a connection or change routing.':
+    '可按文本或级别筛选，并切换是否跟随新日志。清除只会移除显示的记录，不会修复连接或更改路由。',
+
   'Authentication required': '需要认证',
   'Not required for this configuration': '此配置不需要',
   'Approval required': '需要批准',

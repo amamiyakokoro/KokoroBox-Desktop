@@ -1,3 +1,5 @@
+import { PageTourButton } from './page-tour-button'
+import type { PageTourId } from '@renderer/utils/page-tours'
 import { tr } from '../../../../shared/i18n'
 import { Button, Separator } from '@heroui/react'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
@@ -6,6 +8,7 @@ import { isAlwaysOnTop, setAlwaysOnTop } from '@renderer/utils/ipc'
 import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import { RiPushpin2Fill, RiPushpin2Line } from 'react-icons/ri'
 interface Props {
+  tourId?: PageTourId
   title?: React.ReactNode
   header?: React.ReactNode
   children?: React.ReactNode
@@ -42,7 +45,7 @@ const BasePage = forwardRef<HTMLDivElement, Props>((props, ref) => {
   })
 
   return (
-    <div ref={contentRef} className="w-full h-full">
+    <div ref={contentRef} className="w-full h-full" data-tour-page={props.tourId}>
       <div
         className={`sticky top-0 h-12.25 w-full ${disableAnimation ? 'bg-background/95 backdrop-blur-sm' : 'bg-transparent backdrop-blur'}`}
       >
@@ -53,6 +56,7 @@ const BasePage = forwardRef<HTMLDivElement, Props>((props, ref) => {
             className="header flex gap-1 h-full items-center"
           >
             {props.header}
+            {props.tourId && <PageTourButton id={props.tourId} ready={Boolean(appConfig)} />}
             <Button
               data-react-aria-top-layer="true"
               style={{ zIndex: 60 }}

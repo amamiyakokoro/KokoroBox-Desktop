@@ -920,6 +920,7 @@ const Connections: React.FC = () => {
 
   return (
     <BasePage
+      tourId="connections"
       title={tr('Connections')}
       header={
         <>
@@ -1162,7 +1163,7 @@ const Connections: React.FC = () => {
         </KokoToolbar>
         <Separator />
       </div>
-      <div className="h-[calc(100vh-100px)] mt-px">
+      <div data-tour="connections-list" className="h-[calc(100vh-100px)] mt-px">
         {grouped ? (
           connectionGroups.length > 0 ? (
             <GroupedVirtuoso

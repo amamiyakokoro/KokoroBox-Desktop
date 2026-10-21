@@ -1,5 +1,49 @@
 // English source catalog. Keys are the canonical application-owned messages.
 export const messages: Readonly<Record<string, string>> = {
+  'Open page guide': 'Open page guide',
+  'Paste a subscription URL and import it here. Use the plus menu to sign in to Kokoro or import a local file.':
+    'Paste a subscription URL and import it here. Use the plus menu to sign in to Kokoro or import a local file.',
+  'The plus menu can also create a blank local profile. Choose this when you want to write your own configuration.':
+    'The plus menu can also create a blank local profile. Choose this when you want to write your own configuration.',
+  'Select a profile to activate it. Each card offers update and edit actions; its settings also control automatic updates and enabled overrides.':
+    'Select a profile to activate it. Each card offers update and edit actions; its settings also control automatic updates and enabled overrides.',
+  'Application routing sends selected apps through local Mihomo without requiring system proxy or TUN. Check the status here before enabling it.':
+    'Application routing sends selected apps through local Mihomo without requiring system proxy or TUN. Check the status here before enabling it.',
+  'Select an application or enter a matching pattern, then choose Proxy, Direct, or Block in its rule. Rules match from top to bottom.':
+    'Select an application or enter a matching pattern, then choose Proxy, Direct, or Block in its rule. Rules match from top to bottom.',
+  'Open settings for default rule actions, UDP DNS handling, and diagnostic logging. Expand Status and recovery when routing needs attention.':
+    'Open settings for default rule actions, UDP DNS handling, and diagnostic logging. Expand Status and recovery when routing needs attention.',
+  'Proxy groups choose which server handles traffic. Rule mode uses the group selected by a matching rule; Global mode uses the global group. Direct mode does not use proxy groups.':
+    'Proxy groups choose which server handles traffic. Rule mode uses the group selected by a matching rule; Global mode uses the global group. Direct mode does not use proxy groups.',
+  'Search for a group here. Expand a group to view its servers, select a server, and check latency where available.':
+    'Search for a group here. Expand a group to view its servers, select a server, and check latency where available.',
+  'Adjust group layout, ordering, and latency-test behavior in settings. Automatic groups select servers according to their own policy.':
+    'Adjust group layout, ordering, and latency-test behavior in settings. Automatic groups select servers according to their own policy.',
+  'Switch between active connections and closed records. Filter and sort the list to find an application, destination, or connection.':
+    'Switch between active connections and closed records. Filter and sort the list to find an application, destination, or connection.',
+  'Open a connection to inspect its destination, matched rule, proxy chain, and traffic. The list can be empty when no applications are connecting.':
+    'Open a connection to inspect its destination, matched rule, proxy chain, and traffic. The list can be empty when no applications are connecting.',
+  'Pause the display to inspect live traffic, or use settings to group connections by application. Closing a connection interrupts that connection.':
+    'Pause the display to inspect live traffic, or use settings to group connections by application. Closing a connection interrupts that connection.',
+  'Switch between routing rules and rule collections. Use search to find a domain, network, process, or collection.':
+    'Switch between routing rules and rule collections. Use search to find a domain, network, process, or collection.',
+  'Routing rules are evaluated in order, and the first match decides the route. This page shows the rules currently loaded by the core.':
+    'Routing rules are evaluated in order, and the first match decides the route. This page shows the rules currently loaded by the core.',
+  'Rule collections contain remote rule sets and can be refreshed from their tab. To change routing rules, edit the profile or its overrides, or use Kokoro rule settings.':
+    'Rule collections contain remote rule sets and can be refreshed from their tab. To change routing rules, edit the profile or its overrides, or use Kokoro rule settings.',
+  'Import an override URL or use the plus menu to create YAML or JavaScript overrides. Overrides customize a profile without editing its downloaded content.':
+    'Import an override URL or use the plus menu to create YAML or JavaScript overrides. Overrides customize a profile without editing its downloaded content.',
+  'Creating an override does not apply it automatically. Enable it on each profile that should use it in the subscription settings.':
+    'Creating an override does not apply it automatically. Enable it on each profile that should use it in the subscription settings.',
+  'Open Help for YAML merge syntax, JavaScript examples, and the order in which overrides are applied.':
+    'Open Help for YAML merge syntax, JavaScript examples, and the order in which overrides are applied.',
+  'Choose Core, App routing, or Service logs to inspect the component involved in a problem. A source can be empty until it produces new records.':
+    'Choose Core, App routing, or Service logs to inspect the component involved in a problem. A source can be empty until it produces new records.',
+  'Inspect timestamps, levels, and messages here. Open a log entry menu to copy information or create a rule when supported.':
+    'Inspect timestamps, levels, and messages here. Open a log entry menu to copy information or create a rule when supported.',
+  'Filter by text or level and toggle following new logs. Clear removes displayed records; it does not repair a connection or change routing.':
+    'Filter by text or level and toggle following new logs. Clear removes displayed records; it does not repair a connection or change routing.',
+
   'Authentication required': 'Authentication required',
   'Not required for this configuration': 'Not required for this configuration',
   'Approval required': 'Approval required',

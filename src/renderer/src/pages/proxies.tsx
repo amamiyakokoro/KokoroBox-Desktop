@@ -532,6 +532,7 @@ const Proxies: React.FC = () => {
 
   return (
     <BasePage
+      tourId="proxies"
       title={tr('Proxy groups')}
       contentClassName="bg-surface"
       header={
@@ -540,6 +541,7 @@ const Proxies: React.FC = () => {
           isIconOnly
           variant="ghost"
           className="app-nodrag"
+          data-tour="proxies-settings"
           aria-label={tr('Proxy group settings')}
           onPress={() => {
             setSettingDrawerKey((key) => key + 1)
