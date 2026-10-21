@@ -31,7 +31,7 @@ export function RecoveryGuidance({
           {tr('Check again')}
         </Button>
       </div>
-      <dl className="grid gap-x-5 gap-y-2 text-xs sm:grid-cols-2">
+      <dl className="recovery-status-grid grid gap-x-5 gap-y-2 text-xs sm:grid-cols-2">
         {guidance.layers.map((layer) => (
           <div
             key={layer.id}

@@ -661,7 +661,7 @@ const Home = () => {
               className={`flex min-w-0 flex-col rounded-2xl border p-4 sm:p-5 ${cardStyle}`}
               style={cardBackgroundStyle}
             >
-              <div className="mb-4 flex items-center justify-between gap-2">
+              <div className="mb-4 flex min-h-6 items-center justify-between gap-2">
                 <h2 className="text-sm font-semibold text-foreground">
                   {tr('Current subscription')}
                 </h2>
@@ -674,10 +674,10 @@ const Home = () => {
                 </Link>
               </div>
               {profile ? (
-                <div className="flex flex-1 flex-col gap-2">
+                <div className="flex flex-1 flex-col gap-3">
                   <OverviewSubscriptionIdentity profile={profile} />
                   <OverviewUsageSummary usage={usage} quota={quota} />
-                  <dl className="mt-auto space-y-0 border-t border-separator/40 pt-3">
+                  <dl className="mt-auto space-y-1 border-t border-separator/40 pt-3">
                     {profile.extra?.expire ? (
                       <OverviewMetadataRow
                         icon={<LuCalendarDays className="size-3.5 shrink-0" aria-hidden="true" />}
@@ -720,10 +720,12 @@ const Home = () => {
             </Surface>
 
             <Surface
-              className={`min-w-0 rounded-2xl border p-4 sm:p-5 ${cardStyle}`}
+              className={`flex min-w-0 flex-col rounded-2xl border p-4 sm:p-5 ${cardStyle}`}
               style={cardBackgroundStyle}
             >
-              <h2 className="mb-4 text-sm font-semibold text-foreground">{tr('Runtime')}</h2>
+              <h2 className="mb-4 flex min-h-6 items-center text-sm font-semibold text-foreground">
+                {tr('Runtime')}
+              </h2>
               <OverviewStat
                 icon={
                   <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-accent-soft/55 text-accent">
@@ -748,7 +750,7 @@ const Home = () => {
                     ? `Mihomo ${mihomoVersionLabel}`
                     : 'Mihomo'
                 }
-                valueClassName="text-[1.35rem]"
+                valueClassName="text-base"
               />
               <div className="mt-4">
                 <div className="mb-1 text-xs text-muted">{tr('Current status')}</div>
@@ -764,23 +766,14 @@ const Home = () => {
                   </div>
                 )}
               </div>
-              <div className="home-overview-subpanel mt-4 rounded-xl px-3 py-2.5">
-                {configuredFeatures.length > 0 && (
-                  <div className="mt-3">
-                    <div className="mb-1 text-xs text-muted">{tr('Configured')}</div>
-                    <OverviewConfiguredChips features={configuredFeatures} />
-                  </div>
-                )}
-              </div>
-              <div className="mt-4 border-t border-separator/60 pt-3">
-                <RuntimeRecoveryPanel
-                  routingConfig={routingConfig}
-                  routingStatus={routingStatus}
-                  serviceVersion={serviceVersionLabel}
-                />
-              </div>
+              {configuredFeatures.length > 0 && (
+                <div className="home-overview-subpanel my-4 rounded-xl px-3 py-2.5">
+                  <div className="mb-1 text-xs text-muted">{tr('Configured')}</div>
+                  <OverviewConfiguredChips features={configuredFeatures} />
+                </div>
+              )}
               {activeMixedPort !== undefined && (
-                <dl className="mt-3 flex min-w-0 items-center justify-between gap-2 border-t border-separator/40 px-1 pt-3 pb-0.5 text-xs">
+                <dl className="mt-auto flex min-w-0 items-center justify-between gap-2 border-t border-separator/40 pt-3 text-xs">
                   <dt className="flex min-w-0 items-center gap-1.5 text-muted">
                     <LuNetwork className="size-3.5 shrink-0" aria-hidden="true" />
                     <span>{tr('Mixed proxy port')}</span>
@@ -792,6 +785,17 @@ const Home = () => {
               )}
             </Surface>
           </div>
+
+          <Surface
+            className={`home-runtime-health min-w-0 rounded-2xl border p-4 sm:p-5 ${cardStyle}`}
+            style={cardBackgroundStyle}
+          >
+            <RuntimeRecoveryPanel
+              routingConfig={routingConfig}
+              routingStatus={routingStatus}
+              serviceVersion={serviceVersionLabel}
+            />
+          </Surface>
 
           <OverviewTrafficCard
             hasActiveBackground={hasActiveBackground}
