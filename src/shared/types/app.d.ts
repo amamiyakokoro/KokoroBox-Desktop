@@ -35,6 +35,7 @@ interface IHost {
 }
 
 interface AppConfig {
+  kokoroSubscriptionSettings?: KokoroSubscriptionSettings
   homeBackground?: import('../home').HomeBackground
   homeBackgroundDisabled?: boolean
   homeDefaultBackgroundId?: import('../home').HomeDefaultBackgroundId

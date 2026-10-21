@@ -3,6 +3,11 @@ import { Button, Chip, Switch } from '@heroui/react'
 import { KokoSelect, KokoTextField } from '../base/koko-form'
 import BasePage from '@renderer/components/base/base-page'
 import { useProfileConfig } from '@renderer/hooks/use-profile-config'
+import { useAppConfig } from '@renderer/hooks/use-app-config'
+import {
+  isKokoroProtocol,
+  resolveKokoroSubscriptionSettings
+} from '../../../../shared/kokoro-subscription-settings'
 import { calcTraffic } from '@renderer/utils/calc'
 import {
   addKokoroProfile,
@@ -17,12 +22,6 @@ import React, { useEffect, useId, useMemo, useState, type ReactNode } from 'reac
 import { LuCloudDownload, LuLogIn, LuLogOut, LuRefreshCw } from 'react-icons/lu'
 import KokoroDefaultRules from './kokoro-default-rules'
 import KokoroSectionHeading from './kokoro-section-heading'
-
-const supportedProtocols = new Set<KokoroProtocol>(['vmess', 'anytls', 'hysteria2'])
-
-function isKokoroProtocol(value: string): value is KokoroProtocol {
-  return supportedProtocols.has(value as KokoroProtocol)
-}
 
 function utcDate(value: string): dayjs.Dayjs {
   return dayjs(/[zZ]|[+-]\d\d:\d\d$/.test(value) ? value : `${value}Z`)
@@ -57,6 +56,7 @@ const KokoroOptionSection = ({ title, children, footer }: KokoroOptionSectionPro
 
 const KokoroSettingsPage: React.FC = () => {
   const { mutateProfileConfig } = useProfileConfig()
+  const { appConfig, patchAppConfigOrThrow } = useAppConfig()
   const [session, setSession] = useState<KokoroSession>()
   const [settings, setSettings] = useState<KokoroSubscriptionSettings>()
   const [loading, setLoading] = useState(true)
@@ -94,35 +94,9 @@ const KokoroSettingsPage: React.FC = () => {
 
   useEffect(() => {
     const options = session?.options
-    if (!options || settings) return
-    const availableProtocols = options.protocols.map((item) => item.value).filter(isKokoroProtocol)
-    const protocol = availableProtocols.includes(options.defaults.protocol as KokoroProtocol)
-      ? (options.defaults.protocol as KokoroProtocol)
-      : availableProtocols[0] || 'vmess'
-    const protocolSupportsDirect = Boolean(
-      options.protocols.find((item) => item.value === protocol)?.supports_direct
-    )
-    const plan =
-      options.defaults.plan && options.plans.some((item) => item.name === options.defaults.plan)
-        ? options.defaults.plan
-        : options.plans[0]?.name || null
-    setSettings({
-      format: 'mihomo',
-      protocol,
-      plan,
-      isp: null,
-      mode: protocolSupportsDirect && options.defaults.mode === 'direct' ? 'direct' : 'relay',
-      rule_source: options.rule_sources.includes(options.defaults.rule_source)
-        ? (options.defaults.rule_source as KokoroRuleSource)
-        : 'origin',
-      final_route: options.final_routes.includes(options.defaults.final_route)
-        ? (options.defaults.final_route as KokoroFinalRoute)
-        : 'proxy',
-      rule_provider_auto_update: options.defaults.rule_provider_auto_update,
-      profile_auto_update: options.defaults.profile_auto_update,
-      profile_update_hours: options.defaults.profile_update_hours
-    })
-  }, [session, settings])
+    if (!options || !appConfig || settings) return
+    setSettings(resolveKokoroSubscriptionSettings(options, appConfig.kokoroSubscriptionSettings))
+  }, [session, appConfig, settings])
 
   const options = session?.options
   const user = session?.user
@@ -179,11 +153,14 @@ const KokoroSettingsPage: React.FC = () => {
     if (!settings || !canImport) return
     setImporting(true)
     try {
-      await addKokoroProfile({
+      const selectedSettings: KokoroSubscriptionSettings = {
         ...settings,
         mode: supportsDirect ? settings.mode : 'relay',
         isp: settings.isp || null
-      })
+      }
+      // Persist the selection before starting the import.
+      await patchAppConfigOrThrow({ kokoroSubscriptionSettings: selectedSettings })
+      await addKokoroProfile(selectedSettings)
       refreshProfiles()
       notify(tr('Kokoro subscription added'), { variant: 'success' })
     } catch (error) {
