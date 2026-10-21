@@ -335,15 +335,12 @@ const AppRouting: React.FC = () => {
           </Switch>
         </section>
 
-        <Card>
-          <Card.Content>
-            <RuntimeRecoveryPanel
-              routingConfig={config}
-              routingStatus={status}
-              busy={saving || preparingService || repairingFirewall || openingSettings}
-            />
-          </Card.Content>
-        </Card>
+        <RuntimeRecoveryPanel
+          compact
+          routingConfig={config}
+          routingStatus={status}
+          busy={saving || preparingService || repairingFirewall || openingSettings}
+        />
 
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div className="min-w-0">

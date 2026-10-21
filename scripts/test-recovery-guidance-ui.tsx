@@ -98,3 +98,32 @@ test('Home, routing and diagnostics share one recovery panel and checks avoid ow
   assert.match(panel, /snapshot && !error/)
   assert.match(panel, /await refreshAppRoutingStatus\(\)/)
 })
+
+test('compact recovery keeps healthy checks inside a closed disclosure', () => {
+  const guidance = buildRuntimeRecoveryGuidance(fixture('running', false))
+  assert.equal(guidance.issue, undefined)
+  const html = renderToStaticMarkup(
+    <RecoveryGuidance compact guidance={guidance} onAction={() => {}} />
+  )
+  const disclosure = html.match(/<details\b[\s\S]*?<\/details>/)?.[0]
+  assert.ok(disclosure)
+  assert.doesNotMatch(disclosure.match(/<details\b[^>]*>/)![0], /\bopen(?:=|\s|>)/)
+  assert.match(disclosure, /<summary[\s\S]*No issues detected[\s\S]*<\/summary>/)
+  assert.match(disclosure, /data-recovery-layer="routing-endpoint"/)
+  assert.match(html.replace(disclosure, ''), /Check again/)
+  for (const catalog of [zhTW, zhCN]) assert.ok(Object.hasOwn(catalog, 'No issues detected'))
+})
+
+test('compact recovery exposes the problem and primary repair without expanding details', () => {
+  const guidance = buildRuntimeRecoveryGuidance(fixture('degraded', false))
+  const html = renderToStaticMarkup(
+    <RecoveryGuidance compact guidance={guidance} busy onAction={() => {}} />
+  )
+  const summary = html.match(/<summary\b[\s\S]*?<\/summary>/)?.[0]
+  assert.ok(summary?.includes(guidance.issue!.title))
+  const collapsed = html.replace(/<details\b[\s\S]*?<\/details>/, '')
+  assert.match(collapsed, /Restart core/)
+  assert.match(collapsed, /Check again/)
+  assert.match(html, /data-recovery-cause="routing-endpoint"/)
+  for (const button of html.matchAll(/<button\b[^>]*>/g)) assert.match(button[0], /disabled=""/)
+})

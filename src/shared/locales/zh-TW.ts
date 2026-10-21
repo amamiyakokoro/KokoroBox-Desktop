@@ -68,6 +68,7 @@ export const messages: Readonly<Record<string, string>> = {
   'View logs': '查看日誌',
   'Open application settings': '開啟應用程式設定',
   'Status and recovery': '狀態與修復',
+  'No issues detected': '未發現異常',
   'Return to KokoroBox and select Check again to verify routing.':
     '返回 KokoroBox 並點選「再次檢查」以確認分流狀態。',
   'Checking runtime status...': '正在檢查執行狀態...',

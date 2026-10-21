@@ -46,6 +46,7 @@ export default function RuntimeRecoveryPanel({
   routingStatus,
   diagnostics,
   onDiagnostics,
+  compact = false,
   busy: parentBusy = false
 }: {
   routingConfig?: AppRoutingConfig
@@ -53,6 +54,7 @@ export default function RuntimeRecoveryPanel({
   routingStatus?: AppRoutingStatus
   diagnostics?: SystemProxyDiagnostics
   onDiagnostics?: (action?: DiagnosticAction) => Promise<void>
+  compact?: boolean
   busy?: boolean
 }) {
   const { data: snapshot, error, mutate } = useRuntimeRecovery()
@@ -208,6 +210,7 @@ export default function RuntimeRecoveryPanel({
       {guidance ? (
         <RecoveryGuidance
           guidance={guidance}
+          compact={compact}
           serviceVersion={serviceVersion}
           busy={busy || parentBusy || repairing}
           onAction={(action) => {

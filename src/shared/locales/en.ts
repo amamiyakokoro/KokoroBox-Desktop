@@ -71,6 +71,7 @@ export const messages: Readonly<Record<string, string>> = {
   'View logs': 'View logs',
   'Open application settings': 'Open application settings',
   'Status and recovery': 'Status and recovery',
+  'No issues detected': 'No issues detected',
   'Return to KokoroBox and select Check again to verify routing.':
     'Return to KokoroBox and select Check again to verify routing.',
   'Checking runtime status...': 'Checking runtime status...',
