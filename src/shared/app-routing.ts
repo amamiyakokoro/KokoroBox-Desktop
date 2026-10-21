@@ -69,7 +69,7 @@ export const defaultAppRoutingConfig: AppRoutingConfig = {
   proxyUdpDns: true,
   defaultAction: 'proxy',
   defaultProtocol: 'both',
-  diagnosticLogging: false,
+  diagnosticLogging: true,
   rules: []
 }
 

@@ -458,8 +458,8 @@ export const messages: Readonly<Record<string, string>> = {
   'Default protocol for new rules': '新規則預設協定',
   'Advanced options': '進階設定',
   'Diagnostic logging': '診斷記錄',
-  'Log application routing destinations and decisions. Enable only while troubleshooting.':
-    '記錄應用程式分流的比對目標與處理結果；僅在排查問題時啟用。',
+  'Log application routing destinations and decisions. Enabled by default.':
+    '記錄應用程式分流的比對目標與處理結果，預設開啟。',
   'macOS Network Extension': 'macOS 網路延伸功能',
   'Open System Settings and request approval for the KokoroBox Network Extension again.':
     '開啟「系統設定」並重新要求批准 KokoroBox 網路延伸功能。',

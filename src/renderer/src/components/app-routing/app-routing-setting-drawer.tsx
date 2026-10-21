@@ -120,7 +120,7 @@ const AppRoutingSettingDrawer: React.FC<Props> = (props) => {
         <SettingItem
           title={tr('Diagnostic logging')}
           description={tr(
-            'Log application routing destinations and decisions. Enable only while troubleshooting.'
+            'Log application routing destinations and decisions. Enabled by default.'
           )}
           {...settingItemProps}
         >

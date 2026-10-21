@@ -473,8 +473,8 @@ export const messages: Readonly<Record<string, string>> = {
   'Default protocol for new rules': 'Default protocol for new rules',
   'Advanced options': 'Advanced options',
   'Diagnostic logging': 'Diagnostic logging',
-  'Log application routing destinations and decisions. Enable only while troubleshooting.':
-    'Log application routing destinations and decisions. Enable only while troubleshooting.',
+  'Log application routing destinations and decisions. Enabled by default.':
+    'Log application routing destinations and decisions. Enabled by default.',
   'macOS Network Extension': 'macOS Network Extension',
   'Open System Settings and request approval for the KokoroBox Network Extension again.':
     'Open System Settings and request approval for the KokoroBox Network Extension again.',
