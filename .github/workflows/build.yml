@@ -295,6 +295,15 @@ jobs:
             if ($matches.Count -eq 0) { throw "Missing packaged application routing file: $name" }
           }
 
+      - name: Work Around Intel macOS Notarization Networking
+        if: matrix.os == 'macos-latest' && matrix.arch == 'x64'
+        shell: bash
+        # https://github.com/actions/runner-images/issues/14924
+        # This disposable hosted runner must use TCP instead of unreliable HTTP/3.
+        run: |
+          printf '%s\n' 'block return out quick proto udp from any to any port 443' | sudo pfctl -f -
+          sudo pfctl -E
+
       - name: Sign and Notarize macOS Installers
         if: matrix.os == 'macos-latest'
         env:

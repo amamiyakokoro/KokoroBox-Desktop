@@ -35,6 +35,7 @@ import {
   signingConfig,
   kokoroBoxAppleTeamId,
   sparkleSecrets,
+  validateTicket,
   validateSigningEnvironment
 } from './macos-signing.ts'
 import type { CommandRunner } from './macos-signing.ts'
@@ -319,7 +320,52 @@ for (const kind of ['PKG', 'App', 'DMG'] as const) {
     assert.equal(calls, 4)
     assert.deepEqual(delays, [15_000, 30_000, 60_000])
   })
+
+  test(`${kind}: retries ticket validation network failures and timeouts`, () => {
+    let calls = 0
+    const delays: number[] = []
+    const failures = [68, 75, null]
+    validateTicket(
+      kind,
+      'signed artifact',
+      {},
+      (label, command, args, _env, timeout) => {
+        assert.equal(label, `Validate ${kind} ticket`)
+        assert.equal(command, '/usr/bin/xcrun')
+        assert.deepEqual(args, ['stapler', 'validate', 'signed artifact'])
+        assert.equal(timeout, 60_000)
+        if (++calls <= failures.length)
+          throw new SigningCommandError(label, failures[calls - 1], calls === 3)
+        return ''
+      },
+      (delay) => delays.push(delay)
+    )
+    assert.equal(calls, 4)
+    assert.deepEqual(delays, [15_000, 30_000, 60_000])
+  })
 }
+
+test('invalid, missing or revoked tickets fail validation without retrying', () => {
+  for (const code of [1, 65, 66, 77, null]) {
+    let calls = 0
+    const failure = new SigningCommandError('Validate DMG ticket', code)
+    assert.throws(
+      () =>
+        validateTicket(
+          'DMG',
+          'signed artifact',
+          {},
+          () => {
+            calls++
+            throw failure
+          },
+          () => assert.fail('Permanent failures must not wait')
+        ),
+      (error) => error === failure
+    )
+    assert.equal(calls, 1)
+  }
+})
 
 test('ticket timeouts retry but permanent failures stop immediately', () => {
   let calls = 0
@@ -389,6 +435,51 @@ test('command timeouts retain safe retry metadata without exposing raw process e
 })
 
 for (const kind of ['PKG', 'App', 'DMG'] as const) {
+  test(`${kind}: recovered validation completes the release`, () => {
+    fixture((env, directory) => {
+      const mock = mockRunner(env, directory)
+      let attempts = 0
+      const delays: number[] = []
+      const run: CommandRunner = (label, ...args) => {
+        if (label === `Validate ${kind} ticket` && ++attempts < 3)
+          throw new SigningCommandError(label, 68)
+        return mock.run(label, ...args)
+      }
+      signMacRelease(env, run, directory, (delay) => delays.push(delay))
+      assert.equal(attempts, 3)
+      assert.deepEqual(delays, [15_000, 30_000])
+      assert.equal(existsSync(path.join(directory, 'dist', 'macos-signing-arm64.json')), true)
+    })
+  })
+
+  test(`${kind}: exhausted validation retries withhold the receipt and clean credentials`, () => {
+    fixture((env, directory) => {
+      const mock = mockRunner(env, directory)
+      let attempts = 0
+      const delays: number[] = []
+      const run: CommandRunner = (label, ...args) => {
+        if (label === `Validate ${kind} ticket`) {
+          attempts++
+          throw new SigningCommandError(label, 68)
+        }
+        return mock.run(label, ...args)
+      }
+      assert.throws(
+        () => signMacRelease(env, run, directory, (delay) => delays.push(delay)),
+        SigningCommandError
+      )
+      assert.equal(attempts, 5)
+      assert.deepEqual(delays, [15_000, 30_000, 60_000, 120_000])
+      assert.equal(existsSync(path.join(directory, 'dist', 'macos-signing-arm64.json')), false)
+      assert.ok(!mock.calls.includes(`Assess ${kind} with Gatekeeper`))
+      assert.ok(mock.calls.includes('Restore Keychain search list'))
+      assert.equal(
+        readdirSync(directory).some((name) => name.startsWith('kokorobox-signing-')),
+        false
+      )
+    })
+  })
+
   test(`${kind}: recovered stapling still validates before producing the release receipt`, () => {
     fixture((env, directory) => {
       const mock = mockRunner(env, directory)
@@ -750,6 +841,25 @@ test('generated signing config passes electron-builder validation with required 
   assert.equal(config.pkg.identity, teamId)
   assert.equal(config.dmg.sign, true)
   assert.equal(config.dmg.writeUpdateInfo, false)
+})
+
+test('Intel macOS forces TCP before signing without receiving signing secrets', () => {
+  const config = parse(readFileSync('.github/workflows/build.yml', 'utf8'))
+  const steps = config.jobs.build.steps
+  const workaround = steps.findIndex(
+    (step: { name?: string }) => step.name === 'Work Around Intel macOS Notarization Networking'
+  )
+  const signing = steps.findIndex(
+    (step: { name?: string }) => step.name === 'Sign and Notarize macOS Installers'
+  )
+  assert.ok(workaround >= 0 && workaround < signing)
+  assert.equal(steps[workaround].if, "matrix.os == 'macos-latest' && matrix.arch == 'x64'")
+  assert.equal(steps[workaround].shell, 'bash')
+  assert.equal(steps[workaround].env, undefined)
+  assert.match(steps[workaround].run, /block return out quick proto udp from any to any port 443/)
+  assert.match(steps[workaround].run, /sudo pfctl -f -/)
+  assert.match(steps[workaround].run, /sudo pfctl -E/)
+  assert.equal(steps[workaround]['continue-on-error'], undefined)
 })
 
 test('callers isolate macOS build secrets from Linux publication secrets', () => {

@@ -91,18 +91,41 @@ export function stapleTicket(
   run: CommandRunner = runCommand,
   wait: (milliseconds: number) => void = waitForTicketRetry
 ) {
-  const label = `Staple ${kind} ticket`
+  runTicketCommand('staple', kind, artifact, env, run, wait)
+}
+
+export function validateTicket(
+  kind: 'PKG' | 'App' | 'DMG',
+  artifact: string,
+  env: NodeJS.ProcessEnv,
+  run: CommandRunner = runCommand,
+  wait: (milliseconds: number) => void = waitForTicketRetry
+) {
+  runTicketCommand('validate', kind, artifact, env, run, wait)
+}
+
+function runTicketCommand(
+  action: 'staple' | 'validate',
+  kind: 'PKG' | 'App' | 'DMG',
+  artifact: string,
+  env: NodeJS.ProcessEnv,
+  run: CommandRunner,
+  wait: (milliseconds: number) => void
+) {
+  const label = `${action === 'staple' ? 'Staple' : 'Validate'} ${kind} ticket`
+  // Validation also contacts CloudKit, but invalid ticket data must fail immediately.
+  const retryCodes = action === 'staple' ? [65, 68, 75] : [68, 75]
   const attempts = 5
   for (let attempt = 0; attempt < attempts; attempt++) {
     try {
-      run(label, '/usr/bin/xcrun', ['stapler', 'staple', artifact], env, 60_000)
+      run(label, '/usr/bin/xcrun', ['stapler', action, artifact], env, 60_000)
       return
     } catch (error) {
       // After Accepted, CloudKit ticket retrieval may still fail. Retry only
       // stapler's ticket/service errors or a timeout; other signing steps fail immediately.
       if (
         !(error instanceof SigningCommandError) ||
-        (!error.timedOut && ![65, 68, 75].includes(error.exitCode ?? -1)) ||
+        (!error.timedOut && !retryCodes.includes(error.exitCode ?? -1)) ||
         attempt === attempts - 1
       ) {
         throw error
@@ -666,7 +689,7 @@ export function signMacRelease(
     const notarizationId = assertAccepted(result)
     console.log(`Apple accepted notarization ${notarizationId}; stapling and verifying the ticket`)
     stapleTicket('PKG', pkgPath, childEnv, run, waitForRetry)
-    run('Validate PKG ticket', '/usr/bin/xcrun', ['stapler', 'validate', pkgPath], childEnv)
+    validateTicket('PKG', pkgPath, childEnv, run, waitForRetry)
     run(
       'Assess PKG with Gatekeeper',
       '/usr/sbin/spctl',
@@ -706,7 +729,7 @@ export function signMacRelease(
     )
     const appNotarizationId = assertAccepted(appResult)
     stapleTicket('App', appPath, childEnv, run, waitForRetry)
-    run('Validate App ticket', '/usr/bin/xcrun', ['stapler', 'validate', appPath], childEnv)
+    validateTicket('App', appPath, childEnv, run, waitForRetry)
     run(
       'Assess App with Gatekeeper',
       '/usr/sbin/spctl',
@@ -775,7 +798,7 @@ export function signMacRelease(
     )
     const dmgNotarizationId = assertAccepted(dmgResult)
     stapleTicket('DMG', dmgPath, childEnv, run, waitForRetry)
-    run('Validate DMG ticket', '/usr/bin/xcrun', ['stapler', 'validate', dmgPath], childEnv)
+    validateTicket('DMG', dmgPath, childEnv, run, waitForRetry)
     run(
       'Assess DMG with Gatekeeper',
       '/usr/sbin/spctl',
