@@ -95,7 +95,7 @@
     "driver.js": "^1.10.2",
     "electron": "^44.9.3",
     "electron-builder": "26.18.0",
-    "electron-vite": "^6.0.0-beta.7",
+    "electron-vite": "^6.0.0",
     "eslint": "^10.13.0",
     "eslint-plugin-react": "^7.37.5",
     "form-data": "^4.0.6",
