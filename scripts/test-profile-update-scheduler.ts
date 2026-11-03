@@ -1,6 +1,11 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { createProfileUpdateScheduler } from '../src/main/core/profile-update-scheduler'
+import {
+  isValidProfileInterval,
+  parseProfileUpdateInterval,
+  profileUpdateDelay
+} from '../src/shared/profile-update'
 
 function fixture() {
   let time = 1_000_000
@@ -110,7 +115,10 @@ test('new settings replace old timers and invalid intervals never create timers'
   f.scheduler.upsert(f.item())
   f.scheduler.upsert({ ...f.item(), autoUpdate: false })
   assert.equal(f.timers.size, 0)
-  for (const interval of [-1, 0, Infinity, NaN]) f.scheduler.upsert({ ...f.item(), interval })
+  for (const interval of [-1, 0, 0.001, 1.5, Infinity, NaN, Number.MAX_SAFE_INTEGER]) {
+    f.scheduler.upsert({ ...f.item(), interval })
+    assert.equal(profileUpdateDelay({ ...f.item(), interval }), -1)
+  }
   assert.equal(f.timers.size, 0)
 })
 
@@ -122,4 +130,77 @@ test('long intervals use bounded timers and recheck their deadline instead of re
   await f.fire()
   assert.equal(f.refreshes(), 0)
   assert.equal(f.nextDelay(), 2_147_483_647)
+})
+
+test('subscription interval headers accept only positive whole hours with safe millisecond values', () => {
+  for (const value of [
+    undefined,
+    null,
+    1,
+    ['1'],
+    '',
+    ' ',
+    '-1',
+    '0',
+    '1abc',
+    '1.5',
+    '1e2',
+    'Infinity',
+    '999999999999999999'
+  ]) {
+    assert.equal(parseProfileUpdateInterval(value), undefined, String(value))
+  }
+  assert.equal(parseProfileUpdateInterval(' 2 '), 120)
+  assert.equal(parseProfileUpdateInterval('01'), 60)
+  // Longer periods remain safe because the scheduler splits them into bounded timers.
+  assert.equal(parseProfileUpdateInterval('1000'), 60_000)
+  assert.equal(isValidProfileInterval(60_000), true)
+})
+
+test('replacing or reinitializing an overdue schedule never overlaps an in-flight refresh', async () => {
+  for (const clear of [false, true]) {
+    const f = fixture()
+    let release!: () => void
+    f.block(
+      new Promise<void>((resolve) => {
+        release = resolve
+      })
+    )
+    f.recover()
+    f.scheduler.upsert(f.item())
+    await f.fire()
+    assert.equal(f.refreshes(), 1)
+    if (clear) f.scheduler.clear()
+    f.scheduler.upsert(f.item())
+    await f.fire()
+    assert.equal(f.refreshes(), 1)
+    release()
+    await new Promise<void>((resolve) => {
+      setImmediate(resolve)
+    })
+    assert.equal(f.nextDelay(), 0)
+    await f.fire()
+    assert.equal(f.refreshes(), 1)
+    assert.equal(f.nextDelay(), 60_000)
+  }
+})
+
+test('a future replacement timer keeps its deadline while the previous refresh completes', async () => {
+  const f = fixture()
+  let release!: () => void
+  f.block(
+    new Promise<void>((resolve) => {
+      release = resolve
+    })
+  )
+  f.recover()
+  f.scheduler.upsert(f.item())
+  await f.fire()
+  f.scheduler.upsert({ ...f.item(), updated: 1_000_000 })
+  release()
+  await new Promise<void>((resolve) => {
+    setImmediate(resolve)
+  })
+  assert.equal(f.timers.size, 1)
+  assert.equal(f.nextDelay(), 60_000)
 })

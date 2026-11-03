@@ -6,6 +6,7 @@ import { test } from 'node:test'
 import ts from 'typescript'
 import { parse as parseYaml } from 'yaml'
 import * as oauth from '../src/main/kokoro/oauth.ts'
+import * as profileUpdate from '../src/shared/profile-update.ts'
 import { createDeepLinkInbox, takeInitialDeepLinks } from '../src/main/resolve/deepLinkInbox.ts'
 import {
   createKokoroRelayProof,
@@ -109,6 +110,7 @@ function harness(stored: KokoroCredentials | null = null) {
   }
   const dependencies: Record<string, unknown> = {
     '../../shared/i18n': { tr: (value: string) => value },
+    '../../shared/profile-update': profileUpdate,
     axios: {
       create: (config: unknown) => {
         assert.deepEqual(config, { maxRedirects: 0 })
@@ -605,6 +607,7 @@ test('Kokoro subscription User-Agent identifies the platform and application ver
 
 test('Kokoro subscription resolve and config download send the same platform User-Agent', async () => {
   const h = harness(authenticatedCredentials())
+  let intervalHeader = '2'
   h.boundaries.request = async (config) => {
     if (config.url.endsWith('/app/subscription/resolve')) {
       return {
@@ -623,13 +626,16 @@ test('Kokoro subscription resolve and config download send the same platform Use
     if (config.url.includes('/app/subscription/config?')) {
       return {
         data: 'proxies: []\n',
-        headers: { 'content-type': 'text/yaml; charset=utf-8' }
+        headers: {
+          'content-type': 'text/yaml; charset=utf-8',
+          'profile-update-interval': intervalHeader
+        }
       }
     }
     throw new Error('unexpected request')
   }
 
-  await h.client.downloadKokoroProfile({
+  const settings: KokoroSubscriptionSettings = {
     format: 'mihomo',
     protocol: 'vmess',
     plan: null,
@@ -640,12 +646,18 @@ test('Kokoro subscription resolve and config download send the same platform Use
     rule_provider_auto_update: true,
     profile_auto_update: true,
     profile_update_hours: 1
-  })
+  }
+  const downloaded = await h.client.downloadKokoroProfile(settings)
+  assert.equal(downloaded.profileUpdateInterval, 2)
 
   assert.equal(h.requests.length, 2)
   const expectedUserAgent = h.client.kokoroSubscriptionUserAgent(process.platform, '2.26.9-7')
   assert.ok(h.requests.every((request) => request.headers['User-Agent'] === expectedUserAgent))
   assert.ok(h.requests.every((request) => request.headers.Authorization === 'Bearer rules-access'))
+  for (const value of ['-1', '0', '1abc', '1.5', '999999999999999999']) {
+    intervalHeader = value
+    assert.equal((await h.client.downloadKokoroProfile(settings)).profileUpdateInterval, undefined)
+  }
 })
 
 test('failed secure storage never exposes an authenticated session or releases waiting APIs', async () => {

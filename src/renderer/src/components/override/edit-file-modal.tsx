@@ -1,6 +1,6 @@
 import { tr } from '../../../../shared/i18n'
 import { Button, Label, Modal, Spinner, Switch } from '@heroui/react'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { BaseEditor } from '../base/base-editor-lazy'
 import { getOverride, restartCore, setOverride } from '@renderer/utils/ipc'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
@@ -18,17 +18,22 @@ interface Props {
 
 const EditFileModal: React.FC<Props> = (props) => {
   const { id, language, onClose } = props
+  const source = useMemo(() => ({ id, language }), [id, language])
   useAppConfig()
   const { overrideConfig } = useOverrideConfig()
   const { profileConfig } = useProfileConfig()
   const [currData, setCurrData] = useState('')
   const [originalData, setOriginalData] = useState('')
   const [isLoading, setIsLoading] = useState(true)
+  const [loadedSource, setLoadedSource] = useState<typeof source | null>(null)
+  const [loadAttempt, setLoadAttempt] = useState(0)
+  const [isSaving, setIsSaving] = useState(false)
   const [isDiff, setIsDiff] = useState(false)
   const [sideBySide, setSideBySide] = useState(false)
   const [isConfirmOpen, setIsConfirmOpen] = useState(false)
 
   const isModified = currData !== originalData
+  const canSave = !isLoading && loadedSource === source && !isSaving
 
   const handleClose = (): void => {
     if (isModified) {
@@ -38,19 +43,48 @@ const EditFileModal: React.FC<Props> = (props) => {
     }
   }
 
-  const getContent = async (): Promise<void> => {
+  const save = async (): Promise<void> => {
+    if (!canSave) return
+    setIsSaving(true)
     try {
-      const data = await getOverride(id, language === 'javascript' ? 'js' : 'yaml')
-      setCurrData(data)
-      setOriginalData(data)
+      await setOverride(id, language === 'javascript' ? 'js' : 'yaml', currData)
+      const overrideItem = overrideConfig?.items?.find((i) => i.id === id)
+      if (isOverrideUsedByCurrentProfile(profileConfig, id, overrideItem?.global)) {
+        await restartCore()
+      }
+      onClose()
+    } catch (error) {
+      notify(error, { variant: 'danger' })
     } finally {
-      setIsLoading(false)
+      setIsSaving(false)
     }
   }
 
   useEffect(() => {
-    getContent()
-  }, [])
+    let canceled = false
+    const { id, language } = source
+    setIsLoading(true)
+    setLoadedSource(null)
+    setCurrData('')
+    setOriginalData('')
+    const getContent = async (): Promise<void> => {
+      try {
+        const data = await getOverride(id, language === 'javascript' ? 'js' : 'yaml')
+        if (canceled) return
+        setCurrData(data)
+        setOriginalData(data)
+        setLoadedSource(source)
+      } catch (error) {
+        if (!canceled) notify(error, { variant: 'danger' })
+      } finally {
+        if (!canceled) setIsLoading(false)
+      }
+    }
+    void getContent()
+    return () => {
+      canceled = true
+    }
+  }, [source, loadAttempt])
 
   return (
     <Modal>
@@ -82,6 +116,13 @@ const EditFileModal: React.FC<Props> = (props) => {
               {isLoading ? (
                 <div className="flex h-full items-center justify-center">
                   <Spinner size="lg" />
+                </div>
+              ) : loadedSource !== source ? (
+                <div className="flex h-full flex-col items-center justify-center gap-3">
+                  <p>{tr('Failed to read the file. Editing and saving are unavailable.')}</p>
+                  <Button onPress={() => setLoadAttempt((attempt) => attempt + 1)}>
+                    {tr('Retry')}
+                  </Button>
                 </div>
               ) : (
                 <BaseEditor
@@ -119,18 +160,9 @@ const EditFileModal: React.FC<Props> = (props) => {
                 <Button
                   size="sm"
                   variant="primary"
-                  onPress={async () => {
-                    try {
-                      await setOverride(id, language === 'javascript' ? 'js' : 'yaml', currData)
-                      const overrideItem = overrideConfig?.items?.find((i) => i.id === id)
-                      if (isOverrideUsedByCurrentProfile(profileConfig, id, overrideItem?.global)) {
-                        await restartCore()
-                      }
-                      onClose()
-                    } catch (e) {
-                      notify(e, { variant: 'danger' })
-                    }
-                  }}
+                  isDisabled={!canSave}
+                  isPending={isSaving}
+                  onPress={() => save()}
                 >
                   {tr('Save')}
                 </Button>

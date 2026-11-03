@@ -1,5 +1,7 @@
 // English source catalog. Keys are the canonical application-owned messages.
 export const messages: Readonly<Record<string, string>> = {
+  'Failed to read the file. Editing and saving are unavailable.':
+    'Failed to read the file. Editing and saving are unavailable.',
   'Open page guide': 'Open page guide',
   'Paste a subscription URL and import it here. Use the plus menu to sign in to Kokoro or import a local file.':
     'Paste a subscription URL and import it here. Use the plus menu to sign in to Kokoro or import a local file.',

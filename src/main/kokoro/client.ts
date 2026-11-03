@@ -1,4 +1,5 @@
 import { tr } from '../../shared/i18n'
+import { parseProfileUpdateInterval } from '../../shared/profile-update'
 import axios, { type AxiosRequestConfig, type AxiosResponse } from 'axios'
 import { app, BrowserWindow, shell } from 'electron'
 import {
@@ -648,11 +649,11 @@ export async function downloadKokoroProfile(
     throw new KokoroAPIError(tr('The Kokoro configuration response is not YAML'))
   }
 
-  const interval = Number(response.headers['profile-update-interval'])
+  const interval = parseProfileUpdateInterval(response.headers['profile-update-interval'])
   return {
     content: response.data,
     profileName: resolved.profile_name,
-    profileUpdateInterval: Number.isFinite(interval) && interval > 0 ? interval : undefined,
+    profileUpdateInterval: interval === undefined ? undefined : interval / 60,
     subscriptionUserinfo: response.headers['subscription-userinfo']
       ? String(response.headers['subscription-userinfo'])
       : undefined

@@ -1,5 +1,6 @@
 // Simplified Chinese localization. Keys are the canonical English source messages.
 export const messages: Readonly<Record<string, string>> = {
+  'Failed to read the file. Editing and saving are unavailable.': '读取文件失败，无法编辑或保存。',
   'Open page guide': '打开本页教程',
   'Paste a subscription URL and import it here. Use the plus menu to sign in to Kokoro or import a local file.':
     '在此粘贴订阅链接并导入。也可以从加号菜单登录 Kokoro，或导入本地文件。',

@@ -34,6 +34,7 @@ import { downloadKokoroProfile, type DownloadedKokoroProfile } from '../kokoro/c
 import { validateMihomoProfileContent } from '../kokoro/profile-check'
 import { createPinnedHttpsAgent } from '../utils/pinnedHttpsAgent'
 import { writePrivateTextFileAtomic } from './atomic-file'
+import { parseProfileUpdateInterval } from '../../shared/profile-update'
 
 let profileConfig: ProfileConfig | undefined // profile.yaml
 let profileConfigWritePromise: Promise<void> = Promise.resolve()
@@ -410,8 +411,9 @@ async function prepareProfile(
         k.toLowerCase().endsWith('profile-update-interval')
       )
       if (intervalKey) {
-        newItem.interval = parseInt(headers[intervalKey]) * 60
-        if (newItem.interval) {
+        const interval = parseProfileUpdateInterval(headers[intervalKey])
+        if (interval !== undefined) {
+          newItem.interval = interval
           newItem.locked = true
         }
       }

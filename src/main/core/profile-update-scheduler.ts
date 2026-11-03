@@ -1,4 +1,4 @@
-import { profileUpdateDelay } from '../../shared/profile-update'
+import { isValidProfileInterval, profileUpdateDelay } from '../../shared/profile-update'
 
 interface Dependencies {
   getItem: (id: string) => Promise<ProfileItem | undefined>
@@ -17,14 +17,13 @@ function eligible(item: ProfileItem | undefined): item is ProfileItem & { interv
     !!item &&
     item.type === 'remote' &&
     item.autoUpdate !== false &&
-    Number.isFinite(item.interval) &&
-    Number.isFinite(item.interval! * 60_000) &&
-    item.interval! > 0
+    isValidProfileInterval(item.interval)
   )
 }
 
 export function createProfileUpdateScheduler(deps: Dependencies) {
   const entries = new Map<string, Entry>()
+  const running = new Map<string, Entry>()
   const now = deps.now ?? Date.now
   const setTimer =
     deps.setTimer ??
@@ -50,6 +49,9 @@ export function createProfileUpdateScheduler(deps: Dependencies) {
   }
   async function run(entry: Entry): Promise<void> {
     if (!active(entry)) return
+    entry.cancel = undefined
+    if (running.has(entry.id)) return
+    running.set(entry.id, entry)
     try {
       const item = await deps.getItem(entry.id)
       if (!active(entry)) return
@@ -77,6 +79,11 @@ export function createProfileUpdateScheduler(deps: Dependencies) {
       deps.onError(entry.id, error)
       entry.failures = Math.min(entry.failures + 1, 10)
       schedule(entry, Math.min(300_000, 30_000 * 2 ** (entry.failures - 1)))
+    } finally {
+      running.delete(entry.id)
+      const pending = entries.get(entry.id)
+      // A replacement timer may have expired while the previous request was running.
+      if (pending && pending !== entry && !pending.cancel) schedule(pending, 0)
     }
   }
   return {

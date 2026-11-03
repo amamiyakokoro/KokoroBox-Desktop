@@ -4,6 +4,7 @@ import { test } from 'node:test'
 import { isDeepStrictEqual } from 'node:util'
 import ts from 'typescript'
 import { createKokoroRuleSaver } from '../src/main/kokoro/rule-save'
+import { parseProfileUpdateInterval } from '../src/shared/profile-update'
 
 function loadFunctions(
   path: string,
@@ -316,6 +317,38 @@ test('preparing a Kokoro subscription validates the download before committing a
   assert.deepEqual(calls, ['download', 'parse', 'validate'])
   fail = true
   await assert.rejects(prepareProfile(input), /invalid profile/)
+})
+
+test('invalid interval headers preserve user settings without locking a remote subscription', async () => {
+  let header: unknown
+  const { prepareProfile } = loadFunctions('src/main/config/profile.ts', ['prepareProfile'], {
+    getControledMihomoConfig: async () => ({}),
+    getUserAgent: async () => 'test',
+    https: { Agent: class {} },
+    axios: {
+      get: async () => ({ data: 'proxies: []', headers: { 'profile-update-interval': header } })
+    },
+    decryptProfileContent: async (content: string) => content,
+    parseProfileUpdateInterval
+  })
+  for (const value of ['-1', '0', '1abc', '1.5', '999999999999999999']) {
+    header = value
+    const prepared = (await prepareProfile({
+      type: 'remote',
+      url: 'https://example.test',
+      interval: 30
+    })) as { item: ProfileItem }
+    assert.equal(prepared.item.interval, 30, value)
+    assert.equal(prepared.item.locked, undefined, value)
+  }
+  header = '2'
+  const prepared = (await prepareProfile({
+    type: 'remote',
+    url: 'https://example.test',
+    interval: 30
+  })) as { item: ProfileItem }
+  assert.equal(prepared.item.interval, 120)
+  assert.equal(prepared.item.locked, true)
 })
 
 test('age rewrites prepare encryption before committing a transaction and do not publish new keys on failure', async () => {
