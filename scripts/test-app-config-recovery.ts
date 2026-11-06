@@ -21,6 +21,7 @@ import {
 } from '../src/main/config/app-loader'
 import { isDeepStrictEqual } from 'node:util'
 import { assertManagedConfig } from '../src/shared/managed-id'
+import { parseProfileUpdateInterval } from '../src/shared/profile-update'
 import { deepMerge } from '../src/main/utils/merge'
 import { writePrivateTextFileAtomic } from '../src/main/config/atomic-file'
 
@@ -427,6 +428,7 @@ function loadTransactionalProfileConfigModule() {
   const dependencies: Record<string, unknown> = {
     'node:util': { isDeepStrictEqual },
     '../../shared/managed-id': { assertManagedConfig },
+    '../../shared/profile-update': { parseProfileUpdateInterval },
     '../utils/log': { appendAppLog: noOp },
     './profile-key-transaction': {
       recoverProfileKeyTransaction: noOp,
