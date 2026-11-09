@@ -48,8 +48,8 @@ importers:
         specifier: ^5.11.0
         version: 5.11.0
       ws:
-        specifier: ^8.22.0
-        version: 8.22.0
+        specifier: ^8.22.1
+        version: 8.22.1
       yaml:
         specifier: ^2.9.1
         version: 2.9.1
@@ -1127,6 +1127,9 @@ packages:
 
   '@swc/helpers@0.5.23':
     resolution: {integrity: sha512-5lSsMOTXURePglDfvuAQUqkGek9Hg2kksOYay2m0+XR++b2NWYL/4sWyuvVBIs8oKnJaxkdi9whaL/sqN13afw==}
+
+  '@swc/helpers@0.5.24':
+    resolution: {integrity: sha512-6tcXo4kA8HgGO7AVmawB57RYi/piBPYVHVcO6dXjX+SZw8GoHmi262sp4v2Ha2kNP9Cx84qei27yT+fjS1lxgg==}
 
   '@szmarczak/http-timer@4.0.6':
     resolution: {integrity: sha512-4BAffykYOgO+5nzBWYwE3W90sBgLJoUPRWWcL8wlyiM8IB8ipJz3UMJ9KXQd1RKQXpKp8Tutn80HZtWsu2u76w==}
@@ -3967,8 +3970,8 @@ packages:
   wrappy@1.0.2:
     resolution: {integrity: sha512-l4Sp/DRseor9wL6EvV2+TuQn63dMkPjZ/sp9XkghTEbV9KlPS1xUsZ3u7/IQO4wxtcFB4bgpQPRcR3QCvezPcQ==}
 
-  ws@8.22.0:
-    resolution: {integrity: sha512-Ydggc987+RO0AnWtZ/7Wq9FtNvcrL1b/RO0ud9mWjUPgDrsAAwQSF51sm2hm1XofbU/4jkpGEsLFsZZxU+1DOg==}
+  ws@8.22.1:
+    resolution: {integrity: sha512-oyL6OPYme/CmiFvNuGzeoxCJ4nOrZE2O1FwM9MWM1AsGri6nLXB2pg+lNA8aLeXMSav0J6eIVS1j6vUPzUtK9g==}
     engines: {node: '>=10.0.0'}
     peerDependencies:
       bufferutil: ^4.0.1
@@ -4039,7 +4042,7 @@ snapshots:
       '@react-types/shared': 3.37.0(react@19.3.1)
       '@spectrum-icons/ui': 3.7.2(@adobe/react-spectrum@3.47.0(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       '@spectrum-icons/workflow': 4.3.2(@adobe/react-spectrum@3.47.0(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
-      '@swc/helpers': 0.5.23
+      '@swc/helpers': 0.5.24
       client-only: 0.0.1
       clsx: 2.1.1
       react: 19.3.1
@@ -4697,14 +4700,14 @@ snapshots:
 
   '@react-aria/ssr@3.10.1(react-dom@19.3.1(react@19.3.1))(react@19.3.1)':
     dependencies:
-      '@swc/helpers': 0.5.23
+      '@swc/helpers': 0.5.24
       react: 19.3.1
       react-aria: 3.53.1(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       react-dom: 19.3.1(react@19.3.1)
 
   '@react-aria/utils@3.34.1(react-dom@19.3.1(react@19.3.1))(react@19.3.1)':
     dependencies:
-      '@swc/helpers': 0.5.23
+      '@swc/helpers': 0.5.24
       react: 19.3.1
       react-aria: 3.53.1(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       react-dom: 19.3.1(react@19.3.1)
@@ -4721,7 +4724,7 @@ snapshots:
   '@react-spectrum/provider@3.11.0(react-dom@19.3.1(react@19.3.1))(react@19.3.1)':
     dependencies:
       '@adobe/react-spectrum': 3.47.0(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
-      '@swc/helpers': 0.5.23
+      '@swc/helpers': 0.5.24
       react: 19.3.1
       react-dom: 19.3.1(react@19.3.1)
 
@@ -4885,6 +4888,8 @@ snapshots:
   '@swc/helpers@0.5.23':
     dependencies:
       tslib: 2.8.1
+
+  '@swc/helpers@0.5.24': {}
 
   '@szmarczak/http-timer@4.0.6':
     dependencies:
@@ -7432,7 +7437,7 @@ snapshots:
     dependencies:
       '@internationalized/date': 3.12.4
       '@react-types/shared': 3.37.0(react@19.3.1)
-      '@swc/helpers': 0.5.23
+      '@swc/helpers': 0.5.24
       client-only: 0.0.1
       react: 19.3.1
       react-aria: 3.48.0(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
@@ -7458,7 +7463,7 @@ snapshots:
       '@internationalized/number': 3.6.9
       '@internationalized/string': 3.2.10
       '@react-types/shared': 3.37.0(react@19.3.1)
-      '@swc/helpers': 0.5.23
+      '@swc/helpers': 0.5.24
       aria-hidden: 1.2.6
       clsx: 2.1.1
       react: 19.3.1
@@ -7535,7 +7540,7 @@ snapshots:
       '@internationalized/number': 3.6.9
       '@internationalized/string': 3.2.10
       '@react-types/shared': 3.37.0(react@19.3.1)
-      '@swc/helpers': 0.5.23
+      '@swc/helpers': 0.5.24
       react: 19.3.1
       use-sync-external-store: 1.7.0(react@19.3.1)
 
@@ -8306,7 +8311,7 @@ snapshots:
 
   wrappy@1.0.2: {}
 
-  ws@8.22.0: {}
+  ws@8.22.1: {}
 
   xml-naming@0.3.0: {}
 
