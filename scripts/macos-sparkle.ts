@@ -12,6 +12,7 @@ import {
 } from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
+import { setTimeout as delay } from 'node:timers/promises'
 import { fileURLToPath } from 'node:url'
 
 export const sparkleRelease = Object.freeze({
@@ -128,14 +129,43 @@ export function assertSparkleArchive(file: string): void {
   }
 }
 
-async function downloadPinnedArchive(destination: string): Promise<void> {
-  const response = await fetch(sparkleRelease.url, { redirect: 'follow' })
-  if (!response.ok) throw new Error(`Sparkle download failed: HTTP ${response.status}`)
+async function fetchSparkleArchive(): Promise<Buffer> {
+  const maxAttempts = 3
+  const timeoutCodes = [
+    'UND_ERR_CONNECT_TIMEOUT',
+    'UND_ERR_HEADERS_TIMEOUT',
+    'UND_ERR_BODY_TIMEOUT',
+    'ETIMEDOUT'
+  ]
 
+  for (let attempt = 1; ; attempt++) {
+    try {
+      const response = await fetch(sparkleRelease.url, {
+        redirect: 'follow',
+        signal: AbortSignal.timeout(120_000)
+      })
+      if (!response.ok) throw new Error(`Sparkle download failed: HTTP ${response.status}`)
+      return Buffer.from(await response.arrayBuffer())
+    } catch (error) {
+      const cause =
+        error instanceof Error ? (error.cause as NodeJS.ErrnoException | undefined) : undefined
+      const timedOut =
+        (error instanceof Error && error.name === 'TimeoutError') ||
+        timeoutCodes.includes(cause?.code ?? '')
+      if (!timedOut || attempt === maxAttempts) throw error
+
+      console.warn(`Sparkle download timed out (attempt ${attempt}/${maxAttempts}). Retrying.`)
+      await delay(attempt * 1000)
+    }
+  }
+}
+
+export async function downloadPinnedArchive(destination: string): Promise<void> {
+  const archive = await fetchSparkleArchive()
   const temporary = `${destination}.download`
   rmSync(temporary, { force: true })
-  writeFileSync(temporary, Buffer.from(await response.arrayBuffer()), { mode: 0o600 })
   try {
+    writeFileSync(temporary, archive, { mode: 0o600 })
     assertSparkleArchive(temporary)
     renameSync(temporary, destination)
   } finally {

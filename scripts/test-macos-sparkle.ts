@@ -1,12 +1,13 @@
 import assert from 'node:assert/strict'
 import { createHash } from 'node:crypto'
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { test } from 'node:test'
 import { parse } from 'yaml'
 import {
   assertSparkleArchive,
+  downloadPinnedArchive,
   sha256File,
   sparkleAppcastName,
   sparkleDownloadURLPrefix,
@@ -44,6 +45,50 @@ test('Sparkle archive verification rejects modified content', () => {
   } finally {
     rmSync(directory, { recursive: true, force: true })
   }
+})
+
+test('Sparkle retries connection and body timeouts before verifying the downloaded archive', async (t) => {
+  const directory = mkdtempSync(path.join(os.tmpdir(), 'kokorobox-sparkle-test-'))
+  const archive = path.join(directory, 'Sparkle.zip')
+  t.after(() => rmSync(directory, { recursive: true, force: true }))
+  const signals: AbortSignal[] = []
+  const fetchMock = t.mock.method(globalThis, 'fetch', async (_url, options?: RequestInit) => {
+    assert.ok(options?.signal)
+    signals.push(options.signal)
+    if (signals.length === 1) {
+      throw new TypeError('fetch failed', { cause: { code: 'UND_ERR_CONNECT_TIMEOUT' } })
+    }
+    if (signals.length === 2) {
+      return new Response(
+        new ReadableStream({
+          start(controller) {
+            controller.error(new DOMException('Download timed out', 'TimeoutError'))
+          }
+        })
+      )
+    }
+    return new Response('modified archive')
+  })
+
+  await assert.rejects(downloadPinnedArchive(archive), /integrity check failed/)
+  assert.equal(fetchMock.mock.callCount(), 3)
+  assert.equal(new Set(signals).size, 3)
+  assert.equal(existsSync(archive), false)
+  assert.equal(existsSync(`${archive}.download`), false)
+})
+
+test('Sparkle stops after three download timeouts', async (t) => {
+  const directory = mkdtempSync(path.join(os.tmpdir(), 'kokorobox-sparkle-test-'))
+  const archive = path.join(directory, 'Sparkle.zip')
+  t.after(() => rmSync(directory, { recursive: true, force: true }))
+  const timeout = new TypeError('fetch failed', { cause: { code: 'UND_ERR_CONNECT_TIMEOUT' } })
+  const fetchMock = t.mock.method(globalThis, 'fetch', async () => {
+    throw timeout
+  })
+
+  await assert.rejects(downloadPinnedArchive(archive), (error) => error === timeout)
+  assert.equal(fetchMock.mock.callCount(), 3)
+  assert.equal(existsSync(archive), false)
 })
 
 test('Sparkle release names and feeds are fixed by channel and architecture', () => {
