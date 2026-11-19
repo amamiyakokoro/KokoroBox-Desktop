@@ -171,8 +171,7 @@ const AppRouting: React.FC = () => {
     try {
       let nextStatus = await serviceStatus()
       if (nextStatus === 'not-installed') {
-        await installService()
-        nextStatus = await serviceStatus()
+        nextStatus = (await installService()) ? 'running' : await serviceStatus()
       }
       if (nextStatus === 'stopped' || nextStatus === 'paused') {
         await startService()

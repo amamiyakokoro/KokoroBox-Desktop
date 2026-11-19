@@ -119,7 +119,7 @@ const Sysproxy: React.FC<Props> = ({ embedded = false }) => {
   }
 
   const validateServiceAvailability = async (): Promise<typeof values> => {
-    if (!values.enable) {
+    if (!values.enable || platform === 'win32') {
       return values
     }
 
@@ -308,7 +308,13 @@ const Sysproxy: React.FC<Props> = ({ embedded = false }) => {
             description={tr(
               'While enabled, it may replace system proxy settings changed by other applications.'
             )}
-            help={tr('Restore the system proxy automatically if it is changed')}
+            help={
+              platform === 'win32'
+                ? tr(
+                    'Automatically restore changed proxy settings when KokoroBox Service is in use.'
+                  )
+                : tr('Restore the system proxy automatically if it is changed')
+            }
             divider={!values.guard && values.mode === 'manual'}
           >
             <Switch

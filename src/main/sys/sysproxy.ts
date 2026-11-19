@@ -15,7 +15,9 @@ import { net } from 'electron'
 import {
   ServiceAPIError,
   disableProxy,
+  getProxyStatus,
   getServiceMeta,
+  isServiceUnavailableError,
   renewSysProxyLease,
   setPac,
   setServicePac,
@@ -30,6 +32,11 @@ import { showNotification } from '../utils/notification'
 import { disableTerminalProxy, enableTerminalProxy } from './terminal-proxy'
 import { observeNetworkContext, type ObservableNetworkContext } from './network-context'
 import { shouldReapplyProxyForNetworkChange } from './sysproxy-network'
+import {
+  applyWindowsNativeProxy,
+  readWindowsNativeProxyOwnership,
+  releaseWindowsNativeProxy
+} from './windows-system-proxy'
 
 let triggerSysProxyTimer: NodeJS.Timeout | null = null
 let sysproxyLeaseTimer: NodeJS.Timeout | null = null
@@ -41,6 +48,7 @@ let unsubscribeSysproxyGuardEvents: (() => void) | null = null
 let stopSysproxyNetworkObserver: (() => void) | null = null
 let sysproxyNetworkTimer: NodeJS.Timeout | null = null
 let sysproxyNetworkGeneration = 0
+let windowsServiceProxyApplied = false
 
 export function cancelPendingSysProxyRetry(): void {
   if (!triggerSysProxyTimer) return
@@ -50,7 +58,10 @@ export function cancelPendingSysProxyRetry(): void {
 
 export interface TriggerSysProxyOptions {
   serviceRequestTimeoutMs?: number
-  onTiming?: (stage: 'queue' | 'pac' | 'service' | 'terminal', durationMs: number) => void
+  onTiming?: (
+    stage: 'queue' | 'pac' | 'service' | 'native' | 'terminal',
+    durationMs: number
+  ) => void
   onRetryResult?: (result: 'applied' | 'waiting-network') => void
   onRetryError?: (error: unknown) => void
   onSystemApplied?: () => void
@@ -59,7 +70,7 @@ export interface TriggerSysProxyOptions {
 export type TriggerSysProxyResult = 'applied' | 'waiting-network' | 'superseded'
 
 async function timed<T>(
-  stage: 'pac' | 'service' | 'terminal',
+  stage: 'pac' | 'service' | 'native' | 'terminal',
   options: TriggerSysProxyOptions,
   task: () => Promise<T>
 ): Promise<T> {
@@ -169,7 +180,7 @@ function startSysproxyLeaseRenewal(onlyActiveDevice: boolean, useRegistry: boole
         try {
           const { sysProxy } = await getAppConfig()
           if (sysProxy.enable) {
-            await setSysProxy(onlyActiveDevice, useRegistry)
+            await triggerSysProxy(true, onlyActiveDevice, useRegistry)
             restored = true
           }
         } catch (restoreError) {
@@ -232,6 +243,21 @@ async function triggerSysProxyImpl(
   return 'applied'
 }
 
+async function windowsServiceProxyAvailable(): Promise<boolean> {
+  try {
+    await getProxyStatus(true)
+    return true
+  } catch (error) {
+    if (
+      isServiceUnavailableError(error) ||
+      /timeout|EACCES|EPERM|access is denied/i.test(String(error)) ||
+      (error instanceof ServiceAPIError && error.status === 404)
+    )
+      return false
+    throw error
+  }
+}
+
 async function setSysProxy(
   onlyActiveDevice: boolean,
   useRegistry = false,
@@ -240,6 +266,32 @@ async function setSysProxy(
   const defaultBypass = defaultSystemProxyBypass(process.platform)
   const { sysProxy } = await getAppConfig()
   const { mode, host, bypass = defaultBypass, terminalProxy = false } = sysProxy
+  const { 'mixed-port': port = 7890 } = await getControledMihomoConfig()
+  if (process.platform === 'win32') {
+    const owned = await readWindowsNativeProxyOwnership()
+    if (owned.length || (!windowsServiceProxyApplied && !(await windowsServiceProxyAvailable()))) {
+      if (mode === 'auto') {
+        const pacPort = await timed('pac', options, startPacServer)
+        if (pacPort === undefined) throw new Error('PAC server did not start')
+        await timed('native', options, () =>
+          applyWindowsNativeProxy({ mode: 'auto', pacUrl: localPacUrl(pacPort), bypass: [] }, owned)
+        )
+      } else {
+        if (port === 0) throw new Error('System proxy port is unavailable')
+        await timed('native', options, () =>
+          applyWindowsNativeProxy(
+            { mode: 'manual', host: normalizeProxyHost(host || ''), port, bypass },
+            owned
+          )
+        )
+      }
+      stopSysproxyLeaseRenewal()
+      updateSysproxyGuardEventStream(false)
+      options.onSystemApplied?.()
+      if (mode !== 'auto') await timed('pac', options, stopPacServer)
+      return
+    }
+  }
   const servicePAC = mode === 'auto' && (await getServiceMeta()).capabilities.sysproxyPacServer
   const pacPort = await timed('pac', options, async () => {
     if (servicePAC) {
@@ -250,7 +302,6 @@ async function setSysProxy(
   })
   const guard = !!sysProxy.guard
   const guardNotify = guard && !!sysProxy.guardNotify
-  const { 'mixed-port': port = 7890 } = await getControledMihomoConfig()
 
   switch (mode || 'manual') {
     case 'auto': {
@@ -294,6 +345,8 @@ async function setSysProxy(
     }
   }
 
+  if (process.platform === 'win32') windowsServiceProxyApplied = true
+
   if (process.platform === 'linux') {
     if (terminalProxy && port !== 0) {
       await timed('terminal', options, () =>
@@ -311,14 +364,24 @@ async function disableSysProxy(
   options: TriggerSysProxyOptions = {}
 ): Promise<void> {
   stopSysproxyLeaseRenewal()
-  await timed('pac', options, stopPacServer)
   updateSysproxyGuardEventStream(false)
 
   try {
-    await timed('service', options, () =>
-      disableProxy('', onlyActiveDevice, useRegistry, options.serviceRequestTimeoutMs)
-    )
+    const owned = process.platform === 'win32' ? await readWindowsNativeProxyOwnership() : []
+    if (owned.length) {
+      await timed('native', options, () => releaseWindowsNativeProxy(owned))
+    } else if (
+      process.platform !== 'win32' ||
+      windowsServiceProxyApplied ||
+      (await windowsServiceProxyAvailable())
+    ) {
+      await timed('service', options, () =>
+        disableProxy('', onlyActiveDevice, useRegistry, options.serviceRequestTimeoutMs)
+      )
+      windowsServiceProxyApplied = false
+    }
     options.onSystemApplied?.()
+    await timed('pac', options, stopPacServer)
   } finally {
     await timed('terminal', options, disableTerminalProxy)
   }

@@ -132,6 +132,21 @@ test('regular maintenance of a running service still reinstalls its executable',
   assert.deepEqual(calls, ['reinstall'])
 })
 
+test('an installation that also authenticates the requester needs no further setup', async () => {
+  let installs = 0
+  const restartRequired = await recoverServiceBeforeReinstall({
+    status: async () => 'not-installed',
+    initialize: async () => assert.fail('The installer already initializes authentication'),
+    authenticate: async () => assert.fail('The installer already verifies authentication'),
+    reinstall: async () => {
+      installs++
+      return true
+    }
+  })
+  assert.equal(restartRequired, false)
+  assert.equal(installs, 1)
+})
+
 test('service recovery reinstalls after failed initialization but respects cancellation', async () => {
   const calls: string[] = []
   const actions = {

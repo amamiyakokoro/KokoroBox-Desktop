@@ -510,7 +510,13 @@ export function registerIpcMainHandlers(): void {
     })()
   )
   if (!systemCoreOnlyBuild) {
-    ipcMain.handle('installService', () => ipcErrorWrapper(installService)())
+    ipcMain.handle('installService', () =>
+      ipcErrorWrapper(async () => {
+        const initialized = await installService()
+        if (initialized) resumeAppRoutingAfterServiceInitialization()
+        return initialized
+      })()
+    )
     ipcMain.handle('uninstallService', () => ipcErrorWrapper(uninstallService)())
     ipcMain.handle('startService', () => ipcErrorWrapper(startService)())
     ipcMain.handle('restartService', () => ipcErrorWrapper(restartService)())

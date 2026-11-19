@@ -1067,11 +1067,14 @@ export async function repairServiceCoreFirewall(): Promise<void> {
   await getServiceAxios().post('/core/firewall/repair', undefined, { timeout: 20_000 })
 }
 
-export const getProxyStatus = async (): Promise<Record<string, unknown>> => {
-  const instance = getServiceAxios()
+export const getProxyStatus = async (readOnly = false): Promise<Record<string, unknown>> => {
+  const instance = readOnly
+    ? createSignedServiceAxios('http://localhost', false)
+    : getServiceAxios()
   return await instance.request({
     method: serviceContract.sysproxyStatus.method,
-    url: serviceContract.sysproxyStatus.path
+    url: serviceContract.sysproxyStatus.path,
+    ...(readOnly ? { timeout: 1500 } : {})
   })
 }
 

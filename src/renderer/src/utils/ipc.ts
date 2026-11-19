@@ -538,7 +538,7 @@ export async function initService(): Promise<void> {
   return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('initService'))
 }
 
-export async function installService(): Promise<void> {
+export async function installService(): Promise<boolean> {
   return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('installService'))
 }
 

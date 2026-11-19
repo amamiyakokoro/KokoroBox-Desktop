@@ -99,10 +99,19 @@ application-routing firewall itself.
 
 The installer supports current-user and all-users scopes. Current-user app files live below `%LOCALAPPDATA%`, while the privileged service and verified router run from a protected directory below `%ProgramFiles%\KokoroBox Service`.
 
-The all-users installation registers and starts the service as part of package installation. A
-current-user installation defers that UAC-protected operation until the user explicitly enables a
-feature that needs it. Service authentication is initialized separately for the signed-in user so
-the installer never embeds or reuses an application API credential.
+The all-users installation registers and starts the service as part of package installation.
+On a current-user installation, the first request for a missing service uses one UAC prompt when
+the bundled service supports installation during initialization. Desktop supplies the signed-in
+user's SID and public key before elevation. The elevated service command registers the service,
+stores that binding, and starts it. Existing bundles can still use the separate install and
+initialize commands. Application routing works from the authorized user's standard account.
+Service-managed Mihomo and TUN still require an administrator account because the core API can
+launch a client-selected executable as SYSTEM.
+
+When the service proxy is unavailable, Desktop can set the current user's loopback manual proxy
+or local PAC directly. It removes its own configuration when the proxy is turned off or Desktop
+exits, provided the configured proxy endpoint, PAC URL, and bypass rules still match. The service provides the
+system proxy watchdog when it manages the proxy.
 
 An all-users update re-installs a previously running service so older SCM registrations are migrated
 to this protected runtime. Service-managed Mihomo executables are likewise copied into a verified,

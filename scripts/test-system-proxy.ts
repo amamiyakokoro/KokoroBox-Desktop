@@ -1,11 +1,134 @@
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
+import * as fs from 'node:fs/promises'
+import os from 'node:os'
+import path from 'node:path'
 import { test } from 'node:test'
 import { PacHttpServer, localPacUrl } from '../src/main/resolve/pac-http-server'
 import { shouldReapplyProxyForNetworkChange } from '../src/main/sys/sysproxy-network'
 import { defaultSystemProxyBypass, normalizeProxyHost } from '../src/shared/system-proxy'
 import { readSystemProxyEnabled } from '../src/shared/sysproxy-operation'
 import ts from 'typescript'
+
+function loadWindowsModule<T>(name: string, dependencies: Record<string, unknown>): T {
+  const source = ts.transpileModule(readFileSync(`src/main/sys/${name}.ts`, 'utf8'), {
+    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 }
+  }).outputText
+  const module = { exports: {} }
+  new Function('require', 'module', 'exports', 'process', source)(
+    (id: string) => {
+      assert.ok(Object.hasOwn(dependencies, id), `Unexpected dependency: ${id}`)
+      return dependencies[id]
+    },
+    module,
+    module.exports,
+    { platform: 'win32' }
+  )
+  return module.exports as T
+}
+
+test('the Windows switch without Service applies manual and PAC proxy settings and releases them', async (t) => {
+  const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'kokorobox-proxy-'))
+  t.after(() => fs.rm(directory, { recursive: true, force: true }))
+  const events: string[] = []
+  type Settings = import('../src/shared/proxy-diagnostics-contract').NativeSystemProxySettings
+  let system: Settings = { mode: 'disabled', bypass: [] }
+  let serviceAvailable = false
+  let mode: 'manual' | 'auto' = 'manual'
+  let nativeWriteFails = false
+  const native = {
+    getNativeSystemProxyDiagnostics: async () => ({
+      status: 'available',
+      enabled: system.mode === 'manual',
+      pac: { enabled: system.mode === 'auto', url: system.pacUrl },
+      bypass: system.bypass,
+      windows: { proxyServer: `${system.host}:${system.port}` }
+    }),
+    setNativeSystemProxy: async (settings: Settings) => {
+      if (nativeWriteFails) throw new Error('Failed to write Windows proxy settings')
+      events.push(settings.mode)
+      system = settings
+    }
+  }
+  const windowsProxy = loadWindowsModule<typeof import('../src/main/sys/windows-system-proxy')>(
+    'windows-system-proxy',
+    {
+      'node:fs/promises': fs,
+      'node:path': path,
+      '../utils/dirs': { dataDir: () => directory },
+      './native-system-proxy': native
+    }
+  )
+  const app = loadWindowsModule<typeof import('../src/main/sys/sysproxy')>('sysproxy', {
+    './native-system-proxy': native,
+    './windows-system-proxy': windowsProxy,
+    '../service/api': {
+      getProxyStatus: async (readOnly: boolean) => {
+        assert.equal(readOnly, true)
+        if (!serviceAvailable) throw new Error('connect ENOENT')
+      },
+      isServiceUnavailableError: (error: Error) => error.message === 'connect ENOENT',
+      stopServiceSysproxyEventStream: () => {},
+      setProxy: () => assert.fail('Unexpected Service proxy mutation'),
+      setPac: () => assert.fail('Unexpected Service PAC mutation'),
+      disableProxy: () => assert.fail('Unexpected Service cleanup')
+    },
+    '../../shared/i18n': { tr: (value: string) => value },
+    '../config': {
+      getAppConfig: async () => ({ sysProxy: { mode, bypass: [] } }),
+      getControledMihomoConfig: async () => ({ 'mixed-port': 7890 })
+    },
+    '../resolve/server': {
+      startPacServer: async () => {
+        events.push('start PAC')
+        return 43210
+      },
+      stopPacServer: async () => {
+        events.push('stop PAC')
+      }
+    },
+    '../resolve/pac-http-server': { localPacUrl },
+    '../../shared/system-proxy': { defaultSystemProxyBypass, normalizeProxyHost },
+    electron: { net: { isOnline: () => true } },
+    '../utils/log': {},
+    '../utils/notification': {},
+    './terminal-proxy': { disableTerminalProxy: async () => {} },
+    './network-context': {},
+    './sysproxy-network': {}
+  })
+
+  assert.equal(await app.triggerSysProxy(true, false), 'applied')
+  assert.deepEqual(system, { mode: 'manual', host: '127.0.0.1', port: 7890, bypass: [] })
+  assert.equal(await windowsProxy.readWindowsNativeProxyEnabled(), true)
+
+  serviceAvailable = true
+  mode = 'auto'
+  nativeWriteFails = true
+  await assert.rejects(app.triggerSysProxy(true, false), /Failed to write Windows proxy settings/)
+  assert.equal(await windowsProxy.readWindowsNativeProxyEnabled(), true)
+  nativeWriteFails = false
+  await app.triggerSysProxy(true, false)
+  assert.deepEqual(system, { mode: 'auto', pacUrl: localPacUrl(43210), bypass: [] })
+  await app.triggerSysProxy(false, false)
+  assert.deepEqual(events, [
+    'manual',
+    'stop PAC',
+    'start PAC',
+    'start PAC',
+    'auto',
+    'disabled',
+    'stop PAC'
+  ])
+  assert.deepEqual(await windowsProxy.readWindowsNativeProxyOwnership(), [])
+
+  serviceAvailable = false
+  await app.triggerSysProxy(true, false)
+  const externallyChanged = { mode: 'auto' as const, pacUrl: 'http://example.test/pac', bypass: [] }
+  system = externallyChanged
+  await app.triggerSysProxy(false, false)
+  assert.deepEqual(system, externallyChanged)
+  assert.deepEqual(await windowsProxy.readWindowsNativeProxyOwnership(), [])
+})
 
 function loadSysProxyOperation() {
   const events: { channel: string; value?: unknown }[] = []
@@ -34,6 +157,7 @@ function loadSysProxyOperation() {
     '../service/api': { getProxyStatus: async () => serviceStatus },
     '../utils/log': { appendAppLog: async () => {} },
     '../utils/notification': { showNotification: async () => {} },
+    './windows-system-proxy': { readWindowsNativeProxyEnabled: async () => null },
     '../../shared/i18n': { tr: (value: string) => value },
     '../../shared/sysproxy-operation': { readSystemProxyEnabled },
     './sysproxy': {

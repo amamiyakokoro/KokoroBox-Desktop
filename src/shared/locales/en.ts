@@ -1630,6 +1630,8 @@ export const messages: Readonly<Record<string, string>> = {
     'No usable mihomo or clash core found on the system. Switched back to the built-in core',
   'System proxy': 'System proxy',
   'System proxy watchdog': 'System proxy watchdog',
+  'Automatically restore changed proxy settings when KokoroBox Service is in use.':
+    'Automatically restore changed proxy settings when KokoroBox Service is in use.',
   'System proxy: {0}': 'System proxy: {0}',
   'System proxy enabled': 'System proxy enabled',
   On: 'On',
@@ -2058,8 +2060,8 @@ export const messages: Readonly<Record<string, string>> = {
     'Interface names ignored when checking connectivity, for example a virtual adapter that stays online.',
   'Matching a listed Wi-Fi name switches to Direct mode. Leaving it switches to Rule mode, not the previous mode.':
     'Matching a listed Wi-Fi name switches to Direct mode. Leaving it switches to Rule mode, not the previous mode.',
-  'Windows TUN requires administrator privileges or KokoroBox Service.':
-    'Windows TUN requires administrator privileges or KokoroBox Service.',
+  'Windows TUN requires an administrator account, including in Service mode.':
+    'Windows TUN requires an administrator account, including in Service mode.',
   'Repairs KokoroBox and core inbound rules for the selected run mode. It does not reset the entire Windows firewall or enable TUN.':
     'Repairs KokoroBox and core inbound rules for the selected run mode. It does not reset the entire Windows firewall or enable TUN.',
   'Mixed is the default. Change the stack only to address compatibility or performance issues.':

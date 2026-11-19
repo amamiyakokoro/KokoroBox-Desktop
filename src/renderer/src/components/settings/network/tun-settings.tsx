@@ -138,7 +138,7 @@ const Tun: React.FC<Props> = ({ embedded = false }) => {
         )}
         {platform === 'win32' && (
           <p className="px-4 py-2 text-xs text-muted">
-            {tr('Windows TUN requires administrator privileges or KokoroBox Service.')}
+            {tr('Windows TUN requires an administrator account, including in Service mode.')}
           </p>
         )}
         {(platform === 'win32' || platform === 'darwin') && (

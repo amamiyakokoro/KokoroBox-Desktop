@@ -2,7 +2,7 @@ interface ServiceRecoveryActions {
   status: () => Promise<string>
   initialize: () => Promise<void>
   authenticate: () => Promise<boolean>
-  reinstall: () => Promise<void>
+  reinstall: () => Promise<boolean | void>
 }
 
 export interface ServiceRecoveryOptions {
@@ -36,6 +36,5 @@ export async function recoverServiceBeforeReinstall(
     }
   }
 
-  await actions.reinstall()
-  return true
+  return (await actions.reinstall()) !== true
 }

@@ -34,7 +34,7 @@ async function readSnapshot(): Promise<RuntimeRecoverySnapshot> {
     service: service.status === 'fulfilled' ? service.value : 'unknown',
     serviceRequired:
       latest.corePermissionMode === 'service' ||
-      latest.sysProxy.enable ||
+      (process.platform !== 'win32' && latest.sysProxy.enable) ||
       latest.autoSetDNSMode === 'service' ||
       (process.platform !== 'darwin' && routing.enabled && rules.length > 0),
     core:

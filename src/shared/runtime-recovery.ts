@@ -109,7 +109,7 @@ export function applyRecoveryPreferences(
     },
     serviceRequired: config
       ? mode === 'service' ||
-        config.sysProxy.enable ||
+        (snapshot.platform !== 'win32' && config.sysProxy.enable) ||
         config.autoSetDNSMode === 'service' ||
         (snapshot.platform !== 'darwin' && routing.enabled && routing.hasRules)
       : snapshot.serviceRequired

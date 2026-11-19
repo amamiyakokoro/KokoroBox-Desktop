@@ -4,6 +4,7 @@ import { getProxyStatus } from '../service/api'
 import { appendAppLog } from '../utils/log'
 import { showNotification } from '../utils/notification'
 import { tr } from '../../shared/i18n'
+import { readWindowsNativeProxyEnabled } from './windows-system-proxy'
 import {
   readSystemProxyEnabled,
   type SysProxyOperationState
@@ -43,6 +44,10 @@ export function getSysProxyOperationState(): SysProxyOperationState {
 
 async function confirmAfterUncertainResult(): Promise<boolean | null> {
   try {
+    if (process.platform === 'win32') {
+      const native = await readWindowsNativeProxyEnabled()
+      if (native !== null) return native
+    }
     return readSystemProxyEnabled(await getProxyStatus())
   } catch (error) {
     void appendAppLog(`[Sysproxy]: status query failed, ${error}\n`)

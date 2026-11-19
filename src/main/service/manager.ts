@@ -46,6 +46,7 @@ import { existsSync } from 'fs'
 import { appendAppLog } from '../utils/log'
 let keyManager: KeyManager | null = null
 let macOSServiceRecoveryPromise: Promise<void> | undefined
+let windowsServiceInitialization: Promise<void> | undefined
 let pendingLegacyServiceAuthCleanup = false
 const execFilePromise = promisify(execFile)
 const MACOS_SERVICE_PLIST_NAME = 'KokoroBoxService.plist'
@@ -331,6 +332,14 @@ async function installMacOSService(): Promise<void> {
 }
 
 export async function initService(allowInteractiveRecovery = false): Promise<void> {
+  if (process.platform !== 'win32') return initializeService(allowInteractiveRecovery)
+  windowsServiceInitialization ??= initializeService(allowInteractiveRecovery).finally(() => {
+    windowsServiceInitialization = undefined
+  })
+  return windowsServiceInitialization
+}
+
+async function initializeService(allowInteractiveRecovery: boolean): Promise<void> {
   const currentKeyManager = await initKeyManager()
   const secret = await ensurePersistedServiceAuth(currentKeyManager)
   const execPath = servicePath()
@@ -386,8 +395,30 @@ export async function initService(allowInteractiveRecovery = false): Promise<voi
   await finalizeServiceAuthMigration()
 }
 
-export async function installService(): Promise<void> {
+async function supportsWindowsInstallOnInit(executable: string): Promise<boolean> {
+  try {
+    const { stdout } = await execFilePromise(executable, ['service', 'init', '--help'], {
+      windowsHide: true,
+      timeout: 5000
+    })
+    return stdout.includes('--install-if-missing')
+  } catch {
+    return false
+  }
+}
+
+/** Returns true when the service was installed and authenticated in one operation. */
+export async function installService(): Promise<boolean> {
   const execPath = servicePath()
+  if (
+    process.platform === 'win32' &&
+    (await serviceStatus(true)) === 'not-installed' &&
+    (await supportsWindowsInstallOnInit(execPath))
+  ) {
+    // The elevated command has to use the SID captured before UAC switches accounts.
+    await initService()
+    return true
+  }
 
   try {
     if (process.platform === 'darwin') {
@@ -395,6 +426,7 @@ export async function installService(): Promise<void> {
     } else {
       await runServiceLifecycleElevated({ executablePath: execPath, action: 'install' })
     }
+    return false
   } catch (error) {
     if (isUserCancelledError(error)) {
       throw new UserCancelledError()

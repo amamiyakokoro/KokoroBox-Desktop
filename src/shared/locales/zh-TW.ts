@@ -1578,6 +1578,8 @@ export const messages: Readonly<Record<string, string>> = {
     '系統中未找到可用的 mihomo 或 clash 核心，已自動切換回內建核心',
   'System proxy': '系統代理',
   'System proxy watchdog': '系統代理守護',
+  'Automatically restore changed proxy settings when KokoroBox Service is in use.':
+    '使用 KokoroBox Service 時，自動還原遭變更的代理設定。',
   'System proxy: {0}': '系統代理已{0}',
   'System proxy enabled': '系統代理已開啟',
   On: '已開啟',
@@ -1998,8 +2000,8 @@ export const messages: Readonly<Record<string, string>> = {
     '檢查連線時忽略的介面名稱，例如一直顯示連線中的虛擬網卡。',
   'Matching a listed Wi-Fi name switches to Direct mode. Leaving it switches to Rule mode, not the previous mode.':
     '連入清單中的 Wi-Fi 會切換為直連；離開時切換為規則模式，不會恢復之前的模式。',
-  'Windows TUN requires administrator privileges or KokoroBox Service.':
-    'Windows TUN 需要管理員權限或 KokoroBox Service。',
+  'Windows TUN requires an administrator account, including in Service mode.':
+    'Windows TUN 需要管理員帳號，服務模式也適用。',
   'Repairs KokoroBox and core inbound rules for the selected run mode. It does not reset the entire Windows firewall or enable TUN.':
     '修復目前執行模式下 KokoroBox 與核心的傳入規則，不會重設整個 Windows 防火牆或開啟 TUN。',
   'Mixed is the default. Change the stack only to address compatibility or performance issues.':
