@@ -178,11 +178,14 @@ function startSysproxyLeaseRenewal(onlyActiveDevice: boolean, useRegistry: boole
         error.status === 409
       ) {
         try {
-          const { sysProxy } = await getAppConfig()
-          if (sysProxy.enable) {
-            await triggerSysProxy(true, onlyActiveDevice, useRegistry)
-            restored = true
-          }
+          const restore = triggerSysProxyTask.then(async () => {
+            const { sysProxy } = await getAppConfig()
+            if (request !== triggerSysProxyRequest || !sysProxy.enable) return false
+            await setSysProxy(onlyActiveDevice, useRegistry)
+            return true
+          })
+          triggerSysProxyTask = restore.then(() => undefined).catch(() => {})
+          restored = await restore
         } catch (restoreError) {
           appendAppLog(`[Sysproxy]: restore service lease failed, ${restoreError}\n`).catch(
             () => {}

@@ -110,7 +110,7 @@ test('application quit cannot wait indefinitely for cleanup or renderer confirma
   assert.match(source, /if \(quitPromise\) return quitPromise/)
 })
 
-test('system proxy uses KokoroBox Service as its only mutation authority', () => {
+test('service-owned system proxy operations use the authenticated API', () => {
   const sysproxy = readFileSync(resolve('src/main/sys/sysproxy.ts'), 'utf8')
   const coreRuntime = readFileSync(resolve('src/main/core/service-core-runtime.ts'), 'utf8')
   const ipc = readFileSync(resolve('src/main/utils/ipc.ts'), 'utf8')
@@ -140,6 +140,10 @@ test('system proxy reacquires a stale service lease after a conflict', () => {
 
   assert.match(sysproxy, /error instanceof ServiceAPIError/)
   assert.match(sysproxy, /error\.status === 409/)
-  assert.match(sysproxy, /await setSysProxy\(onlyActiveDevice, useRegistry\)/)
+  assert.match(
+    sysproxy,
+    /const restore = triggerSysProxyTask\.then\(async \(\) => \{[\s\S]*?request !== triggerSysProxyRequest \|\| !sysProxy\.enable[\s\S]*?await setSysProxy\(onlyActiveDevice, useRegistry\)/
+  )
+  assert.match(sysproxy, /triggerSysProxyTask = restore\.then/)
   assert.doesNotMatch(sysproxy, /isAxiosError/)
 })
