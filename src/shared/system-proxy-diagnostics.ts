@@ -157,6 +157,7 @@ export function safeDiagnosticCode(code?: string): string | undefined {
     'invalid-port',
     'runtime-port-unavailable',
     'service-unavailable',
+    'service-stopped',
     'service-diagnostics-unsupported',
     'service-authentication-required',
     'service-permission-denied',
@@ -311,6 +312,7 @@ export function buildSystemProxyDiagnostics(
       'service-timeout': tr('Service diagnostics timed out'),
       'service-response-invalid': tr('Service returned invalid diagnostic data'),
       'service-request-failed': tr('Service diagnostics request failed'),
+      'service-stopped': tr('KokoroBox Service is stopped. Start it from Core settings.'),
       'service-unavailable': tr('Unable to contact KokoroBox Service')
     }
     const guidance =

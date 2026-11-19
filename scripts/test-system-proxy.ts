@@ -130,12 +130,13 @@ test('the Windows switch without Service applies manual and PAC proxy settings a
   assert.deepEqual(await windowsProxy.readWindowsNativeProxyOwnership(), [])
 })
 
-function loadSysProxyOperation() {
+function loadSysProxyOperation(platform = process.platform) {
   const events: { channel: string; value?: unknown }[] = []
   let persisted = false
   let canceledRetries = 0
   let saveError: Error | undefined
   let serviceStatus: Record<string, unknown> = {}
+  let serviceStopped = false
   let trigger: (
     enable: boolean,
     options: import('../src/main/sys/sysproxy').TriggerSysProxyOptions
@@ -154,7 +155,11 @@ function loadSysProxyOperation() {
         persisted = patch.sysProxy.enable
       }
     },
-    '../service/api': { getProxyStatus: async () => serviceStatus },
+    '../service/api': {
+      getProxyStatus: async () => serviceStatus,
+      isServiceConnectionError: (error: unknown) => String(error).includes('connect ENOENT')
+    },
+    '../service/manager': { isWindowsServiceStopped: async () => serviceStopped },
     '../utils/log': { appendAppLog: async () => {} },
     '../utils/notification': { showNotification: async () => {} },
     './windows-system-proxy': { readWindowsNativeProxyEnabled: async () => null },
@@ -173,13 +178,14 @@ function loadSysProxyOperation() {
     }
   }
   const module = { exports: {} as typeof import('../src/main/sys/sysproxy-operation') }
-  new Function('require', 'module', 'exports', source)(
+  new Function('require', 'module', 'exports', 'process', source)(
     (name: string) => {
       assert.ok(Object.hasOwn(dependencies, name), `Unexpected dependency: ${name}`)
       return dependencies[name]
     },
     module,
-    module.exports
+    module.exports,
+    { platform }
   )
   return {
     api: module.exports,
@@ -192,11 +198,27 @@ function loadSysProxyOperation() {
     setServiceStatus: (status: Record<string, unknown>) => {
       serviceStatus = status
     },
+    setServiceStopped: (value: boolean) => {
+      serviceStopped = value
+    },
     setTrigger: (next: typeof trigger) => {
       trigger = next
     }
   }
 }
+
+test('Windows proxy operations guide the user to start a confirmed stopped service', async () => {
+  const operation = loadSysProxyOperation('win32')
+  operation.setTrigger(async () => {
+    throw new Error('connect ENOENT')
+  })
+  await assert.rejects(operation.api.changeSysProxy(true, false), /connect ENOENT/)
+
+  operation.setServiceStopped(true)
+  await assert.rejects(operation.api.changeSysProxy(true, false), /KokoroBox Service is stopped/)
+  assert.match(operation.api.getSysProxyOperationState().error ?? '', /Start it from Core settings/)
+  assert.equal(operation.persisted(), false)
+})
 
 test('system proxy status only accepts explicit service booleans', () => {
   assert.equal(readSystemProxyEnabled({ enabled: true }), true)

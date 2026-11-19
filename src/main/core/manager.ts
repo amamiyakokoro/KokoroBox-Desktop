@@ -11,7 +11,8 @@ import {
   patchAppConfig,
   patchControledMihomoConfig
 } from '../config'
-import { app, ipcMain } from 'electron'
+import { app, BrowserWindow, ipcMain } from 'electron'
+import { isRunningAsAdmin } from 'kokorobox-native'
 import {
   startMihomoTraffic,
   startMihomoConnections,
@@ -19,6 +20,7 @@ import {
   startMihomoMemory,
   patchMihomoConfig,
   mihomoGroups,
+  mihomoConfig,
   getAxios
 } from './mihomoApi'
 import { readFile, rm, writeFile } from 'fs/promises'
@@ -66,7 +68,6 @@ import {
   createProviderInitializationTracker,
   isControllerListenError,
   isControllerReadyLog,
-  isTunPermissionError,
   isUpdaterFinishedLog
 } from './startup-chain'
 import { createServiceCoreRuntime } from './service-core-runtime'
@@ -78,6 +79,7 @@ const ctlParam = process.platform === 'win32' ? '-ext-ctl-pipe' : '-ext-ctl-unix
 const serviceConnectionRetryInterval = 500
 const tailscaleAuthNotificationKeyPrefix = 'tailscale-auth:'
 const directCoreLogLineLimit = 16 * 1024
+let tunChangeTask: Promise<unknown> = Promise.resolve()
 
 const directCoreState = {
   child: undefined as ChildProcess | undefined,
@@ -227,7 +229,38 @@ async function startMihomoApiStreams(): Promise<void> {
   directCoreState.retry = 10
 }
 
-async function completeCoreInitialization(logLevel?: LogLevel): Promise<void> {
+function publishTunConfig(): void {
+  for (const window of BrowserWindow.getAllWindows()) {
+    if (!window.isDestroyed()) window.webContents.send('controledMihomoConfigUpdated')
+  }
+  ipcMain.emit('updateTrayMenu')
+}
+
+async function reconcileTunStartup(startupOutput: string): Promise<void> {
+  // A running Mihomo controller can report a failed TUN listener as disabled.
+  if ((await mihomoConfig()).tun?.enable === true) return
+  if (!(await getControledMihomoConfig()).tun?.enable) return
+
+  await patchControledMihomoConfig({ tun: { enable: false } })
+  await recoverDNS().catch((error) => {
+    void appendAppLog(`[Manager]: recover dns failed, ${error}\n`).catch(() => {})
+  })
+  publishTunConfig()
+  const detail = /Start TUN listening error: ([^\r\n]+)/.exec(startupOutput)?.[1]
+  void showNotification({
+    title: tr('Failed to enable TUN mode'),
+    body: detail?.trim().replace(/"$/, '') ?? tr('Check the core logs for details.'),
+    variant: 'danger'
+  })
+}
+
+async function completeCoreInitialization(
+  logLevel: LogLevel | undefined,
+  tunRequested: boolean,
+  startupOutput = ''
+): Promise<void> {
+  if (tunRequested) await reconcileTunStartup(startupOutput)
+
   const tasks: Promise<unknown>[] = [
     delay(100).then(() => {
       mainWindow?.webContents.send('groupsUpdated')
@@ -284,7 +317,8 @@ async function waitForServiceCoreConnection(
   }
 
   const status = await getServiceStatusAfterConnectionError()
-  if (status && status !== 'running') {
+  const waitingForWindowsRestart = process.platform === 'win32' && status === 'stopped'
+  if (status && status !== 'running' && !waitingForWindowsRestart) {
     if (!pausedForAppUpdate) {
       await appendAppLog(`[Manager]: Service status is ${status}, fallback immediately\n`)
       return { reachable: false, running: false, error: initialError }
@@ -343,7 +377,7 @@ async function getServiceStatusAfterConnectionError(): Promise<
   Awaited<ReturnType<typeof serviceStatus>> | undefined
 > {
   try {
-    return await serviceStatus()
+    return await serviceStatus(process.platform === 'win32')
   } catch (error) {
     await appendAppLog(`[Manager]: query service status failed before fallback, ${error}\n`)
     return undefined
@@ -571,7 +605,7 @@ export async function startCore(
     }
     await serviceCoreRuntime.ensureStreamsStarted()
     initialized = true
-    return [completeCoreInitialization(logLevel)]
+    return [completeCoreInitialization(logLevel, Boolean(tun?.enable))]
   }
 
   const providerTracker = createProviderInitializationTracker(await getRuntimeConfig())
@@ -697,23 +731,12 @@ export async function startCore(
           providersReady ||= providerTracker.isReady(line)
           controllerReady ||= isControllerReadyLog(line)
 
-          if (isTunPermissionError(line)) {
-            completing = true
-            patchControledMihomoConfig({ tun: { enable: false } })
-            mainWindow?.webContents.send('controledMihomoConfigUpdated')
-            ipcMain.emit('updateTrayMenu')
-            reject(
-              tr('TUN startup failed. Try granting core permissions manually in Core settings')
-            )
-            return
-          }
-
           if (!controllerReady || !providersReady || completing) return
           completing = true
           await startMihomoApiStreams()
           await waitForMihomoReady()
           initialized = true
-          resolve([completeCoreInitialization(logLevel)])
+          resolve([completeCoreInitialization(logLevel, Boolean(tun?.enable), startupOutput)])
         }
         handleLine().catch(reject)
       })
@@ -732,7 +755,7 @@ export async function startCore(
         .then(async () => {
           initialized = true
           await startMihomoApiStreams()
-          resolve([completeCoreInitialization(logLevel)])
+          resolve([completeCoreInitialization(logLevel, Boolean(tun?.enable), startupOutput)])
         })
         .catch((error) => reject(startupFailure(error)))
     })
@@ -853,7 +876,9 @@ function clearTailscaleAuthNotifications(name?: string): void {
   }
 }
 
-export async function restartCore(options: { throwOnError?: boolean } = {}): Promise<void> {
+export async function restartCore(
+  options: { throwOnError?: boolean; notifyOnError?: boolean } = {}
+): Promise<void> {
   const finishNetworkTransition = beginExpectedNetworkTransition()
   try {
     clearTailscaleAuthNotifications()
@@ -861,11 +886,52 @@ export async function restartCore(options: { throwOnError?: boolean } = {}): Pro
     const promises = await startCore()
     await Promise.all(promises)
   } catch (e) {
-    void showNotification({ title: tr('Failed to start core'), body: `${e}`, variant: 'danger' })
+    if (options.notifyOnError !== false) {
+      void showNotification({ title: tr('Failed to start core'), body: `${e}`, variant: 'danger' })
+    }
     if (options.throwOnError) throw e
   } finally {
     finishNetworkTransition()
   }
+}
+
+export function setTunEnabled(enable: boolean): Promise<boolean> {
+  const task = tunChangeTask.then(async () => {
+    const previous = await getControledMihomoConfig()
+    const previousEnabled = Boolean(previous.tun?.enable)
+    if (enable === previousEnabled) return previousEnabled
+
+    if (enable && process.platform === 'win32') {
+      const { corePermissionMode } = await getAppConfig()
+      if (corePermissionMode !== 'service' && !isRunningAsAdmin()) {
+        throw new Error(tr('Restart KokoroBox with “Run as administrator”'))
+      }
+    }
+
+    await patchControledMihomoConfig(
+      enable ? { tun: { enable }, dns: { enable: true } } : { tun: { enable } }
+    )
+    try {
+      await restartCore({ throwOnError: true, notifyOnError: false })
+      return Boolean((await getControledMihomoConfig()).tun?.enable)
+    } catch (error) {
+      // A later initialization step can fail after the listener has already changed.
+      const runtimeTun = await mihomoConfig()
+        .then((config) => config.tun?.enable)
+        .catch(() => undefined)
+      if (runtimeTun !== enable) {
+        await patchControledMihomoConfig({
+          tun: { enable: previousEnabled },
+          ...(enable ? { dns: { enable: previous.dns?.enable } } : {})
+        })
+      }
+      throw error
+    } finally {
+      publishTunConfig()
+    }
+  })
+  tunChangeTask = task.catch(() => {})
+  return task
 }
 
 export async function keepCoreAlive(): Promise<void> {

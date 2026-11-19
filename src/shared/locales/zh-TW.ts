@@ -1653,6 +1653,8 @@ export const messages: Readonly<Record<string, string>> = {
   'Fake IP range (IPv6)': 'Fake IP 範圍 (IPv6)',
   'Fake IP filter': 'Fake IP 過濾器',
   'TUN mode': 'TUN 模式',
+  'Failed to enable TUN mode': '無法啟用 TUN 模式',
+  'Check the core logs for details.': '請查看核心日誌以瞭解詳情。',
   'TUN startup failed. Try granting core permissions manually in Core settings':
     'TUN 啟動失敗，請前往核心設定頁嘗試手動授予核心權限',
   'TUN mode: {0}': 'TUN 模式：{0}',
@@ -2107,6 +2109,8 @@ export const messages: Readonly<Record<string, string>> = {
   'Service returned invalid diagnostic data': 'Service 傳回無效的診斷資料',
   'Service diagnostics request failed': 'Service 診斷請求失敗',
   'Unable to contact KokoroBox Service': '無法連線至 KokoroBox Service',
+  'KokoroBox Service is stopped. Start it from Core settings.':
+    'KokoroBox 服務已停止。請在核心設定中啟動服務。',
   'Update KokoroBox Service if needed, then restart Service from Core runtime settings and run diagnostics again. The bundled Service and the running Service may be different versions.':
     '必要時更新 KokoroBox Service，然後在「核心執行」設定中重新啟動 Service，再執行診斷。應用程式附帶的 Service 與執行中的 Service 可能是不同版本。',
   'Initialize or repair Service authentication in Core runtime settings, then run diagnostics again.':

@@ -18,7 +18,7 @@ import WebSocket from 'ws'
 import { KeyManager } from './key'
 import { serviceIpcPath } from '../utils/dirs'
 import { appendAppLog } from '../utils/log'
-import { shouldSkipServiceUnavailableFallback } from './fallback'
+import { serviceConnectionRetryTimeout, shouldSkipServiceUnavailableFallback } from './fallback'
 import {
   dnsLeasePayload,
   legacyServiceMeta,
@@ -312,12 +312,17 @@ function scheduleServiceUnavailableFallback(reason: unknown): void {
   if (shouldSkipServiceUnavailableFallback()) return
   if (serviceUnavailableFallbackTimer || serviceUnavailableFallbackPromise) return
 
+  // Allow Windows SCM to restart the service before dropping service-owned runtime modes.
+  const delay =
+    process.platform === 'win32' && isServiceConnectionError(reason)
+      ? serviceConnectionRetryTimeout
+      : serviceUnavailableFallbackDelay
   serviceUnavailableFallbackTimer = setTimeout(() => {
     serviceUnavailableFallbackTimer = null
     serviceUnavailableFallbackPromise = runServiceUnavailableFallback(reason).finally(() => {
       serviceUnavailableFallbackPromise = null
     })
-  }, serviceUnavailableFallbackDelay)
+  }, delay)
 }
 
 async function runServiceUnavailableFallback(reason: unknown): Promise<void> {

@@ -104,12 +104,6 @@ export function isControllerReadyLog(logLine: string): boolean {
   )
 }
 
-export function isTunPermissionError(logLine: string): boolean {
-  return logLine.includes(
-    'Start TUN listening error: configure tun interface: operation not permitted'
-  )
-}
-
 export function isUpdaterFinishedLog(logLine: string): boolean {
   return process.platform === 'win32' && logLine.includes('updater: finished')
 }

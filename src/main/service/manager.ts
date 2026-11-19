@@ -607,6 +607,12 @@ export async function serviceStatus(
   })
 }
 
+export async function isWindowsServiceStopped(): Promise<boolean> {
+  return (
+    process.platform === 'win32' && (await serviceStatus(true).catch(() => 'unknown')) === 'stopped'
+  )
+}
+
 export function openServiceSystemSettings(): void {
   if (process.platform !== 'darwin') return
   openMacosLoginItemsSettings()

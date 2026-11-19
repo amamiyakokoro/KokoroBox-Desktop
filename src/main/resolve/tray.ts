@@ -31,7 +31,7 @@ import {
 import { dataDir, logDir, mihomoCoreDir, mihomoWorkDir } from '../utils/dirs'
 import { changeSysProxy, getSysProxyOperationState } from '../sys/sysproxy-operation'
 import { showNotification } from '../utils/notification'
-import { quitWithoutCore, restartCore } from '../core/manager'
+import { quitWithoutCore, setTunEnabled } from '../core/manager'
 import { floatingWindow, triggerFloatingWindow } from './floatingWindow'
 import { is } from '@electron-toolkit/utils'
 import { extname, join } from 'path'
@@ -363,18 +363,10 @@ export const buildContextMenu = async (): Promise<Menu> => {
       accelerator: triggerTunShortcut,
       checked: tun?.enable ?? false,
       click: async (item): Promise<void> => {
-        const enable = item.checked
         try {
-          if (enable) {
-            await patchControledMihomoConfig({ tun: { enable }, dns: { enable: true } })
-          } else {
-            await patchControledMihomoConfig({ tun: { enable } })
-          }
-          mainWindow?.webContents.send('controledMihomoConfigUpdated')
-          floatingWindow?.webContents.send('controledMihomoConfigUpdated')
-          await restartCore()
-        } catch {
-          // ignore
+          await setTunEnabled(item.checked)
+        } catch (error) {
+          void showNotification({ title: String(error), variant: 'danger' })
         } finally {
           ipcMain.emit('updateTrayMenu')
         }

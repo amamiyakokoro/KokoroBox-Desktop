@@ -155,6 +155,7 @@ export type ProxyRuntimeDiagnosticsFailure =
   | 'service-timeout'
   | 'service-response-invalid'
   | 'service-request-failed'
+  | 'service-stopped'
   | 'service-unavailable'
 
 /** Transport failures describe missing evidence, never a stopped or failed core.

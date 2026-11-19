@@ -25,6 +25,7 @@ import {
   type ServiceCoreEvent
 } from '../service/api'
 import { shouldSkipServiceUnavailableFallback } from '../service/fallback'
+import { isWindowsServiceStopped } from '../service/manager'
 import { appendAppLog, setMihomoLogSource } from '../utils/log'
 import { showNotification } from '../utils/notification'
 
@@ -193,6 +194,12 @@ export function createServiceCoreRuntime(options: ServiceCoreRuntimeOptions) {
       const promises = await options.startCore()
       await Promise.all(promises)
       mainWindow?.webContents.send('core-started')
+    }
+    if (!useServiceCore && (await isWindowsServiceStopped())) {
+      void showNotification({
+        title: tr('KokoroBox Service is stopped. Start it from Core settings.')
+      })
+      return
     }
     void showNotification({
       title: preserveMacOSServiceCore

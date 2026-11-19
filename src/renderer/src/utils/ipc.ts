@@ -448,6 +448,10 @@ export async function restartCore(): Promise<void> {
   return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('restartCore'))
 }
 
+export async function setTunEnabled(enable: boolean): Promise<boolean> {
+  return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('setTunEnabled', enable))
+}
+
 export async function stopCore(): Promise<void> {
   return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('stopCore'))
 }

@@ -7,6 +7,7 @@ import { getRuntimeConfig } from '../core/factory'
 import { bootstrapDNSAddresses } from './dns-bootstrap'
 import { appendDNSDiagnostics, canRepairDNS, type DNSEvidence } from '../../shared/dns-diagnostics'
 import { startCore, restartCore, getProxyRuntimeDiagnostics } from '../service/api'
+import { isWindowsServiceStopped } from '../service/manager'
 import { getActivePacUrl, startPacServer } from '../resolve/server'
 import { localPacUrl } from '../resolve/pac-http-server'
 import { appendAppLog } from '../utils/log'
@@ -158,6 +159,15 @@ async function runChecks(): Promise<SystemProxyDiagnostics> {
       servers: [...replacement]
     }
   }
+  let runtimeFailure =
+    runtime.status === 'rejected' ? proxyRuntimeDiagnosticsFailure(runtime.reason) : undefined
+  if (
+    process.platform === 'win32' &&
+    runtimeFailure === 'service-unavailable' &&
+    (await isWindowsServiceStopped())
+  ) {
+    runtimeFailure = 'service-stopped'
+  }
   const result = combineSystemProxyDiagnostics(
     {
       platform: process.platform,
@@ -169,7 +179,7 @@ async function runChecks(): Promise<SystemProxyDiagnostics> {
     },
     native.status === 'fulfilled' ? native.value : undefined,
     runtime.status === 'fulfilled' ? runtime.value : undefined,
-    runtime.status === 'rejected' ? proxyRuntimeDiagnosticsFailure(runtime.reason) : undefined,
+    runtimeFailure,
     dns
   )
   log(

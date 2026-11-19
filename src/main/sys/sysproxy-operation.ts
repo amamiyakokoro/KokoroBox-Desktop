@@ -1,6 +1,7 @@
 import { BrowserWindow, ipcMain } from 'electron'
 import { patchAppConfig } from '../config'
-import { getProxyStatus } from '../service/api'
+import { getProxyStatus, isServiceConnectionError } from '../service/api'
+import { isWindowsServiceStopped } from '../service/manager'
 import { appendAppLog } from '../utils/log'
 import { showNotification } from '../utils/notification'
 import { tr } from '../../shared/i18n'
@@ -65,6 +66,19 @@ function isTimeout(error: unknown): boolean {
   )
 }
 
+async function describeProxyError(error: unknown): Promise<unknown> {
+  if (
+    process.platform === 'win32' &&
+    isServiceConnectionError(error) &&
+    (await isWindowsServiceStopped())
+  ) {
+    return new Error(tr('KokoroBox Service is stopped. Start it from Core settings.'), {
+      cause: error
+    })
+  }
+  return error
+}
+
 export function changeSysProxy(
   enable: boolean,
   onlyActiveDevice: boolean,
@@ -96,10 +110,11 @@ export function changeSysProxy(
           publish({ phase: 'waiting-network', desired: true, error: undefined })
         }
       },
-      onRetryError: (error) => {
+      onRetryError: async (cause) => {
+        const error = await describeProxyError(cause)
         if (id !== requestId) return
         logTimings('retry failed')
-        if (isTimeout(error)) {
+        if (isTimeout(cause)) {
           publish({ phase: 'unconfirmed', desired: true, confirmed: null, error: String(error) })
           void confirmAfterUncertainResult().then((confirmed) => {
             if (id === requestId && confirmed !== null) {
@@ -143,10 +158,11 @@ export function changeSysProxy(
         publish({ phase: 'idle', desired: enable, confirmed: enable, error: undefined })
       }
       return getSysProxyOperationState()
-    } catch (error) {
+    } catch (cause) {
+      const error = await describeProxyError(cause)
       if (id === requestId) {
         if (waitingForNetwork) cancelPendingSysProxyRetry()
-        if (isTimeout(error)) {
+        if (isTimeout(cause)) {
           publish({ phase: 'unconfirmed', desired: enable, confirmed: null, error: String(error) })
           const confirmed = await confirmAfterUncertainResult()
           if (id !== requestId) return getSysProxyOperationState()

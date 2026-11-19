@@ -397,6 +397,39 @@ test('read-only service status does not probe authenticated health or migrate se
   assert.equal(probes, 1)
 })
 
+test('Windows core startup allows a stopped service to reconnect within the SCM recovery window', async () => {
+  const initialError = new Error('connect ENOENT')
+  let status = 'stopped'
+  let now = 0
+  const probe = isolatedExport<
+    (error: unknown) => Promise<{ reachable: boolean; running: boolean }>
+  >('src/main/core/manager.ts', 'waitForServiceCoreConnection', {
+    appendAppLog: async () => {},
+    getServiceFallbackPolicy: () => ({ pausedForAppUpdate: false, connectionRetryTimeout: 10_000 }),
+    isServiceConnectionError: (error: unknown) => error === initialError,
+    isServiceUnavailableError: (error: unknown) => error === initialError,
+    getServiceStatusAfterConnectionError: async () => status,
+    process: { platform: 'win32' },
+    Date: { now: () => now },
+    delay: async (ms: number) => {
+      now += ms
+    },
+    serviceConnectionRetryInterval: 500,
+    getCoreStatus: async () => {
+      if (now < 5_000) throw initialError
+    }
+  })
+  const recovered = await probe(initialError)
+  assert.equal(recovered.reachable, true)
+  assert.equal(recovered.running, true)
+  assert.equal(now, 5_000)
+
+  status = 'not-installed'
+  now = 0
+  assert.equal((await probe(initialError)).reachable, false)
+  assert.equal(now, 0)
+})
+
 function nativeSnapshot(
   patch: Partial<NativeSystemProxyDiagnostics> = {}
 ): NativeSystemProxyDiagnostics {
@@ -450,6 +483,7 @@ function diagnosticEngine(
         startCore: async () => {},
         restartCore: async () => {}
       },
+      '../service/manager': { isWindowsServiceStopped: async () => false },
       '../resolve/server': { getActivePacUrl: () => undefined, startPacServer: async () => 34567 },
       '../resolve/pac-http-server': {
         localPacUrl: (port: number) => `http://127.0.0.1:${port}/pac`
@@ -904,6 +938,21 @@ test('failed backend calls leave the independent domain visible and cannot repai
     serviceFailed.fixSystemProxyDiagnostic('restore-system-proxy'),
     /private service error/
   )
+})
+
+test('Windows diagnostics distinguish a stopped service from an unreachable service', async () => {
+  const engine = diagnosticEngine({
+    '../service/api': {
+      getProxyRuntimeDiagnostics: async () => {
+        throw new Error('connect ENOENT')
+      }
+    },
+    '../service/manager': { isWindowsServiceStopped: async () => true }
+  })
+  const result = await engine.runSystemProxyDiagnostics()
+  assert.match(result.report, /service-stopped/)
+  assert.match(result.report, /KokoroBox Service is stopped/)
+  assert.equal(result.state.coreRunning, null)
 })
 
 test('service DTO validation rejects guessed/invalid ports and retains only diagnostic fields', () => {

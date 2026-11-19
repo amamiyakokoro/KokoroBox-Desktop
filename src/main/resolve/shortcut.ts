@@ -4,8 +4,8 @@ import { mainWindow, setNotQuitDialog, triggerMainWindow } from '..'
 import { getAppConfig, getControledMihomoConfig, patchControledMihomoConfig } from '../config'
 import { changeSysProxy, getSysProxyOperationState } from '../sys/sysproxy-operation'
 import { patchMihomoConfig } from '../core/mihomoApi'
-import { quitWithoutCore, restartCore } from '../core/manager'
-import { floatingWindow, triggerFloatingWindow } from './floatingWindow'
+import { quitWithoutCore, setTunEnabled } from '../core/manager'
+import { triggerFloatingWindow } from './floatingWindow'
 import { showNotification } from '../utils/notification'
 
 export async function registerShortcut(
@@ -60,24 +60,16 @@ export async function registerShortcut(
     }
     case 'triggerTunShortcut': {
       return globalShortcut.register(newShortcut, async () => {
-        const { tun } = await getControledMihomoConfig()
-        const enable = tun?.enable ?? false
         try {
-          if (!enable) {
-            await patchControledMihomoConfig({ tun: { enable: !enable }, dns: { enable: true } })
-          } else {
-            await patchControledMihomoConfig({ tun: { enable: !enable } })
+          const { tun } = await getControledMihomoConfig()
+          const enable = !tun?.enable
+          if ((await setTunEnabled(enable)) === enable) {
+            void showNotification({
+              title: enable ? tr('TUN mode enabled') : tr('TUN mode disabled')
+            })
           }
-          await restartCore()
-          void showNotification({
-            title: !enable ? tr('TUN mode enabled') : tr('TUN mode disabled')
-          })
-          mainWindow?.webContents.send('controledMihomoConfigUpdated')
-          floatingWindow?.webContents.send('appConfigUpdated')
-        } catch {
-          // ignore
-        } finally {
-          ipcMain.emit('updateTrayMenu')
+        } catch (error) {
+          void showNotification({ title: String(error), variant: 'danger' })
         }
       })
     }

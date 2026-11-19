@@ -4,7 +4,7 @@ import path from 'path'
 import { dataDir } from '../utils/dirs'
 import { appendAppLog } from '../utils/log'
 
-const normalServiceConnectionRetryTimeout = 10000
+export const serviceConnectionRetryTimeout = 10_000
 const appUpdateServiceConnectionRetryTimeout = 60000
 const appUpdateServiceFallbackMarker = 'app-update-service-fallback-paused'
 const appUpdateServiceFallbackGrace = 10 * 60 * 1000
@@ -56,7 +56,7 @@ export function getServiceFallbackPolicy(): ServiceFallbackPolicy {
     pausedForAppUpdate,
     connectionRetryTimeout: pausedForAppUpdate
       ? appUpdateServiceConnectionRetryTimeout
-      : normalServiceConnectionRetryTimeout
+      : serviceConnectionRetryTimeout
   }
 }
 

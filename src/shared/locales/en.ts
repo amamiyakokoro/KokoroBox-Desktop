@@ -1706,6 +1706,8 @@ export const messages: Readonly<Record<string, string>> = {
   'Fake IP range (IPv6)': 'Fake IP range (IPv6)',
   'Fake IP filter': 'Fake IP filter',
   'TUN mode': 'TUN mode',
+  'Failed to enable TUN mode': 'Failed to enable TUN mode',
+  'Check the core logs for details.': 'Check the core logs for details.',
   'TUN startup failed. Try granting core permissions manually in Core settings':
     'TUN startup failed. Try granting core permissions manually in Core settings',
   'TUN mode: {0}': 'TUN mode: {0}',
@@ -2177,6 +2179,8 @@ export const messages: Readonly<Record<string, string>> = {
   'Service returned invalid diagnostic data': 'Service returned invalid diagnostic data',
   'Service diagnostics request failed': 'Service diagnostics request failed',
   'Unable to contact KokoroBox Service': 'Unable to contact KokoroBox Service',
+  'KokoroBox Service is stopped. Start it from Core settings.':
+    'KokoroBox Service is stopped. Start it from Core settings.',
   'Update KokoroBox Service if needed, then restart Service from Core runtime settings and run diagnostics again. The bundled Service and the running Service may be different versions.':
     'Update KokoroBox Service if needed, then restart Service from Core runtime settings and run diagnostics again. The bundled Service and the running Service may be different versions.',
   'Initialize or repair Service authentication in Core runtime settings, then run diagnostics again.':

@@ -80,7 +80,13 @@ import {
   setOverride,
   updateOverrideItem
 } from '../config'
-import { quitWithoutCore, restartCore, startNetworkDetection, stopCore } from '../core/manager'
+import {
+  quitWithoutCore,
+  restartCore,
+  setTunEnabled,
+  startNetworkDetection,
+  stopCore
+} from '../core/manager'
 import { stopNetworkDetection } from '../core/network'
 import {
   checkCorePermission,
@@ -466,6 +472,9 @@ export function registerIpcMainHandlers(): void {
   ipcMain.handle('getOverride', (_e, id, ext) => ipcErrorWrapper(getOverride)(id, ext))
   ipcMain.handle('setOverride', (_e, id, ext, str) => ipcErrorWrapper(setOverride)(id, ext, str))
   ipcMain.handle('restartCore', () => ipcErrorWrapper(restartCore)({ throwOnError: true }))
+  ipcMain.handle('setTunEnabled', (_event, enable: boolean) =>
+    ipcErrorWrapper(setTunEnabled)(enable)
+  )
   ipcMain.handle('getRuntimeRecoverySnapshot', () => ipcErrorWrapper(getRuntimeRecoverySnapshot)())
   ipcMain.handle('runSystemProxyDiagnostics', ipcErrorWrapper(runSystemProxyDiagnostics))
   ipcMain.handle('fixSystemProxyDiagnostic', (_e, action) =>
@@ -542,7 +551,9 @@ export function registerIpcMainHandlers(): void {
   ipcMain.handle('platform', () => process.platform)
   ipcMain.handle('listUwpLoopbackApps', ipcErrorWrapper(listUwpLoopbackApps))
   ipcMain.handle('canManageUwpLoopback', ipcErrorWrapper(canManageUwpLoopback))
-  ipcMain.handle('setUwpLoopbackExemption', ipcErrorWrapper(setUwpLoopbackExemption))
+  ipcMain.handle('setUwpLoopbackExemption', (_e, id, enabled) =>
+    ipcErrorWrapper(setUwpLoopbackExemption)(id, enabled)
+  )
   ipcMain.handle('setupFirewall', ipcErrorWrapper(setupFirewall))
   ipcMain.handle('getInterfaces', getInterfaces)
   ipcMain.handle('webdavBackup', ipcErrorWrapper(webdavBackup))

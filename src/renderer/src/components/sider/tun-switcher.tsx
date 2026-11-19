@@ -1,7 +1,8 @@
 import { tr } from '../../../../shared/i18n'
 import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'
 import { TbDeviceIpadHorizontalBolt } from 'react-icons/tb'
-import { restartCore } from '@renderer/utils/ipc'
+import { setTunEnabled } from '@renderer/utils/ipc'
+import { notify } from '@renderer/utils/notification'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import React from 'react'
@@ -16,7 +17,8 @@ const TunSwitcher: React.FC<Props> = (props) => {
   const { iconOnly } = props
   const { appConfig } = useAppConfig()
   const { tunCardStatus = 'col-span-1', disableAnimation = false } = appConfig || {}
-  const { controledMihomoConfig, patchControledMihomoConfig } = useControledMihomoConfig()
+  const { controledMihomoConfig, mutateControledMihomoConfig } = useControledMihomoConfig()
+  const [pending, setPending] = React.useState(false)
   const { tun } = controledMihomoConfig || {}
   const { enable } = tun || {}
   const {
@@ -30,20 +32,23 @@ const TunSwitcher: React.FC<Props> = (props) => {
   })
   const transform = tf ? { x: tf.x, y: tf.y, scaleX: 1, scaleY: 1 } : null
   const onChange = async (enable: boolean): Promise<void> => {
-    if (enable) {
-      await patchControledMihomoConfig({ tun: { enable }, dns: { enable: true } })
-    } else {
-      await patchControledMihomoConfig({ tun: { enable } })
+    if (pending) return
+    setPending(true)
+    try {
+      await setTunEnabled(enable)
+    } catch (error) {
+      notify(error, { variant: 'danger' })
+    } finally {
+      await mutateControledMihomoConfig().catch(() => {})
+      setPending(false)
     }
-    await restartCore()
-    window.electron.ipcRenderer.send('updateFloatingWindow')
-    window.electron.ipcRenderer.send('updateTrayMenu')
   }
 
   if (iconOnly) {
     return (
       <div className={`${tunCardStatus} flex justify-center`}>
         <SiderIconToggleButton
+          isDisabled={pending}
           isSelected={Boolean(enable)}
           label={`${tr('TUN mode')} — ${enable ? tr('Enabled') : tr('Disabled')}`}
           placement="right"
@@ -75,6 +80,7 @@ const TunSwitcher: React.FC<Props> = (props) => {
           title={tr('TUN mode')}
           status={enable ? tr('Enabled') : tr('Disabled')}
           enabled={Boolean(enable)}
+          pending={pending}
           isDragging={isDragging}
           onToggle={onChange}
         />
