@@ -2,6 +2,7 @@ import { appendAppLog } from '../utils/log'
 import {
   recoverProfileKeyTransaction,
   writeProfileKeyTransaction,
+  type SubscriptionRuntimeFile,
   readProfileKeySnapshot
 } from './profile-key-transaction'
 import { assertManagedConfig } from '../../shared/managed-id'
@@ -18,7 +19,7 @@ import {
 import { addProfileUpdater, delProfileUpdater } from '../core/profileUpdater'
 import { readFile, writeFile, rm, mkdir, rename } from 'fs/promises'
 import { fileToStr, repairManagedFilePermissions } from 'kokorobox-native'
-import { restartCore } from '../core/manager'
+import { hotReloadSubscription, restartCore } from '../core/manager'
 import { getAppConfig } from './app'
 import { existsSync } from 'fs'
 import axios, { AxiosResponse } from 'axios'
@@ -130,7 +131,8 @@ async function replaceProfilePair(
   config: ProfileConfig,
   item: ProfileItem,
   oldContent: string,
-  plaintext: string
+  plaintext: string,
+  runtime?: SubscriptionRuntimeFile
 ): Promise<void> {
   const nextContent = item.ageRecipient
     ? await encryptAgeText(plaintext, item.ageRecipient)
@@ -144,7 +146,9 @@ async function replaceProfilePair(
     oldConfig,
     oldContent,
     stringifyYaml(config),
-    nextContent
+    nextContent,
+    undefined,
+    runtime
   )
   profileConfig = structuredClone(config)
 }
@@ -162,6 +166,19 @@ async function commitPreparedProfile(
   const { item: newItem, content } = prepared
   const config = await getProfileConfig()
   const previous = config.items.find((item) => item.id === newItem.id)
+  if (
+    previous &&
+    newItem.type === 'remote' &&
+    config.current === newItem.id &&
+    options.restartCurrent !== false &&
+    (await getAppConfig()).hotReloadSubscriptions
+  ) {
+    const previousContent = await readFile(profilePath(newItem.id), 'utf8')
+    await hotReloadSubscription(prepared, (runtime) =>
+      replaceProfilePair(config, newItem, previousContent, content, runtime)
+    )
+    return newItem.id
+  }
   const changedKey =
     previous &&
     (previous.ageIdentity !== newItem.ageIdentity || previous.ageRecipient !== newItem.ageRecipient)

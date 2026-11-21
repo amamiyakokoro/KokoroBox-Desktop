@@ -37,6 +37,7 @@ const SubscriptionIntegrationSettings: React.FC<Props> = ({
   const {
     userAgent,
     diffWorkDir = false,
+    hotReloadSubscriptions = false,
     gistSyncEnabled = false,
     gistEncrypted = false,
     gistAgeRecipient = ''
@@ -160,6 +161,29 @@ const SubscriptionIntegrationSettings: React.FC<Props> = ({
     <>
       {hasSubscriptionSection && (
         <SettingCard header={showSubscriptionHeading ? tr('Subscription data') : undefined}>
+          <SettingItem
+            contentAlign="end"
+            title={tr('Hot reload subscription updates')}
+            help={tr(
+              'Apply manual and automatic updates to the active subscription without restarting the core.'
+            )}
+            divider
+          >
+            <Switch
+              size="sm"
+              aria-label={tr('Hot reload subscription updates')}
+              isSelected={hotReloadSubscriptions}
+              onChange={(value) => {
+                void patchAppConfig({ hotReloadSubscriptions: value })
+              }}
+            >
+              <Switch.Content>
+                <Switch.Control>
+                  <Switch.Thumb />
+                </Switch.Control>
+              </Switch.Content>
+            </Switch>
+          </SettingItem>
           <SettingItem
             contentAlign="end"
             title={tr('Use a separate working directory for each profile')}

@@ -1,8 +1,12 @@
-import yaml, { isPair, isScalar } from 'yaml'
+import { tr } from '../../shared/i18n'
+import yaml, { isMap, isPair, isScalar } from 'yaml'
 
-export function parseYaml<T = unknown>(content: string): T {
+export function parseYaml<T = unknown>(content: string, requireMapping = false): T {
   const document = yaml.parseDocument(content, { merge: true })
   if (document.errors.length > 0) throw document.errors[0]
+
+  if (requireMapping && !isMap(document.contents))
+    throw new Error(tr('Subscription must contain a YAML mapping'))
 
   yaml.visit(document, {
     Pair(_key, pair, path) {

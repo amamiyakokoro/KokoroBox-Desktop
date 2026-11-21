@@ -9,9 +9,7 @@ export async function checkProfile(serviceMode = false): Promise<void> {
     await validateMihomoProfile(
       {
         executable: mihomoCorePath(core),
-        configPath: diffWorkDir
-          ? mihomoWorkConfigPath(profileConfig.current)
-          : mihomoWorkConfigPath('work'),
+        configPath: mihomoWorkConfigPath(profileConfig.current, diffWorkDir),
         workDir: mihomoTestDir(),
         safePaths
       },

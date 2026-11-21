@@ -1,3 +1,4 @@
+import { writeDurableText } from '../config/profile-key-transaction'
 import { tr } from '../../shared/i18n'
 import {
   getControledMihomoConfig,
@@ -26,13 +27,46 @@ import { getAppRoutingConfig } from '../app-routing/config'
 import { applyAppRoutingListener } from '../app-routing/profile'
 import { appRoutingSupported } from '../../shared/app-routing'
 
-let runtimeConfigStr: string,
-  rawProfileStr: string,
-  currentProfileStr: string,
-  overrideProfileStr: string,
+export interface PreparedSubscription {
+  item: ProfileItem
+  content: string
+}
+
+interface RuntimeProfile {
+  rawProfileStr: string
+  currentProfileStr: string
+  overrideProfileStr: string
+  runtimeConfigStr: string
   runtimeConfig: MihomoConfig
+  configPath: string
+  diffWorkDir: boolean
+}
+
+let published: RuntimeProfile
+let runtimeWrite: Promise<unknown> = Promise.resolve()
+
+export function withRuntimeWrite<T>(operation: () => Promise<T>): Promise<T> {
+  const result = runtimeWrite.then(operation)
+  runtimeWrite = result.catch(() => undefined)
+  return result
+}
+
+export function publishRuntimeProfile(profile: RuntimeProfile): void {
+  published = profile
+}
 
 export async function generateProfile(controlledConfig?: Partial<MihomoConfig>): Promise<void> {
+  await withRuntimeWrite(async () => {
+    const profile = await buildRuntimeProfile(controlledConfig)
+    await writeDurableText(profile.configPath, profile.runtimeConfigStr)
+    publishRuntimeProfile(profile)
+  })
+}
+
+export async function buildRuntimeProfile(
+  controlledConfig?: Partial<MihomoConfig>,
+  subscription?: PreparedSubscription
+): Promise<RuntimeProfile> {
   const [profileConfig, appConfig, controledMihomoConfig, appRoutingConfig] = await Promise.all([
     getProfileConfig(),
     getAppConfig(),
@@ -41,13 +75,17 @@ export async function generateProfile(controlledConfig?: Partial<MihomoConfig>):
   ])
   const { current } = profileConfig
   const { diffWorkDir = false, controlDns = true, controlSniff = true } = appConfig
-  const nextRawProfileStr = await getProfileStr(current)
-  let currentProfileConfig = parseYaml<MihomoConfig>(nextRawProfileStr)
+  if (subscription && current !== subscription.item.id)
+    throw new Error('Active subscription changed')
+  const rawProfileStr = subscription?.content ?? (await getProfileStr(current))
+  let currentProfileConfig = parseYaml<MihomoConfig>(rawProfileStr, Boolean(subscription))
   if (typeof currentProfileConfig !== 'object') currentProfileConfig = {} as MihomoConfig
-  rawProfileStr = nextRawProfileStr
-  currentProfileStr = stringifyYaml(currentProfileConfig)
-  const currentProfile = await overrideProfile(current, currentProfileConfig)
-  overrideProfileStr = stringifyYaml(currentProfile)
+  const currentProfileStr = stringifyYaml(currentProfileConfig)
+  const currentProfile = await overrideProfile(
+    subscription?.item ?? (await getProfileItem(current)),
+    currentProfileConfig
+  )
+  const overrideProfileStr = stringifyYaml(currentProfile)
 
   const configToMerge = JSON.parse(JSON.stringify(controledMihomoConfig))
   if (!controlDns) {
@@ -74,15 +112,19 @@ export async function generateProfile(controlledConfig?: Partial<MihomoConfig>):
 
   await cleanProfile(profile, controlDns, controlSniff)
 
-  runtimeConfig = profile
-  runtimeConfigStr = stringifyYaml(profile)
-  if (diffWorkDir) {
-    await prepareProfileWorkDir(current)
+  if (diffWorkDir) await prepareProfileWorkDir(current)
+  // Cold startup temporarily uses info for readiness detection. A live reload needs the user's level.
+  if (subscription && controledMihomoConfig['log-level'])
+    profile['log-level'] = controledMihomoConfig['log-level']
+  return {
+    rawProfileStr,
+    currentProfileStr,
+    overrideProfileStr,
+    runtimeConfig: profile,
+    runtimeConfigStr: stringifyYaml(profile),
+    configPath: mihomoWorkConfigPath(current, diffWorkDir),
+    diffWorkDir
   }
-  await writeFile(
-    diffWorkDir ? mihomoWorkConfigPath(current) : mihomoWorkConfigPath('work'),
-    runtimeConfigStr
-  )
 }
 
 async function cleanProfile(
@@ -349,12 +391,12 @@ async function prepareProfileWorkDir(current: string | undefined): Promise<void>
 }
 
 async function overrideProfile(
-  current: string | undefined,
+  profileItem: ProfileItem | undefined,
   profile: MihomoConfig
 ): Promise<MihomoConfig> {
   const { items = [] } = (await getOverrideConfig()) || {}
   const globalOverride = items.filter((item) => item.global).map((item) => item.id)
-  const { override = [] } = (await getProfileItem(current)) || {}
+  const { override = [] } = profileItem || {}
   for (const ov of new Set(globalOverride.concat(override))) {
     const item = await getOverrideItem(ov)
     const content = await getOverride(ov, item?.ext || 'js')
@@ -402,21 +444,21 @@ async function runOverrideScript(
 }
 
 export async function getRuntimeConfigStr(): Promise<string> {
-  return runtimeConfigStr
+  return published?.runtimeConfigStr
 }
 
 export async function getRawProfileStr(): Promise<string> {
-  return rawProfileStr
+  return published?.rawProfileStr
 }
 
 export async function getCurrentProfileStr(): Promise<string> {
-  return currentProfileStr
+  return published?.currentProfileStr
 }
 
 export async function getOverrideProfileStr(): Promise<string> {
-  return overrideProfileStr
+  return published?.overrideProfileStr
 }
 
 export async function getRuntimeConfig(): Promise<MihomoConfig> {
-  return runtimeConfig
+  return published?.runtimeConfig
 }

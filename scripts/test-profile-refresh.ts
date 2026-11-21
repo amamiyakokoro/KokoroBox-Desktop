@@ -121,7 +121,7 @@ function deferred<T>() {
   return { promise, resolve }
 }
 
-function refreshHarness() {
+function refreshHarness(active = false, hotReloadSubscriptions = false) {
   const initial = {
     id: 'subscription',
     name: 'Original',
@@ -129,7 +129,10 @@ function refreshHarness() {
     autoUpdate: false,
     kokoro: { settings: { profile_auto_update: false } }
   } as ProfileItem
-  let config: ProfileConfig = { items: [structuredClone(initial)] }
+  let config: ProfileConfig = {
+    ...(active && { current: initial.id }),
+    items: [structuredClone(initial)]
+  }
   let content: string | undefined = 'old'
   const download = deferred<{ content: string }>()
   let commitWait: Promise<void> = Promise.resolve()
@@ -149,6 +152,24 @@ function refreshHarness() {
       'clearKokoroProfilesUnlocked'
     ],
     {
+      getAppConfig: async () => ({ hotReloadSubscriptions }),
+      readFile: async () => content,
+      hotReloadSubscription: async (
+        prepared: { content: string },
+        persist: (runtime: unknown) => Promise<void>
+      ) => {
+        calls.push('reload')
+        await persist({ perProfile: false, content: prepared.content })
+      },
+      replaceProfilePair: async (
+        next: ProfileConfig,
+        item: ProfileItem,
+        _previous: string,
+        data: string
+      ) => {
+        content = data
+        config = { ...next, items: [item] }
+      },
       profileMutationPromise: Promise.resolve(),
       getProfileItem: async (id: string) =>
         structuredClone(config.items.find((item) => item.id === id)),
@@ -162,10 +183,16 @@ function refreshHarness() {
         const downloaded = await download.promise
         return { item: { ...item, updated: 123 }, content: downloaded.content }
       },
-      writeProfileContent: async (_id: string, nextContent: string) => {
+      writeProfileContent: async (
+        id: string,
+        nextContent: string,
+        _item: ProfileItem,
+        restart: boolean
+      ) => {
         calls.push('commit')
         await commitWait
         content = nextContent
+        if (restart && config.current === id) calls.push('restart')
       },
       addProfileUpdater: async () => {
         calls.push('schedule')
@@ -269,6 +296,23 @@ test('an unchanged subscription refresh commits downloaded content without selec
   assert.equal(h.state().config.current, undefined)
   assert.ok((h.state().config.items[0].updated || 0) >= 123)
   assert.deepEqual(h.calls, ['download', 'commit', 'unschedule', 'schedule'])
+})
+
+test('only opted-in active subscriptions use the hot reload commit', async () => {
+  for (const [active, enabled, expected] of [
+    [true, true, 'reload'],
+    [true, false, 'restart'],
+    [false, true, 'commit']
+  ] as const) {
+    const h = refreshHarness(active, enabled)
+    const refresh = h.addProfileItem(h.initial)
+    h.download.resolve({ content: 'new' })
+    await refresh
+    assert.ok(h.calls.includes(expected))
+    assert.equal(h.calls.includes('restart'), active && !enabled)
+    assert.equal(h.calls.includes('reload'), active && enabled)
+    assert.equal(h.state().content, 'new')
+  }
 })
 
 test('manual and scheduled Kokoro refreshes use the guarded path and cannot recreate a deleted profile', async () => {
@@ -384,6 +428,7 @@ test('strict stop failures preserve Service ownership and prevent a restart from
   const calls: string[] = []
   const failure = new Error('Service refused stop')
   const { stopCore } = loadFunctions('src/main/core/manager.ts', ['stopCore'], {
+    withRuntimeWrite: (run: () => Promise<void>) => run(),
     serviceCoreRuntime: {
       pauseAutoResume: () => {},
       clearStreams: () => {},
@@ -446,4 +491,44 @@ test('failed profile switches restore the previous selection and restart that pr
   assert.deepEqual(writes, ['new', 'old'])
   assert.equal(restarts, 2)
   await assert.rejects(changeCurrentProfileUnlocked('missing'), /Profile not found/)
+})
+
+test('the live core is restored after an ambiguous reload or a failed commit', async (t) => {
+  const { applySubscriptionRuntime, ReloadRejected } =
+    await import('../src/main/core/subscription-reload')
+  const { mkdtemp, readFile, readdir, rm, writeFile } = await import('node:fs/promises')
+  const { tmpdir } = await import('node:os')
+  const { join } = await import('node:path')
+  const work = await mkdtemp(join(tmpdir(), 'kokorobox-reload-'))
+  t.after(() => rm(work, { recursive: true, force: true }))
+  const canonical = join(work, 'config.yaml')
+  await writeFile(canonical, 'previous')
+  for (const failure of ['invalid', 'rejected', 'reply lost', 'commit failed']) {
+    const applied: string[] = []
+    await assert.rejects(
+      applySubscriptionRuntime(
+        canonical,
+        'candidate',
+        async (path) => {
+          assert.equal(await readFile(path, 'utf8'), 'candidate')
+          if (failure === 'invalid') throw new Error(failure)
+        },
+        async (path) => {
+          if (failure === 'rejected') throw new ReloadRejected(failure)
+          applied.push(await readFile(path, 'utf8'))
+          if (failure === 'reply lost' && path !== canonical) throw new Error(failure)
+        },
+        async () => {
+          throw new Error('commit failed')
+        }
+      ),
+      new RegExp(failure)
+    )
+    assert.deepEqual(
+      applied,
+      ['invalid', 'rejected'].includes(failure) ? [] : ['candidate', 'previous']
+    )
+    assert.equal(await readFile(canonical, 'utf8'), 'previous')
+    assert.deepEqual(await readdir(work), ['config.yaml'])
+  }
 })

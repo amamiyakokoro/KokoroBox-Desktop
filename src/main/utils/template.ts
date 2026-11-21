@@ -79,6 +79,7 @@ export const defaultConfig: AppConfig = {
   autoLightweightMode: 'core',
   coreStartupMode: process.platform === 'win32' ? 'log' : 'post-up',
   serviceRunMode: 'auto',
+  hotReloadSubscriptions: false,
   delayTestConcurrency: 50,
   delayTestUseGroupApi: false,
   delayTestUrlScope: 'group',

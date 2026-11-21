@@ -1061,6 +1061,10 @@ export const restartCore = async (
   return await instance.post('/core/restart', profile, { timeout: 60_000 })
 }
 
+export async function getServiceCoreProfile(): Promise<ServiceCoreLaunchProfile> {
+  return await createSignedServiceAxios('http://localhost', false).get('/core/profile')
+}
+
 export const patchCoreProfile = async (
   profile: Partial<ServiceCoreLaunchProfile>
 ): Promise<Record<string, unknown>> => {

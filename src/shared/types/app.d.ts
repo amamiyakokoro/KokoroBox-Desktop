@@ -100,6 +100,7 @@ interface AppConfig {
   autoLightweightMode?: 'core' | 'tray'
   coreStartupMode?: 'post-up' | 'log'
   mihomoCpuPriority?: Priority
+  hotReloadSubscriptions?: boolean
   diffWorkDir?: boolean
   autoSetDNSMode?: 'none' | 'service'
   originDNS?: string

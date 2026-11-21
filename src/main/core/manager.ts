@@ -3,7 +3,17 @@ import { ChildProcess, spawn } from 'child_process'
 import { createInterface } from 'readline'
 import { dataDir, coreLogPath, mihomoCorePath } from '../utils/dirs'
 import { systemCoreOnlyBuild } from '../../shared/build-flags'
-import { generateProfile, getRuntimeConfig } from './factory'
+import {
+  buildRuntimeProfile,
+  generateProfile,
+  getRuntimeConfig,
+  publishRuntimeProfile,
+  withRuntimeWrite,
+  type PreparedSubscription
+} from './factory'
+import { applySubscriptionRuntime } from './subscription-reload'
+import { validateMihomoProfile } from './profile-validation'
+import type { SubscriptionRuntimeFile } from '../config/profile-key-transaction'
 import {
   getAppConfig,
   getControledMihomoConfig,
@@ -19,6 +29,7 @@ import {
   startMihomoLogs,
   startMihomoMemory,
   patchMihomoConfig,
+  reloadMihomoConfig,
   mihomoGroups,
   mihomoConfig,
   getAxios
@@ -32,6 +43,7 @@ import { stopTrafficPresenter } from '../resolve/trafficPresenter'
 import {
   getCoreStatus,
   getCoreDesiredStatus,
+  getServiceCoreProfile,
   restartCore as restartServiceCore,
   startCore as startServiceCore,
   stopCore as stopServiceCore,
@@ -769,39 +781,41 @@ export async function stopCore(
   serviceRequestTimeoutMs?: number,
   options: { throwOnError?: boolean } = {}
 ): Promise<void> {
-  serviceCoreRuntime.pauseAutoResume()
+  await withRuntimeWrite(async () => {
+    serviceCoreRuntime.pauseAutoResume()
 
-  try {
-    if (!force) {
-      await recoverDNS()
-    }
-  } catch (error) {
-    await appendAppLog(`[Manager]: recover dns failed, ${error}\n`)
-  }
-
-  serviceCoreRuntime.clearStreams()
-
-  const { corePermissionMode = 'elevated' } = await getAppConfig()
-  const shouldStopServiceCore = serviceCoreRuntime.isManaged() || corePermissionMode === 'service'
-  if (shouldStopServiceCore) {
-    let stopped = false
     try {
-      await stopServiceCore(serviceRequestTimeoutMs)
-      stopped = true
+      if (!force) {
+        await recoverDNS()
+      }
     } catch (error) {
-      await appendAppLog(`[Manager]: stop service core failed, ${error}\n`)
-      if (options.throwOnError) throw error
-    } finally {
-      if (stopped || !options.throwOnError) {
-        serviceCoreRuntime.setManaged(false)
-        serviceCoreRuntime.stopEventHandlers()
+      await appendAppLog(`[Manager]: recover dns failed, ${error}\n`)
+    }
+
+    serviceCoreRuntime.clearStreams()
+
+    const { corePermissionMode = 'elevated' } = await getAppConfig()
+    const shouldStopServiceCore = serviceCoreRuntime.isManaged() || corePermissionMode === 'service'
+    if (shouldStopServiceCore) {
+      let stopped = false
+      try {
+        await stopServiceCore(serviceRequestTimeoutMs)
+        stopped = true
+      } catch (error) {
+        await appendAppLog(`[Manager]: stop service core failed, ${error}\n`)
+        if (options.throwOnError) throw error
+      } finally {
+        if (stopped || !options.throwOnError) {
+          serviceCoreRuntime.setManaged(false)
+          serviceCoreRuntime.stopEventHandlers()
+        }
       }
     }
-  }
 
-  await stopLegacyDirectCore()
+    await stopLegacyDirectCore()
 
-  await getAxios(true).catch(() => {})
+    await getAxios(true).catch(() => {})
+  })
 }
 
 function notifyCoreLog(source: CoreLogNotificationSource): void {
@@ -874,6 +888,47 @@ function clearTailscaleAuthNotifications(name?: string): void {
   } else {
     tailscaleAuthNotificationKeysByName.clear()
   }
+}
+
+export async function hotReloadSubscription(
+  subscription: PreparedSubscription,
+  persist: (runtime: SubscriptionRuntimeFile) => Promise<void>
+): Promise<void> {
+  await withRuntimeWrite(async () => {
+    const { core = 'mihomo', safePaths = [], corePermissionMode } = await getAppConfig()
+    const serviceMode = corePermissionMode === 'service'
+    const profile = await buildRuntimeProfile(undefined, subscription)
+    const workDir = path.dirname(profile.configPath)
+    const args = serviceMode
+      ? (await getServiceCoreProfile()).args
+      : directCoreState.child?.spawnargs
+    if (!args) throw new Error(tr('Start the core before reloading the active subscription.'))
+    const dirIndex = args.indexOf('-d')
+    if (dirIndex < 0 || args[dirIndex + 1] !== workDir) {
+      throw new Error(
+        tr('Restart the core to use the new working directory before refreshing this subscription.')
+      )
+    }
+    await applySubscriptionRuntime(
+      profile.configPath,
+      profile.runtimeConfigStr,
+      (configPath) =>
+        validateMihomoProfile(
+          { executable: mihomoCorePath(core), configPath, workDir, safePaths },
+          serviceMode
+        ),
+      (configPath) => reloadMihomoConfig(configPath, serviceMode),
+      () => persist({ perProfile: profile.diffWorkDir, content: profile.runtimeConfigStr })
+    )
+    publishRuntimeProfile(profile)
+  })
+  mainWindow?.webContents.send('profileConfigUpdated')
+  mainWindow?.webContents.send('groupsUpdated')
+  mainWindow?.webContents.send('rulesUpdated')
+  ipcMain.emit('updateTrayMenu')
+  void uploadRuntimeConfig().catch((error) =>
+    appendAppLog(`[Manager]: upload runtime config failed, ${error}\n`).catch(() => {})
+  )
 }
 
 export async function restartCore(

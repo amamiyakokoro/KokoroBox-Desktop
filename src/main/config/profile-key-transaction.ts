@@ -39,8 +39,14 @@ export async function writeDurableText(target: string, content: string): Promise
   }
 }
 
+export interface SubscriptionRuntimeFile {
+  perProfile: boolean
+  content: string
+}
+
 interface Journal {
   version: 1
+  runtime?: SubscriptionRuntimeFile
   id: string
   config: string
   content: string
@@ -57,7 +63,19 @@ function validateJournal(value: unknown): Journal {
     throw new Error('Invalid profile key transaction')
   }
   assertManagedConfig(parseYaml(journal.config), 'profile')
+  if (
+    journal.runtime !== undefined &&
+    (!journal.runtime ||
+      typeof journal.runtime.perProfile !== 'boolean' ||
+      typeof journal.runtime.content !== 'string')
+  ) {
+    throw new Error('Invalid subscription runtime recovery record')
+  }
   return journal
+}
+
+function runtimePath(directory: string, id: string, perProfile: boolean): string {
+  return join(directory, 'work', perProfile ? id : '', 'config.yaml')
 }
 
 async function restore(
@@ -65,6 +83,11 @@ async function restore(
   journal: Journal,
   write = writeDurableText
 ): Promise<void> {
+  if (journal.runtime)
+    await write(
+      runtimePath(directory, journal.id, journal.runtime.perProfile),
+      journal.runtime.content
+    )
   await write(join(directory, 'profiles', `${journal.id}.yaml`), journal.content)
   await write(join(directory, 'profile.yaml'), journal.config)
   await rm(join(directory, journalName), { force: true })
@@ -96,19 +119,26 @@ export function writeProfileKeyTransaction(
   oldContent: string,
   nextConfig: string,
   nextContent: string,
-  write = writeDurableText
+  write = writeDurableText,
+  runtime?: SubscriptionRuntimeFile
 ): Promise<void> {
   return enqueue(async () => {
     await recover(directory)
     const journal = validateJournal({ version: 1, id, config: oldConfig, content: oldContent })
     assertManagedConfig(parseYaml(nextConfig), 'profile')
+    const target = runtime && runtimePath(directory, id, runtime.perProfile)
+    if (target && runtime) {
+      journal.runtime = { perProfile: runtime.perProfile, content: await readFile(target, 'utf8') }
+    }
     const path = join(directory, journalName)
     // The rollback record is durable before either member of the pair changes.
     await writeDurableText(path, JSON.stringify(journal))
     try {
       await write(join(directory, 'profiles', `${id}.yaml`), nextContent)
       await write(join(directory, 'profile.yaml'), nextConfig)
+      if (target && runtime) await write(target, runtime.content)
       await rm(path)
+      await syncDirectory(directory)
     } catch (error) {
       try {
         await restore(directory, journal, write)
@@ -120,7 +150,6 @@ export function writeProfileKeyTransaction(
       }
       throw error
     }
-    await syncDirectory(directory)
   })
 }
 

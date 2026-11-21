@@ -1,0 +1,71 @@
+name: Service subscription hot reload
+on:
+  push:
+    branches: [codex/service-hot-reload-validation-20261122]
+permissions:
+  contents: read
+jobs:
+  verify:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - run: npm install --global pnpm@11.1.1
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - name: Fetch pinned Service and Mihomo
+        shell: python
+        run: |
+          import gzip, hashlib, io, os, pathlib, urllib.request, zipfile
+          root = pathlib.Path('test-bin')
+          root.mkdir()
+          windows = os.name == 'nt'
+          platform = 'windows' if windows else 'linux'
+          ext = '.exe' if windows else ''
+          def fetch(repo, tag, asset, sha):
+              url = f'https://github.com/{repo}/releases/download/{tag}/{asset}'
+              with urllib.request.urlopen(url, timeout=90) as response:
+                  data = response.read()
+              assert hashlib.sha256(data).hexdigest() == sha, asset
+              return data
+          def install(name, data):
+              target = root / (name + ext)
+              target.write_bytes(data)
+              target.chmod(0o755)
+          service = fetch('amamiyakokoro/kokorobox-service', 'v0.6.18', f'kokorobox-service-{platform}-amd64-v3{ext}',
+                          'dcb3273d0138977dd3881aa9623da3075efb9f2820749f577d8757665b4c2270' if windows else '64e7ff3fcde67c509a71148c6dca224285af8607240f127ed0b9d2400565fb5f')
+          install('kokorobox-service', service)
+          archive = fetch('MetaCubeX/mihomo', 'v1.19.34', f'mihomo-{platform}-amd64-v3-v1.19.34.' + ('zip' if windows else 'gz'),
+                          'ace63713ea5137d7fcc58c1434b7dee15bccf77457573c84ff2c14b8fb7f07d6' if windows else 'a97b21d7afe5939398b5be2901c30923e8a3f1b112a4733ced5a721630a09b67')
+          if windows:
+              with zipfile.ZipFile(io.BytesIO(archive)) as package:
+                  [exe] = [entry for entry in package.namelist() if entry.lower().endswith('.exe')]
+                  install('mihomo', package.read(exe))
+          else:
+              install('mihomo', gzip.decompress(archive))
+      - name: Verify manual and scheduled updates through Service
+        run: node scripts/verify-service-reload.cjs
+      - name: Linux Service diagnostics
+        if: failure() && runner.os == 'Linux'
+        run: |
+          sudo journalctl --unit=kokorobox-hot-reload -n 45 --no-pager
+          sudo tail -c 12000 /tmp/kokorobox-service.log || true
+      - name: Windows Service diagnostics
+        if: failure() && runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Get-Content "$env:SystemRoot/Temp/kokorobox-service.log" -Tail 100 -ErrorAction SilentlyContinue
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: service-reload-${{ runner.os }}
+          path: service-reload-results.json
+          if-no-files-found: warn

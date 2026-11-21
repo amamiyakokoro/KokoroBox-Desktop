@@ -554,6 +554,12 @@ export const getSettingsSchema = (): SettingsCategorySchema[] => {
       label: tr('Subscription data'),
       entries: [
         entry(
+          'subscription-hot-reload',
+          tr('Hot reload subscription updates'),
+          tr('Subscription data'),
+          { panel: 'subscriptions' }
+        ),
+        entry(
           'separate-profile-workdir',
           tr('Use a separate working directory for each profile'),
           tr('Subscription data'),

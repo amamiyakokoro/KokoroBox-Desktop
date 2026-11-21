@@ -1,5 +1,12 @@
 // Traditional Chinese (Taiwan) localization. Keys are the canonical English source messages.
 export const messages: Readonly<Record<string, string>> = {
+  'Start the core before reloading the active subscription.': '請先啟動核心，再熱載入目前訂閱。',
+  'Hot reload subscription updates': '訂閱更新時熱載入',
+  'Apply manual and automatic updates to the active subscription without restarting the core.':
+    '手動或自動更新目前訂閱時，直接套用設定，無須重啟核心。',
+  'Restart the core to use the new working directory before refreshing this subscription.':
+    '請先重新啟動核心以使用新的工作目錄，再更新此訂閱。',
+  'Subscription must contain a YAML mapping': '訂閱內容必須是 YAML 對應表',
   'Failed to read the file. Editing and saving are unavailable.': '讀取檔案失敗，無法編輯或儲存。',
   'Open page guide': '開啟此頁教學',
   'Paste a subscription URL and import it here. Use the plus menu to sign in to Kokoro or import a local file.':

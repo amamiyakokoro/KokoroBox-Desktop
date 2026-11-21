@@ -1,3 +1,4 @@
+import { ReloadRejected } from './subscription-reload'
 import axios, { AxiosInstance } from 'axios'
 import { getAppConfig, getControledMihomoConfig } from '../config'
 import { mainWindow } from '..'
@@ -8,7 +9,7 @@ import { getRuntimeConfig } from './factory'
 import { floatingWindow } from '../resolve/floatingWindow'
 import { mihomoIpcPath, serviceIpcPath } from '../utils/dirs'
 import { publishMihomoLog } from '../utils/log'
-import { createSignedServiceAxios, getServiceAuthHeaders } from '../service/api'
+import { createSignedServiceAxios, getServiceAuthHeaders, ServiceAPIError } from '../service/api'
 import {
   markTrafficPresenterUnavailable,
   updateTrafficPresenter
@@ -99,6 +100,33 @@ export async function mihomoVersion(): Promise<ControllerVersion> {
 export const mihomoConfig = async (): Promise<ControllerConfigs> => {
   const instance = await getAxios()
   return await instance.get('/configs')
+}
+
+export async function reloadMihomoConfig(configPath: string, serviceMode: boolean): Promise<void> {
+  // A missing reload response is handled by the subscription transaction. Do not also
+  // schedule the general Service-unavailable fallback, which can launch another core.
+  const client = serviceMode
+    ? createSignedServiceAxios('http://localhost/core/controller', false)
+    : axios.create({ baseURL: 'http://localhost', socketPath: mihomoIpcPath() })
+  try {
+    await client.put('/configs?force=true', { path: configPath }, { timeout: 60_000 })
+  } catch (error) {
+    const status =
+      error instanceof ServiceAPIError
+        ? error.status
+        : axios.isAxiosError(error)
+          ? error.response?.status
+          : undefined
+    if (status !== undefined && status >= 400 && status < 500) {
+      throw new ReloadRejected(
+        axios.isAxiosError(error)
+          ? (error.response?.data?.message ?? error.message)
+          : String(error),
+        { cause: error }
+      )
+    }
+    throw error
+  }
 }
 
 export const patchMihomoConfig = async (patch: Partial<ControllerConfigs>): Promise<void> => {

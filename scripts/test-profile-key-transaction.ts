@@ -153,3 +153,31 @@ test('malformed recovery records cannot write outside managed profiles', async (
   await assert.rejects(recoverProfileKeyTransaction(dir), /Invalid managed configuration ID/)
   assert.equal(await readFile(join(dir, 'profile.yaml'), 'utf8'), oldConfig)
 })
+
+test('a failed subscription runtime write restores the source, metadata and runtime together', async (t) => {
+  const dir = await fixture(t)
+  await mkdir(join(dir, 'work/p'), { recursive: true })
+  for (const perProfile of [false, true]) {
+    const runtime = join(dir, 'work', perProfile ? 'p' : '', 'config.yaml')
+    await writeDurableText(runtime, 'last good')
+    await assert.rejects(
+      writeProfileKeyTransaction(
+        dir,
+        'p',
+        oldConfig,
+        'old ciphertext',
+        nextConfig,
+        'new ciphertext',
+        async (target, value) => {
+          if (value === 'candidate') throw new Error('disk full')
+          await writeDurableText(target, value)
+        },
+        { perProfile, content: 'candidate' }
+      ),
+      /disk full/
+    )
+    assert.equal(await readFile(runtime, 'utf8'), 'last good')
+    assert.equal(await readFile(join(dir, 'profiles/p.yaml'), 'utf8'), 'old ciphertext')
+    assert.equal(await readFile(join(dir, 'profile.yaml'), 'utf8'), oldConfig)
+  }
+})

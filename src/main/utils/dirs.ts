@@ -205,12 +205,8 @@ export function mihomoTestDir(): string {
   return path.join(dataDir(), 'test')
 }
 
-export function mihomoWorkConfigPath(id: string | undefined): string {
-  if (id === 'work') {
-    return path.join(mihomoWorkDir(), 'config.yaml')
-  } else {
-    return path.join(mihomoProfileWorkDir(id), 'config.yaml')
-  }
+export function mihomoWorkConfigPath(id: string | undefined, perProfile: boolean): string {
+  return path.join(perProfile ? mihomoProfileWorkDir(id) : mihomoWorkDir(), 'config.yaml')
 }
 
 export function logDir(): string {
