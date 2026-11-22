@@ -9,7 +9,7 @@ import EditInfoModal from './edit-info-modal'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import ExecLogModal from './exec-log-modal'
-import { openFile, restartCore } from '@renderer/utils/ipc'
+import { openFile, applyCurrentProfile } from '@renderer/utils/ipc'
 import { useProfileConfig } from '@renderer/hooks/use-profile-config'
 import ConfirmModal from '../base/base-confirm'
 import QRCodeModal from '../base/base-qrcode-modal'
@@ -253,7 +253,7 @@ const OverrideItem: React.FC<Props> = (props) => {
                       try {
                         await addOverrideItem(info)
                         if (isOverrideUsedByCurrentProfile(profileConfig, info.id, info.global)) {
-                          await restartCore()
+                          await applyCurrentProfile()
                         }
                       } catch (e) {
                         notify(e, { variant: 'danger' })

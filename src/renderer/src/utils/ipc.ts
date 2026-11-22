@@ -315,9 +315,12 @@ export async function getControledMihomoConfig(force = false): Promise<Partial<M
   )
 }
 
-export async function patchControledMihomoConfig(patch: Partial<MihomoConfig>): Promise<void> {
+export async function patchControledMihomoConfig(
+  patch: Partial<MihomoConfig>,
+  apply = false
+): Promise<void> {
   return ipcErrorWrapper(
-    await window.electron.ipcRenderer.invoke('patchControledMihomoConfig', patch)
+    await window.electron.ipcRenderer.invoke('patchControledMihomoConfig', patch, apply)
   )
 }
 
@@ -335,6 +338,10 @@ export async function getCurrentProfileItem(): Promise<ProfileItem> {
 
 export async function getProfileItem(id: string | undefined): Promise<ProfileItem> {
   return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('getProfileItem', id))
+}
+
+export async function applyCurrentProfile(): Promise<void> {
+  return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('applyCurrentProfile'))
 }
 
 export async function changeCurrentProfile(id: string): Promise<void> {

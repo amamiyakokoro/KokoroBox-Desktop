@@ -555,7 +555,7 @@ export const getSettingsSchema = (): SettingsCategorySchema[] => {
       entries: [
         entry(
           'subscription-hot-reload',
-          tr('Hot reload subscription updates'),
+          tr('Hot reload configuration changes'),
           tr('Subscription data'),
           { panel: 'subscriptions' }
         ),

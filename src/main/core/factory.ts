@@ -42,6 +42,7 @@ interface RuntimeProfile {
   diffWorkDir: boolean
 }
 
+let confirmed: RuntimeProfile | undefined
 let published: RuntimeProfile
 let runtimeWrite: Promise<unknown> = Promise.resolve()
 
@@ -51,7 +52,12 @@ export function withRuntimeWrite<T>(operation: () => Promise<T>): Promise<T> {
   return result
 }
 
-export function publishRuntimeProfile(profile: RuntimeProfile): void {
+export function getConfirmedRuntimeProfile(): RuntimeProfile | undefined {
+  return confirmed
+}
+
+export function publishRuntimeProfile(profile: RuntimeProfile, applied = false): void {
+  confirmed = applied ? profile : undefined
   published = profile
 }
 
@@ -65,7 +71,8 @@ export async function generateProfile(controlledConfig?: Partial<MihomoConfig>):
 
 export async function buildRuntimeProfile(
   controlledConfig?: Partial<MihomoConfig>,
-  subscription?: PreparedSubscription
+  subscription?: PreparedSubscription,
+  live = Boolean(subscription)
 ): Promise<RuntimeProfile> {
   const [profileConfig, appConfig, controledMihomoConfig, appRoutingConfig] = await Promise.all([
     getProfileConfig(),
@@ -73,12 +80,10 @@ export async function buildRuntimeProfile(
     controlledConfig ? Promise.resolve(controlledConfig) : getControledMihomoConfig(),
     getAppRoutingConfig()
   ])
-  const { current } = profileConfig
+  const current = subscription?.item.id ?? profileConfig.current
   const { diffWorkDir = false, controlDns = true, controlSniff = true } = appConfig
-  if (subscription && current !== subscription.item.id)
-    throw new Error('Active subscription changed')
   const rawProfileStr = subscription?.content ?? (await getProfileStr(current))
-  let currentProfileConfig = parseYaml<MihomoConfig>(rawProfileStr, Boolean(subscription))
+  let currentProfileConfig = parseYaml<MihomoConfig>(rawProfileStr, live)
   if (typeof currentProfileConfig !== 'object') currentProfileConfig = {} as MihomoConfig
   const currentProfileStr = stringifyYaml(currentProfileConfig)
   const currentProfile = await overrideProfile(
@@ -110,12 +115,12 @@ export async function buildRuntimeProfile(
     process.platform
   )
 
+  const logLevel = profile['log-level']
   await cleanProfile(profile, controlDns, controlSniff)
 
   if (diffWorkDir) await prepareProfileWorkDir(current)
   // Cold startup temporarily uses info for readiness detection. A live reload needs the user's level.
-  if (subscription && controledMihomoConfig['log-level'])
-    profile['log-level'] = controledMihomoConfig['log-level']
+  if (live && logLevel) profile['log-level'] = logLevel
   return {
     rawProfileStr,
     currentProfileStr,

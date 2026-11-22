@@ -266,6 +266,8 @@ function loadTransactionalControlledConfigModule(
       parseYaml: (content: string) => JSON.parse(content),
       stringifyYaml: (value: Partial<MihomoConfig>) => JSON.stringify(value)
     },
+    '../core/manager': {},
+    './profile-key-transaction': {},
     '../core/factory': {
       generateProfile: async (config: Partial<MihomoConfig>) => {
         generatedConfigs.push(structuredClone(config))

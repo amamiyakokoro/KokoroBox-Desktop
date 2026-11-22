@@ -7,7 +7,10 @@ interface ControledMihomoConfigContextType {
   controledMihomoConfig: Partial<MihomoConfig> | undefined
   mutateControledMihomoConfig: () => Promise<Partial<MihomoConfig> | undefined>
   patchControledMihomoConfig: (value: Partial<MihomoConfig>) => Promise<void>
-  patchControledMihomoConfigOrThrow: (value: Partial<MihomoConfig>) => Promise<void>
+  patchControledMihomoConfigOrThrow: (
+    value: Partial<MihomoConfig>,
+    apply?: boolean
+  ) => Promise<void>
 }
 
 const ControledMihomoConfigContext = createContext<ControledMihomoConfigContextType | undefined>(
@@ -30,9 +33,12 @@ export const ControledMihomoConfigProvider: React.FC<{ children: ReactNode }> = 
     }
   }
 
-  const patchControledMihomoConfigOrThrow = async (value: Partial<MihomoConfig>): Promise<void> => {
+  const patchControledMihomoConfigOrThrow = async (
+    value: Partial<MihomoConfig>,
+    apply = false
+  ): Promise<void> => {
     try {
-      await patch(value)
+      await patch(value, apply)
     } finally {
       await mutateControledMihomoConfig()
     }

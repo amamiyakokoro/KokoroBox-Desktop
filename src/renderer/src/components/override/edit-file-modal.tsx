@@ -2,7 +2,7 @@ import { tr } from '../../../../shared/i18n'
 import { Button, Label, Modal, Spinner, Switch } from '@heroui/react'
 import React, { useEffect, useMemo, useState } from 'react'
 import { BaseEditor } from '../base/base-editor-lazy'
-import { getOverride, restartCore, setOverride } from '@renderer/utils/ipc'
+import { getOverride, applyCurrentProfile, setOverride } from '@renderer/utils/ipc'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { useOverrideConfig } from '@renderer/hooks/use-override-config'
 import { useProfileConfig } from '@renderer/hooks/use-profile-config'
@@ -50,7 +50,7 @@ const EditFileModal: React.FC<Props> = (props) => {
       await setOverride(id, language === 'javascript' ? 'js' : 'yaml', currData)
       const overrideItem = overrideConfig?.items?.find((i) => i.id === id)
       if (isOverrideUsedByCurrentProfile(profileConfig, id, overrideItem?.global)) {
-        await restartCore()
+        await applyCurrentProfile()
       }
       onClose()
     } catch (error) {

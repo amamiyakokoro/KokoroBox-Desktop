@@ -12,14 +12,24 @@ const ts = req('typescript'),
   axios = req('axios'),
   os = require('node:os')
 const win = process.platform === 'win32'
-assert.equal(process.env.GITHUB_ACTIONS, 'true', 'Run only on disposable GitHub-hosted runners')
-const dir = fs.mkdtempSync(path.join(process.env.RUNNER_TEMP, 'reload-'))
+const mac = process.platform === 'darwin'
+if (!mac)
+  assert.equal(process.env.GITHUB_ACTIONS, 'true', 'Run only on disposable GitHub-hosted runners')
+const dir = fs.mkdtempSync(path.join(mac ? '/private/tmp' : process.env.RUNNER_TEMP, 'reload-'))
 const work = path.join(dir, 'work'),
   ipc = win ? String.raw`\\.\pipe\kokorobox\service` : path.join(dir, 'service.sock'),
   canonical = path.join(work, 'config.yaml')
 const suffix = win ? '.exe' : ''
-const daemonBinary = path.resolve('test-bin', 'kokorobox-service' + suffix)
-const binary = path.resolve('test-bin', 'mihomo' + suffix)
+const resources = '/Applications/KokoroBox.app/Contents/Resources'
+const daemonBinary = mac
+  ? path.join(resources, 'files/kokorobox-service')
+  : path.resolve('test-bin', 'kokorobox-service' + suffix)
+const binary = mac ? path.join(dir, 'mihomo') : path.resolve('test-bin', 'mihomo' + suffix)
+let daemon
+let diffWorkDir = false
+let hotReloadSubscriptions = true
+let failNextProfileCommit = false
+const methods = []
 const crypto = require('node:crypto'),
   http = require('node:http')
 let feed,
@@ -65,15 +75,29 @@ const data = {},
   events = []
 const dirs = {
   dataDir: () => dir,
+  mihomoCorePath: () => binary,
+  mihomoIpcPath: () =>
+    win ? String.raw`\\.\pipe\kokorobox-reload-core` : path.join(dir, 'core.sock'),
   profileConfigPath: () => path.join(dir, 'profile.yaml'),
   profilePath: (id) => path.join(dir, 'profiles', id + '.yaml'),
   mihomoWorkDir: () => work,
-  mihomoWorkConfigPath: () => canonical
+  mihomoProfileWorkDir: (id) => path.join(work, id || 'default'),
+  mihomoWorkConfigPath: (id, perProfile) =>
+    path.join(perProfile ? dirs.mihomoProfileWorkDir(id) : work, 'config.yaml'),
+  controledMihomoConfigPath: () => path.join(dir, 'mihomo.yaml')
 }
 const app = {
-    getAppConfig: async () => ({ hotReloadSubscriptions: true, corePermissionMode: 'service' })
+    getAppConfig: async () => ({
+      hotReloadSubscriptions,
+      diffWorkDir,
+      corePermissionMode: 'service',
+      serviceRunMode: win || mac ? 'auto' : 'sandbox',
+      saveLogs: false,
+      controlDns: false,
+      controlSniff: false
+    })
   },
-  ctrl = { getControledMihomoConfig: async () => ({ 'log-level': 'warning' }) }
+  ctrl = {}
 const item = {
   id: 'active',
   type: 'remote',
@@ -90,7 +114,18 @@ let incoming = 'rules: [MATCH,DIRECT]',
   requests = 0,
   override = {}
 const noop = async () => {}
+const transactions = fromRepo('config/profile-key-transaction')
 const profile = load('config/profile', {
+  './profile-key-transaction': {
+    ...transactions,
+    writeProfileKeyTransaction: (...args) => {
+      if (failNextProfileCommit) {
+        failNextProfileCommit = false
+        throw new Error('injected commit failure')
+      }
+      return transactions.writeProfileKeyTransaction(...args)
+    }
+  },
   '../core/manager': manager,
   '../core/profileUpdater': updater,
   '../utils/dirs': dirs,
@@ -115,6 +150,17 @@ const factory = load('core/factory', {
   './override-worker?nodeWorker': {},
   '../app-routing/config': { getAppRoutingConfig: async () => ({ enabled: false }) }
 })
+Object.assign(
+  ctrl,
+  load('config/controledMihomo', {
+    '../utils/dirs': dirs,
+    './app': app,
+    '../core/manager': manager,
+    '../core/factory': factory,
+    '../utils/template': { defaultControledMihomoConfig: { 'log-level': 'warning' } }
+  })
+)
+Object.assign(data, ctrl)
 const service = load('service/api', {
   '../utils/dirs': { serviceIpcPath: () => ipc },
   '../utils/log': { appendAppLog: noop },
@@ -134,7 +180,7 @@ const api = load(
     ServiceAPIError: service.ServiceAPIError,
     createSignedServiceAxios: service.createSignedServiceAxios
   },
-  ['reloadMihomoConfig']
+  ['runtimeController', 'mihomoConfig', 'reloadMihomoConfig', 'patchMihomoConfig']
 )
 const validators = load('core/profile-validation', {
   '../service/api': {
@@ -156,7 +202,18 @@ Object.assign(
       ...reload,
       ...validators,
       ...app,
-      ...api,
+      mihomoConfig: api.mihomoConfig,
+      reloadMihomoConfig: (...args) => {
+        methods.push('PUT')
+        return api.reloadMihomoConfig(...args)
+      },
+      patchMihomoConfig: (...args) => {
+        methods.push('PATCH')
+        return api.patchMihomoConfig(...args)
+      },
+      writeDurableText: fromRepo('config/profile-key-transaction').writeDurableText,
+      ServiceAPIError: service.ServiceAPIError,
+      getCoreStatus: service.getCoreStatus,
       getServiceCoreProfile: service.getServiceCoreProfile,
       path,
       directCoreState: {},
@@ -166,10 +223,73 @@ Object.assign(
       mainWindow: { webContents: { send: (event) => events.push(event) } },
       uploadRuntimeConfig: noop
     },
-    ['hotReloadSubscription']
+    ['tryApplyRuntimeConfig']
   )
 )
-manager.restartCore = async () => assert.fail('unexpected restart')
+// Use Desktop's stop/start chain and launch arguments. Only host integration
+// (menus, DNS, event streams and service installation) is isolated from this test.
+const lifecycle = load(
+  'core/manager',
+  {
+    ...data,
+    ...app,
+    ...factory,
+    getCoreStatus: service.getCoreStatus,
+    getCoreDesiredStatus: service.getCoreDesiredStatus,
+    isServiceUnavailableError: service.isServiceUnavailableError,
+    ...load('core/startup-chain', { '../utils/dirs': dirs }),
+    ...load('core/profile-check', {
+      '../config': data,
+      '../utils/dirs': dirs,
+      './profile-validation': validators
+    }),
+    ...fromRepo('core/coreHookPath'),
+    ctlParam: win ? '-ext-ctl-pipe' : '-ext-ctl-unix',
+    mihomoCorePath: dirs.mihomoCorePath,
+    coreLogPath: () => path.join(dir, 'core.log'),
+    startServiceCore: service.startCore,
+    stopServiceCore: service.stopCore,
+    beginExpectedNetworkTransition: () => noop,
+    clearTailscaleAuthNotifications: noop,
+    ensureMacOSServiceReady: noop,
+    repairUninitializedService: noop,
+    recoverDNS: noop,
+    stopLegacyDirectCore: async () => false,
+    getAxios: noop,
+    setMihomoLogSource: noop,
+    appendAppLog: noop,
+    showNotification: noop,
+    tr,
+    serviceCoreRuntime: {
+      isManaged: () => true,
+      pauseAutoResume: noop,
+      clearStreams: noop,
+      setManaged: noop,
+      stopEventHandlers: noop,
+      resumeAutoResume: noop,
+      ensureEventHandler: noop,
+      beginStartup: noop,
+      startEventStream: noop,
+      endStartup: noop,
+      ensureStreamsStarted: noop
+    },
+    completeCoreInitialization: async (level) => api.patchMihomoConfig({ 'log-level': level }, true)
+  },
+  ['startCore', 'stopCore', 'restartCore']
+)
+manager.restartCore = async (options) => {
+  methods.push('restart')
+  await lifecycle.restartCore(options)
+}
+async function launch(directory) {
+  await service.startCore({
+    core_path: binary,
+    args: ['-d', directory],
+    mode: win || mac ? 'auto' : 'sandbox',
+    save_logs: false,
+    safe_paths: []
+  })
+}
 Object.assign(
   updater,
   load('core/profileUpdater', {
@@ -214,7 +334,14 @@ async function setup() {
   await fsp.writeFile(path.join(keys, 'authorized_principal.json'), JSON.stringify(principal), {
     mode: 0o600
   })
-  if (win) {
+  if (mac) {
+    await fsp.copyFile(path.join(resources, 'sidecar/mihomo'), binary)
+    await fsp.chmod(binary, 0o700)
+    daemon = cp.spawn(daemonBinary, ['--listen', ipc, 'service', 'run'], {
+      env: { ...process.env, KOKOROBOX_CONFIG_DIR: configRoot, TMPDIR: dir },
+      stdio: 'ignore'
+    })
+  } else if (win) {
     cp.execFileSync(daemonBinary, ['service', 'install'], { stdio: 'inherit' })
   } else {
     cp.execFileSync(
@@ -271,13 +398,7 @@ async function setup() {
   )
   await fsp.writeFile(dirs.profilePath(item.id), inputRule('DIRECT'))
   await factory.generateProfile()
-  await service.startCore({
-    core_path: binary,
-    args: ['-d', work],
-    mode: win ? 'auto' : 'sandbox',
-    save_logs: false,
-    safe_paths: []
-  })
+  await launch(work)
   coreStarted = true
   const status = await service.getCoreStatus()
   assert.equal(status.launch_mode, 'managed')
@@ -369,7 +490,176 @@ async function main() {
   assert.deepEqual(validations, ['valid', 'valid', 'invalid', 'invalid'])
   assert.equal(requests, 4)
   assert.equal(events.filter((e) => e === 'rulesUpdated').length, 2)
-  report.validation_outcomes = validations
+  report.validation_outcomes = [...validations]
+  await verifyProfileSwitches()
+}
+async function verifyProfileSwitches() {
+  await updater.delProfileUpdater(item.id)
+  override = {}
+  const other = { ...item, id: 'second', autoUpdate: false }
+  const broken = { ...other, id: 'invalid' }
+  const config = await profile.getProfileConfig()
+  await profile.setProfileConfig({ ...config, items: [...config.items, other, broken] })
+  await fsp.writeFile(dirs.profilePath(other.id), inputRule('REJECT'))
+  await fsp.writeFile(dirs.profilePath(broken.id), inputRule(invalidRule))
+
+  async function inspect(name, action, expectedMethod, expectedId, rule, directory) {
+    const before = await service.getCoreStatus()
+    methods.length = 0
+    await action()
+    assert.deepEqual(methods, [expectedMethod ?? []].flat())
+    const after = await service.getCoreStatus()
+    if (expectedMethod === 'restart') assert.notEqual(before.pid, after.pid)
+    else assert.deepEqual([before.pid, before.start_time], [after.pid, after.start_time])
+    const { args } = await service.getServiceCoreProfile()
+    assert.equal(args[args.indexOf('-d') + 1], directory)
+    assert.equal((await profile.getProfileConfig(true)).current, expectedId)
+    assert.equal((await client.get('/rules')).rules[0].proxy, rule)
+    const disk = await fsp.readFile(path.join(directory, 'config.yaml'), 'utf8')
+    assert.deepEqual(yaml.parseYaml(disk).rules, ['MATCH,' + rule])
+    assert.equal(await factory.getRuntimeConfigStr(), disk)
+    report.stages.push({ name, method: expectedMethod, pid: after.pid, directory, rule })
+    console.log(name, expectedMethod || 'retained', before.pid, '->', after.pid, directory, rule)
+  }
+
+  await inspect(
+    'shared switch',
+    () => profile.changeCurrentProfile(other.id),
+    'PUT',
+    other.id,
+    'REJECT',
+    work
+  )
+  await inspect(
+    'invalid shared switch',
+    () => assert.rejects(profile.changeCurrentProfile(broken.id), /GROUP-DOES-NOT-EXIST/i),
+    undefined,
+    other.id,
+    'REJECT',
+    work
+  )
+  await inspect(
+    'log level only',
+    () => ctrl.patchControledMihomoConfig({ 'log-level': 'debug' }, true),
+    'PATCH',
+    other.id,
+    'REJECT',
+    work
+  )
+  assert.equal((await client.get('/configs'))['log-level'], 'debug')
+
+  incoming = 'mode: direct\n' + inputRule('REJECT')
+  await inspect(
+    'subscription mode only',
+    async () => profile.addProfileItem(await profile.getProfileItem(other.id)),
+    'PATCH',
+    other.id,
+    'REJECT',
+    work
+  )
+  assert.equal((await client.get('/configs')).mode, 'direct')
+  failNextProfileCommit = true
+  incoming = inputRule('REJECT')
+  await inspect(
+    'failed PATCH commit restores live mode',
+    async () =>
+      assert.rejects(
+        profile.addProfileItem(await profile.getProfileItem(other.id)),
+        /injected commit failure/
+      ),
+    ['PATCH', 'PATCH'],
+    other.id,
+    'REJECT',
+    work
+  )
+  assert.equal((await client.get('/configs')).mode, 'direct')
+  assert.match(await profile.getProfileStr(other.id), /mode: direct/)
+  incoming = inputRule('REJECT')
+  await inspect(
+    'subscription restores default mode',
+    async () => profile.addProfileItem(await profile.getProfileItem(other.id)),
+    'PATCH',
+    other.id,
+    'REJECT',
+    work
+  )
+  assert.equal((await client.get('/configs')).mode, 'rule')
+  override = { rules: ['MATCH,DIRECT'] }
+  await inspect(
+    'active override',
+    () => profile.applyCurrentProfile(),
+    'PUT',
+    other.id,
+    'DIRECT',
+    work
+  )
+  override = {}
+  await inspect(
+    'remove override',
+    () => profile.applyCurrentProfile(),
+    'PUT',
+    other.id,
+    'REJECT',
+    work
+  )
+
+  diffWorkDir = true
+  const firstDir = dirs.mihomoProfileWorkDir(item.id),
+    secondDir = dirs.mihomoProfileWorkDir(other.id)
+  await inspect(
+    'enter independent directory',
+    () => profile.changeCurrentProfile(item.id),
+    'restart',
+    item.id,
+    'DIRECT',
+    firstDir
+  )
+  await inspect(
+    'independent switch',
+    () => profile.changeCurrentProfile(other.id),
+    'restart',
+    other.id,
+    'REJECT',
+    secondDir
+  )
+  assert.deepEqual(
+    yaml.parseYaml(await fsp.readFile(path.join(firstDir, 'config.yaml'), 'utf8')).rules,
+    ['MATCH,DIRECT']
+  )
+  await inspect(
+    'invalid independent switch',
+    () => assert.rejects(profile.changeCurrentProfile(broken.id), /GROUP-DOES-NOT-EXIST/i),
+    undefined,
+    other.id,
+    'REJECT',
+    secondDir
+  )
+  await inspect(
+    'same independent directory',
+    () => profile.changeCurrentProfile(other.id),
+    'PUT',
+    other.id,
+    'REJECT',
+    secondDir
+  )
+  diffWorkDir = false
+  await inspect(
+    'return to shared directory',
+    () => profile.changeCurrentProfile(item.id),
+    'restart',
+    item.id,
+    'DIRECT',
+    work
+  )
+  hotReloadSubscriptions = false
+  await inspect(
+    'disabled shared switch',
+    () => profile.changeCurrentProfile(other.id),
+    'restart',
+    other.id,
+    'REJECT',
+    work
+  )
 }
 async function cleanup() {
   await updater.delProfileUpdater(item.id)
@@ -381,7 +671,13 @@ async function cleanup() {
   } finally {
     if (feed) feed.close()
     if (daemonStarted) {
-      if (win) cp.execFileSync(daemonBinary, ['service', 'uninstall'], { stdio: 'inherit' })
+      if (mac) {
+        if (daemon.exitCode === null && daemon.signalCode === null) {
+          const exited = once(daemon, 'exit')
+          daemon.kill('SIGTERM')
+          await exited
+        }
+      } else if (win) cp.execFileSync(daemonBinary, ['service', 'uninstall'], { stdio: 'inherit' })
       else
         cp.execFileSync('sudo', ['systemctl', 'stop', 'kokorobox-hot-reload'], { stdio: 'inherit' })
     }
@@ -389,7 +685,7 @@ async function cleanup() {
   if (report.stages) {
     report.cleaned_up = true
     await fsp.writeFile(
-      path.resolve('service-reload-results.json'),
+      path.join(mac ? dir : process.cwd(), 'service-reload-results.json'),
       JSON.stringify(report, null, 2)
     )
   }

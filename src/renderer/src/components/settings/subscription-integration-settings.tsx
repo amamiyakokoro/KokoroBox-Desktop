@@ -163,15 +163,15 @@ const SubscriptionIntegrationSettings: React.FC<Props> = ({
         <SettingCard header={showSubscriptionHeading ? tr('Subscription data') : undefined}>
           <SettingItem
             contentAlign="end"
-            title={tr('Hot reload subscription updates')}
+            title={tr('Hot reload configuration changes')}
             help={tr(
-              'Apply manual and automatic updates to the active subscription without restarting the core.'
+              'Apply subscription updates, profile switches, and overrides live when the core can keep its working directory. Switching to a different working directory restarts the core.'
             )}
             divider
           >
             <Switch
               size="sm"
-              aria-label={tr('Hot reload subscription updates')}
+              aria-label={tr('Hot reload configuration changes')}
               isSelected={hotReloadSubscriptions}
               onChange={(value) => {
                 void patchAppConfig({ hotReloadSubscriptions: value })

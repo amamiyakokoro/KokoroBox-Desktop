@@ -6,7 +6,11 @@ import { KokoTextField } from '../base/koko-form'
 import type { ReactNode } from 'react'
 import React, { useState } from 'react'
 import { useOverrideConfig } from '@renderer/hooks/use-override-config'
-import { ageIdentityToRecipient, generateAgeKeyPair, restartCore } from '@renderer/utils/ipc'
+import {
+  ageIdentityToRecipient,
+  generateAgeKeyPair,
+  applyCurrentProfile
+} from '@renderer/utils/ipc'
 import { MdDeleteForever } from 'react-icons/md'
 import { FaPlus } from 'react-icons/fa6'
 import { BiCopy, BiHide, BiShow } from 'react-icons/bi'
@@ -69,7 +73,7 @@ const EditInfoModal: React.FC<Props> = (props) => {
 
       await updateProfileItem(itemToSave)
       if (item.id && isCurrent) {
-        await restartCore()
+        await applyCurrentProfile()
       }
       onClose()
     } catch (e) {

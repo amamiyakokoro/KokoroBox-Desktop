@@ -101,7 +101,7 @@ test('settings drafts merge nested objects and replace arrays without mutating t
   })
 })
 
-test('Mihomo settings stage edits and restart the core once from the page', () => {
+test('Mihomo settings stage edits and apply the saved batch once', () => {
   const page = readFileSync(
     'src/renderer/src/components/settings/network/mihomo-settings.tsx',
     'utf8'
@@ -116,7 +116,7 @@ test('Mihomo settings stage edits and restart the core once from the page', () =
 
   assert.match(page, /<FeatureSettingsSaveButton/)
   assert.match(page, /setDraftPatch/)
-  assert.match(page, /await restartCore\(\)/)
+  assert.match(page, /await patchControledMihomoConfigOrThrow\(patch, true\)/)
   assert.doesNotMatch(page, /Core network/)
   assert.match(portSetting, /<SettingCard header=\{tr\('Network and ports'\)\}>/)
   assert.match(portSetting, /<SettingItem title="IPv6" divider>/)

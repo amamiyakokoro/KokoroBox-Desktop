@@ -15,6 +15,7 @@ export {
   getProfileStr,
   getProfileParseStr,
   setProfileStr,
+  applyCurrentProfile,
   changeCurrentProfile,
   updateProfileItem,
   addKokoroProfile,

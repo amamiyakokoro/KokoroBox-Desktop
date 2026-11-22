@@ -60,6 +60,7 @@ import {
   getProfileItem,
   addProfileItem,
   removeProfileItem,
+  applyCurrentProfile,
   changeCurrentProfile,
   getProfileStr,
   getFileStr,
@@ -330,7 +331,7 @@ export function registerIpcMainHandlers(): void {
   ipcMain.handle('startHomeNetworkObservation', () => startHomeNetworkObservation())
   ipcMain.handle('stopHomeNetworkObservation', () => stopHomeNetworkObservation())
   ipcMain.handle('mihomoVersion', ipcErrorWrapper(mihomoVersion))
-  ipcMain.handle('mihomoConfig', ipcErrorWrapper(mihomoConfig))
+  ipcMain.handle('mihomoConfig', () => ipcErrorWrapper(mihomoConfig)())
   ipcMain.handle(
     'getSystemProxyEnabled',
     ipcErrorWrapper(async () => readSystemProxyEnabled(await getProxyStatus()))
@@ -412,8 +413,8 @@ export function registerIpcMainHandlers(): void {
   ipcMain.handle('getControledMihomoConfig', (_e, force) =>
     ipcErrorWrapper(getControledMihomoConfig)(force)
   )
-  ipcMain.handle('patchControledMihomoConfig', (_e, config) =>
-    ipcErrorWrapper(patchControledMihomoConfig)(config)
+  ipcMain.handle('patchControledMihomoConfig', (_e, config, apply) =>
+    ipcErrorWrapper(patchControledMihomoConfig)(config, apply === true)
   )
   ipcMain.handle('getProfileConfig', (_e, force) => ipcErrorWrapper(getProfileConfig)(force))
   ipcMain.handle('setProfileConfig', (_e, config) => ipcErrorWrapper(setProfileConfig)(config))
@@ -434,6 +435,7 @@ export function registerIpcMainHandlers(): void {
   }
   ipcMain.handle('setProfileStr', (_e, id, str) => ipcErrorWrapper(setProfileStr)(id, str))
   ipcMain.handle('updateProfileItem', (_e, item) => ipcErrorWrapper(updateProfileItem)(item))
+  ipcMain.handle('applyCurrentProfile', () => ipcErrorWrapper(applyCurrentProfile)())
   ipcMain.handle('changeCurrentProfile', (_e, id) => ipcErrorWrapper(changeCurrentProfile)(id))
   ipcMain.handle('addProfileItem', (_e, item) => ipcErrorWrapper(addProfileItem)(item))
   ipcMain.handle('removeProfileItem', (_e, id) => ipcErrorWrapper(removeProfileItem)(id))

@@ -1,11 +1,9 @@
 // Traditional Chinese (Taiwan) localization. Keys are the canonical English source messages.
 export const messages: Readonly<Record<string, string>> = {
   'Start the core before reloading the active subscription.': '請先啟動核心，再熱載入目前訂閱。',
-  'Hot reload subscription updates': '訂閱更新時熱載入',
-  'Apply manual and automatic updates to the active subscription without restarting the core.':
-    '手動或自動更新目前訂閱時，直接套用設定，無須重啟核心。',
-  'Restart the core to use the new working directory before refreshing this subscription.':
-    '請先重新啟動核心以使用新的工作目錄，再更新此訂閱。',
+  'Hot reload configuration changes': '設定變更時熱載入',
+  'Apply subscription updates, profile switches, and overrides live when the core can keep its working directory. Switching to a different working directory restarts the core.':
+    '手動或自動更新訂閱、切換訂閱或修改覆寫時，會在相同工作目錄內熱載入。切換至不同工作目錄時會重啟核心。',
   'Subscription must contain a YAML mapping': '訂閱內容必須是 YAML 對應表',
   'Failed to read the file. Editing and saving are unavailable.': '讀取檔案失敗，無法編輯或儲存。',
   'Open page guide': '開啟此頁教學',

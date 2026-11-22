@@ -181,3 +181,24 @@ test('a failed subscription runtime write restores the source, metadata and runt
     assert.equal(await readFile(join(dir, 'profile.yaml'), 'utf8'), oldConfig)
   }
 })
+
+test('interrupted shared-directory switch restores the selection and runtime without creating a source file', async (t) => {
+  const dir = await fixture(t)
+  await mkdir(join(dir, 'work'))
+  await writeFile(join(dir, 'work/config.yaml'), 'candidate')
+  await writeFile(join(dir, 'profile.yaml'), 'current: default\n' + oldConfig)
+  await writeFile(
+    join(dir, '.profile-key-update.json'),
+    JSON.stringify({
+      version: 1,
+      id: 'default',
+      config: oldConfig,
+      content: null,
+      runtime: { perProfile: false, content: 'last good' }
+    })
+  )
+  await recoverProfileKeyTransaction(dir)
+  assert.equal(await readFile(join(dir, 'profile.yaml'), 'utf8'), oldConfig)
+  assert.equal(await readFile(join(dir, 'work/config.yaml'), 'utf8'), 'last good')
+  await assert.rejects(stat(join(dir, 'profiles/default.yaml')), { code: 'ENOENT' })
+})

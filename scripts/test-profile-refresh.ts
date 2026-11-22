@@ -144,6 +144,7 @@ function refreshHarness(active = false, hotReloadSubscriptions = false) {
       'refreshKokoroProfile',
       'addProfileItem',
       'commitPreparedProfile',
+      'applyActiveProfile',
       'updateProfileItem',
       'updateProfileItemUnlocked',
       'removeProfileItem',
@@ -154,12 +155,17 @@ function refreshHarness(active = false, hotReloadSubscriptions = false) {
     {
       getAppConfig: async () => ({ hotReloadSubscriptions }),
       readFile: async () => content,
-      hotReloadSubscription: async (
-        prepared: { content: string },
+      stringifyYaml: JSON.stringify,
+      tryApplyRuntimeConfig: async ({
+        subscription: prepared,
+        persist
+      }: {
+        subscription: { content: string }
         persist: (runtime: unknown) => Promise<void>
-      ) => {
+      }) => {
         calls.push('reload')
         await persist({ perProfile: false, content: prepared.content })
+        return true
       },
       replaceProfilePair: async (
         next: ProfileConfig,
@@ -474,6 +480,7 @@ test('failed profile switches restore the previous selection and restart that pr
     'src/main/config/profile.ts',
     ['changeCurrentProfileUnlocked'],
     {
+      getAppConfig: async () => ({}),
       getProfileConfig: async () => ({ current, items: [{ id: 'new' }, { id: 'old' }] }),
       setProfileConfigUnlocked: async (config: ProfileConfig) => {
         current = config.current!

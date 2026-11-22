@@ -1,16 +1,18 @@
 import { getAppConfig, getProfileConfig } from '../config'
-import { mihomoCorePath, mihomoTestDir, mihomoWorkConfigPath } from '../utils/dirs'
+import { dirname } from 'node:path'
+import { mihomoCorePath, mihomoWorkConfigPath } from '../utils/dirs'
 import { validateMihomoProfile } from './profile-validation'
 
 export async function checkProfile(serviceMode = false): Promise<void> {
   const [appConfig, profileConfig] = await Promise.all([getAppConfig(), getProfileConfig()])
   const { core = 'mihomo', diffWorkDir = false, safePaths = [] } = appConfig
+  const configPath = mihomoWorkConfigPath(profileConfig.current, diffWorkDir)
   try {
     await validateMihomoProfile(
       {
         executable: mihomoCorePath(core),
-        configPath: mihomoWorkConfigPath(profileConfig.current, diffWorkDir),
-        workDir: mihomoTestDir(),
+        configPath,
+        workDir: dirname(configPath),
         safePaths
       },
       serviceMode

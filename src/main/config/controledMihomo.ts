@@ -1,6 +1,8 @@
 import { controledMihomoConfigPath } from '../utils/dirs'
 import { readFile } from 'fs/promises'
 import { parseYaml, stringifyYaml } from '../utils/yaml'
+import { restartCore, tryApplyRuntimeConfig } from '../core/manager'
+import { writeDurableText } from './profile-key-transaction'
 import { generateProfile } from '../core/factory'
 import { getAppConfig } from './app'
 import { defaultControledMihomoConfig } from '../utils/template'
@@ -34,12 +36,20 @@ export async function getControledMihomoConfig(force = false): Promise<Partial<M
   return controledMihomoConfig
 }
 
-export async function patchControledMihomoConfig(patch: Partial<MihomoConfig>): Promise<void> {
+export async function patchControledMihomoConfig(
+  patch: Partial<MihomoConfig>,
+  apply = false
+): Promise<void> {
+  let needsRestart = apply
   const previousPromise = writePromise
   const currentPromise = (async () => {
     await previousPromise
     const currentConfig = structuredClone(await getControledMihomoConfig())
-    const { controlDns = true, controlSniff = true } = await getAppConfig()
+    const {
+      controlDns = true,
+      controlSniff = true,
+      hotReloadSubscriptions = false
+    } = await getAppConfig()
     if (!controlDns) {
       delete currentConfig.dns
       delete currentConfig.hosts
@@ -73,10 +83,32 @@ export async function patchControledMihomoConfig(patch: Partial<MihomoConfig>): 
       currentConfig.hosts = patch.hosts
     }
     const nextConfig = deepMerge(currentConfig, structuredClone(patch))
+    if (apply && hotReloadSubscriptions) {
+      const applied = await tryApplyRuntimeConfig({
+        controlledConfig: nextConfig,
+        settingsPatch: patch,
+        persist: async (runtime, path) => {
+          const oldRuntime = await readFile(path, 'utf8')
+          try {
+            await writeDurableText(path, runtime.content)
+            await writeDurableText(controledMihomoConfigPath(), stringifyYaml(nextConfig))
+            controledMihomoConfig = nextConfig
+          } catch (error) {
+            await writeDurableText(path, oldRuntime)
+            throw error
+          }
+        }
+      })
+      if (applied) {
+        needsRestart = false
+        return
+      }
+    }
     await generateProfile(nextConfig)
     await writePrivateTextFileAtomic(controledMihomoConfigPath(), stringifyYaml(nextConfig))
     controledMihomoConfig = nextConfig
   })()
   writePromise = currentPromise.catch(() => {})
   await currentPromise
+  if (needsRestart) await restartCore({ throwOnError: true })
 }

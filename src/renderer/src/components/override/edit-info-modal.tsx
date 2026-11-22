@@ -6,7 +6,7 @@ import ModalSettingItem from '../base/base-modal-setting-item'
 import { KokoSelect, KokoTextField } from '../base/koko-form'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { useProfileConfig } from '@renderer/hooks/use-profile-config'
-import { restartCore } from '@renderer/utils/ipc'
+import { applyCurrentProfile } from '@renderer/utils/ipc'
 import { notify } from '@renderer/utils/notification'
 import { isOverrideUsedByCurrentProfile } from '@renderer/utils/override'
 
@@ -35,7 +35,7 @@ const EditInfoModal: React.FC<Props> = (props) => {
         item.global || itemToSave.global
       )
       if (item.id && usedByCurrent) {
-        await restartCore()
+        await applyCurrentProfile()
       }
       onClose()
     } catch (e) {

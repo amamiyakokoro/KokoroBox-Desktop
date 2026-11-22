@@ -6,14 +6,19 @@ import { systemCoreOnlyBuild } from '../../shared/build-flags'
 import {
   buildRuntimeProfile,
   generateProfile,
+  getConfirmedRuntimeProfile,
   getRuntimeConfig,
   publishRuntimeProfile,
   withRuntimeWrite,
   type PreparedSubscription
 } from './factory'
-import { applySubscriptionRuntime } from './subscription-reload'
+import {
+  applySubscriptionRuntime,
+  selectRuntimePatch,
+  withRuntimeCandidate
+} from './subscription-reload'
 import { validateMihomoProfile } from './profile-validation'
-import type { SubscriptionRuntimeFile } from '../config/profile-key-transaction'
+import { writeDurableText, type SubscriptionRuntimeFile } from '../config/profile-key-transaction'
 import {
   getAppConfig,
   getControledMihomoConfig,
@@ -44,6 +49,7 @@ import {
   getCoreStatus,
   getCoreDesiredStatus,
   getServiceCoreProfile,
+  ServiceAPIError,
   restartCore as restartServiceCore,
   startCore as startServiceCore,
   stopCore as stopServiceCore,
@@ -890,38 +896,95 @@ function clearTailscaleAuthNotifications(name?: string): void {
   }
 }
 
-export async function hotReloadSubscription(
-  subscription: PreparedSubscription,
-  persist: (runtime: SubscriptionRuntimeFile) => Promise<void>
-): Promise<void> {
-  await withRuntimeWrite(async () => {
+// A false result means the validated configuration needs a new core process.
+export async function tryApplyRuntimeConfig(
+  options: {
+    subscription?: PreparedSubscription
+    controlledConfig?: Partial<MihomoConfig>
+    refresh?: boolean
+    settingsPatch?: Partial<MihomoConfig>
+    persist?: (runtime: SubscriptionRuntimeFile, configPath: string) => Promise<void>
+  } = {}
+): Promise<boolean> {
+  const applied = await withRuntimeWrite(async () => {
     const { core = 'mihomo', safePaths = [], corePermissionMode } = await getAppConfig()
     const serviceMode = corePermissionMode === 'service'
-    const profile = await buildRuntimeProfile(undefined, subscription)
+    const profile = await buildRuntimeProfile(options.controlledConfig, options.subscription, true)
     const workDir = path.dirname(profile.configPath)
-    const args = serviceMode
-      ? (await getServiceCoreProfile()).args
-      : directCoreState.child?.spawnargs
-    if (!args) throw new Error(tr('Start the core before reloading the active subscription.'))
-    const dirIndex = args.indexOf('-d')
-    if (dirIndex < 0 || args[dirIndex + 1] !== workDir) {
-      throw new Error(
-        tr('Restart the core to use the new working directory before refreshing this subscription.')
-      )
+    const executable = mihomoCorePath(core)
+    const launch = serviceMode ? await getServiceCoreProfile() : undefined
+    const args = serviceMode ? launch?.args : directCoreState.child?.spawnargs
+    const status =
+      serviceMode &&
+      (await getCoreStatus(undefined, true).catch((error) => {
+        if (
+          error instanceof ServiceAPIError &&
+          error.status === 500 &&
+          /process is not running/i.test(error.message)
+        )
+          return undefined
+        throw error
+      }))
+    const runningBinary = serviceMode
+      ? status && (status.executable ?? launch?.core_path)
+      : directCoreState.child?.spawnfile
+    if (!runningBinary && options.refresh) {
+      throw new Error(tr('Start the core before reloading the active subscription.'))
     }
+    const dirIndex = args?.indexOf('-d') ?? -1
+    const validate = (configPath: string): Promise<void> =>
+      validateMihomoProfile({ executable, configPath, workDir, safePaths }, serviceMode)
+    if (dirIndex < 0 || args?.[dirIndex + 1] !== workDir || runningBinary !== executable) {
+      await withRuntimeCandidate(profile.configPath, profile.runtimeConfigStr, validate)
+      return false
+    }
+
+    const previous = getConfirmedRuntimeProfile()
+    // An explicit settings save can PATCH its scalar fields even if cold startup
+    // temporarily used another log level. A refresh needs a confirmed baseline.
+    let patch: Partial<Pick<MihomoConfig, 'mode' | 'log-level'>> | undefined
+    if (options.settingsPatch) {
+      patch = selectRuntimePatch(
+        await getRuntimeConfig(),
+        profile.runtimeConfig,
+        options.settingsPatch
+      )
+    } else if (
+      options.refresh &&
+      previous &&
+      previous.currentProfileStr !== profile.currentProfileStr
+    ) {
+      patch = selectRuntimePatch(previous.runtimeConfig, profile.runtimeConfig)
+    }
+    const live = patch && (await mihomoConfig(serviceMode))
     await applySubscriptionRuntime(
       profile.configPath,
       profile.runtimeConfigStr,
+      validate,
       (configPath) =>
-        validateMihomoProfile(
-          { executable: mihomoCorePath(core), configPath, workDir, safePaths },
-          serviceMode
-        ),
-      (configPath) => reloadMihomoConfig(configPath, serviceMode),
-      () => persist({ perProfile: profile.diffWorkDir, content: profile.runtimeConfigStr })
+        patch ? patchMihomoConfig(patch, serviceMode) : reloadMihomoConfig(configPath, serviceMode),
+      () =>
+        options.persist
+          ? options.persist(
+              { perProfile: profile.diffWorkDir, content: profile.runtimeConfigStr },
+              profile.configPath
+            )
+          : writeDurableText(profile.configPath, profile.runtimeConfigStr),
+      live && patch
+        ? () =>
+            patchMihomoConfig(
+              {
+                ...(patch.mode && { mode: live.mode }),
+                ...(patch['log-level'] && { 'log-level': live['log-level'] })
+              },
+              serviceMode
+            )
+        : undefined
     )
-    publishRuntimeProfile(profile)
+    publishRuntimeProfile(profile, true)
+    return true
   })
+  if (!applied) return false
   mainWindow?.webContents.send('profileConfigUpdated')
   mainWindow?.webContents.send('groupsUpdated')
   mainWindow?.webContents.send('rulesUpdated')
@@ -929,6 +992,7 @@ export async function hotReloadSubscription(
   void uploadRuntimeConfig().catch((error) =>
     appendAppLog(`[Manager]: upload runtime config failed, ${error}\n`).catch(() => {})
   )
+  return true
 }
 
 export async function restartCore(

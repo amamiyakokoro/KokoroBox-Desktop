@@ -9,7 +9,7 @@ import PortSetting from '@renderer/components/mihomo/port-setting'
 import ControllerSetting from '@renderer/components/mihomo/controller-setting'
 import AdvancedSetting from '@renderer/components/mihomo/advanced-settings'
 import CoreLogSetting from '@renderer/components/mihomo/core-log-setting'
-import { mihomoUpgradeUI, restartCore, triggerSysProxy } from '@renderer/utils/ipc'
+import { mihomoUpgradeUI, triggerSysProxy } from '@renderer/utils/ipc'
 import React, { useCallback, useMemo, useState } from 'react'
 import { mergeSettingsPatch } from '@renderer/utils/merge-settings-patch'
 import { useSettingsSave } from '@renderer/hooks/use-settings-save'
@@ -51,8 +51,7 @@ const Mihomo: React.FC<Props> = ({ embedded = false }) => {
   const saveChanges = async (): Promise<boolean> => {
     const patch = draftPatch
     const saved = await runSave(async () => {
-      await patchControledMihomoConfigOrThrow(patch)
-      await restartCore()
+      await patchControledMihomoConfigOrThrow(patch, true)
     })
     if (!saved) return false
 

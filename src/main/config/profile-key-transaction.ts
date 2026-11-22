@@ -49,7 +49,7 @@ interface Journal {
   runtime?: SubscriptionRuntimeFile
   id: string
   config: string
-  content: string
+  content: string | null // null for a selection-only transaction
 }
 function validateJournal(value: unknown): Journal {
   if (!value || typeof value !== 'object') throw new Error('Invalid profile key transaction')
@@ -58,7 +58,7 @@ function validateJournal(value: unknown): Journal {
   if (
     journal.version !== 1 ||
     typeof journal.config !== 'string' ||
-    typeof journal.content !== 'string'
+    (journal.content !== null && typeof journal.content !== 'string')
   ) {
     throw new Error('Invalid profile key transaction')
   }
@@ -88,7 +88,8 @@ async function restore(
       runtimePath(directory, journal.id, journal.runtime.perProfile),
       journal.runtime.content
     )
-  await write(join(directory, 'profiles', `${journal.id}.yaml`), journal.content)
+  if (journal.content !== null)
+    await write(join(directory, 'profiles', `${journal.id}.yaml`), journal.content)
   await write(join(directory, 'profile.yaml'), journal.config)
   await rm(join(directory, journalName), { force: true })
   await syncDirectory(directory)
@@ -116,9 +117,9 @@ export function writeProfileKeyTransaction(
   directory: string,
   id: string,
   oldConfig: string,
-  oldContent: string,
+  oldContent: string | null,
   nextConfig: string,
-  nextContent: string,
+  nextContent: string | null,
   write = writeDurableText,
   runtime?: SubscriptionRuntimeFile
 ): Promise<void> {
@@ -134,7 +135,7 @@ export function writeProfileKeyTransaction(
     // The rollback record is durable before either member of the pair changes.
     await writeDurableText(path, JSON.stringify(journal))
     try {
-      await write(join(directory, 'profiles', `${id}.yaml`), nextContent)
+      if (nextContent !== null) await write(join(directory, 'profiles', `${id}.yaml`), nextContent)
       await write(join(directory, 'profile.yaml'), nextConfig)
       if (target && runtime) await write(target, runtime.content)
       await rm(path)

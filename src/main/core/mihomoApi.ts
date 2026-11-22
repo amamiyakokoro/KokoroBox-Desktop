@@ -97,17 +97,21 @@ export async function mihomoVersion(): Promise<ControllerVersion> {
   return await instance.get('/version')
 }
 
-export const mihomoConfig = async (): Promise<ControllerConfigs> => {
-  const instance = await getAxios()
+export async function mihomoConfig(serviceMode?: boolean): Promise<ControllerConfigs> {
+  const instance = serviceMode === undefined ? await getAxios() : runtimeController(serviceMode)
   return await instance.get('/configs')
 }
 
-export async function reloadMihomoConfig(configPath: string, serviceMode: boolean): Promise<void> {
+function runtimeController(serviceMode: boolean): AxiosInstance {
   // A missing reload response is handled by the subscription transaction. Do not also
   // schedule the general Service-unavailable fallback, which can launch another core.
-  const client = serviceMode
+  return serviceMode
     ? createSignedServiceAxios('http://localhost/core/controller', false)
     : axios.create({ baseURL: 'http://localhost', socketPath: mihomoIpcPath() })
+}
+
+export async function reloadMihomoConfig(configPath: string, serviceMode: boolean): Promise<void> {
+  const client = runtimeController(serviceMode)
   try {
     await client.put('/configs?force=true', { path: configPath }, { timeout: 60_000 })
   } catch (error) {
@@ -129,8 +133,11 @@ export async function reloadMihomoConfig(configPath: string, serviceMode: boolea
   }
 }
 
-export const patchMihomoConfig = async (patch: Partial<ControllerConfigs>): Promise<void> => {
-  const instance = await getAxios()
+export async function patchMihomoConfig(
+  patch: Partial<ControllerConfigs>,
+  serviceMode?: boolean
+): Promise<void> {
+  const instance = serviceMode === undefined ? await getAxios() : runtimeController(serviceMode)
   return await instance.patch('/configs', patch)
 }
 

@@ -2,11 +2,9 @@
 export const messages: Readonly<Record<string, string>> = {
   'Start the core before reloading the active subscription.':
     'Start the core before reloading the active subscription.',
-  'Hot reload subscription updates': 'Hot reload subscription updates',
-  'Apply manual and automatic updates to the active subscription without restarting the core.':
-    'Apply manual and automatic updates to the active subscription without restarting the core.',
-  'Restart the core to use the new working directory before refreshing this subscription.':
-    'Restart the core to use the new working directory before refreshing this subscription.',
+  'Hot reload configuration changes': 'Hot reload configuration changes',
+  'Apply subscription updates, profile switches, and overrides live when the core can keep its working directory. Switching to a different working directory restarts the core.':
+    'Apply subscription updates, profile switches, and overrides live when the core can keep its working directory. Switching to a different working directory restarts the core.',
   'Subscription must contain a YAML mapping': 'Subscription must contain a YAML mapping',
   'Failed to read the file. Editing and saving are unavailable.':
     'Failed to read the file. Editing and saving are unavailable.',

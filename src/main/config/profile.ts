@@ -19,7 +19,7 @@ import {
 import { addProfileUpdater, delProfileUpdater } from '../core/profileUpdater'
 import { readFile, writeFile, rm, mkdir, rename } from 'fs/promises'
 import { fileToStr, repairManagedFilePermissions } from 'kokorobox-native'
-import { hotReloadSubscription, restartCore } from '../core/manager'
+import { tryApplyRuntimeConfig, restartCore } from '../core/manager'
 import { getAppConfig } from './app'
 import { existsSync } from 'fs'
 import axios, { AxiosResponse } from 'axios'
@@ -85,6 +85,28 @@ async function changeCurrentProfileUnlocked(id: string): Promise<void> {
   if (id !== 'default' && !config.items.some((item) => item.id === id))
     throw new Error('Profile not found')
   const current = config.current
+  if ((await getAppConfig()).hotReloadSubscriptions) {
+    const item = await getProfileItem(id)
+    if (!item) throw new Error('Profile not found')
+    const next = { ...config, current: id }
+    const applied = await tryApplyRuntimeConfig({
+      subscription: { item, content: await getProfileStr(id) },
+      persist: async (runtime) => {
+        await writeProfileKeyTransaction(
+          dataDir(),
+          id,
+          stringifyYaml(config),
+          null,
+          stringifyYaml(next),
+          null,
+          undefined,
+          runtime
+        )
+        profileConfig = next
+      }
+    })
+    if (applied) return
+  }
   config.current = id
   await setProfileConfigUnlocked(config)
   try {
@@ -153,6 +175,37 @@ async function replaceProfilePair(
   profileConfig = structuredClone(config)
 }
 
+async function applyActiveProfile(
+  config: ProfileConfig,
+  prepared: { item: ProfileItem; content: string }
+): Promise<void> {
+  const { item, content } = prepared
+  const previousContent = await readFile(profilePath(item.id), 'utf8')
+  const previousConfig = stringifyYaml(config)
+  const persist = (runtime?: SubscriptionRuntimeFile): Promise<void> =>
+    replaceProfilePair(config, item, previousContent, content, runtime)
+  if (await tryApplyRuntimeConfig({ subscription: prepared, refresh: true, persist })) return
+
+  // A different -d or executable requires a cold start. Keep the original encrypted
+  // bytes and index so a startup failure can restore the previous subscription.
+  await persist()
+  try {
+    await restartCore({ throwOnError: true })
+  } catch (error) {
+    await writeProfileKeyTransaction(
+      dataDir(),
+      item.id,
+      stringifyYaml(config),
+      await readFile(profilePath(item.id), 'utf8'),
+      previousConfig,
+      previousContent
+    )
+    profileConfig = undefined
+    await restartCore({ throwOnError: true })
+    throw error
+  }
+}
+
 interface AddProfileItemOptions {
   downloadedKokoroProfile?: DownloadedKokoroProfile
   restartCurrent?: boolean
@@ -168,15 +221,11 @@ async function commitPreparedProfile(
   const previous = config.items.find((item) => item.id === newItem.id)
   if (
     previous &&
-    newItem.type === 'remote' &&
     config.current === newItem.id &&
     options.restartCurrent !== false &&
     (await getAppConfig()).hotReloadSubscriptions
   ) {
-    const previousContent = await readFile(profilePath(newItem.id), 'utf8')
-    await hotReloadSubscription(prepared, (runtime) =>
-      replaceProfilePair(config, newItem, previousContent, content, runtime)
-    )
+    await applyActiveProfile(config, prepared)
     return newItem.id
   }
   const changedKey =
@@ -213,6 +262,13 @@ async function commitPreparedProfile(
 
 export function setProfileConfig(config: ProfileConfig): Promise<void> {
   return withProfileMutation(() => setProfileConfigUnlocked(config))
+}
+
+export function applyCurrentProfile(): Promise<void> {
+  return withProfileMutation(async () => {
+    if ((await getAppConfig()).hotReloadSubscriptions && (await tryApplyRuntimeConfig())) return
+    await restartCore({ throwOnError: true })
+  })
 }
 
 export function changeCurrentProfile(id: string): Promise<void> {
@@ -479,6 +535,10 @@ export async function addKokoroProfile(settings: KokoroSubscriptionSettings): Pr
   const existingProfile =
     matchingProfiles.find((item) => item.id === config.current) ?? matchingProfiles[0]
 
+  const applyDuringImport =
+    existingProfile !== undefined &&
+    existingProfile.id === config.current &&
+    Boolean((await getAppConfig()).hotReloadSubscriptions)
   const newProfileId = await addProfileItemWithOptions(
     {
       ...existingProfile,
@@ -491,7 +551,7 @@ export async function addKokoroProfile(settings: KokoroSubscriptionSettings): Pr
     },
     {
       downloadedKokoroProfile: downloaded,
-      restartCurrent: false,
+      restartCurrent: applyDuringImport,
       selectIfEmpty: false
     }
   )
@@ -500,7 +560,8 @@ export async function addKokoroProfile(settings: KokoroSubscriptionSettings): Pr
       await removeProfileItem(duplicate.id)
     }
   }
-  await changeCurrentProfile(newProfileId)
+  if (!applyDuringImport || (await getProfileConfig()).current !== newProfileId)
+    await changeCurrentProfile(newProfileId)
   return newProfileId
 }
 
@@ -536,6 +597,12 @@ async function setProfileStrUnlocked(
   content: string,
   item?: ProfileItem
 ): Promise<void> {
+  const config = await getProfileConfig()
+  const active = config.items.find((entry) => entry.id === id)
+  if (config.current === id && active && (await getAppConfig()).hotReloadSubscriptions) {
+    await applyActiveProfile(config, { item: item ?? active, content })
+    return
+  }
   await writeProfileContent(id, content, item, true)
 }
 
