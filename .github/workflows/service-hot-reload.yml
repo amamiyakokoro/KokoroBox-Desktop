@@ -1,7 +1,33 @@
-name: Service subscription hot reload
+name: Service hot reload and profile switching
+
 on:
+  pull_request:
+    paths: &reload_paths
+      - '.github/workflows/service-hot-reload.yml'
+      - 'scripts/verify-service-reload.cjs'
+      - 'scripts/test-profile-*.ts'
+      - 'src/main/**'
+      - 'src/preload/**'
+      - 'src/shared/**'
+      - 'src/renderer/src/components/mihomo/**'
+      - 'src/renderer/src/components/override/**'
+      - 'src/renderer/src/components/profiles/**'
+      - 'src/renderer/src/components/settings/**'
+      - 'src/renderer/src/components/sider/**'
+      - 'src/renderer/src/hooks/use-*-config.tsx'
+      - 'src/renderer/src/pages/override.tsx'
+      - 'src/renderer/src/pages/profiles.tsx'
+      - 'src/renderer/src/utils/ipc.ts'
+      - 'src/renderer/src/utils/override.ts'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - 'patches/**'
+      - 'tsconfig*.json'
   push:
-    branches: [codex/service-hot-reload-validation-20261122]
+    branches: [master]
+    paths: *reload_paths
+
 permissions:
   contents: read
 jobs:
@@ -51,7 +77,7 @@ jobs:
                   install('mihomo', package.read(exe))
           else:
               install('mihomo', gzip.decompress(archive))
-      - name: Verify manual and scheduled updates through Service
+      - name: Verify Service updates, PATCH, profile switches and rollback
         run: node scripts/verify-service-reload.cjs
       - name: Linux Service diagnostics
         if: failure() && runner.os == 'Linux'
