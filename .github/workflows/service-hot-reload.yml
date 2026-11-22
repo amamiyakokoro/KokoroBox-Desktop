@@ -35,7 +35,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, ubuntu-latest]
+        os: [windows-latest, ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 15
     steps:
@@ -50,11 +50,15 @@ jobs:
       - name: Fetch pinned Service and Mihomo
         shell: python
         run: |
-          import gzip, hashlib, io, os, pathlib, urllib.request, zipfile
+          import gzip, hashlib, io, pathlib, sys, urllib.request, zipfile
           root = pathlib.Path('test-bin')
           root.mkdir()
-          windows = os.name == 'nt'
-          platform = 'windows' if windows else 'linux'
+          target, service_sha, mihomo_sha = {
+              'win32': ('windows-amd64-v3', 'dcb3273d0138977dd3881aa9623da3075efb9f2820749f577d8757665b4c2270', 'ace63713ea5137d7fcc58c1434b7dee15bccf77457573c84ff2c14b8fb7f07d6'),
+              'linux': ('linux-amd64-v3', '64e7ff3fcde67c509a71148c6dca224285af8607240f127ed0b9d2400565fb5f', 'a97b21d7afe5939398b5be2901c30923e8a3f1b112a4733ced5a721630a09b67'),
+              'darwin': ('darwin-arm64', '0ce3f3e2e505205eba400d1f7e022d719304deea603845a1596d5d1cb20af228', '1a7a20eca63fbbaec90137717465bfde488d0db2a3a79b8fadebf9b2545b6e4c'),
+          }[sys.platform]
+          windows = sys.platform == 'win32'
           ext = '.exe' if windows else ''
           def fetch(repo, tag, asset, sha):
               url = f'https://github.com/{repo}/releases/download/{tag}/{asset}'
@@ -66,11 +70,9 @@ jobs:
               target = root / (name + ext)
               target.write_bytes(data)
               target.chmod(0o755)
-          service = fetch('amamiyakokoro/kokorobox-service', 'v0.6.18', f'kokorobox-service-{platform}-amd64-v3{ext}',
-                          'dcb3273d0138977dd3881aa9623da3075efb9f2820749f577d8757665b4c2270' if windows else '64e7ff3fcde67c509a71148c6dca224285af8607240f127ed0b9d2400565fb5f')
+          service = fetch('amamiyakokoro/kokorobox-service', 'v0.6.18', f'kokorobox-service-{target}{ext}', service_sha)
           install('kokorobox-service', service)
-          archive = fetch('MetaCubeX/mihomo', 'v1.19.34', f'mihomo-{platform}-amd64-v3-v1.19.34.' + ('zip' if windows else 'gz'),
-                          'ace63713ea5137d7fcc58c1434b7dee15bccf77457573c84ff2c14b8fb7f07d6' if windows else 'a97b21d7afe5939398b5be2901c30923e8a3f1b112a4733ced5a721630a09b67')
+          archive = fetch('MetaCubeX/mihomo', 'v1.19.34', f'mihomo-{target}-v1.19.34.' + ('zip' if windows else 'gz'), mihomo_sha)
           if windows:
               with zipfile.ZipFile(io.BytesIO(archive)) as package:
                   [exe] = [entry for entry in package.namelist() if entry.lower().endswith('.exe')]

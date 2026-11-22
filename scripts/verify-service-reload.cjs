@@ -13,6 +13,7 @@ const ts = req('typescript'),
   os = require('node:os')
 const win = process.platform === 'win32'
 const mac = process.platform === 'darwin'
+const localMac = mac && process.env.GITHUB_ACTIONS !== 'true'
 if (!mac)
   assert.equal(process.env.GITHUB_ACTIONS, 'true', 'Run only on disposable GitHub-hosted runners')
 const dir = fs.mkdtempSync(path.join(mac ? '/private/tmp' : process.env.RUNNER_TEMP, 'reload-'))
@@ -21,10 +22,10 @@ const work = path.join(dir, 'work'),
   canonical = path.join(work, 'config.yaml')
 const suffix = win ? '.exe' : ''
 const resources = '/Applications/KokoroBox.app/Contents/Resources'
-const daemonBinary = mac
+const daemonBinary = localMac
   ? path.join(resources, 'files/kokorobox-service')
   : path.resolve('test-bin', 'kokorobox-service' + suffix)
-const binary = mac ? path.join(dir, 'mihomo') : path.resolve('test-bin', 'mihomo' + suffix)
+const binary = localMac ? path.join(dir, 'mihomo') : path.resolve('test-bin', 'mihomo' + suffix)
 let daemon
 let diffWorkDir = false
 let hotReloadSubscriptions = true
@@ -335,11 +336,13 @@ async function setup() {
     mode: 0o600
   })
   if (mac) {
-    await fsp.copyFile(path.join(resources, 'sidecar/mihomo'), binary)
-    await fsp.chmod(binary, 0o700)
+    if (localMac) {
+      await fsp.copyFile(path.join(resources, 'sidecar/mihomo'), binary)
+      await fsp.chmod(binary, 0o700)
+    }
     daemon = cp.spawn(daemonBinary, ['--listen', ipc, 'service', 'run'], {
       env: { ...process.env, KOKOROBOX_CONFIG_DIR: configRoot, TMPDIR: dir },
-      stdio: 'ignore'
+      stdio: localMac ? 'ignore' : 'inherit'
     })
   } else if (win) {
     cp.execFileSync(daemonBinary, ['service', 'install'], { stdio: 'inherit' })
@@ -685,7 +688,7 @@ async function cleanup() {
   if (report.stages) {
     report.cleaned_up = true
     await fsp.writeFile(
-      path.join(mac ? dir : process.cwd(), 'service-reload-results.json'),
+      path.join(localMac ? dir : process.cwd(), 'service-reload-results.json'),
       JSON.stringify(report, null, 2)
     )
   }
